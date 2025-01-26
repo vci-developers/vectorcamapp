@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">vectorcamapp</string>
+
+    <!-- Network error: Request timeout -->
+    <string name="network_error_request_timeout">The request timed out. Please check your connection and try again.</string>
+
+    <!-- Network error: Too many requests -->
+    <string name="network_error_too_many_requests">You have made too many requests in a short period. Please wait and try again later.</string>
+
+    <!-- Network error: No internet connection -->
+    <string name="network_error_no_internet">No internet connection. Please check your network settings and try again.</string>
+
+    <!-- Network error: Server error -->
+    <string name="network_error_server_error">An error occurred on the server. Please try again later.</string>
+
+    <!-- Network error: Serialization error -->
+    <string name="network_error_serialization">There was an issue processing the response. Please contact support if this continues.</string>
+
+    <!-- Network error: Unknown error -->
+    <string name="network_error_unknown">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Imaging error: Cannot capture -->
+    <string name="imaging_error_cannot_capture">Unable to capture the image. Please try again.</string>
+</resources>
