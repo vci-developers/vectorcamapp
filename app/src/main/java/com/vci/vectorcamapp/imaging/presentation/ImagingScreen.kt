@@ -8,6 +8,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -21,11 +22,17 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -34,6 +41,7 @@ import androidx.core.content.ContextCompat
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
+import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
 import com.vci.vectorcamapp.imaging.presentation.components.CameraPreview
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
@@ -42,27 +50,60 @@ fun ImagingScreen(
     state: ImagingState, onAction: (ImagingAction) -> Unit, modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val analyzer = remember {
+        SpecimenImageAnalyzer(detector = TfLiteSpecimenDetector(
+            context = context
+        ), onResult = { onAction(ImagingAction.UpdateDetection(it)) })
+    }
     val controller = remember {
         LifecycleCameraController(context).apply {
             setEnabledUseCases(
-                CameraController.IMAGE_CAPTURE
+                CameraController.IMAGE_CAPTURE or CameraController.IMAGE_ANALYSIS
+            )
+            setImageAnalysisAnalyzer(
+                ContextCompat.getMainExecutor(context), analyzer
             )
         }
     }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            analyzer.close()
+        }
+    }
+
     Box(
-        modifier = modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter
+        modifier = modifier
+            .fillMaxSize()
+            .onGloballyPositioned { layoutCoordinates ->
+                val widthPx = layoutCoordinates.size.width
+                val heightPx = layoutCoordinates.size.height
+                Log.d("DEBUG", "Width: $widthPx, Height: $heightPx")
+            }, contentAlignment = Alignment.BottomCenter
     ) {
         if (state.currentImage != null) {
             Image(
                 bitmap = state.currentImage.asImageBitmap(),
                 contentDescription = "Specimen Image",
                 modifier = modifier.fillMaxSize(),
-                contentScale = ContentScale.FillHeight
+                contentScale = ContentScale.Fit
             )
         } else {
 
             CameraPreview(controller = controller, modifier = modifier.fillMaxSize())
+
+            if (state.detection != null) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawRect(
+                        color = if (state.detection.confidence > 0.8) Color.Green else Color.Red,
+                        topLeft = Offset(state.detection.topLeftX, state.detection.topLeftY),
+                        size = Size(
+                            width = state.detection.width, height = state.detection.height
+                        ),
+                        style = Stroke(width = 4f)
+                    )
+                }
+            }
 
             Box(
                 modifier = modifier
@@ -77,19 +118,7 @@ fun ImagingScreen(
                                 override fun onCaptureSuccess(image: ImageProxy) {
                                     super.onCaptureSuccess(image)
 
-                                    val matrix = Matrix().apply {
-                                        postRotate(image.imageInfo.rotationDegrees.toFloat())
-                                    }
-
-                                    val rotatedBitmap = Bitmap.createBitmap(
-                                        image.toBitmap(),
-                                        0,
-                                        0,
-                                        image.width,
-                                        image.height,
-                                        matrix,
-                                        true,
-                                    )
+                                    val rotatedBitmap = image.toUprightBitmap()
 
                                     onAction(
                                         ImagingAction.CaptureComplete(

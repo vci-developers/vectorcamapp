@@ -95,6 +95,7 @@ dependencies {
 
     // TensorFlow Lite Library
     implementation(libs.tensorflow.lite)
+    implementation(libs.tensorflow.lite.support)
 
     // Room Database Dependencies
     implementation(libs.androidx.room.runtime)

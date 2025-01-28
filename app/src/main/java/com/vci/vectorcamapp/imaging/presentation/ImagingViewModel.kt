@@ -24,6 +24,12 @@ class ImagingViewModel : ViewModel() {
         viewModelScope.launch {
             when (action) {
 
+                is ImagingAction.UpdateDetection -> {
+                    _state.update {
+                        it.copy(detection = action.detection)
+                    }
+                }
+
                 is ImagingAction.CaptureComplete -> {
                     action.result.onSuccess { bitmap ->
                         _state.update {
