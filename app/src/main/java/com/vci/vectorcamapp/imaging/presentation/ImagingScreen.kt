@@ -1,7 +1,5 @@
 package com.vci.vectorcamapp.imaging.presentation
 
-import android.graphics.Bitmap
-import android.graphics.Matrix
 import android.util.Log
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
 import androidx.camera.core.ImageCaptureException
@@ -22,7 +20,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,7 +50,9 @@ fun ImagingScreen(
     val analyzer = remember {
         SpecimenImageAnalyzer(detector = TfLiteSpecimenDetector(
             context = context
-        ), onResult = { onAction(ImagingAction.UpdateDetection(it)) })
+        ),
+            onDetectionUpdated = { onAction(ImagingAction.UpdateDetection(it)) },
+            onSpecimenIdUpdated = { onAction(ImagingAction.UpdateSpecimenId(it)) })
     }
     val controller = remember {
         LifecycleCameraController(context).apply {
@@ -63,12 +62,6 @@ fun ImagingScreen(
             setImageAnalysisAnalyzer(
                 ContextCompat.getMainExecutor(context), analyzer
             )
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            analyzer.close()
         }
     }
 

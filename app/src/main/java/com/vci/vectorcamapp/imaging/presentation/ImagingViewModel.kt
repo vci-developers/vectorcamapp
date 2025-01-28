@@ -23,6 +23,11 @@ class ImagingViewModel : ViewModel() {
     fun onAction(action: ImagingAction) {
         viewModelScope.launch {
             when (action) {
+                is ImagingAction.UpdateSpecimenId -> {
+                    _state.update {
+                        it.copy(currentSpecimenId = action.specimenId)
+                    }
+                }
 
                 is ImagingAction.UpdateDetection -> {
                     _state.update {

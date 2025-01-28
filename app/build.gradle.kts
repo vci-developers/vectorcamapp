@@ -103,7 +103,9 @@ dependencies {
 
     // Google Play Services Dependencies
     implementation(libs.play.services.location) // Location Services Library
-    implementation(libs.play.services.mlkit.text.recognition) // MLKit Text Recognition Library
+
+    // MLKit Text Recognition Library
+    implementation(libs.text.recognition)
 
     // JSON Serialization Library
     implementation(libs.kotlinx.serialization.json) // Kotlinx JSON serialization library

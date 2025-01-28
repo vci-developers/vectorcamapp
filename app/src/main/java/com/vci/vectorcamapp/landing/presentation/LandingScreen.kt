@@ -1,9 +1,7 @@
 package com.vci.vectorcamapp.landing.presentation
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -114,17 +112,15 @@ fun LandingScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp)) // Space between text and badge
                 if (state.incompleteSessions.isNotEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .background(MaterialTheme.colorScheme.error, CircleShape),
-                        contentAlignment = Alignment.Center
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError,
+                        modifier = Modifier.size(24.dp, 24.dp)
                     ) {
                         Text(
                             text = "${state.incompleteSessions.size}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onError,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
