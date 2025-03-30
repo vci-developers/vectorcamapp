@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.media.Image
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -23,7 +24,7 @@ class SpecimenImageAnalyzer(
     private val detector: SpecimenDetector,
     private val onDetectionUpdated: (Detection?) -> Unit,
     private val onSpecimenIdUpdated: (String) -> Unit
-) : ImageAnalysis.Analyzer {
+) : ImageAnalysis.Analyzer, AutoCloseable {
 
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val specimenIdRecognizer: TextRecognizer =
@@ -32,7 +33,11 @@ class SpecimenImageAnalyzer(
     @OptIn(ExperimentalGetImage::class) // TODO - Remove when possible
     override fun analyze(image: ImageProxy) {
         scope.launch {
-            val mediaImage: Image = image.image ?: run { image.close(); return@launch }
+            val mediaImage: Image = image.image ?: run {
+                Log.e("EXCEPTION", "ERROR")
+                image.close()
+                return@launch
+            }
             val inputImage: InputImage =
                 InputImage.fromMediaImage(mediaImage, image.imageInfo.rotationDegrees)
 
@@ -40,20 +45,28 @@ class SpecimenImageAnalyzer(
                 specimenIdRecognizer.process(inputImage).addOnSuccessListener { visionText: Text ->
                     val specimenId: String = visionText.text
                     onSpecimenIdUpdated(specimenId)
-                }.addOnCompleteListener {
+                }.addOnFailureListener { exception ->
+                    Log.e("EXCEPTION", exception.message.toString())
+                }
+                .addOnCompleteListener {
                     continuation.resume(Unit)
                 }
             }
 
             val detection = detector.detect(image.toUprightBitmap())
             onDetectionUpdated(detection)
+
         }.invokeOnCompletion { exception ->
-            exception?.printStackTrace()
+            exception?.let { e ->
+                Log.e("EXCEPTION", e.message.toString())
+            }
 
             image.close()
-            if (detector is AutoCloseable) {
-                detector.close()
-            }
         }
+    }
+
+    override fun close() {
+        detector.close()
+        specimenIdRecognizer.close()
     }
 }

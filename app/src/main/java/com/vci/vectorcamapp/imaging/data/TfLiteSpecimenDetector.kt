@@ -2,12 +2,18 @@ package com.vci.vectorcamapp.imaging.data
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Handler
+import android.os.HandlerThread
+import android.util.Log
 import com.vci.vectorcamapp.imaging.domain.BoundingBox
 import com.vci.vectorcamapp.imaging.domain.Detection
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import com.vci.vectorcamapp.imaging.presentation.toDetection
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.gpu.CompatibilityList
+import org.tensorflow.lite.gpu.GpuDelegate
+import org.tensorflow.lite.gpu.GpuDelegateFactory
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.common.ops.CastOp
 import org.tensorflow.lite.support.common.ops.NormalizeOp
@@ -20,42 +26,100 @@ class TfLiteSpecimenDetector(
 ) : SpecimenDetector {
 
     private var detector: Interpreter? = null
+    private var gpuDelegate: GpuDelegate? = null
+    private val imageProcessor: ImageProcessor by lazy {
+        ImageProcessor.Builder().add(CastOp(DataType.FLOAT32)).add(NormalizeOp(0f, 255f)).build()
+    }
 
-    private fun setupDetector() {
+    private val handlerThread = HandlerThread("TFLiteGPUThread").apply { start() }
+    private val handler = Handler(handlerThread.looper)
+
+    init {
+        handler.post { initializeInterpreter() }
+    }
+
+    private fun initializeInterpreter() {
+        if (detector != null) return
+
         val model = FileUtil.loadMappedFile(context, "detect.tflite")
-        val options = Interpreter.Options().setNumThreads(4)
+        val options = Interpreter.Options()
+
+        if (CompatibilityList().isDelegateSupportedOnThisDevice) {
+            try {
+                val delegateOptions = GpuDelegateFactory.Options().apply {
+                    inferencePreference =
+                        GpuDelegateFactory.Options.INFERENCE_PREFERENCE_FAST_SINGLE_ANSWER
+                    isPrecisionLossAllowed = true
+                }
+                gpuDelegate = GpuDelegate(delegateOptions)
+                options.addDelegate(gpuDelegate)
+                Log.d(TAG, "GPU delegate initialized")
+            } catch (e: Exception) {
+                Log.w(TAG, "GPU delegate failed, falling back to CPU: ${e.message}")
+                options.setNumThreads(Runtime.getRuntime().availableProcessors())
+            }
+        } else {
+            options.setNumThreads(Runtime.getRuntime().availableProcessors())
+            Log.d(TAG, "GPU not supported, using CPU")
+        }
+
         detector = Interpreter(model, options)
+        Log.d(TAG, "TFLite interpreter initialized")
     }
 
     override fun detect(bitmap: Bitmap): Detection? {
-        if (detector == null) {
-            setupDetector()
+        if (detector == null) return null
+
+        var result: Detection? = null
+        val lock = Object()
+
+        handler.post {
+            try {
+                val inputShape = detector?.getInputTensor(0)?.shape()
+                val outputShape = detector?.getOutputTensor(0)?.shape()
+
+                val tensorWidth = inputShape?.getOrNull(1) ?: DEFAULT_TENSOR_WIDTH
+                val tensorHeight = inputShape?.getOrNull(2) ?: DEFAULT_TENSOR_HEIGHT
+                val numChannels = outputShape?.getOrNull(1) ?: DEFAULT_NUM_CHANNELS
+                val numElements = outputShape?.getOrNull(2) ?: DEFAULT_NUM_ELEMENTS
+
+                val resizedBitmap = Bitmap.createScaledBitmap(bitmap, tensorWidth, tensorHeight, false)
+                val tensorImage = TensorImage(DataType.FLOAT32).apply { load(resizedBitmap) }
+                val input = imageProcessor.process(tensorImage)
+
+                val output = TensorBuffer.createFixedSize(
+                    intArrayOf(1, numChannels, numElements),
+                    DataType.FLOAT32
+                )
+
+                detector?.run(input.buffer, output.buffer)
+
+                result = getBestBox(output.floatArray, numChannels, numElements)?.toDetection(
+                    tensorWidth, tensorHeight, bitmap.width, bitmap.height
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Detector failed to run inference: ${e.message}")
+            } finally {
+                synchronized(lock) {
+                    lock.notify()
+                }
+            }
         }
 
-        val inputShape = detector?.getInputTensor(0)?.shape()
-        val outputShape = detector?.getOutputTensor(0)?.shape()
+        synchronized(lock) {
+            lock.wait()
+        }
 
-        val tensorWidth = inputShape?.getOrNull(1) ?: DEFAULT_TENSOR_WIDTH
-        val tensorHeight = inputShape?.getOrNull(2) ?: DEFAULT_TENSOR_HEIGHT
-        val numChannels = outputShape?.getOrNull(1) ?: DEFAULT_NUM_CHANNELS
-        val numElements = outputShape?.getOrNull(2) ?: DEFAULT_NUM_ELEMENTS
+        return result
+    }
 
-        val resizedBitmap = Bitmap.createScaledBitmap(bitmap, tensorWidth, tensorHeight, false)
-        val tensorImage = TensorImage(DataType.FLOAT32)
-        tensorImage.load(resizedBitmap)
 
-        val imageProcessor =
-            ImageProcessor.Builder().add(CastOp(DataType.FLOAT32)).add(NormalizeOp(0f, 255f))
-                .build()
-
-        val input = imageProcessor.process(tensorImage)
-        val output =
-            TensorBuffer.createFixedSize(intArrayOf(1, numChannels, numElements), DataType.FLOAT32)
-
-        detector?.run(input.buffer, output.buffer)
-        return getBestBox(output.floatArray, numChannels, numElements)?.toDetection(
-            tensorWidth, tensorHeight, bitmap.width, bitmap.height
-        )
+    override fun close() {
+        detector?.close()
+        detector = null
+        gpuDelegate?.close()
+        gpuDelegate = null
+        handlerThread.quitSafely()
     }
 
     private fun getBestBox(boxes: FloatArray, numChannels: Int, numElements: Int): BoundingBox? {
@@ -154,6 +218,7 @@ class TfLiteSpecimenDetector(
     }
 
     companion object {
+        private const val TAG = "TfLiteSpecimenDetector"
         private const val DEFAULT_TENSOR_WIDTH = 640
         private const val DEFAULT_TENSOR_HEIGHT = 640
         private const val DEFAULT_NUM_CHANNELS = 25200

@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,7 +30,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -65,14 +65,14 @@ fun ImagingScreen(
         }
     }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            analyzer.close()
+        }
+    }
+
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .onGloballyPositioned { layoutCoordinates ->
-                val widthPx = layoutCoordinates.size.width
-                val heightPx = layoutCoordinates.size.height
-                Log.d("DEBUG", "Width: $widthPx, Height: $heightPx")
-            }, contentAlignment = Alignment.BottomCenter
+        modifier = modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter
     ) {
         if (state.currentImage != null) {
             Image(
