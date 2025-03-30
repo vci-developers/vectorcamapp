@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.util.Log
+import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -62,6 +63,7 @@ fun ImagingScreen(
             setImageAnalysisAnalyzer(
                 ContextCompat.getMainExecutor(context), analyzer
             )
+            imageCaptureFlashMode = ImageCapture.FLASH_MODE_OFF
         }
     }
 
