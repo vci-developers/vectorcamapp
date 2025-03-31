@@ -67,24 +67,27 @@ class TfLiteSpecimenDetector(
         Log.d(TAG, "TFLite interpreter initialized")
     }
 
-    override fun detect(bitmap: Bitmap): Detection? {
+    override fun getInputTensorShape(): Pair<Int, Int> {
+        val shape = detector?.getInputTensor(0)?.shape()
+        return (shape?.getOrNull(1) ?: DEFAULT_TENSOR_WIDTH) to (shape?.getOrNull(2) ?: DEFAULT_TENSOR_HEIGHT)
+    }
+
+    override fun getOutputTensorShape(): Pair<Int, Int> {
+        val shape = detector?.getOutputTensor(0)?.shape()
+        return (shape?.getOrNull(1) ?: DEFAULT_NUM_CHANNELS) to (shape?.getOrNull(2) ?: DEFAULT_NUM_ELEMENTS)
+    }
+
+    override fun detect(bitmap: Bitmap): BoundingBox? {
         if (detector == null) return null
 
-        var result: Detection? = null
+        var result: BoundingBox? = null
         val lock = Object()
 
         handler.post {
             try {
-                val inputShape = detector?.getInputTensor(0)?.shape()
-                val outputShape = detector?.getOutputTensor(0)?.shape()
+                val (numChannels, numElements) = getOutputTensorShape()
 
-                val tensorWidth = inputShape?.getOrNull(1) ?: DEFAULT_TENSOR_WIDTH
-                val tensorHeight = inputShape?.getOrNull(2) ?: DEFAULT_TENSOR_HEIGHT
-                val numChannels = outputShape?.getOrNull(1) ?: DEFAULT_NUM_CHANNELS
-                val numElements = outputShape?.getOrNull(2) ?: DEFAULT_NUM_ELEMENTS
-
-                val resizedBitmap = Bitmap.createScaledBitmap(bitmap, tensorWidth, tensorHeight, false)
-                val tensorImage = TensorImage(DataType.FLOAT32).apply { load(resizedBitmap) }
+                val tensorImage = TensorImage(DataType.FLOAT32).apply { load(bitmap) }
                 val input = imageProcessor.process(tensorImage)
 
                 val output = TensorBuffer.createFixedSize(
@@ -94,9 +97,7 @@ class TfLiteSpecimenDetector(
 
                 detector?.run(input.buffer, output.buffer)
 
-                result = getBestBox(output.floatArray, numChannels, numElements)?.toDetection(
-                    tensorWidth, tensorHeight, bitmap.width, bitmap.height
-                )
+                result = getBestBox(output.floatArray, numChannels, numElements)
             } catch (e: Exception) {
                 Log.e(TAG, "Detector failed to run inference: ${e.message}")
             } finally {
@@ -116,7 +117,6 @@ class TfLiteSpecimenDetector(
         Log.d("RESULT", "Height: ${result?.height}")
         return result
     }
-
 
     override fun close() {
         detector?.close()

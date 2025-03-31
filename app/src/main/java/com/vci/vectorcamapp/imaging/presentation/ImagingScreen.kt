@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
@@ -86,7 +87,7 @@ fun ImagingScreen(
                     bitmap = state.currentImage.asImageBitmap(),
                     contentDescription = "Specimen Image",
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.FillHeight
+                    contentScale = ContentScale.Fit
                 )
 
                 IconButton(
@@ -137,13 +138,17 @@ fun ImagingScreen(
                                 override fun onCaptureSuccess(image: ImageProxy) {
                                     super.onCaptureSuccess(image)
 
-                                    val rotatedBitmap = image.toUprightBitmap()
+                                    val tensorWidth = detector.getInputTensorShape().first
+                                    val tensorHeight = detector.getInputTensorShape().second
 
-                                    detector.detect(rotatedBitmap)
+                                    val bitmap = image.toUprightBitmap()
+                                    val boundingBox = detector.detect(bitmap.resizeTo(tensorWidth, tensorHeight))
+
+                                    val croppedBitmap = boundingBox?.let { bitmap.cropToBoundingBox(it) }
 
                                     onAction(
                                         ImagingAction.CaptureComplete(
-                                            Result.Success(rotatedBitmap)
+                                            Result.Success(croppedBitmap ?: bitmap)
                                         )
                                     )
                                 }

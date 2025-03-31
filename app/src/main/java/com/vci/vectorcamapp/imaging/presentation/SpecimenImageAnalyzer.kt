@@ -47,14 +47,22 @@ class SpecimenImageAnalyzer(
                     onSpecimenIdUpdated(specimenId)
                 }.addOnFailureListener { exception ->
                     Log.e("EXCEPTION", exception.message.toString())
-                }
-                .addOnCompleteListener {
+                }.addOnCompleteListener {
                     continuation.resume(Unit)
                 }
             }
 
-            val detection = detector.detect(image.toUprightBitmap())
-            onDetectionUpdated(detection)
+            val tensorWidth = detector.getInputTensorShape().first
+            val tensorHeight = detector.getInputTensorShape().second
+
+            val bitmap = image.toUprightBitmap()
+            val detection = detector.detect(bitmap.resizeTo(tensorWidth, tensorHeight))
+
+            onDetectionUpdated(
+                detection?.toDetection(
+                    tensorWidth, tensorHeight, bitmap.width, bitmap.height
+                )
+            )
 
         }.invokeOnCompletion { exception ->
             exception?.let { e ->
