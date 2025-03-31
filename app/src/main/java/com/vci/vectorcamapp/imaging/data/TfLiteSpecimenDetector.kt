@@ -110,6 +110,10 @@ class TfLiteSpecimenDetector(
             lock.wait()
         }
 
+        Log.d("RESULT", "Top Left X: ${result?.topLeftX}")
+        Log.d("RESULT", "Top Left Y: ${result?.topLeftY}")
+        Log.d("RESULT", "Width: ${result?.width}")
+        Log.d("RESULT", "Height: ${result?.height}")
         return result
     }
 

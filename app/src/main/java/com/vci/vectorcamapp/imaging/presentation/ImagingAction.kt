@@ -8,5 +8,6 @@ import com.vci.vectorcamapp.imaging.domain.Detection
 sealed interface ImagingAction {
     data class UpdateSpecimenId(val specimenId: String) : ImagingAction
     data class UpdateDetection(val detection: Detection?) : ImagingAction
-    data class CaptureComplete(val result: Result<Bitmap, ImagingError>): ImagingAction
+    data class CaptureComplete(val result: Result<Bitmap, ImagingError>) : ImagingAction
+    data object RetakeImage : ImagingAction
 }

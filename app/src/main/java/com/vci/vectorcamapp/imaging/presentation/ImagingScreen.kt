@@ -48,10 +48,11 @@ fun ImagingScreen(
     state: ImagingState, onAction: (ImagingAction) -> Unit, modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val analyzer = remember {
-        SpecimenImageAnalyzer(detector = TfLiteSpecimenDetector(
-            context = context
-        ),
+    val detector = remember {
+        TfLiteSpecimenDetector(context = context)
+    }
+    val analyzer = remember(detector) {
+        SpecimenImageAnalyzer(detector = detector,
             onDetectionUpdated = { onAction(ImagingAction.UpdateDetection(it)) },
             onSpecimenIdUpdated = { onAction(ImagingAction.UpdateSpecimenId(it)) })
     }
@@ -69,6 +70,7 @@ fun ImagingScreen(
 
     DisposableEffect(Unit) {
         onDispose {
+            detector.close()
             analyzer.close()
         }
     }
@@ -77,12 +79,34 @@ fun ImagingScreen(
         modifier = modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter
     ) {
         if (state.currentImage != null) {
-            Image(
-                bitmap = state.currentImage.asImageBitmap(),
-                contentDescription = "Specimen Image",
-                modifier = modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit
-            )
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Image(
+                    bitmap = state.currentImage.asImageBitmap(),
+                    contentDescription = "Specimen Image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.FillHeight
+                )
+
+                IconButton(
+                    onClick = { onAction(ImagingAction.RetakeImage) },
+
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(20.dp)
+                        .size(64.dp)
+                        .background(
+                            MaterialTheme.colorScheme.error, shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_cancel),
+                        contentDescription = "Retake Image",
+                        tint = Color.White
+                    )
+                }
+            }
         } else {
 
             CameraPreview(controller = controller, modifier = modifier.fillMaxSize())
@@ -114,6 +138,8 @@ fun ImagingScreen(
                                     super.onCaptureSuccess(image)
 
                                     val rotatedBitmap = image.toUprightBitmap()
+
+                                    detector.detect(rotatedBitmap)
 
                                     onAction(
                                         ImagingAction.CaptureComplete(

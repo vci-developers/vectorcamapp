@@ -46,6 +46,16 @@ class ImagingViewModel : ViewModel() {
                         _events.send(ImagingEvent.DisplayImagingError(error))
                     }
                 }
+
+                ImagingAction.RetakeImage -> {
+                    _state.update {
+                        it.copy(
+                            currentSpecimenId = "",
+                            currentImage = null,
+                            detection = null,
+                        )
+                    }
+                }
             }
         }
     }
