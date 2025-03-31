@@ -2,9 +2,11 @@ package com.vci.vectorcamapp.imaging.presentation
 
 import android.content.res.Resources
 import com.vci.vectorcamapp.imaging.domain.BoundingBox
-import com.vci.vectorcamapp.imaging.domain.Detection
+import com.vci.vectorcamapp.imaging.domain.BoundingBoxUi
 
-fun BoundingBox.toDetection(tensorWidth: Int, tensorHeight: Int, frameWidth: Int, frameHeight: Int): Detection {
+fun BoundingBox.toBoundingBoxUi(
+    tensorWidth: Int, tensorHeight: Int, frameWidth: Int, frameHeight: Int
+): BoundingBoxUi {
     val screenHeight = Resources.getSystem().displayMetrics.heightPixels.toFloat()
     val screenWidth = Resources.getSystem().displayMetrics.widthPixels.toFloat()
 
@@ -21,7 +23,7 @@ fun BoundingBox.toDetection(tensorWidth: Int, tensorHeight: Int, frameWidth: Int
     val scaledWidth = this.width * tensorWidth * scaleX
     val scaledHeight = this.height * tensorHeight * scaleY
 
-    return Detection(
+    return BoundingBoxUi(
         topLeftX = scaledX,
         topLeftY = scaledY,
         width = scaledWidth,

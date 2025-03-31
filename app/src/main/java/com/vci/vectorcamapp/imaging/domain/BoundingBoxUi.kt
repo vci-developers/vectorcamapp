@@ -1,6 +1,6 @@
 package com.vci.vectorcamapp.imaging.domain
 
-data class Detection(
+data class BoundingBoxUi(
     val topLeftX: Float = 0f,
     val topLeftY: Float = 0f,
     val width: Float = 0f,

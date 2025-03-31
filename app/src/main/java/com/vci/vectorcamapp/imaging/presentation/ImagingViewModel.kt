@@ -29,9 +29,9 @@ class ImagingViewModel : ViewModel() {
                     }
                 }
 
-                is ImagingAction.UpdateDetection -> {
+                is ImagingAction.UpdateBoundingBoxUi -> {
                     _state.update {
-                        it.copy(detection = action.detection)
+                        it.copy(currentBoundingBoxUi = action.boundingBoxUi)
                     }
                 }
 
@@ -52,7 +52,7 @@ class ImagingViewModel : ViewModel() {
                         it.copy(
                             currentSpecimenId = "",
                             currentImage = null,
-                            detection = null,
+                            currentBoundingBoxUi = null,
                         )
                     }
                 }

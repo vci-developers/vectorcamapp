@@ -11,7 +11,7 @@ import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizer
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.vci.vectorcamapp.imaging.domain.Detection
+import com.vci.vectorcamapp.imaging.domain.BoundingBoxUi
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +22,7 @@ import kotlin.coroutines.suspendCoroutine
 
 class SpecimenImageAnalyzer(
     private val detector: SpecimenDetector,
-    private val onDetectionUpdated: (Detection?) -> Unit,
+    private val onBoundingBoxUiUpdated: (BoundingBoxUi?) -> Unit,
     private val onSpecimenIdUpdated: (String) -> Unit
 ) : ImageAnalysis.Analyzer, AutoCloseable {
 
@@ -56,10 +56,10 @@ class SpecimenImageAnalyzer(
             val tensorHeight = detector.getInputTensorShape().second
 
             val bitmap = image.toUprightBitmap()
-            val detection = detector.detect(bitmap.resizeTo(tensorWidth, tensorHeight))
+            val boundingBox = detector.detect(bitmap.resizeTo(tensorWidth, tensorHeight))
 
-            onDetectionUpdated(
-                detection?.toDetection(
+            onBoundingBoxUiUpdated(
+                boundingBox?.toBoundingBoxUi(
                     tensorWidth, tensorHeight, bitmap.width, bitmap.height
                 )
             )

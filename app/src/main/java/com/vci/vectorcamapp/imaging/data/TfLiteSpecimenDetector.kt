@@ -6,9 +6,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import com.vci.vectorcamapp.imaging.domain.BoundingBox
-import com.vci.vectorcamapp.imaging.domain.Detection
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
-import com.vci.vectorcamapp.imaging.presentation.toDetection
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.CompatibilityList
@@ -111,10 +109,6 @@ class TfLiteSpecimenDetector(
             lock.wait()
         }
 
-        Log.d("RESULT", "Top Left X: ${result?.topLeftX}")
-        Log.d("RESULT", "Top Left Y: ${result?.topLeftY}")
-        Log.d("RESULT", "Width: ${result?.width}")
-        Log.d("RESULT", "Height: ${result?.height}")
         return result
     }
 

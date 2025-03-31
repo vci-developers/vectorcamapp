@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.imaging.presentation
 
-import android.graphics.Bitmap
 import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
@@ -54,7 +53,7 @@ fun ImagingScreen(
     }
     val analyzer = remember(detector) {
         SpecimenImageAnalyzer(detector = detector,
-            onDetectionUpdated = { onAction(ImagingAction.UpdateDetection(it)) },
+            onBoundingBoxUiUpdated = { onAction(ImagingAction.UpdateBoundingBoxUi(it)) },
             onSpecimenIdUpdated = { onAction(ImagingAction.UpdateSpecimenId(it)) })
     }
     val controller = remember {
@@ -112,13 +111,16 @@ fun ImagingScreen(
 
             CameraPreview(controller = controller, modifier = modifier.fillMaxSize())
 
-            if (state.detection != null) {
+            if (state.currentBoundingBoxUi != null) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     drawRect(
-                        color = if (state.detection.confidence > 0.8) Color.Green else Color.Red,
-                        topLeft = Offset(state.detection.topLeftX, state.detection.topLeftY),
+                        color = if (state.currentBoundingBoxUi.confidence > 0.8) Color.Green else Color.Red,
+                        topLeft = Offset(
+                            state.currentBoundingBoxUi.topLeftX, state.currentBoundingBoxUi.topLeftY
+                        ),
                         size = Size(
-                            width = state.detection.width, height = state.detection.height
+                            width = state.currentBoundingBoxUi.width,
+                            height = state.currentBoundingBoxUi.height
                         ),
                         style = Stroke(width = 4f)
                     )
@@ -142,9 +144,11 @@ fun ImagingScreen(
                                     val tensorHeight = detector.getInputTensorShape().second
 
                                     val bitmap = image.toUprightBitmap()
-                                    val boundingBox = detector.detect(bitmap.resizeTo(tensorWidth, tensorHeight))
+                                    val boundingBox =
+                                        detector.detect(bitmap.resizeTo(tensorWidth, tensorHeight))
 
-                                    val croppedBitmap = boundingBox?.let { bitmap.cropToBoundingBox(it) }
+                                    val croppedBitmap =
+                                        boundingBox?.let { bitmap.cropToBoundingBox(it) }
 
                                     onAction(
                                         ImagingAction.CaptureComplete(
