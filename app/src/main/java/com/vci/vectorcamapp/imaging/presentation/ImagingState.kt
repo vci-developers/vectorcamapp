@@ -2,7 +2,7 @@ package com.vci.vectorcamapp.imaging.presentation
 
 import android.graphics.Bitmap
 import com.vci.vectorcamapp.core.domain.model.Specimen
-import com.vci.vectorcamapp.imaging.domain.BoundingBoxUi
+import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 
 data class ImagingState(
     val currentSpecimenId: String = "",

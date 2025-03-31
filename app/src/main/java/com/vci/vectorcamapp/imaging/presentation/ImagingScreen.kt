@@ -41,6 +41,9 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
 import com.vci.vectorcamapp.imaging.presentation.components.CameraPreview
+import com.vci.vectorcamapp.imaging.presentation.extensions.cropToBoundingBox
+import com.vci.vectorcamapp.imaging.presentation.extensions.resizeTo
+import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
 @Composable

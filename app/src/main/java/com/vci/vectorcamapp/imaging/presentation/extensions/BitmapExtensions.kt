@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.imaging.presentation
+package com.vci.vectorcamapp.imaging.presentation.extensions
 
 import android.graphics.Bitmap
 import com.vci.vectorcamapp.imaging.domain.BoundingBox

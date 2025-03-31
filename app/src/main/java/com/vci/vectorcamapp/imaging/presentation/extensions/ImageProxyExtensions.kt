@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.imaging.presentation
+package com.vci.vectorcamapp.imaging.presentation.extensions
 
 import android.graphics.Bitmap
 import android.graphics.Matrix

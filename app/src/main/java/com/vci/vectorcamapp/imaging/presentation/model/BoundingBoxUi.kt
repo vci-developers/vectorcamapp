@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.imaging.domain
+package com.vci.vectorcamapp.imaging.presentation.model
 
 data class BoundingBoxUi(
     val topLeftX: Float = 0f,

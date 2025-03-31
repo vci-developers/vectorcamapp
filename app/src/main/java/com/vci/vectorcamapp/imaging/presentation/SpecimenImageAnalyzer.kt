@@ -11,8 +11,11 @@ import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizer
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.vci.vectorcamapp.imaging.domain.BoundingBoxUi
+import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
+import com.vci.vectorcamapp.imaging.presentation.extensions.resizeTo
+import com.vci.vectorcamapp.imaging.presentation.extensions.toBoundingBoxUi
+import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

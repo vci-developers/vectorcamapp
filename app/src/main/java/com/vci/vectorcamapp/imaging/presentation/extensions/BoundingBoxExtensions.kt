@@ -1,8 +1,8 @@
-package com.vci.vectorcamapp.imaging.presentation
+package com.vci.vectorcamapp.imaging.presentation.extensions
 
 import android.content.res.Resources
 import com.vci.vectorcamapp.imaging.domain.BoundingBox
-import com.vci.vectorcamapp.imaging.domain.BoundingBoxUi
+import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 
 fun BoundingBox.toBoundingBoxUi(
     tensorWidth: Int, tensorHeight: Int, frameWidth: Int, frameHeight: Int
