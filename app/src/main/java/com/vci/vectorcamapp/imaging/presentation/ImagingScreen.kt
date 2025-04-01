@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.imaging.presentation
 
-import android.graphics.Bitmap
 import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
@@ -44,7 +43,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
 import com.vci.vectorcamapp.imaging.presentation.components.CameraPreview
-import com.vci.vectorcamapp.imaging.presentation.extensions.cropToBoundingBox
+import com.vci.vectorcamapp.imaging.presentation.extensions.cropToBoundingBoxAndPad
 import com.vci.vectorcamapp.imaging.presentation.extensions.resizeTo
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
@@ -159,12 +158,12 @@ fun ImagingScreen(
                                     val boundingBox =
                                         detector.detect(bitmap.resizeTo(tensorWidth, tensorHeight))
 
-                                    val croppedBitmap =
-                                        boundingBox?.let { bitmap.cropToBoundingBox(it) }
+                                    val croppedAndPaddedBitmap =
+                                        boundingBox?.let { bitmap.cropToBoundingBoxAndPad(it) }
 
                                     onAction(
                                         ImagingAction.CaptureComplete(
-                                            Result.Success(croppedBitmap ?: bitmap)
+                                            Result.Success(croppedAndPaddedBitmap ?: bitmap)
                                         )
                                     )
                                 }
