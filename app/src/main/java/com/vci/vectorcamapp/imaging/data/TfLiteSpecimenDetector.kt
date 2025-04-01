@@ -25,99 +25,151 @@ class TfLiteSpecimenDetector(
 
     private var detector: Interpreter? = null
     private var gpuDelegate: GpuDelegate? = null
-    private val imageProcessor: ImageProcessor by lazy {
-        ImageProcessor.Builder().add(CastOp(DataType.FLOAT32)).add(NormalizeOp(0f, 255f)).build()
-    }
+
+    private val detectorLock = Any()
+    private var initialized = false
+    private var isClosed = false
 
     private val handlerThread = HandlerThread("TFLiteGPUThread").apply { start() }
     private val handler = Handler(handlerThread.looper)
+
+    private val imageProcessor by lazy {
+        ImageProcessor.Builder().add(CastOp(DataType.FLOAT32)).add(NormalizeOp(0f, 255f)).build()
+    }
 
     init {
         handler.post { initializeInterpreter() }
     }
 
     private fun initializeInterpreter() {
-        if (detector != null) return
+        synchronized(detectorLock) {
+            if (initialized || isClosed) return
 
-        val model = FileUtil.loadMappedFile(context, "detect.tflite")
-        val options = Interpreter.Options()
-
-        if (CompatibilityList().isDelegateSupportedOnThisDevice) {
             try {
-                val delegateOptions = GpuDelegateFactory.Options().apply {
-                    inferencePreference =
-                        GpuDelegateFactory.Options.INFERENCE_PREFERENCE_FAST_SINGLE_ANSWER
-                    isPrecisionLossAllowed = true
-                }
-                gpuDelegate = GpuDelegate(delegateOptions)
-                options.addDelegate(gpuDelegate)
-                Log.d(TAG, "GPU delegate initialized")
-            } catch (e: Exception) {
-                Log.w(TAG, "GPU delegate failed, falling back to CPU: ${e.message}")
-                options.setNumThreads(Runtime.getRuntime().availableProcessors())
-            }
-        } else {
-            options.setNumThreads(Runtime.getRuntime().availableProcessors())
-            Log.d(TAG, "GPU not supported, using CPU")
-        }
+                val model = FileUtil.loadMappedFile(context, "detect.tflite")
+                val options = Interpreter.Options()
 
-        detector = Interpreter(model, options)
-        Log.d(TAG, "TFLite interpreter initialized")
+                if (CompatibilityList().isDelegateSupportedOnThisDevice) {
+                    try {
+                        val delegateOptions = GpuDelegateFactory.Options().apply {
+                            inferencePreference =
+                                GpuDelegateFactory.Options.INFERENCE_PREFERENCE_FAST_SINGLE_ANSWER
+                            isPrecisionLossAllowed = true
+                        }
+                        gpuDelegate = GpuDelegate(delegateOptions)
+                        options.addDelegate(gpuDelegate)
+                        Log.d(TAG, "GPU delegate initialized")
+                    } catch (e: Exception) {
+                        Log.w(TAG, "GPU delegate failed: ${e.message}. Falling back to CPU.")
+                    }
+                }
+
+                options.setNumThreads(Runtime.getRuntime().availableProcessors())
+                detector = Interpreter(model, options)
+                initialized = true
+                Log.d(TAG, "TFLite interpreter initialized")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
+            }
+        }
+    }
+
+    private fun isReady(): Boolean = synchronized(detectorLock) {
+        initialized && !isClosed && detector != null
     }
 
     override fun getInputTensorShape(): Pair<Int, Int> {
-        val shape = detector?.getInputTensor(0)?.shape()
-        return (shape?.getOrNull(1) ?: DEFAULT_TENSOR_WIDTH) to (shape?.getOrNull(2) ?: DEFAULT_TENSOR_HEIGHT)
+        synchronized(detectorLock) {
+            if (!isReady()) {
+                Log.w(TAG, "Detector not ready in getInputTensorShape")
+                return DEFAULT_TENSOR_WIDTH to DEFAULT_TENSOR_HEIGHT
+            }
+
+            return try {
+                val shape = detector!!.getInputTensor(0).shape()
+                shape[1] to shape[2]
+            } catch (e: Exception) {
+                Log.e(TAG, "getInputTensorShape failed: ${e.message}")
+                DEFAULT_TENSOR_WIDTH to DEFAULT_TENSOR_HEIGHT
+            }
+        }
     }
 
     override fun getOutputTensorShape(): Pair<Int, Int> {
-        val shape = detector?.getOutputTensor(0)?.shape()
-        return (shape?.getOrNull(1) ?: DEFAULT_NUM_CHANNELS) to (shape?.getOrNull(2) ?: DEFAULT_NUM_ELEMENTS)
+        synchronized(detectorLock) {
+            if (!isReady()) {
+                Log.w(TAG, "Detector not ready in getOutputTensorShape")
+                return DEFAULT_NUM_CHANNELS to DEFAULT_NUM_ELEMENTS
+            }
+
+            return try {
+                val shape = detector!!.getOutputTensor(0).shape()
+                shape[1] to shape[2]
+            } catch (e: Exception) {
+                Log.e(TAG, "getOutputTensorShape failed: ${e.message}")
+                DEFAULT_NUM_CHANNELS to DEFAULT_NUM_ELEMENTS
+            }
+        }
     }
 
     override fun detect(bitmap: Bitmap): BoundingBox? {
-        if (detector == null) return null
+        if (!isReady()) return null
 
         var result: BoundingBox? = null
-        val lock = Object()
+        val taskLock = Object()
 
-        handler.post {
+        val task = Runnable {
             try {
                 val (numChannels, numElements) = getOutputTensorShape()
-
-                val tensorImage = TensorImage(DataType.FLOAT32).apply { load(bitmap) }
+                val tensorImage = TensorImage(DataType.FLOAT32).apply {
+                    load(bitmap.copy(Bitmap.Config.ARGB_8888, false))
+                }
                 val input = imageProcessor.process(tensorImage)
 
                 val output = TensorBuffer.createFixedSize(
-                    intArrayOf(1, numChannels, numElements),
-                    DataType.FLOAT32
+                    intArrayOf(1, numChannels, numElements), DataType.FLOAT32
                 )
 
-                detector?.run(input.buffer, output.buffer)
+                synchronized(detectorLock) {
+                    if (!isReady()) return@synchronized
+                    detector?.run(input.buffer, output.buffer)
+                }
 
                 result = getBestBox(output.floatArray, numChannels, numElements)
+
             } catch (e: Exception) {
-                Log.e(TAG, "Detector failed to run inference: ${e.message}")
+                Log.e(TAG, "Inference failed: ${e.message}")
             } finally {
-                synchronized(lock) {
-                    lock.notify()
-                }
+                synchronized(taskLock) { taskLock.notify() }
             }
         }
 
-        synchronized(lock) {
-            lock.wait()
+        synchronized(taskLock) {
+            handler.post(task)
+            taskLock.wait()
         }
 
         return result
     }
 
     override fun close() {
-        detector?.close()
-        detector = null
-        gpuDelegate?.close()
-        gpuDelegate = null
-        handlerThread.quitSafely()
+        synchronized(detectorLock) {
+            if (isClosed) return
+            isClosed = true
+
+            handler.post {
+                try {
+                    detector?.close()
+                    detector = null
+                    gpuDelegate?.close()
+                    gpuDelegate = null
+                    handlerThread.quitSafely()
+                    Log.d(TAG, "Detector closed")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error during detector close: ${e.message}")
+                }
+            }
+        }
     }
 
     private fun getBestBox(boxes: FloatArray, numChannels: Int, numElements: Int): BoundingBox? {
@@ -129,11 +181,12 @@ class TfLiteSpecimenDetector(
 
             if (confidence < CONFIDENCE_THRESHOLD) continue
 
-            var maxClassScore = -1.0f
+            var maxClassScore = -1f
             var bestClassIndex = -1
             for (j in 5 until numElements) {
-                if (boxes[baseIndex + j] > maxClassScore) {
-                    maxClassScore = boxes[baseIndex + j]
+                val score = boxes[baseIndex + j]
+                if (score > maxClassScore) {
+                    maxClassScore = score
                     bestClassIndex = j - 5
                 }
             }
@@ -148,9 +201,7 @@ class TfLiteSpecimenDetector(
             val bottomRightX = centerX + (width / 2f)
             val bottomRightY = centerY + (height / 2f)
 
-            if (topLeftX < 0f || topLeftX > 1f || topLeftY < 0f || topLeftY > 1f || bottomRightX < 0f || bottomRightX > 1f || bottomRightY < 0f || bottomRightY > 1f) {
-                continue
-            }
+            if (topLeftX < 0f || topLeftX > 1f || topLeftY < 0f || topLeftY > 1f || bottomRightX < 0f || bottomRightX > 1f || bottomRightY < 0f || bottomRightY > 1f) continue
 
             boundingBoxes.add(
                 BoundingBox(
@@ -168,51 +219,42 @@ class TfLiteSpecimenDetector(
             )
         }
 
-        if (boundingBoxes.isEmpty()) return null
-
-        // Apply Non-Maximum Suppression (NMS) to get the best bounding box
         return applyNMS(boundingBoxes).maxByOrNull { it.confidence }
     }
 
     private fun applyNMS(boxes: List<BoundingBox>): MutableList<BoundingBox> {
-        val sortedBoxes = boxes.sortedByDescending { it.confidence }.toMutableList()
-        val selectedBoxes = mutableListOf<BoundingBox>()
+        val sorted = boxes.sortedByDescending { it.confidence }.toMutableList()
+        val selected = mutableListOf<BoundingBox>()
 
-        while (sortedBoxes.isNotEmpty()) {
-            val bestBox = sortedBoxes.removeAt(0)
-            selectedBoxes.add(bestBox)
+        while (sorted.isNotEmpty()) {
+            val best = sorted.removeAt(0)
+            selected.add(best)
 
-            val iterator = sortedBoxes.iterator()
+            val iterator = sorted.iterator()
             while (iterator.hasNext()) {
-                val currentBox = iterator.next()
-                val iou = calculateIoU(bestBox, currentBox)
-                if (iou >= IOU_THRESHOLD) {
+                val other = iterator.next()
+                if (calculateIoU(best, other) >= IOU_THRESHOLD) {
                     iterator.remove()
                 }
             }
         }
 
-        return selectedBoxes
+        return selected
     }
 
-    private fun calculateIoU(box1: BoundingBox, box2: BoundingBox): Float {
-        val topLeftX = maxOf(box1.topLeftX, box2.topLeftX)
-        val topLeftY = maxOf(box1.topLeftY, box2.topLeftY)
-        val bottomRightX = minOf(box1.bottomRightX, box2.bottomRightX)
-        val bottomRightY = minOf(box1.bottomRightY, box2.bottomRightY)
+    private fun calculateIoU(a: BoundingBox, b: BoundingBox): Float {
+        val x1 = maxOf(a.topLeftX, b.topLeftX)
+        val y1 = maxOf(a.topLeftY, b.topLeftY)
+        val x2 = minOf(a.bottomRightX, b.bottomRightX)
+        val y2 = minOf(a.bottomRightY, b.bottomRightY)
 
-        val intersectionWidth = maxOf(0f, bottomRightX - topLeftX)
-        val intersectionHeight = maxOf(0f, bottomRightY - topLeftY)
-        val intersectionArea = intersectionWidth * intersectionHeight
+        val intersection = maxOf(0f, x2 - x1) * maxOf(0f, y2 - y1)
+        val areaA = a.width * a.height
+        val areaB = b.width * b.height
 
-        val box1Area = box1.width * box1.height
-        val box2Area = box2.width * box2.height
-
-        return if (box1Area + box2Area - intersectionArea > 0f) {
-            intersectionArea / (box1Area + box2Area - intersectionArea)
-        } else {
-            0f
-        }
+        return if (areaA + areaB - intersection > 0) {
+            intersection / (areaA + areaB - intersection)
+        } else 0f
     }
 
     companion object {

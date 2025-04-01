@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
@@ -22,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
@@ -51,6 +54,8 @@ fun ImagingScreen(
     state: ImagingState, onAction: (ImagingAction) -> Unit, modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
     val detector = remember {
         TfLiteSpecimenDetector(context = context)
     }
@@ -71,9 +76,13 @@ fun ImagingScreen(
         }
     }
 
+    LaunchedEffect(lifecycleOwner) {
+        controller.unbind()
+        controller.bindToLifecycle(lifecycleOwner)
+    }
+
     DisposableEffect(Unit) {
         onDispose {
-            detector.close()
             analyzer.close()
         }
     }
