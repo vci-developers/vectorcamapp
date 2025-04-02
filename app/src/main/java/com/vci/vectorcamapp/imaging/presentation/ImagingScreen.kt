@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
+import com.vci.vectorcamapp.imaging.data.GpuDelegateManager
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
 import com.vci.vectorcamapp.imaging.presentation.components.CameraPreview
 import com.vci.vectorcamapp.imaging.presentation.extensions.cropToBoundingBoxAndPad
@@ -53,7 +54,6 @@ fun ImagingScreen(
     state: ImagingState, onAction: (ImagingAction) -> Unit, modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
 
     val detector = remember {
         TfLiteSpecimenDetector(context = context)
@@ -75,14 +75,10 @@ fun ImagingScreen(
         }
     }
 
-    LaunchedEffect(lifecycleOwner) {
-        controller.unbind()
-        controller.bindToLifecycle(lifecycleOwner)
-    }
-
     DisposableEffect(Unit) {
         onDispose {
             analyzer.close()
+            GpuDelegateManager.close()
         }
     }
 

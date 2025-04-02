@@ -24,7 +24,6 @@ class TfLiteSpecimenDetector(
 ) : SpecimenDetector {
 
     private var detector: Interpreter? = null
-    private var gpuDelegate: GpuDelegate? = null
 
     private val detectorLock = Any()
     private var initialized = false
@@ -51,13 +50,7 @@ class TfLiteSpecimenDetector(
 
                 if (CompatibilityList().isDelegateSupportedOnThisDevice) {
                     try {
-                        val delegateOptions = GpuDelegateFactory.Options().apply {
-                            inferencePreference =
-                                GpuDelegateFactory.Options.INFERENCE_PREFERENCE_FAST_SINGLE_ANSWER
-                            isPrecisionLossAllowed = true
-                        }
-                        gpuDelegate = GpuDelegate(delegateOptions)
-                        options.addDelegate(gpuDelegate)
+                        options.addDelegate(GpuDelegateManager.getDelegate())
                         Log.d(TAG, "GPU delegate initialized")
                     } catch (e: Exception) {
                         Log.w(TAG, "GPU delegate failed: ${e.message}. Falling back to CPU.")
@@ -161,8 +154,6 @@ class TfLiteSpecimenDetector(
                 try {
                     detector?.close()
                     detector = null
-                    gpuDelegate?.close()
-                    gpuDelegate = null
                     handlerThread.quitSafely()
                     Log.d(TAG, "Detector closed")
                 } catch (e: Exception) {
