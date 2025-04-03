@@ -11,15 +11,18 @@ import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizer
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import com.vci.vectorcamapp.imaging.presentation.extensions.resizeTo
 import com.vci.vectorcamapp.imaging.presentation.extensions.toBoundingBoxUi
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
+import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -33,50 +36,52 @@ class SpecimenImageAnalyzer(
     private val specimenIdRecognizer: TextRecognizer =
         TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
-    @OptIn(ExperimentalGetImage::class) // TODO - Remove when possible
+    @OptIn(ExperimentalGetImage::class) // TODO: REMOVE WHEN POSSIBLE
     override fun analyze(image: ImageProxy) {
         scope.launch {
-            val mediaImage: Image = image.image ?: run {
-                Log.e("EXCEPTION", "ERROR")
-                image.close()
-                return@launch
-            }
-            val inputImage: InputImage =
-                InputImage.fromMediaImage(mediaImage, image.imageInfo.rotationDegrees)
+            try {
+                val mediaImage: Image = image.image ?: throw IllegalStateException("No image data")
+                val inputImage =
+                    InputImage.fromMediaImage(mediaImage, image.imageInfo.rotationDegrees)
 
-            suspendCoroutine { continuation ->
-                specimenIdRecognizer.process(inputImage).addOnSuccessListener { visionText: Text ->
-                    val specimenId: String = visionText.text
-                    onSpecimenIdUpdated(specimenId)
-                }.addOnFailureListener { exception ->
-                    Log.e("EXCEPTION", exception.message.toString())
-                }.addOnCompleteListener {
-                    continuation.resume(Unit)
+                suspendCoroutine { continuation ->
+                    specimenIdRecognizer.process(inputImage)
+                        .addOnSuccessListener { visionText: Text ->
+                            onSpecimenIdUpdated(visionText.text)
+                        }.addOnFailureListener { exception ->
+                            Log.e("Analyzer", "Text recognition failed: ${exception.message}")
+                        }.addOnCompleteListener {
+                            continuation.resume(Unit)
+                        }
                 }
+
+                val (tensorWidth, tensorHeight) = detector.getInputTensorShape()
+                val bitmap = image.toUprightBitmap()
+                val resized = bitmap.resizeTo(tensorWidth, tensorHeight)
+                val boundingBox = detector.detect(resized)
+
+                withContext(Dispatchers.Main) {
+                    onBoundingBoxUiUpdated(
+                        boundingBox?.toBoundingBoxUi(
+                            tensorWidth, tensorHeight, bitmap.width, bitmap.height
+                        )
+                    )
+                }
+
+            } catch (e: Exception) {
+                if (e is CancellationException) {
+                    Log.d("Analyzer", "Analysis cancelled.")
+                } else {
+                    Log.e("Analyzer", "Exception during analysis: ${e.message}")
+                }
+            } finally {
+                image.close()
             }
-
-            val tensorWidth = detector.getInputTensorShape().first
-            val tensorHeight = detector.getInputTensorShape().second
-
-            val bitmap = image.toUprightBitmap()
-            val boundingBox = detector.detect(bitmap.resizeTo(tensorWidth, tensorHeight))
-
-            onBoundingBoxUiUpdated(
-                boundingBox?.toBoundingBoxUi(
-                    tensorWidth, tensorHeight, bitmap.width, bitmap.height
-                )
-            )
-
-        }.invokeOnCompletion { exception ->
-            exception?.let { e ->
-                Log.e("EXCEPTION", e.message.toString())
-            }
-
-            image.close()
         }
     }
 
     override fun close() {
+        scope.cancel()
         detector.close()
         specimenIdRecognizer.close()
     }

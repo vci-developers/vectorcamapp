@@ -10,14 +10,14 @@ import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.CompatibilityList
-import org.tensorflow.lite.gpu.GpuDelegate
-import org.tensorflow.lite.gpu.GpuDelegateFactory
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.common.ops.CastOp
 import org.tensorflow.lite.support.common.ops.NormalizeOp
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class TfLiteSpecimenDetector(
     private val context: Context
@@ -29,7 +29,7 @@ class TfLiteSpecimenDetector(
     private var initialized = false
     private var isClosed = false
 
-    private val handlerThread = HandlerThread("TFLiteGPUThread").apply { start() }
+    private val handlerThread = HandlerThread("TFLiteSpecimenDetectorThread").apply { start() }
     private val handler = Handler(handlerThread.looper)
 
     private val imageProcessor by lazy {
@@ -105,44 +105,35 @@ class TfLiteSpecimenDetector(
         }
     }
 
-    override fun detect(bitmap: Bitmap): BoundingBox? {
+    override suspend fun detect(bitmap: Bitmap): BoundingBox? {
         if (!isReady()) return null
 
-        var result: BoundingBox? = null
-        val taskLock = Object()
+        return suspendCoroutine { continuation ->
+            handler.post {
+                try {
+                    val (numChannels, numElements) = getOutputTensorShape()
+                    val tensorImage = TensorImage(DataType.FLOAT32).apply {
+                        load(bitmap.copy(Bitmap.Config.ARGB_8888, false))
+                    }
+                    val input = imageProcessor.process(tensorImage)
 
-        val task = Runnable {
-            try {
-                val (numChannels, numElements) = getOutputTensorShape()
-                val tensorImage = TensorImage(DataType.FLOAT32).apply {
-                    load(bitmap.copy(Bitmap.Config.ARGB_8888, false))
+                    val output = TensorBuffer.createFixedSize(
+                        intArrayOf(1, numChannels, numElements), DataType.FLOAT32
+                    )
+
+                    val result = synchronized(detectorLock) {
+                        if (!isReady()) return@post continuation.resume(null)
+                        detector?.run(input.buffer, output.buffer)
+                        getBestBox(output.floatArray, numChannels, numElements)
+                    }
+
+                    continuation.resume(result)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Inference failed: ${e.message}")
+                    continuation.resume(null)
                 }
-                val input = imageProcessor.process(tensorImage)
-
-                val output = TensorBuffer.createFixedSize(
-                    intArrayOf(1, numChannels, numElements), DataType.FLOAT32
-                )
-
-                synchronized(detectorLock) {
-                    if (!isReady()) return@synchronized
-                    detector?.run(input.buffer, output.buffer)
-                }
-
-                result = getBestBox(output.floatArray, numChannels, numElements)
-
-            } catch (e: Exception) {
-                Log.e(TAG, "Inference failed: ${e.message}")
-            } finally {
-                synchronized(taskLock) { taskLock.notify() }
             }
         }
-
-        synchronized(taskLock) {
-            handler.post(task)
-            taskLock.wait()
-        }
-
-        return result
     }
 
     override fun close() {

@@ -22,8 +22,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -37,7 +37,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
@@ -48,6 +47,10 @@ import com.vci.vectorcamapp.imaging.presentation.extensions.cropToBoundingBoxAnd
 import com.vci.vectorcamapp.imaging.presentation.extensions.resizeTo
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ImagingScreen(
@@ -55,6 +58,7 @@ fun ImagingScreen(
 ) {
     val context = LocalContext.current
 
+    val captureScope = rememberCoroutineScope()
     val detector = remember {
         TfLiteSpecimenDetector(context = context)
     }
@@ -147,21 +151,29 @@ fun ImagingScreen(
                                 override fun onCaptureSuccess(image: ImageProxy) {
                                     super.onCaptureSuccess(image)
 
-                                    val tensorWidth = detector.getInputTensorShape().first
-                                    val tensorHeight = detector.getInputTensorShape().second
+                                    captureScope.launch {
+                                        val tensorWidth = detector.getInputTensorShape().first
+                                        val tensorHeight = detector.getInputTensorShape().second
 
-                                    val bitmap = image.toUprightBitmap()
-                                    val boundingBox =
-                                        detector.detect(bitmap.resizeTo(tensorWidth, tensorHeight))
+                                        val bitmap = image.toUprightBitmap()
 
-                                    val croppedAndPaddedBitmap =
-                                        boundingBox?.let { bitmap.cropToBoundingBoxAndPad(it) }
-
-                                    onAction(
-                                        ImagingAction.CaptureComplete(
-                                            Result.Success(croppedAndPaddedBitmap ?: bitmap)
+                                        val boundingBox = detector.detect(
+                                            bitmap.resizeTo(
+                                                tensorWidth, tensorHeight
+                                            )
                                         )
-                                    )
+
+                                        val croppedAndPaddedBitmap =
+                                            boundingBox?.let { bitmap.cropToBoundingBoxAndPad(it) }
+
+                                        withContext(Dispatchers.Main) {
+                                            onAction(
+                                                ImagingAction.CaptureComplete(
+                                                    Result.Success(croppedAndPaddedBitmap ?: bitmap)
+                                                )
+                                            )
+                                        }
+                                    }
                                 }
 
                                 override fun onError(exception: ImageCaptureException) {
