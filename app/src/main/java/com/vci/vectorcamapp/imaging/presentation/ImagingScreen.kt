@@ -5,6 +5,8 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.Canvas
@@ -41,13 +43,13 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 import com.vci.vectorcamapp.imaging.data.GpuDelegateManager
+import com.vci.vectorcamapp.imaging.data.TfLiteSpeciesClassifier
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
 import com.vci.vectorcamapp.imaging.presentation.components.CameraPreview
 import com.vci.vectorcamapp.imaging.presentation.extensions.cropToBoundingBoxAndPad
 import com.vci.vectorcamapp.imaging.presentation.extensions.resizeTo
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,6 +63,9 @@ fun ImagingScreen(
     val captureScope = rememberCoroutineScope()
     val detector = remember {
         TfLiteSpecimenDetector(context = context)
+    }
+    val speciesClassifier = remember {
+        TfLiteSpeciesClassifier(context = context)
     }
     val analyzer = remember(detector) {
         SpecimenImageAnalyzer(detector = detector,
@@ -81,6 +86,8 @@ fun ImagingScreen(
 
     DisposableEffect(Unit) {
         onDispose {
+            detector.close()
+            speciesClassifier.close()
             analyzer.close()
             GpuDelegateManager.close()
         }
@@ -152,27 +159,36 @@ fun ImagingScreen(
                                     super.onCaptureSuccess(image)
 
                                     captureScope.launch {
-                                        val tensorWidth = detector.getInputTensorShape().first
-                                        val tensorHeight = detector.getInputTensorShape().second
+                                        val result = withContext(Dispatchers.Default) {
+                                            val (detectorTensorWidth, detectorTensorHeight) = detector.getInputTensorShape()
+                                            val (speciesClassifierTensorWidth, speciesClassifierTensorHeight) = speciesClassifier.getInputTensorShape()
 
-                                        val bitmap = image.toUprightBitmap()
+                                            val bitmap = image.toUprightBitmap()
 
-                                        val boundingBox = detector.detect(
-                                            bitmap.resizeTo(
-                                                tensorWidth, tensorHeight
-                                            )
-                                        )
-
-                                        val croppedAndPaddedBitmap =
-                                            boundingBox?.let { bitmap.cropToBoundingBoxAndPad(it) }
-
-                                        withContext(Dispatchers.Main) {
-                                            onAction(
-                                                ImagingAction.CaptureComplete(
-                                                    Result.Success(croppedAndPaddedBitmap ?: bitmap)
+                                            val boundingBox = detector.detect(
+                                                bitmap.resizeTo(
+                                                    detectorTensorWidth, detectorTensorHeight
                                                 )
                                             )
+
+                                            val croppedAndPaddedBitmap =
+                                                boundingBox?.let { bitmap.cropToBoundingBoxAndPad(it) }
+
+                                            croppedAndPaddedBitmap?.let {
+                                                speciesClassifier.classifySpecies(
+                                                    it.resizeTo(
+                                                        speciesClassifierTensorWidth,
+                                                        speciesClassifierTensorHeight
+                                                    )
+                                                )
+                                            }
+
+                                            croppedAndPaddedBitmap ?: bitmap
                                         }
+
+                                        // This is now back on the Main thread
+                                        image.close()
+                                        onAction(ImagingAction.CaptureComplete(Result.Success(result)))
                                     }
                                 }
 
