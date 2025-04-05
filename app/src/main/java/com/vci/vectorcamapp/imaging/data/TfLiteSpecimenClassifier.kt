@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
-import com.vci.vectorcamapp.imaging.domain.SpeciesClassifier
+import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
@@ -17,9 +17,11 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class TfLiteSpeciesClassifier(
-    private val context: Context
-) : SpeciesClassifier {
+class TfLiteSpecimenClassifier(
+    private val context: Context,
+    private val filePath: String,
+    threadName: String,
+) : SpecimenClassifier {
 
     private var classifier: Interpreter? = null
 
@@ -27,7 +29,7 @@ class TfLiteSpeciesClassifier(
     private var initialized = false
     private var isClosed = false
 
-    private val handlerThread = HandlerThread("TFLiteSpeciesClassifierThread").apply { start() }
+    private val handlerThread = HandlerThread(threadName).apply { start() }
     private val handler = Handler(handlerThread.looper)
 
     private val imageProcessor by lazy {
@@ -47,7 +49,7 @@ class TfLiteSpeciesClassifier(
             if (initialized || isClosed) return
 
             try {
-                val model = FileUtil.loadMappedFile(context, "species.tflite")
+                val model = FileUtil.loadMappedFile(context, filePath)
                 val options = Interpreter.Options()
 
                 options.setNumThreads(Runtime.getRuntime().availableProcessors())
@@ -115,13 +117,13 @@ class TfLiteSpeciesClassifier(
         }
     }
 
-    override suspend fun classifySpecies(bitmap: Bitmap): Int? {
+    override suspend fun classify(bitmap: Bitmap): Int? {
         if (!isReady()) return null
 
         return suspendCoroutine { continuation ->
             handler.post {
                 try {
-
+                    Log.d(TAG, "Inference started!")
                     val numChannels = getNumChannels()
                     val (tensorWidth, tensorHeight) = getInputTensorShape()
                     val numClasses = getOutputTensorShape()
@@ -172,29 +174,10 @@ class TfLiteSpeciesClassifier(
         }
     }
 
-//    private fun getClass(logits: FloatArray): Int {
-//        if (logits.isEmpty()) return -1
-//        return logits.indices.maxByOrNull { logits[it] } ?: -1
-//    }
-
     private fun getClass(logits: FloatArray): Int {
         if (logits.isEmpty()) return -1
-
-        // Apply softmax to get probabilities
-        val maxLogit = logits.maxOrNull() ?: 0f
-        val expLogits = logits.map { Math.exp((it - maxLogit).toDouble()) }
-        val sumExp = expLogits.sum()
-        val probabilities = expLogits.map { (it / sumExp).toFloat() }
-
-        // Log the probabilities
-        probabilities.forEachIndexed { index, prob ->
-            Log.d("SpeciesClassifier", "Class $index: ${"%.8f".format(prob)}")
-        }
-
-        // Return the index with highest probability
-        return probabilities.indices.maxByOrNull { probabilities[it] } ?: -1
+        return logits.indices.maxByOrNull { logits[it] } ?: -1
     }
-
 
     override fun close() {
         synchronized(classifierLock) {
@@ -216,8 +199,8 @@ class TfLiteSpeciesClassifier(
 
     companion object {
         private const val TAG = "TfLiteSpeciesClassifier"
-        private const val DEFAULT_TENSOR_WIDTH = 384
-        private const val DEFAULT_TENSOR_HEIGHT = 384
+        private const val DEFAULT_TENSOR_WIDTH = 300
+        private const val DEFAULT_TENSOR_HEIGHT = 300
         private const val DEFAULT_NUM_CLASSES = 7
         private const val DEFAULT_NUM_CHANNELS = 3
 

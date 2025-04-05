@@ -22,6 +22,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.Closeable
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -30,7 +31,7 @@ class SpecimenImageAnalyzer(
     private val detector: SpecimenDetector,
     private val onBoundingBoxUiUpdated: (BoundingBoxUi?) -> Unit,
     private val onSpecimenIdUpdated: (String) -> Unit
-) : ImageAnalysis.Analyzer, AutoCloseable {
+) : ImageAnalysis.Analyzer, Closeable {
 
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val specimenIdRecognizer: TextRecognizer =
@@ -67,7 +68,6 @@ class SpecimenImageAnalyzer(
                         )
                     )
                 }
-
             } catch (e: Exception) {
                 if (e is CancellationException) {
                     Log.d("Analyzer", "Analysis cancelled.")
@@ -82,7 +82,6 @@ class SpecimenImageAnalyzer(
 
     override fun close() {
         scope.cancel()
-        detector.close()
         specimenIdRecognizer.close()
     }
 }

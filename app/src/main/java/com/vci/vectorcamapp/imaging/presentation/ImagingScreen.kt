@@ -5,8 +5,6 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
-import androidx.camera.core.resolutionselector.ResolutionSelector
-import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.Canvas
@@ -43,7 +41,6 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 import com.vci.vectorcamapp.imaging.data.GpuDelegateManager
-import com.vci.vectorcamapp.imaging.data.TfLiteSpeciesClassifier
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
 import com.vci.vectorcamapp.imaging.presentation.components.CameraPreview
 import com.vci.vectorcamapp.imaging.presentation.extensions.cropToBoundingBoxAndPad
@@ -63,9 +60,6 @@ fun ImagingScreen(
     val captureScope = rememberCoroutineScope()
     val detector = remember {
         TfLiteSpecimenDetector(context = context)
-    }
-    val speciesClassifier = remember {
-        TfLiteSpeciesClassifier(context = context)
     }
     val analyzer = remember(detector) {
         SpecimenImageAnalyzer(detector = detector,
@@ -87,7 +81,6 @@ fun ImagingScreen(
     DisposableEffect(Unit) {
         onDispose {
             detector.close()
-            speciesClassifier.close()
             analyzer.close()
             GpuDelegateManager.close()
         }
@@ -159,9 +152,8 @@ fun ImagingScreen(
                                     super.onCaptureSuccess(image)
 
                                     captureScope.launch {
-                                        val result = withContext(Dispatchers.Default) {
+                                        withContext(Dispatchers.Default) {
                                             val (detectorTensorWidth, detectorTensorHeight) = detector.getInputTensorShape()
-                                            val (speciesClassifierTensorWidth, speciesClassifierTensorHeight) = speciesClassifier.getInputTensorShape()
 
                                             val bitmap = image.toUprightBitmap()
 
@@ -175,20 +167,12 @@ fun ImagingScreen(
                                                 boundingBox?.let { bitmap.cropToBoundingBoxAndPad(it) }
 
                                             croppedAndPaddedBitmap?.let {
-                                                speciesClassifier.classifySpecies(
-                                                    it.resizeTo(
-                                                        speciesClassifierTensorWidth,
-                                                        speciesClassifierTensorHeight
-                                                    )
-                                                )
+                                                withContext(Dispatchers.Main) {
+                                                    image.close()
+                                                    onAction(ImagingAction.CaptureComplete(Result.Success(it)))
+                                                }
                                             }
-
-                                            croppedAndPaddedBitmap ?: bitmap
                                         }
-
-                                        // This is now back on the Main thread
-                                        image.close()
-                                        onAction(ImagingAction.CaptureComplete(Result.Success(result)))
                                     }
                                 }
 
