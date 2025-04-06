@@ -87,7 +87,7 @@ class TfLiteSpecimenClassifier(
         synchronized(classifierLock) {
             if (!isReady()) {
                 Log.w(TAG, "Classifier not ready in getInputTensorShape")
-                return DEFAULT_TENSOR_WIDTH to DEFAULT_TENSOR_HEIGHT
+                return DEFAULT_TENSOR_HEIGHT to DEFAULT_TENSOR_WIDTH
             }
 
             return try {
@@ -95,7 +95,7 @@ class TfLiteSpecimenClassifier(
                 shape[2] to shape[3]
             } catch (e: Exception) {
                 Log.e(TAG, "getInputTensorShape failed: ${e.message}")
-                DEFAULT_TENSOR_WIDTH to DEFAULT_TENSOR_HEIGHT
+                DEFAULT_TENSOR_HEIGHT to DEFAULT_TENSOR_WIDTH
             }
         }
     }
@@ -125,7 +125,7 @@ class TfLiteSpecimenClassifier(
                 try {
                     Log.d(TAG, "Inference started!")
                     val numChannels = getNumChannels()
-                    val (tensorWidth, tensorHeight) = getInputTensorShape()
+                    val (tensorHeight, tensorWidth) = getInputTensorShape()
                     val numClasses = getOutputTensorShape()
                     val tensorImage = TensorImage(DataType.FLOAT32).apply {
                         load(bitmap.copy(Bitmap.Config.ARGB_8888, false))
@@ -199,8 +199,8 @@ class TfLiteSpecimenClassifier(
 
     companion object {
         private const val TAG = "TfLiteSpeciesClassifier"
-        private const val DEFAULT_TENSOR_WIDTH = 300
         private const val DEFAULT_TENSOR_HEIGHT = 300
+        private const val DEFAULT_TENSOR_WIDTH = 300
         private const val DEFAULT_NUM_CLASSES = 7
         private const val DEFAULT_NUM_CHANNELS = 3
 

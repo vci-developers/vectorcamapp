@@ -75,7 +75,7 @@ class TfLiteSpecimenDetector(
         synchronized(detectorLock) {
             if (!isReady()) {
                 Log.w(TAG, "Detector not ready in getInputTensorShape")
-                return DEFAULT_TENSOR_WIDTH to DEFAULT_TENSOR_HEIGHT
+                return DEFAULT_TENSOR_HEIGHT to DEFAULT_TENSOR_WIDTH
             }
 
             return try {
@@ -83,7 +83,7 @@ class TfLiteSpecimenDetector(
                 shape[1] to shape[2]
             } catch (e: Exception) {
                 Log.e(TAG, "getInputTensorShape failed: ${e.message}")
-                DEFAULT_TENSOR_WIDTH to DEFAULT_TENSOR_HEIGHT
+                DEFAULT_TENSOR_HEIGHT to DEFAULT_TENSOR_WIDTH
             }
         }
     }
@@ -241,8 +241,8 @@ class TfLiteSpecimenDetector(
 
     companion object {
         private const val TAG = "TfLiteSpecimenDetector"
-        private const val DEFAULT_TENSOR_WIDTH = 640
         private const val DEFAULT_TENSOR_HEIGHT = 640
+        private const val DEFAULT_TENSOR_WIDTH = 640
         private const val DEFAULT_NUM_CHANNELS = 25200
         private const val DEFAULT_NUM_ELEMENTS = 6
         private const val CONFIDENCE_THRESHOLD = 0.6f

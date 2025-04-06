@@ -1,13 +1,10 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
-import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenClassifier
 import com.vci.vectorcamapp.imaging.di.AbdomenStatusClassifier
 import com.vci.vectorcamapp.imaging.di.SexClassifier
 import com.vci.vectorcamapp.imaging.di.SpeciesClassifier
@@ -59,9 +56,11 @@ class ImagingViewModel @Inject constructor(
                     action.result.onSuccess { bitmap ->
                         withContext(Dispatchers.Default) {
 
-                            val speciesPromise = async { getClassification(bitmap, speciesClassifier) }
+                            val speciesPromise =
+                                async { getClassification(bitmap, speciesClassifier) }
                             val sexPromise = async { getClassification(bitmap, sexClassifier) }
-                            val abdomenStatusPromise = async { getClassification(bitmap, abdomenStatusClassifier) }
+                            val abdomenStatusPromise =
+                                async { getClassification(bitmap, abdomenStatusClassifier) }
 
                             val species = speciesPromise.await()
                             val sex = sexPromise.await()
@@ -94,13 +93,8 @@ class ImagingViewModel @Inject constructor(
     }
 
     private suspend fun getClassification(bitmap: Bitmap, classifier: SpecimenClassifier): Int? {
-        val (classifierTensorWidth, classifierTensorHeight) = classifier.getInputTensorShape()
+        val (classifierTensorHeight, classifierTensorWidth) = classifier.getInputTensorShape()
 
-        return classifier.classify(
-            bitmap.resizeTo(
-                classifierTensorWidth,
-                classifierTensorHeight
-            )
-        )
+        return classifier.classify(bitmap.resizeTo(classifierTensorWidth, classifierTensorHeight))
     }
 }

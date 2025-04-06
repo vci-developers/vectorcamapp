@@ -56,7 +56,7 @@ class SpecimenImageAnalyzer(
                         }
                 }
 
-                val (tensorWidth, tensorHeight) = detector.getInputTensorShape()
+                val (tensorHeight, tensorWidth) = detector.getInputTensorShape()
                 val bitmap = image.toUprightBitmap()
                 val resized = bitmap.resizeTo(tensorWidth, tensorHeight)
                 val boundingBox = detector.detect(resized)

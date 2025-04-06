@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.imaging.presentation
 import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
+import androidx.camera.core.ImageCapture.OnImageSavedCallback
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
@@ -153,7 +154,7 @@ fun ImagingScreen(
 
                                     captureScope.launch {
                                         withContext(Dispatchers.Default) {
-                                            val (detectorTensorWidth, detectorTensorHeight) = detector.getInputTensorShape()
+                                            val (detectorTensorHeight, detectorTensorWidth) = detector.getInputTensorShape()
 
                                             val bitmap = image.toUprightBitmap()
 
@@ -169,7 +170,13 @@ fun ImagingScreen(
                                             croppedAndPaddedBitmap?.let {
                                                 withContext(Dispatchers.Main) {
                                                     image.close()
-                                                    onAction(ImagingAction.CaptureComplete(Result.Success(it)))
+                                                    onAction(
+                                                        ImagingAction.CaptureComplete(
+                                                            Result.Success(
+                                                                it
+                                                            )
+                                                        )
+                                                    )
                                                 }
                                             }
                                         }
@@ -186,7 +193,8 @@ fun ImagingScreen(
                                         )
                                     )
                                 }
-                            })
+                            }
+                        )
                     }, modifier = Modifier
                         .size(64.dp)
                         .background(
