@@ -3,7 +3,6 @@ package com.vci.vectorcamapp.imaging.presentation
 import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
-import androidx.camera.core.ImageCapture.OnImageSavedCallback
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
@@ -24,7 +23,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -42,15 +40,8 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 import com.vci.vectorcamapp.imaging.data.GpuDelegateManager
-import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
 import com.vci.vectorcamapp.imaging.presentation.components.CameraPreview
-import com.vci.vectorcamapp.imaging.presentation.extensions.cropToBoundingBoxAndPad
-import com.vci.vectorcamapp.imaging.presentation.extensions.resizeTo
-import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun ImagingScreen(
@@ -58,14 +49,10 @@ fun ImagingScreen(
 ) {
     val context = LocalContext.current
 
-    val captureScope = rememberCoroutineScope()
-    val detector = remember {
-        TfLiteSpecimenDetector(context = context)
-    }
-    val analyzer = remember(detector) {
-        SpecimenImageAnalyzer(detector = detector,
-            onBoundingBoxUiUpdated = { onAction(ImagingAction.UpdateBoundingBoxUi(it)) },
-            onSpecimenIdUpdated = { onAction(ImagingAction.UpdateSpecimenId(it)) })
+    val analyzer = remember {
+        SpecimenImageAnalyzer { frame ->
+            onAction(ImagingAction.ProcessFrame(frame))
+        }
     }
     val controller = remember {
         LifecycleCameraController(context).apply {
@@ -81,8 +68,6 @@ fun ImagingScreen(
 
     DisposableEffect(Unit) {
         onDispose {
-            detector.close()
-            analyzer.close()
             GpuDelegateManager.close()
         }
     }
@@ -152,35 +137,11 @@ fun ImagingScreen(
                                 override fun onCaptureSuccess(image: ImageProxy) {
                                     super.onCaptureSuccess(image)
 
-                                    captureScope.launch {
-                                        withContext(Dispatchers.Default) {
-                                            val (detectorTensorHeight, detectorTensorWidth) = detector.getInputTensorShape()
-
-                                            val bitmap = image.toUprightBitmap()
-
-                                            val boundingBox = detector.detect(
-                                                bitmap.resizeTo(
-                                                    detectorTensorWidth, detectorTensorHeight
-                                                )
-                                            )
-
-                                            val croppedAndPaddedBitmap =
-                                                boundingBox?.let { bitmap.cropToBoundingBoxAndPad(it) }
-
-                                            croppedAndPaddedBitmap?.let {
-                                                withContext(Dispatchers.Main) {
-                                                    image.close()
-                                                    onAction(
-                                                        ImagingAction.CaptureComplete(
-                                                            Result.Success(
-                                                                it
-                                                            )
-                                                        )
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
+                                    onAction(
+                                        ImagingAction.CaptureComplete(
+                                            Result.Success(image)
+                                        )
+                                    )
                                 }
 
                                 override fun onError(exception: ImageCaptureException) {
@@ -193,8 +154,7 @@ fun ImagingScreen(
                                         )
                                     )
                                 }
-                            }
-                        )
+                            })
                     }, modifier = Modifier
                         .size(64.dp)
                         .background(
