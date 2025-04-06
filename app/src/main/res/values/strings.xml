@@ -19,6 +19,36 @@
     <!-- Network error: Unknown error -->
     <string name="network_error_unknown">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
-    <!-- Imaging error: Cannot capture -->
-    <string name="imaging_error_cannot_capture">Unable to capture the image. Please try again.</string>
+    <!-- Imaging error: Capture error -->
+    <string name="imaging_error_capture_error">Couldn’t take the photo. Please try again.</string>
+
+    <!-- Imaging error: No specimen found -->
+    <string name="imaging_error_no_specimen_found">No specimen found in the photo. Please try again with a clearer image.</string>
+
+    <!-- Imaging error: Model initialization failed -->
+    <string name="imaging_error_model_initialization_failed">App couldn’t load its brain. Try restarting the app.</string>
+
+    <!-- Imaging error: GPU delegate initialization failed -->
+    <string name="imaging_error_gpu_delegate_initialization_failed">Your device may not support faster image analysis. The app will still work, but may be slower.</string>
+
+    <!-- Imaging error: Unknown initialization error -->
+    <string name="imaging_error_unknown_initialization_error">Something went wrong while preparing the session. Please restart or contact support.</string>
+
+    <!-- Imaging error: Invalid input shape -->
+    <string name="imaging_error_invalid_input_shape">The app ran into a problem analyzing the image. Please retake the photo.</string>
+
+    <!-- Imaging error: Specimen ID recognition failed -->
+    <string name="imaging_error_specimen_id_recognition_failed">Couldn’t read the specimen ID. Make sure the label is clear and well-lit.</string>
+
+    <!-- Imaging error: Specimen detection failed -->
+    <string name="imaging_error_specimen_detection_failed">Couldn’t detect a specimen in the image. Try taking a clearer photo.</string>
+
+    <!-- Imaging error: Specimen classification failed -->
+    <string name="imaging_error_specimen_classification_failed">Couldn’t identify the specimen. Please retake the photo.</string>
+
+    <!-- Imaging error: Unknown inference error -->
+    <string name="imaging_error_unknown_inference_error">An unknown error occurred during analysis. Please try again.</string>
+
+    <!-- Imaging error: Unknown error -->
+    <string name="imaging_error_unknown">An unknown error occurred. Please contact support if this issue persists.</string>
 </resources>

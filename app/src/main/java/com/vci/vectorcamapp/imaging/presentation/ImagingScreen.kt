@@ -21,7 +21,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,7 +38,6 @@ import androidx.core.content.ContextCompat
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
-import com.vci.vectorcamapp.imaging.data.GpuDelegateManager
 import com.vci.vectorcamapp.imaging.presentation.components.CameraPreview
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
@@ -63,12 +61,6 @@ fun ImagingScreen(
                 ContextCompat.getMainExecutor(context), analyzer
             )
             imageCaptureFlashMode = ImageCapture.FLASH_MODE_OFF
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            GpuDelegateManager.close()
         }
     }
 

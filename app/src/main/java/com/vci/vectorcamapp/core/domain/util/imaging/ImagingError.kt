@@ -3,5 +3,15 @@ package com.vci.vectorcamapp.core.domain.util.imaging
 import com.vci.vectorcamapp.core.domain.util.Error
 
 enum class ImagingError : Error {
-    CANNOT_CAPTURE
+    CAPTURE_ERROR,
+    NO_SPECIMEN_FOUND,
+    MODEL_INITIALIZATION_FAILED,
+    GPU_DELEGATE_INITIALIZATION_FAILED,
+    UNKNOWN_INITIALIZATION_ERROR,
+    INVALID_INPUT_SHAPE,
+    SPECIMEN_ID_RECOGNITION_FAILED,
+    SPECIMEN_DETECTION_FAILED,
+    SPECIMEN_CLASSIFICATION_FAILED,
+    UNKNOWN_INFERENCE_ERROR,
+    UNKNOWN
 }

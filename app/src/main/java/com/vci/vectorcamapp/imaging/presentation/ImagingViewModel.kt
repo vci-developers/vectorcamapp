@@ -9,6 +9,7 @@ import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognizer
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
+import com.vci.vectorcamapp.imaging.data.GpuDelegateManager
 import com.vci.vectorcamapp.imaging.di.AbdomenStatusClassifier
 import com.vci.vectorcamapp.imaging.di.Detector
 import com.vci.vectorcamapp.imaging.di.SexClassifier
@@ -55,18 +56,6 @@ class ImagingViewModel @Inject constructor(
     fun onAction(action: ImagingAction) {
         viewModelScope.launch {
             when (action) {
-                is ImagingAction.UpdateSpecimenId -> {
-                    _state.update {
-                        it.copy(currentSpecimenId = action.specimenId)
-                    }
-                }
-
-                is ImagingAction.UpdateBoundingBoxUi -> {
-                    _state.update {
-                        it.copy(currentBoundingBoxUi = action.boundingBoxUi)
-                    }
-                }
-
                 is ImagingAction.ProcessFrame -> {
                     try {
                         val bitmap = action.frame.toUprightBitmap()
@@ -184,5 +173,16 @@ class ImagingViewModel @Inject constructor(
         val (classifierTensorHeight, classifierTensorWidth) = classifier.getInputTensorShape()
 
         return classifier.classify(bitmap.resizeTo(classifierTensorWidth, classifierTensorHeight))
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+
+        specimenIdRecognizer.close()
+        specimenDetector.close()
+        speciesClassifier.close()
+        sexClassifier.close()
+        abdomenStatusClassifier.close()
+        GpuDelegateManager.close()
     }
 }

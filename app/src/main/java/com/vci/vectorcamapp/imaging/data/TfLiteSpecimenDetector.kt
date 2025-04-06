@@ -16,6 +16,7 @@ import org.tensorflow.lite.support.common.ops.NormalizeOp
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import java.io.Closeable
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -26,7 +27,6 @@ class TfLiteSpecimenDetector(
     private var detector: Interpreter? = null
 
     private val detectorLock = Any()
-    private var initialized = false
     private var isClosed = false
 
     private val handlerThread = HandlerThread("TFLiteSpecimenDetectorThread").apply { start() }
@@ -42,7 +42,7 @@ class TfLiteSpecimenDetector(
 
     private fun initializeInterpreter() {
         synchronized(detectorLock) {
-            if (initialized || isClosed) return
+            if (detector != null || isClosed) return
 
             try {
                 val model = FileUtil.loadMappedFile(context, "detect.tflite")
@@ -59,7 +59,6 @@ class TfLiteSpecimenDetector(
 
                 options.setNumThreads(Runtime.getRuntime().availableProcessors())
                 detector = Interpreter(model, options)
-                initialized = true
                 Log.d(TAG, "TFLite interpreter initialized")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
@@ -68,7 +67,7 @@ class TfLiteSpecimenDetector(
     }
 
     private fun isReady(): Boolean = synchronized(detectorLock) {
-        initialized && !isClosed && detector != null
+        !isClosed && detector != null
     }
 
     override fun getInputTensorShape(): Pair<Int, Int> {

@@ -14,6 +14,7 @@ import org.tensorflow.lite.support.common.ops.NormalizeOp
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import java.io.Closeable
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -26,7 +27,6 @@ class TfLiteSpecimenClassifier(
     private var classifier: Interpreter? = null
 
     private val classifierLock = Any()
-    private var initialized = false
     private var isClosed = false
 
     private val handlerThread = HandlerThread(threadName).apply { start() }
@@ -46,7 +46,7 @@ class TfLiteSpecimenClassifier(
 
     private fun initializeInterpreter() {
         synchronized(classifierLock) {
-            if (initialized || isClosed) return
+            if (classifier != null || isClosed) return
 
             try {
                 val model = FileUtil.loadMappedFile(context, filePath)
@@ -54,7 +54,6 @@ class TfLiteSpecimenClassifier(
 
                 options.setNumThreads(Runtime.getRuntime().availableProcessors())
                 classifier = Interpreter(model, options)
-                initialized = true
                 Log.d(TAG, "TFLite interpreter initialized")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
@@ -63,7 +62,7 @@ class TfLiteSpecimenClassifier(
     }
 
     private fun isReady(): Boolean = synchronized(classifierLock) {
-        initialized && !isClosed && classifier != null
+        !isClosed && classifier != null
     }
 
     private fun getNumChannels(): Int {
