@@ -140,16 +140,26 @@ class ImagingViewModel @Inject constructor(
                                 val species = speciesPromise.await()
                                 val sex = sexPromise.await()
                                 val abdomenStatus = abdomenStatusPromise.await()
+
+                                withContext(Dispatchers.Main) {
+                                    _state.update {
+                                        it.copy(
+                                            currentSpecies = species?.let { index -> SPECIES_LABELS[index] } ?: "",
+                                            currentSex = sex?.let { index -> SEX_LABELS[index] } ?: "",
+                                            currentAbdomenStatus = abdomenStatus?.let { index -> ABDOMEN_STATUS_LABELS[index] } ?: "",
+                                            currentImage = bitmap,
+                                            currentBoundingBoxUi = boundingBox.toBoundingBoxUi(
+                                                detectorTensorWidth,
+                                                detectorTensorHeight,
+                                                bitmap.width,
+                                                bitmap.height
+                                            )
+                                        )
+                                    }
+                                }
                             }
 
-                            withContext(Dispatchers.Main) {
-                                _state.update {
-                                    it.copy(
-                                        currentImage = croppedAndPadded,
-                                    )
-                                }
-                                image.close()
-                            }
+                            image.close()
                         }
                     }.onError { error ->
                         _events.send(ImagingEvent.DisplayImagingError(error))
@@ -160,6 +170,9 @@ class ImagingViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             currentSpecimenId = "",
+                            currentSpecies = "",
+                            currentSex = "",
+                            currentAbdomenStatus = "",
                             currentImage = null,
                             currentBoundingBoxUi = null,
                         )
@@ -184,5 +197,25 @@ class ImagingViewModel @Inject constructor(
         sexClassifier.close()
         abdomenStatusClassifier.close()
         GpuDelegateManager.close()
+    }
+
+    companion object {
+        private val SPECIES_LABELS = listOf(
+            "Anopheles funestus",
+            "Anopheles gambiae",
+            "Anopheles other",
+            "Culex",
+            "Aedes",
+            "Mansonia",
+            "Non-Mosquito"
+        )
+
+        private val SEX_LABELS = listOf(
+            "Female", "Male"
+        )
+
+        private val ABDOMEN_STATUS_LABELS = listOf(
+            "Unfed", "Fully Fed", "Gravid"
+        )
     }
 }

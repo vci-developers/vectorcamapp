@@ -75,7 +75,7 @@ fun ImagingScreen(
                     bitmap = state.currentImage.asImageBitmap(),
                     contentDescription = "Specimen Image",
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.FillHeight
                 )
 
                 IconButton(
@@ -142,7 +142,7 @@ fun ImagingScreen(
                                     exception.message?.let { Log.e("ERROR", it) }
                                     onAction(
                                         ImagingAction.CaptureComplete(
-                                            Result.Error(ImagingError.CANNOT_CAPTURE)
+                                            Result.Error(ImagingError.CAPTURE_ERROR)
                                         )
                                     )
                                 }
