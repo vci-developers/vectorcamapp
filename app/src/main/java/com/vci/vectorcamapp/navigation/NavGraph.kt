@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -87,7 +88,7 @@ fun NavGraph() {
         }
         composable<Destination.Imaging> {
             val context = LocalContext.current
-            val viewModel = viewModel<ImagingViewModel>()
+            val viewModel = hiltViewModel<ImagingViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
             ObserveAsEvents(events = viewModel.events) { event ->

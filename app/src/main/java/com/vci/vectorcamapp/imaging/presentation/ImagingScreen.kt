@@ -21,7 +21,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,7 +38,6 @@ import androidx.core.content.ContextCompat
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
-import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
 import com.vci.vectorcamapp.imaging.presentation.components.CameraPreview
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
@@ -48,13 +46,11 @@ fun ImagingScreen(
     state: ImagingState, onAction: (ImagingAction) -> Unit, modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val detector = remember {
-        TfLiteSpecimenDetector(context = context)
-    }
-    val analyzer = remember(detector) {
-        SpecimenImageAnalyzer(detector = detector,
-            onDetectionUpdated = { onAction(ImagingAction.UpdateDetection(it)) },
-            onSpecimenIdUpdated = { onAction(ImagingAction.UpdateSpecimenId(it)) })
+
+    val analyzer = remember {
+        SpecimenImageAnalyzer { frame ->
+            onAction(ImagingAction.ProcessFrame(frame))
+        }
     }
     val controller = remember {
         LifecycleCameraController(context).apply {
@@ -65,13 +61,6 @@ fun ImagingScreen(
                 ContextCompat.getMainExecutor(context), analyzer
             )
             imageCaptureFlashMode = ImageCapture.FLASH_MODE_OFF
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            detector.close()
-            analyzer.close()
         }
     }
 
@@ -111,13 +100,16 @@ fun ImagingScreen(
 
             CameraPreview(controller = controller, modifier = modifier.fillMaxSize())
 
-            if (state.detection != null) {
+            if (state.currentBoundingBoxUi != null) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     drawRect(
-                        color = if (state.detection.confidence > 0.8) Color.Green else Color.Red,
-                        topLeft = Offset(state.detection.topLeftX, state.detection.topLeftY),
+                        color = if (state.currentBoundingBoxUi.confidence > 0.8) Color.Green else Color.Red,
+                        topLeft = Offset(
+                            state.currentBoundingBoxUi.topLeftX, state.currentBoundingBoxUi.topLeftY
+                        ),
                         size = Size(
-                            width = state.detection.width, height = state.detection.height
+                            width = state.currentBoundingBoxUi.width,
+                            height = state.currentBoundingBoxUi.height
                         ),
                         style = Stroke(width = 4f)
                     )
@@ -137,13 +129,9 @@ fun ImagingScreen(
                                 override fun onCaptureSuccess(image: ImageProxy) {
                                     super.onCaptureSuccess(image)
 
-                                    val rotatedBitmap = image.toUprightBitmap()
-
-                                    detector.detect(rotatedBitmap)
-
                                     onAction(
                                         ImagingAction.CaptureComplete(
-                                            Result.Success(rotatedBitmap)
+                                            Result.Success(image)
                                         )
                                     )
                                 }
@@ -154,7 +142,7 @@ fun ImagingScreen(
                                     exception.message?.let { Log.e("ERROR", it) }
                                     onAction(
                                         ImagingAction.CaptureComplete(
-                                            Result.Error(ImagingError.CANNOT_CAPTURE)
+                                            Result.Error(ImagingError.CAPTURE_ERROR)
                                         )
                                     )
                                 }
