@@ -5,6 +5,7 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 
 data class ImagingState(
+    val isCapturing: Boolean = false,
     val currentSpecimenId: String = "",
     val currentSpecies: String = "",
     val currentSex: String = "",

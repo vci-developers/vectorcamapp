@@ -57,6 +57,8 @@ class ImagingViewModel @Inject constructor(
         viewModelScope.launch {
             when (action) {
                 is ImagingAction.ProcessFrame -> {
+                    if (_state.value.isCapturing) return@launch
+
                     try {
                         val bitmap = action.frame.toUprightBitmap()
                         val inputImage = InputImage.fromBitmap(bitmap, 0)
@@ -116,6 +118,10 @@ class ImagingViewModel @Inject constructor(
                     }
                 }
 
+                ImagingAction.CaptureStart -> {
+                    _state.update { it.copy(isCapturing = true) }
+                }
+
                 is ImagingAction.CaptureComplete -> {
                     action.result.onSuccess { image ->
                         val bitmap = image.toUprightBitmap()
@@ -159,9 +165,11 @@ class ImagingViewModel @Inject constructor(
                                 }
                             }
 
+                            _state.update { it.copy(isCapturing = false) }
                             image.close()
                         }
                     }.onError { error ->
+                        _state.update { it.copy(isCapturing = true) }
                         _events.send(ImagingEvent.DisplayImagingError(error))
                     }
                 }

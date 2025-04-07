@@ -78,6 +78,22 @@ fun ImagingScreen(
                     contentScale = ContentScale.FillHeight
                 )
 
+                if (state.currentBoundingBoxUi != null) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        drawRect(
+                            color = if (state.currentBoundingBoxUi.confidence > 0.8) Color.Green else Color.Red,
+                            topLeft = Offset(
+                                state.currentBoundingBoxUi.topLeftX, state.currentBoundingBoxUi.topLeftY
+                            ),
+                            size = Size(
+                                width = state.currentBoundingBoxUi.width,
+                                height = state.currentBoundingBoxUi.height
+                            ),
+                            style = Stroke(width = 4f)
+                        )
+                    }
+                }
+
                 IconButton(
                     onClick = { onAction(ImagingAction.RetakeImage) },
 
@@ -126,6 +142,12 @@ fun ImagingScreen(
                     onClick = {
                         controller.takePicture(ContextCompat.getMainExecutor(context),
                             object : OnImageCapturedCallback() {
+                                override fun onCaptureStarted() {
+                                    super.onCaptureStarted()
+
+                                    onAction(ImagingAction.CaptureStart)
+                                }
+
                                 override fun onCaptureSuccess(image: ImageProxy) {
                                     super.onCaptureSuccess(image)
 
