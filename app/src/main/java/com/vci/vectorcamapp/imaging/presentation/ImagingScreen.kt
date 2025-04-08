@@ -102,7 +102,7 @@ fun ImagingScreen(
                     specimenId = state.currentSpecimenId,
                     species = state.currentSpecies,
                     sex = state.currentSex,
-                    abdomen = state.currentAbdomenStatus,
+                    abdomenStatus = state.currentAbdomenStatus,
                     onSpecimenIdCorrected = { onAction(ImagingAction.CorrectSpecimenId(it)) },
                     modifier = modifier.align(Alignment.BottomCenter),
                 )

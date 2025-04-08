@@ -18,9 +18,9 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SpecimenInfoCard(
     specimenId: String,
-    species: String,
-    sex: String,
-    abdomen: String,
+    species: String?,
+    sex: String?,
+    abdomenStatus: String?,
     onSpecimenIdCorrected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -43,17 +43,23 @@ fun SpecimenInfoCard(
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            species?.let {
+                Spacer(modifier = Modifier.height(12.dp))
 
-            LabelRow("Species: ", species, modifier = modifier)
+                LabelRow("Species: ", species, modifier = modifier)
+            }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            sex?.let {
+                Spacer(modifier = Modifier.height(12.dp))
 
-            LabelRow("Sex: ", sex, modifier = modifier)
+                LabelRow("Sex: ", sex, modifier = modifier)
+            }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            abdomenStatus?.let {
+                Spacer(modifier = Modifier.height(12.dp))
 
-            LabelRow("Abdomen: ", abdomen, modifier = modifier)
+                LabelRow("Abdomen Status: ", abdomenStatus, modifier = modifier)
+            }
         }
     }
 }
