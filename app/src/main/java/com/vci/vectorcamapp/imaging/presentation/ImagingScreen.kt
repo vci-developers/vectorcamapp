@@ -7,7 +7,6 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -24,11 +23,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -38,6 +34,7 @@ import androidx.core.content.ContextCompat
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
+import com.vci.vectorcamapp.imaging.presentation.components.BoundingBoxOverlay
 import com.vci.vectorcamapp.imaging.presentation.components.CameraPreview
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
@@ -78,20 +75,8 @@ fun ImagingScreen(
                     contentScale = ContentScale.FillHeight
                 )
 
-                if (state.currentBoundingBoxUi != null) {
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        drawRect(
-                            color = if (state.currentBoundingBoxUi.confidence > 0.8) Color.Green else Color.Red,
-                            topLeft = Offset(
-                                state.currentBoundingBoxUi.topLeftX, state.currentBoundingBoxUi.topLeftY
-                            ),
-                            size = Size(
-                                width = state.currentBoundingBoxUi.width,
-                                height = state.currentBoundingBoxUi.height
-                            ),
-                            style = Stroke(width = 4f)
-                        )
-                    }
+                state.currentBoundingBoxUi?.let {
+                    BoundingBoxOverlay(it, modifier = modifier)
                 }
 
                 IconButton(
@@ -116,20 +101,8 @@ fun ImagingScreen(
 
             CameraPreview(controller = controller, modifier = modifier.fillMaxSize())
 
-            if (state.currentBoundingBoxUi != null) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    drawRect(
-                        color = if (state.currentBoundingBoxUi.confidence > 0.8) Color.Green else Color.Red,
-                        topLeft = Offset(
-                            state.currentBoundingBoxUi.topLeftX, state.currentBoundingBoxUi.topLeftY
-                        ),
-                        size = Size(
-                            width = state.currentBoundingBoxUi.width,
-                            height = state.currentBoundingBoxUi.height
-                        ),
-                        style = Stroke(width = 4f)
-                    )
-                }
+            state.currentBoundingBoxUi?.let {
+                BoundingBoxOverlay(it, modifier = modifier)
             }
 
             Box(

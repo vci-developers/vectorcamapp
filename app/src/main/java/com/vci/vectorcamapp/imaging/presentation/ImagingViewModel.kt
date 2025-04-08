@@ -57,9 +57,8 @@ class ImagingViewModel @Inject constructor(
         viewModelScope.launch {
             when (action) {
                 is ImagingAction.ProcessFrame -> {
-                    if (_state.value.isCapturing) return@launch
-
                     try {
+                        if (_state.value.isCapturing) return@launch
                         val bitmap = action.frame.toUprightBitmap()
                         val inputImage = InputImage.fromBitmap(bitmap, 0)
 
@@ -125,6 +124,7 @@ class ImagingViewModel @Inject constructor(
                 is ImagingAction.CaptureComplete -> {
                     action.result.onSuccess { image ->
                         val bitmap = image.toUprightBitmap()
+                        _state.update { it.copy(isCapturing = false) }
 
                         withContext(Dispatchers.Default) {
                             val (detectorTensorHeight, detectorTensorWidth) = specimenDetector.getInputTensorShape()
@@ -165,11 +165,9 @@ class ImagingViewModel @Inject constructor(
                                 }
                             }
 
-                            _state.update { it.copy(isCapturing = false) }
                             image.close()
                         }
                     }.onError { error ->
-                        _state.update { it.copy(isCapturing = true) }
                         _events.send(ImagingEvent.DisplayImagingError(error))
                     }
                 }
