@@ -34,8 +34,9 @@ import androidx.core.content.ContextCompat
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
-import com.vci.vectorcamapp.imaging.presentation.components.BoundingBoxOverlay
-import com.vci.vectorcamapp.imaging.presentation.components.CameraPreview
+import com.vci.vectorcamapp.imaging.presentation.components.camera.BoundingBoxOverlay
+import com.vci.vectorcamapp.imaging.presentation.components.camera.CameraPreview
+import com.vci.vectorcamapp.imaging.presentation.components.specimeninfocard.SpecimenInfoCard
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
 @Composable
@@ -81,13 +82,13 @@ fun ImagingScreen(
 
                 IconButton(
                     onClick = { onAction(ImagingAction.RetakeImage) },
-
-                    modifier = Modifier
+                    modifier = modifier
                         .align(Alignment.TopStart)
                         .padding(20.dp)
                         .size(64.dp)
                         .background(
-                            MaterialTheme.colorScheme.error, shape = CircleShape
+                            MaterialTheme.colorScheme.error,
+                            shape = CircleShape
                         )
                 ) {
                     Icon(
@@ -96,6 +97,15 @@ fun ImagingScreen(
                         tint = Color.White
                     )
                 }
+
+                SpecimenInfoCard(
+                    specimenId = state.currentSpecimenId,
+                    species = state.currentSpecies,
+                    sex = state.currentSex,
+                    abdomen = state.currentAbdomenStatus,
+                    onSpecimenIdCorrected = { onAction(ImagingAction.CorrectSpecimenId(it)) },
+                    modifier = modifier.align(Alignment.BottomCenter),
+                )
             }
         } else {
 

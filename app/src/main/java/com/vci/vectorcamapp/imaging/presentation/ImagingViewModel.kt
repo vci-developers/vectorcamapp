@@ -56,6 +56,10 @@ class ImagingViewModel @Inject constructor(
     fun onAction(action: ImagingAction) {
         viewModelScope.launch {
             when (action) {
+                is ImagingAction.CorrectSpecimenId -> {
+                    _state.update { it.copy(currentSpecimenId = action.specimenId) }
+                }
+
                 is ImagingAction.ProcessFrame -> {
                     try {
                         if (_state.value.isCapturing) return@launch

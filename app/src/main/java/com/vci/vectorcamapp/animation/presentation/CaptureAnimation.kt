@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.imaging.presentation.components
+package com.vci.vectorcamapp.animation.presentation
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing

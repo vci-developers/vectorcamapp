@@ -5,6 +5,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 
 sealed interface ImagingAction {
+    data class CorrectSpecimenId(val specimenId: String) : ImagingAction
     data class ProcessFrame(val frame: ImageProxy) : ImagingAction
     data object CaptureStart : ImagingAction
     data class CaptureComplete(val result: Result<ImageProxy, ImagingError>) : ImagingAction

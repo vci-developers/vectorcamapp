@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.loading.presentation
+package com.vci.vectorcamapp.animation.presentation
 
 import android.graphics.BlurMaskFilter
 import android.graphics.Paint
