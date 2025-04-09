@@ -15,6 +15,9 @@ import com.vci.vectorcamapp.imaging.di.Detector
 import com.vci.vectorcamapp.imaging.di.SexClassifier
 import com.vci.vectorcamapp.imaging.di.SpeciesClassifier
 import com.vci.vectorcamapp.imaging.di.SpecimenIdRecognizer
+import com.vci.vectorcamapp.imaging.domain.AbdomenStatusLabel
+import com.vci.vectorcamapp.imaging.domain.SexLabel
+import com.vci.vectorcamapp.imaging.domain.SpeciesLabel
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import com.vci.vectorcamapp.imaging.presentation.extensions.cropToBoundingBoxAndPad
@@ -56,8 +59,13 @@ class ImagingViewModel @Inject constructor(
     fun onAction(action: ImagingAction) {
         viewModelScope.launch {
             when (action) {
+                is ImagingAction.CorrectSpecimenId -> {
+                    _state.update { it.copy(currentSpecimenId = action.specimenId) }
+                }
+
                 is ImagingAction.ProcessFrame -> {
                     try {
+                        if (_state.value.isCapturing) return@launch
                         val bitmap = action.frame.toUprightBitmap()
                         val inputImage = InputImage.fromBitmap(bitmap, 0)
 
@@ -116,9 +124,14 @@ class ImagingViewModel @Inject constructor(
                     }
                 }
 
+                ImagingAction.CaptureStart -> {
+                    _state.update { it.copy(isCapturing = true) }
+                }
+
                 is ImagingAction.CaptureComplete -> {
                     action.result.onSuccess { image ->
                         val bitmap = image.toUprightBitmap()
+                        _state.update { it.copy(isCapturing = false) }
 
                         withContext(Dispatchers.Default) {
                             val (detectorTensorHeight, detectorTensorWidth) = specimenDetector.getInputTensorShape()
@@ -138,15 +151,21 @@ class ImagingViewModel @Inject constructor(
                                     async { getClassification(it, abdomenStatusClassifier) }
 
                                 val species = speciesPromise.await()
-                                val sex = sexPromise.await()
-                                val abdomenStatus = abdomenStatusPromise.await()
+                                    ?.let { index -> SpeciesLabel.entries.getOrNull(index) }
+                                var sex = sexPromise.await()
+                                    ?.let { index -> SexLabel.entries.getOrNull(index) }
+                                var abdomenStatus = abdomenStatusPromise.await()
+                                    ?.let { index -> AbdomenStatusLabel.entries.getOrNull(index) }
+
+                                if (species == SpeciesLabel.NON_MOSQUITO || species == null) { sex = null }
+                                if (sex == SexLabel.MALE || sex == null) { abdomenStatus = null }
 
                                 withContext(Dispatchers.Main) {
                                     _state.update {
                                         it.copy(
-                                            currentSpecies = species?.let { index -> SPECIES_LABELS[index] } ?: "",
-                                            currentSex = sex?.let { index -> SEX_LABELS[index] } ?: "",
-                                            currentAbdomenStatus = abdomenStatus?.let { index -> ABDOMEN_STATUS_LABELS[index] } ?: "",
+                                            currentSpecies = species?.label,
+                                            currentSex = sex?.label,
+                                            currentAbdomenStatus = abdomenStatus?.label,
                                             currentImage = bitmap,
                                             currentBoundingBoxUi = boundingBox.toBoundingBoxUi(
                                                 detectorTensorWidth,
@@ -170,9 +189,9 @@ class ImagingViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             currentSpecimenId = "",
-                            currentSpecies = "",
-                            currentSex = "",
-                            currentAbdomenStatus = "",
+                            currentSpecies = null,
+                            currentSex = null,
+                            currentAbdomenStatus = null,
                             currentImage = null,
                             currentBoundingBoxUi = null,
                         )
@@ -197,25 +216,5 @@ class ImagingViewModel @Inject constructor(
         sexClassifier.close()
         abdomenStatusClassifier.close()
         GpuDelegateManager.close()
-    }
-
-    companion object {
-        private val SPECIES_LABELS = listOf(
-            "Anopheles funestus",
-            "Anopheles gambiae",
-            "Anopheles other",
-            "Culex",
-            "Aedes",
-            "Mansonia",
-            "Non-Mosquito"
-        )
-
-        private val SEX_LABELS = listOf(
-            "Female", "Male"
-        )
-
-        private val ABDOMEN_STATUS_LABELS = listOf(
-            "Unfed", "Fully Fed", "Gravid"
-        )
     }
 }

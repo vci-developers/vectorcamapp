@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.imaging.presentation.components
+package com.vci.vectorcamapp.imaging.presentation.components.camera
 
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
