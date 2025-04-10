@@ -1,12 +1,17 @@
 package com.vci.vectorcamapp.imaging.presentation
 
+import android.content.ContentValues
+import android.content.Context
 import android.graphics.Bitmap
+import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognizer
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.imaging.data.GpuDelegateManager
@@ -25,6 +30,7 @@ import com.vci.vectorcamapp.imaging.presentation.extensions.resizeTo
 import com.vci.vectorcamapp.imaging.presentation.extensions.toBoundingBoxUi
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -36,6 +42,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -43,6 +50,7 @@ import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     @SpecimenIdRecognizer private val specimenIdRecognizer: TextRecognizer,
     @Detector private val specimenDetector: SpecimenDetector,
     @SpeciesClassifier private val speciesClassifier: SpecimenClassifier,
@@ -75,7 +83,10 @@ class ImagingViewModel @Inject constructor(
                                     val specimenId = suspendCoroutine { continuation ->
                                         specimenIdRecognizer.process(inputImage)
                                             .addOnSuccessListener { visionText: Text ->
-                                                continuation.resume(visionText.text)
+                                                continuation.resume(
+                                                    visionText.text.lineSequence().firstOrNull()
+                                                        ?.trim() ?: ""
+                                                )
                                             }.addOnFailureListener { exception ->
                                                 Log.e(
                                                     "ViewModel",
@@ -157,8 +168,12 @@ class ImagingViewModel @Inject constructor(
                                 var abdomenStatus = abdomenStatusPromise.await()
                                     ?.let { index -> AbdomenStatusLabel.entries.getOrNull(index) }
 
-                                if (species == SpeciesLabel.NON_MOSQUITO || species == null) { sex = null }
-                                if (sex == SexLabel.MALE || sex == null) { abdomenStatus = null }
+                                if (species == SpeciesLabel.NON_MOSQUITO || species == null) {
+                                    sex = null
+                                }
+                                if (sex == SexLabel.MALE || sex == null) {
+                                    abdomenStatus = null
+                                }
 
                                 withContext(Dispatchers.Main) {
                                     _state.update {
@@ -195,6 +210,60 @@ class ImagingViewModel @Inject constructor(
                             currentImage = null,
                             currentBoundingBoxUi = null,
                         )
+                    }
+                }
+
+                ImagingAction.SaveImageToSession -> {
+                    val bitmap = _state.value.currentImage
+                    val specimenId = _state.value.currentSpecimenId
+
+                    if (bitmap == null) {
+                        Log.e("SaveImage", "No image to save.")
+                        return@launch
+                    }
+
+                    withContext(Dispatchers.IO) {
+                        val timestamp = System.currentTimeMillis()
+                        val fileName = "${specimenId}_$timestamp.jpg"
+                        val appName = context.getString(R.string.app_name)
+                        val directory = "${Environment.DIRECTORY_DCIM}/$appName/vci"
+
+                        val resolver = context.contentResolver
+                        val imageCollection = MediaStore.Images.Media.getContentUri(
+                            MediaStore.VOLUME_EXTERNAL_PRIMARY
+                        )
+
+                        val contentValues = ContentValues().apply {
+                            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                            put(MediaStore.MediaColumns.RELATIVE_PATH, directory)
+                            put(MediaStore.MediaColumns.DATE_TAKEN, timestamp)
+                            put(MediaStore.MediaColumns.IS_PENDING, 1)
+                        }
+
+                        val imageUri = resolver.insert(imageCollection, contentValues)
+
+                        if (imageUri == null) {
+                            Log.e("SaveImage", "Failed to create MediaStore entry.")
+                            return@withContext
+                        }
+
+                        try {
+                            resolver.openOutputStream(imageUri)?.use { outputStream ->
+                                val success =
+                                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                                if (!success) throw IOException("Bitmap compression failed.")
+                            }
+
+                            contentValues.clear()
+                            contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                            resolver.update(imageUri, contentValues, null, null)
+
+                            Log.d("SaveImage", "Image saved successfully: $imageUri")
+                        } catch (e: Exception) {
+                            Log.e("SaveImage", "Error saving image: ${e.message}", e)
+                            resolver.delete(imageUri, null, null)
+                        }
                     }
                 }
             }

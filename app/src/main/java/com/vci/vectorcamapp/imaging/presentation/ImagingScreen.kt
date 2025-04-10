@@ -1,10 +1,14 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.util.Log
+import android.util.Size
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.Image
@@ -59,6 +63,19 @@ fun ImagingScreen(
                 ContextCompat.getMainExecutor(context), analyzer
             )
             imageCaptureFlashMode = ImageCapture.FLASH_MODE_OFF
+            imageAnalysisResolutionSelector = ResolutionSelector.Builder()
+                .setResolutionStrategy(
+                    ResolutionStrategy(
+                        Size(640, 480),
+                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER
+                    )
+                )
+                .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+                .build()
+            imageCaptureResolutionSelector = ResolutionSelector.Builder()
+                .setResolutionStrategy(ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY)
+                .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+                .build()
         }
     }
 
@@ -93,6 +110,24 @@ fun ImagingScreen(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_cancel),
+                        contentDescription = "Retake Image",
+                        tint = Color.White
+                    )
+                }
+
+                IconButton(
+                    onClick = { onAction(ImagingAction.SaveImageToSession) },
+                    modifier = modifier
+                        .align(Alignment.TopEnd)
+                        .padding(20.dp)
+                        .size(64.dp)
+                        .background(
+                            MaterialTheme.colorScheme.primary,
+                            shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_add_to_session),
                         contentDescription = "Retake Image",
                         tint = Color.White
                     )
