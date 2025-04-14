@@ -22,6 +22,9 @@
     <!-- Imaging error: Capture error -->
     <string name="imaging_error_capture_error">Couldn’t take the photo. Please try again.</string>
 
+    <!-- Imaging error: Save error -->
+    <string name="imaging_error_save_error">Couldn’t save the photo. Please try again.</string>
+
     <!-- Imaging error: No specimen found -->
     <string name="imaging_error_no_specimen_found">No specimen found in the photo. Please try again with a clearer image.</string>
 

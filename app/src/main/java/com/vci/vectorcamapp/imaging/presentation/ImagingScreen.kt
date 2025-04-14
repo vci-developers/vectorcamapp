@@ -1,11 +1,7 @@
 package com.vci.vectorcamapp.imaging.presentation
 
-import android.util.Log
 import android.util.Size
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCapture.OnImageCapturedCallback
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
@@ -36,8 +32,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.domain.util.Result
-import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 import com.vci.vectorcamapp.imaging.presentation.components.camera.BoundingBoxOverlay
 import com.vci.vectorcamapp.imaging.presentation.components.camera.CameraPreview
 import com.vci.vectorcamapp.imaging.presentation.components.specimeninfocard.SpecimenInfoCard
@@ -157,37 +151,8 @@ fun ImagingScreen(
                 contentAlignment = Alignment.Center
             ) {
                 IconButton(
-                    onClick = {
-                        controller.takePicture(ContextCompat.getMainExecutor(context),
-                            object : OnImageCapturedCallback() {
-                                override fun onCaptureStarted() {
-                                    super.onCaptureStarted()
-
-                                    onAction(ImagingAction.CaptureStart)
-                                }
-
-                                override fun onCaptureSuccess(image: ImageProxy) {
-                                    super.onCaptureSuccess(image)
-
-                                    onAction(
-                                        ImagingAction.CaptureComplete(
-                                            Result.Success(image)
-                                        )
-                                    )
-                                }
-
-                                override fun onError(exception: ImageCaptureException) {
-                                    super.onError(exception)
-
-                                    exception.message?.let { Log.e("ERROR", it) }
-                                    onAction(
-                                        ImagingAction.CaptureComplete(
-                                            Result.Error(ImagingError.CAPTURE_ERROR)
-                                        )
-                                    )
-                                }
-                            })
-                    }, modifier = Modifier
+                    onClick = { onAction(ImagingAction.CaptureImage(controller)) },
+                    modifier = Modifier
                         .size(64.dp)
                         .background(
                             MaterialTheme.colorScheme.primary, shape = CircleShape

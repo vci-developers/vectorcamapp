@@ -4,6 +4,7 @@ import com.vci.vectorcamapp.core.domain.util.Error
 
 enum class ImagingError : Error {
     CAPTURE_ERROR,
+    SAVE_ERROR,
     NO_SPECIMEN_FOUND,
     MODEL_INITIALIZATION_FAILED,
     GPU_DELEGATE_INITIALIZATION_FAILED,
