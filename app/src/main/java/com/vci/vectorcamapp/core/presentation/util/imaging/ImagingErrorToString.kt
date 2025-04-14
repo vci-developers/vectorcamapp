@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 fun ImagingError.toString(context: Context): String {
     val resId = when(this) {
         ImagingError.CAPTURE_ERROR -> R.string.imaging_error_capture_error
+        ImagingError.SAVE_ERROR -> R.string.imaging_error_save_error
         ImagingError.NO_SPECIMEN_FOUND -> R.string.imaging_error_no_specimen_found
         ImagingError.MODEL_INITIALIZATION_FAILED -> R.string.imaging_error_model_initialization_failed
         ImagingError.GPU_DELEGATE_INITIALIZATION_FAILED -> R.string.imaging_error_gpu_delegate_initialization_failed

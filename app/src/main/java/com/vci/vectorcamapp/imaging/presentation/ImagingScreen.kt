@@ -1,10 +1,10 @@
 package com.vci.vectorcamapp.imaging.presentation
 
-import android.util.Log
+import android.util.Size
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCapture.OnImageCapturedCallback
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.Image
@@ -32,8 +32,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.domain.util.Result
-import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 import com.vci.vectorcamapp.imaging.presentation.components.camera.BoundingBoxOverlay
 import com.vci.vectorcamapp.imaging.presentation.components.camera.CameraPreview
 import com.vci.vectorcamapp.imaging.presentation.components.specimeninfocard.SpecimenInfoCard
@@ -59,6 +57,19 @@ fun ImagingScreen(
                 ContextCompat.getMainExecutor(context), analyzer
             )
             imageCaptureFlashMode = ImageCapture.FLASH_MODE_OFF
+            imageAnalysisResolutionSelector = ResolutionSelector.Builder()
+                .setResolutionStrategy(
+                    ResolutionStrategy(
+                        Size(640, 480),
+                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER
+                    )
+                )
+                .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+                .build()
+            imageCaptureResolutionSelector = ResolutionSelector.Builder()
+                .setResolutionStrategy(ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY)
+                .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+                .build()
         }
     }
 
@@ -98,6 +109,24 @@ fun ImagingScreen(
                     )
                 }
 
+                IconButton(
+                    onClick = { onAction(ImagingAction.SaveImageToSession) },
+                    modifier = modifier
+                        .align(Alignment.TopEnd)
+                        .padding(20.dp)
+                        .size(64.dp)
+                        .background(
+                            MaterialTheme.colorScheme.primary,
+                            shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_add_to_session),
+                        contentDescription = "Retake Image",
+                        tint = Color.White
+                    )
+                }
+
                 SpecimenInfoCard(
                     specimenId = state.currentSpecimenId,
                     species = state.currentSpecies,
@@ -122,37 +151,8 @@ fun ImagingScreen(
                 contentAlignment = Alignment.Center
             ) {
                 IconButton(
-                    onClick = {
-                        controller.takePicture(ContextCompat.getMainExecutor(context),
-                            object : OnImageCapturedCallback() {
-                                override fun onCaptureStarted() {
-                                    super.onCaptureStarted()
-
-                                    onAction(ImagingAction.CaptureStart)
-                                }
-
-                                override fun onCaptureSuccess(image: ImageProxy) {
-                                    super.onCaptureSuccess(image)
-
-                                    onAction(
-                                        ImagingAction.CaptureComplete(
-                                            Result.Success(image)
-                                        )
-                                    )
-                                }
-
-                                override fun onError(exception: ImageCaptureException) {
-                                    super.onError(exception)
-
-                                    exception.message?.let { Log.e("ERROR", it) }
-                                    onAction(
-                                        ImagingAction.CaptureComplete(
-                                            Result.Error(ImagingError.CAPTURE_ERROR)
-                                        )
-                                    )
-                                }
-                            })
-                    }, modifier = Modifier
+                    onClick = { onAction(ImagingAction.CaptureImage(controller)) },
+                    modifier = Modifier
                         .size(64.dp)
                         .background(
                             MaterialTheme.colorScheme.primary, shape = CircleShape

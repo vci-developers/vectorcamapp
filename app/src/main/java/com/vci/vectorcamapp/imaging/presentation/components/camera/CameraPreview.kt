@@ -20,6 +20,10 @@ fun CameraPreview(
                 scaleType = PreviewView.ScaleType.FILL_CENTER
                 controller.bindToLifecycle(lifecycleOwner)
             }
-        }, modifier = modifier
+        },
+        onRelease = {
+            controller.unbind()
+        },
+        modifier = modifier
     )
 }
