@@ -35,7 +35,7 @@ fun NavGraph() {
         navController = navController, startDestination = Destination.Landing
     ) {
         composable<Destination.Landing> {
-            val viewModel = viewModel<LandingViewModel>()
+            val viewModel = hiltViewModel<LandingViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
             ObserveAsEvents(events = viewModel.events) { event ->
@@ -61,6 +61,7 @@ fun NavGraph() {
             }
         }
         composable<Destination.SurveillanceForm> {
+            // TODO: UPON PRESSING THE BACK BUTTON, SHOULD CLEAR THE CACHE!
             val viewModel = viewModel<SurveillanceFormViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -69,6 +70,17 @@ fun NavGraph() {
                     SurveillanceFormEvent.NavigateToImagingScreen -> navController.navigate(
                         Destination.Imaging
                     )
+
+                    SurveillanceFormEvent.NavigateBackToLandingScreen -> {
+                        navController.navigate(Destination.Landing) {
+                            popUpTo(Destination.Landing) {
+                                inclusive = false
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 }
             }
 
@@ -96,6 +108,17 @@ fun NavGraph() {
                     is ImagingEvent.DisplayImagingError -> {
                         Toast.makeText(context, event.error.toString(context), Toast.LENGTH_LONG)
                             .show()
+                    }
+
+                    ImagingEvent.NavigateBackToLandingScreen -> {
+                        navController.navigate(Destination.Landing) {
+                            popUpTo(Destination.Landing) {
+                                inclusive = false
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 }
             }

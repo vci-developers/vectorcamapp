@@ -28,6 +28,9 @@
     <!-- Imaging error: No specimen found -->
     <string name="imaging_error_no_specimen_found">No specimen found in the photo. Please try again with a clearer image.</string>
 
+    <!-- Imaging error: No active session -->
+    <string name="imaging_error_no_active_session">No active session found. Please start a new session before capturing images.</string>
+
     <!-- Imaging error: Model initialization failed -->
     <string name="imaging_error_model_initialization_failed">App couldn’t load its brain. Try restarting the app.</string>
 

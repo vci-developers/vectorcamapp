@@ -5,6 +5,7 @@ plugins {
     kotlin("plugin.serialization") version "2.0.21"
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+    id("androidx.room")
 }
 
 android {
@@ -29,19 +30,31 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         buildConfig = true
         compose = true
     }
+
     androidResources {
         noCompress += "tflite"
+    }
+
+    room {
+        schemaDirectory("$projectDir/schemas")
+    }
+
+    sourceSets {
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
 }
 
@@ -101,13 +114,18 @@ dependencies {
 
     // Room Database Dependencies
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+    testImplementation(libs.androidx.room.testing)
 
     // Google Play Services Dependencies
     implementation(libs.play.services.location) // Location Services Library
 
     // MLKit Text Recognition Library
     implementation(libs.text.recognition)
+
+    // Proto Data Store Library
+    implementation(libs.androidx.datastore)
 
     // JSON Serialization Library
     implementation(libs.kotlinx.serialization.json) // Kotlinx JSON serialization library
