@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.imaging.data.repository
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
@@ -11,12 +12,17 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.view.LifecycleCameraController
 import androidx.core.content.ContextCompat
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -42,10 +48,13 @@ class CameraRepositoryImplementation @Inject constructor(
         }
     }
 
-    override suspend fun saveImage(bitmap: Bitmap, filename: String): Result<Unit, ImagingError> {
+    override suspend fun saveImage(bitmap: Bitmap, filename: String, currentSession: Session): Result<Uri, ImagingError> {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault())
+        val sessionTimestamp = dateFormat.format(Date(currentSession.createdAt))
+
         return withContext(Dispatchers.IO) {
             val appName = context.getString(R.string.app_name)
-            val directory = "${Environment.DIRECTORY_DCIM}/$appName"
+            val directory = "${Environment.DIRECTORY_DCIM}/$appName/$sessionTimestamp"
 
             val contentValues = ContentValues().apply {
                 put(MediaStore.Images.Media.DISPLAY_NAME, filename)
@@ -55,10 +64,12 @@ class CameraRepositoryImplementation @Inject constructor(
             }
 
             val resolver = context.contentResolver
-            val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val collection =
+                MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
 
-            val uri = resolver.insert(collection, contentValues)
-                ?: return@withContext Result.Error(ImagingError.SAVE_ERROR)
+            val uri = resolver.insert(collection, contentValues) ?: return@withContext Result.Error(
+                ImagingError.SAVE_ERROR
+            )
 
             try {
                 resolver.openOutputStream(uri)?.use { outputStream ->
@@ -71,7 +82,7 @@ class CameraRepositoryImplementation @Inject constructor(
                 contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
                 resolver.update(uri, contentValues, null, null)
 
-                Result.Success(Unit)
+                Result.Success(uri)
             } catch (e: Exception) {
                 resolver.delete(uri, null, null)
                 Result.Error(ImagingError.SAVE_ERROR)

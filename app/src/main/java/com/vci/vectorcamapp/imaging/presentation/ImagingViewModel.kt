@@ -3,6 +3,9 @@ package com.vci.vectorcamapp.imaging.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.model.Specimen
+import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
@@ -22,6 +25,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
+    private val currentSessionCache: CurrentSessionCache,
+    private val specimenRepository: SpecimenRepository,
     private val cameraRepository: CameraRepository,
     private val inferenceRepository: InferenceRepository,
 ) : ViewModel() {
@@ -89,42 +94,65 @@ class ImagingViewModel @Inject constructor(
                             _events.send(ImagingEvent.DisplayImagingError(ImagingError.NO_SPECIMEN_FOUND))
                         }
                     }.onError { error ->
+                        if (error == ImagingError.NO_ACTIVE_SESSION) {
+                            _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        }
                         _events.send(ImagingEvent.DisplayImagingError(error))
                     }
                 }
 
-                ImagingAction.RetakeImage -> {
-                    _state.update {
-                        it.copy(
-                            currentSpecimenId = "",
-                            currentSpecies = null,
-                            currentSex = null,
-                            currentAbdomenStatus = null,
-                            currentImage = null,
-                            currentBoundingBoxUi = null,
-                        )
-                    }
-                }
+                ImagingAction.RetakeImage -> { clearSpecimenStateFields() }
 
                 ImagingAction.SaveImageToSession -> {
-                    _state.value.currentImage?.let { bitmap ->
-                        val specimenId = _state.value.currentSpecimenId
-                        val timestamp = System.currentTimeMillis()
-                        val filename = buildString {
-                            append(specimenId)
-                            append("_")
-                            append(timestamp)
-                            append(".jpg")
-                        }
+                    val bitmap = _state.value.currentImage ?: return@launch
+                    val specimenId = _state.value.currentSpecimenId
+                    val timestamp = System.currentTimeMillis()
+                    val filename = buildString {
+                        append(specimenId)
+                        append("_")
+                        append(timestamp)
+                        append(".jpg")
+                    }
 
-                        val saveResult = cameraRepository.saveImage(bitmap, filename)
+                    val currentSession = currentSessionCache.getSession()
+                    if (currentSession == null) {
+                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        return@launch
+                    }
 
-                        saveResult.onError { error ->
-                            _events.send(ImagingEvent.DisplayImagingError(error))
+                    val saveResult = cameraRepository.saveImage(bitmap, filename, currentSession)
+
+                    saveResult.onSuccess { imageUri ->
+                        val specimen = Specimen(
+                            id = specimenId,
+                            species = _state.value.currentSpecies,
+                            sex = _state.value.currentSex,
+                            abdomenStatus = _state.value.currentAbdomenStatus,
+                            imageUri = imageUri,
+                            capturedAt = timestamp
+                        )
+
+                        if (specimenRepository.upsertSpecimen(specimen, currentSession.id)) {
+                            clearSpecimenStateFields()
                         }
+                    }.onError { error ->
+                        _events.send(ImagingEvent.DisplayImagingError(error))
                     }
                 }
             }
+        }
+    }
+
+    private fun clearSpecimenStateFields() {
+        _state.update {
+            it.copy(
+                currentSpecimenId = "",
+                currentSpecies = null,
+                currentSex = null,
+                currentAbdomenStatus = null,
+                currentImage = null,
+                currentBoundingBoxUi = null,
+            )
         }
     }
 

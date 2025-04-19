@@ -3,7 +3,10 @@ package com.vci.vectorcamapp.landing.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vci.vectorcamapp.permission.presentation.PermissionEvent
+import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,8 +17,14 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
+import javax.inject.Inject
 
-class LandingViewModel : ViewModel() {
+@HiltViewModel
+class LandingViewModel @Inject constructor(
+    private val currentSessionCache: CurrentSessionCache,
+    private val sessionRepository: SessionRepository
+) : ViewModel() {
     private val _state = MutableStateFlow(LandingState())
     val state: StateFlow<LandingState> = _state.onStart {
         loadCompleteAndIncompleteSessions()
@@ -30,18 +39,31 @@ class LandingViewModel : ViewModel() {
         viewModelScope.launch {
             when (action) {
                 LandingAction.StartNewSurveillanceSession -> {
-                    _events.send(LandingEvent.NavigateToNewSurveillanceSessionScreen)
+                    val newSession = Session(
+                        id = UUID.randomUUID(),
+                        createdAt = System.currentTimeMillis(),
+                        submittedAt = null
+                    )
+                    if (sessionRepository.upsertSession(newSession)) {
+                        currentSessionCache.saveSession(newSession)
+                        _events.send(LandingEvent.NavigateToNewSurveillanceSessionScreen)
+                    } else {
+                        Log.e("LandingViewModel", "Failed to create session.")
+                    }
                 }
+
                 LandingAction.StartNewNonSurveillanceSession -> {
                     Log.d(
                         "Navigation", "StartNewNonSurveillanceSession"
                     )
                 }
+
                 LandingAction.ViewIncompleteSessions -> {
                     Log.d(
                         "Navigation", "ViewIncompleteSessions"
                     )
                 }
+
                 LandingAction.ViewCompleteSessions -> {
                     Log.d(
                         "Navigation", "ViewCompleteSessions"
