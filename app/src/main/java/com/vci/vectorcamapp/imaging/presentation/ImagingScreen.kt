@@ -11,9 +11,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +32,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import coil3.compose.AsyncImage
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.imaging.presentation.components.camera.BoundingBoxOverlay
 import com.vci.vectorcamapp.imaging.presentation.components.camera.CameraPreview
@@ -42,30 +45,24 @@ fun ImagingScreen(
     state: ImagingState, onAction: (ImagingAction) -> Unit, modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     val analyzer = remember {
         SpecimenImageAnalyzer { frame ->
             onAction(ImagingAction.ProcessFrame(frame))
         }
     }
-    val controller = remember {
+
+    val controller = remember(lifecycleOwner) {
         LifecycleCameraController(context).apply {
-            setEnabledUseCases(
-                CameraController.IMAGE_CAPTURE or CameraController.IMAGE_ANALYSIS
-            )
-            setImageAnalysisAnalyzer(
-                ContextCompat.getMainExecutor(context), analyzer
-            )
+            setEnabledUseCases(CameraController.IMAGE_CAPTURE or CameraController.IMAGE_ANALYSIS)
+            setImageAnalysisAnalyzer(ContextCompat.getMainExecutor(context), analyzer)
             imageCaptureFlashMode = ImageCapture.FLASH_MODE_OFF
-            imageAnalysisResolutionSelector = ResolutionSelector.Builder()
-                .setResolutionStrategy(
-                    ResolutionStrategy(
-                        Size(640, 480),
-                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER
-                    )
+            imageAnalysisResolutionSelector = ResolutionSelector.Builder().setResolutionStrategy(
+                ResolutionStrategy(
+                    Size(640, 480), ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER
                 )
-                .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
-                .build()
+            ).setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY).build()
             imageCaptureResolutionSelector = ResolutionSelector.Builder()
                 .setResolutionStrategy(ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY)
                 .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
@@ -73,97 +70,98 @@ fun ImagingScreen(
         }
     }
 
-    Box(
-        modifier = modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter
-    ) {
-        if (state.currentImage != null) {
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Image(
-                    bitmap = state.currentImage.asImageBitmap(),
-                    contentDescription = "Specimen Image",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.FillHeight
-                )
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { state.specimens.size + 1 })
 
-                state.currentBoundingBoxUi?.let {
-                    BoundingBoxOverlay(it, modifier = modifier)
-                }
-
-                IconButton(
-                    onClick = { onAction(ImagingAction.RetakeImage) },
-                    modifier = modifier
-                        .align(Alignment.TopStart)
-                        .padding(20.dp)
-                        .size(64.dp)
-                        .background(
-                            MaterialTheme.colorScheme.error,
-                            shape = CircleShape
-                        )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_cancel),
-                        contentDescription = "Retake Image",
-                        tint = Color.White
-                    )
-                }
-
-                IconButton(
-                    onClick = { onAction(ImagingAction.SaveImageToSession) },
-                    modifier = modifier
-                        .align(Alignment.TopEnd)
-                        .padding(20.dp)
-                        .size(64.dp)
-                        .background(
-                            MaterialTheme.colorScheme.primary,
-                            shape = CircleShape
-                        )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_add_to_session),
-                        contentDescription = "Retake Image",
-                        tint = Color.White
-                    )
-                }
-
-                SpecimenInfoCard(
-                    specimenId = state.currentSpecimenId,
-                    species = state.currentSpecies,
-                    sex = state.currentSex,
-                    abdomenStatus = state.currentAbdomenStatus,
-                    onSpecimenIdCorrected = { onAction(ImagingAction.CorrectSpecimenId(it)) },
-                    modifier = modifier.align(Alignment.BottomCenter),
-                )
-            }
+    HorizontalPager(
+        state = pagerState, modifier = modifier.fillMaxSize()
+    ) { page ->
+        if (page < state.specimens.size) {
+            val specimen = state.specimens[page]
+            AsyncImage(
+                model = specimen.imageUri,
+                contentDescription = specimen.id,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit
+            )
         } else {
-
-            CameraPreview(controller = controller, modifier = modifier.fillMaxSize())
-
-            state.currentBoundingBoxUi?.let {
-                BoundingBoxOverlay(it, modifier = modifier)
-            }
-
             Box(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
+                modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter
             ) {
-                IconButton(
-                    onClick = { onAction(ImagingAction.CaptureImage(controller)) },
-                    modifier = Modifier
-                        .size(64.dp)
-                        .background(
-                            MaterialTheme.colorScheme.primary, shape = CircleShape
-                        )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_camera),
-                        contentDescription = "Capture Image",
-                        modifier = Modifier.size(32.dp),
-                        tint = MaterialTheme.colorScheme.onPrimary
+                if (state.currentImage != null) {
+                    Image(
+                        bitmap = state.currentImage.asImageBitmap(),
+                        contentDescription = "Captured Specimen",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit
                     )
+
+                    state.currentBoundingBoxUi?.let {
+                        BoundingBoxOverlay(it, Modifier.fillMaxSize())
+                    }
+
+                    IconButton(
+                        onClick = { onAction(ImagingAction.RetakeImage) },
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(20.dp)
+                            .size(64.dp)
+                            .background(MaterialTheme.colorScheme.error, CircleShape)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_cancel),
+                            contentDescription = "Retake Image",
+                            tint = Color.White
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { onAction(ImagingAction.SaveImageToSession) },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(20.dp)
+                            .size(64.dp)
+                            .background(MaterialTheme.colorScheme.primary, CircleShape)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_add_to_session),
+                            contentDescription = "Save Image",
+                            tint = Color.White
+                        )
+                    }
+
+                    SpecimenInfoCard(
+                        specimenId = state.currentSpecimenId,
+                        species = state.currentSpecies,
+                        sex = state.currentSex,
+                        abdomenStatus = state.currentAbdomenStatus,
+                        onSpecimenIdCorrected = {
+                            onAction(ImagingAction.CorrectSpecimenId(it))
+                        },
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    )
+                } else {
+
+                    CameraPreview(controller, modifier.fillMaxSize())
+
+                    state.currentBoundingBoxUi?.let {
+                        BoundingBoxOverlay(it, Modifier.fillMaxSize())
+                    }
+
+                    IconButton(
+                        onClick = { onAction(ImagingAction.CaptureImage(controller)) },
+                        modifier = Modifier
+                            .padding(bottom = 48.dp)
+                            .size(64.dp)
+                            .background(MaterialTheme.colorScheme.primary, CircleShape)
+                            .align(Alignment.BottomCenter)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_camera),
+                            contentDescription = "Capture Image",
+                            modifier = Modifier.size(32.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
             }
         }

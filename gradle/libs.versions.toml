@@ -1,6 +1,7 @@
 [versions]
 agp = "8.7.3"
 cameraCoreVersion = "1.4.2"
+coilCompose = "3.1.0"
 datastore = "1.1.4"
 hiltAndroidCompiler = "2.51.1"
 hiltNavigationCompose = "1.2.0"
@@ -45,6 +46,7 @@ androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "
 androidx-window = { module = "androidx.window:window", version.ref = "window" }
 androidx-window-testing = { module = "androidx.window:window-testing", version.ref = "window" }
 camera-core = { module = "androidx.camera:camera-core", version.ref = "cameraCoreVersion" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroidCompiler" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
