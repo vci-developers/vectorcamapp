@@ -99,19 +99,19 @@ class InferenceRepositoryImplementation @Inject constructor(
 
         val (tensorHeight, tensorWidth) = specimenDetector.getInputTensorShape()
 
-        val screenHeight = Resources.getSystem().displayMetrics.heightPixels.toFloat()
         val screenWidth = Resources.getSystem().displayMetrics.widthPixels.toFloat()
+        val screenHeight = Resources.getSystem().displayMetrics.heightPixels.toFloat()
 
-        val previewHeight = screenHeight
-        val previewWidth = (imageWidth.toFloat() / imageHeight.toFloat()) * previewHeight
+        val previewWidth = screenWidth
+        val previewHeight = (imageHeight.toFloat() / imageWidth.toFloat()) * previewWidth
 
-        val scaleX = previewWidth / tensorWidth.toFloat()
-        val scaleY = previewHeight / tensorHeight.toFloat()
+        val verticalPadding = (screenHeight - previewHeight) / 2
 
-        val xOffset = (previewWidth - screenWidth) / 2
+        val scaleX = previewWidth / tensorWidth
+        val scaleY = previewHeight / tensorHeight
 
-        val scaledX = (boundingBox.topLeftX * tensorWidth * scaleX) - xOffset
-        val scaledY = boundingBox.topLeftY * tensorHeight * scaleY
+        val scaledX = boundingBox.topLeftX * tensorWidth * scaleX
+        val scaledY = boundingBox.topLeftY * tensorHeight * scaleY + verticalPadding
         val scaledWidth = boundingBox.width * tensorWidth * scaleX
         val scaledHeight = boundingBox.height * tensorHeight * scaleY
 
