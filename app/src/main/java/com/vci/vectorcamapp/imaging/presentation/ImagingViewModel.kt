@@ -99,15 +99,17 @@ class ImagingViewModel @Inject constructor(
                                     val boundingBox = specimenDetector.detect(resized)
 
                                     withContext(Dispatchers.Main) {
-                                        _state.update {
-                                            it.copy(
-                                                currentBoundingBoxUi = boundingBox?.toBoundingBoxUi(
-                                                    detectorTensorWidth,
-                                                    detectorTensorHeight,
-                                                    bitmap.width,
-                                                    bitmap.height
+                                        if (!_state.value.isCapturing) {
+                                            _state.update {
+                                                it.copy(
+                                                    currentBoundingBoxUi = boundingBox?.toBoundingBoxUi(
+                                                        detectorTensorWidth,
+                                                        detectorTensorHeight,
+                                                        bitmap.width,
+                                                        bitmap.height
+                                                    )
                                                 )
-                                            )
+                                            }
                                         }
                                     }
                                 } catch (e: Exception) {
