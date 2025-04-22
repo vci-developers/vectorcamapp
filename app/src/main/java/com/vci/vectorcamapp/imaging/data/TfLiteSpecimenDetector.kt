@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
-import com.vci.vectorcamapp.imaging.domain.BoundingBox
+import com.vci.vectorcamapp.core.domain.model.BoundingBox
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
@@ -16,7 +16,6 @@ import org.tensorflow.lite.support.common.ops.NormalizeOp
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import java.io.Closeable
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -188,10 +187,6 @@ class TfLiteSpecimenDetector(
                 BoundingBox(
                     topLeftX = topLeftX,
                     topLeftY = topLeftY,
-                    bottomRightX = bottomRightX,
-                    bottomRightY = bottomRightY,
-                    centerX = centerX,
-                    centerY = centerY,
                     width = width,
                     height = height,
                     confidence = confidence,
@@ -226,8 +221,8 @@ class TfLiteSpecimenDetector(
     private fun calculateIoU(a: BoundingBox, b: BoundingBox): Float {
         val x1 = maxOf(a.topLeftX, b.topLeftX)
         val y1 = maxOf(a.topLeftY, b.topLeftY)
-        val x2 = minOf(a.bottomRightX, b.bottomRightX)
-        val y2 = minOf(a.bottomRightY, b.bottomRightY)
+        val x2 = minOf(a.topLeftX + a.width, b.topLeftX + b.width)
+        val y2 = minOf(a.topLeftY + a.height, b.topLeftY + b.height)
 
         val intersection = maxOf(0f, x2 - x1) * maxOf(0f, y2 - y1)
         val areaA = a.width * a.height

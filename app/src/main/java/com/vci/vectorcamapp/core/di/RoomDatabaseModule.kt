@@ -4,9 +4,12 @@ import android.content.Context
 import android.util.Log
 import androidx.room.Room
 import com.vci.vectorcamapp.BuildConfig
+import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.room.VectorCamDatabase
+import com.vci.vectorcamapp.core.data.room.dao.BoundingBoxDao
 import com.vci.vectorcamapp.core.data.room.dao.SessionDao
 import com.vci.vectorcamapp.core.data.room.dao.SpecimenDao
+import com.vci.vectorcamapp.core.data.room.migrations.ALL_MIGRATIONS
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,7 +35,7 @@ object RoomDatabaseModule {
             context,
             VectorCamDatabase::class.java,
             DB_NAME,
-        ).build().apply {
+        ).addMigrations(*ALL_MIGRATIONS).build().apply {
             // TODO: ⚠️ For development only: wipe database on every launch
             if (BuildConfig.DEBUG) {
                 CoroutineScope(Dispatchers.IO).launch {
@@ -44,8 +47,14 @@ object RoomDatabaseModule {
     }
 
     @Provides
+    fun provideTransactionHelper(db: VectorCamDatabase): TransactionHelper = TransactionHelper(db)
+
+    @Provides
     fun provideSessionDao(db: VectorCamDatabase): SessionDao = db.sessionDao
 
     @Provides
     fun provideSpecimenDao(db: VectorCamDatabase): SpecimenDao = db.specimenDao
+
+    @Provides
+    fun provideBoundingBoxDao(db: VectorCamDatabase): BoundingBoxDao = db.boundingBoxDao
 }

@@ -12,7 +12,7 @@ import com.vci.vectorcamapp.imaging.di.SexClassifier
 import com.vci.vectorcamapp.imaging.di.SpeciesClassifier
 import com.vci.vectorcamapp.imaging.di.SpecimenIdRecognizer
 import com.vci.vectorcamapp.imaging.domain.AbdomenStatusLabel
-import com.vci.vectorcamapp.imaging.domain.BoundingBox
+import com.vci.vectorcamapp.core.domain.model.BoundingBox
 import com.vci.vectorcamapp.imaging.domain.SexLabel
 import com.vci.vectorcamapp.imaging.domain.SpeciesLabel
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
@@ -91,6 +91,39 @@ class InferenceRepositoryImplementation @Inject constructor(
                 Triple(species, sex, abdomenStatus)
             } ?: Triple(null, null, null)
         }
+
+    override fun convertToBoundingBox(
+        boundingBoxUi: BoundingBoxUi?, imageWidth: Int, imageHeight: Int
+    ): BoundingBox? {
+        if (boundingBoxUi == null) return null
+
+        val (tensorHeight, tensorWidth) = specimenDetector.getInputTensorShape()
+
+        val screenWidth = Resources.getSystem().displayMetrics.widthPixels.toFloat()
+        val screenHeight = Resources.getSystem().displayMetrics.heightPixels.toFloat()
+
+        val previewWidth = screenWidth
+        val previewHeight = (imageHeight.toFloat() / imageWidth.toFloat()) * previewWidth
+
+        val verticalPadding = (screenHeight - previewHeight) / 2
+
+        val scaleX = previewWidth / tensorWidth
+        val scaleY = previewHeight / tensorHeight
+
+        val scaledX = boundingBoxUi.topLeftX / (scaleX * tensorWidth)
+        val scaledY = (boundingBoxUi.topLeftY - verticalPadding) / (scaleY * tensorHeight)
+        val scaledWidth = boundingBoxUi.width / (scaleX * tensorWidth)
+        val scaledHeight = boundingBoxUi.height / (scaleY * tensorHeight)
+
+        return BoundingBox(
+            topLeftX = scaledX,
+            topLeftY = scaledY,
+            width = scaledWidth,
+            height = scaledHeight,
+            confidence = boundingBoxUi.confidence,
+            classId = boundingBoxUi.classId,
+        )
+    }
 
     override fun convertToBoundingBoxUi(
         boundingBox: BoundingBox?, imageWidth: Int, imageHeight: Int

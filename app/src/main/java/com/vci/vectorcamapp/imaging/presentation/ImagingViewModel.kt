@@ -3,10 +3,12 @@ package com.vci.vectorcamapp.imaging.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.composites.SessionWithSpecimens
+import com.vci.vectorcamapp.core.domain.repository.BoundingBoxRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
@@ -34,9 +36,12 @@ class ImagingViewModel @Inject constructor(
     private val currentSessionCache: CurrentSessionCache,
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
+    private val boundingBoxRepository: BoundingBoxRepository,
     private val cameraRepository: CameraRepository,
     private val inferenceRepository: InferenceRepository,
 ) : ViewModel() {
+
+    @Inject lateinit var transactionHelper: TransactionHelper
 
     private val _sessionWithSpecimens = MutableStateFlow(
         SessionWithSpecimens(
@@ -167,7 +172,17 @@ class ImagingViewModel @Inject constructor(
                             capturedAt = timestamp
                         )
 
-                        if (specimenRepository.upsertSpecimen(specimen, currentSession.id)) {
+                        val success = transactionHelper.runAsTransaction {
+                            val boundingBoxUi = _state.value.currentBoundingBoxUi
+                            val boundingBox = inferenceRepository.convertToBoundingBox(boundingBoxUi, bitmap.width, bitmap.height)
+                                ?: return@runAsTransaction false
+
+                            val specimenInserted = specimenRepository.upsertSpecimen(specimen, currentSession.id)
+                            val boundingBoxInserted = boundingBoxRepository.upsertBoundingBox(boundingBox, specimen.id)
+                            specimenInserted && boundingBoxInserted
+                        }
+
+                        if (success) {
                             clearSpecimenStateFields()
                         }
                     }.onError { error ->

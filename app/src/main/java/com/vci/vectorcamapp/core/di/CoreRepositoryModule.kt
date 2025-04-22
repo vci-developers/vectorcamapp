@@ -1,7 +1,9 @@
 package com.vci.vectorcamapp.core.di
 
+import com.vci.vectorcamapp.core.data.repository.BoundingBoxRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SessionRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SpecimenRepositoryImplementation
+import com.vci.vectorcamapp.core.domain.repository.BoundingBoxRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import dagger.Binds
@@ -25,4 +27,10 @@ abstract class CoreRepositoryModule {
     abstract fun bindSpecimenRepository(
         specimenRepositoryImplementation: SpecimenRepositoryImplementation
     ): SpecimenRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBoundingBoxRepository(
+        boundingBoxRepositoryImplementation: BoundingBoxRepositoryImplementation
+    ): BoundingBoxRepository
 }

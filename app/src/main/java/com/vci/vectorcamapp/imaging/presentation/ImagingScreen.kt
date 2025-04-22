@@ -62,12 +62,16 @@ fun ImagingScreen(
     HorizontalPager(
         state = pagerState, modifier = modifier.fillMaxSize()
     ) { page ->
-        if (page < state.specimens.size) {
-            CapturedSpecimenPage(specimen = state.specimens[page], modifier = modifier)
-        } else {
-            if (state.currentImage != null) {
+        when {
+            page < state.specimens.size -> {
+                CapturedSpecimenPage(specimen = state.specimens[page], modifier = modifier)
+            }
+
+            state.currentImage != null -> {
                 CapturedSpecimenReviewPage(state = state, onAction = onAction, modifier = modifier)
-            } else {
+            }
+
+            else -> {
                 LiveCameraPreviewPage(
                     controller = controller,
                     boundingBoxUi = state.currentBoundingBoxUi,

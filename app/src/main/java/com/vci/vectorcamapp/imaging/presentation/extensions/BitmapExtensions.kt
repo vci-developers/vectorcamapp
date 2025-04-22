@@ -3,7 +3,7 @@ package com.vci.vectorcamapp.imaging.presentation.extensions
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import com.vci.vectorcamapp.imaging.domain.BoundingBox
+import com.vci.vectorcamapp.core.domain.model.BoundingBox
 
 fun Bitmap.resizeTo(width: Int, height: Int) : Bitmap {
     return Bitmap.createScaledBitmap(this, width, height, false)
