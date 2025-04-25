@@ -3,10 +3,12 @@ package com.vci.vectorcamapp.imaging.presentation.extensions
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import com.vci.vectorcamapp.imaging.domain.BoundingBox
+import com.vci.vectorcamapp.core.domain.model.BoundingBox
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.scale
 
 fun Bitmap.resizeTo(width: Int, height: Int) : Bitmap {
-    return Bitmap.createScaledBitmap(this, width, height, false)
+    return this.scale(width, height, false)
 }
 
 fun Bitmap.cropToBoundingBoxAndPad(boundingBox: BoundingBox) : Bitmap {
@@ -18,7 +20,7 @@ fun Bitmap.cropToBoundingBoxAndPad(boundingBox: BoundingBox) : Bitmap {
     val cropped = Bitmap.createBitmap(this, x, y, width, height)
 
     val size = maxOf(width, height)
-    val paddedBitmap = Bitmap.createBitmap(size, size, this.config ?: Bitmap.Config.ARGB_8888)
+    val paddedBitmap = createBitmap(size, size, this.config ?: Bitmap.Config.ARGB_8888)
 
     val canvas = Canvas(paddedBitmap)
 

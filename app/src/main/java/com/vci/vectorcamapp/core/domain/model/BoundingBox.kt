@@ -1,6 +1,6 @@
-package com.vci.vectorcamapp.imaging.presentation.model
+package com.vci.vectorcamapp.core.domain.model
 
-data class BoundingBoxUi(
+data class BoundingBox(
     val topLeftX: Float,
     val topLeftY: Float,
     val width: Float,

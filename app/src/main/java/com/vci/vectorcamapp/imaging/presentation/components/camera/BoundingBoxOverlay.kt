@@ -12,7 +12,7 @@ import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 
 @Composable
 fun BoundingBoxOverlay(boundingBoxUi: BoundingBoxUi, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier.fillMaxSize()) {
+    Canvas(modifier = modifier) {
         drawRect(
             color = if (boundingBoxUi.confidence > 0.8) Color.Green else Color.Red,
             topLeft = Offset(boundingBoxUi.topLeftX, boundingBoxUi.topLeftY),

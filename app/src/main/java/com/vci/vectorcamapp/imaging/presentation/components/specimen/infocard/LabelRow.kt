@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.imaging.presentation.components.specimeninfocard
+package com.vci.vectorcamapp.imaging.presentation.components.specimen.infocard
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth

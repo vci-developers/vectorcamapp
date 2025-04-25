@@ -14,7 +14,6 @@ import org.tensorflow.lite.support.common.ops.NormalizeOp
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import java.io.Closeable
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -40,6 +39,12 @@ class TfLiteSpecimenClassifier(
             .build()
     }
 
+    private var inputNumChannels = DEFAULT_NUM_CHANNELS
+    private var inputTensorHeight = DEFAULT_TENSOR_HEIGHT
+    private var inputTensorWidth = DEFAULT_TENSOR_WIDTH
+
+    private var outputNumClasses = DEFAULT_NUM_CLASSES
+
     init {
         handler.post { initializeInterpreter() }
     }
@@ -54,6 +59,15 @@ class TfLiteSpecimenClassifier(
 
                 options.setNumThreads(Runtime.getRuntime().availableProcessors())
                 classifier = Interpreter(model, options)
+
+                classifier?.let {
+                    inputNumChannels = it.getInputTensor(0).shape()[1]
+                    inputTensorHeight = it.getInputTensor(0).shape()[2]
+                    inputTensorWidth = it.getInputTensor(0).shape()[3]
+
+                    outputNumClasses = it.getOutputTensor(0).shape()[1]
+                }
+
                 Log.d(TAG, "TFLite interpreter initialized")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
@@ -65,56 +79,9 @@ class TfLiteSpecimenClassifier(
         !isClosed && classifier != null
     }
 
-    private fun getNumChannels(): Int {
-        synchronized(classifierLock) {
-            if (!isReady()) {
-                Log.w(TAG, "Classifier not ready in getNumChannels")
-                return DEFAULT_NUM_CHANNELS
-            }
+    override fun getInputTensorShape(): Pair<Int, Int> = inputTensorHeight to inputTensorWidth
 
-            return try {
-                val shape = classifier!!.getInputTensor(0).shape()
-                shape[1]
-            } catch (e: Exception) {
-                Log.e(TAG, "getNumChannels failed: ${e.message}")
-                DEFAULT_NUM_CHANNELS
-            }
-        }
-    }
-
-    override fun getInputTensorShape(): Pair<Int, Int> {
-        synchronized(classifierLock) {
-            if (!isReady()) {
-                Log.w(TAG, "Classifier not ready in getInputTensorShape")
-                return DEFAULT_TENSOR_HEIGHT to DEFAULT_TENSOR_WIDTH
-            }
-
-            return try {
-                val shape = classifier!!.getInputTensor(0).shape()
-                shape[2] to shape[3]
-            } catch (e: Exception) {
-                Log.e(TAG, "getInputTensorShape failed: ${e.message}")
-                DEFAULT_TENSOR_HEIGHT to DEFAULT_TENSOR_WIDTH
-            }
-        }
-    }
-
-    override fun getOutputTensorShape(): Int {
-        synchronized(classifierLock) {
-            if (!isReady()) {
-                Log.w(TAG, "Classifier not ready in getOutputTensorShape")
-                return DEFAULT_NUM_CLASSES
-            }
-
-            return try {
-                val shape = classifier!!.getOutputTensor(0).shape()
-                shape[1]
-            } catch (e: Exception) {
-                Log.e(TAG, "getOutputTensorShape failed: ${e.message}")
-                DEFAULT_NUM_CLASSES
-            }
-        }
-    }
+    override fun getOutputTensorShape(): Int = outputNumClasses
 
     override suspend fun classify(bitmap: Bitmap): Int? {
         if (!isReady()) return null
@@ -123,21 +90,18 @@ class TfLiteSpecimenClassifier(
             handler.post {
                 try {
                     Log.d(TAG, "Inference started!")
-                    val numChannels = getNumChannels()
-                    val (tensorHeight, tensorWidth) = getInputTensorShape()
-                    val numClasses = getOutputTensorShape()
                     val tensorImage = TensorImage(DataType.FLOAT32).apply {
                         load(bitmap.copy(Bitmap.Config.ARGB_8888, false))
                     }
                     val processedImage = imageProcessor.process(tensorImage)
                     val inputBufferHWC = processedImage.buffer.asFloatBuffer()
 
-                    val chwArray = FloatArray(numChannels * tensorHeight * tensorWidth)
-                    for (y in 0 until tensorHeight) {
-                        for (x in 0 until tensorWidth) {
-                            for (c in 0 until numChannels) {
-                                val hwcIndex = (y * tensorWidth + x) * numChannels + c
-                                val chwIndex = c * tensorHeight * tensorWidth + y * tensorWidth + x
+                    val chwArray = FloatArray(inputNumChannels * inputTensorHeight * inputTensorWidth)
+                    for (y in 0 until inputTensorHeight) {
+                        for (x in 0 until inputTensorWidth) {
+                            for (c in 0 until inputNumChannels) {
+                                val hwcIndex = (y * inputTensorWidth + x) * inputNumChannels + c
+                                val chwIndex = c * inputTensorHeight * inputTensorWidth + y * inputTensorWidth + x
                                 chwArray[chwIndex] = inputBufferHWC.get(hwcIndex)
                             }
                         }
@@ -146,15 +110,15 @@ class TfLiteSpecimenClassifier(
                     val input = TensorBuffer.createFixedSize(
                         intArrayOf(
                             1,
-                            numChannels,
-                            tensorHeight,
-                            tensorWidth
+                            inputNumChannels,
+                            inputTensorHeight,
+                            inputTensorWidth
                         ), DataType.FLOAT32
                     )
                     input.loadArray(chwArray)
 
                     val output = TensorBuffer.createFixedSize(
-                        intArrayOf(1, numClasses), DataType.FLOAT32
+                        intArrayOf(1, outputNumClasses), DataType.FLOAT32
                     )
 
                     val result = synchronized(classifierLock) {
@@ -198,10 +162,10 @@ class TfLiteSpecimenClassifier(
 
     companion object {
         private const val TAG = "TfLiteSpeciesClassifier"
+        private const val DEFAULT_NUM_CHANNELS = 3
         private const val DEFAULT_TENSOR_HEIGHT = 300
         private const val DEFAULT_TENSOR_WIDTH = 300
-        private const val DEFAULT_NUM_CLASSES = 7
-        private const val DEFAULT_NUM_CHANNELS = 3
+        private const val DEFAULT_NUM_CLASSES = 1
 
         private val NORMALIZE_MEAN = floatArrayOf(0.485f, 0.456f, 0.406f)
         private val NORMALIZE_STD = floatArrayOf(0.229f, 0.224f, 0.225f)

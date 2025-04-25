@@ -121,6 +121,9 @@ dependencies {
     // Google Play Services Dependencies
     implementation(libs.play.services.location) // Location Services Library
 
+    // Coil Async Image Rendering Library
+    implementation(libs.coil.compose)
+
     // MLKit Text Recognition Library
     implementation(libs.text.recognition)
 

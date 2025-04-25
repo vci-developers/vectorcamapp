@@ -3,8 +3,11 @@ package com.vci.vectorcamapp.imaging.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.Specimen
+import com.vci.vectorcamapp.core.domain.repository.BoundingBoxRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 import com.vci.vectorcamapp.core.domain.util.onError
@@ -12,36 +15,95 @@ import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
+import com.vci.vectorcamapp.imaging.presentation.model.composites.SpecimenAndBoundingBoxUi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
     private val currentSessionCache: CurrentSessionCache,
+    private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
+    private val boundingBoxRepository: BoundingBoxRepository,
     private val cameraRepository: CameraRepository,
     private val inferenceRepository: InferenceRepository,
 ) : ViewModel() {
 
+    @Inject
+    lateinit var transactionHelper: TransactionHelper
+
+    private val _capturedSpecimensAndBoundingBoxesUi =
+        MutableStateFlow<List<SpecimenAndBoundingBoxUi>>(emptyList())
     private val _state = MutableStateFlow(ImagingState())
-    val state: StateFlow<ImagingState> = _state.asStateFlow()
+    val state = combine(
+        _capturedSpecimensAndBoundingBoxesUi, _state
+    ) { capturedSpecimensAndBoundingBoxesUi, state ->
+        state.copy(
+            capturedSpecimensAndBoundingBoxesUi = capturedSpecimensAndBoundingBoxesUi
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), ImagingState())
 
     private val _events = Channel<ImagingEvent>()
     val events = _events.receiveAsFlow()
+
+    init {
+        viewModelScope.launch {
+            val currentSession = currentSessionCache.getSession()
+            if (currentSession == null) {
+                _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                _events.send(ImagingEvent.DisplayImagingError(ImagingError.NO_ACTIVE_SESSION))
+                return@launch
+            }
+
+            sessionRepository.observeSessionWithSpecimens(currentSession.id).filterNotNull()
+                .collectLatest { sessionWithSpecimens ->
+                    val specimensAndBoundingBoxUiFlows =
+                        sessionWithSpecimens.specimens.map { specimen ->
+                            specimenRepository.observeSpecimenAndBoundingBox(specimen.id)
+                                .filterNotNull().map { specimenAndBoundingBox ->
+                                    val boundingBoxUi = inferenceRepository.convertToBoundingBoxUi(
+                                        specimenAndBoundingBox.boundingBox
+                                    )
+                                    SpecimenAndBoundingBoxUi(
+                                        specimen = specimenAndBoundingBox.specimen,
+                                        boundingBoxUi = boundingBoxUi
+                                    )
+                                }
+                        }
+                    if (specimensAndBoundingBoxUiFlows.isEmpty()) {
+                        _capturedSpecimensAndBoundingBoxesUi.value = emptyList()
+                    } else {
+                        combine(specimensAndBoundingBoxUiFlows) { it.toList() }.collect { capturedSpecimensAndBoundingBoxesUi ->
+                            _capturedSpecimensAndBoundingBoxesUi.value =
+                                capturedSpecimensAndBoundingBoxesUi
+                        }
+                    }
+                }
+        }
+    }
 
     fun onAction(action: ImagingAction) {
         viewModelScope.launch {
             when (action) {
                 is ImagingAction.CorrectSpecimenId -> {
-                    _state.update { it.copy(currentSpecimenId = action.specimenId) }
+                    _state.update {
+                        it.copy(
+                            currentSpecimen = it.currentSpecimen.copy(
+                                id = action.specimenId
+                            )
+                        )
+                    }
                 }
 
                 is ImagingAction.ProcessFrame -> {
@@ -50,14 +112,13 @@ class ImagingViewModel @Inject constructor(
 
                         val specimenId = inferenceRepository.readSpecimenId(bitmap)
                         val (_, boundingBox) = inferenceRepository.detectSpecimen(bitmap)
-                        val boundingBoxUi = inferenceRepository.convertToBoundingBoxUi(
-                            boundingBox, bitmap.width, bitmap.height
-                        )
 
                         _state.update {
                             it.copy(
-                                currentSpecimenId = specimenId, currentBoundingBoxUi = boundingBoxUi
-                            )
+                                currentSpecimen = it.currentSpecimen.copy(id = specimenId),
+                                currentBoundingBoxUi = boundingBox?.let { boundingBox ->
+                                    inferenceRepository.convertToBoundingBoxUi(boundingBox)
+                                })
                         }
                     } catch (e: Exception) {
                         Log.e("ViewModel", "Image processing setup failed: ${e.message}")
@@ -84,10 +145,11 @@ class ImagingViewModel @Inject constructor(
                         if (species != null) {
                             _state.update {
                                 it.copy(
-                                    currentSpecies = species.label,
-                                    currentSex = sex?.label,
-                                    currentAbdomenStatus = abdomenStatus?.label,
-                                    currentImage = bitmap
+                                    currentSpecimen = it.currentSpecimen.copy(
+                                        species = species.label,
+                                        sex = sex?.label,
+                                        abdomenStatus = abdomenStatus?.label,
+                                    ), currentImage = bitmap
                                 )
                             }
                         } else {
@@ -101,11 +163,13 @@ class ImagingViewModel @Inject constructor(
                     }
                 }
 
-                ImagingAction.RetakeImage -> { clearSpecimenStateFields() }
+                ImagingAction.RetakeImage -> {
+                    clearCurrentSpecimenStateFields()
+                }
 
                 ImagingAction.SaveImageToSession -> {
                     val bitmap = _state.value.currentImage ?: return@launch
-                    val specimenId = _state.value.currentSpecimenId
+                    val specimenId = _state.value.currentSpecimen.id
                     val timestamp = System.currentTimeMillis()
                     val filename = buildString {
                         append(specimenId)
@@ -125,15 +189,29 @@ class ImagingViewModel @Inject constructor(
                     saveResult.onSuccess { imageUri ->
                         val specimen = Specimen(
                             id = specimenId,
-                            species = _state.value.currentSpecies,
-                            sex = _state.value.currentSex,
-                            abdomenStatus = _state.value.currentAbdomenStatus,
+                            species = _state.value.currentSpecimen.species,
+                            sex = _state.value.currentSpecimen.sex,
+                            abdomenStatus = _state.value.currentSpecimen.abdomenStatus,
                             imageUri = imageUri,
                             capturedAt = timestamp
                         )
 
-                        if (specimenRepository.upsertSpecimen(specimen, currentSession.id)) {
-                            clearSpecimenStateFields()
+                        val success = transactionHelper.runAsTransaction {
+                            val boundingBoxUi =
+                                _state.value.currentBoundingBoxUi ?: return@runAsTransaction false
+                            val boundingBox = inferenceRepository.convertToBoundingBox(
+                                boundingBoxUi
+                            )
+
+                            val specimenInserted =
+                                specimenRepository.upsertSpecimen(specimen, currentSession.id)
+                            val boundingBoxInserted =
+                                boundingBoxRepository.upsertBoundingBox(boundingBox, specimen.id)
+                            specimenInserted && boundingBoxInserted
+                        }
+
+                        if (success) {
+                            clearCurrentSpecimenStateFields()
                         }
                     }.onError { error ->
                         _events.send(ImagingEvent.DisplayImagingError(error))
@@ -143,13 +221,12 @@ class ImagingViewModel @Inject constructor(
         }
     }
 
-    private fun clearSpecimenStateFields() {
+    private fun clearCurrentSpecimenStateFields() {
         _state.update {
             it.copy(
-                currentSpecimenId = "",
-                currentSpecies = null,
-                currentSex = null,
-                currentAbdomenStatus = null,
+                currentSpecimen = it.currentSpecimen.copy(
+                    id = "", species = null, sex = null, abdomenStatus = null
+                ),
                 currentImage = null,
                 currentBoundingBoxUi = null,
             )

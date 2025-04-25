@@ -12,7 +12,7 @@ import com.vci.vectorcamapp.imaging.di.SexClassifier
 import com.vci.vectorcamapp.imaging.di.SpeciesClassifier
 import com.vci.vectorcamapp.imaging.di.SpecimenIdRecognizer
 import com.vci.vectorcamapp.imaging.domain.AbdomenStatusLabel
-import com.vci.vectorcamapp.imaging.domain.BoundingBox
+import com.vci.vectorcamapp.core.domain.model.BoundingBox
 import com.vci.vectorcamapp.imaging.domain.SexLabel
 import com.vci.vectorcamapp.imaging.domain.SpeciesLabel
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
@@ -35,6 +35,7 @@ class InferenceRepositoryImplementation @Inject constructor(
     @SexClassifier private val sexClassifier: SpecimenClassifier,
     @AbdomenStatusClassifier private val abdomenStatusClassifier: SpecimenClassifier,
 ) : InferenceRepository {
+
     override suspend fun readSpecimenId(bitmap: Bitmap): String = withContext(Dispatchers.IO) {
         try {
             val inputImage = InputImage.fromBitmap(bitmap, 0)
@@ -92,26 +93,51 @@ class InferenceRepositoryImplementation @Inject constructor(
             } ?: Triple(null, null, null)
         }
 
-    override fun convertToBoundingBoxUi(
-        boundingBox: BoundingBox?, imageWidth: Int, imageHeight: Int
-    ): BoundingBoxUi? {
-        if (boundingBox == null) return null
-
+    override fun convertToBoundingBox(boundingBoxUi: BoundingBoxUi): BoundingBox {
         val (tensorHeight, tensorWidth) = specimenDetector.getInputTensorShape()
 
-        val screenHeight = Resources.getSystem().displayMetrics.heightPixels.toFloat()
         val screenWidth = Resources.getSystem().displayMetrics.widthPixels.toFloat()
+        val screenHeight = Resources.getSystem().displayMetrics.heightPixels.toFloat()
 
-        val previewHeight = screenHeight
-        val previewWidth = (imageWidth.toFloat() / imageHeight.toFloat()) * previewHeight
+        val previewWidth = screenWidth
+        val previewHeight = HEIGHT_TO_WIDTH_ASPECT_RATIO * previewWidth
 
-        val scaleX = previewWidth / tensorWidth.toFloat()
-        val scaleY = previewHeight / tensorHeight.toFloat()
+        val verticalPadding = (screenHeight - previewHeight) / 2
 
-        val xOffset = (previewWidth - screenWidth) / 2
+        val scaleX = previewWidth / tensorWidth
+        val scaleY = previewHeight / tensorHeight
 
-        val scaledX = (boundingBox.topLeftX * tensorWidth * scaleX) - xOffset
-        val scaledY = boundingBox.topLeftY * tensorHeight * scaleY
+        val scaledX = boundingBoxUi.topLeftX / (scaleX * tensorWidth)
+        val scaledY = (boundingBoxUi.topLeftY - verticalPadding) / (scaleY * tensorHeight)
+        val scaledWidth = boundingBoxUi.width / (scaleX * tensorWidth)
+        val scaledHeight = boundingBoxUi.height / (scaleY * tensorHeight)
+
+        return BoundingBox(
+            topLeftX = scaledX,
+            topLeftY = scaledY,
+            width = scaledWidth,
+            height = scaledHeight,
+            confidence = boundingBoxUi.confidence,
+            classId = boundingBoxUi.classId,
+        )
+    }
+
+    override fun convertToBoundingBoxUi(boundingBox: BoundingBox): BoundingBoxUi {
+        val (tensorHeight, tensorWidth) = specimenDetector.getInputTensorShape()
+
+        val screenWidth = Resources.getSystem().displayMetrics.widthPixels.toFloat()
+        val screenHeight = Resources.getSystem().displayMetrics.heightPixels.toFloat()
+
+        val previewWidth = screenWidth
+        val previewHeight = HEIGHT_TO_WIDTH_ASPECT_RATIO * previewWidth
+
+        val verticalPadding = (screenHeight - previewHeight) / 2
+
+        val scaleX = previewWidth / tensorWidth
+        val scaleY = previewHeight / tensorHeight
+
+        val scaledX = boundingBox.topLeftX * tensorWidth * scaleX
+        val scaledY = boundingBox.topLeftY * tensorHeight * scaleY + verticalPadding
         val scaledWidth = boundingBox.width * tensorWidth * scaleX
         val scaledHeight = boundingBox.height * tensorHeight * scaleY
 
@@ -135,8 +161,12 @@ class InferenceRepositoryImplementation @Inject constructor(
     }
 
     private suspend fun getClassification(bitmap: Bitmap, classifier: SpecimenClassifier): Int? {
-        val (classifierTensorHeight, classifierTensorWidth) = classifier.getInputTensorShape()
+        val (tensorHeight, tensorWidth) = classifier.getInputTensorShape()
 
-        return classifier.classify(bitmap.resizeTo(classifierTensorWidth, classifierTensorHeight))
+        return classifier.classify(bitmap.resizeTo(tensorWidth, tensorHeight))
+    }
+
+    companion object {
+        private const val HEIGHT_TO_WIDTH_ASPECT_RATIO = 4f / 3f
     }
 }
