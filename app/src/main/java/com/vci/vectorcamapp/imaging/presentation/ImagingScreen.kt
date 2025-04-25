@@ -1,8 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
-import android.util.Size
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.CameraController
@@ -19,9 +17,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.vci.vectorcamapp.imaging.presentation.components.camera.CapturedSpecimenReviewPage
 import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreviewPage
-import com.vci.vectorcamapp.imaging.presentation.components.specimen.gallery.CapturedSpecimenPage
+import com.vci.vectorcamapp.imaging.presentation.components.specimen.gallery.CapturedSpecimenOverlay
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
 @Composable
@@ -42,33 +39,39 @@ fun ImagingScreen(
             setEnabledUseCases(CameraController.IMAGE_CAPTURE or CameraController.IMAGE_ANALYSIS)
             setImageAnalysisAnalyzer(ContextCompat.getMainExecutor(context), analyzer)
             imageCaptureFlashMode = ImageCapture.FLASH_MODE_OFF
-            imageAnalysisResolutionSelector = ResolutionSelector.Builder().setResolutionStrategy(
-                ResolutionStrategy(
-                    Size(640, 480), ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER
-                )
-            ).setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY).build()
             imageCaptureResolutionSelector = ResolutionSelector.Builder()
                 .setResolutionStrategy(ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY)
-                .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
                 .build()
         }
     }
 
     val pagerState = rememberPagerState(
         initialPage = 0,
-        pageCount = { state.specimens.size + 1 }
+        pageCount = { state.capturedSpecimensAndBoundingBoxesUi.size + 1 }
     )
 
     HorizontalPager(
         state = pagerState, modifier = modifier.fillMaxSize()
     ) { page ->
         when {
-            page < state.specimens.size -> {
-                CapturedSpecimenPage(specimen = state.specimens[page], modifier = modifier)
+            page < state.capturedSpecimensAndBoundingBoxesUi.size -> {
+                CapturedSpecimenOverlay(
+                    specimen = state.capturedSpecimensAndBoundingBoxesUi[page].specimen,
+                    boundingBoxUi = state.capturedSpecimensAndBoundingBoxesUi[page].boundingBoxUi,
+                    modifier = modifier
+                )
             }
 
-            state.currentImage != null -> {
-                CapturedSpecimenReviewPage(state = state, onAction = onAction, modifier = modifier)
+            (state.currentImage != null && state.currentBoundingBoxUi != null) -> {
+                CapturedSpecimenOverlay(
+                    specimen = state.currentSpecimen,
+                    boundingBoxUi = state.currentBoundingBoxUi,
+                    modifier = modifier,
+                    specimenBitmap = state.currentImage,
+                    onSpecimenIdCorrected = { onAction(ImagingAction.CorrectSpecimenId(it)) },
+                    onRetakeImage = { onAction(ImagingAction.RetakeImage) },
+                    onSaveImageToSession = { onAction(ImagingAction.SaveImageToSession) }
+                )
             }
 
             else -> {

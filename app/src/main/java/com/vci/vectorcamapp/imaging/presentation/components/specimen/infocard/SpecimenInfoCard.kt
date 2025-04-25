@@ -14,20 +14,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.vci.vectorcamapp.core.domain.model.Specimen
 
 @Composable
 fun SpecimenInfoCard(
-    specimenId: String,
-    species: String?,
-    sex: String?,
-    abdomenStatus: String?,
-    onSpecimenIdCorrected: (String) -> Unit,
+    specimen: Specimen,
+    onSpecimenIdChanged: ((String) -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(24.dp)
             .background(
                 color = Color.White,
                 shape = MaterialTheme.shapes.medium
@@ -35,30 +32,34 @@ fun SpecimenInfoCard(
             .padding(16.dp)
     ) {
         Column {
-            OutlinedTextField(
-                value = specimenId,
-                onValueChange = onSpecimenIdCorrected,
-                label = { Text("Specimen ID") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            species?.let {
-                Spacer(modifier = Modifier.height(12.dp))
-
-                LabelRow("Species: ", species, modifier = modifier)
+            if (onSpecimenIdChanged != null) {
+                OutlinedTextField(
+                    value = specimen.id,
+                    onValueChange = onSpecimenIdChanged,
+                    label = { Text("Specimen ID") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            } else {
+                LabelRow("Specimen ID: ", specimen.id, modifier = modifier)
             }
 
-            sex?.let {
+            specimen.species?.let {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                LabelRow("Sex: ", sex, modifier = modifier)
+                LabelRow("Species: ", it, modifier = modifier)
             }
 
-            abdomenStatus?.let {
+            specimen.sex?.let {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                LabelRow("Abdomen Status: ", abdomenStatus, modifier = modifier)
+                LabelRow("Sex: ", it, modifier = modifier)
+            }
+
+            specimen.abdomenStatus?.let {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LabelRow("Abdomen Status: ", it, modifier = modifier)
             }
         }
     }

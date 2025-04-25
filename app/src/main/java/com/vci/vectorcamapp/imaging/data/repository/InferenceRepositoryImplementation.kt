@@ -35,6 +35,7 @@ class InferenceRepositoryImplementation @Inject constructor(
     @SexClassifier private val sexClassifier: SpecimenClassifier,
     @AbdomenStatusClassifier private val abdomenStatusClassifier: SpecimenClassifier,
 ) : InferenceRepository {
+
     override suspend fun readSpecimenId(bitmap: Bitmap): String = withContext(Dispatchers.IO) {
         try {
             val inputImage = InputImage.fromBitmap(bitmap, 0)
@@ -92,18 +93,14 @@ class InferenceRepositoryImplementation @Inject constructor(
             } ?: Triple(null, null, null)
         }
 
-    override fun convertToBoundingBox(
-        boundingBoxUi: BoundingBoxUi?, imageWidth: Int, imageHeight: Int
-    ): BoundingBox? {
-        if (boundingBoxUi == null) return null
-
+    override fun convertToBoundingBox(boundingBoxUi: BoundingBoxUi): BoundingBox {
         val (tensorHeight, tensorWidth) = specimenDetector.getInputTensorShape()
 
         val screenWidth = Resources.getSystem().displayMetrics.widthPixels.toFloat()
         val screenHeight = Resources.getSystem().displayMetrics.heightPixels.toFloat()
 
         val previewWidth = screenWidth
-        val previewHeight = (imageHeight.toFloat() / imageWidth.toFloat()) * previewWidth
+        val previewHeight = HEIGHT_TO_WIDTH_ASPECT_RATIO * previewWidth
 
         val verticalPadding = (screenHeight - previewHeight) / 2
 
@@ -125,18 +122,14 @@ class InferenceRepositoryImplementation @Inject constructor(
         )
     }
 
-    override fun convertToBoundingBoxUi(
-        boundingBox: BoundingBox?, imageWidth: Int, imageHeight: Int
-    ): BoundingBoxUi? {
-        if (boundingBox == null) return null
-
+    override fun convertToBoundingBoxUi(boundingBox: BoundingBox): BoundingBoxUi {
         val (tensorHeight, tensorWidth) = specimenDetector.getInputTensorShape()
 
         val screenWidth = Resources.getSystem().displayMetrics.widthPixels.toFloat()
         val screenHeight = Resources.getSystem().displayMetrics.heightPixels.toFloat()
 
         val previewWidth = screenWidth
-        val previewHeight = (imageHeight.toFloat() / imageWidth.toFloat()) * previewWidth
+        val previewHeight = HEIGHT_TO_WIDTH_ASPECT_RATIO * previewWidth
 
         val verticalPadding = (screenHeight - previewHeight) / 2
 
@@ -168,8 +161,12 @@ class InferenceRepositoryImplementation @Inject constructor(
     }
 
     private suspend fun getClassification(bitmap: Bitmap, classifier: SpecimenClassifier): Int? {
-        val (classifierTensorHeight, classifierTensorWidth) = classifier.getInputTensorShape()
+        val (tensorHeight, tensorWidth) = classifier.getInputTensorShape()
 
-        return classifier.classify(bitmap.resizeTo(classifierTensorWidth, classifierTensorHeight))
+        return classifier.classify(bitmap.resizeTo(tensorWidth, tensorHeight))
+    }
+
+    companion object {
+        private const val HEIGHT_TO_WIDTH_ASPECT_RATIO = 4f / 3f
     }
 }

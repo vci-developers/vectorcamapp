@@ -6,10 +6,10 @@ import com.vci.vectorcamapp.core.data.room.entities.BoundingBoxEntity
 import com.vci.vectorcamapp.core.data.room.entities.SpecimenEntity
 
 data class SpecimenAndBoundingBoxRelation(
-    @Embedded val specimen: SpecimenEntity,
+    @Embedded val specimenEntity: SpecimenEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "specimenId"
     )
-    val boundingBox: BoundingBoxEntity
+    val boundingBoxEntity: BoundingBoxEntity
 )

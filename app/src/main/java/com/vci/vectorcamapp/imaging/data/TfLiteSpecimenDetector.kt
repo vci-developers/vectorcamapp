@@ -35,6 +35,12 @@ class TfLiteSpecimenDetector(
         ImageProcessor.Builder().add(CastOp(DataType.FLOAT32)).add(NormalizeOp(0f, 255f)).build()
     }
 
+    private var inputTensorHeight = DEFAULT_TENSOR_HEIGHT
+    private var inputTensorWidth = DEFAULT_TENSOR_WIDTH
+
+    private var outputNumChannels = DEFAULT_NUM_CHANNELS
+    private var outputNumElements = DEFAULT_NUM_ELEMENTS
+
     init {
         handler.post { initializeInterpreter() }
     }
@@ -58,6 +64,15 @@ class TfLiteSpecimenDetector(
 
                 options.setNumThreads(Runtime.getRuntime().availableProcessors())
                 detector = Interpreter(model, options)
+
+                detector?.let {
+                    inputTensorHeight = it.getInputTensor(0).shape()[1]
+                    inputTensorWidth = it.getInputTensor(0).shape()[2]
+
+                    outputNumChannels = it.getOutputTensor(0).shape()[1]
+                    outputNumElements = it.getOutputTensor(0).shape()[2]
+                }
+
                 Log.d(TAG, "TFLite interpreter initialized")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
@@ -65,43 +80,9 @@ class TfLiteSpecimenDetector(
         }
     }
 
-    private fun isReady(): Boolean = synchronized(detectorLock) {
-        !isClosed && detector != null
-    }
+    override fun getInputTensorShape(): Pair<Int, Int> = inputTensorHeight to inputTensorWidth
 
-    override fun getInputTensorShape(): Pair<Int, Int> {
-        synchronized(detectorLock) {
-            if (!isReady()) {
-                Log.w(TAG, "Detector not ready in getInputTensorShape")
-                return DEFAULT_TENSOR_HEIGHT to DEFAULT_TENSOR_WIDTH
-            }
-
-            return try {
-                val shape = detector!!.getInputTensor(0).shape()
-                shape[1] to shape[2]
-            } catch (e: Exception) {
-                Log.e(TAG, "getInputTensorShape failed: ${e.message}")
-                DEFAULT_TENSOR_HEIGHT to DEFAULT_TENSOR_WIDTH
-            }
-        }
-    }
-
-    override fun getOutputTensorShape(): Pair<Int, Int> {
-        synchronized(detectorLock) {
-            if (!isReady()) {
-                Log.w(TAG, "Detector not ready in getOutputTensorShape")
-                return DEFAULT_NUM_CHANNELS to DEFAULT_NUM_ELEMENTS
-            }
-
-            return try {
-                val shape = detector!!.getOutputTensor(0).shape()
-                shape[1] to shape[2]
-            } catch (e: Exception) {
-                Log.e(TAG, "getOutputTensorShape failed: ${e.message}")
-                DEFAULT_NUM_CHANNELS to DEFAULT_NUM_ELEMENTS
-            }
-        }
-    }
+    override fun getOutputTensorShape(): Pair<Int, Int> = outputNumChannels to outputNumElements
 
     override suspend fun detect(bitmap: Bitmap): BoundingBox? {
         if (!isReady()) return null
@@ -109,20 +90,19 @@ class TfLiteSpecimenDetector(
         return suspendCoroutine { continuation ->
             handler.post {
                 try {
-                    val (numChannels, numElements) = getOutputTensorShape()
                     val tensorImage = TensorImage(DataType.FLOAT32).apply {
                         load(bitmap.copy(Bitmap.Config.ARGB_8888, false))
                     }
                     val input = imageProcessor.process(tensorImage)
 
                     val output = TensorBuffer.createFixedSize(
-                        intArrayOf(1, numChannels, numElements), DataType.FLOAT32
+                        intArrayOf(1, outputNumChannels, outputNumElements), DataType.FLOAT32
                     )
 
                     val result = synchronized(detectorLock) {
                         if (!isReady()) return@post continuation.resume(null)
                         detector?.run(input.buffer, output.buffer)
-                        getBestBox(output.floatArray, numChannels, numElements)
+                        getBestBox(output.floatArray)
                     }
 
                     continuation.resume(result)
@@ -152,18 +132,22 @@ class TfLiteSpecimenDetector(
         }
     }
 
-    private fun getBestBox(boxes: FloatArray, numChannels: Int, numElements: Int): BoundingBox? {
+    private fun isReady(): Boolean = synchronized(detectorLock) {
+        !isClosed && detector != null
+    }
+
+    private fun getBestBox(boxes: FloatArray): BoundingBox? {
         val boundingBoxes = mutableListOf<BoundingBox>()
 
-        for (i in 0 until numChannels) {
-            val baseIndex = i * numElements
+        for (i in 0 until outputNumChannels) {
+            val baseIndex = i * outputNumElements
             val confidence = boxes[baseIndex + 4]
 
             if (confidence < CONFIDENCE_THRESHOLD) continue
 
             var maxClassScore = -1f
             var bestClassIndex = -1
-            for (j in 5 until numElements) {
+            for (j in 5 until outputNumElements) {
                 val score = boxes[baseIndex + j]
                 if (score > maxClassScore) {
                     maxClassScore = score

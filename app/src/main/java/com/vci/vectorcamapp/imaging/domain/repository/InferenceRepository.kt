@@ -14,9 +14,9 @@ interface InferenceRepository {
 
     suspend fun classifySpecimen(bitmap: Bitmap) : Triple<SpeciesLabel?, SexLabel?, AbdomenStatusLabel?>
 
-    fun convertToBoundingBox(boundingBoxUi: BoundingBoxUi?, imageWidth: Int, imageHeight: Int) : BoundingBox?
+    fun convertToBoundingBox(boundingBoxUi: BoundingBoxUi) : BoundingBox
 
-    fun convertToBoundingBoxUi(boundingBox: BoundingBox?, imageWidth: Int, imageHeight: Int) : BoundingBoxUi?
+    fun convertToBoundingBoxUi(boundingBox: BoundingBox) : BoundingBoxUi
 
     fun closeResources()
 }
