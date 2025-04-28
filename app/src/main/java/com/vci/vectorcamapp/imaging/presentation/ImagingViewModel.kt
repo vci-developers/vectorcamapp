@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.repository.BoundingBoxRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
+import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
@@ -203,11 +204,22 @@ class ImagingViewModel @Inject constructor(
                                 boundingBoxUi
                             )
 
-                            val specimenInserted =
-                                specimenRepository.upsertSpecimen(specimen, currentSession.id)
-                            val boundingBoxInserted =
-                                boundingBoxRepository.upsertBoundingBox(boundingBox, specimen.id)
-                            specimenInserted && boundingBoxInserted
+                            val specimenResult =
+                                specimenRepository.insertSpecimen(specimen, currentSession.id)
+                            val boundingBoxResult =
+                                boundingBoxRepository.insertBoundingBox(boundingBox, specimen.id)
+
+                            specimenResult.onError { error ->
+                                Log.d("ROOM ERROR", "Specimen error: $error")
+                                return@runAsTransaction false
+                            }
+
+                            boundingBoxResult.onError { error ->
+                                Log.d("ROOM ERROR", "Bounding box error: $error")
+                                return@runAsTransaction false
+                            }
+
+                            true
                         }
 
                         if (success) {

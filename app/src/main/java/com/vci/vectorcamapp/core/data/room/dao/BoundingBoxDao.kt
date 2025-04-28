@@ -1,12 +1,13 @@
 package com.vci.vectorcamapp.core.data.room.dao
 
 import androidx.room.Dao
-import androidx.room.Upsert
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import com.vci.vectorcamapp.core.data.room.entities.BoundingBoxEntity
 
 @Dao
 interface BoundingBoxDao {
 
-    @Upsert
-    suspend fun upsertBoundingBox(boundingBoxEntity: BoundingBoxEntity): Long
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertBoundingBox(boundingBoxEntity: BoundingBoxEntity)
 }
