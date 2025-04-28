@@ -2,10 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.devtools.ksp)
+    alias(libs.plugins.google.dagger.hilt.android)
+    alias(libs.plugins.androidx.room)
     kotlin("plugin.serialization") version "2.0.21"
-    id("com.google.devtools.ksp")
-    id("com.google.dagger.hilt.android")
-    id("androidx.room")
 }
 
 android {
