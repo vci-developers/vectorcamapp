@@ -26,6 +26,7 @@ fun LiveCameraPreviewPage(
     controller: LifecycleCameraController,
     boundingBoxUi: BoundingBoxUi?,
     onImageCaptured: () -> Unit,
+    onSubmitSession: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -46,6 +47,22 @@ fun LiveCameraPreviewPage(
 
         boundingBoxUi?.let {
             BoundingBoxOverlay(it, modifier.fillMaxSize())
+        }
+
+        IconButton(
+            onClick = onSubmitSession,
+            modifier = modifier
+                .padding(24.dp)
+                .size(64.dp)
+                .background(MaterialTheme.colorScheme.tertiary, CircleShape)
+                .align(Alignment.TopEnd)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_upload),
+                contentDescription = "Submit Session",
+                modifier = modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onTertiary
+            )
         }
 
         IconButton(

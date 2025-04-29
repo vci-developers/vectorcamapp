@@ -75,7 +75,6 @@ fun NavGraph() {
                         navController.navigate(Destination.Landing) {
                             popUpTo(Destination.Landing) {
                                 inclusive = false
-                                saveState = true
                             }
                             launchSingleTop = true
                             restoreState = true
@@ -114,7 +113,6 @@ fun NavGraph() {
                         navController.navigate(Destination.Landing) {
                             popUpTo(Destination.Landing) {
                                 inclusive = false
-                                saveState = true
                             }
                             launchSingleTop = true
                             restoreState = true

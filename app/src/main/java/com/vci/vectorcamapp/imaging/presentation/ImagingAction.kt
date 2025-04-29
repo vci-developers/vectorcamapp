@@ -9,4 +9,5 @@ sealed interface ImagingAction {
     data class CaptureImage(val controller: LifecycleCameraController) : ImagingAction
     data object SaveImageToSession : ImagingAction
     data object RetakeImage : ImagingAction
+    data object SubmitSession: ImagingAction
 }

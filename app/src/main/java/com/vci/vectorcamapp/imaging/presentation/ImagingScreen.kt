@@ -79,6 +79,7 @@ fun ImagingScreen(
                     controller = controller,
                     boundingBoxUi = state.currentBoundingBoxUi,
                     onImageCaptured = { onAction(ImagingAction.CaptureImage(controller)) },
+                    onSubmitSession = { onAction(ImagingAction.SubmitSession) },
                     modifier = modifier
                 )
             }

@@ -228,6 +228,20 @@ class ImagingViewModel @Inject constructor(
                         _events.send(ImagingEvent.DisplayImagingError(error))
                     }
                 }
+
+                ImagingAction.SubmitSession -> {
+                    val currentSession = currentSessionCache.getSession()
+                    if (currentSession == null) {
+                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        return@launch
+                    }
+                    val success = sessionRepository.markSessionAsComplete(currentSession.id)
+                    if (success) {
+                        currentSessionCache.clearSession()
+                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        // TODO: Trigger background task to upload images to cloud
+                    }
+                }
             }
         }
     }
