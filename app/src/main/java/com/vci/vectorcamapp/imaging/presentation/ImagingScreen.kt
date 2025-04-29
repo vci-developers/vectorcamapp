@@ -79,6 +79,8 @@ fun ImagingScreen(
                     controller = controller,
                     boundingBoxUi = state.currentBoundingBoxUi,
                     onImageCaptured = { onAction(ImagingAction.CaptureImage(controller)) },
+                    onSaveSessionProgress = { onAction(ImagingAction.SaveSessionProgress) },
+                    onSubmitSession = { onAction(ImagingAction.SubmitSession) },
                     modifier = modifier
                 )
             }
