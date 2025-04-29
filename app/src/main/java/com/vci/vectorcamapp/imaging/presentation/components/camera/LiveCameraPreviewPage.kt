@@ -26,6 +26,7 @@ fun LiveCameraPreviewPage(
     controller: LifecycleCameraController,
     boundingBoxUi: BoundingBoxUi?,
     onImageCaptured: () -> Unit,
+    onSaveSessionProgress: () -> Unit,
     onSubmitSession: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -47,6 +48,22 @@ fun LiveCameraPreviewPage(
 
         boundingBoxUi?.let {
             BoundingBoxOverlay(it, modifier.fillMaxSize())
+        }
+
+        IconButton(
+            onClick = onSaveSessionProgress,
+            modifier = modifier
+                .padding(24.dp)
+                .size(64.dp)
+                .background(MaterialTheme.colorScheme.tertiary, CircleShape)
+                .align(Alignment.TopStart)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_save),
+                contentDescription = "Save Session Progress",
+                modifier = modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onTertiary
+            )
         }
 
         IconButton(

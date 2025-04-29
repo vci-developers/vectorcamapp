@@ -110,7 +110,7 @@ fun CapturedSpecimenOverlay(
                                 .background(MaterialTheme.colorScheme.primary, CircleShape)
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_save_to_session),
+                                painter = painterResource(id = R.drawable.ic_add),
                                 contentDescription = "Add Image To Session",
                                 tint = Color.White
                             )

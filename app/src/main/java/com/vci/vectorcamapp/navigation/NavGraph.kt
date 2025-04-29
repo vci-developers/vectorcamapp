@@ -72,13 +72,7 @@ fun NavGraph() {
                     )
 
                     SurveillanceFormEvent.NavigateBackToLandingScreen -> {
-                        navController.navigate(Destination.Landing) {
-                            popUpTo(Destination.Landing) {
-                                inclusive = false
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        navController.popBackStack(Destination.Landing, false)
                     }
                 }
             }
@@ -110,13 +104,7 @@ fun NavGraph() {
                     }
 
                     ImagingEvent.NavigateBackToLandingScreen -> {
-                        navController.navigate(Destination.Landing) {
-                            popUpTo(Destination.Landing) {
-                                inclusive = false
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        navController.popBackStack(Destination.Landing, false)
                     }
                 }
             }

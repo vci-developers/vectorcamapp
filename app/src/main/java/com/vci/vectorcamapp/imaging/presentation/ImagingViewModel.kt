@@ -127,6 +127,25 @@ class ImagingViewModel @Inject constructor(
                     }
                 }
 
+                ImagingAction.SaveSessionProgress -> {
+                    currentSessionCache.clearSession()
+                    _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                }
+
+                ImagingAction.SubmitSession -> {
+                    val currentSession = currentSessionCache.getSession()
+                    if (currentSession == null) {
+                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        return@launch
+                    }
+                    val success = sessionRepository.markSessionAsComplete(currentSession.id)
+                    if (success) {
+                        currentSessionCache.clearSession()
+                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        // TODO: Trigger background task to upload images to cloud
+                    }
+                }
+
                 is ImagingAction.CaptureImage -> {
                     _state.update { it.copy(isCapturing = true) }
 
@@ -226,20 +245,6 @@ class ImagingViewModel @Inject constructor(
                         }
                     }.onError { error ->
                         _events.send(ImagingEvent.DisplayImagingError(error))
-                    }
-                }
-
-                ImagingAction.SubmitSession -> {
-                    val currentSession = currentSessionCache.getSession()
-                    if (currentSession == null) {
-                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                        return@launch
-                    }
-                    val success = sessionRepository.markSessionAsComplete(currentSession.id)
-                    if (success) {
-                        currentSessionCache.clearSession()
-                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                        // TODO: Trigger background task to upload images to cloud
                     }
                 }
             }
