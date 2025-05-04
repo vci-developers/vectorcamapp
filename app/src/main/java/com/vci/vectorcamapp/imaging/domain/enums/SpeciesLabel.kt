@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.imaging.domain
+package com.vci.vectorcamapp.imaging.domain.enums
 
 enum class SpeciesLabel(val label: String) {
     ANOPHELES_FUNESTUS("Anopheles funestus"),

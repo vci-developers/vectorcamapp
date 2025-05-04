@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.imaging.domain
+package com.vci.vectorcamapp.imaging.domain.enums
 
 enum class AbdomenStatusLabel(val label: String) {
     UNFED("Unfed"),
