@@ -11,10 +11,10 @@ import com.vci.vectorcamapp.imaging.di.Detector
 import com.vci.vectorcamapp.imaging.di.SexClassifier
 import com.vci.vectorcamapp.imaging.di.SpeciesClassifier
 import com.vci.vectorcamapp.imaging.di.SpecimenIdRecognizer
-import com.vci.vectorcamapp.imaging.domain.AbdomenStatusLabel
+import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
 import com.vci.vectorcamapp.core.domain.model.BoundingBox
-import com.vci.vectorcamapp.imaging.domain.SexLabel
-import com.vci.vectorcamapp.imaging.domain.SpeciesLabel
+import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
+import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
