@@ -41,6 +41,7 @@ fun SurveillanceFormScreen(
             value = state.surveillanceForm.country,
             onValueChange = { onAction(SurveillanceFormAction.EnterCountry(it)) },
             singleLine = true,
+            error = state.surveillanceFormErrors.country,
             modifier = modifier
         )
 
@@ -49,6 +50,7 @@ fun SurveillanceFormScreen(
             value = state.surveillanceForm.district,
             onValueChange = { onAction(SurveillanceFormAction.EnterDistrict(it)) },
             singleLine = true,
+            error = state.surveillanceFormErrors.district,
             modifier = modifier
         )
 
@@ -57,6 +59,7 @@ fun SurveillanceFormScreen(
             value = state.surveillanceForm.healthCenter,
             onValueChange = { onAction(SurveillanceFormAction.EnterHealthCenter(it)) },
             singleLine = true,
+            error = state.surveillanceFormErrors.healthCenter,
             modifier = modifier
         )
 
@@ -65,6 +68,7 @@ fun SurveillanceFormScreen(
             value = state.surveillanceForm.sentinelSite,
             onValueChange = { onAction(SurveillanceFormAction.EnterSentinelSite(it)) },
             singleLine = true,
+            error = state.surveillanceFormErrors.sentinelSite,
             modifier = modifier
         )
 
@@ -73,6 +77,7 @@ fun SurveillanceFormScreen(
             value = state.surveillanceForm.householdNumber,
             onValueChange = { onAction(SurveillanceFormAction.EnterHouseholdNumber(it)) },
             singleLine = true,
+            error = state.surveillanceFormErrors.householdNumber,
             modifier = modifier
         )
 
@@ -83,6 +88,7 @@ fun SurveillanceFormScreen(
             label = "Collection Date",
             selectedDateInMillis = state.surveillanceForm.collectionDate,
             onDateSelected = { onAction(SurveillanceFormAction.PickCollectionDate(it)) },
+            error = state.surveillanceFormErrors.collectionDate,
             modifier = modifier
         )
 
@@ -91,6 +97,7 @@ fun SurveillanceFormScreen(
             options = CollectionMethodOption.entries,
             selectedOption = CollectionMethodOption.entries.find { it.label == state.surveillanceForm.collectionMethod },
             onOptionSelected = { onAction(SurveillanceFormAction.SelectCollectionMethod(it)) },
+            error = state.surveillanceFormErrors.collectionMethod,
             modifier = modifier
         )
 
@@ -99,6 +106,7 @@ fun SurveillanceFormScreen(
             value = state.surveillanceForm.collectorName,
             onValueChange = { onAction(SurveillanceFormAction.EnterCollectorName(it)) },
             singleLine = true,
+            error = state.surveillanceFormErrors.collectorName,
             modifier = modifier
         )
 
@@ -107,6 +115,7 @@ fun SurveillanceFormScreen(
             value = state.surveillanceForm.collectorTitle,
             onValueChange = { onAction(SurveillanceFormAction.EnterCollectorTitle(it)) },
             singleLine = true,
+            error = state.surveillanceFormErrors.collectorTitle,
             modifier = modifier
         )
 
@@ -152,6 +161,7 @@ fun SurveillanceFormScreen(
                 options = LlinTypeOption.entries,
                 selectedOption = LlinTypeOption.entries.find { it.label == state.surveillanceForm.llinType },
                 onOptionSelected = { onAction(SurveillanceFormAction.SelectLlinType(it)) },
+                error = state.surveillanceFormErrors.llinType,
                 modifier = modifier
             )
         }
@@ -162,6 +172,7 @@ fun SurveillanceFormScreen(
                 options = LlinBrandOption.entries,
                 selectedOption = LlinBrandOption.entries.find { it.label == state.surveillanceForm.llinBrand },
                 onOptionSelected = { onAction(SurveillanceFormAction.SelectLlinBrand(it)) },
+                error = state.surveillanceFormErrors.llinBrand,
                 modifier = modifier
             )
         }
@@ -185,7 +196,7 @@ fun SurveillanceFormScreen(
         )
 
         Button(
-            onClick = { onAction(SurveillanceFormAction.StartImaging) }, modifier = modifier
+            onClick = { onAction(SurveillanceFormAction.SubmitSurveillanceForm) }, modifier = modifier
         ) {
             Text("Start Imaging")
         }

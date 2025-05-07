@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.surveillance_form.presentation
 
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
+import com.vci.vectorcamapp.surveillance_form.presentation.model.SurveillanceFormErrors
 
 data class SurveillanceFormState(
     val isLoading: Boolean = false,
@@ -24,5 +25,18 @@ data class SurveillanceFormState(
         llinBrand = null,
         numPeopleSleptUnderLlin = null,
         notes = ""
+    ),
+    val surveillanceFormErrors: SurveillanceFormErrors = SurveillanceFormErrors(
+        country = null,
+        district = null,
+        healthCenter = null,
+        sentinelSite = null,
+        householdNumber = null,
+        collectionDate = null,
+        collectionMethod = null,
+        collectorName = null,
+        collectorTitle = null,
+        llinType = null,
+        llinBrand = null
     )
 )

@@ -7,6 +7,8 @@ sealed interface Result<out D, out E : Error> {
     data class Error<out E : DomainError>(val error: E) : Result<Nothing, E>
 }
 
+fun <E: Error> Result<*, E>.errorOrNull() : E? = (this as? Result.Error)?.error
+
 inline fun <T, E : Error, R> Result<T, E>.map(map: (T) -> R): Result<R, E> {
     return when (this) {
         is Result.Error -> Result.Error(error)

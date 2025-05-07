@@ -62,7 +62,7 @@ fun NavGraph() {
         }
         composable<Destination.SurveillanceForm> {
             // TODO: UPON PRESSING THE BACK BUTTON, SHOULD CLEAR THE CACHE!
-            val viewModel = viewModel<SurveillanceFormViewModel>()
+            val viewModel = hiltViewModel<SurveillanceFormViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
             ObserveAsEvents(events = viewModel.events) { event ->

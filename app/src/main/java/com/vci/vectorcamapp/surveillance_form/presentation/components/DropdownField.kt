@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,10 +17,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.surveillance_form.domain.enums.SurveillanceFormDropdownOption
+import com.vci.vectorcamapp.surveillance_form.domain.util.FormValidationError
+import com.vci.vectorcamapp.surveillance_form.presentation.util.toString
 
 @Composable
 fun <T : SurveillanceFormDropdownOption> DropdownField(
@@ -27,8 +32,10 @@ fun <T : SurveillanceFormDropdownOption> DropdownField(
     options: List<T>,
     selectedOption: T?,
     onOptionSelected: (T) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    error: FormValidationError? = null
 ) {
+    val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -39,8 +46,9 @@ fun <T : SurveillanceFormDropdownOption> DropdownField(
             OutlinedTextField(
                 value = selectedOption?.label ?: "",
                 onValueChange = { },
-                enabled = false,
                 label = { Text(label) },
+                isError = error != null,
+                enabled = false,
                 trailingIcon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_arrow_drop_down),
@@ -66,6 +74,16 @@ fun <T : SurveillanceFormDropdownOption> DropdownField(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+        }
+
+        if (error != null) {
+            Text(
+                text = error.toString(context),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Start
+            )
         }
     }
 }
