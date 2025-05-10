@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.util.onError
+import com.vci.vectorcamapp.core.domain.util.onSuccess
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -44,10 +46,10 @@ class LandingViewModel @Inject constructor(
                         createdAt = System.currentTimeMillis(),
                         submittedAt = null
                     )
-                    if (sessionRepository.upsertSession(newSession)) {
+                    sessionRepository.upsertSession(newSession).onSuccess {
                         currentSessionCache.saveSession(newSession)
                         _events.send(LandingEvent.NavigateToNewSurveillanceSessionScreen)
-                    } else {
+                    }.onError {
                         Log.e("LandingViewModel", "Failed to create session.")
                     }
                 }

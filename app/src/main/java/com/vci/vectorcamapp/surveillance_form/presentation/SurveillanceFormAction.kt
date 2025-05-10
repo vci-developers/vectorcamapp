@@ -5,6 +5,7 @@ import com.vci.vectorcamapp.surveillance_form.domain.enums.LlinBrandOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.LlinTypeOption
 
 sealed interface SurveillanceFormAction {
+    data object SaveSessionProgress: SurveillanceFormAction
     data object SubmitSurveillanceForm: SurveillanceFormAction
     data class EnterCountry(val text: String) : SurveillanceFormAction
     data class EnterDistrict(val text: String) : SurveillanceFormAction

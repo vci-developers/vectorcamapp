@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.surveillance_form.presentation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -29,6 +30,10 @@ fun SurveillanceFormScreen(
     modifier: Modifier = Modifier
 ) {
     val verticalScrollState = rememberScrollState()
+
+    BackHandler {
+        onAction(SurveillanceFormAction.SaveSessionProgress)
+    }
 
     Column(
         modifier = modifier
