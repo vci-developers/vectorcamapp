@@ -1,9 +1,14 @@
 package com.vci.vectorcamapp.surveillance_form.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
+import com.vci.vectorcamapp.core.domain.util.onError
+import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.surveillance_form.domain.use_cases.ValidationUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -19,7 +24,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SurveillanceFormViewModel @Inject constructor(
-    private val validationUseCases: ValidationUseCases
+    private val validationUseCases: ValidationUseCases,
+    private val currentSessionCache: CurrentSessionCache,
+    private val surveillanceFormRepository: SurveillanceFormRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SurveillanceFormState())
@@ -35,6 +42,11 @@ class SurveillanceFormViewModel @Inject constructor(
     fun onAction(action: SurveillanceFormAction) {
         viewModelScope.launch {
             when (action) {
+                SurveillanceFormAction.SaveSessionProgress -> {
+                    currentSessionCache.clearSession()
+                    _events.send(SurveillanceFormEvent.NavigateBackToLandingScreen)
+                }
+
                 SurveillanceFormAction.SubmitSurveillanceForm -> {
                     val surveillanceForm = _state.value.surveillanceForm
 
@@ -75,7 +87,16 @@ class SurveillanceFormViewModel @Inject constructor(
                     ).any { it is Result.Error }
 
                     if (!hasError) {
-                        _events.send(SurveillanceFormEvent.NavigateToImagingScreen)
+                        val session = currentSessionCache.getSession()
+                        if (session == null) {
+                            _events.send(SurveillanceFormEvent.NavigateBackToLandingScreen)
+                            return@launch
+                        }
+                        surveillanceFormRepository.upsertSurveillanceForm(surveillanceForm, session.id).onSuccess {
+                            _events.send(SurveillanceFormEvent.NavigateToImagingScreen)
+                        }.onError { error ->
+                            Log.e("ROOM DB ERROR", error.toString())
+                        }
                     } else {
                         _state.update {
                             it.copy(

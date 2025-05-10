@@ -18,8 +18,7 @@ val MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE = object : Migration(1, 2) {
                 PRIMARY KEY(`specimenId`),
                 FOREIGN KEY(`specimenId`) REFERENCES `specimen`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
             )
-        """.trimIndent()
+            """.trimIndent()
         )
     }
-
 }

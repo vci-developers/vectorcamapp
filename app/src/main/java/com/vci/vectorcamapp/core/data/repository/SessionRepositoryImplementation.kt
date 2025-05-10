@@ -6,6 +6,8 @@ import com.vci.vectorcamapp.core.data.room.dao.SessionDao
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.composites.SessionWithSpecimens
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.UUID
@@ -14,8 +16,13 @@ import javax.inject.Inject
 class SessionRepositoryImplementation @Inject constructor(
     private val sessionDao: SessionDao
 ) : SessionRepository {
-    override suspend fun upsertSession(session: Session): Boolean {
-        return sessionDao.upsertSession(session.toEntity()) != -1L
+    override suspend fun upsertSession(session: Session): Result<Unit, RoomDbError> {
+        return try {
+            sessionDao.upsertSession(session.toEntity())
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(RoomDbError.UNKNOWN_ERROR)
+        }
     }
 
     override suspend fun deleteSession(session: Session): Boolean {

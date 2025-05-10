@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.data.room.VectorCamDatabase
 import com.vci.vectorcamapp.core.data.room.dao.BoundingBoxDao
 import com.vci.vectorcamapp.core.data.room.dao.SessionDao
 import com.vci.vectorcamapp.core.data.room.dao.SpecimenDao
+import com.vci.vectorcamapp.core.data.room.dao.SurveillanceFormDao
 import com.vci.vectorcamapp.core.data.room.migrations.ALL_MIGRATIONS
 import dagger.Module
 import dagger.Provides
@@ -57,4 +58,7 @@ object RoomDatabaseModule {
 
     @Provides
     fun provideBoundingBoxDao(db: VectorCamDatabase): BoundingBoxDao = db.boundingBoxDao
+
+    @Provides
+    fun provideSurveillanceFormDao(db: VectorCamDatabase): SurveillanceFormDao = db.surveillanceFormDao
 }
