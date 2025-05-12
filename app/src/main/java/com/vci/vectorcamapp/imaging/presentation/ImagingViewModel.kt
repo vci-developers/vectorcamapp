@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.repository.BoundingBoxRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
+import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
@@ -229,19 +230,19 @@ class ImagingViewModel @Inject constructor(
 
                             specimenResult.onError { error ->
                                 Log.d("ROOM ERROR", "Specimen error: $error")
-                                return@runAsTransaction false
                             }
 
                             boundingBoxResult.onError { error ->
                                 Log.d("ROOM ERROR", "Bounding box error: $error")
-                                return@runAsTransaction false
                             }
 
-                            true
+                            (specimenResult !is Result.Error) && (boundingBoxResult !is Result.Error)
                         }
 
                         if (success) {
                             clearCurrentSpecimenStateFields()
+                        } else {
+                            cameraRepository.deleteSavedImage(imageUri)
                         }
                     }.onError { error ->
                         _events.send(ImagingEvent.DisplayImagingError(error))

@@ -72,10 +72,19 @@ class CameraRepositoryImplementation @Inject constructor(
             )
 
             try {
-                resolver.openOutputStream(uri)?.use { outputStream ->
-                    if (!bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)) {
-                        return@withContext Result.Error(ImagingError.SAVE_ERROR)
-                    }
+                val outputStream = resolver.openOutputStream(uri)
+                if (outputStream == null) {
+                    deleteSavedImage(uri)
+                    return@withContext Result.Error(ImagingError.SAVE_ERROR)
+                }
+
+                val writeSuccess = outputStream.use {
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
+                }
+
+                if (!writeSuccess) {
+                    deleteSavedImage(uri)
+                    return@withContext Result.Error(ImagingError.SAVE_ERROR)
                 }
 
                 contentValues.clear()
@@ -84,9 +93,14 @@ class CameraRepositoryImplementation @Inject constructor(
 
                 Result.Success(uri)
             } catch (e: Exception) {
-                resolver.delete(uri, null, null)
+                deleteSavedImage(uri)
                 Result.Error(ImagingError.SAVE_ERROR)
             }
         }
+    }
+
+    override suspend fun deleteSavedImage(uri: Uri) {
+        val resolver = context.contentResolver
+        resolver.delete(uri, null, null)
     }
 }
