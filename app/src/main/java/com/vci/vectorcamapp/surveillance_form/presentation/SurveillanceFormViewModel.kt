@@ -72,6 +72,24 @@ class SurveillanceFormViewModel @Inject constructor(
                     val llinBrandResult =
                         surveillanceForm.llinBrand?.let { validationUseCases.validateLlinBrand(it) }
 
+                    _state.update {
+                        it.copy(
+                            surveillanceFormErrors = it.surveillanceFormErrors.copy(
+                                country = countryResult.errorOrNull(),
+                                district = districtResult.errorOrNull(),
+                                healthCenter = healthCenterResult.errorOrNull(),
+                                sentinelSite = sentinelSiteResult.errorOrNull(),
+                                householdNumber = householdNumberResult.errorOrNull(),
+                                collectionDate = collectionDateResult.errorOrNull(),
+                                collectionMethod = collectionMethodResult.errorOrNull(),
+                                collectorName = collectorNameResult.errorOrNull(),
+                                collectorTitle = collectorTitleResult.errorOrNull(),
+                                llinType = llinTypeResult?.errorOrNull(),
+                                llinBrand = llinBrandResult?.errorOrNull()
+                            )
+                        )
+                    }
+
                     val hasError = listOf(
                         countryResult,
                         districtResult,
@@ -96,24 +114,6 @@ class SurveillanceFormViewModel @Inject constructor(
                             _events.send(SurveillanceFormEvent.NavigateToImagingScreen)
                         }.onError { error ->
                             Log.e("ROOM DB ERROR", error.toString())
-                        }
-                    } else {
-                        _state.update {
-                            it.copy(
-                                surveillanceFormErrors = it.surveillanceFormErrors.copy(
-                                    country = countryResult.errorOrNull(),
-                                    district = districtResult.errorOrNull(),
-                                    healthCenter = healthCenterResult.errorOrNull(),
-                                    sentinelSite = sentinelSiteResult.errorOrNull(),
-                                    householdNumber = householdNumberResult.errorOrNull(),
-                                    collectionDate = collectionDateResult.errorOrNull(),
-                                    collectionMethod = collectionMethodResult.errorOrNull(),
-                                    collectorName = collectorNameResult.errorOrNull(),
-                                    collectorTitle = collectorTitleResult.errorOrNull(),
-                                    llinType = llinTypeResult?.errorOrNull(),
-                                    llinBrand = llinBrandResult?.errorOrNull()
-                                )
-                            )
                         }
                     }
                 }

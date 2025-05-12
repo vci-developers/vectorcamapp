@@ -11,4 +11,5 @@ import com.vci.vectorcamapp.core.domain.util.Result
 interface CameraRepository {
     suspend fun captureImage(controller: LifecycleCameraController) : Result<ImageProxy, ImagingError>
     suspend fun saveImage(bitmap: Bitmap, filename: String, currentSession: Session) : Result<Uri, ImagingError>
+    suspend fun deleteSavedImage(uri: Uri)
 }
