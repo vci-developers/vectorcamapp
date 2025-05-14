@@ -1,6 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
-import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
+import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 
 sealed interface ImagingEvent {
     data class DisplayImagingError(val error: ImagingError) : ImagingEvent

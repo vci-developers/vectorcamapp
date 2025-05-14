@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.core.domain.util.imaging
+package com.vci.vectorcamapp.imaging.domain.util
 
 import com.vci.vectorcamapp.core.domain.util.Error
 

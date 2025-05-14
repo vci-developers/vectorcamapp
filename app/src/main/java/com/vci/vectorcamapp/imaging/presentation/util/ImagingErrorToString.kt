@@ -1,8 +1,8 @@
-package com.vci.vectorcamapp.core.presentation.util.imaging
+package com.vci.vectorcamapp.imaging.presentation.util
 
 import android.content.Context
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
+import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 
 fun ImagingError.toString(context: Context): String {
     val resId = when(this) {

@@ -22,9 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.imaging.presentation.components.camera.BoundingBoxOverlay
@@ -41,9 +44,10 @@ fun CapturedSpecimenOverlay(
     onRetakeImage: (() -> Unit)? = null,
     onSaveImageToSession: (() -> Unit)? = null,
 ) {
+    val context = LocalContext.current
+
     Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomCenter
+        modifier = modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter
     ) {
         if (specimenBitmap != null) {
             Image(
@@ -54,7 +58,8 @@ fun CapturedSpecimenOverlay(
             )
         } else if (specimen.imageUri != Uri.EMPTY) {
             AsyncImage(
-                model = specimen.imageUri,
+                model = ImageRequest.Builder(context).data(specimen.imageUri).crossfade(true)
+                    .build(),
                 contentDescription = specimen.id,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize()
@@ -62,8 +67,7 @@ fun CapturedSpecimenOverlay(
         }
 
         BoundingBoxOverlay(
-            boundingBoxUi = boundingBoxUi,
-            modifier = modifier.fillMaxSize()
+            boundingBoxUi = boundingBoxUi, modifier = modifier.fillMaxSize()
         )
 
         Column(

@@ -61,9 +61,7 @@ class LandingViewModel @Inject constructor(
                 }
 
                 LandingAction.ViewIncompleteSessions -> {
-                    Log.d(
-                        "Navigation", "ViewIncompleteSessions"
-                    )
+                    _events.send(LandingEvent.NavigateToIncompleteSessionsScreen)
                 }
 
                 LandingAction.ViewCompleteSessions -> {
