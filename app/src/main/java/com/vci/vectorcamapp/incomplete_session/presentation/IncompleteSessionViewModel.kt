@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class IncompleteSessionViewModel @Inject constructor(
-    private val sessionRepository: SessionRepository
+    sessionRepository: SessionRepository
 ) : ViewModel() {
 
     private val _incompleteSessions = sessionRepository.observeIncompleteSessions()
