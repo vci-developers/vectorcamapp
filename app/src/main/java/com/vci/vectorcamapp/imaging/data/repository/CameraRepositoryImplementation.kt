@@ -12,10 +12,9 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.view.LifecycleCameraController
 import androidx.core.content.ContextCompat
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.util.Result
-import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
+import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers

@@ -10,12 +10,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
-import com.vci.vectorcamapp.core.presentation.util.imaging.toString
+import com.vci.vectorcamapp.imaging.presentation.util.toString
 import com.vci.vectorcamapp.imaging.presentation.ImagingEvent
 import com.vci.vectorcamapp.imaging.presentation.ImagingScreen
 import com.vci.vectorcamapp.imaging.presentation.ImagingViewModel
@@ -23,6 +22,8 @@ import com.vci.vectorcamapp.landing.presentation.LandingEvent
 import com.vci.vectorcamapp.landing.presentation.LandingScreen
 import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
+import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionScreen
+import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionViewModel
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormEvent
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormScreen
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormViewModel
@@ -42,6 +43,10 @@ fun NavGraph() {
                 when (event) {
                     LandingEvent.NavigateToNewSurveillanceSessionScreen -> navController.navigate(
                         Destination.SurveillanceForm
+                    )
+
+                    LandingEvent.NavigateToIncompleteSessionsScreen -> navController.navigate(
+                        Destination.IncompleteSession
                     )
                 }
             }
@@ -113,6 +118,17 @@ fun NavGraph() {
                 ImagingScreen(
                     state = state,
                     onAction = viewModel::onAction,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+        }
+        composable<Destination.IncompleteSession> {
+            val viewModel = hiltViewModel<IncompleteSessionViewModel>()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+
+            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                IncompleteSessionScreen(
+                    state = state,
                     modifier = Modifier.padding(innerPadding)
                 )
             }

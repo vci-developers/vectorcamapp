@@ -5,7 +5,7 @@ import android.net.Uri
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.LifecycleCameraController
 import com.vci.vectorcamapp.core.domain.model.Session
-import com.vci.vectorcamapp.core.domain.util.imaging.ImagingError
+import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.core.domain.util.Result
 
 interface CameraRepository {
