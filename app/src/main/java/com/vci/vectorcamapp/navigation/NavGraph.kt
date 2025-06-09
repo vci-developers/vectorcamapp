@@ -22,8 +22,8 @@ import com.vci.vectorcamapp.landing.presentation.LandingEvent
 import com.vci.vectorcamapp.landing.presentation.LandingScreen
 import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
-import com.vci.vectorcamapp.complete_session.presentation.CompleteSessionScreen
-import com.vci.vectorcamapp.complete_session.presentation.CompleteSessionViewModel
+import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionScreen
+import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionViewModel
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionScreen
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionViewModel
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormEvent

@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.complete_session.presentation
+package com.vci.vectorcamapp.complete_session.list.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.complete_session.presentation.components
+package com.vci.vectorcamapp.complete_session.list.presentation.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

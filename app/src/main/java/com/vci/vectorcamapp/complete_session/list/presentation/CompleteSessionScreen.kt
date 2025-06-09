@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.complete_session.presentation
+package com.vci.vectorcamapp.complete_session.list.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,7 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.vci.vectorcamapp.complete_session.presentation.components.CompleteSessionCard
+import com.vci.vectorcamapp.complete_session.list.presentation.components.CompleteSessionCard
 
 @Composable
 fun CompleteSessionScreen(
