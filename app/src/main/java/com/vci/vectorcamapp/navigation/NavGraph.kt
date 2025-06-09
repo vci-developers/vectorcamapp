@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
@@ -33,8 +35,31 @@ fun NavGraph() {
     val navController = rememberNavController()
 
     NavHost(
-        navController = navController, startDestination = Destination.Landing
+        navController = navController, startDestination = Destination.Splash
     ) {
+        composable<Destination.Splash> {
+            val viewModel = hiltViewModel<SplashViewModel>()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+            LaunchedEffect(uiState.checked) {
+                if (!uiState.checked) return@LaunchedEffect
+
+                if (uiState.session != null) {
+                    navController.navigate(Destination.SurveillanceForm) {
+                        popUpTo(Destination.Splash) { inclusive = true }
+                    }
+                } else {
+                    navController.navigate(Destination.Landing) {
+                        popUpTo(Destination.Splash) { inclusive = true }
+                    }
+                }
+            }
+
+            LoadingAnimation(
+                text = "Loading...", modifier = Modifier.fillMaxSize().padding(16.dp)
+            )
+        }
+
         composable<Destination.Landing> {
             val viewModel = hiltViewModel<LandingViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()

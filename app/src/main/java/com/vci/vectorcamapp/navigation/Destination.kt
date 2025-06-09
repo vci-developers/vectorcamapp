@@ -4,6 +4,9 @@ import kotlinx.serialization.Serializable
 
 sealed interface Destination {
     @Serializable
+    data object Splash : Destination
+
+    @Serializable
     data object Landing : Destination
 
     @Serializable
