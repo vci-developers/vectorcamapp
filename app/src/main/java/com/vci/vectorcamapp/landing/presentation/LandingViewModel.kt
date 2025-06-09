@@ -65,9 +65,7 @@ class LandingViewModel @Inject constructor(
                 }
 
                 LandingAction.ViewCompleteSessions -> {
-                    Log.d(
-                        "Navigation", "ViewCompleteSessions"
-                    )
+                    _events.send(LandingEvent.NavigateToCompleteSessionsScreen)
                 }
             }
         }

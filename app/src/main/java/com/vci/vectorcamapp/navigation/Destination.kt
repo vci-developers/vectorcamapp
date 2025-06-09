@@ -14,4 +14,7 @@ sealed interface Destination {
 
     @Serializable
     data object IncompleteSession : Destination
+
+    @Serializable
+    data object CompleteSession : Destination
 }
