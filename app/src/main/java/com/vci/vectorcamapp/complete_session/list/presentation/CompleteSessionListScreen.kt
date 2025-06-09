@@ -12,7 +12,7 @@ import com.vci.vectorcamapp.complete_session.list.presentation.components.Comple
 
 @Composable
 fun CompleteSessionScreen(
-    state: CompleteSessionState,
+    state: CompleteSessionListState,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(

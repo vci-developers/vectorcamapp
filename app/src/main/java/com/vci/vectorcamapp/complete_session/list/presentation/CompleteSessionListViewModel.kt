@@ -11,16 +11,16 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
-class CompleteSessionViewModel @Inject constructor(
+class CompleteSessionListViewModel @Inject constructor(
     sessionRepository: SessionRepository
 ) : ViewModel() {
 
     private val _completeSessions = sessionRepository.observeCompleteSessions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-    private val _state = MutableStateFlow(CompleteSessionState())
+    private val _state = MutableStateFlow(CompleteSessionListState())
     val state = combine(_completeSessions, _state) { completeSessions, state ->
         state.copy(
             sessions = completeSessions
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionState())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
 }
