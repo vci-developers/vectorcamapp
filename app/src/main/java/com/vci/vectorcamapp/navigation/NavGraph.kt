@@ -35,7 +35,7 @@ fun NavGraph() {
     val navController = rememberNavController()
 
     NavHost(
-        navController = navController, startDestination = Destination.Splash
+        navController = navController, startDestination = Destination.Landing
     ) {
         composable<Destination.Splash> {
             val viewModel = hiltViewModel<SplashViewModel>()

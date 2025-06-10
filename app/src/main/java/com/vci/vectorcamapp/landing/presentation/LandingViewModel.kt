@@ -37,6 +37,14 @@ class LandingViewModel @Inject constructor(
     private val _events = Channel<LandingEvent>()
     val events = _events.receiveAsFlow()
 
+    init {
+        viewModelScope.launch {
+            if (currentSessionCache.getSession() != null) {
+                _state.update { it.copy(showResumeDialog = true) }
+            }
+        }
+    }
+
     fun onAction(action: LandingAction) {
         viewModelScope.launch {
             when (action) {
@@ -68,6 +76,16 @@ class LandingViewModel @Inject constructor(
                     Log.d(
                         "Navigation", "ViewCompleteSessions"
                     )
+                }
+
+                LandingAction.ResumeSession -> {
+                    _state.update { it.copy(showResumeDialog = false) }
+                    _events.send(LandingEvent.NavigateToNewSurveillanceSessionScreen)
+                }
+
+                LandingAction.DismissResumePrompt -> {
+                    currentSessionCache.clearSession()
+                    _state.update { it.copy(showResumeDialog = false) }
                 }
             }
         }

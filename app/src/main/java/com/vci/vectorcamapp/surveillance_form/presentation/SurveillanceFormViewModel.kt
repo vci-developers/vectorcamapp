@@ -32,6 +32,7 @@ class SurveillanceFormViewModel @Inject constructor(
     private val _state = MutableStateFlow(SurveillanceFormState())
     val state: StateFlow<SurveillanceFormState> = _state.onStart {
         getLocation()
+        loadSavedForm()
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000L), SurveillanceFormState()
     )
@@ -359,6 +360,17 @@ class SurveillanceFormViewModel @Inject constructor(
                     isLoading = false
                 )
             }
+        }
+    }
+
+    private suspend fun loadSavedForm() {
+//        Log.d("SurveillanceFormViewModel", "loadSavedForm")
+        val session = currentSessionCache.getSession() ?: return
+        val saved = surveillanceFormRepository.getSurveillanceForm(session.id)
+//        Log.d("SurveillanceFormViewModel", "loadSavedForm: $session")
+        if (saved != null) {
+//            Log.d("SurveillanceFormViewModel", "loadSavedForm: $saved")
+            _state.update { it.copy(surveillanceForm = saved) }
         }
     }
 }
