@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
@@ -19,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.core.app.ActivityCompat
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.permission.presentation.PermissionAction
 import com.vci.vectorcamapp.permission.presentation.PermissionEvent
@@ -32,10 +34,13 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: PermissionViewModel by viewModels()
 
-    private val permissionsRequired = arrayOf(
-        Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.CAMERA,
-    )
+    private val permissionsRequired = buildList {
+        add(Manifest.permission.ACCESS_FINE_LOCATION)
+        add(Manifest.permission.CAMERA)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }.toTypedArray()
 
     private val permissionLauncher = registerForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
