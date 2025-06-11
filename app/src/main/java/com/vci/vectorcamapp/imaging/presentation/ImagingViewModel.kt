@@ -112,7 +112,7 @@ class ImagingViewModel @Inject constructor(
                         val bitmap = action.frame.toUprightBitmap()
 
                         val specimenId = inferenceRepository.readSpecimenId(bitmap)
-                        val (_, boundingBox) = inferenceRepository.detectSpecimen(bitmap)
+                        val boundingBox = inferenceRepository.detectSpecimen(bitmap)
 
                         _state.update {
                             it.copy(
