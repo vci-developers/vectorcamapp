@@ -53,7 +53,7 @@ fun CompleteSessionDetailCard(session: Session, surveillanceForm: SurveillanceFo
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Country: $${surveillanceForm.country}",
+                text = "Country: ${surveillanceForm.country}",
                 style = MaterialTheme.typography.bodySmall
             )
             Spacer(modifier = Modifier.height(4.dp))
