@@ -5,14 +5,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
 import com.vci.vectorcamapp.imaging.presentation.util.toString
 import com.vci.vectorcamapp.imaging.presentation.ImagingEvent
@@ -22,7 +25,10 @@ import com.vci.vectorcamapp.landing.presentation.LandingEvent
 import com.vci.vectorcamapp.landing.presentation.LandingScreen
 import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
-import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionScreen
+import com.vci.vectorcamapp.complete_session.detail.presentation.CompleteSessionDetailScreen
+import com.vci.vectorcamapp.complete_session.detail.presentation.CompleteSessionDetailViewModel
+import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListEvent
+import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListScreen
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListViewModel
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionScreen
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionViewModel
@@ -52,7 +58,7 @@ fun NavGraph() {
                     )
 
                     LandingEvent.NavigateToCompleteSessionsScreen -> navController.navigate(
-                        Destination.CompleteSession
+                        Destination.CompleteSessionList
                     )
                 }
             }
@@ -139,12 +145,43 @@ fun NavGraph() {
                 )
             }
         }
-        composable<Destination.CompleteSession> {
+        composable<Destination.CompleteSessionList> {
             val viewModel = hiltViewModel<CompleteSessionListViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
+            ObserveAsEvents(events = viewModel.events) { event ->
+                when (event) {
+                    is CompleteSessionListEvent.NavigateToCompleteSessionDetail -> {
+                        navController.navigate(
+                            Destination.CompleteSessionDetail.createRoute(event.sessionId)
+                        )
+                    }
+                }
+            }
+
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                CompleteSessionScreen(
+                CompleteSessionListScreen(
+                    state = state,
+                    onAction = viewModel::onAction,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+        }
+        composable(
+            route = Destination.CompleteSessionDetail.route + "/{sessionId}",
+            arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val viewModel = hiltViewModel<CompleteSessionDetailViewModel>()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+
+            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: return@composable
+
+            LaunchedEffect(sessionId) {
+                viewModel.loadSession(sessionId)
+            }
+
+            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                CompleteSessionDetailScreen(
                     state = state,
                     modifier = Modifier.padding(innerPadding)
                 )

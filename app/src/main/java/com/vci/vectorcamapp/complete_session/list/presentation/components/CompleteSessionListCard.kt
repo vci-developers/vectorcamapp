@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Composable
-fun CompleteSessionCard(session: Session, modifier: Modifier = Modifier) {
+fun CompleteSessionListCard(session: Session, modifier: Modifier = Modifier) {
 
     val dateTimeFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
     val formattedDateTime = dateTimeFormatter.format(session.createdAt)

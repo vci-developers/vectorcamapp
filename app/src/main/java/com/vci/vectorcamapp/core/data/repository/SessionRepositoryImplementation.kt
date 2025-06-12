@@ -4,6 +4,7 @@ import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.dao.SessionDao
 import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.composites.SessionWithSpecimens
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.util.Result
@@ -51,6 +52,17 @@ class SessionRepositoryImplementation @Inject constructor(
                 SessionWithSpecimens(
                     session = it.sessionEntity.toDomain(),
                     specimens = it.specimenEntities.map { specimenEntity -> specimenEntity.toDomain() }
+                )
+            }
+        }
+    }
+
+    override fun observeSessionAndSurveillanceForm(sessionId: UUID): Flow<SessionAndSurveillanceForm?> {
+        return sessionDao.observeSessionAndSurveillanceForm(sessionId).map { sessionAndSurveillanceFormRelation ->
+            sessionAndSurveillanceFormRelation?.let {
+                SessionAndSurveillanceForm(
+                    session = it.sessionEntity.toDomain(),
+                    surveillanceForm = it.surveillanceFormEntity.toDomain()
                 )
             }
         }
