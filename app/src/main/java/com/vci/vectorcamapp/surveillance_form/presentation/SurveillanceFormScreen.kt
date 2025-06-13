@@ -41,88 +41,6 @@ fun SurveillanceFormScreen(
             .padding(8.dp)
             .verticalScroll(verticalScrollState)
     ) {
-        TextEntryField(
-            label = "Country",
-            value = state.surveillanceForm.country,
-            onValueChange = { onAction(SurveillanceFormAction.EnterCountry(it)) },
-            singleLine = true,
-            error = state.surveillanceFormErrors.country,
-            modifier = modifier
-        )
-
-        TextEntryField(
-            label = "District",
-            value = state.surveillanceForm.district,
-            onValueChange = { onAction(SurveillanceFormAction.EnterDistrict(it)) },
-            singleLine = true,
-            error = state.surveillanceFormErrors.district,
-            modifier = modifier
-        )
-
-        TextEntryField(
-            label = "Health Center",
-            value = state.surveillanceForm.healthCenter,
-            onValueChange = { onAction(SurveillanceFormAction.EnterHealthCenter(it)) },
-            singleLine = true,
-            error = state.surveillanceFormErrors.healthCenter,
-            modifier = modifier
-        )
-
-        TextEntryField(
-            label = "Sentinel Site",
-            value = state.surveillanceForm.sentinelSite,
-            onValueChange = { onAction(SurveillanceFormAction.EnterSentinelSite(it)) },
-            singleLine = true,
-            error = state.surveillanceFormErrors.sentinelSite,
-            modifier = modifier
-        )
-
-        TextEntryField(
-            label = "Household Number",
-            value = state.surveillanceForm.householdNumber,
-            onValueChange = { onAction(SurveillanceFormAction.EnterHouseholdNumber(it)) },
-            singleLine = true,
-            error = state.surveillanceFormErrors.householdNumber,
-            modifier = modifier
-        )
-
-        Text("Latitude: %.4f".format(state.surveillanceForm.latitude))
-        Text("Longitude: %.4f".format(state.surveillanceForm.longitude))
-
-        DatePickerField(
-            label = "Collection Date",
-            selectedDateInMillis = state.surveillanceForm.collectionDate,
-            onDateSelected = { onAction(SurveillanceFormAction.PickCollectionDate(it)) },
-            error = state.surveillanceFormErrors.collectionDate,
-            modifier = modifier
-        )
-
-        DropdownField(
-            label = "Collection Method",
-            options = CollectionMethodOption.entries,
-            selectedOption = CollectionMethodOption.entries.find { it.label == state.surveillanceForm.collectionMethod },
-            onOptionSelected = { onAction(SurveillanceFormAction.SelectCollectionMethod(it)) },
-            error = state.surveillanceFormErrors.collectionMethod,
-            modifier = modifier
-        )
-
-        TextEntryField(
-            label = "Collector Name",
-            value = state.surveillanceForm.collectorName,
-            onValueChange = { onAction(SurveillanceFormAction.EnterCollectorName(it)) },
-            singleLine = true,
-            error = state.surveillanceFormErrors.collectorName,
-            modifier = modifier
-        )
-
-        TextEntryField(
-            label = "Collector Title",
-            value = state.surveillanceForm.collectorTitle,
-            onValueChange = { onAction(SurveillanceFormAction.EnterCollectorTitle(it)) },
-            singleLine = true,
-            error = state.surveillanceFormErrors.collectorTitle,
-            modifier = modifier
-        )
 
         TextEntryField(
             label = "Number of People who Slept in the House",
@@ -192,13 +110,6 @@ fun SurveillanceFormScreen(
                 modifier = modifier
             )
         }
-
-        TextEntryField(
-            label = "Notes",
-            value = state.surveillanceForm.notes ,
-            onValueChange = { onAction(SurveillanceFormAction.EnterNotes(it)) },
-            modifier = modifier
-        )
 
         Button(
             onClick = { onAction(SurveillanceFormAction.SubmitSurveillanceForm) }, modifier = modifier

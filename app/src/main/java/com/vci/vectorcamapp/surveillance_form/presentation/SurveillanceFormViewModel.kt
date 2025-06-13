@@ -50,23 +50,6 @@ class SurveillanceFormViewModel @Inject constructor(
                 SurveillanceFormAction.SubmitSurveillanceForm -> {
                     val surveillanceForm = _state.value.surveillanceForm
 
-                    val countryResult = validationUseCases.validateCountry(surveillanceForm.country)
-                    val districtResult =
-                        validationUseCases.validateDistrict(surveillanceForm.district)
-                    val healthCenterResult =
-                        validationUseCases.validateHealthCenter(surveillanceForm.healthCenter)
-                    val sentinelSiteResult =
-                        validationUseCases.validateSentinelSite(surveillanceForm.sentinelSite)
-                    val householdNumberResult =
-                        validationUseCases.validateHouseholdNumber(surveillanceForm.householdNumber)
-                    val collectionDateResult =
-                        validationUseCases.validateCollectionDate(surveillanceForm.collectionDate)
-                    val collectionMethodResult =
-                        validationUseCases.validateCollectionMethod(surveillanceForm.collectionMethod)
-                    val collectorNameResult =
-                        validationUseCases.validateCollectorName(surveillanceForm.collectorName)
-                    val collectorTitleResult =
-                        validationUseCases.validateCollectorTitle(surveillanceForm.collectorTitle)
                     val llinTypeResult =
                         surveillanceForm.llinType?.let { validationUseCases.validateLlinType(it) }
                     val llinBrandResult =
@@ -75,15 +58,6 @@ class SurveillanceFormViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             surveillanceFormErrors = it.surveillanceFormErrors.copy(
-                                country = countryResult.errorOrNull(),
-                                district = districtResult.errorOrNull(),
-                                healthCenter = healthCenterResult.errorOrNull(),
-                                sentinelSite = sentinelSiteResult.errorOrNull(),
-                                householdNumber = householdNumberResult.errorOrNull(),
-                                collectionDate = collectionDateResult.errorOrNull(),
-                                collectionMethod = collectionMethodResult.errorOrNull(),
-                                collectorName = collectorNameResult.errorOrNull(),
-                                collectorTitle = collectorTitleResult.errorOrNull(),
                                 llinType = llinTypeResult?.errorOrNull(),
                                 llinBrand = llinBrandResult?.errorOrNull()
                             )
@@ -91,15 +65,6 @@ class SurveillanceFormViewModel @Inject constructor(
                     }
 
                     val hasError = listOf(
-                        countryResult,
-                        districtResult,
-                        healthCenterResult,
-                        sentinelSiteResult,
-                        householdNumberResult,
-                        collectionDateResult,
-                        collectionMethodResult,
-                        collectorNameResult,
-                        collectorTitleResult,
                         llinTypeResult,
                         llinBrandResult
                     ).any { it is Result.Error }
@@ -110,101 +75,11 @@ class SurveillanceFormViewModel @Inject constructor(
                             _events.send(SurveillanceFormEvent.NavigateBackToLandingScreen)
                             return@launch
                         }
-                        surveillanceFormRepository.upsertSurveillanceForm(surveillanceForm, session.id).onSuccess {
+                        surveillanceFormRepository.upsertSurveillanceForm(surveillanceForm, session.localId).onSuccess {
                             _events.send(SurveillanceFormEvent.NavigateToImagingScreen)
                         }.onError { error ->
                             Log.e("ROOM DB ERROR", error.toString())
                         }
-                    }
-                }
-
-                is SurveillanceFormAction.EnterCountry -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                country = action.text
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.EnterDistrict -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                district = action.text
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.EnterHealthCenter -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                healthCenter = action.text
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.EnterSentinelSite -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                sentinelSite = action.text
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.EnterHouseholdNumber -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                householdNumber = action.text
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.PickCollectionDate -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                collectionDate = action.date
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.SelectCollectionMethod -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                collectionMethod = action.option.label
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.EnterCollectorName -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                collectorName = action.text
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.EnterCollectorTitle -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                collectorTitle = action.text
-                            )
-                        )
                     }
                 }
 
@@ -330,16 +205,6 @@ class SurveillanceFormViewModel @Inject constructor(
                                 )
                             )
                         }
-                    }
-                }
-
-                is SurveillanceFormAction.EnterNotes -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                notes = action.text
-                            )
-                        )
                     }
                 }
             }

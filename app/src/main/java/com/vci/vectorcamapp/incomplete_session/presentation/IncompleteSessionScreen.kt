@@ -21,7 +21,7 @@ fun IncompleteSessionScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(items = state.sessions.asReversed(), key = { it.id }) { session ->
+        items(items = state.sessions.asReversed(), key = { it.localId }) { session ->
             IncompleteSessionCard(session = session, modifier = modifier)
         }
     }

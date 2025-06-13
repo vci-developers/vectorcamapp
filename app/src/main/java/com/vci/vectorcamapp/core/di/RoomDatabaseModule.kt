@@ -7,9 +7,13 @@ import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.room.VectorCamDatabase
 import com.vci.vectorcamapp.core.data.room.dao.BoundingBoxDao
+import com.vci.vectorcamapp.core.data.room.dao.ProgramDao
 import com.vci.vectorcamapp.core.data.room.dao.SessionDao
+import com.vci.vectorcamapp.core.data.room.dao.SiteDao
 import com.vci.vectorcamapp.core.data.room.dao.SpecimenDao
 import com.vci.vectorcamapp.core.data.room.dao.SurveillanceFormDao
+import com.vci.vectorcamapp.core.data.room.entities.ProgramEntity
+import com.vci.vectorcamapp.core.data.room.entities.SiteEntity
 import com.vci.vectorcamapp.core.data.room.migrations.ALL_MIGRATIONS
 import dagger.Module
 import dagger.Provides
@@ -42,10 +46,41 @@ object RoomDatabaseModule {
                 CoroutineScope(Dispatchers.IO).launch {
                     Log.w("VectorCamDatabase", "Clearing all tables (DEBUG only)")
                     clearAllTables()
+
+                    val seededPrograms = listOf(
+                        ProgramEntity(id = 1, name = "Uganda Surveillance Program", country = "Uganda"),
+                        ProgramEntity(id = 2, name = "Kenya Research Study", country = "Kenya")
+                    )
+
+                    programDao.insertAll(seededPrograms)
+
+                    val seededSites = listOf(
+                        SiteEntity(
+                            id = 1,
+                            programId = 1,
+                            district = "Jinja",
+                            subCounty = "Bugembe",
+                            parish = "Kakira",
+                            sentinelSite = "Site A",
+                            healthCenter = "Health Center 1"
+                        ),
+                        SiteEntity(
+                            id = 2,
+                            programId = 2,
+                            district = "Kisumu",
+                            subCounty = "Central",
+                            parish = "Market",
+                            sentinelSite = "Site B",
+                            healthCenter = "Health Center 2"
+                        )
+                    )
+
+                    siteDao.insertAll(seededSites)
                 }
             }
         }
     }
+
 
     @Provides
     fun provideTransactionHelper(db: VectorCamDatabase): TransactionHelper = TransactionHelper(db)
@@ -61,4 +96,10 @@ object RoomDatabaseModule {
 
     @Provides
     fun provideSurveillanceFormDao(db: VectorCamDatabase): SurveillanceFormDao = db.surveillanceFormDao
+
+    @Provides
+    fun provideProgramDao(db: VectorCamDatabase): ProgramDao = db.programDao
+
+    @Provides
+    fun provideSiteDao(db: VectorCamDatabase): SiteDao = db.siteDao
 }
