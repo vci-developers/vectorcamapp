@@ -7,6 +7,6 @@ import com.vci.vectorcamapp.core.data.room.entities.SiteEntity
 
 @Dao
 interface SiteDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(sites: List<SiteEntity>)
 }

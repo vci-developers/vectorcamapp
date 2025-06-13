@@ -3,7 +3,10 @@ package com.vci.vectorcamapp.surveillance_form.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
@@ -20,13 +23,16 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class SurveillanceFormViewModel @Inject constructor(
+    private val transactionHelper: TransactionHelper,
     private val validationUseCases: ValidationUseCases,
     private val currentSessionCache: CurrentSessionCache,
-    private val surveillanceFormRepository: SurveillanceFormRepository
+    private val surveillanceFormRepository: SurveillanceFormRepository,
+    private val sessionRepository: SessionRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SurveillanceFormState())
@@ -70,15 +76,43 @@ class SurveillanceFormViewModel @Inject constructor(
                     ).any { it is Result.Error }
 
                     if (!hasError) {
-                        val session = currentSessionCache.getSession()
-                        if (session == null) {
-                            _events.send(SurveillanceFormEvent.NavigateBackToLandingScreen)
-                            return@launch
+                        // TODO: MODIFY WHEN FORM FIELDS ARE CREATED
+                        val newSession = Session(
+                            localId = UUID.randomUUID(),
+                            remoteId = null,
+                            houseNumber = "1",
+                            collectorTitle = "Student",
+                            collectorName = "Queen Victoria II",
+                            collectionDate = 0L,
+                            collectionMethod = "HLC",
+                            specimenCondition = "Dessicated",
+                            createdAt = System.currentTimeMillis(),
+                            completedAt = null,
+                            submittedAt = null,
+                            notes = "Fake Session"
+                        )
+
+                        val success = transactionHelper.runAsTransaction {
+                            val sessionResult = sessionRepository.upsertSession(newSession, 1)
+                            val surveillanceFormResult = surveillanceFormRepository.upsertSurveillanceForm(
+                                surveillanceForm,
+                                newSession.localId
+                            )
+
+                            sessionResult.onError { error ->
+                                Log.e("ROOM DB ERROR", "Session Error: $error")
+                            }
+
+                            surveillanceFormResult.onError { error ->
+                                Log.e("ROOM DB ERROR", "Surveillance Form Error: $error")
+                            }
+
+                            (sessionResult !is Result.Error) && (surveillanceFormResult !is Result.Error)
                         }
-                        surveillanceFormRepository.upsertSurveillanceForm(surveillanceForm, session.localId).onSuccess {
+
+                        if (success) {
+                            currentSessionCache.saveSession(newSession, 1)
                             _events.send(SurveillanceFormEvent.NavigateToImagingScreen)
-                        }.onError { error ->
-                            Log.e("ROOM DB ERROR", error.toString())
                         }
                     }
                 }

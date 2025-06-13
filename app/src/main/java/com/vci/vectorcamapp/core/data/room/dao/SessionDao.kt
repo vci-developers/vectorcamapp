@@ -23,10 +23,10 @@ interface SessionDao {
     @Query("UPDATE session SET completedAt = :timestamp WHERE localId = :sessionId")
     suspend fun markSessionAsComplete(sessionId: UUID, timestamp: Long): Int
 
-    @Query("SELECT * FROM session WHERE submittedAt IS NOT NULL")
+    @Query("SELECT * FROM session WHERE completedAt IS NOT NULL")
     fun observeCompleteSessions(): Flow<List<SessionEntity>>
 
-    @Query("SELECT * FROM session WHERE submittedAt IS NULL")
+    @Query("SELECT * FROM session WHERE completedAt IS NULL")
     fun observeIncompleteSessions(): Flow<List<SessionEntity>>
 
     @Transaction

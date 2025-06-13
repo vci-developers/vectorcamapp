@@ -7,6 +7,6 @@ import com.vci.vectorcamapp.core.data.room.entities.ProgramEntity
 
 @Dao
 interface ProgramDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(programs: List<ProgramEntity>)
 }

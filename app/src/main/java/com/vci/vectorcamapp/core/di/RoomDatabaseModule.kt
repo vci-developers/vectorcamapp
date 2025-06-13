@@ -45,7 +45,7 @@ object RoomDatabaseModule {
             if (BuildConfig.DEBUG) {
                 CoroutineScope(Dispatchers.IO).launch {
                     Log.w("VectorCamDatabase", "Clearing all tables (DEBUG only)")
-                    clearAllTables()
+//                    clearAllTables()
 
                     val seededPrograms = listOf(
                         ProgramEntity(id = 1, name = "Uganda Surveillance Program", country = "Uganda"),
