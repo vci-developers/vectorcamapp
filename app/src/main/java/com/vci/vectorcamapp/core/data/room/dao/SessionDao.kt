@@ -20,20 +20,20 @@ interface SessionDao {
     @Delete
     suspend fun deleteSession(session: SessionEntity): Int
 
-    @Query("UPDATE session SET submittedAt = :timestamp WHERE id = :sessionId")
+    @Query("UPDATE session SET completedAt = :timestamp WHERE localId = :sessionId")
     suspend fun markSessionAsComplete(sessionId: UUID, timestamp: Long): Int
 
-    @Query("SELECT * FROM session WHERE submittedAt IS NOT NULL")
+    @Query("SELECT * FROM session WHERE completedAt IS NOT NULL")
     fun observeCompleteSessions(): Flow<List<SessionEntity>>
 
-    @Query("SELECT * FROM session WHERE submittedAt IS NULL")
+    @Query("SELECT * FROM session WHERE completedAt IS NULL")
     fun observeIncompleteSessions(): Flow<List<SessionEntity>>
 
     @Transaction
-    @Query("SELECT * FROM session WHERE id = :sessionId")
+    @Query("SELECT * FROM session WHERE localId = :sessionId")
     fun observeSessionAndSurveillanceForm(sessionId: UUID): Flow<SessionAndSurveillanceFormRelation?>
 
     @Transaction
-    @Query("SELECT * FROM session WHERE id = :sessionId")
+    @Query("SELECT * FROM session WHERE localId = :sessionId")
     fun observeSessionWithSpecimens(sessionId: UUID): Flow<SessionWithSpecimensRelation?>
 }

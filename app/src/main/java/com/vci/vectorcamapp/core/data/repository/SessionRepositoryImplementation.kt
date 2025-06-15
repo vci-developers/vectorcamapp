@@ -16,17 +16,18 @@ import javax.inject.Inject
 class SessionRepositoryImplementation @Inject constructor(
     private val sessionDao: SessionDao
 ) : SessionRepository {
-    override suspend fun upsertSession(session: Session): Result<Unit, RoomDbError> {
+    override suspend fun upsertSession(session: Session, siteId: Int): Result<Unit, RoomDbError> {
         return try {
-            sessionDao.upsertSession(session.toEntity())
+            sessionDao.upsertSession(session.toEntity(siteId))
             Result.Success(Unit)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }
 
-    override suspend fun deleteSession(session: Session): Boolean {
-        return sessionDao.deleteSession(session.toEntity()) > 0
+    override suspend fun deleteSession(session: Session, siteId: Int): Boolean {
+        return sessionDao.deleteSession(session.toEntity(siteId)) > 0
     }
 
     override suspend fun markSessionAsComplete(sessionId: UUID): Boolean {

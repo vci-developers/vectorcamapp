@@ -80,7 +80,7 @@ class ImagingViewModel @Inject constructor(
                 return@launch
             }
 
-            sessionRepository.observeSessionWithSpecimens(currentSession.id).filterNotNull()
+            sessionRepository.observeSessionWithSpecimens(currentSession.localId).filterNotNull()
                 .collectLatest { sessionWithSpecimens ->
                     val specimensAndBoundingBoxUiFlows =
                         sessionWithSpecimens.specimens.map { specimen ->
@@ -152,7 +152,7 @@ class ImagingViewModel @Inject constructor(
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
                         return@launch
                     }
-                    val success = sessionRepository.markSessionAsComplete(currentSession.id)
+                    val success = sessionRepository.markSessionAsComplete(currentSession.localId)
                     if (success) {
                         currentSessionCache.clearSession()
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
@@ -264,7 +264,7 @@ class ImagingViewModel @Inject constructor(
                             )
 
                             val specimenResult =
-                                specimenRepository.insertSpecimen(specimen, currentSession.id)
+                                specimenRepository.insertSpecimen(specimen, currentSession.localId)
                             val boundingBoxResult =
                                 boundingBoxRepository.insertBoundingBox(boundingBox, specimen.id)
 
