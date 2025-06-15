@@ -43,6 +43,7 @@ fun Session.toEntity(siteId: Int): SessionEntity {
 fun Session.toDto(siteId: Int) : SessionDto {
     return SessionDto(
         localId = this.localId,
+        siteId = siteId,
         remoteId =  this.remoteId,
         houseNumber = this.houseNumber,
         collectorTitle = this.collectorTitle,
@@ -52,8 +53,7 @@ fun Session.toDto(siteId: Int) : SessionDto {
         specimenCondition = this.specimenCondition,
         createdAt = this.createdAt,
         submittedAt = this.submittedAt,
-        notes = this.notes,
-        siteId = siteId
+        notes = this.notes
     )
 }
 
