@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -30,94 +32,91 @@ import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
 @Composable
 fun LandingScreen(
-    state: LandingState, onAction: (LandingAction) -> Unit, modifier: Modifier = Modifier
+    state: LandingState,
+    onAction: (LandingAction) -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val buttonModifier = Modifier
+        .fillMaxWidth(0.8f)
+        .height(60.dp)
+
+    val verticalScrollState = rememberScrollState();
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp), // Padding for the overall layout
-        verticalArrangement = Arrangement.SpaceEvenly, // Spread content vertically
+            .padding(16.dp)
+            .verticalScroll(verticalScrollState),
+        verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Title Section
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "VectorCam",
                 style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.ExtraBold
             )
-            Spacer(modifier = Modifier.height(16.dp)) // Space below title
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "Democratizing Vector Surveillance",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center // Align the text content to the center
+                textAlign = TextAlign.Center
             )
         }
 
         // Buttons Section
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(32.dp) // Add spacing between buttons
+            verticalArrangement = Arrangement.spacedBy(32.dp),
+            modifier = Modifier.padding(vertical = 16.dp)
         ) {
-            // Surveillance Button
             Button(
                 onClick = { onAction(LandingAction.StartNewSurveillanceSession) },
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(60.dp), // Larger height for the button
-                shape = MaterialTheme.shapes.medium, // Rounded rectangle shape
+                modifier = buttonModifier,
+                shape = MaterialTheme.shapes.medium
             ) {
                 Text(
                     text = "New Surveillance Session",
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
-            // Non-Surveillance Button
             Button(
                 onClick = { onAction(LandingAction.StartNewNonSurveillanceSession) },
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(60.dp), // Larger height for the button
-                shape = MaterialTheme.shapes.medium, // Rounded rectangle shape
+                modifier = buttonModifier,
+                shape = MaterialTheme.shapes.medium
             ) {
                 Text(
                     text = "New Non-Surveillance Session",
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
-            // Incomplete Sessions Button with Badge
             OutlinedButton(
                 onClick = { onAction(LandingAction.ViewIncompleteSessions) },
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(60.dp), // Larger height for the button
-                shape = MaterialTheme.shapes.medium, // Rounded rectangle shape
+                modifier = buttonModifier,
+                shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.secondary // Text color matches border
+                    contentColor = MaterialTheme.colorScheme.secondary
                 ),
-                border = BorderStroke(
-                    2.dp, MaterialTheme.colorScheme.secondary
-                ) // Custom border
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.secondary)
             ) {
                 Text(
                     text = "View Incomplete Sessions",
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.width(8.dp)) // Space between text and badge
                 if (state.incompleteSessions.isNotEmpty()) {
+                    Spacer(modifier = Modifier.width(8.dp))
                     Badge(
                         containerColor = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError,
-                        modifier = Modifier.size(24.dp, 24.dp)
+                        modifier = Modifier.size(24.dp)
                     ) {
                         Text(
                             text = "${state.incompleteSessions.size}",
@@ -128,24 +127,19 @@ fun LandingScreen(
                 }
             }
 
-            // Complete Sessions Button
             OutlinedButton(
                 onClick = { onAction(LandingAction.ViewCompleteSessions) },
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(60.dp), // Larger height for the button
-                shape = MaterialTheme.shapes.medium, // Rounded rectangle shape
+                modifier = buttonModifier,
+                shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.secondary // Text color matches border
+                    contentColor = MaterialTheme.colorScheme.secondary
                 ),
-                border = BorderStroke(
-                    2.dp, MaterialTheme.colorScheme.secondary
-                ) // Custom border
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.secondary)
             ) {
                 Text(
                     text = "View Complete Sessions",
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -154,7 +148,7 @@ fun LandingScreen(
         Text(
             text = "Version: ${state.versionName}",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.onBackground
         )
     }
     if (state.showResumeDialog) {
@@ -182,7 +176,9 @@ fun LandingScreenPreview() {
     VectorcamappTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             LandingScreen(
-                state = LandingState(), onAction = { }, modifier = Modifier.padding(innerPadding)
+                state = LandingState(),
+                onAction = {},
+                modifier = Modifier.padding(innerPadding)
             )
         }
     }

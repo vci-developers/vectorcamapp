@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 interface SessionRepository {
-    suspend fun upsertSession(session: Session): Result<Unit, RoomDbError>
-    suspend fun deleteSession(session: Session): Boolean
+    suspend fun upsertSession(session: Session, siteId: Int): Result<Unit, RoomDbError>
+    suspend fun deleteSession(session: Session, siteId: Int): Boolean
     suspend fun markSessionAsComplete(sessionId: UUID): Boolean
     fun observeCompleteSessions(): Flow<List<Session>>
     fun observeIncompleteSessions(): Flow<List<Session>>
