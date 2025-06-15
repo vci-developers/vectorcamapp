@@ -38,7 +38,7 @@ object CacheModule {
         if (BuildConfig.DEBUG) {
             CoroutineScope(Dispatchers.IO).launch {
                 Log.w("CacheModule", "Clearing current session cache (DEBUG only)")
-                impl.clearSession()
+//                impl.clearSession()
             }
         }
         return impl

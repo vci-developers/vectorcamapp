@@ -62,7 +62,7 @@ fun NavGraph() {
         }
 
         composable<Destination.Landing> {
-            val viewModel = viewModel<LandingViewModel>()
+            val viewModel = hiltViewModel<LandingViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
             ObserveAsEvents(events = viewModel.events) { event ->
