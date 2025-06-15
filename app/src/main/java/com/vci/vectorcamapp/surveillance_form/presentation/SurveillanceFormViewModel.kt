@@ -265,7 +265,7 @@ class SurveillanceFormViewModel @Inject constructor(
     private suspend fun loadSavedForm() {
 //        Log.d("SurveillanceFormViewModel", "loadSavedForm")
         val session = currentSessionCache.getSession() ?: return
-        val saved = surveillanceFormRepository.getSurveillanceForm(session.id)
+        val saved = surveillanceFormRepository.getSurveillanceForm(session.localId)
 //        Log.d("SurveillanceFormViewModel", "loadSavedForm: $session")
         if (saved != null) {
 //            Log.d("SurveillanceFormViewModel", "loadSavedForm: $saved")
