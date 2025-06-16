@@ -33,9 +33,14 @@ class CompleteSessionListViewModel @Inject constructor(
 
     fun onAction(action: CompleteSessionListAction) {
         when (action) {
-            is CompleteSessionListAction.ViewCompleteSessionDetail -> {
+            is CompleteSessionListAction.ViewCompleteSessionDetails -> {
                 viewModelScope.launch {
-                    _events.send(CompleteSessionListEvent.NavigateToCompleteSessionDetail(action.sessionId))
+                    _events.send(CompleteSessionListEvent.NavigateToCompleteSessionDetails(action.sessionId))
+                }
+            }
+            is CompleteSessionListAction.ViewCompleteSessionSpecimens -> {
+                viewModelScope.launch {
+                    _events.send(CompleteSessionListEvent.NavigateToCompleteSessionSpecimens(action.sessionId))
                 }
             }
         }

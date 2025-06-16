@@ -25,11 +25,13 @@ import com.vci.vectorcamapp.landing.presentation.LandingEvent
 import com.vci.vectorcamapp.landing.presentation.LandingScreen
 import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
-import com.vci.vectorcamapp.complete_session.detail.presentation.CompleteSessionDetailScreen
-import com.vci.vectorcamapp.complete_session.detail.presentation.CompleteSessionDetailViewModel
+import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsViewModel
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListEvent
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListScreen
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListViewModel
+import com.vci.vectorcamapp.complete_session.specimens.presentation.CompleteSessionSpecimensScreen
+import com.vci.vectorcamapp.complete_session.specimens.presentation.CompleteSessionSpecimensViewModel
+import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsScreen
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionScreen
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionViewModel
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormEvent
@@ -151,9 +153,14 @@ fun NavGraph() {
 
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    is CompleteSessionListEvent.NavigateToCompleteSessionDetail -> {
+                    is CompleteSessionListEvent.NavigateToCompleteSessionDetails -> {
                         navController.navigate(
-                            Destination.CompleteSessionDetail.createRoute(event.sessionId)
+                            Destination.CompleteSessionDetails.createRoute(event.sessionId)
+                        )
+                    }
+                    is CompleteSessionListEvent.NavigateToCompleteSessionSpecimens -> {
+                        navController.navigate(
+                            Destination.CompleteSessionSpecimens.createRoute(event.sessionId)
                         )
                     }
                 }
@@ -168,10 +175,10 @@ fun NavGraph() {
             }
         }
         composable(
-            route = Destination.CompleteSessionDetail.route + "/{sessionId}",
+            route = Destination.CompleteSessionDetails.ROUTE + "/{sessionId}",
             arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val viewModel = hiltViewModel<CompleteSessionDetailViewModel>()
+            val viewModel = hiltViewModel<CompleteSessionDetailsViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
             val sessionId = backStackEntry.arguments?.getString("sessionId") ?: return@composable
@@ -181,7 +188,27 @@ fun NavGraph() {
             }
 
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                CompleteSessionDetailScreen(
+                CompleteSessionDetailsScreen(
+                    state = state,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+        }
+        composable(
+            route = Destination.CompleteSessionSpecimens.ROUTE + "/{sessionId}",
+            arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val viewModel = hiltViewModel<CompleteSessionSpecimensViewModel>()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+
+            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: return@composable
+
+            LaunchedEffect(sessionId) {
+                viewModel.loadSession(sessionId)
+            }
+
+            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                CompleteSessionSpecimensScreen(
                     state = state,
                     modifier = Modifier.padding(innerPadding)
                 )

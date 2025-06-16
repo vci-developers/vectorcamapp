@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.complete_session.detail.presentation
+package com.vci.vectorcamapp.complete_session.details.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,12 +11,12 @@ import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
-class CompleteSessionDetailViewModel @Inject constructor(
+class CompleteSessionDetailsViewModel @Inject constructor(
     private val sessionRepository: SessionRepository
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(CompleteSessionDetailState())
-    val state: StateFlow<CompleteSessionDetailState> = _state
+    private val _state = MutableStateFlow(CompleteSessionDetailsState())
+    val state: StateFlow<CompleteSessionDetailsState> = _state
 
     fun loadSession(sessionId: String) {
         val uuid = try {

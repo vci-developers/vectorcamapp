@@ -28,7 +28,7 @@ fun CompleteSessionListScreen(
                 session = session,
                 modifier = Modifier
                     .clickable {
-                        onAction(CompleteSessionListAction.ViewCompleteSessionDetail(session.id.toString()))
+                        onAction(CompleteSessionListAction.ViewCompleteSessionSpecimens(session.id.toString()))
                     }
                     .then(modifier)
             )

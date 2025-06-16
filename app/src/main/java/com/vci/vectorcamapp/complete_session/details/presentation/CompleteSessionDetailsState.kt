@@ -1,14 +1,15 @@
-package com.vci.vectorcamapp.complete_session.detail.presentation
+package com.vci.vectorcamapp.complete_session.details.presentation
 
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import java.util.UUID
 
-data class CompleteSessionDetailState (
+data class CompleteSessionDetailsState (
     val session: Session = Session(
         id = UUID(0, 0),
         createdAt = 0L,
-        submittedAt = null),
+        submittedAt = null
+    ),
     val surveillanceForm: SurveillanceForm = SurveillanceForm(
         country = "",
         district = "",
