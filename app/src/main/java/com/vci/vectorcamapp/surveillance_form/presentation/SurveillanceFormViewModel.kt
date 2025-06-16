@@ -376,10 +376,20 @@ class SurveillanceFormViewModel @Inject constructor(
 //        Log.d("SurveillanceFormViewModel", "loadSavedForm")
         val session = currentSessionCache.getSession() ?: return
         val saved = surveillanceFormRepository.getSurveillanceForm(session.localId)
-//        Log.d("SurveillanceFormViewModel", "loadSavedForm: $session")
+        val siteId: Int? = currentSessionCache.getSiteId()
+        val site = siteRepository.getSiteById(siteId)
+//        Log.d("SurveillanceFormViewModel", "loadSavedForm tried to find: $session")
         if (saved != null) {
-//            Log.d("SurveillanceFormViewModel", "loadSavedForm: $saved")
-            _state.update { it.copy(surveillanceForm = saved) }
+//            Log.d("SurveillanceFormViewModel", "loadSavedForm found form: $saved")
+//            Log.d("SurveillanceFormViewModel", "loadSavedForm found site: $site")
+            _state.update {
+                it.copy(
+                    surveillanceForm     = saved,
+                    session              = session,
+                    selectedDistrict     = site.district,
+                    selectedSentinelSite = site.sentinelSite
+                )
+            }
         }
     }
 }
