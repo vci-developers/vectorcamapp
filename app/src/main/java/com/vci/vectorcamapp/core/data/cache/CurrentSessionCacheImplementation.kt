@@ -12,9 +12,9 @@ import javax.inject.Inject
 class CurrentSessionCacheImplementation @Inject constructor(
     private val dataStore: DataStore<SessionDto>
 ) : CurrentSessionCache {
-    override suspend fun saveSession(session: Session) {
+    override suspend fun saveSession(session: Session, siteId: Int) {
         dataStore.updateData {
-            session.toDto()
+            session.toDto(siteId)
         }
     }
 

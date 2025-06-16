@@ -35,7 +35,7 @@ fun IncompleteSessionCard(session: Session, modifier: Modifier = Modifier) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Session ID: ${session.id}",
+                text = "Session ID: ${session.localId}",
                 style = MaterialTheme.typography.bodySmall
             )
             Spacer(modifier = Modifier.height(4.dp))

@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -46,7 +47,7 @@ fun NavGraph() {
         navController = navController, startDestination = Destination.Landing
     ) {
         composable<Destination.Landing> {
-            val viewModel = hiltViewModel<LandingViewModel>()
+            val viewModel = viewModel<LandingViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
             ObserveAsEvents(events = viewModel.events) { event ->

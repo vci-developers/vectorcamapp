@@ -15,8 +15,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.surveillance_form.domain.enums.CollectionMethodOption
+import com.vci.vectorcamapp.surveillance_form.domain.enums.DistrictOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.LlinBrandOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.LlinTypeOption
+import com.vci.vectorcamapp.surveillance_form.domain.enums.SentinelSiteOption
+import com.vci.vectorcamapp.surveillance_form.domain.enums.SpecimenConditionOption
 import com.vci.vectorcamapp.surveillance_form.presentation.components.DatePickerField
 import com.vci.vectorcamapp.surveillance_form.presentation.components.DropdownField
 import com.vci.vectorcamapp.surveillance_form.presentation.components.TextEntryField
@@ -41,86 +44,53 @@ fun SurveillanceFormScreen(
             .padding(8.dp)
             .verticalScroll(verticalScrollState)
     ) {
-        TextEntryField(
-            label = "Country",
-            value = state.surveillanceForm.country,
-            onValueChange = { onAction(SurveillanceFormAction.EnterCountry(it)) },
-            singleLine = true,
-            error = state.surveillanceFormErrors.country,
-            modifier = modifier
-        )
 
         TextEntryField(
-            label = "District",
-            value = state.surveillanceForm.district,
-            onValueChange = { onAction(SurveillanceFormAction.EnterDistrict(it)) },
+            label = "Collector Title",
+            value = state.session.collectorTitle,
+            onValueChange = { onAction(SurveillanceFormAction.EnterCollectorTitle(it)) },
             singleLine = true,
-            error = state.surveillanceFormErrors.district,
-            modifier = modifier
-        )
-
-        TextEntryField(
-            label = "Health Center",
-            value = state.surveillanceForm.healthCenter,
-            onValueChange = { onAction(SurveillanceFormAction.EnterHealthCenter(it)) },
-            singleLine = true,
-            error = state.surveillanceFormErrors.healthCenter,
-            modifier = modifier
-        )
-
-        TextEntryField(
-            label = "Sentinel Site",
-            value = state.surveillanceForm.sentinelSite,
-            onValueChange = { onAction(SurveillanceFormAction.EnterSentinelSite(it)) },
-            singleLine = true,
-            error = state.surveillanceFormErrors.sentinelSite,
-            modifier = modifier
-        )
-
-        TextEntryField(
-            label = "Household Number",
-            value = state.surveillanceForm.householdNumber,
-            onValueChange = { onAction(SurveillanceFormAction.EnterHouseholdNumber(it)) },
-            singleLine = true,
-            error = state.surveillanceFormErrors.householdNumber,
-            modifier = modifier
-        )
-
-        Text("Latitude: %.4f".format(state.surveillanceForm.latitude))
-        Text("Longitude: %.4f".format(state.surveillanceForm.longitude))
-
-        DatePickerField(
-            label = "Collection Date",
-            selectedDateInMillis = state.surveillanceForm.collectionDate,
-            onDateSelected = { onAction(SurveillanceFormAction.PickCollectionDate(it)) },
-            error = state.surveillanceFormErrors.collectionDate,
-            modifier = modifier
-        )
-
-        DropdownField(
-            label = "Collection Method",
-            options = CollectionMethodOption.entries,
-            selectedOption = CollectionMethodOption.entries.find { it.label == state.surveillanceForm.collectionMethod },
-            onOptionSelected = { onAction(SurveillanceFormAction.SelectCollectionMethod(it)) },
-            error = state.surveillanceFormErrors.collectionMethod,
-            modifier = modifier
+            error = state.surveillanceFormErrors.collectorTitle,
+            modifier = modifier,
         )
 
         TextEntryField(
             label = "Collector Name",
-            value = state.surveillanceForm.collectorName,
+            value = state.session.collectorName,
             onValueChange = { onAction(SurveillanceFormAction.EnterCollectorName(it)) },
             singleLine = true,
             error = state.surveillanceFormErrors.collectorName,
+            modifier = modifier,
+        )
+
+        DropdownField(
+            label = "District",
+            options = state.allSitesInProgram.map { DistrictOption(it.district) }
+                .distinctBy { it.label },
+            selectedOption = DistrictOption(state.selectedDistrict),
+            onOptionSelected = { onAction(SurveillanceFormAction.SelectDistrict(it)) },
+            error = state.surveillanceFormErrors.district,
             modifier = modifier
         )
 
+        if (state.selectedDistrict.isNotBlank()) {
+            DropdownField(
+                label = "Sentinel Site",
+                options = state.allSitesInProgram.filter { it.district == state.selectedDistrict }
+                    .map { SentinelSiteOption(it.sentinelSite) }.distinctBy { it.label },
+                selectedOption = SentinelSiteOption(state.selectedSentinelSite),
+                onOptionSelected = { onAction(SurveillanceFormAction.SelectSentinelSite(it)) },
+                error = state.surveillanceFormErrors.sentinelSite,
+                modifier = modifier
+            )
+        }
+
         TextEntryField(
-            label = "Collector Title",
-            value = state.surveillanceForm.collectorTitle,
-            onValueChange = { onAction(SurveillanceFormAction.EnterCollectorTitle(it)) },
+            label = "House Number",
+            value = state.session.houseNumber,
+            onValueChange = { onAction(SurveillanceFormAction.EnterHouseNumber(it)) },
             singleLine = true,
-            error = state.surveillanceFormErrors.collectorTitle,
+            error = state.surveillanceFormErrors.houseNumber,
             modifier = modifier
         )
 
@@ -139,7 +109,7 @@ fun SurveillanceFormScreen(
             onCheckedChange = { onAction(SurveillanceFormAction.ToggleIrsConducted(it)) },
             modifier = modifier,
         )
-        
+
         state.surveillanceForm.monthsSinceIrs?.let {
             TextEntryField(
                 label = "Months Since IRS",
@@ -193,15 +163,42 @@ fun SurveillanceFormScreen(
             )
         }
 
+        DatePickerField(
+            label = "Collection Date",
+            selectedDateInMillis = state.session.collectionDate,
+            onDateSelected = { onAction(SurveillanceFormAction.PickCollectionDate(it)) },
+            error = state.surveillanceFormErrors.collectionDate,
+            modifier = modifier
+        )
+
+        DropdownField(
+            label = "Collection Method",
+            options = CollectionMethodOption.entries,
+            selectedOption = CollectionMethodOption.entries.find { it.label == state.session.collectionMethod },
+            onOptionSelected = { onAction(SurveillanceFormAction.SelectCollectionMethod(it)) },
+            error = state.surveillanceFormErrors.collectionMethod,
+            modifier = modifier
+        )
+
+        DropdownField(
+            label = "Specimen Condition",
+            options = SpecimenConditionOption.entries,
+            selectedOption = SpecimenConditionOption.entries.find { it.label == state.session.specimenCondition },
+            onOptionSelected = { onAction(SurveillanceFormAction.SelectSpecimenCondition(it)) },
+            error = state.surveillanceFormErrors.specimenCondition,
+            modifier = modifier
+        )
+
         TextEntryField(
             label = "Notes",
-            value = state.surveillanceForm.notes ,
+            value = state.session.notes,
             onValueChange = { onAction(SurveillanceFormAction.EnterNotes(it)) },
             modifier = modifier
         )
 
         Button(
-            onClick = { onAction(SurveillanceFormAction.SubmitSurveillanceForm) }, modifier = modifier
+            onClick = { onAction(SurveillanceFormAction.SubmitSurveillanceForm) },
+            modifier = modifier
         ) {
             Text("Start Imaging")
         }

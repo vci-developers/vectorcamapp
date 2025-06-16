@@ -130,6 +130,9 @@ dependencies {
     // Proto Data Store Library
     implementation(libs.androidx.datastore)
 
+    // Work Manager Library
+    implementation(libs.androidx.work.runtime.ktx)
+
     // JSON Serialization Library
     implementation(libs.kotlinx.serialization.json) // Kotlinx JSON serialization library
 

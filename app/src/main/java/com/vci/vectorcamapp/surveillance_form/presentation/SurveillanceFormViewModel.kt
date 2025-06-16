@@ -3,12 +3,14 @@ package com.vci.vectorcamapp.surveillance_form.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
-import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.surveillance_form.domain.use_cases.ValidationUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -26,11 +28,17 @@ import javax.inject.Inject
 class SurveillanceFormViewModel @Inject constructor(
     private val validationUseCases: ValidationUseCases,
     private val currentSessionCache: CurrentSessionCache,
-    private val surveillanceFormRepository: SurveillanceFormRepository
+    private val siteRepository: SiteRepository,
+    private val surveillanceFormRepository: SurveillanceFormRepository,
+    private val sessionRepository: SessionRepository,
 ) : ViewModel() {
+
+    @Inject
+    lateinit var transactionHelper: TransactionHelper
 
     private val _state = MutableStateFlow(SurveillanceFormState())
     val state: StateFlow<SurveillanceFormState> = _state.onStart {
+        loadAllSites()
         getLocation()
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000L), SurveillanceFormState()
@@ -48,141 +56,103 @@ class SurveillanceFormViewModel @Inject constructor(
                 }
 
                 SurveillanceFormAction.SubmitSurveillanceForm -> {
+                    val session = _state.value.session
                     val surveillanceForm = _state.value.surveillanceForm
 
-                    val countryResult = validationUseCases.validateCountry(surveillanceForm.country)
-                    val districtResult =
-                        validationUseCases.validateDistrict(surveillanceForm.district)
-                    val healthCenterResult =
-                        validationUseCases.validateHealthCenter(surveillanceForm.healthCenter)
-                    val sentinelSiteResult =
-                        validationUseCases.validateSentinelSite(surveillanceForm.sentinelSite)
-                    val householdNumberResult =
-                        validationUseCases.validateHouseholdNumber(surveillanceForm.householdNumber)
-                    val collectionDateResult =
-                        validationUseCases.validateCollectionDate(surveillanceForm.collectionDate)
-                    val collectionMethodResult =
-                        validationUseCases.validateCollectionMethod(surveillanceForm.collectionMethod)
-                    val collectorNameResult =
-                        validationUseCases.validateCollectorName(surveillanceForm.collectorName)
                     val collectorTitleResult =
-                        validationUseCases.validateCollectorTitle(surveillanceForm.collectorTitle)
+                        validationUseCases.validateCollectorTitle(session.collectorTitle)
+                    val collectorNameResult =
+                        validationUseCases.validateCollectorName(session.collectorName)
+                    val districtResult =
+                        validationUseCases.validateDistrict(_state.value.selectedDistrict)
+                    val sentinelSiteResult =
+                        validationUseCases.validateSentinelSite(_state.value.selectedSentinelSite)
+                    val houseNumberResult =
+                        validationUseCases.validateHouseNumber(session.houseNumber)
                     val llinTypeResult =
                         surveillanceForm.llinType?.let { validationUseCases.validateLlinType(it) }
                     val llinBrandResult =
                         surveillanceForm.llinBrand?.let { validationUseCases.validateLlinBrand(it) }
+                    val collectionDateResult =
+                        validationUseCases.validateCollectionDate(session.collectionDate)
+                    val collectionMethodResult =
+                        validationUseCases.validateCollectionMethod(session.collectionMethod)
+                    val specimenConditionResult =
+                        validationUseCases.validateSpecimenCondition(session.specimenCondition)
 
                     _state.update {
                         it.copy(
                             surveillanceFormErrors = it.surveillanceFormErrors.copy(
-                                country = countryResult.errorOrNull(),
+                                collectorTitle = collectorTitleResult.errorOrNull(),
+                                collectorName = collectorNameResult.errorOrNull(),
                                 district = districtResult.errorOrNull(),
-                                healthCenter = healthCenterResult.errorOrNull(),
                                 sentinelSite = sentinelSiteResult.errorOrNull(),
-                                householdNumber = householdNumberResult.errorOrNull(),
+                                houseNumber = houseNumberResult.errorOrNull(),
+                                llinType = llinTypeResult?.errorOrNull(),
+                                llinBrand = llinBrandResult?.errorOrNull(),
                                 collectionDate = collectionDateResult.errorOrNull(),
                                 collectionMethod = collectionMethodResult.errorOrNull(),
-                                collectorName = collectorNameResult.errorOrNull(),
-                                collectorTitle = collectorTitleResult.errorOrNull(),
-                                llinType = llinTypeResult?.errorOrNull(),
-                                llinBrand = llinBrandResult?.errorOrNull()
+                                specimenCondition = specimenConditionResult.errorOrNull()
                             )
                         )
                     }
 
                     val hasError = listOf(
-                        countryResult,
+                        collectorTitleResult,
+                        collectorNameResult,
                         districtResult,
-                        healthCenterResult,
                         sentinelSiteResult,
-                        householdNumberResult,
+                        houseNumberResult,
+                        llinTypeResult,
+                        llinBrandResult,
                         collectionDateResult,
                         collectionMethodResult,
-                        collectorNameResult,
-                        collectorTitleResult,
-                        llinTypeResult,
-                        llinBrandResult
+                        specimenConditionResult
                     ).any { it is Result.Error }
 
                     if (!hasError) {
-                        val session = currentSessionCache.getSession()
-                        if (session == null) {
-                            _events.send(SurveillanceFormEvent.NavigateBackToLandingScreen)
+                        val selectedSite = _state.value.allSitesInProgram.find {
+                            it.district == _state.value.selectedDistrict && it.sentinelSite == _state.value.selectedSentinelSite
+                        }
+                        if (selectedSite == null) {
+                            Log.e(
+                                "SUBMIT_ERROR",
+                                "Site not found for district=${_state.value.selectedDistrict} and sentinel=${_state.value.selectedSentinelSite}"
+                            )
                             return@launch
                         }
-                        surveillanceFormRepository.upsertSurveillanceForm(surveillanceForm, session.id).onSuccess {
+
+                        val success = transactionHelper.runAsTransaction {
+                            val sessionResult =
+                                sessionRepository.upsertSession(session, selectedSite.id)
+                            val surveillanceFormResult =
+                                surveillanceFormRepository.upsertSurveillanceForm(
+                                    surveillanceForm, session.localId
+                                )
+
+                            sessionResult.onError { error ->
+                                Log.e("ROOM DB ERROR", "Session Error: $error")
+                            }
+
+                            surveillanceFormResult.onError { error ->
+                                Log.e("ROOM DB ERROR", "Surveillance Form Error: $error")
+                            }
+
+                            (sessionResult !is Result.Error) && (surveillanceFormResult !is Result.Error)
+                        }
+
+                        if (success) {
+                            currentSessionCache.saveSession(session, selectedSite.id)
                             _events.send(SurveillanceFormEvent.NavigateToImagingScreen)
-                        }.onError { error ->
-                            Log.e("ROOM DB ERROR", error.toString())
                         }
                     }
                 }
 
-                is SurveillanceFormAction.EnterCountry -> {
+                is SurveillanceFormAction.EnterCollectorTitle -> {
                     _state.update {
                         it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                country = action.text
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.EnterDistrict -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                district = action.text
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.EnterHealthCenter -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                healthCenter = action.text
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.EnterSentinelSite -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                sentinelSite = action.text
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.EnterHouseholdNumber -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                householdNumber = action.text
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.PickCollectionDate -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                collectionDate = action.date
-                            )
-                        )
-                    }
-                }
-
-                is SurveillanceFormAction.SelectCollectionMethod -> {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                collectionMethod = action.option.label
+                            session = it.session.copy(
+                                collectorTitle = action.text
                             )
                         )
                     }
@@ -191,18 +161,34 @@ class SurveillanceFormViewModel @Inject constructor(
                 is SurveillanceFormAction.EnterCollectorName -> {
                     _state.update {
                         it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
+                            session = it.session.copy(
                                 collectorName = action.text
                             )
                         )
                     }
                 }
 
-                is SurveillanceFormAction.EnterCollectorTitle -> {
+                is SurveillanceFormAction.SelectDistrict -> {
                     _state.update {
                         it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
-                                collectorTitle = action.text
+                            selectedDistrict = action.option.label, selectedSentinelSite = ""
+                        )
+                    }
+                }
+
+                is SurveillanceFormAction.SelectSentinelSite -> {
+                    _state.update {
+                        it.copy(
+                            selectedSentinelSite = action.option.label
+                        )
+                    }
+                }
+
+                is SurveillanceFormAction.EnterHouseNumber -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                houseNumber = action.text
                             )
                         )
                     }
@@ -227,26 +213,10 @@ class SurveillanceFormViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             surveillanceForm = it.surveillanceForm.copy(
-                                wasIrsConducted = wasIrsConducted
+                                wasIrsConducted = wasIrsConducted,
+                                monthsSinceIrs = if (wasIrsConducted) 0 else null
                             )
                         )
-                    }
-                    if (!wasIrsConducted) {
-                        _state.update {
-                            it.copy(
-                                surveillanceForm = it.surveillanceForm.copy(
-                                    monthsSinceIrs = null
-                                )
-                            )
-                        }
-                    } else {
-                        _state.update {
-                            it.copy(
-                                surveillanceForm = it.surveillanceForm.copy(
-                                    monthsSinceIrs = 0
-                                )
-                            )
-                        }
                     }
                 }
 
@@ -289,9 +259,7 @@ class SurveillanceFormViewModel @Inject constructor(
                             _state.update {
                                 it.copy(
                                     surveillanceForm = it.surveillanceForm.copy(
-                                        llinType = "",
-                                        llinBrand = "",
-                                        numPeopleSleptUnderLlin = 0
+                                        llinType = "", llinBrand = "", numPeopleSleptUnderLlin = 0
                                     )
                                 )
                             }
@@ -333,10 +301,40 @@ class SurveillanceFormViewModel @Inject constructor(
                     }
                 }
 
+                is SurveillanceFormAction.PickCollectionDate -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                collectionDate = action.date
+                            )
+                        )
+                    }
+                }
+
+                is SurveillanceFormAction.SelectCollectionMethod -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                collectionMethod = action.option.label
+                            )
+                        )
+                    }
+                }
+
+                is SurveillanceFormAction.SelectSpecimenCondition -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                specimenCondition = action.option.label
+                            )
+                        )
+                    }
+                }
+
                 is SurveillanceFormAction.EnterNotes -> {
                     _state.update {
                         it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
+                            session = it.session.copy(
                                 notes = action.text
                             )
                         )
@@ -346,13 +344,24 @@ class SurveillanceFormViewModel @Inject constructor(
         }
     }
 
-    private fun getLocation() {
+    private fun loadAllSites() {
         viewModelScope.launch {
             _state.update {
                 it.copy(
                     isLoading = true
                 )
             }
+            val allSitesInProgram = siteRepository.getAllSitesByProgramId(1)
+            _state.update {
+                it.copy(
+                    allSitesInProgram = allSitesInProgram
+                )
+            }
+        }
+    }
+
+    private fun getLocation() {
+        viewModelScope.launch {
             // FETCH LOCATION DATA HERE
             _state.update {
                 it.copy(

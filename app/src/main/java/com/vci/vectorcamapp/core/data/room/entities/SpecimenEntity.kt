@@ -10,7 +10,7 @@ import java.util.UUID
 @Entity(
     tableName = "specimen", foreignKeys = [ForeignKey(
         entity = SessionEntity::class,
-        parentColumns = ["id"],
+        parentColumns = ["localId"],
         childColumns = ["sessionId"],
         onDelete = ForeignKey.CASCADE,
         onUpdate = ForeignKey.CASCADE
