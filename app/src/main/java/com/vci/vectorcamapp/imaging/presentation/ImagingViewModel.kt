@@ -80,29 +80,19 @@ class ImagingViewModel @Inject constructor(
                 return@launch
             }
 
-            sessionRepository.observeSessionWithSpecimens(currentSession.localId).filterNotNull()
-                .collectLatest { sessionWithSpecimens ->
-                    val specimensAndBoundingBoxUiFlows =
-                        sessionWithSpecimens.specimens.map { specimen ->
-                            specimenRepository.observeSpecimenAndBoundingBox(specimen.id)
-                                .filterNotNull().map { specimenAndBoundingBox ->
-                                    val boundingBoxUi = inferenceRepository.convertToBoundingBoxUi(
-                                        specimenAndBoundingBox.boundingBox
-                                    )
-                                    SpecimenAndBoundingBoxUi(
-                                        specimen = specimenAndBoundingBox.specimen,
-                                        boundingBoxUi = boundingBoxUi
-                                    )
-                                }
-                        }
-                    if (specimensAndBoundingBoxUiFlows.isEmpty()) {
-                        _capturedSpecimensAndBoundingBoxesUi.value = emptyList()
-                    } else {
-                        combine(specimensAndBoundingBoxUiFlows) { it.toList() }.collect { capturedSpecimensAndBoundingBoxesUi ->
-                            _capturedSpecimensAndBoundingBoxesUi.value =
-                                capturedSpecimensAndBoundingBoxesUi
-                        }
+            specimenRepository
+                .observeSpecimensAndBoundingBoxesBySession(currentSession.localId)
+                .map { list ->
+                    list.map { relation ->
+                        SpecimenAndBoundingBoxUi(
+                            specimen = relation.specimen,
+                            boundingBoxUi = inferenceRepository
+                                .convertToBoundingBoxUi(relation.boundingBox)
+                        )
                     }
+                }
+                .collect { alreadyCaptured ->
+                    _capturedSpecimensAndBoundingBoxesUi.value = alreadyCaptured
                 }
         }
     }

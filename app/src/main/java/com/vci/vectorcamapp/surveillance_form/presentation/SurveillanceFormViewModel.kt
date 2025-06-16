@@ -50,7 +50,7 @@ class SurveillanceFormViewModel @Inject constructor(
         viewModelScope.launch {
             when (action) {
                 SurveillanceFormAction.SaveSessionProgress -> {
-                    currentSessionCache.clearSession()
+//                    currentSessionCache.clearSession()
                     _events.send(SurveillanceFormEvent.NavigateBackToLandingScreen)
                 }
 
@@ -78,20 +78,35 @@ class SurveillanceFormViewModel @Inject constructor(
 
                     if (!hasError) {
                         // TODO: MODIFY WHEN FORM FIELDS ARE CREATED
-                        val newSession = Session(
-                            localId = UUID.randomUUID(),
-                            remoteId = null,
-                            houseNumber = "1",
-                            collectorTitle = "Student",
-                            collectorName = "Queen Victoria II",
-                            collectionDate = 0L,
-                            collectionMethod = "HLC",
-                            specimenCondition = "Dessicated",
-                            createdAt = System.currentTimeMillis(),
-                            completedAt = null,
-                            submittedAt = null,
-                            notes = "Fake Session"
-                        )
+                        val cachedSession: Session? = currentSessionCache.getSession()
+                        val newSession = if (cachedSession != null) {
+                            cachedSession.copy(
+                                // TODO — replace these with the real fields
+                                houseNumber       = "1",
+                                collectorTitle    = "Student",
+                                collectorName     = "Queen Victoria II",
+                                collectionDate    = 0L,
+                                collectionMethod  = "HLC",
+                                specimenCondition = "Dessicated",
+                                notes             = "Fake Session"
+                            )
+                        } else {
+                            Session(
+                                localId           = UUID.randomUUID(),
+                                remoteId          = null,
+                                houseNumber       = "1",
+                                collectorTitle    = "Student",
+                                collectorName     = "Queen Victoria II",
+                                collectionDate    = 0L,
+                                collectionMethod  = "HLC",
+                                specimenCondition = "Dessicated",
+                                createdAt         = System.currentTimeMillis(),
+                                completedAt       = null,
+                                submittedAt       = null,
+                                notes             = "Fake Session"
+                            )
+                        }
+
 
                         val success = transactionHelper.runAsTransaction {
                             val sessionResult = sessionRepository.upsertSession(newSession, 1)
