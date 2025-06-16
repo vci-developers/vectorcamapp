@@ -38,29 +38,6 @@ fun NavGraph() {
     NavHost(
         navController = navController, startDestination = Destination.Landing
     ) {
-        composable<Destination.Splash> {
-            val viewModel = hiltViewModel<SplashViewModel>()
-            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-            LaunchedEffect(uiState.checked) {
-                if (!uiState.checked) return@LaunchedEffect
-
-                if (uiState.session != null) {
-                    navController.navigate(Destination.SurveillanceForm) {
-                        popUpTo(Destination.Splash) { inclusive = true }
-                    }
-                } else {
-                    navController.navigate(Destination.Landing) {
-                        popUpTo(Destination.Splash) { inclusive = true }
-                    }
-                }
-            }
-
-            LoadingAnimation(
-                text = "Loading...", modifier = Modifier.fillMaxSize().padding(16.dp)
-            )
-        }
-
         composable<Destination.Landing> {
             val viewModel = hiltViewModel<LandingViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
