@@ -16,5 +16,5 @@ interface SiteDao {
     suspend fun getAllSitesByProgramId(programId: Int): List<SiteEntity>
 
     @Query("SELECT * FROM site WHERE id = :id")
-    suspend fun getSiteById(id: Int?): SiteEntity
+    suspend fun getSiteById(id: Int): SiteEntity?
 }

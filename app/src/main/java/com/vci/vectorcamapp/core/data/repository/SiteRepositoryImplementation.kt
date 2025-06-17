@@ -14,7 +14,7 @@ class SiteRepositoryImplementation @Inject constructor(
         return siteDao.getAllSitesByProgramId(programId).map { it.toDomain() }
     }
 
-    override suspend fun getSiteById(id: Int?): Site {
-        return siteDao.getSiteById(id).toDomain()
+    override suspend fun getSiteById(id: Int): Site? {
+        return siteDao.getSiteById(id)?.toDomain()
     }
 }

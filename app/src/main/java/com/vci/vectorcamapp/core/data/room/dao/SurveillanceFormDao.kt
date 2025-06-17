@@ -12,6 +12,6 @@ interface SurveillanceFormDao {
     @Upsert
     suspend fun upsertSurveillanceForm(surveillanceForm: SurveillanceFormEntity) : Long
 
-    @Query("SELECT * FROM surveillance_form WHERE sessionId = :sessionId LIMIT 1")
-    suspend fun getBySessionId(sessionId: UUID): SurveillanceFormEntity?
+    @Query("SELECT * FROM surveillance_form WHERE sessionId = :sessionId")
+    suspend fun getSurveillanceFormBySessionId(sessionId: UUID): SurveillanceFormEntity?
 }

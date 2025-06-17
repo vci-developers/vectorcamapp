@@ -2,13 +2,11 @@ package com.vci.vectorcamapp.core.data.repository
 
 import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toEntity
-import com.vci.vectorcamapp.core.data.room.dao.SessionDao
 import com.vci.vectorcamapp.core.data.room.dao.SurveillanceFormDao
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
-import kotlinx.coroutines.flow.firstOrNull
 import java.util.UUID
 import javax.inject.Inject
 
@@ -25,8 +23,9 @@ class SurveillanceFormRepositoryImplementation @Inject constructor(
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }
-    override suspend fun getSurveillanceForm(sessionId: UUID): SurveillanceForm? =
+
+    override suspend fun getSurveillanceFormBySessionId(sessionId: UUID): SurveillanceForm? =
         surveillanceFormDao
-            .getBySessionId(sessionId)
+            .getSurveillanceFormBySessionId(sessionId)
             ?.toDomain()
 }
