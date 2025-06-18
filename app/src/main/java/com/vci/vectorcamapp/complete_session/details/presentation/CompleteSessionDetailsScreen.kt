@@ -56,7 +56,32 @@ fun CompleteSessionDetailsScreen(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "House Number: ${state.session.houseNumber}",
+            text = "Site ID: ${state.site.id}",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Sentinel Site: ${state.site.sentinelSite}",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Health Center: ${state.site.healthCenter}",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "District: ${state.site.district}",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Sub-County: ${state.site.subCounty}",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Parish: ${state.site.parish}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))

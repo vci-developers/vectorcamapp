@@ -29,7 +29,7 @@ class CompleteSessionDetailsViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val result = sessionRepository.getSessionAndSurveillanceForm(uuid)
+            val result = sessionRepository.getSessionWithSiteAndSurveillanceForm(uuid)
             if (result == null) {
                 _state.value = _state.value.copy(
                     error = "No data found for session"
@@ -38,6 +38,7 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                 _state.value = _state.value.copy(
                     session = result.session,
                     surveillanceForm = result.surveillanceForm,
+                    site = result.site,
                     error = null
                 )
             }

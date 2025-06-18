@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.complete_session.details.presentation
 
 import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import java.util.UUID
 
@@ -18,6 +19,14 @@ data class CompleteSessionDetailsState (
         completedAt = null,
         submittedAt = null,
         notes = ""
+    ),
+    val site: Site = Site(
+        id = -1,
+        district = "",
+        subCounty = "",
+        parish = "",
+        sentinelSite = "",
+        healthCenter = ""
     ),
     val surveillanceForm: SurveillanceForm = SurveillanceForm(
         numPeopleSleptInHouse = 0,
