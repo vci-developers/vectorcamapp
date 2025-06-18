@@ -8,6 +8,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,23 +22,47 @@ class LocationClient @Inject constructor(
     private val fused: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
 
+    companion object {
+        private const val MAX_LAST_LOCATION_AGE_MS = 5 * 60 * 1_000L
+    }
+
     @SuppressLint("MissingPermission")
     suspend fun getCurrentLocation(): Location =
-        suspendCancellableCoroutine { cont ->
+        suspendCancellableCoroutine<Location> { cont ->
             val cts = CancellationTokenSource()
+            val now = System.currentTimeMillis()
 
-            fused.getCurrentLocation(
-                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
-                cts.token
-            ).addOnSuccessListener { loc ->
-                if (loc != null) cont.resume(loc)
-                else cont.resumeWithException(RuntimeException("No location available"))
-            }.addOnFailureListener { e ->
-                cont.resumeWithException(e)
-            }
+            fused.lastLocation
+                .addOnSuccessListener { last ->
+                    if (last != null && now - last.time <= MAX_LAST_LOCATION_AGE_MS) {
+                        if (cont.isActive) cont.resume(last)
+                    } else {
+                        requestFreshLocation(cts, cont)
+                    }
+                }
+                .addOnFailureListener {
+                    requestFreshLocation(cts, cont)
+                }
 
-            cont.invokeOnCancellation {
-                cts.cancel()
-            }
+            cont.invokeOnCancellation { cts.cancel() }
         }
+
+    @SuppressLint("MissingPermission")
+    private fun requestFreshLocation(
+        cts: CancellationTokenSource,
+        cont: CancellableContinuation<Location>
+    ) {
+        fused.getCurrentLocation(
+            Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+            cts.token
+        ).addOnSuccessListener { loc ->
+            if (loc != null && cont.isActive) {
+                cont.resume(loc)
+            } else if (cont.isActive) {
+                cont.resumeWithException(RuntimeException("No location available"))
+            }
+        }.addOnFailureListener { e ->
+            if (cont.isActive) cont.resumeWithException(e)
+        }
+    }
 }
