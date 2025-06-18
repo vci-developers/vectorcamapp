@@ -8,6 +8,7 @@ import androidx.room.Upsert
 import com.vci.vectorcamapp.core.data.room.entities.SessionEntity
 import com.vci.vectorcamapp.core.data.room.entities.relations.SessionAndSurveillanceFormRelation
 import com.vci.vectorcamapp.core.data.room.entities.relations.SessionWithSpecimensRelation
+import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSurveillanceForm
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
@@ -22,6 +23,14 @@ interface SessionDao {
 
     @Query("UPDATE session SET completedAt = :timestamp WHERE localId = :sessionId")
     suspend fun markSessionAsComplete(sessionId: UUID, timestamp: Long): Int
+
+    @Transaction
+    @Query("SELECT * FROM session WHERE localId = :sessionId")
+    suspend fun getSessionWithSpecimens(sessionId: UUID): SessionWithSpecimensRelation?
+
+    @Transaction
+    @Query("SELECT * FROM session WHERE localId = :sessionId")
+    suspend fun getSessionAndSurveillanceForm(sessionId: UUID): SessionAndSurveillanceFormRelation?
 
     @Query("SELECT * FROM session WHERE completedAt IS NOT NULL")
     fun observeCompleteSessions(): Flow<List<SessionEntity>>

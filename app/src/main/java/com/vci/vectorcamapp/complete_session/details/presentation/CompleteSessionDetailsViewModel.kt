@@ -29,18 +29,17 @@ class CompleteSessionDetailsViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            sessionRepository.observeSessionAndSurveillanceForm(uuid).collect { result ->
-                if (result == null) {
-                    _state.value = _state.value.copy(
-                        error = "No data found for session"
-                    )
-                } else {
-                    _state.value = _state.value.copy(
-                        session = result.session,
-                        surveillanceForm = result.surveillanceForm,
-                        error = null
-                    )
-                }
+            val result = sessionRepository.getSessionAndSurveillanceForm(uuid)
+            if (result == null) {
+                _state.value = _state.value.copy(
+                    error = "No data found for session"
+                )
+            } else {
+                _state.value = _state.value.copy(
+                    session = result.session,
+                    surveillanceForm = result.surveillanceForm,
+                    error = null
+                )
             }
         }
     }

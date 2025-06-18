@@ -12,6 +12,8 @@ interface SessionRepository {
     suspend fun upsertSession(session: Session, siteId: Int): Result<Unit, RoomDbError>
     suspend fun deleteSession(session: Session, siteId: Int): Boolean
     suspend fun markSessionAsComplete(sessionId: UUID): Boolean
+    suspend fun getSessionWithSpecimens(sessionId: UUID): SessionWithSpecimens?
+    suspend fun getSessionAndSurveillanceForm(sessionId: UUID): SessionAndSurveillanceForm?
     fun observeCompleteSessions(): Flow<List<Session>>
     fun observeIncompleteSessions(): Flow<List<Session>>
     fun observeSessionWithSpecimens(sessionId: UUID): Flow<SessionWithSpecimens?>

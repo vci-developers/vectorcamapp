@@ -56,7 +56,7 @@ fun CompleteSessionSpecimensCard(
             )
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "Session ID: ${session.id}",
+                text = "Session ID: ${session.localId}",
                 style = MaterialTheme.typography.bodySmall
             )
             Spacer(modifier = Modifier.height(4.dp))

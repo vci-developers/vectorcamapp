@@ -24,62 +24,44 @@ fun CompleteSessionDetailsScreen(
     val dateTimeFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
 
-    val formattedDateTime = dateTimeFormatter.format(state.session.createdAt)
-    val collectionDateFormatted = if (state.surveillanceForm.collectionDate != 0L)
-        dateFormatter.format(Date(state.surveillanceForm.collectionDate))
-    else "N/A"
+    val createdAtDateTimeFormatted = dateTimeFormatter.format(state.session.createdAt)
+    val collectionDateFormatted = dateFormatter.format(Date(state.session.collectionDate))
+    val submittedAtDateTimeFormatted = state.session.submittedAt?.let { dateTimeFormatter.format(it) }
+    val completedAtDateTimeFormatted = state.session.completedAt?.let { dateTimeFormatter.format(it) }
 
     Column(
         modifier = modifier.padding(16.dp)
     ) {
         Text(
-            text = "Session ID: ${state.session.id}",
+            text = "Session ID: ${state.session.localId}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Created: $formattedDateTime",
+            text = "Created At: $createdAtDateTimeFormatted",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Country: ${state.surveillanceForm.country}",
+            text = "Completed At: $completedAtDateTimeFormatted",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Submitted At: $submittedAtDateTimeFormatted",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "House Number: ${state.session.houseNumber}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "District: ${state.surveillanceForm.district}",
-            style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Health Center: ${state.surveillanceForm.healthCenter}",
-            style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Sentinel Site: ${state.surveillanceForm.sentinelSite}",
-            style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Household Number: ${state.surveillanceForm.householdNumber}",
-            style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Longitude: ${state.surveillanceForm.longitude}",
-            style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Latitude: ${state.surveillanceForm.latitude}",
-            style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Collection Method: ${state.surveillanceForm.collectionMethod}",
+            text = "Collector: ${state.session.collectorName} (${state.session.collectorTitle})",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -89,7 +71,17 @@ fun CompleteSessionDetailsScreen(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Collector: ${state.surveillanceForm.collectorName} (${state.surveillanceForm.collectorTitle})",
+            text = "Collection Method: ${state.session.collectionMethod}",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Specimen Condition: ${state.session.specimenCondition}",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Notes: ${state.session.notes}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -99,17 +91,32 @@ fun CompleteSessionDetailsScreen(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "IRS Conducted: ${if (state.surveillanceForm.wasIrsConducted) "Yes" else "No"}",
+            text = "IRS Conducted: ${state.surveillanceForm.wasIrsConducted}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Months Since IRS: ${state.surveillanceForm.monthsSinceIrs ?: "N/A"}",
+            text = "Months Since IRS: ${state.surveillanceForm.monthsSinceIrs}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "Number of LLIs Available: ${state.surveillanceForm.numLlinsAvailable}",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "LIL Type: ${state.surveillanceForm.llinType}",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "LIL Brand: ${state.surveillanceForm.llinBrand}",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Number of People Slept Under LIL: ${state.surveillanceForm.numPeopleSleptUnderLlin}",
             style = MaterialTheme.typography.bodySmall
         )
     }

@@ -29,18 +29,17 @@ class CompleteSessionSpecimensViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            sessionRepository.observeSessionWithSpecimens(uuid).collect { result ->
-                if (result == null) {
-                    _state.value = _state.value.copy(
-                        error = "No data found for session"
-                    )
-                } else {
-                    _state.value = _state.value.copy(
-                        session = result.session,
-                        specimens = result.specimens,
-                        error = null
-                    )
-                }
+            val result = sessionRepository.getSessionWithSpecimens(uuid)
+            if (result == null) {
+                _state.value = _state.value.copy(
+                    error = "No data found for session"
+                )
+            } else {
+                _state.value = _state.value.copy(
+                    session = result.session,
+                    specimens = result.specimens,
+                    error = null
+                )
             }
         }
     }

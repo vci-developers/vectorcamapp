@@ -6,9 +6,18 @@ import java.util.UUID
 
 data class CompleteSessionSpecimensState (
     val session: Session = Session(
-        id = UUID(0, 0),
-        createdAt = 0L,
-        submittedAt = null
+        localId = UUID.randomUUID(),
+        remoteId = null,
+        houseNumber = "",
+        collectorTitle = "",
+        collectorName = "",
+        collectionDate = System.currentTimeMillis(),
+        collectionMethod = "",
+        specimenCondition = "",
+        createdAt = System.currentTimeMillis(),
+        completedAt = null,
+        submittedAt = null,
+        notes = ""
     ),
     val specimens: List<Specimen> = emptyList(),
     val error: String? = null

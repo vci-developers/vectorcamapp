@@ -35,6 +35,26 @@ class SessionRepositoryImplementation @Inject constructor(
         return sessionDao.markSessionAsComplete(sessionId, System.currentTimeMillis()) > 0
     }
 
+    override suspend fun getSessionWithSpecimens(sessionId: UUID): SessionWithSpecimens? {
+        val relation = sessionDao.getSessionWithSpecimens(sessionId)
+        return relation?.let {
+            SessionWithSpecimens(
+                session = it.sessionEntity.toDomain(),
+                specimens = it.specimenEntities.map { specimenEntity -> specimenEntity.toDomain() }
+            )
+        }
+    }
+
+    override suspend fun getSessionAndSurveillanceForm(sessionId: UUID): SessionAndSurveillanceForm? {
+        val relation = sessionDao.getSessionAndSurveillanceForm(sessionId)
+        return relation?.let {
+            SessionAndSurveillanceForm(
+                session = it.sessionEntity.toDomain(),
+                surveillanceForm = it.surveillanceFormEntity.toDomain()
+            )
+        }
+    }
+
     override fun observeCompleteSessions(): Flow<List<Session>> {
         return sessionDao.observeCompleteSessions().map {
             it.map { sessionEntity -> sessionEntity.toDomain() }

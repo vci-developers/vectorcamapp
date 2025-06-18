@@ -23,12 +23,12 @@ fun CompleteSessionListScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(items = state.sessions.asReversed(), key = { it.id }) { session ->
+        items(items = state.sessions.asReversed(), key = { it.localId }) { session ->
             CompleteSessionListCard(
                 session = session,
                 modifier = Modifier
                     .clickable {
-                        onAction(CompleteSessionListAction.ViewCompleteSessionSpecimens(session.id.toString()))
+                        onAction(CompleteSessionListAction.ViewCompleteSessionDetails(sessionId = session.localId.toString()))
                     }
                     .then(modifier)
             )
