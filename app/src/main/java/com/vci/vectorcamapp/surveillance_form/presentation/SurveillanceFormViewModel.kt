@@ -11,7 +11,7 @@ import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
-import com.vci.vectorcamapp.location.LocationClient
+import com.vci.vectorcamapp.location.domain.repository.LocationRepository
 import com.vci.vectorcamapp.surveillance_form.domain.use_cases.ValidationUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.TimeoutCancellationException
@@ -34,7 +34,7 @@ class SurveillanceFormViewModel @Inject constructor(
     private val siteRepository: SiteRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
     private val sessionRepository: SessionRepository,
-    private val locationClient: LocationClient,
+    private val locationRepository: LocationRepository,
 ) : ViewModel() {
 
     @Inject
@@ -371,7 +371,7 @@ class SurveillanceFormViewModel @Inject constructor(
 
         repeat(2) { attempt ->
             try {
-                val loc = withTimeout(5_000) { locationClient.getCurrentLocation() }
+                val loc = withTimeout(5_000) { locationRepository.getCurrentLocation() }
                 _state.update {
                     it.copy(locationState = LocationState.Success(loc.latitude.toFloat(), loc.longitude.toFloat()))
                 }
@@ -388,7 +388,7 @@ class SurveillanceFormViewModel @Inject constructor(
             }
         }
     }
-    
+
     private suspend fun loadSavedForm() {
         currentSessionCache.getSession()?.let { session ->
             val savedForm = surveillanceFormRepository.getSurveillanceFormBySessionId(session.localId)

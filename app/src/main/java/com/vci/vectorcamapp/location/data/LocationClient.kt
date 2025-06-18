@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.location
+package com.vci.vectorcamapp.location.data
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -15,6 +15,7 @@ import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+
 @Singleton
 class LocationClient @Inject constructor(
     @ApplicationContext private val context: Context
@@ -28,7 +29,7 @@ class LocationClient @Inject constructor(
 
     @SuppressLint("MissingPermission")
     suspend fun getCurrentLocation(): Location =
-        suspendCancellableCoroutine<Location> { cont ->
+        suspendCancellableCoroutine { cont ->
             val cts = CancellationTokenSource()
             val now = System.currentTimeMillis()
 
