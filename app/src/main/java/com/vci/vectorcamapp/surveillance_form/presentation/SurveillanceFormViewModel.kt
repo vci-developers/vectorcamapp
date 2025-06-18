@@ -11,8 +11,10 @@ import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
+import com.vci.vectorcamapp.location.LocationClient
 import com.vci.vectorcamapp.surveillance_form.domain.use_cases.ValidationUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,6 +34,7 @@ class SurveillanceFormViewModel @Inject constructor(
     private val siteRepository: SiteRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
     private val sessionRepository: SessionRepository,
+    private val locationClient: LocationClient,
 ) : ViewModel() {
 
     @Inject
@@ -39,8 +43,8 @@ class SurveillanceFormViewModel @Inject constructor(
     private val _state = MutableStateFlow(SurveillanceFormState())
     val state: StateFlow<SurveillanceFormState> = _state.onStart {
         loadAllSites()
-        getLocation()
         loadSavedForm()
+        getLocation()
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000L), SurveillanceFormState()
     )
@@ -361,17 +365,30 @@ class SurveillanceFormViewModel @Inject constructor(
         }
     }
 
-    private fun getLocation() {
-        viewModelScope.launch {
-            // FETCH LOCATION DATA HERE
-            _state.update {
-                it.copy(
-                    isLoading = false
-                )
+    fun getLocation() = viewModelScope.launch {
+        _state.update { it.copy(isLoading = false) }
+        _state.update { it.copy(locationState = LocationState.Loading) }
+
+        repeat(2) { attempt ->
+            try {
+                val loc = withTimeout(5_000) { locationClient.getCurrentLocation() }
+                _state.update {
+                    it.copy(locationState = LocationState.Success(loc.latitude.toFloat(), loc.longitude.toFloat()))
+                }
+                return@launch
+            } catch (e: Exception) {
+                if (attempt == 1) {
+                    val msg = when (e) {
+                        is SecurityException -> "Permission denied"
+                        is TimeoutCancellationException -> "GPS timeout"
+                        else -> e.localizedMessage ?: "Unknown error"
+                    }
+                    _state.update { it.copy(locationState = LocationState.Error(msg)) }
+                }
             }
         }
     }
-
+    
     private suspend fun loadSavedForm() {
         currentSessionCache.getSession()?.let { session ->
             val savedForm = surveillanceFormRepository.getSurveillanceFormBySessionId(session.localId)

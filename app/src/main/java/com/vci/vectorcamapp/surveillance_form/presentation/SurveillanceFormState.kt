@@ -6,8 +6,15 @@ import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.surveillance_form.presentation.model.SurveillanceFormErrors
 import java.util.UUID
 
+sealed class LocationState {
+    object Loading : LocationState()
+    data class Success(val lat: Float, val lon: Float) : LocationState()
+    data class Error(val message: String) : LocationState()
+}
+
 data class SurveillanceFormState(
     val isLoading: Boolean = false,
+    val locationState: LocationState = LocationState.Loading,
     val allSitesInProgram: List<Site> = emptyList(),
     val selectedDistrict: String = "",
     val selectedSentinelSite: String = "",

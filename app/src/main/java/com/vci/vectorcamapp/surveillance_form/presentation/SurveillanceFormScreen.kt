@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -195,6 +196,20 @@ fun SurveillanceFormScreen(
             onValueChange = { onAction(SurveillanceFormAction.EnterNotes(it)) },
             modifier = modifier
         )
+        when (val loc = state.locationState) {
+            is LocationState.Loading -> {
+                CircularProgressIndicator()
+                Text("Getting location…", Modifier.padding(start = 8.dp))
+            }
+            is LocationState.Success -> {
+                Text("Latitude: ${loc.lat}", Modifier.padding(vertical = 4.dp))
+                Text("Longitude: ${loc.lon}", Modifier.padding(vertical = 4.dp))
+            }
+            is LocationState.Error -> {
+                Text("Could not get location: ${loc.message}", Modifier.padding(vertical = 4.dp))
+            }
+        }
+
 
         Button(
             onClick = { onAction(SurveillanceFormAction.SubmitSurveillanceForm) },
