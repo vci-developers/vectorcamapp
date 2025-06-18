@@ -6,7 +6,9 @@ import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toDto
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class DeviceCacheImplementation @Inject constructor(

@@ -24,17 +24,39 @@ import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionScreen
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionViewModel
+import com.vci.vectorcamapp.registration.presentation.RegistrationEvent
+import com.vci.vectorcamapp.registration.presentation.RegistrationScreen
+import com.vci.vectorcamapp.registration.presentation.RegistrationViewModel
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormEvent
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormScreen
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormViewModel
 
 @Composable
-fun NavGraph() {
+fun NavGraph(startDestination: Destination) {
     val navController = rememberNavController()
 
     NavHost(
-        navController = navController, startDestination = Destination.Landing
+        navController = navController, startDestination = startDestination
     ) {
+        composable<Destination.Registration> {
+            val vm = hiltViewModel<RegistrationViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+
+            ObserveAsEvents(events = vm.events) { event ->
+                if (event is RegistrationEvent.NavigateToLanding) {
+                    navController.navigate(Destination.Landing) {
+                        popUpTo(Destination.Registration) { inclusive = true }
+                    }
+                }
+            }
+
+            RegistrationScreen(
+                state = state,
+                onAction = vm::onAction,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
         composable<Destination.Landing> {
             val viewModel = hiltViewModel<LandingViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()

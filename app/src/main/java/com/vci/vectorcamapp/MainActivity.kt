@@ -19,8 +19,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
+import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
+import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.navigation.Destination
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.permission.presentation.PermissionAction
 import com.vci.vectorcamapp.permission.presentation.PermissionEvent
@@ -28,9 +32,11 @@ import com.vci.vectorcamapp.permission.presentation.PermissionScreen
 import com.vci.vectorcamapp.permission.presentation.PermissionViewModel
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject lateinit var deviceCache: DeviceCache
 
     private val viewModel: PermissionViewModel by viewModels()
 
@@ -76,7 +82,22 @@ class MainActivity : ComponentActivity() {
                 val state by viewModel.state.collectAsState()
 
                 when (state.allGranted && state.isGpsEnabled) {
-                    true -> NavGraph()
+                    true -> {
+                        val startDestination by produceState<Destination?>(initialValue = null) {
+                            val pId = deviceCache.getProgramId()
+                            value = if (pId == null) {
+                                Destination.Registration
+                            } else {
+                                Destination.Landing
+                            }
+                        }
+
+                        if (startDestination != null) {
+                            NavGraph(startDestination = startDestination!!)
+                        } else {
+                            LoadingAnimation(text = "Initializing...")
+                        }
+                    }
                     false -> Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                         PermissionScreen(
                             state = state,
