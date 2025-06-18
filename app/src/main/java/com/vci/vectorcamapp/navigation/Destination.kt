@@ -19,14 +19,13 @@ sealed interface Destination {
     data object CompleteSessionList : Destination
 
     @Serializable
-    data object CompleteSessionDetails : Destination {
-        const val ROUTE = "complete_session_details"
+    data object CompleteSessionRoot : Destination {
+        const val ROUTE = "complete_session"
         fun createRoute(sessionId: String) = "$ROUTE/$sessionId"
     }
 
     @Serializable
-    data object CompleteSessionSpecimens : Destination {
-        const val ROUTE = "complete_session_specimens"
-        fun createRoute(sessionId: String) = "$ROUTE/$sessionId"
+    data object CompleteSessionDetails : Destination {
+        const val ROUTE = "details"
     }
 }

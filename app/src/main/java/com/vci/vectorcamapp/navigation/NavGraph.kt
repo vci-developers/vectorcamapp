@@ -1,18 +1,24 @@
 package com.vci.vectorcamapp.navigation
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavType
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -25,14 +31,15 @@ import com.vci.vectorcamapp.imaging.presentation.ImagingViewModel
 import com.vci.vectorcamapp.landing.presentation.LandingEvent
 import com.vci.vectorcamapp.landing.presentation.LandingScreen
 import com.vci.vectorcamapp.landing.presentation.LandingViewModel
+import androidx.navigation.compose.navigation
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
+import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsScreen
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsViewModel
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListEvent
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListScreen
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListViewModel
 import com.vci.vectorcamapp.complete_session.specimens.presentation.CompleteSessionSpecimensScreen
 import com.vci.vectorcamapp.complete_session.specimens.presentation.CompleteSessionSpecimensViewModel
-import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsScreen
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionScreen
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionViewModel
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormEvent
@@ -156,12 +163,13 @@ fun NavGraph() {
                 when (event) {
                     is CompleteSessionListEvent.NavigateToCompleteSessionDetails -> {
                         navController.navigate(
-                            Destination.CompleteSessionDetails.createRoute(event.sessionId)
+                            Destination.CompleteSessionRoot.createRoute(event.sessionId)
                         )
                     }
+
                     is CompleteSessionListEvent.NavigateToCompleteSessionSpecimens -> {
                         navController.navigate(
-                            Destination.CompleteSessionSpecimens.createRoute(event.sessionId)
+                            Destination.CompleteSessionRoot.createRoute(event.sessionId) + "/specimens"
                         )
                     }
                 }
@@ -175,44 +183,47 @@ fun NavGraph() {
                 )
             }
         }
-        composable(
-            route = Destination.CompleteSessionDetails.ROUTE + "/{sessionId}",
+        navigation(
+            route = Destination.CompleteSessionRoot.ROUTE + "/{sessionId}",
+            startDestination = Destination.CompleteSessionDetails.ROUTE,
             arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val viewModel = hiltViewModel<CompleteSessionDetailsViewModel>()
-            val state by viewModel.state.collectAsStateWithLifecycle()
+        ) {
+            composable(Destination.CompleteSessionDetails.ROUTE) { backStackEntry ->
+                val sessionId = backStackEntry.arguments?.getString("sessionId") ?: return@composable
+                val selectedTab = rememberSaveable { mutableIntStateOf(0) }
 
-            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: return@composable
+                val detailsViewModel = hiltViewModel<CompleteSessionDetailsViewModel>()
+                val detailsState by detailsViewModel.state.collectAsStateWithLifecycle()
+                LaunchedEffect(sessionId) {
+                    detailsViewModel.loadSession(sessionId)
+                }
 
-            LaunchedEffect(sessionId) {
-                viewModel.loadSession(sessionId)
-            }
+                val specimensViewModel = hiltViewModel<CompleteSessionSpecimensViewModel>()
+                val specimensState by specimensViewModel.state.collectAsStateWithLifecycle()
+                LaunchedEffect(sessionId) {
+                    specimensViewModel.loadSession(sessionId)
+                }
 
-            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                CompleteSessionDetailsScreen(
-                    state = state,
-                    modifier = Modifier.padding(innerPadding)
-                )
-            }
-        }
-        composable(
-            route = Destination.CompleteSessionSpecimens.ROUTE + "/{sessionId}",
-            arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val viewModel = hiltViewModel<CompleteSessionSpecimensViewModel>()
-            val state by viewModel.state.collectAsStateWithLifecycle()
-
-            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: return@composable
-
-            LaunchedEffect(sessionId) {
-                viewModel.loadSession(sessionId)
-            }
-
-            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                CompleteSessionSpecimensScreen(
-                    state = state,
-                    modifier = Modifier.padding(innerPadding)
-                )
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    Column(modifier = Modifier.padding(innerPadding)) {
+                        TabRow(selectedTabIndex = selectedTab.intValue) {
+                            Tab(
+                                selected = selectedTab.intValue == 0,
+                                onClick = { selectedTab.intValue = 0 },
+                                text = { Text("Details") }
+                            )
+                            Tab(
+                                selected = selectedTab.intValue == 1,
+                                onClick = { selectedTab.intValue = 1 },
+                                text = { Text("Specimens") }
+                            )
+                        }
+                        when (selectedTab.intValue) {
+                            0 -> CompleteSessionDetailsScreen(state = detailsState)
+                            1 -> CompleteSessionSpecimensScreen(state = specimensState)
+                        }
+                    }
+                }
             }
         }
     }
