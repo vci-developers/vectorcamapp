@@ -29,7 +29,7 @@ class ImageUploadWorker @AssistedInject constructor(
 
         setForegroundAsync(createForegroundInfo())
 
-        val sessionId = inputData.getString("sessionId") ?: return Result.retry()
+        val sessionId = inputData.getString("session_id") ?: return Result.retry()
 
         try {
             for (i in 1..TOTAL_IMAGES) {
