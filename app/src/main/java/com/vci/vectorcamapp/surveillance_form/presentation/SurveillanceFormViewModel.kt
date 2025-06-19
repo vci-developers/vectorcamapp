@@ -371,7 +371,7 @@ class SurveillanceFormViewModel @Inject constructor(
 
         repeat(2) { attempt ->
             try {
-                val loc = withTimeout(5_000) { locationRepository.getCurrentLocation() }
+                val loc = withTimeout(30_000) { locationRepository.getCurrentLocation() }
                 _state.update {
                     it.copy(locationState = LocationState.Success(loc.latitude.toFloat(), loc.longitude.toFloat()))
                 }

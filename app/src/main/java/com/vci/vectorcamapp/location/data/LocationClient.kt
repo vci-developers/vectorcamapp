@@ -54,7 +54,7 @@ class LocationClient @Inject constructor(
         cont: CancellableContinuation<Location>
     ) {
         fused.getCurrentLocation(
-            Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+            Priority.PRIORITY_HIGH_ACCURACY,
             cts.token
         ).addOnSuccessListener { loc ->
             if (loc != null && cont.isActive) {
