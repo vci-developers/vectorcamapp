@@ -57,7 +57,7 @@ object RoomDatabaseModule {
 
                     val seededSites = listOf(
                         SiteEntity(
-                            id = 1,
+                            id = 2,
                             programId = 2,
                             district = "Mayuge",
                             subCounty = "County1",
@@ -66,7 +66,7 @@ object RoomDatabaseModule {
                             healthCenter = "Health Center 1"
                         ),
                         SiteEntity(
-                            id = 2,
+                            id = 3,
                             programId = 2,
                             district = "Mayuge",
                             subCounty = "County2",
@@ -75,7 +75,7 @@ object RoomDatabaseModule {
                             healthCenter = "Health Center 2"
                         ),
                         SiteEntity(
-                            id = 3,
+                            id = 4,
                             programId = 2,
                             district = "Adjumani",
                             subCounty = "County3",
@@ -84,7 +84,7 @@ object RoomDatabaseModule {
                             healthCenter = "Health Center 3"
                         ),
                         SiteEntity(
-                            id = 4,
+                            id = 5,
                             programId = 3,
                             district = "Ahmedabad",
                             subCounty = "County4",
