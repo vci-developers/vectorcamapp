@@ -36,15 +36,19 @@ class RegistrationViewModel @Inject constructor(
 
     fun onAction(action: RegistrationAction) {
         when (action) {
-            is RegistrationAction.RegisterProgram -> {
+            is RegistrationAction.SelectProgram -> {
+                _state.update { it.copy(selectedProgramId = action.option.id) }
+            }
+
+            RegistrationAction.Continue -> {
+                val programId = _state.value.selectedProgramId ?: return
                 viewModelScope.launch {
-                    // TODO: use real data instead
                     val device = Device(
                         id = 1,
                         model = "fake phone",
                         registeredAt = System.currentTimeMillis()
                     )
-                    deviceCache.saveDevice(device, action.programId)
+                    deviceCache.saveDevice(device, programId)
                     _events.send(RegistrationEvent.NavigateToLanding)
                 }
             }

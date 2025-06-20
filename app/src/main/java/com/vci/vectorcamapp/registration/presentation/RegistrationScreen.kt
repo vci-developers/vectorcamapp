@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
+import com.vci.vectorcamapp.registration.domain.enums.ProgramOption
+import com.vci.vectorcamapp.surveillance_form.presentation.components.DropdownField
 
 @Composable
 fun RegistrationScreen(
@@ -29,16 +31,30 @@ fun RegistrationScreen(
                     Text("Error: $it", modifier = Modifier.padding(16.dp))
                 }
 
-                LazyColumn(
+                Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(innerPadding)
+                        .padding(24.dp)
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    items(state.programs) { program ->
-                        ProgramItem(program) {
-                            onAction(RegistrationAction.RegisterProgram(program.id))
-                        }
+                    val options = state.programs.map { ProgramOption(it.id, it.name) }
+
+                    DropdownField(
+                        label            = "Program",
+                        options          = options,
+                        selectedOption   = options.find { it.id == state.selectedProgramId },
+                        onOptionSelected = { onAction(RegistrationAction.SelectProgram(it)) },
+                        modifier         = Modifier.fillMaxWidth(),
+                        error            = null
+                    )
+
+                    Button(
+                        onClick  = { onAction(RegistrationAction.Continue) },
+                        enabled  = state.selectedProgramId != null,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Continue")
                     }
                 }
             }

@@ -1,5 +1,8 @@
 package com.vci.vectorcamapp.registration.presentation
 
+import com.vci.vectorcamapp.registration.domain.enums.ProgramOption
+
 sealed interface RegistrationAction {
-    data class RegisterProgram(val programId: Int) : RegistrationAction
+    data class SelectProgram(val option: ProgramOption) : RegistrationAction
+    object Continue : RegistrationAction
 }
