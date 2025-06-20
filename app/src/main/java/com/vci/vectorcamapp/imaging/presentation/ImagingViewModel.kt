@@ -213,7 +213,7 @@ class ImagingViewModel @Inject constructor(
                                         abdomenStatus = abdomenStatus?.label,
                                     ),
                                     currentImage = bitmap,
-                                    currentBoundingBoxUi = it.previewBoundingBoxUi,
+                                    captureBoundingBoxUi = it.previewBoundingBoxUi,
                                     previewBoundingBoxUi = null
                                 )
                             }
@@ -263,7 +263,7 @@ class ImagingViewModel @Inject constructor(
 
                         val success = transactionHelper.runAsTransaction {
                             val boundingBoxUi =
-                                _state.value.currentBoundingBoxUi ?: return@runAsTransaction false
+                                _state.value.captureBoundingBoxUi ?: return@runAsTransaction false
                             val boundingBox = inferenceRepository.convertToBoundingBox(
                                 boundingBoxUi
                             )
@@ -304,7 +304,7 @@ class ImagingViewModel @Inject constructor(
                     id = "", species = null, sex = null, abdomenStatus = null
                 ),
                 currentImage = null,
-                currentBoundingBoxUi = null,
+                captureBoundingBoxUi = null,
                 previewBoundingBoxUi = null,
             )
         }

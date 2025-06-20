@@ -62,10 +62,10 @@ fun ImagingScreen(
                 )
             }
 
-            (state.currentImage != null && state.currentBoundingBoxUi != null) -> {
+            (state.currentImage != null && state.captureBoundingBoxUi != null) -> {
                 CapturedSpecimenOverlay(
                     specimen = state.currentSpecimen,
-                    boundingBoxUi = state.currentBoundingBoxUi,
+                    boundingBoxUi = state.captureBoundingBoxUi,
                     modifier = modifier,
                     specimenBitmap = state.currentImage,
                     onSpecimenIdCorrected = { onAction(ImagingAction.CorrectSpecimenId(it)) },
