@@ -42,6 +42,7 @@ class RegistrationViewModel @Inject constructor(
 
             RegistrationAction.Continue -> {
                 val programId = _state.value.selectedProgramId ?: return
+                //TODO: Dummy Device, replace later
                 viewModelScope.launch {
                     val device = Device(
                         id = 1,

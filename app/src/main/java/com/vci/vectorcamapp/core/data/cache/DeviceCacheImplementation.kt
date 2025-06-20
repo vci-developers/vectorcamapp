@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.data.mappers.toDto
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -28,5 +29,14 @@ class DeviceCacheImplementation @Inject constructor(
     override suspend fun getProgramId(): Int? {
         val deviceDto = dataStore.data.firstOrNull()
         return if (deviceDto == null || deviceDto.isEmpty()) null else deviceDto.programId
+    }
+
+    override fun observeProgramId(): Flow<Int?> {
+        return dataStore.data
+            .map { dto ->
+                if (dto.isEmpty()) null
+                else dto.programId
+            }
+            .distinctUntilChanged()
     }
 }

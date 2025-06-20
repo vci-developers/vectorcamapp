@@ -32,6 +32,7 @@ import com.vci.vectorcamapp.permission.presentation.PermissionScreen
 import com.vci.vectorcamapp.permission.presentation.PermissionViewModel
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -83,19 +84,16 @@ class MainActivity : ComponentActivity() {
 
                 when (state.allGranted && state.isGpsEnabled) {
                     true -> {
-                        val startDestination by produceState<Destination?>(initialValue = null) {
-                            val pId = deviceCache.getProgramId()
-                            value = if (pId == null) {
-                                Destination.Registration
-                            } else {
-                                Destination.Landing
-                            }
-                        }
+                        val startDestinationState = deviceCache
+                            .observeProgramId()
+                            .map { id -> if (id == null) Destination.Registration else Destination.Landing }
+                            .collectAsState(initial = null)
 
-                        if (startDestination != null) {
-                            NavGraph(startDestination = startDestination!!)
-                        } else {
-                            LoadingAnimation(text = "Initializing...")
+                        val startDestination = startDestinationState.value
+
+                        when (startDestination) {
+                            null -> LoadingAnimation(text = "Initializing…")
+                            else -> NavGraph(startDestination = startDestination)
                         }
                     }
                     false -> Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->

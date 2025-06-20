@@ -33,7 +33,6 @@ fun RegistrationScreen(
 
                 Column(
                     modifier = Modifier
-                        .padding(innerPadding)
                         .padding(24.dp)
                         .fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
