@@ -1,9 +1,8 @@
 package com.vci.vectorcamapp.core.domain.repository
 
-import com.vci.vectorcamapp.core.data.room.entities.relations.SessionWithSiteAndSurveillanceFormRelation
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSurveillanceForm
-import com.vci.vectorcamapp.core.domain.model.composites.SessionWithSiteAndSurveillanceForm
+import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.composites.SessionWithSpecimens
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
@@ -16,9 +15,8 @@ interface SessionRepository {
     suspend fun markSessionAsComplete(sessionId: UUID): Boolean
     suspend fun getSessionWithSpecimens(sessionId: UUID): SessionWithSpecimens?
     suspend fun getSessionAndSurveillanceForm(sessionId: UUID): SessionAndSurveillanceForm?
-    suspend fun getSessionWithSiteAndSurveillanceForm(sessionId: UUID): SessionWithSiteAndSurveillanceForm?
-    fun observeCompleteSessions(): Flow<List<Session>>
+    suspend fun getSessionAndSite(sessionId: UUID): SessionAndSite?
     fun observeIncompleteSessions(): Flow<List<Session>>
+    fun observeCompleteSessionsAndSites(): Flow<List<SessionAndSite>>
     fun observeSessionWithSpecimens(sessionId: UUID): Flow<SessionWithSpecimens?>
-    fun observeSessionAndSurveillanceForm(sessionId: UUID): Flow<SessionAndSurveillanceForm?>
 }

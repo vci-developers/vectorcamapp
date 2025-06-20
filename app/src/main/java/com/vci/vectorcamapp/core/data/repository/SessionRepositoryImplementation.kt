@@ -3,10 +3,9 @@ package com.vci.vectorcamapp.core.data.repository
 import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.dao.SessionDao
-import com.vci.vectorcamapp.core.data.room.entities.relations.SessionWithSiteAndSurveillanceFormRelation
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSurveillanceForm
-import com.vci.vectorcamapp.core.domain.model.composites.SessionWithSiteAndSurveillanceForm
+import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.composites.SessionWithSpecimens
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.util.Result
@@ -57,20 +56,24 @@ class SessionRepositoryImplementation @Inject constructor(
         }
     }
 
-    override suspend fun getSessionWithSiteAndSurveillanceForm(sessionId: UUID): SessionWithSiteAndSurveillanceForm? {
-        val relation = sessionDao.getSessionWithSiteAndSurveillanceForm(sessionId)
+    override suspend fun getSessionAndSite(sessionId: UUID): SessionAndSite? {
+        val relation = sessionDao.getSessionAndSite(sessionId)
         return relation?.let {
-            SessionWithSiteAndSurveillanceForm(
+            SessionAndSite(
                 session = it.session.toDomain(),
-                site = it.site.toDomain(),
-                surveillanceForm = it.surveillanceForm.toDomain()
+                site = it.site.toDomain()
             )
         }
     }
 
-    override fun observeCompleteSessions(): Flow<List<Session>> {
-        return sessionDao.observeCompleteSessions().map {
-            it.map { sessionEntity -> sessionEntity.toDomain() }
+    override fun observeCompleteSessionsAndSites(): Flow<List<SessionAndSite>> {
+        return sessionDao.observeCompleteSessionsAndSites().map { relations ->
+            relations.map {
+                SessionAndSite(
+                    session = it.session.toDomain(),
+                    site = it.site.toDomain()
+                )
+            }
         }
     }
 
@@ -86,17 +89,6 @@ class SessionRepositoryImplementation @Inject constructor(
                 SessionWithSpecimens(
                     session = it.sessionEntity.toDomain(),
                     specimens = it.specimenEntities.map { specimenEntity -> specimenEntity.toDomain() }
-                )
-            }
-        }
-    }
-
-    override fun observeSessionAndSurveillanceForm(sessionId: UUID): Flow<SessionAndSurveillanceForm?> {
-        return sessionDao.observeSessionAndSurveillanceForm(sessionId).map { sessionAndSurveillanceFormRelation ->
-            sessionAndSurveillanceFormRelation?.let {
-                SessionAndSurveillanceForm(
-                    session = it.sessionEntity.toDomain(),
-                    surveillanceForm = it.surveillanceFormEntity.toDomain()
                 )
             }
         }

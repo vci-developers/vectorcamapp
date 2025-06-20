@@ -6,15 +6,15 @@ import java.util.UUID
 
 data class CompleteSessionSpecimensState (
     val session: Session = Session(
-        localId = UUID.randomUUID(),
+        localId = UUID(0, 0),
         remoteId = null,
         houseNumber = "",
         collectorTitle = "",
         collectorName = "",
-        collectionDate = System.currentTimeMillis(),
+        collectionDate = 0L,
         collectionMethod = "",
         specimenCondition = "",
-        createdAt = System.currentTimeMillis(),
+        createdAt = 0L,
         completedAt = null,
         submittedAt = null,
         notes = ""

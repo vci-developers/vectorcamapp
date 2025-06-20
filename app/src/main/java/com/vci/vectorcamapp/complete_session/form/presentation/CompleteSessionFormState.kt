@@ -1,21 +1,21 @@
-package com.vci.vectorcamapp.complete_session.details.presentation
+package com.vci.vectorcamapp.complete_session.form.presentation
 
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import java.util.UUID
 
-data class CompleteSessionDetailsState (
+data class CompleteSessionFormState (
     val session: Session = Session(
-        localId = UUID.randomUUID(),
+        localId = UUID(0, 0),
         remoteId = null,
         houseNumber = "",
         collectorTitle = "",
         collectorName = "",
-        collectionDate = System.currentTimeMillis(),
+        collectionDate = 0L,
         collectionMethod = "",
         specimenCondition = "",
-        createdAt = System.currentTimeMillis(),
+        createdAt = 0L,
         completedAt = null,
         submittedAt = null,
         notes = ""
@@ -28,14 +28,6 @@ data class CompleteSessionDetailsState (
         sentinelSite = "",
         healthCenter = ""
     ),
-    val surveillanceForm: SurveillanceForm = SurveillanceForm(
-        numPeopleSleptInHouse = 0,
-        wasIrsConducted = false,
-        monthsSinceIrs = null,
-        numLlinsAvailable = 0,
-        llinType = null,
-        llinBrand = null,
-        numPeopleSleptUnderLlin = null
-    ),
+    val surveillanceForm: SurveillanceForm? = null,
     val error: String? = null
 )

@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.complete_session.list.presentation.components.CompleteSessionListCard
+import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 
 @Composable
 fun CompleteSessionListScreen(
@@ -23,14 +24,14 @@ fun CompleteSessionListScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(items = state.sessions.asReversed(), key = { it.localId }) { session ->
+        items(items = state.sessionsAndSites.asReversed(), key = { it.session.localId }) { sessionAndSite ->
             CompleteSessionListCard(
-                session = session,
+                session = sessionAndSite.session,
+                site = sessionAndSite.site,
                 modifier = Modifier
                     .clickable {
-                        onAction(CompleteSessionListAction.ViewCompleteSessionDetails(sessionId = session.localId.toString()))
+                        onAction(CompleteSessionListAction.ViewCompleteSessionDetails(sessionId = sessionAndSite.session.localId.toString()))
                     }
-                    .then(modifier)
             )
         }
     }

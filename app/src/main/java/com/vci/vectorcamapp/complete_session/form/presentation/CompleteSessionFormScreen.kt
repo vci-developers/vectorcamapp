@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.complete_session.details.presentation
+package com.vci.vectorcamapp.complete_session.form.presentation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Column
@@ -15,8 +15,8 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun CompleteSessionDetailsScreen(
-    state: CompleteSessionDetailsState,
+fun CompleteSessionFormScreen(
+    state: CompleteSessionFormState,
     modifier: Modifier = Modifier
 ) {
     val dateTimeFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
@@ -38,19 +38,16 @@ fun CompleteSessionDetailsScreen(
         Text(
             text = "Created At: $createdAtDateTimeFormatted",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "Completed At: $completedAtDateTimeFormatted",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "Submitted At: $submittedAtDateTimeFormatted",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -109,37 +106,37 @@ fun CompleteSessionDetailsScreen(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Number of People Slept in House: ${state.surveillanceForm.numPeopleSleptInHouse}",
+            text = "Number of People Slept in House: ${state.surveillanceForm?.numPeopleSleptInHouse}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "IRS Conducted: ${state.surveillanceForm.wasIrsConducted}",
+            text = "IRS Conducted: ${state.surveillanceForm?.wasIrsConducted}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Months Since IRS: ${state.surveillanceForm.monthsSinceIrs}",
+            text = "Months Since IRS: ${state.surveillanceForm?.monthsSinceIrs}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Number of LLIs Available: ${state.surveillanceForm.numLlinsAvailable}",
+            text = "Number of LLIs Available: ${state.surveillanceForm?.numLlinsAvailable}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "LIL Type: ${state.surveillanceForm.llinType}",
+            text = "LIL Type: ${state.surveillanceForm?.llinType}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "LIL Brand: ${state.surveillanceForm.llinBrand}",
+            text = "LIL Brand: ${state.surveillanceForm?.llinBrand}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Number of People Slept Under LIL: ${state.surveillanceForm.numPeopleSleptUnderLlin}",
+            text = "Number of People Slept Under LIL: ${state.surveillanceForm?.numPeopleSleptUnderLlin}",
             style = MaterialTheme.typography.bodySmall
         )
     }

@@ -18,22 +18,24 @@ class CompleteSessionSpecimensViewModel @Inject constructor(
     private val _state = MutableStateFlow(CompleteSessionSpecimensState())
     val state: StateFlow<CompleteSessionSpecimensState> = _state
 
-    fun loadSession(sessionId: String) {
+    fun onAction(action: CompleteSessionSpecimensAction) {
+        when (action) {
+            is CompleteSessionSpecimensAction.LoadSession -> loadSession(action.sessionId)
+        }
+    }
+
+    private fun loadSession(sessionId: String) {
         val uuid = try {
             UUID.fromString(sessionId)
         } catch (e: IllegalArgumentException) {
-            _state.value = _state.value.copy(
-                error = "Invalid session ID"
-            )
+            _state.value = _state.value.copy(error = "Invalid session ID")
             return
         }
 
         viewModelScope.launch {
             val result = sessionRepository.getSessionWithSpecimens(uuid)
             if (result == null) {
-                _state.value = _state.value.copy(
-                    error = "No data found for session"
-                )
+                _state.value = _state.value.copy(error = "No data found for session")
             } else {
                 _state.value = _state.value.copy(
                     session = result.session,

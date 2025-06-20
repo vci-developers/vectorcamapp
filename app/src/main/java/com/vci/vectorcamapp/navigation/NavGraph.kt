@@ -18,11 +18,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
 import com.vci.vectorcamapp.imaging.presentation.util.toString
 import com.vci.vectorcamapp.imaging.presentation.ImagingEvent
@@ -31,13 +29,15 @@ import com.vci.vectorcamapp.imaging.presentation.ImagingViewModel
 import com.vci.vectorcamapp.landing.presentation.LandingEvent
 import com.vci.vectorcamapp.landing.presentation.LandingScreen
 import com.vci.vectorcamapp.landing.presentation.LandingViewModel
-import androidx.navigation.compose.navigation
+import androidx.navigation.toRoute
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
-import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsScreen
-import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsViewModel
+import com.vci.vectorcamapp.complete_session.form.presentation.CompleteSessionFormAction
+import com.vci.vectorcamapp.complete_session.form.presentation.CompleteSessionFormScreen
+import com.vci.vectorcamapp.complete_session.form.presentation.CompleteSessionFormViewModel
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListEvent
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListScreen
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListViewModel
+import com.vci.vectorcamapp.complete_session.specimens.presentation.CompleteSessionSpecimensAction
 import com.vci.vectorcamapp.complete_session.specimens.presentation.CompleteSessionSpecimensScreen
 import com.vci.vectorcamapp.complete_session.specimens.presentation.CompleteSessionSpecimensViewModel
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionScreen
@@ -155,73 +155,65 @@ fun NavGraph() {
                 )
             }
         }
-        composable<Destination.CompleteSessionList> {
-            val viewModel = hiltViewModel<CompleteSessionListViewModel>()
+        composable<Destination.IncompleteSession> {
+            val viewModel = hiltViewModel<IncompleteSessionViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
-            ObserveAsEvents(events = viewModel.events) { event ->
-                when (event) {
-                    is CompleteSessionListEvent.NavigateToCompleteSessionDetails -> {
-                        navController.navigate(
-                            Destination.CompleteSessionRoot.createRoute(event.sessionId)
-                        )
-                    }
-
-                    is CompleteSessionListEvent.NavigateToCompleteSessionSpecimens -> {
-                        navController.navigate(
-                            Destination.CompleteSessionRoot.createRoute(event.sessionId) + "/specimens"
-                        )
-                    }
-                }
-            }
-
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                CompleteSessionListScreen(
+                IncompleteSessionScreen(
                     state = state,
-                    onAction = viewModel::onAction,
                     modifier = Modifier.padding(innerPadding)
                 )
             }
         }
-        navigation(
-            route = Destination.CompleteSessionRoot.ROUTE + "/{sessionId}",
-            startDestination = Destination.CompleteSessionDetails.ROUTE,
-            arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
-        ) {
-            composable(Destination.CompleteSessionDetails.ROUTE) { backStackEntry ->
-                val sessionId = backStackEntry.arguments?.getString("sessionId") ?: return@composable
-                val selectedTab = rememberSaveable { mutableIntStateOf(0) }
-
-                val detailsViewModel = hiltViewModel<CompleteSessionDetailsViewModel>()
-                val detailsState by detailsViewModel.state.collectAsStateWithLifecycle()
-                LaunchedEffect(sessionId) {
-                    detailsViewModel.loadSession(sessionId)
+        composable<Destination.CompleteSessionList> {
+            val viewModel = hiltViewModel<CompleteSessionListViewModel>()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            ObserveAsEvents(events = viewModel.events) { event ->
+                when (event) {
+                    is CompleteSessionListEvent.NavigateToCompleteSessionDetails -> {
+                        navController.navigate(Destination.CompleteSessionDetails(event.sessionId))
+                    }
                 }
+            }
+            CompleteSessionListScreen(
+                state = state,
+                onAction = viewModel::onAction
+            )
+        }
+        composable<Destination.CompleteSessionDetails> {
+            val args = it.toRoute<Destination.CompleteSessionDetails>()
+            val selectedTab = rememberSaveable { mutableIntStateOf(0) }
 
-                val specimensViewModel = hiltViewModel<CompleteSessionSpecimensViewModel>()
-                val specimensState by specimensViewModel.state.collectAsStateWithLifecycle()
-                LaunchedEffect(sessionId) {
-                    specimensViewModel.loadSession(sessionId)
-                }
+            val formViewModel = hiltViewModel<CompleteSessionFormViewModel>()
+            val formState by formViewModel.state.collectAsStateWithLifecycle()
+            LaunchedEffect(args.sessionId) {
+                formViewModel.onAction(CompleteSessionFormAction.LoadSession(args.sessionId))
+            }
 
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(modifier = Modifier.padding(innerPadding)) {
-                        TabRow(selectedTabIndex = selectedTab.intValue) {
-                            Tab(
-                                selected = selectedTab.intValue == 0,
-                                onClick = { selectedTab.intValue = 0 },
-                                text = { Text("Details") }
-                            )
-                            Tab(
-                                selected = selectedTab.intValue == 1,
-                                onClick = { selectedTab.intValue = 1 },
-                                text = { Text("Specimens") }
-                            )
-                        }
-                        when (selectedTab.intValue) {
-                            0 -> CompleteSessionDetailsScreen(state = detailsState)
-                            1 -> CompleteSessionSpecimensScreen(state = specimensState)
-                        }
+            val specimensViewModel = hiltViewModel<CompleteSessionSpecimensViewModel>()
+            val specimensState by specimensViewModel.state.collectAsStateWithLifecycle()
+            LaunchedEffect(args.sessionId) {
+                specimensViewModel.onAction(CompleteSessionSpecimensAction.LoadSession(args.sessionId))
+            }
+
+            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Column(modifier = Modifier.padding(innerPadding)) {
+                    TabRow(selectedTabIndex = selectedTab.intValue) {
+                        Tab(
+                            selected = selectedTab.intValue == 0,
+                            onClick = { selectedTab.intValue = 0 },
+                            text = { Text("Details") }
+                        )
+                        Tab(
+                            selected = selectedTab.intValue == 1,
+                            onClick = { selectedTab.intValue = 1 },
+                            text = { Text("Specimens") }
+                        )
+                    }
+                    when (selectedTab.intValue) {
+                        0 -> CompleteSessionFormScreen(state = formState)
+                        1 -> CompleteSessionSpecimensScreen(state = specimensState)
                     }
                 }
             }
