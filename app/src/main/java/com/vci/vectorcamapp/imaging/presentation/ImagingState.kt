@@ -18,5 +18,6 @@ data class ImagingState(
     ),
     val currentImage: Bitmap? = null,
     val currentBoundingBoxUi: BoundingBoxUi? = null,
+    val previewBoundingBoxUi: BoundingBoxUi? = null,
     val capturedSpecimensAndBoundingBoxesUi: List<SpecimenAndBoundingBoxUi> = emptyList()
 )

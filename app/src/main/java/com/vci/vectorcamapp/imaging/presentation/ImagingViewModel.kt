@@ -131,9 +131,10 @@ class ImagingViewModel @Inject constructor(
                         _state.update {
                             it.copy(
                                 currentSpecimen = it.currentSpecimen.copy(id = specimenId),
-                                currentBoundingBoxUi = boundingBox?.let { boundingBox ->
-                                    inferenceRepository.convertToBoundingBoxUi(boundingBox)
-                                })
+                                previewBoundingBoxUi = boundingBox?.let { box ->
+                                    inferenceRepository.convertToBoundingBoxUi(box)
+                                }
+                            )
                         }
                     } catch (e: Exception) {
                         Log.e("ViewModel", "Image processing setup failed: ${e.message}")
@@ -210,7 +211,10 @@ class ImagingViewModel @Inject constructor(
                                         species = species.label,
                                         sex = sex?.label,
                                         abdomenStatus = abdomenStatus?.label,
-                                    ), currentImage = bitmap
+                                    ),
+                                    currentImage = bitmap,
+                                    currentBoundingBoxUi = it.previewBoundingBoxUi,
+                                    previewBoundingBoxUi = null
                                 )
                             }
                         } else {
@@ -301,6 +305,7 @@ class ImagingViewModel @Inject constructor(
                 ),
                 currentImage = null,
                 currentBoundingBoxUi = null,
+                previewBoundingBoxUi = null,
             )
         }
     }

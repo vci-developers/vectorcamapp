@@ -77,7 +77,7 @@ fun ImagingScreen(
             else -> {
                 LiveCameraPreviewPage(
                     controller = controller,
-                    boundingBoxUi = state.currentBoundingBoxUi,
+                    boundingBoxUi = state.previewBoundingBoxUi,
                     onImageCaptured = { onAction(ImagingAction.CaptureImage(controller)) },
                     onSaveSessionProgress = { onAction(ImagingAction.SaveSessionProgress) },
                     onSubmitSession = { onAction(ImagingAction.SubmitSession) },
