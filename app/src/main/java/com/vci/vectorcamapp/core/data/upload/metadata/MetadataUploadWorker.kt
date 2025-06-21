@@ -31,11 +31,12 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val notificationManager: NotificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-    override suspend fun doWork(): Result {
+    override suspend fun getForegroundInfo(): ForegroundInfo {
         createNotificationChannel()
+        return createForegroundInfo()
+    }
 
-        setForegroundAsync(createForegroundInfo())
-
+    override suspend fun doWork(): Result {
         val session = inputData.getString("session_id")?.let { UUID.fromString(it) }
             ?.let { sessionRepository.getSessionById(it) } ?: return Result.retry()
         val siteId = inputData.getInt("site_id", -1)

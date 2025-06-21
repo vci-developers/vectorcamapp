@@ -179,7 +179,6 @@ class ImagingViewModel @Inject constructor(
                                 WorkRequest.MIN_BACKOFF_MILLIS,
                                 TimeUnit.MILLISECONDS,
                             )
-                            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                             .build()
 
                         val imageUploadRequest = OneTimeWorkRequestBuilder<ImageUploadWorker>()
@@ -190,7 +189,6 @@ class ImagingViewModel @Inject constructor(
                                 WorkRequest.MIN_BACKOFF_MILLIS,
                                 TimeUnit.MILLISECONDS,
                             )
-                            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                             .build()
 
                         WorkManager.getInstance(context).beginUniqueWork(
