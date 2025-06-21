@@ -39,22 +39,26 @@ fun NavGraph(startDestination: Destination) {
         navController = navController, startDestination = startDestination
     ) {
         composable<Destination.Registration> {
-            val vm = hiltViewModel<RegistrationViewModel>()
-            val state by vm.state.collectAsStateWithLifecycle()
+            val viewModel = hiltViewModel<RegistrationViewModel>()
+            val state by viewModel.state.collectAsStateWithLifecycle()
 
-            ObserveAsEvents(events = vm.events) { event ->
-                if (event is RegistrationEvent.NavigateToLandingScreen) {
-                    navController.navigate(Destination.Landing) {
-                        popUpTo(Destination.Registration) { inclusive = true }
+            ObserveAsEvents(events = viewModel.events) { event ->
+                when (event) {
+                    RegistrationEvent.NavigateToLandingScreen -> {
+                        navController.navigate(Destination.Landing) {
+                            popUpTo(Destination.Registration) { inclusive = true }
+                        }
                     }
                 }
             }
 
-            RegistrationScreen(
-                state = state,
-                onAction = vm::onAction,
-                modifier = Modifier.fillMaxSize()
-            )
+            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                RegistrationScreen(
+                    state = state,
+                    onAction = viewModel::onAction,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
         }
 
         composable<Destination.Landing> {

@@ -35,20 +35,18 @@ fun RegistrationScreen(
                         .fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    val options = state.programs.map { ProgramOption(it.name) }
 
                     DropdownField(
-                        label            = "Program",
-                        options          = options,
-                        selectedOption   = options.find { it.label == state.selectedProgram },
+                        label = "Program",
+                        options = state.programs.map { ProgramOption(it.name) },
+                        selectedOption = ProgramOption(state.selectedProgramName),
                         onOptionSelected = { onAction(RegistrationAction.SelectProgram(it)) },
-                        modifier         = Modifier.fillMaxWidth(),
-                        error            = null
+                        modifier = Modifier.fillMaxWidth(),
                     )
 
                     Button(
                         onClick  = { onAction(RegistrationAction.ConfirmRegistration) },
-                        enabled  = state.selectedProgram != null,
+                        enabled  = state.selectedProgramName != "",
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Continue")

@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class DeviceDto(
     val id: Int? = null,
+    val programId: Int = -1,
     val model: String = "",
     val registeredAt: Long = 0L,
-    val programName: String = ""
 ) {
-    fun isEmpty() = id == null
+    fun hasId() = id != null
 }

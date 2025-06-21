@@ -14,5 +14,5 @@ interface ProgramDao {
     suspend fun insertAll(programs: List<ProgramEntity>)
 
     @Query("SELECT * FROM program")
-    fun getAllPrograms(): Flow<List<ProgramEntity>>
+    suspend fun getAllPrograms(): List<ProgramEntity>
 }

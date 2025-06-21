@@ -11,10 +11,10 @@ fun DeviceDto.toDomain() : Device {
     )
 }
 
-fun Device.toDto(programName: String) : DeviceDto {
+fun Device.toDto(programId: Int) : DeviceDto {
     return DeviceDto(
         id = this.id,
-        programName = programName,
+        programId = programId,
         model = this.model,
         registeredAt = this.registeredAt
     )
