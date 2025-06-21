@@ -131,8 +131,10 @@ class ImagingViewModel @Inject constructor(
                         _state.update {
                             it.copy(
                                 currentSpecimen = it.currentSpecimen.copy(id = specimenId),
-                                previewBoundingBoxUi = boundingBox?.let { box ->
-                                    inferenceRepository.convertToBoundingBoxUi(box)
+                                previewBoundingBoxUi = if (it.captureBoundingBoxUi == null && boundingBox != null) {
+                                    inferenceRepository.convertToBoundingBoxUi(boundingBox)
+                                } else {
+                                    it.previewBoundingBoxUi
                                 }
                             )
                         }
