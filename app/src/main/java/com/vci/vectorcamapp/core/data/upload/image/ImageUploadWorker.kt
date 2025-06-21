@@ -24,12 +24,11 @@ class ImageUploadWorker @AssistedInject constructor(
     private val notificationManager: NotificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-    override suspend fun getForegroundInfo(): ForegroundInfo {
-        createNotificationChannel()
-        return createForegroundInfo()
-    }
-
     override suspend fun doWork(): Result {
+        createNotificationChannel()
+
+        setForeground(createForegroundInfo())
+
         val sessionId = inputData.getString("session_id") ?: return Result.retry()
 
         try {

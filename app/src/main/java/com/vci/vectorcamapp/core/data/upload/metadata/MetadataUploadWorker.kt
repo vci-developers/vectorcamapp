@@ -31,12 +31,11 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val notificationManager: NotificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-    override suspend fun getForegroundInfo(): ForegroundInfo {
-        createNotificationChannel()
-        return createForegroundInfo()
-    }
-
     override suspend fun doWork(): Result {
+        createNotificationChannel()
+
+        setForeground(createForegroundInfo())
+
         val session = inputData.getString("session_id")?.let { UUID.fromString(it) }
             ?.let { sessionRepository.getSessionById(it) } ?: return Result.retry()
         val siteId = inputData.getInt("site_id", -1)
@@ -56,6 +55,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             for (i in 1..TOTAL_DATAPOINTS) {
                 // Simulate metadata upload
                 delay(1000)
+                Log.d("UploadWorker", i.toString())
                 updateNotification(i)
             }
         } catch (e: Exception) {

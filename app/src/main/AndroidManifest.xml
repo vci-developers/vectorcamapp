@@ -37,7 +37,7 @@
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
-            android:exported="false" />
+            tools:node="merge" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"
