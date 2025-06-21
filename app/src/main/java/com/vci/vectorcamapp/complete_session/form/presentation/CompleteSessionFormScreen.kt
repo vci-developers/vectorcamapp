@@ -121,22 +121,22 @@ fun CompleteSessionFormScreen(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Number of LLIs Available: ${state.surveillanceForm?.numLlinsAvailable}",
+            text = "Number of LLINs Available: ${state.surveillanceForm?.numLlinsAvailable}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "LIL Type: ${state.surveillanceForm?.llinType}",
+            text = "LLIN Type: ${state.surveillanceForm?.llinType}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "LIL Brand: ${state.surveillanceForm?.llinBrand}",
+            text = "LLIN Brand: ${state.surveillanceForm?.llinBrand}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Number of People Slept Under LIL: ${state.surveillanceForm?.numPeopleSleptUnderLlin}",
+            text = "Number of People Slept Under LLIN: ${state.surveillanceForm?.numPeopleSleptUnderLlin}",
             style = MaterialTheme.typography.bodySmall
         )
     }

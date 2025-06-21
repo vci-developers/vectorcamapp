@@ -45,6 +45,10 @@ import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionVie
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormEvent
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormScreen
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormViewModel
+import java.util.UUID
+
+private const val TAB_SESSION_FORM = 0
+private const val TAB_SESSION_SPECIMENS = 1
 
 @Composable
 fun NavGraph() {
@@ -172,7 +176,7 @@ fun NavGraph() {
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
                     is CompleteSessionListEvent.NavigateToCompleteSessionDetails -> {
-                        navController.navigate(Destination.CompleteSessionDetails(event.sessionId))
+                        navController.navigate(Destination.CompleteSessionDetails(event.sessionId.toString()))
                     }
                 }
             }
@@ -187,33 +191,41 @@ fun NavGraph() {
 
             val formViewModel = hiltViewModel<CompleteSessionFormViewModel>()
             val formState by formViewModel.state.collectAsStateWithLifecycle()
-            LaunchedEffect(args.sessionId) {
-                formViewModel.onAction(CompleteSessionFormAction.LoadSession(args.sessionId))
+
+            val uuid = try {
+                UUID.fromString(args.sessionId)
+            } catch (e: IllegalArgumentException) {
+                return@composable
+            }
+
+            LaunchedEffect(uuid) {
+                formViewModel.onAction(CompleteSessionFormAction.LoadSession(uuid))
             }
 
             val specimensViewModel = hiltViewModel<CompleteSessionSpecimensViewModel>()
             val specimensState by specimensViewModel.state.collectAsStateWithLifecycle()
-            LaunchedEffect(args.sessionId) {
-                specimensViewModel.onAction(CompleteSessionSpecimensAction.LoadSession(args.sessionId))
+            LaunchedEffect(uuid) {
+                specimensViewModel.onAction(CompleteSessionSpecimensAction.LoadSession(uuid))
             }
 
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 Column(modifier = Modifier.padding(innerPadding)) {
                     TabRow(selectedTabIndex = selectedTab.intValue) {
                         Tab(
-                            selected = selectedTab.intValue == 0,
-                            onClick = { selectedTab.intValue = 0 },
+                            selected = selectedTab.intValue == TAB_SESSION_FORM,
+                            onClick = { selectedTab.intValue = TAB_SESSION_FORM },
                             text = { Text("Details") }
                         )
                         Tab(
-                            selected = selectedTab.intValue == 1,
-                            onClick = { selectedTab.intValue = 1 },
+                            selected = selectedTab.intValue == TAB_SESSION_SPECIMENS,
+                            onClick = { selectedTab.intValue = TAB_SESSION_SPECIMENS },
                             text = { Text("Specimens") }
                         )
                     }
+
                     when (selectedTab.intValue) {
-                        0 -> CompleteSessionFormScreen(state = formState)
-                        1 -> CompleteSessionSpecimensScreen(state = specimensState)
+                        TAB_SESSION_FORM -> CompleteSessionFormScreen(state = formState)
+                        TAB_SESSION_SPECIMENS -> CompleteSessionSpecimensScreen(state = specimensState)
                     }
                 }
             }

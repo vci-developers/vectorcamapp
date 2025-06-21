@@ -6,6 +6,7 @@ import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -24,24 +25,19 @@ class CompleteSessionSpecimensViewModel @Inject constructor(
         }
     }
 
-    private fun loadSession(sessionId: String) {
-        val uuid = try {
-            UUID.fromString(sessionId)
-        } catch (e: IllegalArgumentException) {
-            _state.value = _state.value.copy(error = "Invalid session ID")
-            return
-        }
-
+    private fun loadSession(sessionId: UUID) {
         viewModelScope.launch {
-            val result = sessionRepository.getSessionWithSpecimens(uuid)
+            val result = sessionRepository.getSessionWithSpecimens(sessionId)
             if (result == null) {
-                _state.value = _state.value.copy(error = "No data found for session")
+                _state.update { it.copy(error = "No data found for session") }
             } else {
-                _state.value = _state.value.copy(
-                    session = result.session,
-                    specimens = result.specimens,
-                    error = null
-                )
+                _state.update {
+                    it.copy(
+                        session = result.session,
+                        specimens = result.specimens,
+                        error = null
+                    )
+                }
             }
         }
     }

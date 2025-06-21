@@ -34,14 +34,14 @@ interface SessionDao {
 
     @Transaction
     @Query("SELECT * FROM session WHERE localId = :sessionId")
-    suspend fun getSessionAndSite(sessionId: UUID): SessionAndSiteRelation?
+    suspend fun getSessionAndSiteById(sessionId: UUID): SessionAndSiteRelation?
 
     @Query("SELECT * FROM session WHERE completedAt IS NULL")
     fun observeIncompleteSessions(): Flow<List<SessionEntity>>
 
     @Transaction
     @Query("SELECT * FROM session WHERE completedAt IS NOT NULL")
-    fun observeCompleteSessionsAndSites(): Flow<List<SessionAndSiteRelation?>>
+    fun observeCompleteSessionsAndSites(): Flow<List<SessionAndSiteRelation>>
 
     @Transaction
     @Query("SELECT * FROM session WHERE localId = :sessionId")

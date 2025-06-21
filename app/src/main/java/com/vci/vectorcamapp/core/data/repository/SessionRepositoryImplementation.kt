@@ -56,8 +56,8 @@ class SessionRepositoryImplementation @Inject constructor(
         }
     }
 
-    override suspend fun getSessionAndSite(sessionId: UUID): SessionAndSite? {
-        val relation = sessionDao.getSessionAndSite(sessionId)
+    override suspend fun getSessionAndSiteById(sessionId: UUID): SessionAndSite? {
+        val relation = sessionDao.getSessionAndSiteById(sessionId)
         return relation?.let {
             SessionAndSite(
                 session = it.session.toDomain(),
@@ -67,11 +67,11 @@ class SessionRepositoryImplementation @Inject constructor(
     }
 
     override fun observeCompleteSessionsAndSites(): Flow<List<SessionAndSite>> {
-        return sessionDao.observeCompleteSessionsAndSites().map { relations ->
-            relations.map {
+        return sessionDao.observeCompleteSessionsAndSites().map { sessionAndSiteRelations ->
+            sessionAndSiteRelations.map { sessionAndSiteRelation ->
                 SessionAndSite(
-                    session = it.session.toDomain(),
-                    site = it.site.toDomain()
+                    session = sessionAndSiteRelation.session.toDomain(),
+                    site = sessionAndSiteRelation.site.toDomain()
                 )
             }
         }
