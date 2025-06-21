@@ -4,8 +4,7 @@ import com.vci.vectorcamapp.core.domain.model.Device
 import kotlinx.coroutines.flow.Flow
 
 interface DeviceCache {
-    suspend fun saveDevice(device: Device, programId: Int)
+    suspend fun saveDevice(device: Device, programName: String)
     suspend fun getDevice(): Device?
-    suspend fun getProgramId(): Int?
-    fun observeProgramId(): Flow<Int?>
+    suspend fun getProgramName(): String?
 }

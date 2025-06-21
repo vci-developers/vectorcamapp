@@ -4,5 +4,5 @@ import com.vci.vectorcamapp.registration.domain.enums.ProgramOption
 
 sealed interface RegistrationAction {
     data class SelectProgram(val option: ProgramOption) : RegistrationAction
-    object Continue : RegistrationAction
+    object ConfirmRegistration : RegistrationAction
 }

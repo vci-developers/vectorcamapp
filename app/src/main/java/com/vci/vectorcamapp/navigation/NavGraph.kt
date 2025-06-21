@@ -43,7 +43,7 @@ fun NavGraph(startDestination: Destination) {
             val state by vm.state.collectAsStateWithLifecycle()
 
             ObserveAsEvents(events = vm.events) { event ->
-                if (event is RegistrationEvent.NavigateToLanding) {
+                if (event is RegistrationEvent.NavigateToLandingScreen) {
                     navController.navigate(Destination.Landing) {
                         popUpTo(Destination.Registration) { inclusive = true }
                     }

@@ -6,18 +6,15 @@ import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toDto
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class DeviceCacheImplementation @Inject constructor(
     private val dataStore: DataStore<DeviceDto>
 ) : DeviceCache {
-    override suspend fun saveDevice(device: Device, programId: Int) {
+    override suspend fun saveDevice(device: Device, programName: String) {
         dataStore.updateData {
-            device.toDto(programId)
+            device.toDto(programName)
         }
     }
 
@@ -26,17 +23,8 @@ class DeviceCacheImplementation @Inject constructor(
         return if (deviceDto == null || deviceDto.isEmpty()) null else deviceDto.toDomain()
     }
 
-    override suspend fun getProgramId(): Int? {
+    override suspend fun getProgramName(): String? {
         val deviceDto = dataStore.data.firstOrNull()
-        return if (deviceDto == null || deviceDto.isEmpty()) null else deviceDto.programId
-    }
-
-    override fun observeProgramId(): Flow<Int?> {
-        return dataStore.data
-            .map { dto ->
-                if (dto.isEmpty()) null
-                else dto.programId
-            }
-            .distinctUntilChanged()
+        return if (deviceDto == null || deviceDto.isEmpty()) null else deviceDto.programName
     }
 }

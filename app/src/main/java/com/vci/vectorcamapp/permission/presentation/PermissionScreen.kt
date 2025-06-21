@@ -42,7 +42,7 @@ fun PermissionScreen(
             Spacer(modifier = Modifier.height(32.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (!state.allGranted) {
-                    Button(onClick = { onAction(PermissionAction.OpenAppSettings) }) {
+                    Button(onClick = { onAction(PermissionAction.RequestPermissions) }) {
                         Text(
                             text = "Grant Permissions",
                             style = MaterialTheme.typography.bodyLarge,

@@ -2,8 +2,6 @@
 package com.vci.vectorcamapp.registration.presentation
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -37,20 +35,20 @@ fun RegistrationScreen(
                         .fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    val options = state.programs.map { ProgramOption(it.id, it.name) }
+                    val options = state.programs.map { ProgramOption(it.name) }
 
                     DropdownField(
                         label            = "Program",
                         options          = options,
-                        selectedOption   = options.find { it.id == state.selectedProgramId },
+                        selectedOption   = options.find { it.label == state.selectedProgram },
                         onOptionSelected = { onAction(RegistrationAction.SelectProgram(it)) },
                         modifier         = Modifier.fillMaxWidth(),
                         error            = null
                     )
 
                     Button(
-                        onClick  = { onAction(RegistrationAction.Continue) },
-                        enabled  = state.selectedProgramId != null,
+                        onClick  = { onAction(RegistrationAction.ConfirmRegistration) },
+                        enabled  = state.selectedProgram != null,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Continue")
@@ -58,15 +56,5 @@ fun RegistrationScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ProgramItem(program: Program, onSelect: () -> Unit) {
-    Button(
-        onClick = onSelect,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(program.name)
     }
 }

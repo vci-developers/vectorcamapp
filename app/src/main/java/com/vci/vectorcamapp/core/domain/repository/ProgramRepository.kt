@@ -4,5 +4,5 @@ import com.vci.vectorcamapp.core.domain.model.Program
 import kotlinx.coroutines.flow.Flow
 
 interface ProgramRepository {
-    fun getAllPrograms(): Flow<List<Program>>
+    suspend fun getAllPrograms(): List<Program>
 }

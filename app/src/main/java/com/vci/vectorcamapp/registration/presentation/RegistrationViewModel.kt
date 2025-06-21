@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.registration.presentation
 
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
@@ -18,39 +19,47 @@ class RegistrationViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RegistrationState())
-    val state: StateFlow<RegistrationState> = _state.asStateFlow()
+    val state: StateFlow<RegistrationState> = _state.onStart {
+        loadAllPrograms()
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000L),
+        RegistrationState()
+    )
 
-    private val _events = Channel<RegistrationEvent>(Channel.BUFFERED)
+    private val _events = Channel<RegistrationEvent>()
     val events = _events.receiveAsFlow()
 
-    init {
+    private fun loadAllPrograms() {
         viewModelScope.launch {
-            programRepository.getAllPrograms()
-                .onStart { _state.update { it.copy(isLoading = true) } }
-                .catch { e -> _state.update { it.copy(isLoading = false, error = e.localizedMessage) } }
-                .collect { list ->
-                    _state.update { it.copy(isLoading = false, programs = list, error = null) }
-                }
+            _state.update { it.copy(isLoading = true) }
+            val programs = programRepository.getAllPrograms()
+            _state.update {
+                it.copy(
+                    programs = programs,
+                    isLoading = false
+                )
+            }
         }
     }
 
     fun onAction(action: RegistrationAction) {
         when (action) {
             is RegistrationAction.SelectProgram -> {
-                _state.update { it.copy(selectedProgramId = action.option.id) }
+                _state.update { it.copy(selectedProgram = action.option.label) }
             }
 
-            RegistrationAction.Continue -> {
-                val programId = _state.value.selectedProgramId ?: return
+            RegistrationAction.ConfirmRegistration -> {
+                val programId = _state.value.selectedProgram ?: return
                 //TODO: Dummy Device, replace later
                 viewModelScope.launch {
                     val device = Device(
-                        id = 1,
-                        model = "fake phone",
-                        registeredAt = System.currentTimeMillis()
+                        id = -1,
+                        model = "${Build.MANUFACTURER} ${Build.MODEL}",
+                        registeredAt = 0L
                     )
                     deviceCache.saveDevice(device, programId)
-                    _events.send(RegistrationEvent.NavigateToLanding)
+                    _events.send(RegistrationEvent.NavigateToLandingScreen)
                 }
             }
         }
