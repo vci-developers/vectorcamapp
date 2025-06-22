@@ -15,6 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.vci.vectorcamapp.core.domain.util.onError
+import com.vci.vectorcamapp.core.domain.util.onSuccess
+import com.vci.vectorcamapp.core.domain.util.Result as DomainResult
 import com.vci.vectorcamapp.surveillance_form.domain.enums.CollectionMethodOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.DistrictOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.LlinBrandOption
@@ -196,20 +199,21 @@ fun SurveillanceFormScreen(
             onValueChange = { onAction(SurveillanceFormAction.EnterNotes(it)) },
             modifier = modifier
         )
-        when (val loc = state.locationState) {
-            is LocationState.Loading -> {
-                CircularProgressIndicator()
-                Text("Getting location…", Modifier.padding(start = 8.dp))
-            }
-            is LocationState.Success -> {
-                Text("Latitude: ${loc.lat}", Modifier.padding(vertical = 4.dp))
-                Text("Longitude: ${loc.lon}", Modifier.padding(vertical = 4.dp))
-            }
-            is LocationState.Error -> {
-                Text("Could not get location: ${loc.message}", Modifier.padding(vertical = 4.dp))
-            }
-        }
+        state.locationResult?.let { result ->
 
+            result.onSuccess { (lat, lon) ->
+                Text("Latitude: $lat", Modifier.padding(vertical = 4.dp))
+                Text("Longitude: $lon", Modifier.padding(vertical = 4.dp))
+            }
+
+            result.onError { error ->
+                Text("Could not get location: ${error.message}", Modifier.padding(vertical = 4.dp))
+            }
+
+        } ?: run {
+            CircularProgressIndicator()
+            Text("Getting location…", Modifier.padding(start = 8.dp))
+        }
 
         Button(
             onClick = { onAction(SurveillanceFormAction.SubmitSurveillanceForm) },

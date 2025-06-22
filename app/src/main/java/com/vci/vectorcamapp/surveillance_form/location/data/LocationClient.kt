@@ -1,35 +1,44 @@
-package com.vci.vectorcamapp.location.data
+package com.vci.vectorcamapp.surveillance_form.location.data
 
-import android.annotation.SuppressLint
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.location.Location
+import androidx.annotation.RequiresPermission
+import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 
-@Singleton
+@ViewModelScoped
 class LocationClient @Inject constructor(
+    private val fused: FusedLocationProviderClient,
     @ApplicationContext private val context: Context
 ) {
-    private val fused: FusedLocationProviderClient =
-        LocationServices.getFusedLocationProviderClient(context)
-
     companion object {
         private const val MAX_LAST_LOCATION_AGE_MS = 5 * 60 * 1_000L
     }
 
-    @SuppressLint("MissingPermission")
-    suspend fun getCurrentLocation(): Location =
-        suspendCancellableCoroutine { cont ->
+    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+    suspend fun getCurrentLocation(): Location = suspendCancellableCoroutine { cont ->
+        if (ContextCompat.checkSelfPermission(
+                context, Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            cont.resumeWithException(
+                SecurityException("ACCESS_FINE_LOCATION permission not granted")
+            )
+            return@suspendCancellableCoroutine
+        }
+
             val cts = CancellationTokenSource()
             val now = System.currentTimeMillis()
 
@@ -48,7 +57,7 @@ class LocationClient @Inject constructor(
             cont.invokeOnCancellation { cts.cancel() }
         }
 
-    @SuppressLint("MissingPermission")
+    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     private fun requestFreshLocation(
         cts: CancellationTokenSource,
         cont: CancellableContinuation<Location>

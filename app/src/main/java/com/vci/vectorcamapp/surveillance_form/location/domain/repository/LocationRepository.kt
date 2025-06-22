@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.location.domain.repository
+package com.vci.vectorcamapp.surveillance_form.location.domain.repository
 
 import android.location.Location
 

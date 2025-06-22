@@ -11,8 +11,9 @@ import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
-import com.vci.vectorcamapp.location.domain.repository.LocationRepository
 import com.vci.vectorcamapp.surveillance_form.domain.use_cases.ValidationUseCases
+import com.vci.vectorcamapp.surveillance_form.location.data.LocationError
+import com.vci.vectorcamapp.surveillance_form.location.domain.repository.LocationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
@@ -36,6 +37,11 @@ class SurveillanceFormViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val locationRepository: LocationRepository,
 ) : ViewModel() {
+
+    companion object {
+        private const val MAX_ATTEMPTS = 2
+        private const val LOCATION_TIMEOUT_MS = 30_000L
+    }
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
@@ -367,25 +373,26 @@ class SurveillanceFormViewModel @Inject constructor(
 
     fun getLocation() = viewModelScope.launch {
         _state.update { it.copy(isLoading = false) }
-        _state.update { it.copy(locationState = LocationState.Loading) }
+        _state.update { it.copy(locationResult = null) }
 
-        repeat(2) { attempt ->
-            try {
-                val loc = withTimeout(30_000) { locationRepository.getCurrentLocation() }
-                _state.update {
-                    it.copy(locationState = LocationState.Success(loc.latitude.toFloat(), loc.longitude.toFloat()))
+        repeat(MAX_ATTEMPTS) { attempt ->
+            val result: Result<Pair<Float,Float>, LocationError> = try {
+                val loc = withTimeout(LOCATION_TIMEOUT_MS) {
+                    locationRepository.getCurrentLocation()
                 }
-                return@launch
+                Result.Success(loc.latitude.toFloat() to loc.longitude.toFloat())
             } catch (e: Exception) {
-                if (attempt == 1) {
-                    val msg = when (e) {
-                        is SecurityException -> "Permission denied"
-                        is TimeoutCancellationException -> "GPS timeout"
-                        else -> e.localizedMessage ?: "Unknown error"
-                    }
-                    _state.update { it.copy(locationState = LocationState.Error(msg)) }
+                val error = when (e) {
+                    is SecurityException -> LocationError.PermissionDenied
+                    is TimeoutCancellationException -> LocationError.Timeout
+                    else -> LocationError.Unknown(e.localizedMessage ?: "Unknown error")
                 }
+                Result.Error(error)
             }
+
+            _state.update { it.copy(locationResult = result) }
+
+            if (result is Result.Success) return@launch
         }
     }
 
