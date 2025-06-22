@@ -20,7 +20,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.core.app.ActivityCompat
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.permission.presentation.PermissionAction
 import com.vci.vectorcamapp.permission.presentation.PermissionEvent
