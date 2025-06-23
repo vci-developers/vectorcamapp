@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
@@ -32,6 +34,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SurveillanceFormViewModel @Inject constructor(
     private val validationUseCases: ValidationUseCases,
+    private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
     private val siteRepository: SiteRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
@@ -49,9 +52,7 @@ class SurveillanceFormViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(SurveillanceFormState())
     val state: StateFlow<SurveillanceFormState> = _state.onStart {
-        loadAllSites()
-        loadSavedForm()
-        getLocation()
+        loadFormDetails()
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000L), SurveillanceFormState()
     )
@@ -356,66 +357,47 @@ class SurveillanceFormViewModel @Inject constructor(
         }
     }
 
-    private fun loadAllSites() {
+    private fun loadFormDetails() {
         viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    isLoading = true
-                )
-            }
-            val allSitesInProgram = siteRepository.getAllSitesByProgramId(2)
-            _state.update {
-                it.copy(
-                    allSitesInProgram = allSitesInProgram
-                )
-            }
-        }
-    }
+            _state.update { it.copy(isLoading = true) }
 
-    fun getLocation() = viewModelScope.launch {
-        _state.update { it.copy(isLoading = false) }
-        _state.update { it.copy(locationResult = null) }
-
-        repeat(MAX_ATTEMPTS) { attempt ->
-            val result: Result<Pair<Float,Float>, LocationError> = try {
-                val loc = withTimeout(LOCATION_TIMEOUT_MS) {
-                    locationRepository.getCurrentLocation()
-                }
-                Result.Success(loc.latitude.toFloat() to loc.longitude.toFloat())
-            } catch (e: Exception) {
-                val error = when (e) {
-                    is SecurityException -> LocationError.PERMISSION_DENIED
-                    is TimeoutCancellationException -> LocationError.GPS_TIMEOUT
-                    else -> LocationError.UNKNOWN
-                }
-                Result.Error(error)
-            }
-
-            _state.update { it.copy(locationResult = result) }
-            result.onSuccess { (lat, lon) ->
-                _state.update { it.copy(latitude = lat, longitude = lon) }
+            val programId = deviceCache.getProgramId()
+            if (programId == null) {
+                _events.send(SurveillanceFormEvent.NavigateBackToRegistrationScreen)
+                _state.update { it.copy(isLoading = false) }
                 return@launch
             }
-        }
-    }
 
-    private fun loadSavedForm() {
-        viewModelScope.launch {
-            currentSessionCache.getSession()?.let { session ->
-                val savedForm = surveillanceFormRepository.getSurveillanceFormBySessionId(session.localId)
-                val siteId: Int = currentSessionCache.getSiteId() ?: return@let
-                val site = siteRepository.getSiteById(siteId) ?: return@let
+            val currentSession = currentSessionCache.getSession()
+            val allSites = siteRepository.getAllSitesByProgramId(programId)
 
-                if (savedForm != null) {
-                    _state.update {
-                        it.copy(
-                            surveillanceForm = savedForm,
-                            session = session,
-                            selectedDistrict = site.district,
-                            selectedSentinelSite = site.sentinelSite
-                        )
-                    }
+            var savedForm: SurveillanceForm? = null
+            var district = ""
+            var sentinelSite = ""
+
+            if (currentSession != null) {
+                savedForm = surveillanceFormRepository.getSurveillanceFormBySessionId(currentSession.localId)
+                Log.d("SAVED FORM", "Saved form: ${savedForm?.wasIrsConducted}")
+
+                val siteId = currentSessionCache.getSiteId()
+                val site = allSites.find { it.id == siteId }
+                if (site != null) {
+                    district = site.district
+                    sentinelSite = site.sentinelSite
                 }
+            }
+
+            // FETCH LOCATION HERE
+
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    session = currentSession ?: it.session,
+                    surveillanceForm = savedForm ?: it.surveillanceForm,
+                    allSitesInProgram = allSites,
+                    selectedDistrict = district,
+                    selectedSentinelSite = sentinelSite
+                )
             }
         }
     }
