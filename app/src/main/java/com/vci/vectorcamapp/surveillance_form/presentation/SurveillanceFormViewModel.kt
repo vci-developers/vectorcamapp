@@ -363,7 +363,7 @@ class SurveillanceFormViewModel @Inject constructor(
                     isLoading = true
                 )
             }
-            val allSitesInProgram = siteRepository.getAllSitesByProgramId(1)
+            val allSitesInProgram = siteRepository.getAllSitesByProgramId(2)
             _state.update {
                 it.copy(
                     allSitesInProgram = allSitesInProgram
@@ -399,20 +399,22 @@ class SurveillanceFormViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadSavedForm() {
-        currentSessionCache.getSession()?.let { session ->
-            val savedForm = surveillanceFormRepository.getSurveillanceFormBySessionId(session.localId)
-            val siteId: Int = currentSessionCache.getSiteId() ?: return@let
-            val site = siteRepository.getSiteById(siteId) ?: return@let
+    private fun loadSavedForm() {
+        viewModelScope.launch {
+            currentSessionCache.getSession()?.let { session ->
+                val savedForm = surveillanceFormRepository.getSurveillanceFormBySessionId(session.localId)
+                val siteId: Int = currentSessionCache.getSiteId() ?: return@let
+                val site = siteRepository.getSiteById(siteId) ?: return@let
 
-            if (savedForm != null) {
-                _state.update {
-                    it.copy(
-                        surveillanceForm = savedForm,
-                        session = session,
-                        selectedDistrict = site.district,
-                        selectedSentinelSite = site.sentinelSite
-                    )
+                if (savedForm != null) {
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = savedForm,
+                            session = session,
+                            selectedDistrict = site.district,
+                            selectedSentinelSite = site.sentinelSite
+                        )
+                    }
                 }
             }
         }
