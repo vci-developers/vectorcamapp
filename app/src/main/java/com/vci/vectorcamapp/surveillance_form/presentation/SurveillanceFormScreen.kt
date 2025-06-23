@@ -207,7 +207,7 @@ fun SurveillanceFormScreen(
             }
 
             result.onError { error ->
-                Text("Could not get location: ${error.message}", Modifier.padding(vertical = 4.dp))
+                Text("Could not get location: $error", Modifier.padding(vertical = 4.dp))
             }
 
         } ?: run {
