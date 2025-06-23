@@ -353,6 +353,12 @@ class SurveillanceFormViewModel @Inject constructor(
                         )
                     }
                 }
+
+                is SurveillanceFormAction.RetryLocation -> {
+                    _state.update { it.copy(locationError = null) }
+                    _state.update { it.copy(latitude = null, longitude = null) }
+                    getLocation()
+                }
             }
         }
     }
@@ -387,8 +393,6 @@ class SurveillanceFormViewModel @Inject constructor(
                 }
             }
 
-            // FETCH LOCATION HERE
-
             _state.update {
                 it.copy(
                     isLoading = false,
@@ -398,6 +402,34 @@ class SurveillanceFormViewModel @Inject constructor(
                     selectedDistrict = district,
                     selectedSentinelSite = sentinelSite
                 )
+            }
+
+            getLocation()
+        }
+    }
+
+    suspend fun getLocation() {
+        repeat(MAX_ATTEMPTS) { attempt ->
+            val result: Result<Pair<Float, Float>, LocationError> = try {
+                val loc = withTimeout(LOCATION_TIMEOUT_MS) {
+                    locationRepository.getCurrentLocation()
+                }
+                Result.Success(loc.latitude.toFloat() to loc.longitude.toFloat())
+            } catch (e: Exception) {
+                val error = when (e) {
+                    is SecurityException -> LocationError.PERMISSION_DENIED
+                    is TimeoutCancellationException -> LocationError.GPS_TIMEOUT
+                    else -> LocationError.UNKNOWN
+                }
+                Result.Error(error)
+            }
+
+            result.onSuccess { (latitude, longitude) ->
+                _state.update {
+                    it.copy(latitude = latitude, longitude = longitude)
+                }
+            }.onError { error ->
+                _state.update { it.copy(locationError = error) }
             }
         }
     }

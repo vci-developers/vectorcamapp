@@ -15,6 +15,6 @@ abstract class LocationModule {
     @Binds
     @ViewModelScoped
     abstract fun bindLocationRepository(
-        impl: LocationRepositoryImplementation
+        locationRepositoryImplementation: LocationRepositoryImplementation
     ): LocationRepository
 }

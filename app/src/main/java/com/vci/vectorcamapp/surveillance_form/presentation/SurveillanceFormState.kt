@@ -11,9 +11,9 @@ import java.util.UUID
 
 data class SurveillanceFormState(
     val isLoading: Boolean = false,
-    val locationResult: Result<Pair<Float,Float>,LocationError>? = null,
     val latitude: Float? = null,
     val longitude: Float? = null,
+    val locationError: LocationError? = null,
     val allSitesInProgram: List<Site> = emptyList(),
     val selectedDistrict: String = "",
     val selectedSentinelSite: String = "",

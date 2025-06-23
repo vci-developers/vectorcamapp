@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.surveillance_form.presentation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -25,6 +26,7 @@ import com.vci.vectorcamapp.surveillance_form.domain.enums.LlinBrandOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.LlinTypeOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.SentinelSiteOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.SpecimenConditionOption
+import com.vci.vectorcamapp.surveillance_form.location.data.LocationError
 import com.vci.vectorcamapp.surveillance_form.presentation.components.DatePickerField
 import com.vci.vectorcamapp.surveillance_form.presentation.components.DropdownField
 import com.vci.vectorcamapp.surveillance_form.presentation.components.TextEntryField
@@ -37,7 +39,7 @@ fun SurveillanceFormScreen(
     onAction: (SurveillanceFormAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val ctx = LocalContext.current
+    val context = LocalContext.current
 
     val verticalScrollState = rememberScrollState()
 
@@ -202,18 +204,24 @@ fun SurveillanceFormScreen(
             onValueChange = { onAction(SurveillanceFormAction.EnterNotes(it)) },
             modifier = modifier
         )
-        state.locationResult?.let { result ->
 
-            result.onSuccess { (lat, lon) ->
-                Text("Latitude: $lat", Modifier.padding(vertical = 4.dp))
-                Text("Longitude: $lon", Modifier.padding(vertical = 4.dp))
+        if (state.latitude != null && state.longitude != null) {
+            Text("Latitude: ${state.latitude}", Modifier.padding(vertical = 4.dp))
+            Text("Longitude: ${state.longitude}", Modifier.padding(vertical = 4.dp))
+        } else if (state.locationError != null) {
+            Text(
+                "Could not get location: ${state.locationError.toString(context)}",
+                Modifier.padding(vertical = 4.dp)
+            )
+            if(state.locationError == LocationError.GPS_TIMEOUT) {
+                Button(onClick = {
+                    onAction(SurveillanceFormAction.RetryLocation() ) },
+                    modifier = modifier
+                ) {
+                    Text("Retry Location")
+                }
             }
-
-            result.onError { error ->
-                Text("Could not get location: ${error.toString(ctx)}", Modifier.padding(vertical = 4.dp))
-            }
-
-        } ?: run {
+        } else {
             CircularProgressIndicator()
             Text("Getting location…", Modifier.padding(start = 8.dp))
         }

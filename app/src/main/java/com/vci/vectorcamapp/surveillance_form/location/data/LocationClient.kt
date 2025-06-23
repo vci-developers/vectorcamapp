@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import androidx.annotation.RequiresPermission
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
@@ -27,7 +28,6 @@ class LocationClient @Inject constructor(
         private const val MAX_LAST_LOCATION_AGE_MS = 5 * 60 * 1_000L
     }
 
-    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     suspend fun getCurrentLocation(): Location = suspendCancellableCoroutine { cont ->
         if (ContextCompat.checkSelfPermission(
                 context, Manifest.permission.ACCESS_FINE_LOCATION
@@ -39,7 +39,7 @@ class LocationClient @Inject constructor(
             return@suspendCancellableCoroutine
         }
 
-            val cts = CancellationTokenSource()
+            val cancellationTokenSource = CancellationTokenSource()
             val now = System.currentTimeMillis()
 
             fused.lastLocation
@@ -47,32 +47,41 @@ class LocationClient @Inject constructor(
                     if (last != null && now - last.time <= MAX_LAST_LOCATION_AGE_MS) {
                         if (cont.isActive) cont.resume(last)
                     } else {
-                        requestFreshLocation(cts, cont)
+                        requestFreshLocation(cancellationTokenSource, cont)
                     }
                 }
                 .addOnFailureListener {
-                    requestFreshLocation(cts, cont)
+                    requestFreshLocation(cancellationTokenSource, cont)
                 }
 
-            cont.invokeOnCancellation { cts.cancel() }
+            cont.invokeOnCancellation { cancellationTokenSource.cancel() }
         }
 
-    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     private fun requestFreshLocation(
-        cts: CancellationTokenSource,
-        cont: CancellableContinuation<Location>
+        cancellationTokenSource: CancellationTokenSource,
+        cancellableContinuation: CancellableContinuation<Location>
     ) {
-        fused.getCurrentLocation(
+    if (ActivityCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED
+    ) {
+        return
+    }
+    fused.getCurrentLocation(
             Priority.PRIORITY_HIGH_ACCURACY,
-            cts.token
+            cancellationTokenSource.token
         ).addOnSuccessListener { loc ->
-            if (loc != null && cont.isActive) {
-                cont.resume(loc)
-            } else if (cont.isActive) {
-                cont.resumeWithException(RuntimeException("No location available"))
+            if (loc != null && cancellableContinuation.isActive) {
+                cancellableContinuation.resume(loc)
+            } else if (cancellableContinuation.isActive) {
+                cancellableContinuation.resumeWithException(RuntimeException("No location available"))
             }
         }.addOnFailureListener { e ->
-            if (cont.isActive) cont.resumeWithException(e)
+            if (cancellableContinuation.isActive) cancellableContinuation.resumeWithException(e)
         }
     }
 }
