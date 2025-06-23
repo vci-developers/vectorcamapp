@@ -12,11 +12,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
+import com.vci.vectorcamapp.surveillance_form.location.data.toString
 import com.vci.vectorcamapp.surveillance_form.domain.enums.CollectionMethodOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.DistrictOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.LlinBrandOption
@@ -35,6 +37,8 @@ fun SurveillanceFormScreen(
     onAction: (SurveillanceFormAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val ctx = LocalContext.current
+
     val verticalScrollState = rememberScrollState()
 
     BackHandler {
@@ -206,7 +210,7 @@ fun SurveillanceFormScreen(
             }
 
             result.onError { error ->
-                Text("Could not get location: $error", Modifier.padding(vertical = 4.dp))
+                Text("Could not get location: ${error.toString(ctx)}", Modifier.padding(vertical = 4.dp))
             }
 
         } ?: run {
