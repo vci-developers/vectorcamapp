@@ -11,6 +11,7 @@ import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
+import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.surveillance_form.domain.use_cases.ValidationUseCases
 import com.vci.vectorcamapp.surveillance_form.location.data.LocationError
 import com.vci.vectorcamapp.surveillance_form.location.domain.repository.LocationRepository
@@ -391,8 +392,10 @@ class SurveillanceFormViewModel @Inject constructor(
             }
 
             _state.update { it.copy(locationResult = result) }
-
-            if (result is Result.Success) return@launch
+            result.onSuccess { (lat, lon) ->
+                _state.update { it.copy(latitude = lat, longitude = lon) }
+                return@launch
+            }
         }
     }
 
