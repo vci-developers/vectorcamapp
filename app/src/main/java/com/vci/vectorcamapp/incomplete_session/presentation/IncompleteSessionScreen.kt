@@ -14,7 +14,7 @@ import java.util.UUID
 @Composable
 fun IncompleteSessionScreen(
     state: IncompleteSessionState,
-    onResumeSession: (UUID) -> Unit,
+    onAction: (IncompleteSessionAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -25,7 +25,7 @@ fun IncompleteSessionScreen(
     ) {
         items(items = state.sessions.asReversed(), key = { it.localId }) { session ->
             IncompleteSessionCard(session = session,
-                onClick = { onResumeSession(session.localId) },
+                onClick = { onAction(IncompleteSessionAction.ResumeSession(session.localId)) },
                 modifier = modifier
             )
         }

@@ -76,7 +76,7 @@ fun NavGraph(startDestination: Destination) {
             }
 
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                RegistrationScreen(
+                 RegistrationScreen(
                     state = state,
                     onAction = viewModel::onAction,
                     modifier = Modifier.padding(innerPadding)
@@ -190,11 +190,7 @@ fun NavGraph(startDestination: Destination) {
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 IncompleteSessionScreen(
                     state = state,
-                    onResumeSession = { sessionId ->
-                        viewModel.onAction(
-                            IncompleteSessionAction.ResumeSession(sessionId)
-                        )
-                    },
+                    onAction = viewModel::onAction,
                     modifier = Modifier.padding(innerPadding)
                 )
             }
