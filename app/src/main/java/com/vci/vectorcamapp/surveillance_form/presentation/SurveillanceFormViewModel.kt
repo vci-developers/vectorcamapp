@@ -408,7 +408,7 @@ class SurveillanceFormViewModel @Inject constructor(
         }
     }
 
-    suspend fun getLocation() {
+    private suspend fun getLocation() {
         repeat(MAX_ATTEMPTS) { attempt ->
             val result: Result<Pair<Float, Float>, LocationError> = try {
                 val loc = withTimeout(LOCATION_TIMEOUT_MS) {

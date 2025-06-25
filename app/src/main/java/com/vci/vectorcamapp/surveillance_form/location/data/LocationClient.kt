@@ -19,7 +19,6 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 
-@ViewModelScoped
 class LocationClient @Inject constructor(
     private val fused: FusedLocationProviderClient,
     @ApplicationContext private val context: Context
