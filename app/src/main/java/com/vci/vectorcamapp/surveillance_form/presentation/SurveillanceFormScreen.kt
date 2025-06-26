@@ -215,7 +215,7 @@ fun SurveillanceFormScreen(
             )
             if(state.locationError == LocationError.GPS_TIMEOUT) {
                 Button(onClick = {
-                    onAction(SurveillanceFormAction.RetryLocation() ) },
+                    onAction(SurveillanceFormAction.RetryLocation ) },
                     modifier = modifier
                 ) {
                     Text("Retry Location")
