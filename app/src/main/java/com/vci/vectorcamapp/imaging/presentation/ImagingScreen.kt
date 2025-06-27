@@ -79,24 +79,16 @@ fun ImagingScreen(
             }
 
             else -> {
-                Column {
-                    if (state.currentImage != null) {
-                        Image(
-                            painter = BitmapPainter(state.currentImage.asImageBitmap()),
-                            contentDescription = "Captured image"
-                        )
-                    }
-                    LiveCameraPreviewPage(
-                        controller = controller,
-                        boundingBoxesUiList = state.previewBoundingBoxesUiList,
-                        onImageCaptured = {
-                            onAction(ImagingAction.CaptureImage(controller))
-                        },
-                        onSaveSessionProgress = { onAction(ImagingAction.SaveSessionProgress) },
-                        onSubmitSession = { onAction(ImagingAction.SubmitSession) },
-                        modifier = modifier
-                    )
-                }
+                LiveCameraPreviewPage(
+                    controller = controller,
+                    boundingBoxesUiList = state.previewBoundingBoxesUiList,
+                    onImageCaptured = {
+                        onAction(ImagingAction.CaptureImage(controller))
+                    },
+                    onSaveSessionProgress = { onAction(ImagingAction.SaveSessionProgress) },
+                    onSubmitSession = { onAction(ImagingAction.SubmitSession) },
+                    modifier = modifier
+                )
             }
         }
     }
