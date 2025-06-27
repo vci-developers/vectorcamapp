@@ -5,6 +5,8 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -13,6 +15,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.core.content.ContextCompat
@@ -75,14 +79,24 @@ fun ImagingScreen(
             }
 
             else -> {
-                LiveCameraPreviewPage(
-                    controller = controller,
-                    boundingBoxesUiList = state.previewBoundingBoxesUiList,
-                    onImageCaptured = { onAction(ImagingAction.CaptureImage(controller)) },
-                    onSaveSessionProgress = { onAction(ImagingAction.SaveSessionProgress) },
-                    onSubmitSession = { onAction(ImagingAction.SubmitSession) },
-                    modifier = modifier
-                )
+                Column {
+                    if (state.currentImage != null) {
+                        Image(
+                            painter = BitmapPainter(state.currentImage.asImageBitmap()),
+                            contentDescription = "Captured image"
+                        )
+                    }
+                    LiveCameraPreviewPage(
+                        controller = controller,
+                        boundingBoxesUiList = state.previewBoundingBoxesUiList,
+                        onImageCaptured = {
+                            onAction(ImagingAction.CaptureImage(controller))
+                        },
+                        onSaveSessionProgress = { onAction(ImagingAction.SaveSessionProgress) },
+                        onSubmitSession = { onAction(ImagingAction.SubmitSession) },
+                        modifier = modifier
+                    )
+                }
             }
         }
     }
