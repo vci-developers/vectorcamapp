@@ -46,7 +46,7 @@ class MainViewModel @Inject constructor(
                 is MainAction.UpdatePermissionStatus -> {
                     _state.update {
                         it.copy(
-                            allGranted = action.allGranted, isLoading = false
+                            allGranted = action.allGranted
                         )
                     }
                 }
