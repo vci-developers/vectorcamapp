@@ -32,7 +32,6 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             when (action) {
                 MainAction.RequestPermissions -> {
-                    _state.update { it.copy(isLoading = true) }
                     _events.send(MainEvent.LaunchPermissionRequest)
                 }
 
