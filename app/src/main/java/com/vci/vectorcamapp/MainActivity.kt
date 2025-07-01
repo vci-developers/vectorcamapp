@@ -19,19 +19,29 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
 import com.vci.vectorcamapp.main.presentation.MainAction
 import com.vci.vectorcamapp.main.presentation.MainEvent
 import com.vci.vectorcamapp.main.presentation.MainViewModel
+import com.vci.vectorcamapp.main.presentation.SplashScreen
 import com.vci.vectorcamapp.main.presentation.components.PermissionAndGpsPrompt
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        private const val SPLASH_SCREEN_DURATION_MS = 2500L
+    }
+
     private val viewModel: MainViewModel by viewModels()
 
     private val permissionsRequired = buildList {
@@ -51,43 +61,46 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             VectorcamappTheme {
+                val state by viewModel.state.collectAsState()
+                var minSplashElapsed by remember { mutableStateOf(false) }
+
+                LaunchedEffect(Unit) {
+                    delay(SPLASH_SCREEN_DURATION_MS)
+                    minSplashElapsed = true
+                }
+
+                val isReady = state.permissionChecked && state.gpsChecked
+
                 ObserveAsEvents(events = viewModel.events) { event ->
                     when (event) {
-                        MainEvent.LaunchPermissionRequest -> {
-                            permissionLauncher.launch(permissionsRequired)
-                        }
-
+                        MainEvent.LaunchPermissionRequest -> permissionLauncher.launch(permissionsRequired)
                         MainEvent.NavigateToAppSettings -> openAppSettings()
-
                         MainEvent.NavigateToLocationSettings -> openLocationSettings()
                     }
                 }
 
-                LaunchedEffect(Unit) {
-                    checkAndUpdatePermissionStatus()
-                    checkAndUpdateGpsStatus()
-                    viewModel.onAction(MainAction.RequestPermissions)
-                }
-
-                val state by viewModel.state.collectAsState()
-
-                when (state.allGranted && state.isGpsEnabled) {
-                    true -> {
+                when {
+                    !isReady || !minSplashElapsed -> {
+                        SplashScreen(modifier = Modifier.fillMaxSize())
+                    }
+                    state.allGranted && state.isGpsEnabled -> {
                         when (val startDestination = state.startDestination) {
                             null -> LoadingAnimation(text = "Initializing…")
                             else -> NavGraph(startDestination = startDestination)
                         }
                     }
-
-                    false -> Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                        PermissionAndGpsPrompt(
-                            state = state,
-                            onAction = viewModel::onAction,
-                            modifier = Modifier.padding(innerPadding)
-                        )
+                    else -> {
+                        Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
+                            PermissionAndGpsPrompt(
+                                state = state,
+                                onAction = viewModel::onAction,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(padding)
+                            )
+                        }
                     }
                 }
             }
@@ -110,7 +123,7 @@ class MainActivity : ComponentActivity() {
 
     private fun checkAndUpdateGpsStatus() {
         val locationManager =
-            application.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            application.getSystemService(LOCATION_SERVICE) as LocationManager
         val isGpsEnabled =
             locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) || locationManager.isProviderEnabled(
                 LocationManager.GPS_PROVIDER

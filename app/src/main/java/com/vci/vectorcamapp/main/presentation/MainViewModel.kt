@@ -8,7 +8,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -21,32 +20,30 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MainState())
-    val state = _state.onStart {
-        determineStartDestination()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
+    val state = _state.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        MainState()
+    )
 
     private val _events = Channel<MainEvent>()
     val events = _events.receiveAsFlow()
 
+    init {
+        determineStartDestination()
+    }
+
     fun onAction(action: MainAction) {
         viewModelScope.launch {
             when (action) {
-                MainAction.RequestPermissions -> {
-                    _events.send(MainEvent.LaunchPermissionRequest)
-                }
-
-                MainAction.OpenAppSettings -> {
-                    _events.send(MainEvent.NavigateToAppSettings)
-                }
-
-                MainAction.OpenLocationSettings -> {
-                    _events.send(MainEvent.NavigateToLocationSettings)
-                }
-
+                MainAction.RequestPermissions -> _events.send(MainEvent.LaunchPermissionRequest)
+                MainAction.OpenAppSettings -> _events.send(MainEvent.NavigateToAppSettings)
+                MainAction.OpenLocationSettings -> _events.send(MainEvent.NavigateToLocationSettings)
                 is MainAction.UpdatePermissionStatus -> {
                     _state.update {
                         it.copy(
-                            allGranted = action.allGranted
+                            allGranted = action.allGranted,
+                            permissionChecked = true
                         )
                     }
                 }
@@ -54,7 +51,8 @@ class MainViewModel @Inject constructor(
                 is MainAction.UpdateGpsStatus -> {
                     _state.update {
                         it.copy(
-                            isGpsEnabled = action.isGpsEnabled
+                            isGpsEnabled = action.isGpsEnabled,
+                            gpsChecked = true
                         )
                     }
                 }

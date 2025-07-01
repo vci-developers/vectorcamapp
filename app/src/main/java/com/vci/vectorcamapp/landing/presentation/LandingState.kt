@@ -5,7 +5,7 @@ import com.vci.vectorcamapp.core.domain.model.Session
 
 data class LandingState(
     val versionName: String = BuildConfig.VERSION_NAME,
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val incompleteSessions: List<Session> = emptyList(),
     val completeSessions: List<Session> = emptyList(),
     val showResumeDialog: Boolean = false
