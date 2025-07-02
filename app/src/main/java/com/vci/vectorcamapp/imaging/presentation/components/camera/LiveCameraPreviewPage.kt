@@ -120,9 +120,6 @@ fun LiveCameraPreviewPage(
                         }
                     }
             ) {
-                boundingBoxesUiList.forEach {
-                    BoundingBoxOverlay(it, Modifier.fillMaxSize())
-                }
 
                 manualFocusPoint?.let { focusPoint ->
                     if (overlaySize != IntSize.Zero) {
@@ -153,6 +150,10 @@ fun LiveCameraPreviewPage(
                     }
                 }
             }
+        }
+
+        boundingBoxesUiList.forEach {
+            BoundingBoxOverlay(it, Modifier.fillMaxSize())
         }
 
         IconButton(
