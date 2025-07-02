@@ -27,6 +27,7 @@ import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
 import com.vci.vectorcamapp.core.presentation.components.ui.ActionButton
 import com.vci.vectorcamapp.registration.domain.enums.ProgramOption
 import com.vci.vectorcamapp.surveillance_form.presentation.components.DropdownField
+import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
@@ -59,7 +60,7 @@ fun RegistrationScreen(
 
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = MaterialTheme.colors.cardBackground
                 ),
                 shape = RoundedCornerShape(
                     topStart = MaterialTheme.dimensions.cornerRadiusMedium,
@@ -83,14 +84,14 @@ fun RegistrationScreen(
                         Text(
                             text = "Register Program",
                             style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = MaterialTheme.colors.textPrimary,
                             fontWeight = FontWeight.Black
                         )
 
                         Text(
                             text = "Select your affiliated program",
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colors.textPrimary
                         )
                     }
 

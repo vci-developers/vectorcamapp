@@ -7,7 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-data class Dimension(
+data class Dimensions(
     // Padding & Spacing
     val paddingExtraSmall: Dp = 4.dp,
     val paddingSmall: Dp = 8.dp,
@@ -57,7 +57,7 @@ data class Dimension(
     val lineHeightLarge: Dp = 32.dp,
 )
 
-val LocalDimensions = staticCompositionLocalOf { Dimension() }
+val LocalDimensions = staticCompositionLocalOf { Dimensions() }
 
 @Composable
 fun screenWidthFraction(fraction: Float): Dp {

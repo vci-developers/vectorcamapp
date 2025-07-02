@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
@@ -32,15 +33,15 @@ fun ActionButton(
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.primaryContainer,
-                        MaterialTheme.colorScheme.secondaryContainer
+                        MaterialTheme.colors.buttonGradientLeft,
+                        MaterialTheme.colors.buttonGradientRight
                     )
                 ), shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
             )
     ) {
         Text(
             text = label,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = MaterialTheme.colors.buttonText,
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold
         )

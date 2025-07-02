@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.surveillance_form.domain.enums.DropdownOption
 import com.vci.vectorcamapp.surveillance_form.domain.util.FormValidationError
 import com.vci.vectorcamapp.surveillance_form.presentation.util.toString
+import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.screenHeightFraction
 
@@ -71,14 +72,12 @@ fun <T : DropdownOption> DropdownField(
                 },
                 shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall),
                 singleLine = true,
-                isError = error != null,
                 enabled = false,
                 colors = TextFieldDefaults.colors(
-                    errorIndicatorColor = MaterialTheme.colorScheme.error,
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledContainerColor = MaterialTheme.colorScheme.background,
-                    disabledTrailingIconColor = if (selectedOption == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+                    disabledTextColor = MaterialTheme.colors.textPrimary,
+                    disabledPlaceholderColor = MaterialTheme.colors.textSecondary,
+                    disabledContainerColor = MaterialTheme.colors.cardBackground,
+                    disabledTrailingIconColor = if (selectedOption == null) MaterialTheme.colors.textSecondary else MaterialTheme.colors.textPrimary
                 ),
                 trailingIcon = {
                     Box(modifier = Modifier.padding(end = MaterialTheme.dimensions.paddingLarge)) {
@@ -93,7 +92,7 @@ fun <T : DropdownOption> DropdownField(
                     .fillMaxWidth()
                     .border(
                         width = MaterialTheme.dimensions.borderThicknessThick,
-                        color = MaterialTheme.colorScheme.outline,
+                        color = if (error != null) MaterialTheme.colors.error else MaterialTheme.colors.primary,
                         shape = RoundedCornerShape(
                             topStart = MaterialTheme.dimensions.cornerRadiusSmall,
                             topEnd = MaterialTheme.dimensions.cornerRadiusSmall,
@@ -105,10 +104,10 @@ fun <T : DropdownOption> DropdownField(
 
             DropdownMenu(
                 expanded = expanded,
-                containerColor = MaterialTheme.colorScheme.background,
+                containerColor = MaterialTheme.colors.cardBackground,
                 border = BorderStroke(
                     width = MaterialTheme.dimensions.borderThicknessThick,
-                    color = MaterialTheme.colorScheme.outline
+                    color = MaterialTheme.colors.primary
                 ),
                 shape = RoundedCornerShape(
                     topStart = MaterialTheme.dimensions.cornerRadiusSmall,
@@ -135,7 +134,7 @@ fun <T : DropdownOption> DropdownField(
                     if (index != options.lastIndex) {
                         HorizontalDivider(
                             thickness = MaterialTheme.dimensions.dividerThickness,
-                            color = MaterialTheme.colorScheme.outlineVariant
+                            color = MaterialTheme.colors.divider
                         )
                     }
                 }
@@ -145,7 +144,7 @@ fun <T : DropdownOption> DropdownField(
         if (error != null) {
             Text(
                 text = error.toString(context),
-                color = MaterialTheme.colorScheme.error,
+                color = MaterialTheme.colors.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Start
