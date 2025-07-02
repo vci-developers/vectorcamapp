@@ -8,7 +8,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -27,9 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -48,9 +52,12 @@ fun LiveCameraPreviewPage(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val previewView = remember { PreviewView(context) }
+    val density = LocalDensity.current
 
     var manualFocusPoint by remember { mutableStateOf<Offset?>(null) }
-    val focusRingSize = 64.dp
+    val focusBoxSize = 64.dp
+    val aspectRatio = 4f / 3f
+    var overlaySize by remember { mutableStateOf(IntSize.Zero) }
 
     LaunchedEffect(Unit) {
         previewView.apply {
@@ -81,47 +88,70 @@ fun LiveCameraPreviewPage(
     }
 
     Box(
-        modifier = modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter
+        modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center
     ) {
-        AndroidView(
-            factory = { previewView },
-            modifier = Modifier.fillMaxSize()
-        )
-
-        boundingBoxesUiList.map {
-            BoundingBoxOverlay(it, Modifier.fillMaxSize())
-        }
-
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTapGestures { offset ->
-                        manualFocusPoint = offset
-                        val point = previewView.meteringPointFactory.createPoint(offset.x, offset.y)
-                        val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
-                            .disableAutoCancel()
-                            .build()
-                        controller.cameraControl?.startFocusAndMetering(action)
+                .fillMaxWidth()
+                .aspectRatio(1f / aspectRatio)
+        ) {
+            AndroidView(
+                factory = { previewView },
+                modifier = Modifier.fillMaxSize()
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .onSizeChanged {
+                        overlaySize = it
+                    }
+                    .pointerInput(Unit) {
+                        detectTapGestures { offset ->
+                            manualFocusPoint = offset
+
+                            val meteringPoint = previewView.meteringPointFactory.createPoint(offset.x, offset.y)
+
+                            val action = FocusMeteringAction
+                                .Builder(meteringPoint, FocusMeteringAction.FLAG_AF)
+                                .disableAutoCancel()
+                                .build()
+                            controller.cameraControl?.startFocusAndMetering(action)
+                        }
+                    }
+            ) {
+                boundingBoxesUiList.forEach {
+                    BoundingBoxOverlay(it, Modifier.fillMaxSize())
+                }
+
+                manualFocusPoint?.let { focusPoint ->
+                    if (overlaySize != IntSize.Zero) {
+                        val focusRingSizePx = with(density) { focusBoxSize.toPx() }
+
+                        val initialX = focusPoint.x - (focusRingSizePx / 2)
+                        val initialY = focusPoint.y - (focusRingSizePx / 2)
+
+                        val containerWidthPx = overlaySize.width.toFloat()
+                        val containerHeightPx = overlaySize.height.toFloat()
+
+                        val clampedX = initialX.coerceIn(0f, containerWidthPx - focusRingSizePx)
+                        val clampedY = initialY.coerceIn(0f, containerHeightPx - focusRingSizePx)
+
+                        Box(
+                            modifier = Modifier
+                                .offset(
+                                    x = with(density) { clampedX.toDp() },
+                                    y = with(density) { clampedY.toDp() }
+                                )
+                                .size(focusBoxSize)
+                                .border(2.dp, Color.Yellow)
+                                .clickable {
+                                    manualFocusPoint = null
+                                    controller.cameraControl?.cancelFocusAndMetering()
+                                }
+                        )
                     }
                 }
-        ) {
-            manualFocusPoint?.let { focusPoint ->
-                val density = LocalDensity.current
-                val focusRingSizePx = with(density) { focusRingSize.toPx() }
-
-                Box(
-                    modifier = Modifier
-                        .offset(
-                            x = with(density) { (focusPoint.x - focusRingSizePx / 2).toDp() },
-                            y = with(density) { (focusPoint.y - focusRingSizePx / 2).toDp() }
-                        )
-                        .size(focusRingSize)
-                        .border(2.dp, Color.Yellow)
-                        .clickable {
-                            manualFocusPoint = null
-                        }
-                )
             }
         }
 
