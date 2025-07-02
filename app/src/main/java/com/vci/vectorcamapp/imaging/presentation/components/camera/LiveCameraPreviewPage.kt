@@ -144,7 +144,7 @@ fun LiveCameraPreviewPage(
                                     y = with(density) { clampedY.toDp() }
                                 )
                                 .size(focusBoxSize)
-                                .border(2.dp, Color.Yellow)
+                                .border(2.dp, Color.Cyan, CircleShape)
                                 .clickable {
                                     manualFocusPoint = null
                                     controller.cameraControl?.cancelFocusAndMetering()
