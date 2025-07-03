@@ -2,12 +2,12 @@ package com.vci.vectorcamapp.registration.presentation
 
 import android.os.Build
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -19,7 +19,7 @@ class RegistrationViewModel @Inject constructor(
     private val programRepository: ProgramRepository,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _state = MutableStateFlow(RegistrationState())
     val state: StateFlow<RegistrationState> = _state.onStart {

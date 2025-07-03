@@ -2,7 +2,6 @@ package com.vci.vectorcamapp.imaging.presentation
 
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
@@ -16,7 +15,6 @@ import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.upload.image.ImageUploadWorker
 import com.vci.vectorcamapp.core.data.upload.metadata.MetadataUploadWorker
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
-import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.repository.BoundingBoxRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
@@ -24,6 +22,7 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
+import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
@@ -59,7 +58,7 @@ class ImagingViewModel @Inject constructor(
     private val boundingBoxRepository: BoundingBoxRepository,
     private val cameraRepository: CameraRepository,
     private val inferenceRepository: InferenceRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
@@ -137,6 +136,7 @@ class ImagingViewModel @Inject constructor(
                                 })
                         }
                     } catch (e: Exception) {
+                        emitError("Image processing setup failed: ${e.message}")
                         Log.e("ViewModel", "Image processing setup failed: ${e.message}")
                     } finally {
                         action.frame.close()
@@ -240,6 +240,7 @@ class ImagingViewModel @Inject constructor(
                             }
                         }
                     }.onError { error ->
+                        emitError("Error capturing image")
                         if (error == ImagingError.NO_ACTIVE_SESSION) {
                             _events.send(ImagingEvent.NavigateBackToLandingScreen)
                         }
@@ -293,10 +294,12 @@ class ImagingViewModel @Inject constructor(
                                 boundingBoxRepository.insertBoundingBox(boundingBox, specimen.id)
 
                             specimenResult.onError { error ->
+                                emitError("Error saving specimen")
                                 Log.d("ROOM ERROR", "Specimen error: $error")
                             }
 
                             boundingBoxResult.onError { error ->
+                                emitError("Error saving bounding box")
                                 Log.d("ROOM ERROR", "Bounding box error: $error")
                             }
 
@@ -309,6 +312,7 @@ class ImagingViewModel @Inject constructor(
                             cameraRepository.deleteSavedImage(imageUri)
                         }
                     }.onError { error ->
+                        emitError("Error saving image")
                         _events.send(ImagingEvent.DisplayImagingError(error))
                     }
                 }

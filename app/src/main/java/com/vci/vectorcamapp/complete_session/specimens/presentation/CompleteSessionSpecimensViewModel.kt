@@ -1,8 +1,8 @@
 package com.vci.vectorcamapp.complete_session.specimens.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +14,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CompleteSessionSpecimensViewModel @Inject constructor(
     private val sessionRepository: SessionRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _state = MutableStateFlow(CompleteSessionSpecimensState())
     val state: StateFlow<CompleteSessionSpecimensState> = _state
@@ -29,13 +29,14 @@ class CompleteSessionSpecimensViewModel @Inject constructor(
         viewModelScope.launch {
             val sessionWithSpecimens = sessionRepository.getSessionWithSpecimens(sessionId)
             if (sessionWithSpecimens == null) {
-                _state.update { it.copy(error = "No data found for session") }
+                _state.update {
+                    emitError("No data found for session")
+                }
             } else {
                 _state.update {
                     it.copy(
                         session = sessionWithSpecimens.session,
                         specimens = sessionWithSpecimens.specimens,
-                        error = null
                     )
                 }
             }

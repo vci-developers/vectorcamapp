@@ -13,15 +13,23 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
+import com.vci.vectorcamapp.core.presentation.components.BaseScaffold
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageFlow
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorSnackbarHost
 import com.vci.vectorcamapp.main.presentation.MainAction
 import com.vci.vectorcamapp.main.presentation.MainEvent
 import com.vci.vectorcamapp.main.presentation.MainViewModel
@@ -54,45 +62,43 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             VectorcamappTheme {
-                ObserveAsEvents(events = viewModel.events) { event ->
-                    when (event) {
-                        MainEvent.LaunchPermissionRequest -> {
-                            permissionLauncher.launch(permissionsRequired)
-                        }
-
-                        MainEvent.NavigateToAppSettings -> openAppSettings()
-
-                        MainEvent.NavigateToLocationSettings -> openLocationSettings()
-                    }
-                }
-
-                LaunchedEffect(Unit) {
-                    checkAndUpdatePermissionStatus()
-                    checkAndUpdateGpsStatus()
-                    viewModel.onAction(MainAction.RequestPermissions)
-                }
-
-                val state by viewModel.state.collectAsState()
-
-                when (state.allGranted && state.isGpsEnabled) {
-                    true -> {
-                        when (val startDestination = state.startDestination) {
-                            null -> LoadingAnimation(text = "Initializing…")
-                            else -> NavGraph(startDestination = startDestination)
+                BaseScaffold {
+                    ObserveAsEvents(events = viewModel.events) { event ->
+                        when (event) {
+                            MainEvent.LaunchPermissionRequest -> permissionLauncher.launch(permissionsRequired)
+                            MainEvent.NavigateToAppSettings -> openAppSettings()
+                            MainEvent.NavigateToLocationSettings -> openLocationSettings()
                         }
                     }
 
-                    false -> Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                        PermissionAndGpsPrompt(
+                    LaunchedEffect(Unit) {
+                        checkAndUpdatePermissionStatus()
+                        checkAndUpdateGpsStatus()
+                        viewModel.onAction(MainAction.RequestPermissions)
+                    }
+
+                    val state by viewModel.state.collectAsState()
+
+                    when (state.allGranted && state.isGpsEnabled) {
+                        true -> {
+                            when (val startDestination = state.startDestination) {
+                                null -> LoadingAnimation(text = "Initializing…")
+                                else -> NavGraph(startDestination = startDestination)
+                            }
+                        }
+
+                        false -> PermissionAndGpsPrompt(
                             state = state,
                             onAction = viewModel::onAction,
-                            modifier = Modifier.padding(innerPadding)
+                            modifier = Modifier.padding(it)
                         )
                     }
                 }
             }
         }
+
     }
+
 
     override fun onResume() {
         super.onResume()

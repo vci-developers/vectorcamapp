@@ -1,8 +1,8 @@
 package com.vci.vectorcamapp.complete_session.form.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +14,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CompleteSessionFormViewModel @Inject constructor(
     private val sessionRepository: SessionRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _state = MutableStateFlow(CompleteSessionFormState())
     val state: StateFlow<CompleteSessionFormState> = _state
@@ -33,7 +33,7 @@ class CompleteSessionFormViewModel @Inject constructor(
             when {
                 sessionAndSite == null -> {
                     _state.update {
-                        it.copy(error = "No site data found for session")
+                        emitError("No site data found for session")
                     }
                 }
 
@@ -42,8 +42,7 @@ class CompleteSessionFormViewModel @Inject constructor(
                         it.copy(
                             session = sessionAndSite.session,
                             site = sessionAndSite.site,
-                            surveillanceForm = null,
-                            error = null
+                            surveillanceForm = null
                         )
                     }
                 }
@@ -53,8 +52,7 @@ class CompleteSessionFormViewModel @Inject constructor(
                         it.copy(
                             session = sessionAndSite.session,
                             site = sessionAndSite.site,
-                            surveillanceForm = sessionAndSurveillanceForm.surveillanceForm,
-                            error = null
+                            surveillanceForm = sessionAndSurveillanceForm.surveillanceForm
                         )
                     }
                 }

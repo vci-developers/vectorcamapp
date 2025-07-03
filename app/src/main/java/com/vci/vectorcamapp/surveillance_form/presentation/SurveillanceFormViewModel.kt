@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.surveillance_form.presentation
 
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
@@ -14,6 +13,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
+import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
 import com.vci.vectorcamapp.surveillance_form.domain.use_cases.ValidationUseCases
 import com.vci.vectorcamapp.surveillance_form.location.data.LocationError
 import com.vci.vectorcamapp.surveillance_form.location.domain.repository.LocationRepository
@@ -40,11 +40,15 @@ class SurveillanceFormViewModel @Inject constructor(
     private val surveillanceFormRepository: SurveillanceFormRepository,
     private val sessionRepository: SessionRepository,
     private val locationRepository: LocationRepository,
-) : ViewModel() {
+) : BaseViewModel() {
 
     companion object {
         private const val MAX_ATTEMPTS = 2
         private const val LOCATION_TIMEOUT_MS = 30_000L
+    }
+
+    init {
+        emitError("Test error toast")
     }
 
     @Inject

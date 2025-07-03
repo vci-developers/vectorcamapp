@@ -1,9 +1,9 @@
 package com.vci.vectorcamapp.incomplete_session.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +18,7 @@ import javax.inject.Inject
 class IncompleteSessionViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val currentSessionCache: CurrentSessionCache
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _incompleteSessions = sessionRepository.observeIncompleteSessions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
