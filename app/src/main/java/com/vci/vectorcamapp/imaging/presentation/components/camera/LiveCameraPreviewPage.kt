@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.imaging.presentation.components.camera
 
-import androidx.camera.core.FocusMeteringAction
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
@@ -70,19 +69,9 @@ fun LiveCameraPreviewPage(
     LaunchedEffect(boundingBoxesUiList, manualFocusPoint) {
         if (manualFocusPoint == null) {
             if (boundingBoxesUiList.isNotEmpty()) {
-                val box = boundingBoxesUiList.first()
-                val centerX = box.topLeftX + box.width / 2f
-                val centerY = box.topLeftY + box.height / 2f
-                val point = previewView.meteringPointFactory.createPoint(centerX, centerY)
-
-                val action = FocusMeteringAction
-                    .Builder(point, FocusMeteringAction.FLAG_AF)
-                    .disableAutoCancel()
-                    .build()
-
-                controller.cameraControl?.startFocusAndMetering(action)
+                autoFocusOnObject(controller, previewView, boundingBoxesUiList.first())
             } else {
-                controller.cameraControl?.cancelFocusAndMetering()
+                cancelFocus(controller)
             }
         }
     }
@@ -103,48 +92,31 @@ fun LiveCameraPreviewPage(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .onSizeChanged {
-                        overlaySize = it
-                    }
+                    .onSizeChanged { overlaySize = it }
                     .pointerInput(Unit) {
                         detectTapGestures { offset ->
                             manualFocusPoint = offset
-
-                            val meteringPoint = previewView.meteringPointFactory.createPoint(offset.x, offset.y)
-
-                            val action = FocusMeteringAction
-                                .Builder(meteringPoint, FocusMeteringAction.FLAG_AF)
-                                .disableAutoCancel()
-                                .build()
-                            controller.cameraControl?.startFocusAndMetering(action)
+                            handleTapToFocus(controller, previewView, offset)
                         }
                     }
             ) {
-
                 manualFocusPoint?.let { focusPoint ->
                     if (overlaySize != IntSize.Zero) {
-                        val focusRingSizePx = with(density) { focusBoxSize.toPx() }
-
-                        val initialX = focusPoint.x - (focusRingSizePx / 2)
-                        val initialY = focusPoint.y - (focusRingSizePx / 2)
-
-                        val containerWidthPx = overlaySize.width.toFloat()
-                        val containerHeightPx = overlaySize.height.toFloat()
-
-                        val clampedX = initialX.coerceIn(0f, containerWidthPx - focusRingSizePx)
-                        val clampedY = initialY.coerceIn(0f, containerHeightPx - focusRingSizePx)
+                        val offset = calculateFocusRingOffset(
+                            focusPoint = focusPoint,
+                            overlaySize = overlaySize,
+                            focusBoxSize = focusBoxSize,
+                            density = density
+                        )
 
                         Box(
                             modifier = Modifier
-                                .offset(
-                                    x = with(density) { clampedX.toDp() },
-                                    y = with(density) { clampedY.toDp() }
-                                )
+                                .offset(x = offset.x.dp, y = offset.y.dp)
                                 .size(focusBoxSize)
                                 .border(2.dp, Color.Cyan, CircleShape)
                                 .clickable {
                                     manualFocusPoint = null
-                                    controller.cameraControl?.cancelFocusAndMetering()
+                                    cancelFocus(controller)
                                 }
                         )
                     }
