@@ -59,7 +59,7 @@ class SurveillanceFormViewModel @Inject constructor(
 
     private val _events = Channel<SurveillanceFormEvent>()
     val events = _events.receiveAsFlow()
-    
+
     fun onAction(action: SurveillanceFormAction) {
         viewModelScope.launch {
             when (action) {
@@ -160,7 +160,7 @@ class SurveillanceFormViewModel @Inject constructor(
                         }
                     }
                     else {
-                        emitError("Form has errors")
+                        emitError("Required fields are incomplete")
                     }
                 }
 
