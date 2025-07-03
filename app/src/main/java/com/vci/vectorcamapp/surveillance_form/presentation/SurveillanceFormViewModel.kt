@@ -47,10 +47,6 @@ class SurveillanceFormViewModel @Inject constructor(
         private const val LOCATION_TIMEOUT_MS = 30_000L
     }
 
-    init {
-        emitError("Test error toast")
-    }
-
     @Inject
     lateinit var transactionHelper: TransactionHelper
 
@@ -63,7 +59,7 @@ class SurveillanceFormViewModel @Inject constructor(
 
     private val _events = Channel<SurveillanceFormEvent>()
     val events = _events.receiveAsFlow()
-
+    
     fun onAction(action: SurveillanceFormAction) {
         viewModelScope.launch {
             when (action) {
@@ -162,6 +158,9 @@ class SurveillanceFormViewModel @Inject constructor(
                             currentSessionCache.saveSession(session, selectedSite.id)
                             _events.send(SurveillanceFormEvent.NavigateToImagingScreen)
                         }
+                    }
+                    else {
+                        emitError("Form has errors")
                     }
                 }
 
@@ -425,6 +424,7 @@ class SurveillanceFormViewModel @Inject constructor(
                     is TimeoutCancellationException -> LocationError.GPS_TIMEOUT
                     else -> LocationError.UNKNOWN
                 }
+                emitError("Error getting location")
                 Result.Error(error)
             }
 
@@ -433,6 +433,7 @@ class SurveillanceFormViewModel @Inject constructor(
                     it.copy(latitude = latitude, longitude = longitude)
                 }
             }.onError { error ->
+                emitError("Error getting location")
                 _state.update { it.copy(locationError = error) }
             }
         }

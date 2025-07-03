@@ -32,9 +32,7 @@ class CompleteSessionFormViewModel @Inject constructor(
 
             when {
                 sessionAndSite == null -> {
-                    _state.update {
-                        emitError("No site data found for session")
-                    }
+                    emitError("No site data found for session")
                 }
 
                 sessionAndSurveillanceForm == null -> {

@@ -39,6 +39,7 @@ class RegistrationViewModel @Inject constructor(
                 RegistrationAction.ConfirmRegistration -> {
                     val selectedProgram = _state.value.programs.find { it.name == _state.value.selectedProgramName }
                     if (selectedProgram == null) {
+                        emitError("Program not found")
                         Log.e(
                             "REGISTRATION_ERROR",
                             "Program not found for name ${_state.value.selectedProgramName}"

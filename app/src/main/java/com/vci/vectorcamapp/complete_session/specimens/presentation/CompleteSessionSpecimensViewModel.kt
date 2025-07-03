@@ -29,9 +29,7 @@ class CompleteSessionSpecimensViewModel @Inject constructor(
         viewModelScope.launch {
             val sessionWithSpecimens = sessionRepository.getSessionWithSpecimens(sessionId)
             if (sessionWithSpecimens == null) {
-                _state.update {
-                    emitError("No data found for session")
-                }
+                emitError("No data found for session")
             } else {
                 _state.update {
                     it.copy(
