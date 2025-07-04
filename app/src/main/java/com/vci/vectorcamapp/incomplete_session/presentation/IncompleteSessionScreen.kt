@@ -43,9 +43,7 @@ fun IncompleteSessionScreen(
 
     val pageHeaderHeight = 0.25f
     val pageBodyOffset = 0.2f
-
-    LocalColors.current
-
+    
     Scaffold (
         modifier = modifier
     ){ systemBars ->
