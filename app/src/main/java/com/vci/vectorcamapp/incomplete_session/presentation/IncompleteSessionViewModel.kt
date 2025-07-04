@@ -45,6 +45,10 @@ class IncompleteSessionViewModel @Inject constructor(
                         _events.send(IncompleteSessionEvent.NavigateToSurveillanceForm)
                     }
                 }
+
+                is IncompleteSessionAction.NavigateBack -> {
+                    _events.send(IncompleteSessionEvent.NavigateBack)
+                }
             }
         }
     }

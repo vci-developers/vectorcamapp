@@ -39,7 +39,6 @@ import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionLi
 import com.vci.vectorcamapp.complete_session.specimens.presentation.CompleteSessionSpecimensAction
 import com.vci.vectorcamapp.complete_session.specimens.presentation.CompleteSessionSpecimensScreen
 import com.vci.vectorcamapp.complete_session.specimens.presentation.CompleteSessionSpecimensViewModel
-import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionAction
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionEvent
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionScreen
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionViewModel
@@ -185,6 +184,7 @@ fun NavGraph(startDestination: Destination) {
                 when (event) {
                     IncompleteSessionEvent.NavigateToSurveillanceForm ->
                         navController.navigate(Destination.SurveillanceForm)
+                    IncompleteSessionEvent.NavigateBack -> navController.popBackStack()
                 }
             }
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
