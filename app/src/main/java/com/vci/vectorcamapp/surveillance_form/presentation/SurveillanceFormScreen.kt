@@ -30,9 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -50,9 +48,10 @@ import com.vci.vectorcamapp.surveillance_form.presentation.components.DropdownFi
 import com.vci.vectorcamapp.surveillance_form.presentation.components.TextEntryField
 import com.vci.vectorcamapp.surveillance_form.presentation.components.ToggleField
 import com.vci.vectorcamapp.ui.extensions.customShadow
+import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.LocalColors
-import com.vci.vectorcamapp.ui.theme.LocalDimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import com.vci.vectorcamapp.ui.theme.screenHeightFraction
 
 @Composable
 fun SurveillanceFormScreen(
@@ -60,8 +59,6 @@ fun SurveillanceFormScreen(
     onAction: (SurveillanceFormAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val dims = LocalDimensions.current
-
     val pageHeaderHeight = 0.25f
     val pageBodyOffset = 0.2f
 
@@ -74,14 +71,14 @@ fun SurveillanceFormScreen(
                 onBack = { onAction(SurveillanceFormAction.SaveSessionProgress) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightFraction(pageHeaderHeight)
+                    .height(screenHeightFraction(pageHeaderHeight))
             )
 
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .offsetYFraction(pageBodyOffset)
-                    .padding(horizontal = dims.paddingMedium)
+                    .offset(y = screenHeightFraction(pageBodyOffset))
+                    .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
                     .padding(systemBars)
             ) {
 
@@ -95,7 +92,7 @@ fun SurveillanceFormScreen(
                             singleLine = true,
                             error = state.surveillanceFormErrors.collectorName
                         )
-                        Spacer(Modifier.height(dims.spacingSmall))
+                        Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
                         TextEntryField(
                             label = "Collector Title",
@@ -104,7 +101,7 @@ fun SurveillanceFormScreen(
                             singleLine = true,
                             error = state.surveillanceFormErrors.collectorTitle
                         )
-                        Spacer(Modifier.height(dims.spacingSmall))
+                        Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
                         DatePickerField(
                             label = "Collection Date",
@@ -113,7 +110,7 @@ fun SurveillanceFormScreen(
                             error = state.surveillanceFormErrors.collectionDate,
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(Modifier.height(dims.spacingSmall))
+                        Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
                         DropdownField(
                             label = "Collection Method",
@@ -130,7 +127,7 @@ fun SurveillanceFormScreen(
                             error = state.surveillanceFormErrors.collectionMethod,
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(Modifier.height(dims.spacingSmall))
+                        Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
                         DropdownField(
                             label = "Specimen Condition",
@@ -162,7 +159,7 @@ fun SurveillanceFormScreen(
                             onOptionSelected = { onAction(SurveillanceFormAction.SelectDistrict(it)) },
                             error = state.surveillanceFormErrors.district
                         )
-                        Spacer(Modifier.height(dims.spacingSmall))
+                        Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
                         if (state.selectedDistrict.isNotBlank()) {
                             DropdownField(
@@ -177,7 +174,7 @@ fun SurveillanceFormScreen(
                                 },
                                 error = state.surveillanceFormErrors.sentinelSite
                             )
-                            Spacer(Modifier.height(dims.spacingSmall))
+                            Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
                         }
 
                         TextEntryField(
@@ -187,7 +184,7 @@ fun SurveillanceFormScreen(
                             singleLine = true,
                             error = state.surveillanceFormErrors.houseNumber
                         )
-                        Spacer(Modifier.height(dims.spacingSmall))
+                        Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
                         TextEntryField(
                             label = "Number of House Occupants",
@@ -198,12 +195,12 @@ fun SurveillanceFormScreen(
                             singleLine = true,
                             keyboardType = KeyboardType.Number,
                         )
-                        Spacer(Modifier.height(dims.spacingSmall))
+                        Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
                         when {
                             state.latitude != null && state.longitude != null -> {
                                 Text("Latitude: ${state.latitude}")
-                                Spacer(Modifier.height(dims.spacingSmall))
+                                Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
                                 Text("Longitude: ${state.longitude}")
                             }
 
@@ -214,7 +211,7 @@ fun SurveillanceFormScreen(
                                             state.locationError.toString(context)
                                 )
                                 if (state.locationError == LocationError.GPS_TIMEOUT) {
-                                    Spacer(Modifier.height(dims.spacingSmall))
+                                    Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
                                     val colors = LocalColors.current
                                     Button(
@@ -231,11 +228,11 @@ fun SurveillanceFormScreen(
                                                             colors.buttonGradientRight
                                                         )
                                                     ),
-                                                    shape = RoundedCornerShape(dims.cornerRadiusMedium)
+                                                    shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
                                                 )
                                                 .padding(
-                                                    horizontal = dims.paddingMedium,
-                                                    vertical = dims.paddingSmall
+                                                    horizontal = MaterialTheme.dimensions.paddingMedium,
+                                                    vertical = MaterialTheme.dimensions.paddingSmall
                                                 ),
                                             contentAlignment = Alignment.Center
                                         ) {
@@ -252,7 +249,7 @@ fun SurveillanceFormScreen(
                             else -> {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     CircularProgressIndicator()
-                                    Spacer(Modifier.width(dims.spacingSmall))
+                                    Spacer(Modifier.width(MaterialTheme.dimensions.spacingSmall))
                                     Text("Getting location…")
                                 }
                             }
@@ -275,7 +272,7 @@ fun SurveillanceFormScreen(
                             singleLine = true,
                             keyboardType = KeyboardType.Number
                         )
-                        Spacer(Modifier.height(dims.spacingSmall))
+                        Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
                         state.surveillanceForm.llinType?.let { current ->
                             DropdownField(
@@ -287,7 +284,7 @@ fun SurveillanceFormScreen(
                                 },
                                 error = state.surveillanceFormErrors.llinType
                             )
-                            Spacer(Modifier.height(dims.spacingSmall))
+                            Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
                         }
 
                         state.surveillanceForm.llinBrand?.let { current ->
@@ -300,7 +297,7 @@ fun SurveillanceFormScreen(
                                 },
                                 error = state.surveillanceFormErrors.llinBrand
                             )
-                            Spacer(Modifier.height(dims.spacingSmall))
+                            Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
                         }
 
                         state.surveillanceForm.numPeopleSleptUnderLlin?.let { current ->
@@ -313,7 +310,7 @@ fun SurveillanceFormScreen(
                                 singleLine = true,
                                 keyboardType = KeyboardType.Number
                             )
-                            Spacer(Modifier.height(dims.spacingSmall))
+                            Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
                         }
 
                         ToggleField(
@@ -327,7 +324,7 @@ fun SurveillanceFormScreen(
                                 )
                             }
                         )
-                        Spacer(Modifier.height(dims.spacingSmall))
+                        Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
                         if (state.surveillanceForm.wasIrsConducted) {
                             TextEntryField(
@@ -363,8 +360,8 @@ fun SurveillanceFormScreen(
                         onClick = { onAction(SurveillanceFormAction.SubmitSurveillanceForm) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = dims.paddingLarge)
-                            .height(dims.componentHeightLarge),
+                            .padding(vertical = MaterialTheme.dimensions.paddingLarge)
+                            .height(MaterialTheme.dimensions.componentHeightLarge),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent
                         ),
@@ -380,7 +377,7 @@ fun SurveillanceFormScreen(
                                             colors.buttonGradientRight
                                         )
                                     ),
-                                    shape = RoundedCornerShape(dims.cornerRadiusMedium)
+                                    shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
@@ -394,7 +391,7 @@ fun SurveillanceFormScreen(
                 }
 
                 item {
-                    Spacer(modifier = Modifier.heightFraction(pageBodyOffset))
+                    Spacer(modifier = Modifier.height(screenHeightFraction(pageBodyOffset)))
                 }
             }
         }
@@ -422,7 +419,6 @@ private fun PageHeader(
     modifier: Modifier = Modifier
 ) {
     val colors = LocalColors.current
-    val dims   = LocalDimensions.current
 
     Column(
         modifier
@@ -436,18 +432,18 @@ private fun PageHeader(
                 )
             )
             .padding(
-                horizontal = dims.paddingMedium,
-                vertical   = dims.paddingMedium
+                horizontal = MaterialTheme.dimensions.paddingMedium,
+                vertical   = MaterialTheme.dimensions.paddingMedium
             )
     ) {
         IconButton(onClick = onBack) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
         }
 
-        Spacer(Modifier.height(dims.spacingMedium))
+        Spacer(Modifier.height(MaterialTheme.dimensions.spacingMedium))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Spacer(modifier = Modifier.width(dims.spacingMedium))
+            Spacer(modifier = Modifier.width(MaterialTheme.dimensions.spacingMedium))
             Column {
                 Text(
                     text  = title,
@@ -469,53 +465,30 @@ private fun SectionCard(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val dims = LocalDimensions.current
     val colors = LocalColors.current
 
     Column(
         modifier
             .fillMaxWidth()
-            .padding(vertical = dims.paddingMedium)
+            .padding(vertical = MaterialTheme.dimensions.paddingMedium)
             .customShadow(
                 color = colors.cardGlow.copy(alpha = 0.25f),
-                offsetY = dims.shadowOffsetYSmall,
-                blurRadius = dims.shadowBlurMedium,
-                cornerRadius = dims.cornerRadiusMedium,
+                offsetY = MaterialTheme.dimensions.shadowOffsetYSmall,
+                blurRadius = MaterialTheme.dimensions.shadowBlurMedium,
+                cornerRadius = MaterialTheme.dimensions.cornerRadiusMedium,
                 spread = 0.dp
             )
             .background(
                 color = colors.cardBackground,
-                shape = RoundedCornerShape(dims.cornerRadiusMedium)
+                shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
             )
-            .padding(dims.paddingLarge)
+            .padding(MaterialTheme.dimensions.paddingLarge)
     ) {
         Text(
             text  = sectionTitle,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
         )
-        Spacer(Modifier.height(dims.spacingMedium))
+        Spacer(Modifier.height(MaterialTheme.dimensions.spacingMedium))
         content()
     }
-}
-
-@Composable
-fun Modifier.heightFraction(fraction: Float): Modifier {
-    return this.then(
-        with(LocalDensity.current) {
-            Modifier.height(
-                (LocalConfiguration.current.screenHeightDp * fraction).dp
-            )
-        }
-    )
-}
-
-@Composable
-fun Modifier.offsetYFraction(fraction: Float): Modifier {
-    return this.then(
-        with(LocalDensity.current) {
-            Modifier.offset(
-                y = (LocalConfiguration.current.screenHeightDp * fraction).dp
-            )
-        }
-    )
 }
