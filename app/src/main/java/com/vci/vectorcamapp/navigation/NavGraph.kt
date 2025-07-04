@@ -186,17 +186,15 @@ fun NavGraph(startDestination: Destination) {
             val state by viewModel.state.collectAsStateWithLifecycle()
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    IncompleteSessionEvent.NavigateBack -> navController.popBackStack()
-                    IncompleteSessionEvent.NavigateToSurveillanceForm -> navController.navigate(
-                        Destination.SurveillanceForm
-                    )
+                    IncompleteSessionEvent.NavigateToSurveillanceForm ->
+                        navController.navigate(Destination.SurveillanceForm)
+                    IncompleteSessionEvent.NavigateToMain -> navController.popBackStack()
                 }
             }
-            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            Scaffold(modifier = Modifier.fillMaxSize()) {
                 IncompleteSessionScreen(
                     state = state,
-                    onAction = viewModel::onAction,
-                    modifier = Modifier.padding(innerPadding)
+                    onAction = viewModel::onAction
                 )
             }
         }

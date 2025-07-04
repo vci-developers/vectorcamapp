@@ -46,8 +46,8 @@ class IncompleteSessionViewModel @Inject constructor(
                     }
                 }
 
-                is IncompleteSessionAction.NavigateBack -> {
-                    _events.send(IncompleteSessionEvent.NavigateBack)
+                is IncompleteSessionAction.ReturnToMain -> {
+                    _events.send(IncompleteSessionEvent.NavigateToMain)
                 }
             }
         }
