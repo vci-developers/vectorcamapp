@@ -188,13 +188,15 @@ fun NavGraph(startDestination: Destination) {
                 when (event) {
                     IncompleteSessionEvent.NavigateToSurveillanceForm ->
                         navController.navigate(Destination.SurveillanceForm)
-                    IncompleteSessionEvent.NavigateToMain -> navController.popBackStack()
+                    IncompleteSessionEvent.NavigateToLandingScreen -> navController.popBackStack()
                 }
             }
-            Scaffold(modifier = Modifier.fillMaxSize()) {
+            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 IncompleteSessionScreen(
                     state = state,
-                    onAction = viewModel::onAction
+                    onAction = viewModel::onAction,
+                    modifier = Modifier.padding(innerPadding)
+
                 )
             }
         }

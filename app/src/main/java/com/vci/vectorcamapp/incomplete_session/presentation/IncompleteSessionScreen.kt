@@ -21,17 +21,18 @@ import com.vci.vectorcamapp.ui.theme.screenHeightFraction
 @Composable
 fun IncompleteSessionScreen(
     state: IncompleteSessionState,
-    onAction: (IncompleteSessionAction) -> Unit
+    onAction: (IncompleteSessionAction) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val pageHeaderHeight = 0.25f
     val pageBodyOffset = 0.2f
 
-    Box(Modifier.fillMaxSize()) {
+    Box(modifier.fillMaxSize()) {
 
         PageHeader(
             title     = "Incomplete Sessions",
             subtitle  = "Click on session to resume",
-            onBack    = { onAction(IncompleteSessionAction.ReturnToMain) },
+            onBack    = { onAction(IncompleteSessionAction.ReturnToLandingScreen) },
             modifier  = Modifier
                 .fillMaxWidth()
                 .height(screenHeightFraction(pageHeaderHeight))
