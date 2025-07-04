@@ -97,6 +97,9 @@ fun RegistrationScreen(
 
                     DropdownField(
                         label = "Program",
+                        labelEnabled = false,
+                        highlightBorder = true,
+                        arrowAlwaysDown = false,
                         options = state.programs.map { ProgramOption(it.name) },
                         selectedOption = ProgramOption(state.selectedProgramName),
                         onOptionSelected = { onAction(RegistrationAction.SelectProgram(it)) },
