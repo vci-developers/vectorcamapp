@@ -86,6 +86,13 @@ fun <T : DropdownOption> DropdownField(
             OutlinedTextField(
                 value = selectedOption?.label ?: "",
                 onValueChange = { },
+                placeholder = {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(start = MaterialTheme.dimensions.paddingSmall)
+                    )
+                },
                 shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall),
                 singleLine = true,
                 enabled = false,
