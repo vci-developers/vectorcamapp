@@ -95,7 +95,6 @@ fun RegistrationScreen(
 
                     DropdownField(
                         label = "Program",
-                        labelEnabled = false,
                         highlightBorder = true,
                         arrowAlwaysDown = false,
                         options = state.programs.map { ProgramOption(it.name) },

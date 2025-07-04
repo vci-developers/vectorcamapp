@@ -48,7 +48,6 @@ fun <T : DropdownOption> DropdownField(
     selectedOption: T?,
     onOptionSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
-    labelEnabled: Boolean = true,
     highlightBorder: Boolean = false,
     arrowAlwaysDown: Boolean = true,
     menuItemContent: @Composable (T) -> Unit = { Text(text = it.label) },
@@ -58,12 +57,10 @@ fun <T : DropdownOption> DropdownField(
     var expanded by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxWidth()) {
-        if (labelEnabled) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-            )
-        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+        )
 
         BoxWithConstraints(
             modifier = modifier
