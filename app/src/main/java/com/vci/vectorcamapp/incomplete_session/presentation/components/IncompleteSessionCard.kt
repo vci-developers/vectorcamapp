@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.ui.extensions.customShadow
+import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.LocalColors
 import com.vci.vectorcamapp.ui.theme.LocalDimensions
 import java.text.SimpleDateFormat
@@ -30,7 +31,6 @@ fun IncompleteSessionCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val dims   = LocalDimensions.current
     val colors = LocalColors.current
 
     val titleFormatter  = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
@@ -41,12 +41,12 @@ fun IncompleteSessionCard(
             .fillMaxWidth()
             .customShadow(
                 color        = colors.cardGlow.copy(alpha = 0.25f),
-                offsetY      = dims.shadowOffsetYSmall,
-                blurRadius   = dims.shadowBlurMedium,
-                cornerRadius = dims.cornerRadiusMedium
+                offsetY      = MaterialTheme.dimensions.shadowOffsetYSmall,
+                blurRadius   = MaterialTheme.dimensions.shadowBlurMedium,
+                cornerRadius = MaterialTheme.dimensions.cornerRadiusMedium
             )
             .clickable(onClick = onClick),
-        shape  = RoundedCornerShape(dims.cornerRadiusMedium),
+        shape  = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium),
         colors = androidx.compose.material3.CardDefaults.cardColors(
             containerColor = colors.cardBackground
         )
@@ -54,7 +54,7 @@ fun IncompleteSessionCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(dims.paddingLarge),
+                .padding(MaterialTheme.dimensions.paddingLarge),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(Modifier.weight(1f)) {
@@ -65,12 +65,12 @@ fun IncompleteSessionCard(
 
                 Box(
                     modifier = Modifier
-                        .padding(top = dims.spacingSmall)
+                        .padding(top = MaterialTheme.dimensions.spacingSmall)
                         .background(
                             color = colors.pillBackground,
-                            shape = RoundedCornerShape(dims.cornerRadiusSmall)
+                            shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
                         )
-                        .padding(horizontal = dims.paddingMedium, vertical = 4.dp)
+                        .padding(horizontal = MaterialTheme.dimensions.paddingMedium, vertical = 4.dp)
                 ) {
                     Text(
                         text  = "Session ID: ${session.localId}",
@@ -79,7 +79,7 @@ fun IncompleteSessionCard(
                     )
                 }
 
-                Spacer(Modifier.height(dims.spacingMedium))
+                Spacer(Modifier.height(MaterialTheme.dimensions.spacingMedium))
                 Text(
                     text  = "Created: ${detailFormatter.format(session.createdAt)}",
                     style = MaterialTheme.typography.bodySmall
@@ -90,13 +90,13 @@ fun IncompleteSessionCard(
                 )
             }
 
-            Spacer(Modifier.width(dims.spacingSmall))
+            Spacer(Modifier.width(MaterialTheme.dimensions.spacingSmall))
 
             Icon(
                 imageVector   = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = "Resume",
                 modifier = Modifier
-                    .size(dims.iconSizeLarge + 6.dp)
+                    .size(MaterialTheme.dimensions.iconSizeLarge + 6.dp)
                     .background(colors.iconBackground, CircleShape)
                     .padding(12.dp),
                 tint = colors.icon

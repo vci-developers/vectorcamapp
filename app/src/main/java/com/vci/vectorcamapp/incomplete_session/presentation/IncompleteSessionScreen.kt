@@ -25,13 +25,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.incomplete_session.presentation.components.IncompleteSessionCard
+import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.LocalColors
-import com.vci.vectorcamapp.ui.theme.LocalDimensions
+import com.vci.vectorcamapp.ui.theme.screenHeightFraction
 
 @Composable
 fun IncompleteSessionScreen(
@@ -39,8 +37,6 @@ fun IncompleteSessionScreen(
     onAction: (IncompleteSessionAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val dims = LocalDimensions.current
-
     val pageHeaderHeight = 0.25f
     val pageBodyOffset = 0.2f
     
@@ -55,16 +51,16 @@ fun IncompleteSessionScreen(
                 onBack    = { onAction(IncompleteSessionAction.NavigateBack) },
                 modifier  = Modifier
                     .fillMaxWidth()
-                    .heightFraction(pageHeaderHeight)
+                    .height(screenHeightFraction(pageHeaderHeight))
             )
 
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .offsetYFraction(pageBodyOffset)
-                    .padding(horizontal = dims.paddingMedium)
+                    .offset(y = screenHeightFraction(pageBodyOffset))
+                    .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
                     .padding(systemBars),
-                verticalArrangement = Arrangement.spacedBy(dims.spacingMedium)
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
             ) {
                 items(
                     items = state.sessions.asReversed(),
@@ -77,7 +73,7 @@ fun IncompleteSessionScreen(
                 }
 
                 item {
-                    Spacer(modifier = Modifier.heightFraction(pageBodyOffset))
+                    Spacer(modifier = Modifier.height(screenHeightFraction(pageBodyOffset)))
                 }
             }
         }
@@ -92,7 +88,6 @@ private fun PageHeader(
     modifier: Modifier = Modifier
 ) {
     val colors = LocalColors.current
-    val dims   = LocalDimensions.current
 
     Column(
         modifier
@@ -102,45 +97,24 @@ private fun PageHeader(
                     listOf(colors.headerGradientTopLeft, colors.headerGradientBottomRight)
                 )
             )
-            .padding(horizontal = dims.paddingMedium, vertical = dims.paddingMedium)
+            .padding(horizontal = MaterialTheme.dimensions.paddingMedium, vertical = MaterialTheme.dimensions.paddingMedium)
     ) {
         IconButton(onClick = onBack) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
         }
-        Spacer(Modifier.height(dims.spacingMedium))
+        Spacer(Modifier.height(MaterialTheme.dimensions.spacingMedium))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Spacer(modifier = Modifier.width(dims.spacingMedium))
+            Spacer(modifier = Modifier.width(MaterialTheme.dimensions.spacingMedium))
             Column {
                 Text(
                     text  = title,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 )
                 Text(
-                    text  = "Click on session to resume",
+                    text  = subtitle,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
         }
     }
-}
-
-@Composable
-fun Modifier.heightFraction(fraction: Float): Modifier {
-    return this.then(
-        with(LocalDensity.current) {
-            Modifier.height(
-                (LocalConfiguration.current.screenHeightDp * fraction).dp
-            )
-        }
-    )
-}
-@Composable
-fun Modifier.offsetYFraction(fraction: Float): Modifier {
-    return this.then(
-        with(LocalDensity.current) {
-            Modifier.offset(
-                y = (LocalConfiguration.current.screenHeightDp * fraction).dp
-            )
-        }
-    )
 }
