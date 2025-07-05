@@ -20,7 +20,7 @@ object ErrorMessageBus {
     }
 
     suspend fun emit(error: Error, context: Context, duration: SnackbarDuration = SnackbarDuration.Long) {
-        emit(error.toString(context), duration)
+        emit(context.getString(error.messageResId), duration)
     }
 
     fun clearLastMessage() {

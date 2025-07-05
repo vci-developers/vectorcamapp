@@ -76,7 +76,7 @@ fun DatePickerField(
 
         if (error != null) {
             Text(
-                text = error.toString(context),
+                text = context.getString(error.messageResId),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth(),

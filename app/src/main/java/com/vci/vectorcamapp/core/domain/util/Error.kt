@@ -1,3 +1,5 @@
 package com.vci.vectorcamapp.core.domain.util
 
-interface Error
+interface Error {
+    val messageResId: Int
+}

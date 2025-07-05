@@ -89,7 +89,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 when (val syncDeviceResult = syncDeviceIfNeeded(localDevice, localProgramId)) {
                     is DomainResult.Success -> syncDeviceResult.data
                     is DomainResult.Error -> return retryOrFailure(
-                        syncDeviceResult.error.toString(context)
+                        context.getString(syncDeviceResult.error.messageResId)
                     )
                 }
 
@@ -97,7 +97,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 syncSessionIfNeeded(localSession, localSiteId, syncedDevice.id)) {
                 is DomainResult.Success -> syncSessionResult.data
                 is DomainResult.Error -> return retryOrFailure(
-                    syncSessionResult.error.toString(context)
+                    context.getString(syncSessionResult.error.messageResId)
                 )
             }
             if (syncedSession.remoteId == null) {
@@ -110,7 +110,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 syncSurveillanceFormIfNeeded(
                     localSurveillanceForm, syncedSession.localId, syncedSession.remoteId
                 ).onError { error ->
-                    return retryOrFailure(error.toString(context))
+                    return retryOrFailure(context.getString(error.messageResId))
                 }
             }
 
@@ -122,7 +122,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 ).onSuccess {
                     showSpecimenUploadProgress(index + 1, specimensAndBoundingBoxes.size)
                 }.onError { error ->
-                    return retryOrFailure(error.toString(context))
+                    return retryOrFailure(context.getString(error.messageResId))
                 }
             }
 
@@ -193,7 +193,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         } catch (e: IOException) {
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
-            DomainResult.Error(NetworkError.UNKNOWN)
+            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
 
@@ -263,7 +263,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         } catch (e: IOException) {
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
-            DomainResult.Error(NetworkError.UNKNOWN)
+            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
 
@@ -331,7 +331,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         } catch (e: IOException) {
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
-            DomainResult.Error(NetworkError.UNKNOWN)
+            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
 
@@ -420,7 +420,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         } catch (e: IOException) {
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
-            DomainResult.Error(NetworkError.UNKNOWN)
+            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
 

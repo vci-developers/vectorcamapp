@@ -416,9 +416,9 @@ class SurveillanceFormViewModel @Inject constructor(
                 Result.Success(loc.latitude.toFloat() to loc.longitude.toFloat())
             } catch (e: Exception) {
                 val error = when (e) {
-                    is SecurityException -> SurveillanceFormError.LOCATION_GPS_TIMEOUT
+                    is SecurityException -> SurveillanceFormError.LOCATION_PERMISSION_DENIED
                     is TimeoutCancellationException -> SurveillanceFormError.LOCATION_GPS_TIMEOUT
-                    else -> SurveillanceFormError.UNKNOWN
+                    else -> SurveillanceFormError.UNKNOWN_ERROR
                 }
                 Result.Error(error)
             }

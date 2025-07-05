@@ -142,7 +142,7 @@ fun <T : DropdownOption> DropdownField(
 
         if (error != null) {
             Text(
-                text = error.toString(context),
+                text = context.getString(error.messageResId),
                 color = MaterialTheme.colors.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth(),
