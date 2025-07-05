@@ -43,10 +43,6 @@ class CompleteSessionSpecimensViewModel @Inject constructor(
                         specimens = sessionWithSpecimens.specimens,
                     )
                 }
-
-                if (sessionWithSpecimens.specimens.isEmpty()) {
-                    emitError(CompleteSessionError.NO_SPECIMENS)
-                }
             }
         }
     }

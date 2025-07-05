@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.error.collectEmptyStateError
 import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -36,13 +35,6 @@ class IncompleteSessionViewModel @Inject constructor(
 
     private val _events = Channel<IncompleteSessionEvent>()
     val events = _events.receiveAsFlow()
-
-    init {
-        viewModelScope.collectEmptyStateError(
-            flow = _incompleteSessions,
-            emitError = { emitError(IncompleteSessionError.NO_INCOMPLETE_SESSIONS) }
-        )
-    }
 
     fun onAction(action: IncompleteSessionAction) {
         viewModelScope.launch {

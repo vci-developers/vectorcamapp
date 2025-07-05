@@ -41,7 +41,7 @@ class CompleteSessionFormViewModel @Inject constructor(
             val surveillanceForm = sessionAndSurveillanceForm?.surveillanceForm
 
             if (surveillanceForm == null) {
-                emitError(CompleteSessionError.NO_SURVEILLANCE_FORM)
+                emitError(CompleteSessionError.SURVEILLANCE_FORM_NOT_FOUND)
             }
 
             _state.update {

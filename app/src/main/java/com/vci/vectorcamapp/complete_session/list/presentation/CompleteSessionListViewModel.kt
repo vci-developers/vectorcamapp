@@ -2,10 +2,8 @@ package com.vci.vectorcamapp.complete_session.list.presentation
 
 import android.content.Context
 import androidx.lifecycle.viewModelScope
-import com.vci.vectorcamapp.complete_session.domain.util.CompleteSessionError
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.error.collectEmptyStateError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
@@ -36,12 +34,6 @@ class CompleteSessionListViewModel @Inject constructor(
 
     private val _events = Channel<CompleteSessionListEvent>()
     val events = _events.receiveAsFlow()
-
-    init {
-        viewModelScope.collectEmptyStateError(_completeSessionsAndSites) {
-            emitError(CompleteSessionError.NO_COMPLETE_SESSIONS)
-        }
-    }
 
     fun onAction(action: CompleteSessionListAction) {
         when (action) {

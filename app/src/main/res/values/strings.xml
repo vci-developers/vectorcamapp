@@ -148,9 +148,6 @@
     <!-- Incomplete session error: Session retrieval failed -->
     <string name="incomplete_session_session_retrieval_failed">Unable to retrieve session. Please try again.</string>
 
-    <!-- Incomplete session error: No incomplete sessions -->
-    <string name="incomplete_session_no_incomplete_sessions">No incomplete sessions found.</string>
-
     <!-- Incomplete session error: Unknown error -->
     <string name="incomplete_session_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
@@ -160,14 +157,8 @@
     <!-- Complete session error: Site not found -->
     <string name="complete_session_site_not_found">Site not found. Please try again.</string>
 
-    <!-- Complete session error: No complete sessions -->
-    <string name="complete_session_no_complete_sessions">No complete sessions found.</string>
-
-    <!-- Complete session error: No surveillance form -->
-    <string name="complete_session_no_surveillance_form">No surveillance form found for this session.</string>"
-
-    <!-- Complete session error: No specimens -->
-    <string name="complete_session_no_specimens">No specimens found for this session.</string>"
+    <!-- Complete session error: Surveillance form not found -->
+    <string name="complete_session_surveillance_form_not_found">No surveillance form found for this session.</string>"
 
     <!-- Complete session error: Unknown error -->
     <string name="complete_session_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>"
