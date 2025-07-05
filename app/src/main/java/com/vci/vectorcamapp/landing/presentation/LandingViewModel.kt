@@ -6,7 +6,6 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,12 +18,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LandingViewModel @Inject constructor(
+    private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(LandingState())
     val state: StateFlow<LandingState> = _state.onStart {
-        launchResumeSessionDialogIfExists()
+        loadLandingDetails()
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000L), LandingState()
     )
@@ -66,18 +66,33 @@ class LandingViewModel @Inject constructor(
         }
     }
 
-    private fun launchResumeSessionDialogIfExists() {
+    private fun loadLandingDetails() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
+
+            val programId = deviceCache.getProgramId()
+            if (programId == null) {
+                _events.send(LandingEvent.NavigateBackToRegistrationScreen)
+                return@launch
+            }
+
+            val program = programRepository.getProgramById(programId)
+            if (program == null) {
+                _events.send(LandingEvent.NavigateBackToRegistrationScreen)
+                return@launch
+            }
 
             val currentSession = currentSessionCache.getSession()
             if (currentSession != null) {
                 _state.update { it.copy(showResumeDialog = true) }
             }
 
-            delay(3000L)
-
-            _state.update { it.copy(isLoading = false) }
+            _state.update {
+                it.copy(
+                    enrolledProgram = program,
+                    isLoading = false
+                )
+            }
         }
     }
 }

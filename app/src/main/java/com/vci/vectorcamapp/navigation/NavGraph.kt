@@ -39,6 +39,9 @@ import com.vci.vectorcamapp.complete_session.specimens.presentation.CompleteSess
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionEvent
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionScreen
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionViewModel
+import com.vci.vectorcamapp.landing.presentation.LandingEvent
+import com.vci.vectorcamapp.landing.presentation.LandingScreen
+import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import com.vci.vectorcamapp.registration.presentation.RegistrationEvent
 import com.vci.vectorcamapp.registration.presentation.RegistrationScreen
 import com.vci.vectorcamapp.registration.presentation.RegistrationViewModel
@@ -72,7 +75,7 @@ fun NavGraph(startDestination: Destination) {
             }
 
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                 RegistrationScreen(
+                RegistrationScreen(
                     state = state,
                     onAction = viewModel::onAction,
                     modifier = Modifier.padding(innerPadding)
@@ -96,6 +99,10 @@ fun NavGraph(startDestination: Destination) {
 
                     LandingEvent.NavigateToCompleteSessionsScreen -> navController.navigate(
                         Destination.CompleteSessionList
+                    )
+
+                    LandingEvent.NavigateBackToRegistrationScreen -> navController.popBackStack(
+                        Destination.Registration, false
                     )
                 }
             }
@@ -124,13 +131,13 @@ fun NavGraph(startDestination: Destination) {
                         Destination.Imaging
                     )
 
-                    SurveillanceFormEvent.NavigateBackToLandingScreen -> {
-                        navController.popBackStack(Destination.Landing, false)
-                    }
+                    SurveillanceFormEvent.NavigateBackToLandingScreen -> navController.popBackStack(
+                        Destination.Landing, false
+                    )
 
-                    SurveillanceFormEvent.NavigateBackToRegistrationScreen -> {
-                        navController.popBackStack(Destination.Registration, false)
-                    }
+                    SurveillanceFormEvent.NavigateBackToRegistrationScreen -> navController.popBackStack(
+                        Destination.Registration, false
+                    )
                 }
             }
 
@@ -173,8 +180,9 @@ fun NavGraph(startDestination: Destination) {
             val state by viewModel.state.collectAsStateWithLifecycle()
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    IncompleteSessionEvent.NavigateToSurveillanceForm ->
-                        navController.navigate(Destination.SurveillanceForm)
+                    IncompleteSessionEvent.NavigateToSurveillanceForm -> navController.navigate(
+                        Destination.SurveillanceForm
+                    )
                 }
             }
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -190,14 +198,13 @@ fun NavGraph(startDestination: Destination) {
             val state by viewModel.state.collectAsStateWithLifecycle()
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    is CompleteSessionListEvent.NavigateToCompleteSessionDetails -> {
-                        navController.navigate(Destination.CompleteSessionDetails(event.sessionId.toString()))
-                    }
+                    is CompleteSessionListEvent.NavigateToCompleteSessionDetails -> navController.navigate(
+                        Destination.CompleteSessionDetails(event.sessionId.toString())
+                    )
                 }
             }
             CompleteSessionListScreen(
-                state = state,
-                onAction = viewModel::onAction
+                state = state, onAction = viewModel::onAction
             )
         }
         composable<Destination.CompleteSessionDetails> {
@@ -229,13 +236,11 @@ fun NavGraph(startDestination: Destination) {
                         Tab(
                             selected = selectedTab.intValue == TAB_SESSION_FORM,
                             onClick = { selectedTab.intValue = TAB_SESSION_FORM },
-                            text = { Text("Details") }
-                        )
+                            text = { Text("Details") })
                         Tab(
                             selected = selectedTab.intValue == TAB_SESSION_SPECIMENS,
                             onClick = { selectedTab.intValue = TAB_SESSION_SPECIMENS },
-                            text = { Text("Specimens") }
-                        )
+                            text = { Text("Specimens") })
                     }
 
                     when (selectedTab.intValue) {

@@ -82,6 +82,15 @@ class ImagingViewModel @Inject constructor(
         }
     }
 
+    private val orientationListener = object : OrientationEventListener(context) {
+        override fun onOrientationChanged(displayOrientation: Int) {
+            val currentRotation = _state.value.displayOrientation
+            if (currentRotation != displayOrientation) {
+                _state.update { it.copy(displayOrientation = displayOrientation) }
+            }
+        }
+    }
+
     private val _state = MutableStateFlow(ImagingState())
     val state: StateFlow<ImagingState> = combine(
         specimensUiFlow, _state
@@ -97,6 +106,8 @@ class ImagingViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     init {
+        orientationListener.enable()
+
         viewModelScope.launch {
             if (currentSessionCache.getSession() == null) {
                 _events.send(ImagingEvent.NavigateBackToLandingScreen)
@@ -120,7 +131,8 @@ class ImagingViewModel @Inject constructor(
 
                 is ImagingAction.ProcessFrame -> {
                     try {
-                        val bitmap = action.frame.toUprightBitmap()
+                        val displayOrientation = _state.value.displayOrientation
+                        val bitmap = action.frame.toUprightBitmap(displayOrientation)
 
                         val specimenId = inferenceRepository.readSpecimenId(bitmap)
                         val boundingBoxes = inferenceRepository.detectSpecimen(bitmap)
@@ -200,7 +212,8 @@ class ImagingViewModel @Inject constructor(
                     _state.update { it.copy(isCapturing = false) }
 
                     captureResult.onSuccess { image ->
-                        val bitmap = image.toUprightBitmap()
+                        val displayOrientation = _state.value.displayOrientation
+                        val bitmap = image.toUprightBitmap(displayOrientation)
                         image.close()
 
                         val boundingBoxesList = inferenceRepository.detectSpecimen(bitmap)
@@ -279,7 +292,8 @@ class ImagingViewModel @Inject constructor(
                             sex = _state.value.currentSpecimen.sex,
                             abdomenStatus = _state.value.currentSpecimen.abdomenStatus,
                             imageUri = imageUri,
-                            capturedAt = timestamp
+                            capturedAt = timestamp,
+                            submittedAt = null
                         )
 
                         val success = transactionHelper.runAsTransaction {
@@ -335,6 +349,7 @@ class ImagingViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
 
+        orientationListener.disable()
         inferenceRepository.closeResources()
     }
 }
