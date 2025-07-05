@@ -26,9 +26,11 @@ enum class NetworkError : Error {
             NO_INTERNET -> R.string.network_error_no_internet
             SERVER_ERROR -> R.string.network_error_server_error
             SERIALIZATION -> R.string.network_error_serialization
-            UNKNOWN -> R.string.network_error_unknown
-
             SESSION_NOT_COMPLETED -> R.string.network_error_session_not_completed
+            NOT_FOUND -> R.string.network_error_not_found
+            CONFLICT -> R.string.network_error_conflict
+            CLIENT_ERROR -> R.string.network_error_client_error
+            UNKNOWN -> R.string.network_error_unknown
         }
         return context.getString(resId)
     }

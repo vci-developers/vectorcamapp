@@ -49,7 +49,8 @@ class RegistrationViewModel @Inject constructor(
                     val device = Device(
                         id = -1,
                         model = "${Build.MANUFACTURER} ${Build.MODEL}",
-                        registeredAt = System.currentTimeMillis()
+                        registeredAt = System.currentTimeMillis(),
+                        submittedAt = null,
                     )
                     deviceCache.saveDevice(device, selectedProgram.id)
                     currentSessionCache.clearSession()

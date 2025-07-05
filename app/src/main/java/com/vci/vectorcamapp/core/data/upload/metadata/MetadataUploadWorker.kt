@@ -33,7 +33,6 @@ import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
-import com.vci.vectorcamapp.core.presentation.util.network.toString
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.io.IOException

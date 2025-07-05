@@ -34,6 +34,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.surveillance_form.domain.enums.DropdownOption
 import com.vci.vectorcamapp.surveillance_form.domain.util.FormValidationError
+import com.vci.vectorcamapp.ui.extensions.colors
+import com.vci.vectorcamapp.ui.extensions.dimensions
+import com.vci.vectorcamapp.ui.theme.screenHeightFraction
 
 @Composable
 fun <T : DropdownOption> DropdownField(

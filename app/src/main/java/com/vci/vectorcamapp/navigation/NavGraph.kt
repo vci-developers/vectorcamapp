@@ -22,9 +22,7 @@ import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
 import com.vci.vectorcamapp.imaging.presentation.ImagingEvent
 import com.vci.vectorcamapp.imaging.presentation.ImagingScreen
 import com.vci.vectorcamapp.imaging.presentation.ImagingViewModel
-import com.vci.vectorcamapp.landing.presentation.LandingEvent
 import com.vci.vectorcamapp.landing.presentation.LandingScreen
-import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import androidx.navigation.toRoute
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
 import com.vci.vectorcamapp.complete_session.form.presentation.CompleteSessionFormAction
@@ -40,7 +38,6 @@ import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionEve
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionScreen
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionViewModel
 import com.vci.vectorcamapp.landing.presentation.LandingEvent
-import com.vci.vectorcamapp.landing.presentation.LandingScreen
 import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import com.vci.vectorcamapp.registration.presentation.RegistrationEvent
 import com.vci.vectorcamapp.registration.presentation.RegistrationScreen
