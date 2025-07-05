@@ -62,41 +62,44 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             VectorcamappTheme {
-                BaseScaffold {
-                    ObserveAsEvents(events = viewModel.events) { event ->
-                        when (event) {
-                            MainEvent.LaunchPermissionRequest -> permissionLauncher.launch(permissionsRequired)
-                            MainEvent.NavigateToAppSettings -> openAppSettings()
-                            MainEvent.NavigateToLocationSettings -> openLocationSettings()
+                ObserveAsEvents(events = viewModel.events) { event ->
+                    when (event) {
+                        MainEvent.LaunchPermissionRequest -> {
+                            permissionLauncher.launch(permissionsRequired)
+                        }
+
+                        MainEvent.NavigateToAppSettings -> openAppSettings()
+
+                        MainEvent.NavigateToLocationSettings -> openLocationSettings()
+                    }
+                }
+
+                LaunchedEffect(Unit) {
+                    checkAndUpdatePermissionStatus()
+                    checkAndUpdateGpsStatus()
+                    viewModel.onAction(MainAction.RequestPermissions)
+                }
+
+                val state by viewModel.state.collectAsState()
+
+                when (state.allGranted && state.isGpsEnabled) {
+                    true -> {
+                        when (val startDestination = state.startDestination) {
+                            null -> LoadingAnimation(text = "Initializing…")
+                            else -> NavGraph(startDestination = startDestination)
                         }
                     }
 
-                    LaunchedEffect(Unit) {
-                        checkAndUpdatePermissionStatus()
-                        checkAndUpdateGpsStatus()
-                        viewModel.onAction(MainAction.RequestPermissions)
-                    }
-
-                    val state by viewModel.state.collectAsState()
-
-                    when (state.allGranted && state.isGpsEnabled) {
-                        true -> {
-                            when (val startDestination = state.startDestination) {
-                                null -> LoadingAnimation(text = "Initializing…")
-                                else -> NavGraph(startDestination = startDestination)
-                            }
-                        }
-
-                        false -> PermissionAndGpsPrompt(
+                    false -> Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        PermissionAndGpsPrompt(
                             state = state,
                             onAction = viewModel::onAction,
-                            modifier = Modifier.padding(it)
+                            modifier = Modifier.padding(innerPadding)
                         )
                     }
                 }
             }
         }
-
     }
 
 
