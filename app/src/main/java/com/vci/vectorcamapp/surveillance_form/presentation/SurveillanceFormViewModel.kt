@@ -431,7 +431,14 @@ class SurveillanceFormViewModel @Inject constructor(
                 }
                 return
             }.onError { error ->
-                emitError(error, context)
+                if (error == LocationError.GPS_TIMEOUT) {
+                    _state.update {
+                        it.copy(locationError = error)
+                    }
+                }
+                else {
+                    emitError(error, context)
+                }
             }
         }
     }
