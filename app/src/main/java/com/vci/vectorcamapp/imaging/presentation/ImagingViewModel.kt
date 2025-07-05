@@ -23,7 +23,7 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
-import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
+import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
@@ -52,14 +52,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @ApplicationContext override val context: Context,
     private val currentSessionCache: CurrentSessionCache,
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
     private val boundingBoxRepository: BoundingBoxRepository,
     private val cameraRepository: CameraRepository,
     private val inferenceRepository: InferenceRepository
-) : BaseViewModel() {
+) : CoreViewModel() {
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
@@ -113,7 +113,7 @@ class ImagingViewModel @Inject constructor(
         viewModelScope.launch {
             if (currentSessionCache.getSession() == null) {
                 _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                emitError(ImagingError.NO_ACTIVE_SESSION, context)
+                emitError(ImagingError.NO_ACTIVE_SESSION)
             }
         }
     }
@@ -149,7 +149,7 @@ class ImagingViewModel @Inject constructor(
                                 })
                         }
                     } catch (e: Exception) {
-                        emitError(ImagingError.PROCESSING_ERROR, context)
+                        emitError(ImagingError.PROCESSING_ERROR)
                     } finally {
                         action.frame.close()
                     }
@@ -221,7 +221,7 @@ class ImagingViewModel @Inject constructor(
                         val boundingBoxesList = inferenceRepository.detectSpecimen(bitmap)
 
                         if (!_state.value.isCapturing && boundingBoxesList.isEmpty()) {
-                            emitError(ImagingError.NO_SPECIMEN_FOUND, context, SnackbarDuration.Short)
+                            emitError(ImagingError.NO_SPECIMEN_FOUND, SnackbarDuration.Short)
                             return@onSuccess
                         }
 
@@ -232,7 +232,7 @@ class ImagingViewModel @Inject constructor(
                                 val (species, sex, abdomenStatus) = inferenceRepository.classifySpecimen(cropped)
 
                                 if (species == null || sex == null || abdomenStatus == null) {
-                                    emitError(ImagingError.SPECIMEN_CLASSIFICATION_FAILED, context, SnackbarDuration.Short)
+                                    emitError(ImagingError.SPECIMEN_CLASSIFICATION_FAILED, SnackbarDuration.Short)
                                 }
 
                                 _state.update {
@@ -250,19 +250,19 @@ class ImagingViewModel @Inject constructor(
                             }
 
                             0 -> {
-                                emitError(ImagingError.NO_SPECIMEN_FOUND, context, SnackbarDuration.Short)
+                                emitError(ImagingError.NO_SPECIMEN_FOUND, SnackbarDuration.Short)
                             }
 
                             else -> {
-                                emitError(ImagingError.MULTIPLE_SPECIMENS_FOUND, context, SnackbarDuration.Short)
+                                emitError(ImagingError.MULTIPLE_SPECIMENS_FOUND, SnackbarDuration.Short)
                             }
                         }
                     }.onError { error ->
                         if (error == ImagingError.NO_ACTIVE_SESSION) {
                             _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                            emitError(error, context)
+                            emitError(error)
                         } else {
-                            emitError(error, context)
+                            emitError(error)
                         }
                     }
                 }
@@ -314,11 +314,11 @@ class ImagingViewModel @Inject constructor(
                                 boundingBoxRepository.insertBoundingBox(boundingBox, specimen.id)
 
                             specimenResult.onError { error ->
-                                emitError(error, context)
+                                emitError(error)
                             }
 
                             boundingBoxResult.onError { error ->
-                                emitError(error, context)
+                                emitError(error)
                             }
 
                             (specimenResult !is Result.Error) && (boundingBoxResult !is Result.Error)
@@ -327,11 +327,11 @@ class ImagingViewModel @Inject constructor(
                         if (success) {
                             clearCurrentSpecimenStateFields()
                         } else {
-                            emitError(ImagingError.SAVE_ERROR, context)
+                            emitError(ImagingError.SAVE_ERROR)
                             cameraRepository.deleteSavedImage(imageUri)
                         }
                     }.onError { error ->
-                        emitError(error, context)
+                        emitError(error)
                     }
                 }
             }
@@ -358,4 +358,3 @@ class ImagingViewModel @Inject constructor(
         inferenceRepository.closeResources()
     }
 }
-

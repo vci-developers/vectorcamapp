@@ -2,7 +2,6 @@ package com.vci.vectorcamapp.surveillance_form.presentation
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
@@ -15,10 +14,9 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
-import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
+import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.surveillance_form.domain.use_cases.ValidationUseCases
 import com.vci.vectorcamapp.surveillance_form.domain.util.SurveillanceFormError
-import com.vci.vectorcamapp.surveillance_form.location.data.LocationError
 import com.vci.vectorcamapp.surveillance_form.location.domain.repository.LocationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -37,7 +35,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SurveillanceFormViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @ApplicationContext override val context: Context,
     private val validationUseCases: ValidationUseCases,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
@@ -45,7 +43,7 @@ class SurveillanceFormViewModel @Inject constructor(
     private val surveillanceFormRepository: SurveillanceFormRepository,
     private val sessionRepository: SessionRepository,
     private val locationRepository: LocationRepository,
-) : BaseViewModel() {
+) : CoreViewModel() {
 
     companion object {
         private const val MAX_ATTEMPTS = 2
@@ -133,22 +131,22 @@ class SurveillanceFormViewModel @Inject constructor(
                             it.district == _state.value.selectedDistrict && it.sentinelSite == _state.value.selectedSentinelSite
                         }
                         if (selectedSite == null) {
-                            emitError(SurveillanceFormError.SITE_NOT_FOUND, context)
+                            emitError(SurveillanceFormError.SITE_NOT_FOUND)
                             return@launch
                         }
 
                         val success = transactionHelper.runAsTransaction {
                             val sessionResult = sessionRepository.upsertSession(session, selectedSite.id)
-                            sessionResult.onError {
-                                emitError(it, context)
+                            sessionResult.onError { error ->
+                                emitError(error)
                                 return@runAsTransaction false
                             }
 
                             val surveillanceFormResult = surveillanceFormRepository.upsertSurveillanceForm(
                                 surveillanceForm, session.localId
                             )
-                            surveillanceFormResult.onError {
-                                emitError(it, context)
+                            surveillanceFormResult.onError { error ->
+                                emitError(error)
                                 return@runAsTransaction false
                             }
                             true
@@ -369,7 +367,7 @@ class SurveillanceFormViewModel @Inject constructor(
 
             val programId = deviceCache.getProgramId()
             if (programId == null) {
-                emitError(SurveillanceFormError.MISSING_PROGRAM_ID, context)
+                emitError(SurveillanceFormError.MISSING_PROGRAM_ID)
                 _events.send(SurveillanceFormEvent.NavigateBackToRegistrationScreen)
                 _state.update { it.copy(isLoading = false) }
                 return@launch
@@ -411,16 +409,16 @@ class SurveillanceFormViewModel @Inject constructor(
 
     private suspend fun getLocation() {
         repeat(MAX_ATTEMPTS) {
-            val result: Result<Pair<Float, Float>, LocationError> = try {
+            val result: Result<Pair<Float, Float>, SurveillanceFormError> = try {
                 val loc = withTimeout(LOCATION_TIMEOUT_MS) {
                     locationRepository.getCurrentLocation()
                 }
                 Result.Success(loc.latitude.toFloat() to loc.longitude.toFloat())
             } catch (e: Exception) {
                 val error = when (e) {
-                    is SecurityException -> LocationError.PERMISSION_DENIED
-                    is TimeoutCancellationException -> LocationError.GPS_TIMEOUT
-                    else -> LocationError.UNKNOWN
+                    is SecurityException -> SurveillanceFormError.LOCATION_GPS_TIMEOUT
+                    is TimeoutCancellationException -> SurveillanceFormError.LOCATION_GPS_TIMEOUT
+                    else -> SurveillanceFormError.UNKNOWN
                 }
                 Result.Error(error)
             }
@@ -431,13 +429,13 @@ class SurveillanceFormViewModel @Inject constructor(
                 }
                 return
             }.onError { error ->
-                if (error == LocationError.GPS_TIMEOUT) {
+                if (error == SurveillanceFormError.LOCATION_GPS_TIMEOUT) {
                     _state.update {
                         it.copy(locationError = error)
                     }
                 }
                 else {
-                    emitError(error, context)
+                    emitError(error)
                 }
             }
         }

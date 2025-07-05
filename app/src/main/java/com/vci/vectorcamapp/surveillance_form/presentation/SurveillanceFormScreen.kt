@@ -23,7 +23,7 @@ import com.vci.vectorcamapp.surveillance_form.domain.enums.LlinBrandOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.LlinTypeOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.SentinelSiteOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.SpecimenConditionOption
-import com.vci.vectorcamapp.surveillance_form.location.data.LocationError
+import com.vci.vectorcamapp.surveillance_form.domain.util.SurveillanceFormError
 import com.vci.vectorcamapp.surveillance_form.presentation.components.DatePickerField
 import com.vci.vectorcamapp.surveillance_form.presentation.components.DropdownField
 import com.vci.vectorcamapp.surveillance_form.presentation.components.TextEntryField
@@ -210,7 +210,7 @@ fun SurveillanceFormScreen(
                 "Could not get location: ${state.locationError.toString(context)}",
                 Modifier.padding(vertical = 4.dp)
             )
-            if(state.locationError == LocationError.GPS_TIMEOUT) {
+            if(state.locationError == SurveillanceFormError.LOCATION_GPS_TIMEOUT) {
                 Button(onClick = {
                     onAction(SurveillanceFormAction.RetryLocation ) },
                     modifier = Modifier

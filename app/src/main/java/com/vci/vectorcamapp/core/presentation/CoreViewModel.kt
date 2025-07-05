@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.core.presentation.base
+package com.vci.vectorcamapp.core.presentation
 
 import android.content.Context
 import androidx.compose.material3.SnackbarDuration
@@ -8,10 +8,11 @@ import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
 import kotlinx.coroutines.launch
 
-abstract class BaseViewModel : ViewModel() {
+abstract class CoreViewModel : ViewModel() {
+    protected abstract val context: Context
+
     protected fun emitError(
         error: Error,
-        context: Context,
         duration: SnackbarDuration = SnackbarDuration.Long
     ) {
         viewModelScope.launch {

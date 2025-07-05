@@ -12,7 +12,7 @@ object ErrorMessageBus {
 
     private var lastMessage: String? = null
 
-    suspend fun emit(message: String, duration: SnackbarDuration = SnackbarDuration.Long) {
+    private suspend fun emit(message: String, duration: SnackbarDuration = SnackbarDuration.Long) {
         if (message != lastMessage) {
             lastMessage = message
             _errors.emit(ErrorMessage(message, duration))

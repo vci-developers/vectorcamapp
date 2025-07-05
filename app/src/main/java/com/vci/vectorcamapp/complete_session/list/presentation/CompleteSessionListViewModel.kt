@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.complete_session.domain.util.CompleteSessionError
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
-import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
+import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.collectEmptyStateError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -12,10 +12,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -24,9 +20,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CompleteSessionListViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @ApplicationContext override val context: Context,
     sessionRepository: SessionRepository
-) : BaseViewModel() {
+) : CoreViewModel() {
 
     private val _completeSessionsAndSites = sessionRepository.observeCompleteSessionsAndSites()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
@@ -43,7 +39,7 @@ class CompleteSessionListViewModel @Inject constructor(
 
     init {
         viewModelScope.collectEmptyStateError(_completeSessionsAndSites) {
-            emitError(CompleteSessionError.NO_COMPLETE_SESSIONS, context)
+            emitError(CompleteSessionError.NO_COMPLETE_SESSIONS)
         }
     }
 

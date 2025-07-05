@@ -7,7 +7,7 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
-import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
+import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -18,11 +18,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @ApplicationContext override val context: Context,
     private val programRepository: ProgramRepository,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache
-) : BaseViewModel() {
+) : CoreViewModel() {
 
     private val _state = MutableStateFlow(RegistrationState())
     val state: StateFlow<RegistrationState> = _state.onStart {
@@ -42,7 +42,7 @@ class RegistrationViewModel @Inject constructor(
                 RegistrationAction.ConfirmRegistration -> {
                     val selectedProgram = _state.value.programs.find { it.name == _state.value.selectedProgramName }
                     if (selectedProgram == null) {
-                        emitError(RegistrationError.PROGRAM_NOT_FOUND, context)
+                        emitError(RegistrationError.PROGRAM_NOT_FOUND)
                         return@launch
                     }
 

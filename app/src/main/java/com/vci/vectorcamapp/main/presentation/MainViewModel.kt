@@ -3,7 +3,7 @@ package com.vci.vectorcamapp.main.presentation
 import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
+import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.main.domain.util.MainError
 import com.vci.vectorcamapp.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,9 +20,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @ApplicationContext override val context: Context,
     private val deviceCache: DeviceCache
-) : BaseViewModel() {
+) : CoreViewModel() {
 
     private val _state = MutableStateFlow(MainState())
     val state = _state.onStart {
@@ -77,7 +77,7 @@ class MainViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                emitError(MainError.DEVICE_FETCH_FAILED, context)
+                emitError(MainError.DEVICE_FETCH_FAILED)
             }
         }
     }

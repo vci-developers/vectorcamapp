@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.complete_session.domain.util.CompleteSessionError
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
-import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
+import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,9 +16,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CompleteSessionSpecimensViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @ApplicationContext override val context: Context,
     private val sessionRepository: SessionRepository
-) : BaseViewModel() {
+) : CoreViewModel() {
 
     private val _state = MutableStateFlow(CompleteSessionSpecimensState())
     val state: StateFlow<CompleteSessionSpecimensState> = _state
@@ -34,7 +34,7 @@ class CompleteSessionSpecimensViewModel @Inject constructor(
             val sessionWithSpecimens = sessionRepository.getSessionWithSpecimens(sessionId)
 
             if (sessionWithSpecimens == null) {
-                emitError(CompleteSessionError.SESSION_NOT_FOUND, context)
+                emitError(CompleteSessionError.SESSION_NOT_FOUND)
                 return@launch
             } else {
                 _state.update {
@@ -45,7 +45,7 @@ class CompleteSessionSpecimensViewModel @Inject constructor(
                 }
 
                 if (sessionWithSpecimens.specimens.isEmpty()) {
-                    emitError(CompleteSessionError.NO_SPECIMENS, context)
+                    emitError(CompleteSessionError.NO_SPECIMENS)
                 }
             }
         }
