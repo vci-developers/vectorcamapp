@@ -1,3 +1,7 @@
 package com.vci.vectorcamapp.core.domain.util
 
-interface Error
+import android.content.Context
+
+interface Error {
+    fun toString(context: Context): String
+}

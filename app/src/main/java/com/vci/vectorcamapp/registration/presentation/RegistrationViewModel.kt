@@ -1,14 +1,16 @@
 package com.vci.vectorcamapp.registration.presentation
 
+import android.content.Context
 import android.os.Build
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
+import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -16,6 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val programRepository: ProgramRepository,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache
@@ -39,24 +42,18 @@ class RegistrationViewModel @Inject constructor(
                 RegistrationAction.ConfirmRegistration -> {
                     val selectedProgram = _state.value.programs.find { it.name == _state.value.selectedProgramName }
                     if (selectedProgram == null) {
-                        emitError("Program not found")
-                        Log.e(
-                            "REGISTRATION_ERROR",
-                            "Program not found for name ${_state.value.selectedProgramName}"
-                        )
+                        emitError(RegistrationError.PROGRAM_NOT_FOUND, context)
                         return@launch
                     }
 
-                    viewModelScope.launch {
-                        val device = Device(
-                            id = -1,
-                            model = "${Build.MANUFACTURER} ${Build.MODEL}",
-                            registeredAt = System.currentTimeMillis()
-                        )
-                        deviceCache.saveDevice(device, selectedProgram.id)
-                        currentSessionCache.clearSession()
-                        _events.send(RegistrationEvent.NavigateToLandingScreen)
-                    }
+                    val device = Device(
+                        id = -1,
+                        model = "${Build.MANUFACTURER} ${Build.MODEL}",
+                        registeredAt = System.currentTimeMillis()
+                    )
+                    deviceCache.saveDevice(device, selectedProgram.id)
+                    currentSessionCache.clearSession()
+                    _events.send(RegistrationEvent.NavigateToLandingScreen)
                 }
             }
         }

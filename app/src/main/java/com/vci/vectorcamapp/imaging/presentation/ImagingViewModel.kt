@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
@@ -101,7 +100,7 @@ class ImagingViewModel @Inject constructor(
         viewModelScope.launch {
             if (currentSessionCache.getSession() == null) {
                 _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                _events.send(ImagingEvent.DisplayImagingError(ImagingError.NO_ACTIVE_SESSION))
+                emitError(ImagingError.NO_ACTIVE_SESSION, context)
             }
         }
     }
@@ -136,8 +135,7 @@ class ImagingViewModel @Inject constructor(
                                 })
                         }
                     } catch (e: Exception) {
-                        emitError("Image processing setup failed: ${e.message}")
-                        Log.e("ViewModel", "Image processing setup failed: ${e.message}")
+                        emitError(ImagingError.PROCESSING_ERROR, context)
                     } finally {
                         action.frame.close()
                     }
@@ -209,7 +207,7 @@ class ImagingViewModel @Inject constructor(
 
                         when (boundingBoxesList.size) {
                             0 -> {
-                                _events.send(ImagingEvent.DisplayImagingError(ImagingError.NO_SPECIMEN_FOUND))
+                                emitError(ImagingError.NO_SPECIMEN_FOUND, context)
                             }
 
                             1 -> {
@@ -218,6 +216,10 @@ class ImagingViewModel @Inject constructor(
                                 val (species, sex, abdomenStatus) = inferenceRepository.classifySpecimen(
                                     croppedAndPadded
                                 )
+
+                                if (species == null || sex == null || abdomenStatus == null) {
+                                    emitError(ImagingError.SPECIMEN_CLASSIFICATION_FAILED, context)
+                                }
 
                                 _state.update {
                                     it.copy(
@@ -236,15 +238,14 @@ class ImagingViewModel @Inject constructor(
                             }
 
                             else -> {
-                                _events.send(ImagingEvent.DisplayImagingError(ImagingError.MULTIPLE_SPECIMENS_FOUND))
+                                emitError(ImagingError.MULTIPLE_SPECIMENS_FOUND, context)
                             }
                         }
                     }.onError { error ->
-                        emitError("Error capturing image")
                         if (error == ImagingError.NO_ACTIVE_SESSION) {
                             _events.send(ImagingEvent.NavigateBackToLandingScreen)
                         }
-                        _events.send(ImagingEvent.DisplayImagingError(error))
+                        emitError(error, context)
                     }
                 }
 
@@ -294,13 +295,11 @@ class ImagingViewModel @Inject constructor(
                                 boundingBoxRepository.insertBoundingBox(boundingBox, specimen.id)
 
                             specimenResult.onError { error ->
-                                emitError("Error saving specimen")
-                                Log.d("ROOM ERROR", "Specimen error: $error")
+                                emitError(error, context)
                             }
 
                             boundingBoxResult.onError { error ->
-                                emitError("Error saving bounding box")
-                                Log.d("ROOM ERROR", "Bounding box error: $error")
+                                emitError(error, context)
                             }
 
                             (specimenResult !is Result.Error) && (boundingBoxResult !is Result.Error)
@@ -309,11 +308,11 @@ class ImagingViewModel @Inject constructor(
                         if (success) {
                             clearCurrentSpecimenStateFields()
                         } else {
+                            emitError(ImagingError.SAVE_ERROR, context)
                             cameraRepository.deleteSavedImage(imageUri)
                         }
                     }.onError { error ->
-                        emitError("Error saving image")
-                        _events.send(ImagingEvent.DisplayImagingError(error))
+                        emitError(error, context)
                     }
                 }
             }

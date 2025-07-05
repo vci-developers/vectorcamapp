@@ -58,6 +58,9 @@
     <!-- Imaging error: Save error -->
     <string name="imaging_error_save_error">Couldn’t save the photo. Please try again.</string>
 
+    <!-- Imaging error: Processing error -->
+    <string name="imaging_error_processing_error">Couldn’t process the photo. Please try again.</string>
+
     <!-- Imaging error: No specimen found -->
     <string name="imaging_error_no_specimen_found">No specimen found in the photo. Please try again with a clearer image.</string>
 
@@ -111,4 +114,58 @@
   
     <!-- Location error: Unknown error -->
     <string name="location_error_unknown">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Main error: Device fetch failed -->
+    <string name="main_error_device_fetch_failed">Unable to load device information. Please try again.</string>
+
+    <!-- Main error: Unknown error -->
+    <string name="main_error_unknown">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Surveillance form error: Site fetch failed -->
+    <string name="surveillance_form_error_site_not_found">Site not found for selected district and sentinel site.</string>
+
+    <!-- Surveillance form error: Missing program id -->
+    <string name="surveillance_form_error_missing_program_id">Program ID is missing. Please contact support.</string>
+
+    <!-- Surveillance form error: Missing session -->
+    <string name="surveillance_form_error_missing_session">Session is missing. Please try again.</string>
+
+    <!-- Surveillance form error: Unknown error -->
+    <string name="surveillance_form_error_unknown">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Registration error: Program not found -->
+    <string name="registration_program_not_found">Program not found. Please contact support.</string>
+
+    <!-- Registration error: Unknown error -->
+    <string name="registration_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Incomplete session error: Session not found -->
+    <string name="incomplete_session_session_not_found">Session not found. Please try again.</string>"
+
+    <!-- Incomplete session error: Session retrieval failed -->
+    <string name="incomplete_session_session_retrieval_failed">Unable to retrieve session. Please try again.</string>
+
+    <!-- Incomplete session error: No incomplete sessions -->
+    <string name="incomplete_session_no_incomplete_sessions">No incomplete sessions found.</string>
+
+    <!-- Incomplete session error: Unknown error -->
+    <string name="incomplete_session_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Complete session error: Session not found -->
+    <string name="complete_session_session_not_found">Session not found. Please try again.</string>
+
+    <!-- Complete session error: Site not found -->
+    <string name="complete_session_site_not_found">Site not found. Please try again.</string>
+
+    <!-- Complete session error: No complete sessions -->
+    <string name="complete_session_no_complete_sessions">No complete sessions found.</string>
+
+    <!-- Complete session error: No surveillance form -->
+    <string name="complete_session_no_surveillance_form">No surveillance form found for this session.</string>"
+
+    <!-- Complete session error: No specimens -->
+    <string name="complete_session_no_specimens">No specimens found for this session.</string>"
+
+    <!-- Complete session error: Unknown error -->
+    <string name="complete_session_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>"
 </resources>

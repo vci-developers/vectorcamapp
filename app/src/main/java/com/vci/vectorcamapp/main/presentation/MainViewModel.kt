@@ -1,11 +1,13 @@
 package com.vci.vectorcamapp.main.presentation
 
-import androidx.lifecycle.ViewModel
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
+import com.vci.vectorcamapp.main.domain.util.MainError
 import com.vci.vectorcamapp.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,6 +20,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val deviceCache: DeviceCache
 ) : BaseViewModel() {
 
@@ -66,11 +69,15 @@ class MainViewModel @Inject constructor(
 
     private fun determineStartDestination() {
         viewModelScope.launch {
-            val device = deviceCache.getDevice()
-            _state.update {
-                it.copy(
-                    startDestination = if (device == null) Destination.Registration else Destination.Landing
-                )
+            try {
+                val device = deviceCache.getDevice()
+                _state.update {
+                    it.copy(
+                        startDestination = if (device == null) Destination.Registration else Destination.Landing
+                    )
+                }
+            } catch (e: Exception) {
+                emitError(MainError.DEVICE_FETCH_FAILED, context)
             }
         }
     }

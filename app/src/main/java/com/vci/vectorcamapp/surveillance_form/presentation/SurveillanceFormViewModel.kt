@@ -1,6 +1,8 @@
 package com.vci.vectorcamapp.surveillance_form.presentation
 
+import android.content.Context
 import android.util.Log
+import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
@@ -15,9 +17,11 @@ import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
 import com.vci.vectorcamapp.surveillance_form.domain.use_cases.ValidationUseCases
+import com.vci.vectorcamapp.surveillance_form.domain.util.SurveillanceFormError
 import com.vci.vectorcamapp.surveillance_form.location.data.LocationError
 import com.vci.vectorcamapp.surveillance_form.location.domain.repository.LocationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +37,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SurveillanceFormViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val validationUseCases: ValidationUseCases,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
@@ -128,39 +133,31 @@ class SurveillanceFormViewModel @Inject constructor(
                             it.district == _state.value.selectedDistrict && it.sentinelSite == _state.value.selectedSentinelSite
                         }
                         if (selectedSite == null) {
-                            Log.e(
-                                "SUBMIT_ERROR",
-                                "Site not found for district=${_state.value.selectedDistrict} and sentinel=${_state.value.selectedSentinelSite}"
-                            )
+                            emitError(SurveillanceFormError.SITE_NOT_FOUND, context)
                             return@launch
                         }
 
                         val success = transactionHelper.runAsTransaction {
-                            val sessionResult =
-                                sessionRepository.upsertSession(session, selectedSite.id)
-                            val surveillanceFormResult =
-                                surveillanceFormRepository.upsertSurveillanceForm(
-                                    surveillanceForm, session.localId
-                                )
-
-                            sessionResult.onError { error ->
-                                Log.e("ROOM DB ERROR", "Session Error: $error")
+                            val sessionResult = sessionRepository.upsertSession(session, selectedSite.id)
+                            sessionResult.onError {
+                                emitError(it, context)
+                                return@runAsTransaction false
                             }
 
-                            surveillanceFormResult.onError { error ->
-                                Log.e("ROOM DB ERROR", "Surveillance Form Error: $error")
+                            val surveillanceFormResult = surveillanceFormRepository.upsertSurveillanceForm(
+                                surveillanceForm, session.localId
+                            )
+                            surveillanceFormResult.onError {
+                                emitError(it, context)
+                                return@runAsTransaction false
                             }
-
-                            (sessionResult !is Result.Error) && (surveillanceFormResult !is Result.Error)
+                            true
                         }
 
                         if (success) {
                             currentSessionCache.saveSession(session, selectedSite.id)
                             _events.send(SurveillanceFormEvent.NavigateToImagingScreen)
                         }
-                    }
-                    else {
-                        emitError("Required fields are incomplete")
                     }
                 }
 
@@ -372,6 +369,7 @@ class SurveillanceFormViewModel @Inject constructor(
 
             val programId = deviceCache.getProgramId()
             if (programId == null) {
+                emitError(SurveillanceFormError.MISSING_PROGRAM_ID, context)
                 _events.send(SurveillanceFormEvent.NavigateBackToRegistrationScreen)
                 _state.update { it.copy(isLoading = false) }
                 return@launch
@@ -412,7 +410,7 @@ class SurveillanceFormViewModel @Inject constructor(
     }
 
     private suspend fun getLocation() {
-        repeat(MAX_ATTEMPTS) { attempt ->
+        repeat(MAX_ATTEMPTS) {
             val result: Result<Pair<Float, Float>, LocationError> = try {
                 val loc = withTimeout(LOCATION_TIMEOUT_MS) {
                     locationRepository.getCurrentLocation()
@@ -424,7 +422,6 @@ class SurveillanceFormViewModel @Inject constructor(
                     is TimeoutCancellationException -> LocationError.GPS_TIMEOUT
                     else -> LocationError.UNKNOWN
                 }
-                emitError("Error getting location")
                 Result.Error(error)
             }
 
@@ -432,9 +429,9 @@ class SurveillanceFormViewModel @Inject constructor(
                 _state.update {
                     it.copy(latitude = latitude, longitude = longitude)
                 }
+                return
             }.onError { error ->
-                emitError("Error getting location")
-                _state.update { it.copy(locationError = error) }
+                emitError(error, context)
             }
         }
     }

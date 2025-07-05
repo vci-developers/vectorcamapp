@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.navigation
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -14,14 +13,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
-import com.vci.vectorcamapp.imaging.presentation.util.toString
 import com.vci.vectorcamapp.imaging.presentation.ImagingEvent
 import com.vci.vectorcamapp.imaging.presentation.ImagingScreen
 import com.vci.vectorcamapp.imaging.presentation.ImagingViewModel
@@ -152,17 +149,11 @@ fun NavGraph(startDestination: Destination) {
             }
         }
         composable<Destination.Imaging> {
-            val context = LocalContext.current
             val viewModel = hiltViewModel<ImagingViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    is ImagingEvent.DisplayImagingError -> {
-                        Toast.makeText(context, event.error.toString(context), Toast.LENGTH_LONG)
-                            .show()
-                    }
-
                     ImagingEvent.NavigateBackToLandingScreen -> {
                         navController.popBackStack(Destination.Landing, false)
                     }

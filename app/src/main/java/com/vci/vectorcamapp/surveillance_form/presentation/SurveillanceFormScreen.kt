@@ -17,9 +17,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.vci.vectorcamapp.core.domain.util.onError
-import com.vci.vectorcamapp.core.domain.util.onSuccess
-import com.vci.vectorcamapp.surveillance_form.location.data.toString
 import com.vci.vectorcamapp.surveillance_form.domain.enums.CollectionMethodOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.DistrictOption
 import com.vci.vectorcamapp.surveillance_form.domain.enums.LlinBrandOption

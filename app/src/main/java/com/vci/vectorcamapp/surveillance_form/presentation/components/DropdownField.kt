@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.surveillance_form.domain.enums.DropdownOption
 import com.vci.vectorcamapp.surveillance_form.domain.util.FormValidationError
-import com.vci.vectorcamapp.surveillance_form.presentation.util.toString
 
 @Composable
 fun <T : DropdownOption> DropdownField(

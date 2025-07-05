@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.presentation.util.error
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
@@ -7,6 +8,7 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -25,6 +27,7 @@ fun ErrorSnackbarHost(
         errorFlow.collect { error ->
             snackbarHostState.showSnackbar(
                 message = error.message,
+                actionLabel = "Dismiss",
                 duration = error.duration
             )
         }
@@ -35,6 +38,19 @@ fun ErrorSnackbarHost(
         modifier = modifier,
         snackbar = { snackbarData ->
             Snackbar(
+                action = {
+                    snackbarData.visuals.actionLabel?.let { actionLabel ->
+                        TextButton(
+                            onClick = { snackbarData.performAction() }
+                        ) {
+                            Text(
+                                text = actionLabel,
+                                color = MaterialTheme.colorScheme.primary, // Better contrast and visibility
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+                    }
+                },
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 contentColor = MaterialTheme.colorScheme.onErrorContainer,
                 modifier = Modifier

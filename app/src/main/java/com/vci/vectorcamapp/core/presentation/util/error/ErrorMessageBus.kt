@@ -8,7 +8,7 @@ object ErrorMessageBus {
     private val _errors = MutableSharedFlow<ErrorMessage>(extraBufferCapacity = 1)
     val errors: SharedFlow<ErrorMessage> = _errors
 
-    fun emit(message: String, duration: SnackbarDuration = SnackbarDuration.Short) {
+    fun emit(message: String, duration: SnackbarDuration) {
         _errors.tryEmit(ErrorMessage(message, duration))
     }
 }

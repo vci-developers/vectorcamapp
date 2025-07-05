@@ -1,9 +1,12 @@
 package com.vci.vectorcamapp.complete_session.form.presentation
 
+import android.content.Context
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.complete_session.domain.util.CompleteSessionError
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -13,6 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CompleteSessionFormViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val sessionRepository: SessionRepository
 ) : BaseViewModel() {
 
@@ -28,32 +32,24 @@ class CompleteSessionFormViewModel @Inject constructor(
     private fun loadSession(sessionId: UUID) {
         viewModelScope.launch {
             val sessionAndSite = sessionRepository.getSessionAndSiteById(sessionId)
+            if (sessionAndSite == null) {
+                emitError(CompleteSessionError.SITE_NOT_FOUND, context)
+                return@launch
+            }
+
             val sessionAndSurveillanceForm = sessionRepository.getSessionAndSurveillanceForm(sessionId)
+            val surveillanceForm = sessionAndSurveillanceForm?.surveillanceForm
 
-            when {
-                sessionAndSite == null -> {
-                    emitError("No site data found for session")
-                }
+            if (surveillanceForm == null) {
+                emitError(CompleteSessionError.NO_SURVEILLANCE_FORM, context)
+            }
 
-                sessionAndSurveillanceForm == null -> {
-                    _state.update {
-                        it.copy(
-                            session = sessionAndSite.session,
-                            site = sessionAndSite.site,
-                            surveillanceForm = null
-                        )
-                    }
-                }
-
-                else -> {
-                    _state.update {
-                        it.copy(
-                            session = sessionAndSite.session,
-                            site = sessionAndSite.site,
-                            surveillanceForm = sessionAndSurveillanceForm.surveillanceForm
-                        )
-                    }
-                }
+            _state.update {
+                it.copy(
+                    session = sessionAndSite.session,
+                    site = sessionAndSite.site,
+                    surveillanceForm = surveillanceForm
+                )
             }
         }
     }
