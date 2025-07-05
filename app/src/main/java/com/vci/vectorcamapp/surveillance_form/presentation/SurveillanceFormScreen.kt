@@ -207,7 +207,7 @@ fun SurveillanceFormScreen(
             Text("Longitude: ${state.longitude}", Modifier.padding(vertical = 4.dp))
         } else if (state.locationError != null) {
             Text(
-                "Could not get location: ${context.getString(state.locationError.messageResId)}",
+                "Could not get location: ${state.locationError.toString(context)}",
                 Modifier.padding(vertical = 4.dp)
             )
             if(state.locationError == SurveillanceFormError.LOCATION_GPS_TIMEOUT) {

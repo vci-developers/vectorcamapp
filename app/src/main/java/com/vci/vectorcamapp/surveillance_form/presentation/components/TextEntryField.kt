@@ -42,7 +42,7 @@ fun TextEntryField(
 
         if (error != null) {
             Text(
-                text = context.getString(error.messageResId),
+                text = error.toString(context),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth(),
