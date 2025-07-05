@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.imaging.presentation
 
 import android.content.Context
 import android.view.OrientationEventListener
+import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
@@ -209,7 +210,6 @@ class ImagingViewModel @Inject constructor(
                     _state.update { it.copy(isCapturing = true) }
 
                     val captureResult = cameraRepository.captureImage(action.controller)
-
                     _state.update { it.copy(isCapturing = false) }
 
                     captureResult.onSuccess { image ->
@@ -217,22 +217,22 @@ class ImagingViewModel @Inject constructor(
                         val bitmap = image.toUprightBitmap(displayOrientation)
                         image.close()
 
+                        // Avoid issuing error if preview bounding boxes are not yet ready
                         val boundingBoxesList = inferenceRepository.detectSpecimen(bitmap)
 
-                        when (boundingBoxesList.size) {
-                            0 -> {
-                                emitError(ImagingError.NO_SPECIMEN_FOUND, context)
-                            }
+                        if (!_state.value.isCapturing && boundingBoxesList.isEmpty()) {
+                            emitError(ImagingError.NO_SPECIMEN_FOUND, context, SnackbarDuration.Short)
+                            return@onSuccess
+                        }
 
+                        when (boundingBoxesList.size) {
                             1 -> {
                                 val boundingBox = boundingBoxesList[0]
-                                val croppedAndPadded = bitmap.cropToBoundingBoxAndPad(boundingBox)
-                                val (species, sex, abdomenStatus) = inferenceRepository.classifySpecimen(
-                                    croppedAndPadded
-                                )
+                                val cropped = bitmap.cropToBoundingBoxAndPad(boundingBox)
+                                val (species, sex, abdomenStatus) = inferenceRepository.classifySpecimen(cropped)
 
                                 if (species == null || sex == null || abdomenStatus == null) {
-                                    emitError(ImagingError.SPECIMEN_CLASSIFICATION_FAILED, context)
+                                    emitError(ImagingError.SPECIMEN_CLASSIFICATION_FAILED, context, SnackbarDuration.Short)
                                 }
 
                                 _state.update {
@@ -243,23 +243,27 @@ class ImagingViewModel @Inject constructor(
                                             abdomenStatus = abdomenStatus?.label,
                                         ),
                                         currentImage = bitmap,
-                                        captureBoundingBoxUi = inferenceRepository.convertToBoundingBoxUi(
-                                            boundingBox
-                                        ),
+                                        captureBoundingBoxUi = inferenceRepository.convertToBoundingBoxUi(boundingBox),
                                         previewBoundingBoxesUiList = emptyList()
                                     )
                                 }
                             }
 
+                            0 -> {
+                                emitError(ImagingError.NO_SPECIMEN_FOUND, context, SnackbarDuration.Short)
+                            }
+
                             else -> {
-                                emitError(ImagingError.MULTIPLE_SPECIMENS_FOUND, context)
+                                emitError(ImagingError.MULTIPLE_SPECIMENS_FOUND, context, SnackbarDuration.Short)
                             }
                         }
                     }.onError { error ->
                         if (error == ImagingError.NO_ACTIVE_SESSION) {
                             _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                            emitError(error, context)
+                        } else {
+                            emitError(error, context)
                         }
-                        emitError(error, context)
                     }
                 }
 
@@ -354,3 +358,4 @@ class ImagingViewModel @Inject constructor(
         inferenceRepository.closeResources()
     }
 }
+
