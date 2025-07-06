@@ -408,36 +408,34 @@ class SurveillanceFormViewModel @Inject constructor(
     }
 
     private suspend fun getLocation() {
-        if (_state.value.latitude != null && _state.value.longitude != null)
-            return
-
         repeat(MAX_ATTEMPTS) {
-            val result: Result<Pair<Float, Float>, SurveillanceFormError> = try {
-                val loc = withTimeout(LOCATION_TIMEOUT_MS) {
-                    locationRepository.getCurrentLocation()
-                }
-                Result.Success(loc.latitude.toFloat() to loc.longitude.toFloat())
-            } catch (e: Exception) {
-                val error = when (e) {
-                    is SecurityException -> SurveillanceFormError.LOCATION_GPS_TIMEOUT
-                    is TimeoutCancellationException -> SurveillanceFormError.LOCATION_GPS_TIMEOUT
-                    else -> SurveillanceFormError.UNKNOWN_ERROR
-                }
-                Result.Error(error)
-            }
-
-            result.onSuccess { (latitude, longitude) ->
-                _state.update {
-                    it.copy(latitude = latitude, longitude = longitude)
-                }
-                return
-            }.onError { error ->
-                if (error == SurveillanceFormError.LOCATION_GPS_TIMEOUT) {
-                    _state.update {
-                        it.copy(locationError = error)
+            if (_state.value.latitude == null || _state.value.longitude == null) {
+                val result: Result<Pair<Float, Float>, SurveillanceFormError> = try {
+                    val loc = withTimeout(LOCATION_TIMEOUT_MS) {
+                        locationRepository.getCurrentLocation()
                     }
-                } else {
-                    emitError(error)
+                    Result.Success(loc.latitude.toFloat() to loc.longitude.toFloat())
+                } catch (e: Exception) {
+                    val error = when (e) {
+                        is SecurityException -> SurveillanceFormError.LOCATION_GPS_TIMEOUT
+                        is TimeoutCancellationException -> SurveillanceFormError.LOCATION_GPS_TIMEOUT
+                        else -> SurveillanceFormError.UNKNOWN_ERROR
+                    }
+                    Result.Error(error)
+                }
+
+                result.onSuccess { (latitude, longitude) ->
+                    _state.update {
+                        it.copy(latitude = latitude, longitude = longitude)
+                    }
+                }.onError { error ->
+                    if (error == SurveillanceFormError.LOCATION_GPS_TIMEOUT) {
+                        _state.update {
+                            it.copy(locationError = error)
+                        }
+                    } else {
+                        emitError(error)
+                    }
                 }
             }
         }
