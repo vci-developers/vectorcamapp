@@ -34,6 +34,7 @@ class CompleteSessionFormViewModel @Inject constructor(
                 return@launch
             }
 
+            // TODO: Surveillance form will be optional
             val sessionAndSurveillanceForm =
                 sessionRepository.getSessionAndSurveillanceForm(sessionId)
             if (sessionAndSurveillanceForm == null) {

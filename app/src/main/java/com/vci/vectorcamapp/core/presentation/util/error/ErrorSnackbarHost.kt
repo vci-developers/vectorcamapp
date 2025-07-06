@@ -28,6 +28,7 @@ fun ErrorSnackbarHost(
 
     ObserveAsEvents(errorFlow) { errorData ->
         coroutineScope.launch {
+            ErrorMessageBus.clearLastMessage()
             snackbarHostState.currentSnackbarData?.dismiss()
             snackbarHostState.showSnackbar(
                 message = errorData.error.toString(context),
