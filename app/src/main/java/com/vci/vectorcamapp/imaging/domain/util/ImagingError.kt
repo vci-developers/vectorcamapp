@@ -1,7 +1,5 @@
 package com.vci.vectorcamapp.imaging.domain.util
 
-import android.content.Context
-import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Error
 
 enum class ImagingError : Error {
@@ -19,5 +17,5 @@ enum class ImagingError : Error {
     SPECIMEN_DETECTION_FAILED,
     SPECIMEN_CLASSIFICATION_FAILED,
     UNKNOWN_INFERENCE_ERROR,
-    UNKNOWN;
+    UNKNOWN_ERROR;
 }

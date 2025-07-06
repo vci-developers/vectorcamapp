@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.surveillance_form.domain.util.FormValidationError
 import java.text.SimpleDateFormat
 import java.util.Locale

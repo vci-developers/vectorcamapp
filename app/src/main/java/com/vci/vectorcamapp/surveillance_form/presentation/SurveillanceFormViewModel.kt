@@ -418,7 +418,7 @@ class SurveillanceFormViewModel @Inject constructor(
                 val error = when (e) {
                     is SecurityException -> SurveillanceFormError.LOCATION_GPS_TIMEOUT
                     is TimeoutCancellationException -> SurveillanceFormError.LOCATION_GPS_TIMEOUT
-                    else -> SurveillanceFormError.UNKNOWN
+                    else -> SurveillanceFormError.UNKNOWN_ERROR
                 }
                 Result.Error(error)
             }
