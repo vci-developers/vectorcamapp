@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.presentation.components.ui.ActionTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -34,25 +35,8 @@ fun LandingActionTile(
     modifier: Modifier = Modifier
 ) {
 
-    Card(
-        onClick = onClick,
-        border = CardDefaults.outlinedCardBorder(),
-        shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colors.cardBackground),
-        modifier = modifier
-            .padding(
-                horizontal = MaterialTheme.dimensions.paddingMedium,
-                vertical = MaterialTheme.dimensions.paddingSmall
-            )
-            .customShadow(
-                color = MaterialTheme.colors.cardGlow.copy(alpha = 0.2f),
-                offsetX = MaterialTheme.dimensions.shadowOffsetSmall,
-                offsetY = MaterialTheme.dimensions.shadowOffsetSmall,
-                cornerRadius = MaterialTheme.dimensions.cornerRadiusMedium,
-                spread = MaterialTheme.dimensions.shadowSpreadSmall,
-                blurRadius = MaterialTheme.dimensions.shadowBlurSmall,
-            )
-            .fillMaxWidth()
+    ActionTile(
+        onClick = onClick, modifier = modifier
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

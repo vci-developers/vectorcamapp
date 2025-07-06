@@ -1,85 +1,153 @@
 package com.vci.vectorcamapp.complete_session.list.presentation.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
+import com.vci.vectorcamapp.core.presentation.components.ui.ActionTile
+import com.vci.vectorcamapp.ui.extensions.colors
+import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Composable
-fun CompleteSessionListCard(session: Session, site: Site, modifier: Modifier = Modifier) {
+fun CompleteSessionListCard(
+    session: Session, site: Site, onClick: () -> Unit, modifier: Modifier = Modifier
+) {
 
-    val dateTimeFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
-    val createdAtDateTimeFormatted = dateTimeFormatter.format(session.createdAt)
-    val completedAtDateTimeFormatted = session.completedAt?.let { dateTimeFormatter.format(it) }
+    val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
+    val dateTimeFormatter =
+        remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
-    Card(
-        modifier = modifier.fillMaxWidth().wrapContentHeight(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+    session.completedAt?.let { completedAt ->
+        ActionTile(
+            onClick = onClick, modifier = modifier,
         ) {
-            Text(
-                text = "Session ID: ${session.localId}",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Created At: $createdAtDateTimeFormatted",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Completed At: $completedAtDateTimeFormatted",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Site ID: ${site.id}",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Parish: ${site.parish}",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "District: ${site.district}",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Sub-County: ${site.subCounty}",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Sentinel Site: ${site.sentinelSite}",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "House Number: ${session.houseNumber}",
-                style = MaterialTheme.typography.bodySmall,
-            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+                modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Completed Session on\n${dateFormatter.format(completedAt)}",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(MaterialTheme.dimensions.componentHeightSmall)
+                            .background(
+                                color = MaterialTheme.colors.iconBackground, shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrow_right),
+                            contentDescription = "Arrow Right",
+                            tint = MaterialTheme.colors.icon,
+                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .background(
+                            color = MaterialTheme.colors.pillBackground,
+                            shape = RoundedCornerShape(50)
+                        )
+                        .padding(MaterialTheme.dimensions.paddingSmall)
+                ) {
+                    Text(
+                        text = "Session ID: ${session.localId}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colors.pillText
+                    )
+                }
+            }
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+                modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
+            ) {
+                CompleteSessionListDetailRow(
+                    iconPainter = painterResource(R.drawable.ic_person),
+                    iconDescription = "Arrow Right",
+                    text = "Collector: ${session.collectorName}, ${session.collectorTitle}",
+                )
+
+                CompleteSessionListDetailRow(
+                    iconPainter = painterResource(R.drawable.ic_pin),
+                    iconDescription = "Arrow Right",
+                    text = "District: ${site.district}",
+                )
+
+                CompleteSessionListDetailRow(
+                    iconPainter = painterResource(R.drawable.ic_map),
+                    iconDescription = "Arrow Right",
+                    text = "Sub-County: ${site.subCounty}",
+                )
+
+                CompleteSessionListDetailRow(
+                    iconPainter = painterResource(R.drawable.ic_navigation),
+                    iconDescription = "Arrow Right",
+                    text = "Parish: ${site.parish}",
+                )
+
+                CompleteSessionListDetailRow(
+                    iconPainter = painterResource(R.drawable.ic_clipboard),
+                    iconDescription = "Arrow Right",
+                    text = "Sentinel Site: ${site.sentinelSite}",
+                )
+
+                CompleteSessionListDetailRow(
+                    iconPainter = painterResource(R.drawable.ic_house),
+                    iconDescription = "Arrow Right",
+                    text = "House Number: ${session.houseNumber}",
+                )
+            }
+
+            HorizontalDivider(color = MaterialTheme.colors.divider, thickness = MaterialTheme.dimensions.dividerThickness)
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
+            ) {
+                Text(
+                    text = "Created: ${dateTimeFormatter.format(session.createdAt)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colors.textSecondary
+                )
+
+                Text(
+                    text = "Completed: ${dateTimeFormatter.format(session.completedAt)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colors.textSecondary
+                )
+            }
         }
     }
 }
