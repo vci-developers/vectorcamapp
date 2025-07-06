@@ -12,23 +12,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.SharedFlow
 
 @Composable
 fun ErrorSnackbarHost(
-    modifier: Modifier = Modifier,
-    errorFlow: SharedFlow<ErrorMessage> = LocalErrorMessageFlow.current
+    modifier: Modifier = Modifier, errorFlow: SharedFlow<ErrorData> = LocalErrorDataFlow.current
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(errorFlow) {
-        errorFlow.collect { error ->
+        errorFlow.collect { errorData ->
             snackbarHostState.currentSnackbarData?.dismiss()
 
             snackbarHostState.showSnackbar(
-                message = error.message,
-                duration = error.duration
+                message = errorData.error.toString(context), duration = errorData.duration
             )
 
             ErrorMessageBus.clearLastMessage()
@@ -36,9 +36,7 @@ fun ErrorSnackbarHost(
     }
 
     SnackbarHost(
-        hostState = snackbarHostState,
-        modifier = modifier,
-        snackbar = { snackbarData ->
+        hostState = snackbarHostState, modifier = modifier, snackbar = { snackbarData ->
             Snackbar(
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 contentColor = MaterialTheme.colorScheme.onErrorContainer,
@@ -47,8 +45,7 @@ fun ErrorSnackbarHost(
                         onClick = {
                             snackbarData.dismiss()
                             ErrorMessageBus.clearLastMessage()
-                        }
-                    ) {
+                        }) {
                         Text(
                             text = "Dismiss",
                             style = MaterialTheme.typography.labelLarge,
@@ -61,10 +58,8 @@ fun ErrorSnackbarHost(
                     .widthIn(max = 420.dp)
             ) {
                 Text(
-                    text = snackbarData.visuals.message,
-                    style = MaterialTheme.typography.bodyMedium
+                    text = snackbarData.visuals.message, style = MaterialTheme.typography.bodyMedium
                 )
             }
-        }
-    )
+        })
 }

@@ -1,13 +1,11 @@
 package com.vci.vectorcamapp.incomplete_session.presentation
 
-import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,7 +17,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class IncompleteSessionViewModel @Inject constructor(
-    @ApplicationContext override val context: Context,
     private val sessionRepository: SessionRepository,
     private val currentSessionCache: CurrentSessionCache
 ) : CoreViewModel() {

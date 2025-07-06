@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.surveillance_form.presentation
 
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
@@ -19,7 +18,6 @@ import com.vci.vectorcamapp.surveillance_form.domain.use_cases.ValidationUseCase
 import com.vci.vectorcamapp.surveillance_form.domain.util.SurveillanceFormError
 import com.vci.vectorcamapp.surveillance_form.location.domain.repository.LocationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,7 +33,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SurveillanceFormViewModel @Inject constructor(
-    @ApplicationContext override val context: Context,
     private val validationUseCases: ValidationUseCases,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
@@ -136,15 +133,17 @@ class SurveillanceFormViewModel @Inject constructor(
                         }
 
                         val success = transactionHelper.runAsTransaction {
-                            val sessionResult = sessionRepository.upsertSession(session, selectedSite.id)
+                            val sessionResult =
+                                sessionRepository.upsertSession(session, selectedSite.id)
                             sessionResult.onError { error ->
                                 emitError(error)
                                 return@runAsTransaction false
                             }
 
-                            val surveillanceFormResult = surveillanceFormRepository.upsertSurveillanceForm(
-                                surveillanceForm, session.localId
-                            )
+                            val surveillanceFormResult =
+                                surveillanceFormRepository.upsertSurveillanceForm(
+                                    surveillanceForm, session.localId
+                                )
                             surveillanceFormResult.onError { error ->
                                 emitError(error)
                                 return@runAsTransaction false
@@ -381,7 +380,8 @@ class SurveillanceFormViewModel @Inject constructor(
             var sentinelSite = ""
 
             if (currentSession != null) {
-                savedForm = surveillanceFormRepository.getSurveillanceFormBySessionId(currentSession.localId)
+                savedForm =
+                    surveillanceFormRepository.getSurveillanceFormBySessionId(currentSession.localId)
                 Log.d("SAVED FORM", "Saved form: ${savedForm?.wasIrsConducted}")
 
                 val siteId = currentSessionCache.getSiteId()
@@ -433,8 +433,7 @@ class SurveillanceFormViewModel @Inject constructor(
                     _state.update {
                         it.copy(locationError = error)
                     }
-                }
-                else {
+                } else {
                     emitError(error)
                 }
             }

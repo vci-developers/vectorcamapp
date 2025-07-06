@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.core.presentation.components
 
-import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,21 +7,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessage
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorData
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorSnackbarHost
-import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageFlow
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorDataFlow
 import kotlinx.coroutines.flow.SharedFlow
 
 @Composable
 fun BaseScaffold(
-    errorFlow: SharedFlow<ErrorMessage> = ErrorMessageBus.errors,
+    errorFlow: SharedFlow<ErrorData> = ErrorMessageBus.errors,
     content: @Composable (PaddingValues) -> Unit,
     modifier: Modifier
 ) {
-    CompositionLocalProvider(LocalErrorMessageFlow provides errorFlow) {
+    CompositionLocalProvider(LocalErrorDataFlow provides errorFlow) {
         Scaffold(modifier = modifier) { innerPadding ->
             Box(modifier = Modifier.fillMaxSize()) {
                 content(innerPadding)

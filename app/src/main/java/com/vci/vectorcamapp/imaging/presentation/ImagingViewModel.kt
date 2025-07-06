@@ -52,7 +52,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
-    @ApplicationContext override val context: Context,
+    @ApplicationContext private val context: Context,
     private val currentSessionCache: CurrentSessionCache,
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
@@ -229,10 +229,15 @@ class ImagingViewModel @Inject constructor(
                             1 -> {
                                 val boundingBox = boundingBoxesList[0]
                                 val cropped = bitmap.cropToBoundingBoxAndPad(boundingBox)
-                                val (species, sex, abdomenStatus) = inferenceRepository.classifySpecimen(cropped)
+                                val (species, sex, abdomenStatus) = inferenceRepository.classifySpecimen(
+                                    cropped
+                                )
 
                                 if (species == null || sex == null || abdomenStatus == null) {
-                                    emitError(ImagingError.SPECIMEN_CLASSIFICATION_FAILED, SnackbarDuration.Short)
+                                    emitError(
+                                        ImagingError.SPECIMEN_CLASSIFICATION_FAILED,
+                                        SnackbarDuration.Short
+                                    )
                                 }
 
                                 _state.update {
@@ -243,7 +248,9 @@ class ImagingViewModel @Inject constructor(
                                             abdomenStatus = abdomenStatus?.label,
                                         ),
                                         currentImage = bitmap,
-                                        captureBoundingBoxUi = inferenceRepository.convertToBoundingBoxUi(boundingBox),
+                                        captureBoundingBoxUi = inferenceRepository.convertToBoundingBoxUi(
+                                            boundingBox
+                                        ),
                                         previewBoundingBoxesUiList = emptyList()
                                     )
                                 }
@@ -254,7 +261,9 @@ class ImagingViewModel @Inject constructor(
                             }
 
                             else -> {
-                                emitError(ImagingError.MULTIPLE_SPECIMENS_FOUND, SnackbarDuration.Short)
+                                emitError(
+                                    ImagingError.MULTIPLE_SPECIMENS_FOUND, SnackbarDuration.Short
+                                )
                             }
                         }
                     }.onError { error ->

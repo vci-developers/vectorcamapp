@@ -1,12 +1,10 @@
 package com.vci.vectorcamapp.complete_session.specimens.presentation
 
-import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.complete_session.domain.util.CompleteSessionError
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -16,7 +14,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CompleteSessionSpecimensViewModel @Inject constructor(
-    @ApplicationContext override val context: Context,
     private val sessionRepository: SessionRepository
 ) : CoreViewModel() {
 

@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.registration.presentation
 
-import android.content.Context
 import android.os.Build
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
@@ -10,15 +9,19 @@ import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
-    @ApplicationContext override val context: Context,
     private val programRepository: ProgramRepository,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache
@@ -40,7 +43,8 @@ class RegistrationViewModel @Inject constructor(
                 }
 
                 RegistrationAction.ConfirmRegistration -> {
-                    val selectedProgram = _state.value.programs.find { it.name == _state.value.selectedProgramName }
+                    val selectedProgram =
+                        _state.value.programs.find { it.name == _state.value.selectedProgramName }
                     if (selectedProgram == null) {
                         emitError(RegistrationError.PROGRAM_NOT_FOUND)
                         return@launch
