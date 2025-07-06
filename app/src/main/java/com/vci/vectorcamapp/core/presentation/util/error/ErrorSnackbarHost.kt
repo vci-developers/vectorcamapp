@@ -9,28 +9,30 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.SharedFlow
+import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
+import kotlinx.coroutines.launch
 
 @Composable
 fun ErrorSnackbarHost(
-    modifier: Modifier = Modifier, errorFlow: SharedFlow<ErrorData> = LocalErrorDataFlow.current
+    modifier: Modifier = Modifier
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val errorFlow = LocalErrorDataFlow.current
+    val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(errorFlow) {
-        errorFlow.collect { errorData ->
+    ObserveAsEvents(errorFlow) { errorData ->
+        coroutineScope.launch {
             snackbarHostState.currentSnackbarData?.dismiss()
-
             snackbarHostState.showSnackbar(
-                message = errorData.error.toString(context), duration = errorData.duration
+                message = errorData.error.toString(context),
+                duration = errorData.duration
             )
-
             ErrorMessageBus.clearLastMessage()
         }
     }

@@ -30,23 +30,22 @@ class CompleteSessionFormViewModel @Inject constructor(
         viewModelScope.launch {
             val sessionAndSite = sessionRepository.getSessionAndSiteById(sessionId)
             if (sessionAndSite == null) {
-                emitError(CompleteSessionError.SITE_NOT_FOUND)
+                emitError(CompleteSessionError.SESSION_OR_SITE_NOT_FOUND)
                 return@launch
             }
 
             val sessionAndSurveillanceForm =
                 sessionRepository.getSessionAndSurveillanceForm(sessionId)
-            val surveillanceForm = sessionAndSurveillanceForm?.surveillanceForm
-
-            if (surveillanceForm == null) {
-                emitError(CompleteSessionError.SURVEILLANCE_FORM_NOT_FOUND)
+            if (sessionAndSurveillanceForm == null) {
+                emitError(CompleteSessionError.SESSION_OR_SURVEILLANCE_FORM_NOT_FOUND)
+                return@launch
             }
 
             _state.update {
                 it.copy(
                     session = sessionAndSite.session,
                     site = sessionAndSite.site,
-                    surveillanceForm = surveillanceForm
+                    surveillanceForm = sessionAndSurveillanceForm.surveillanceForm
                 )
             }
         }

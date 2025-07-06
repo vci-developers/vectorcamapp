@@ -99,10 +99,7 @@
 
     <!-- Imaging error: Specimen detection failed -->
     <string name="imaging_error_specimen_detection_failed">Couldn’t detect a specimen in the image. Try taking a clearer photo.</string>
-
-    <!-- Imaging error: Specimen classification failed -->
-    <string name="imaging_error_specimen_classification_failed">Couldn’t identify the specimen. Please retake the photo.</string>
-
+    
     <!-- Imaging error: Unknown inference error -->
     <string name="imaging_error_unknown_inference_error">An unknown error occurred during analysis. Please try again.</string>
 
@@ -130,14 +127,14 @@
     <!-- Surveillance form error: Missing session -->
     <string name="surveillance_form_error_missing_session">Session is missing. Please try again.</string>
 
-    <!-- Surveillance form error: Unknown error -->
-    <string name="surveillance_form_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
-
     <!-- Surveillance form error: Permission denied -->
     <string name="surveillance_form_error_location_permission_denied">Permission error. Please enable location access in settings.</string>
 
     <!-- Surveillance form error: GPS timeout -->
     <string name="surveillance_form_error_location_gps_timeout">GPS Timeout. Please move to a different location and try again.</string>
+
+    <!-- Surveillance form error: Unknown error -->
+    <string name="surveillance_form_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
     <!-- Registration error: Program not found -->
     <string name="registration_error_program_not_found">Program not found. Please contact support.</string>
@@ -157,11 +154,11 @@
     <!-- Complete session error: Session not found -->
     <string name="complete_session_error_session_not_found">Session not found. Please try again.</string>
 
-    <!-- Complete session error: Site not found -->
-    <string name="complete_session_error_site_not_found">Site not found. Please try again.</string>
+    <!-- Complete session error: Session or surveillance form not found -->
+    <string name="complete_session_error_session_or_surveillance_form_not_found">Session or surveillance form not found. Please try again.</string>
 
-    <!-- Complete session error: Surveillance form not found -->
-    <string name="complete_session_error_surveillance_form_not_found">No surveillance form found for this session.</string>"
+    <!-- Complete session error: Session or site not found -->
+    <string name="complete_session_error_session_or_site_not_found">Session or site not found. Please try again.</string>
 
     <!-- Complete session error: Unknown error -->
     <string name="complete_session_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>

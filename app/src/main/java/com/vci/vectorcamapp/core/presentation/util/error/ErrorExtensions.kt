@@ -33,8 +33,8 @@ fun Error.toString(context: Context): String {
         }
         is CompleteSessionError -> when (this) {
             CompleteSessionError.SESSION_NOT_FOUND -> R.string.complete_session_error_session_not_found
-            CompleteSessionError.SITE_NOT_FOUND -> R.string.complete_session_error_site_not_found
-            CompleteSessionError.SURVEILLANCE_FORM_NOT_FOUND -> R.string.complete_session_error_surveillance_form_not_found
+            CompleteSessionError.SESSION_OR_SURVEILLANCE_FORM_NOT_FOUND -> R.string.complete_session_error_session_or_surveillance_form_not_found
+            CompleteSessionError.SESSION_OR_SITE_NOT_FOUND -> R.string.complete_session_error_session_or_site_not_found
             CompleteSessionError.UNKNOWN_ERROR -> R.string.complete_session_error_unknown_error
         }
         is ImagingError -> when(this) {
@@ -50,7 +50,6 @@ fun Error.toString(context: Context): String {
             ImagingError.INVALID_INPUT_SHAPE -> R.string.imaging_error_invalid_input_shape
             ImagingError.SPECIMEN_ID_RECOGNITION_FAILED -> R.string.imaging_error_specimen_id_recognition_failed
             ImagingError.SPECIMEN_DETECTION_FAILED -> R.string.imaging_error_specimen_detection_failed
-            ImagingError.SPECIMEN_CLASSIFICATION_FAILED -> R.string.imaging_error_specimen_classification_failed
             ImagingError.UNKNOWN_INFERENCE_ERROR -> R.string.imaging_error_unknown_inference_error
             ImagingError.UNKNOWN_ERROR -> R.string.imaging_error_unknown_error
         }

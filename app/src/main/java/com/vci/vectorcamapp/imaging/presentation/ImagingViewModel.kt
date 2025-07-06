@@ -220,25 +220,16 @@ class ImagingViewModel @Inject constructor(
                         // Avoid issuing error if preview bounding boxes are not yet ready
                         val boundingBoxesList = inferenceRepository.detectSpecimen(bitmap)
 
-                        if (!_state.value.isCapturing && boundingBoxesList.isEmpty()) {
-                            emitError(ImagingError.NO_SPECIMEN_FOUND, SnackbarDuration.Short)
-                            return@onSuccess
-                        }
-
                         when (boundingBoxesList.size) {
+                            0 -> {
+                                emitError(ImagingError.NO_SPECIMEN_FOUND, SnackbarDuration.Short)
+                            }
                             1 -> {
                                 val boundingBox = boundingBoxesList[0]
-                                val cropped = bitmap.cropToBoundingBoxAndPad(boundingBox)
+                                val croppedAndPadded = bitmap.cropToBoundingBoxAndPad(boundingBox)
                                 val (species, sex, abdomenStatus) = inferenceRepository.classifySpecimen(
-                                    cropped
+                                    croppedAndPadded
                                 )
-
-                                if (species == null || sex == null || abdomenStatus == null) {
-                                    emitError(
-                                        ImagingError.SPECIMEN_CLASSIFICATION_FAILED,
-                                        SnackbarDuration.Short
-                                    )
-                                }
 
                                 _state.update {
                                     it.copy(
@@ -255,11 +246,6 @@ class ImagingViewModel @Inject constructor(
                                     )
                                 }
                             }
-
-                            0 -> {
-                                emitError(ImagingError.NO_SPECIMEN_FOUND, SnackbarDuration.Short)
-                            }
-
                             else -> {
                                 emitError(
                                     ImagingError.MULTIPLE_SPECIMENS_FOUND, SnackbarDuration.Short
@@ -269,10 +255,8 @@ class ImagingViewModel @Inject constructor(
                     }.onError { error ->
                         if (error == ImagingError.NO_ACTIVE_SESSION) {
                             _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                            emitError(error)
-                        } else {
-                            emitError(error)
                         }
+                        emitError(error)
                     }
                 }
 

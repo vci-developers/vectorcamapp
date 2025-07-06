@@ -408,6 +408,9 @@ class SurveillanceFormViewModel @Inject constructor(
     }
 
     private suspend fun getLocation() {
+        if (_state.value.latitude != null && _state.value.longitude != null)
+            return
+
         repeat(MAX_ATTEMPTS) {
             val result: Result<Pair<Float, Float>, SurveillanceFormError> = try {
                 val loc = withTimeout(LOCATION_TIMEOUT_MS) {
