@@ -7,7 +7,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.vci.vectorcamapp.complete_session.list.presentation.components.CompleteSessionListCard
+import com.vci.vectorcamapp.complete_session.list.presentation.components.CompleteSessionListTile
 import com.vci.vectorcamapp.core.presentation.components.ui.ScreenHeader
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
@@ -25,7 +25,7 @@ fun CompleteSessionListScreen(
         items(
             items = state.sessionsAndSites.asReversed(),
             key = { it.session.localId }) { sessionAndSite ->
-            CompleteSessionListCard(
+            CompleteSessionListTile(
                 session = sessionAndSite.session, site = sessionAndSite.site, onClick = {
                     onAction(
                         CompleteSessionListAction.ViewCompleteSessionDetails(

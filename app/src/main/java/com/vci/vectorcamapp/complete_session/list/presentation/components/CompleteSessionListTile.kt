@@ -19,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
@@ -30,7 +29,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Composable
-fun CompleteSessionListCard(
+fun CompleteSessionListTile(
     session: Session, site: Site, onClick: () -> Unit, modifier: Modifier = Modifier
 ) {
 
@@ -44,7 +43,7 @@ fun CompleteSessionListCard(
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
-                modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
+                modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
             ) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -91,7 +90,7 @@ fun CompleteSessionListCard(
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
-                modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
+                modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
             ) {
                 CompleteSessionListDetailRow(
                     iconPainter = painterResource(R.drawable.ic_person),
@@ -134,7 +133,7 @@ fun CompleteSessionListCard(
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
-                modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
+                modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
             ) {
                 Text(
                     text = "Created: ${dateTimeFormatter.format(session.createdAt)}",
