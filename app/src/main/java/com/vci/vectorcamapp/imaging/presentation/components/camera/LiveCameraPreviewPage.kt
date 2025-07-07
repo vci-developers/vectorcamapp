@@ -38,15 +38,18 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.imaging.data.CameraFocusManagerImplementation
+import com.vci.vectorcamapp.imaging.presentation.ImagingAction
 import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 
 @Composable
 fun LiveCameraPreviewPage(
     controller: LifecycleCameraController,
     boundingBoxesUiList: List<BoundingBoxUi>,
+    manualFocusPoint: Offset?,
     onImageCaptured: () -> Unit,
     onSaveSessionProgress: () -> Unit,
     onSubmitSession: () -> Unit,
+    onAction: (ImagingAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -61,7 +64,6 @@ fun LiveCameraPreviewPage(
         )
     }
 
-    var manualFocusPoint by remember { mutableStateOf<Offset?>(null) }
     val focusBoxSize = 64.dp
     val aspectRatio = 4f / 3f
     var overlaySize by remember { mutableStateOf(IntSize.Zero) }
@@ -100,8 +102,8 @@ fun LiveCameraPreviewPage(
                     .onSizeChanged { overlaySize = it }
                     .pointerInput(Unit) {
                         detectTapGestures { offset ->
-                            manualFocusPoint = offset
                             cameraManager.focusAt(offset)
+                            onAction(ImagingAction.ManualFocusAt(offset))
                         }
                     }
             ) {
@@ -120,8 +122,8 @@ fun LiveCameraPreviewPage(
                                 .size(focusBoxSize)
                                 .border(2.dp, Color.Cyan, CircleShape)
                                 .clickable {
-                                    manualFocusPoint = null
                                     cameraManager.cancelFocus()
+                                    onAction(ImagingAction.CancelManualFocus)
                                 }
                         )
                     }
