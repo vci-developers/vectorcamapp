@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.complete_session.form.presentation
+package com.vci.vectorcamapp.complete_session.details.presentation.components.form
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Column
@@ -10,28 +10,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.Site
+import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @Composable
 fun CompleteSessionFormScreen(
-    state: CompleteSessionFormState,
+    session: Session,
+    site: Site,
+    surveillanceForm: SurveillanceForm,
     modifier: Modifier = Modifier
 ) {
     val dateTimeFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
 
-    val collectionDateFormatted = dateFormatter.format(Date(state.session.collectionDate))
-    val createdAtDateTimeFormatted = dateTimeFormatter.format(state.session.createdAt)
-    val completedAtDateTimeFormatted = state.session.completedAt?.let { dateTimeFormatter.format(it) }
-    val submittedAtDateTimeFormatted = state.session.submittedAt?.let { dateTimeFormatter.format(it) }
+    val collectionDateFormatted = dateFormatter.format(Date(session.collectionDate))
+    val createdAtDateTimeFormatted = dateTimeFormatter.format(session.createdAt)
+    val completedAtDateTimeFormatted = session.completedAt?.let { dateTimeFormatter.format(it) }
+    val submittedAtDateTimeFormatted = session.submittedAt?.let { dateTimeFormatter.format(it) }
 
     Column(
         modifier = modifier.padding(16.dp)
     ) {
         Text(
-            text = "Session ID: ${state.session.localId}",
+            text = "Session ID: ${session.localId}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -51,37 +56,37 @@ fun CompleteSessionFormScreen(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Site ID: ${state.site.id}",
+            text = "Site ID: ${site.id}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Sentinel Site: ${state.site.sentinelSite}",
+            text = "Sentinel Site: ${site.sentinelSite}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Health Center: ${state.site.healthCenter}",
+            text = "Health Center: ${site.healthCenter}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "District: ${state.site.district}",
+            text = "District: ${site.district}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Sub-County: ${state.site.subCounty}",
+            text = "Sub-County: ${site.subCounty}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Parish: ${state.site.parish}",
+            text = "Parish: ${site.parish}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Collector: ${state.session.collectorName} (${state.session.collectorTitle})",
+            text = "Collector: ${session.collectorName} (${session.collectorTitle})",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -91,52 +96,52 @@ fun CompleteSessionFormScreen(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Collection Method: ${state.session.collectionMethod}",
+            text = "Collection Method: ${session.collectionMethod}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Specimen Condition: ${state.session.specimenCondition}",
+            text = "Specimen Condition: ${session.specimenCondition}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Notes: ${state.session.notes}",
+            text = "Notes: ${session.notes}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Number of People Slept in House: ${state.surveillanceForm?.numPeopleSleptInHouse}",
+            text = "Number of People Slept in House: ${surveillanceForm.numPeopleSleptInHouse}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "IRS Conducted: ${state.surveillanceForm?.wasIrsConducted}",
+            text = "IRS Conducted: ${surveillanceForm.wasIrsConducted}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Months Since IRS: ${state.surveillanceForm?.monthsSinceIrs}",
+            text = "Months Since IRS: ${surveillanceForm.monthsSinceIrs}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Number of LLINs Available: ${state.surveillanceForm?.numLlinsAvailable}",
+            text = "Number of LLINs Available: ${surveillanceForm.numLlinsAvailable}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "LLIN Type: ${state.surveillanceForm?.llinType}",
+            text = "LLIN Type: ${surveillanceForm.llinType}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "LLIN Brand: ${state.surveillanceForm?.llinBrand}",
+            text = "LLIN Brand: ${surveillanceForm.llinBrand}",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Number of People Slept Under LLIN: ${state.surveillanceForm?.numPeopleSleptUnderLlin}",
+            text = "Number of People Slept Under LLIN: ${surveillanceForm.numPeopleSleptUnderLlin}",
             style = MaterialTheme.typography.bodySmall
         )
     }

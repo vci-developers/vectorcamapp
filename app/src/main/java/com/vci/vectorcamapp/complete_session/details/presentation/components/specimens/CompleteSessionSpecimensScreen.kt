@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.complete_session.specimens.presentation
+package com.vci.vectorcamapp.complete_session.details.presentation.components.specimens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,11 +8,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.vci.vectorcamapp.complete_session.specimens.presentation.components.CompleteSessionSpecimensCard
+import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.Specimen
 
 @Composable
 fun CompleteSessionSpecimensScreen(
-    state: CompleteSessionSpecimensState,
+    session: Session,
+    specimens: List<Specimen>,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -21,8 +23,8 @@ fun CompleteSessionSpecimensScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(items = state.specimens.asReversed(), key = { it.id }) { specimen ->
-            CompleteSessionSpecimensCard(session = state.session, specimen = specimen, modifier = modifier)
+        items(items = specimens.asReversed(), key = { it.id }) { specimen ->
+            CompleteSessionSpecimensCard(session = session, specimen = specimen, modifier = modifier)
         }
     }
 }
