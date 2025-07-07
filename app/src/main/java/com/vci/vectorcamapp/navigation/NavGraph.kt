@@ -34,9 +34,6 @@ import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormEvent
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormScreen
 import com.vci.vectorcamapp.surveillance_form.presentation.SurveillanceFormViewModel
 
-private const val TAB_SESSION_FORM = 0
-private const val TAB_SESSION_SPECIMENS = 1
-
 @Composable
 fun NavGraph(startDestination: Destination) {
     val navController = rememberNavController()
@@ -58,16 +55,13 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(
-                modifier = Modifier.fillMaxSize(),
-                content = { innerPadding ->
-                    RegistrationScreen(
-                        state = state,
-                        onAction = viewModel::onAction,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            )
+            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                RegistrationScreen(
+                    state = state,
+                    onAction = viewModel::onAction,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
         }
 
         composable<Destination.Landing> {
@@ -94,22 +88,19 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(
-                modifier = Modifier.fillMaxSize(),
-                content = { innerPadding ->
-                    when (state.isLoading) {
-                        true -> LoadingAnimation(
-                            text = "Loading...", modifier = Modifier.padding(innerPadding)
-                        )
+            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                when (state.isLoading) {
+                    true -> LoadingAnimation(
+                        text = "Loading...", modifier = Modifier.padding(innerPadding)
+                    )
 
-                        false -> LandingScreen(
-                            state = state,
-                            onAction = viewModel::onAction,
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
+                    false -> LandingScreen(
+                        state = state,
+                        onAction = viewModel::onAction,
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
-            )
+            }
         }
 
         composable<Destination.SurveillanceForm> {
@@ -132,22 +123,19 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(
-                modifier = Modifier.fillMaxSize(),
-                content = { innerPadding ->
-                    when (state.isLoading) {
-                        true -> LoadingAnimation(
-                            text = "Loading...", modifier = Modifier.padding(innerPadding)
-                        )
+            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                when (state.isLoading) {
+                    true -> LoadingAnimation(
+                        text = "Loading...", modifier = Modifier.padding(innerPadding)
+                    )
 
-                        false -> SurveillanceFormScreen(
-                            state = state,
-                            onAction = viewModel::onAction,
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
+                    false -> SurveillanceFormScreen(
+                        state = state,
+                        onAction = viewModel::onAction,
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
-            )
+            }
         }
 
         composable<Destination.Imaging> {
@@ -162,21 +150,19 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(
-                modifier = Modifier.fillMaxSize(),
-                content = { innerPadding ->
-                    ImagingScreen(
-                        state = state,
-                        onAction = viewModel::onAction,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            )
+            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                ImagingScreen(
+                    state = state,
+                    onAction = viewModel::onAction,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
         }
 
         composable<Destination.IncompleteSession> {
             val viewModel = hiltViewModel<IncompleteSessionViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
+
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
                     IncompleteSessionEvent.NavigateToSurveillanceForm -> navController.navigate(
@@ -185,16 +171,13 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(
-                modifier = Modifier.fillMaxSize(),
-                content = { innerPadding ->
-                    IncompleteSessionScreen(
-                        state = state,
-                        onAction = viewModel::onAction,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            )
+            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                IncompleteSessionScreen(
+                    state = state,
+                    onAction = viewModel::onAction,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
         }
 
         composable<Destination.CompleteSessionList> {
