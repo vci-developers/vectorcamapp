@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.imaging.data.CameraFocusManagerImplementation
 import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 
 @Composable
@@ -53,25 +54,29 @@ fun LiveCameraPreviewPage(
     val previewView = remember { PreviewView(context) }
     val density = LocalDensity.current
 
+    val cameraManager = remember(previewView, controller) {
+        CameraFocusManagerImplementation(
+            previewView = previewView,
+            controller = controller
+        )
+    }
+
     var manualFocusPoint by remember { mutableStateOf<Offset?>(null) }
     val focusBoxSize = 64.dp
     val aspectRatio = 4f / 3f
     var overlaySize by remember { mutableStateOf(IntSize.Zero) }
 
-    LaunchedEffect(Unit) {
-        previewView.apply {
-            scaleType = PreviewView.ScaleType.FIT_CENTER
-            this.controller = controller
-        }
+    LaunchedEffect(lifecycleOwner) {
+        previewView.controller = controller
         controller.bindToLifecycle(lifecycleOwner)
     }
 
     LaunchedEffect(boundingBoxesUiList, manualFocusPoint) {
         if (manualFocusPoint == null) {
             if (boundingBoxesUiList.isNotEmpty()) {
-                autoFocusOnObject(controller, previewView, boundingBoxesUiList.first())
+                cameraManager.autoFocusOn(boundingBoxesUiList.first())
             } else {
-                cancelFocus(controller)
+                cameraManager.cancelFocus()
             }
         }
     }
@@ -96,13 +101,13 @@ fun LiveCameraPreviewPage(
                     .pointerInput(Unit) {
                         detectTapGestures { offset ->
                             manualFocusPoint = offset
-                            handleTapToFocus(controller, previewView, offset)
+                            cameraManager.focusAt(offset)
                         }
                     }
             ) {
                 manualFocusPoint?.let { focusPoint ->
                     if (overlaySize != IntSize.Zero) {
-                        val offset = calculateFocusRingOffset(
+                        val (offsetX, offsetY) = cameraManager.calculateFocusRingOffset(
                             focusPoint = focusPoint,
                             overlaySize = overlaySize,
                             focusBoxSize = focusBoxSize,
@@ -111,12 +116,12 @@ fun LiveCameraPreviewPage(
 
                         Box(
                             modifier = Modifier
-                                .offset(x = offset.x.dp, y = offset.y.dp)
+                                .offset(x = offsetX, y = offsetY)
                                 .size(focusBoxSize)
                                 .border(2.dp, Color.Cyan, CircleShape)
                                 .clickable {
                                     manualFocusPoint = null
-                                    cancelFocus(controller)
+                                    cameraManager.cancelFocus()
                                 }
                         )
                     }
