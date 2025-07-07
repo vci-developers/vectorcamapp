@@ -18,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,9 +69,11 @@ fun LiveCameraPreviewPage(
     val aspectRatio = 4f / 3f
     var overlaySize by remember { mutableStateOf(IntSize.Zero) }
 
-    LaunchedEffect(lifecycleOwner) {
-        previewView.controller = controller
-        controller.bindToLifecycle(lifecycleOwner)
+    DisposableEffect(lifecycleOwner) {
+        cameraManager.bind(lifecycleOwner)
+        onDispose {
+            cameraManager.cancelFocus()
+        }
     }
 
     LaunchedEffect(boundingBoxesUiList, manualFocusPoint) {

@@ -8,15 +8,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
+import androidx.lifecycle.LifecycleOwner
 import com.vci.vectorcamapp.imaging.domain.use_cases.CameraFocusManager
 import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 
 class CameraFocusManagerImplementation (
     private val previewView: PreviewView,
-    private val controller: LifecycleCameraController
+    private val controller: LifecycleCameraController,
 ) : CameraFocusManager {
 
-    override fun bind(controller: LifecycleCameraController) {
+    override fun bind(lifecycleOwner: LifecycleOwner) {
+        previewView.controller = controller
+        controller.bindToLifecycle(lifecycleOwner)
     }
 
     private fun buildAction(x: Float, y: Float): FocusMeteringAction {
