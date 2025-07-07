@@ -51,7 +51,7 @@ fun SurveillanceFormScreen(
 ) {
     ScreenHeader(
         title = "Surveillance Form",
-        subtitle = "",
+        subtitle = "Fill out the information below",
         modifier = modifier
     ) {
         item {
