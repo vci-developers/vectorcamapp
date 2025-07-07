@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.presentation.components.ui.ActionTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -42,20 +43,9 @@ fun IncompleteSessionCard(
     val detailFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
-    Card(
+    ActionTile(
+        onClick = onClick,
         modifier = modifier
-            .fillMaxWidth()
-            .customShadow(
-                color = MaterialTheme.colors.cardGlow.copy(alpha = 0.25f),
-                offsetY = MaterialTheme.dimensions.shadowOffsetSmall,
-                blurRadius = MaterialTheme.dimensions.shadowBlurMedium,
-                cornerRadius = MaterialTheme.dimensions.cornerRadiusMedium
-            )
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colors.cardBackground
-        )
     ) {
         Row(
             modifier = Modifier
