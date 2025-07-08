@@ -370,12 +370,3 @@ fun SurveillanceFormScreenPreview() {
         }
     }
 }
-
-private fun sanitizeNumericInput(newValue: String, oldValue: Int?): String {
-    val digits = newValue.filter { it.isDigit() }
-    return if (oldValue == 0 && digits.length > 1) {
-        digits.replace("0", "")
-    } else {
-        digits
-    }
-}
