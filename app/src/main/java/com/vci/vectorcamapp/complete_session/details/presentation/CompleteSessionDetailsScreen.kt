@@ -1,14 +1,17 @@
 package com.vci.vectorcamapp.complete_session.details.presentation
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.vci.vectorcamapp.complete_session.details.presentation.components.SegmentedTabBar
+import com.vci.vectorcamapp.complete_session.details.presentation.components.form.CompleteSessionForm
+import com.vci.vectorcamapp.complete_session.details.presentation.components.specimens.CompleteSessionSpecimens
 import com.vci.vectorcamapp.complete_session.details.presentation.enums.CompleteSessionDetailsTab
-import com.vci.vectorcamapp.complete_session.details.presentation.components.form.CompleteSessionFormScreen
-import com.vci.vectorcamapp.complete_session.details.presentation.components.specimens.CompleteSessionSpecimensScreen
+import com.vci.vectorcamapp.core.presentation.components.ui.ScreenHeader
+import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
 @Composable
 fun CompleteSessionDetailsScreen(
@@ -17,21 +20,46 @@ fun CompleteSessionDetailsScreen(
     modifier: Modifier = Modifier
 ) {
 
-    Column {
-        TabRow(selectedTabIndex = state.selectedTab.ordinal) {
-            Tab(
-                selected = state.selectedTab == CompleteSessionDetailsTab.SESSION_FORM,
-                onClick = { onAction(CompleteSessionDetailsAction.ChangeSelectedTab(CompleteSessionDetailsTab.SESSION_FORM)) },
-                text = { Text("Details") })
-            Tab(
-                selected = state.selectedTab == CompleteSessionDetailsTab.SESSION_SPECIMENS,
-                onClick = { onAction(CompleteSessionDetailsAction.ChangeSelectedTab(CompleteSessionDetailsTab.SESSION_SPECIMENS)) },
-                text = { Text("Specimens") })
+    ScreenHeader(
+        title = "Session Information",
+        subtitle = "ID: ${state.session.localId}",
+        modifier = modifier
+    ) {
+        item {
+            SegmentedTabBar(
+                tabs = CompleteSessionDetailsTab.entries,
+                selectedTab = state.selectedTab,
+                onTabSelected = { onAction(CompleteSessionDetailsAction.ChangeSelectedTab(it)) },
+            )
         }
 
-        when (state.selectedTab) {
-            CompleteSessionDetailsTab.SESSION_FORM -> CompleteSessionFormScreen(session = state.session, site = state.site, surveillanceForm = state.surveillanceForm, modifier = modifier)
-            CompleteSessionDetailsTab.SESSION_SPECIMENS -> CompleteSessionSpecimensScreen(session = state.session, specimens = state.specimens, modifier = modifier)
+        item {
+            when (state.selectedTab) {
+                CompleteSessionDetailsTab.SESSION_FORM -> CompleteSessionForm(
+                    session = state.session,
+                    site = state.site,
+                    surveillanceForm = state.surveillanceForm,
+                    modifier = modifier
+                )
+
+                CompleteSessionDetailsTab.SESSION_SPECIMENS -> CompleteSessionSpecimens(
+                    session = state.session, specimens = state.specimens, modifier = modifier
+                )
+            }
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+fun CompleteSessionDetailsScreenPreview() {
+    VectorcamappTheme {
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            CompleteSessionDetailsScreen(
+                state = CompleteSessionDetailsState(),
+                onAction = {},
+                modifier = Modifier.padding(innerPadding)
+            )
         }
     }
 }
