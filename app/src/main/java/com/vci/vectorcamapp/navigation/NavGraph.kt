@@ -165,9 +165,9 @@ fun NavGraph(startDestination: Destination) {
 
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    IncompleteSessionEvent.NavigateToSurveillanceForm -> navController.navigate(
-                        Destination.SurveillanceForm
-                    )
+                    IncompleteSessionEvent.NavigateToSurveillanceForm ->
+                        navController.navigate(Destination.SurveillanceForm)
+                    IncompleteSessionEvent.NavigateToLandingScreen -> navController.popBackStack()
                 }
             }
 
