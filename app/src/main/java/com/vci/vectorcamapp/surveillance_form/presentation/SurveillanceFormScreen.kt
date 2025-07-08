@@ -161,7 +161,9 @@ fun SurveillanceFormScreen(
                     label = "Number of House Occupants",
                     value = state.surveillanceForm.numPeopleSleptInHouse.toString(),
                     onValueChange = {
-                        onAction(SurveillanceFormAction.EnterNumPeopleSleptInHouse(it))
+                        onAction(SurveillanceFormAction.EnterNumPeopleSleptInHouse(
+                            sanitizeNumericInput(it, state.surveillanceForm.numPeopleSleptInHouse)
+                        ))
                     },
                     singleLine = true,
                     keyboardType = KeyboardType.Number,
@@ -233,11 +235,9 @@ fun SurveillanceFormScreen(
                     label = "Number of LLINs Available",
                     value = state.surveillanceForm.numLlinsAvailable.toString(),
                     onValueChange = {
-                        onAction(
-                            SurveillanceFormAction.EnterNumLlinsAvailable(
-                                it
-                            )
-                        )
+                        onAction(SurveillanceFormAction.EnterNumLlinsAvailable(
+                            sanitizeNumericInput(it, state.surveillanceForm.numLlinsAvailable)
+                        ))
                     },
                     singleLine = true,
                     keyboardType = KeyboardType.Number
@@ -275,7 +275,9 @@ fun SurveillanceFormScreen(
                         label = "Number of People who Slept Under LLIN",
                         value = current.toString(),
                         onValueChange = {
-                            onAction(SurveillanceFormAction.EnterNumPeopleSleptUnderLlin(it))
+                            onAction(SurveillanceFormAction.EnterNumPeopleSleptUnderLlin(
+                                sanitizeNumericInput(it, state.surveillanceForm.numPeopleSleptUnderLlin)
+                            ))
                         },
                         singleLine = true,
                         keyboardType = KeyboardType.Number
@@ -301,11 +303,9 @@ fun SurveillanceFormScreen(
                         label = "Months Since IRS",
                         value = state.surveillanceForm.monthsSinceIrs?.toString().orEmpty(),
                         onValueChange = {
-                            onAction(
-                                SurveillanceFormAction.EnterMonthsSinceIrs(
-                                    it
-                                )
-                            )
+                            onAction(SurveillanceFormAction.EnterMonthsSinceIrs(
+                                sanitizeNumericInput(it, state.surveillanceForm.monthsSinceIrs)
+                            ))
                         },
                         singleLine = true,
                         keyboardType = KeyboardType.Number,
@@ -372,5 +372,14 @@ fun SurveillanceFormScreenPreview() {
                 modifier = Modifier.padding(innerPadding)
             )
         }
+    }
+}
+
+private fun sanitizeNumericInput(newValue: String, oldValue: Int?): String {
+    val digits = newValue.filter { it.isDigit() }
+    return if (oldValue == 0 && digits.length > 1) {
+        digits.replace("0", "")
+    } else {
+        digits
     }
 }
