@@ -390,6 +390,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                 sex = remoteSpecimenDto.sex,
                 abdomenStatus = remoteSpecimenDto.abdomenStatus,
                 imageUri = localSpecimen.imageUri,
+                metadataUploadStatus = localSpecimen.metadataUploadStatus,
+                imageUploadStatus = localSpecimen.imageUploadStatus,
                 capturedAt = remoteSpecimenDto.capturedAt,
                 submittedAt = remoteSpecimenDto.submittedAt,
             )
@@ -434,7 +436,7 @@ class MetadataUploadWorker @AssistedInject constructor(
 
     private fun showInitialMetadataNotification(): ForegroundInfo {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setContentTitle("Registering device and session...").setSmallIcon(R.drawable.ic_upload)
+            .setContentTitle("Registering device and session...").setSmallIcon(R.drawable.ic_cloud_upload)
             .setOngoing(true).build()
 
         return ForegroundInfo(
@@ -446,7 +448,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         val notification =
             NotificationCompat.Builder(context, CHANNEL_ID).setContentTitle("Uploading specimens")
                 .setContentText("Uploading $current of $total specimens")
-                .setSmallIcon(R.drawable.ic_upload).setProgress(total, current, false)
+                .setSmallIcon(R.drawable.ic_cloud_upload).setProgress(total, current, false)
                 .setOngoing(true).build()
 
         notificationManager.notify(NOTIFICATION_ID, notification)
