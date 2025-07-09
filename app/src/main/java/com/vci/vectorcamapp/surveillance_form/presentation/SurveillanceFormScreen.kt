@@ -161,7 +161,7 @@ fun SurveillanceFormScreen(
                     label = "Number of House Occupants",
                     value = if (state.surveillanceForm.numPeopleSleptInHouse == 0) "" else state.surveillanceForm.numPeopleSleptInHouse.toString(),
                     onValueChange = {
-                        onAction(SurveillanceFormAction.EnterNumPeopleSleptInHouse(it.filter { c -> c.isDigit() }))
+                        onAction(SurveillanceFormAction.EnterNumPeopleSleptInHouse(it.filter { character -> character.isDigit() }))
                     },
                     placeholder = "0",
                     singleLine = true,
@@ -234,7 +234,7 @@ fun SurveillanceFormScreen(
                     label = "Number of LLINs Available",
                     value = if (state.surveillanceForm.numLlinsAvailable == 0) "" else state.surveillanceForm.numLlinsAvailable.toString(),
                     onValueChange = {
-                        onAction(SurveillanceFormAction.EnterNumLlinsAvailable(it.filter { c -> c.isDigit() }))
+                        onAction(SurveillanceFormAction.EnterNumLlinsAvailable(it.filter { character -> character.isDigit() }))
                     },
                     placeholder = "0",
                     singleLine = true,
@@ -273,7 +273,7 @@ fun SurveillanceFormScreen(
                         label = "Number of People who Slept Under LLIN",
                         value = if (current == 0) "" else current.toString(),
                         onValueChange = {
-                            onAction(SurveillanceFormAction.EnterNumPeopleSleptUnderLlin(it.filter { c -> c.isDigit() }))
+                            onAction(SurveillanceFormAction.EnterNumPeopleSleptUnderLlin(it.filter { character -> character.isDigit() }))
                         },
                         placeholder = "0",
                         singleLine = true,
@@ -300,7 +300,7 @@ fun SurveillanceFormScreen(
                         label = "Months Since IRS",
                         value = state.surveillanceForm.monthsSinceIrs?.let { if (it == 0) "" else it.toString() }.orEmpty(),
                         onValueChange = {
-                            onAction(SurveillanceFormAction.EnterMonthsSinceIrs(it.filter { c -> c.isDigit() }))
+                            onAction(SurveillanceFormAction.EnterMonthsSinceIrs(it.filter { character -> character.isDigit() }))
                         },
                         placeholder = "0",
                         singleLine = true,
