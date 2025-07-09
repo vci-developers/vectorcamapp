@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.lifecycle.LifecycleOwner
+import com.vci.vectorcamapp.core.domain.model.BoundingBox
 import com.vci.vectorcamapp.imaging.domain.use_cases.CameraFocusManager
 import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 
@@ -37,12 +38,17 @@ class CameraFocusManagerImplementation (
     }
 
 
-    override fun autoFocusOn(box: BoundingBoxUi) {
+    override fun autoFocusOn(box: BoundingBox) {
+        if (previewView.width == 0 || previewView.height == 0) {
+            Log.w("CameraFocusManager", "autoFocusOn(): previewView not ready yet")
+            return
+        }
+
+        val focusX = (box.topLeftX + box.width / 2f) * previewView.width
+        val focusY = (box.topLeftY + box.height / 2f) * previewView.height
+
         controller.cameraControl
-            ?.startFocusAndMetering(buildAction(
-                box.topLeftX + box.width/2f,
-                box.topLeftY + box.height/2f
-            ))
+            ?.startFocusAndMetering(buildAction(focusX, focusY))
             ?: Log.w("CameraFocusManager", "autoFocusOn(): cameraControl not ready yet")
     }
 
