@@ -5,10 +5,8 @@ import android.net.Uri
 import androidx.compose.ui.geometry.Offset
 import com.vci.vectorcamapp.core.domain.model.BoundingBox
 import com.vci.vectorcamapp.core.domain.model.Specimen
-import com.vci.vectorcamapp.core.domain.model.composites.SpecimenAndBoundingBox
 import com.vci.vectorcamapp.core.domain.model.UploadStatus
-import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
-import com.vci.vectorcamapp.imaging.presentation.model.composites.SpecimenAndBoundingBoxUi
+import com.vci.vectorcamapp.core.domain.model.composites.SpecimenAndBoundingBox
 
 data class ImagingState(
     val isCapturing: Boolean = false,
