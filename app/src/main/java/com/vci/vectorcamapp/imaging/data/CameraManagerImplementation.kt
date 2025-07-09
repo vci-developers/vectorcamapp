@@ -11,7 +11,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.lifecycle.LifecycleOwner
 import com.vci.vectorcamapp.core.domain.model.BoundingBox
 import com.vci.vectorcamapp.imaging.domain.use_cases.CameraFocusManager
-import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 
 class CameraFocusManagerImplementation (
     private val previewView: PreviewView,
