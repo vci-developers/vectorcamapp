@@ -17,7 +17,7 @@ fun BoundingBoxOverlay(
     modifier: Modifier = Modifier
 ) {
     Canvas(modifier = modifier) {
-        boundingBoxes.forEach { box ->
+        boundingBoxes.map { box ->
             val topLeft = Offset(
                 x = box.topLeftX * overlaySize.width,
                 y = box.topLeftY * overlaySize.height
