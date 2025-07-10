@@ -12,27 +12,25 @@ import com.vci.vectorcamapp.core.domain.model.BoundingBox
 
 @Composable
 fun BoundingBoxOverlay(
-    boundingBoxes: List<BoundingBox>,
+    boundingBox: BoundingBox,
     overlaySize: IntSize,
     modifier: Modifier = Modifier
 ) {
     Canvas(modifier = modifier) {
-        boundingBoxes.map { box ->
-            val topLeft = Offset(
-                x = box.topLeftX * overlaySize.width,
-                y = box.topLeftY * overlaySize.height
-            )
-            val boxSize = Size(
-                width = box.width * overlaySize.width,
-                height = box.height * overlaySize.height
-            )
+        val topLeft = Offset(
+            x = boundingBox.topLeftX * overlaySize.width,
+            y = boundingBox.topLeftY * overlaySize.height
+        )
+        val boxSize = Size(
+            width = boundingBox.width * overlaySize.width,
+            height = boundingBox.height * overlaySize.height
+        )
 
-            drawRect(
-                color = if (box.confidence > 0.8) Color.Green else Color.Red,
-                topLeft = topLeft,
-                size = boxSize,
-                style = Stroke(width = 4f)
-            )
-        }
+        drawRect(
+            color = if (boundingBox.confidence > 0.8) Color.Green else Color.Red,
+            topLeft = topLeft,
+            size = boxSize,
+            style = Stroke(width = 4f)
+        )
     }
 }

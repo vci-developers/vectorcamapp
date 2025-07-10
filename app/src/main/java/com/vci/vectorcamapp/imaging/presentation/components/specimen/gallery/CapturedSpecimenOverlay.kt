@@ -88,9 +88,7 @@ fun CapturedSpecimenOverlay(
                 }
 
                 BoundingBoxOverlay(
-                    boundingBoxes = listOf(boundingBox),
-                    overlaySize = overlaySize,
-                    modifier = Modifier.fillMaxSize()
+                    boundingBox = boundingBox, overlaySize = overlaySize, modifier = Modifier.fillMaxSize()
                 )
             }
         }

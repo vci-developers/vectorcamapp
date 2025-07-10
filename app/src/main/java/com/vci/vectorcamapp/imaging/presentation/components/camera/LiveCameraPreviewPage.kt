@@ -102,11 +102,9 @@ fun LiveCameraPreviewPage(
                 modifier = Modifier.fillMaxSize()
             )
 
-            BoundingBoxOverlay(
-                boundingBoxes = boundingBoxes,
-                overlaySize = outerOverlaySize,
-                modifier = Modifier.fillMaxSize()
-            )
+            boundingBoxes.map {
+                BoundingBoxOverlay(it, overlaySize = outerOverlaySize, Modifier.fillMaxSize())
+            }
 
             Box(
                 modifier = Modifier

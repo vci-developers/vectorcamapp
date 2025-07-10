@@ -66,7 +66,7 @@ class ImagingViewModel @Inject constructor(
     lateinit var transactionHelper: TransactionHelper
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val specimensFlow: Flow<List<SpecimenAndBoundingBox>> = flow {
+    private val _specimensAndBoundingBoxes: Flow<List<SpecimenAndBoundingBox>> = flow {
         emit(currentSessionCache.getSession())
     }.flatMapLatest { session ->
         if (session == null) {
@@ -95,7 +95,7 @@ class ImagingViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(ImagingState())
     val state: StateFlow<ImagingState> = combine(
-        specimensFlow, _state
+        _specimensAndBoundingBoxes, _state
     ) { specimens, state ->
         state.copy(capturedSpecimensAndBoundingBoxes = specimens)
     }.stateIn(
