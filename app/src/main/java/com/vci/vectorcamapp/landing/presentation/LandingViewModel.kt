@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -23,11 +24,13 @@ class LandingViewModel @Inject constructor(
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
     private val programRepository: ProgramRepository,
+    private val sessionRepository: SessionRepository,
 ) : CoreViewModel() {
 
     private val _state = MutableStateFlow(LandingState())
     val state: StateFlow<LandingState> = _state.onStart {
         loadLandingDetails()
+        observeIncompleteSessionsCount()
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000L), LandingState()
     )
@@ -94,6 +97,14 @@ class LandingViewModel @Inject constructor(
                 it.copy(
                     enrolledProgram = program, isLoading = false
                 )
+            }
+        }
+    }
+
+    private fun observeIncompleteSessionsCount() {
+        viewModelScope.launch {
+            sessionRepository.observeIncompleteSessions().collect { sessions ->
+                _state.update { it.copy(incompleteSessionsCount = sessions.size) }
             }
         }
     }

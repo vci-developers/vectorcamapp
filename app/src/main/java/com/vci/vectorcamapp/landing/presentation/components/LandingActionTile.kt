@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,13 +25,15 @@ import com.vci.vectorcamapp.core.presentation.components.ui.ActionTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LandingActionTile(
     title: String,
     description: String,
     icon: Painter,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    badgeCount: Int = 0
 ) {
 
     ActionTile(
@@ -40,21 +45,34 @@ fun LandingActionTile(
                 .fillMaxWidth()
                 .padding(MaterialTheme.dimensions.paddingMedium)
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(MaterialTheme.dimensions.componentHeightLarge)
-                    .background(
-                        color = MaterialTheme.colors.iconBackground,
-                        shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
-                    )
+            BadgedBox(
+                badge = {
+                    if (badgeCount > 0) {
+                        Badge(containerColor = MaterialTheme.colors.error) {
+                            Text(
+                                text = badgeCount.toString(),
+                                color = MaterialTheme.colors.buttonText
+                            )
+                        }
+                    }
+                }
             ) {
-                Icon(
-                    painter = icon,
-                    contentDescription = "Action Icon",
-                    tint = MaterialTheme.colors.icon,
-                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(MaterialTheme.dimensions.componentHeightLarge)
+                        .background(
+                            color = MaterialTheme.colors.iconBackground,
+                            shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
+                        )
+                ) {
+                    Icon(
+                        painter = icon,
+                        contentDescription = "Action Icon",
+                        tint = MaterialTheme.colors.icon,
+                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                    )
+                }
             }
 
             Column(
