@@ -6,11 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -45,33 +45,37 @@ fun LandingActionTile(
                 .fillMaxWidth()
                 .padding(MaterialTheme.dimensions.paddingMedium)
         ) {
-            BadgedBox(
-                badge = {
-                    if (badgeCount > 0) {
-                        Badge(containerColor = MaterialTheme.colors.error) {
-                            Text(
-                                text = badgeCount.toString(),
-                                color = MaterialTheme.colors.buttonText
-                            )
-                        }
-                    }
-                }
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(MaterialTheme.dimensions.componentHeightLarge)
-                        .background(
-                            color = MaterialTheme.colors.iconBackground,
-                            shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
-                        )
-                ) {
-                    Icon(
-                        painter = icon,
-                        contentDescription = "Action Icon",
-                        tint = MaterialTheme.colors.icon,
-                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(MaterialTheme.dimensions.componentHeightLarge)
+                    .background(
+                        color = MaterialTheme.colors.iconBackground,
+                        shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
                     )
+            ) {
+                Icon(
+                    painter = icon,
+                    contentDescription = "Action Icon",
+                    tint = MaterialTheme.colors.icon,
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                )
+
+                if (badgeCount > 0) {
+                    Badge(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(
+                                x = MaterialTheme.dimensions.paddingExtraSmall,
+                                y = -MaterialTheme.dimensions.paddingExtraSmall
+                            ),
+                        containerColor = MaterialTheme.colors.error
+                    ) {
+                        Text(
+                            text = badgeCount.toString(),
+                            color = MaterialTheme.colors.buttonText
+                        )
+                    }
                 }
             }
 
