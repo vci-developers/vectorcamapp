@@ -53,16 +53,8 @@ fun ImagingScreen(
     HorizontalPager(
         state = pagerState, modifier = modifier.fillMaxSize()
     ) { page ->
-        when {
-            page < state.capturedSpecimensAndBoundingBoxes.size -> {
-                CapturedSpecimenOverlay(
-                    specimen = state.capturedSpecimensAndBoundingBoxes[page].specimen,
-                    boundingBox = state.capturedSpecimensAndBoundingBoxes[page].boundingBox,
-                    modifier = modifier
-                )
-            }
-
-            (state.currentImage != null && state.captureBoundingBox != null) -> {
+        if (page == 0) {
+            if (state.currentImage != null && state.captureBoundingBox != null) {
                 CapturedSpecimenOverlay(
                     specimen = state.currentSpecimen,
                     boundingBox = state.captureBoundingBox,
@@ -72,9 +64,7 @@ fun ImagingScreen(
                     onRetakeImage = { onAction(ImagingAction.RetakeImage) },
                     onSaveImageToSession = { onAction(ImagingAction.SaveImageToSession) }
                 )
-            }
-
-            else -> {
+            } else {
                 LiveCameraPreviewPage(
                     controller = controller,
                     boundingBoxes = state.previewBoundingBoxes,
@@ -88,6 +78,13 @@ fun ImagingScreen(
                     modifier = modifier
                 )
             }
+        } else {
+            val specimenIndex = page - 1
+            CapturedSpecimenOverlay(
+                specimen = state.capturedSpecimensAndBoundingBoxes[specimenIndex].specimen,
+                boundingBox = state.capturedSpecimensAndBoundingBoxes[specimenIndex].boundingBox,
+                modifier = modifier
+            )
         }
     }
 }
