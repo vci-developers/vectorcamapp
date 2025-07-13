@@ -95,7 +95,6 @@ class TfLiteSpecimenDetector(
         return suspendCoroutine { continuation ->
             handler.post {
                 try {
-
                     val inputMatrix = prepareInputMatrix(bitmap)
 
                     val preprocessedMatrix = preprocessMatrix(inputMatrix)
@@ -130,24 +129,6 @@ class TfLiteSpecimenDetector(
                 } catch (e: Exception) {
                     Log.e(TAG, "Inference failed: ${e.message}")
                     continuation.resume(emptyList())
-                }
-            }
-        }
-    }
-
-    override fun close() {
-        synchronized(detectorLock) {
-            if (isClosed) return
-            isClosed = true
-
-            handler.post {
-                try {
-                    detector?.close()
-                    detector = null
-                    handlerThread.quitSafely()
-                    Log.d(TAG, "Detector closed")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error during detector close: ${e.message}")
                 }
             }
         }
@@ -274,6 +255,24 @@ class TfLiteSpecimenDetector(
         }
 
         return finalBoundingBoxes
+    }
+
+    override fun close() {
+        synchronized(detectorLock) {
+            if (isClosed) return
+            isClosed = true
+
+            handler.post {
+                try {
+                    detector?.close()
+                    detector = null
+                    handlerThread.quitSafely()
+                    Log.d(TAG, "Detector closed")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error during detector close: ${e.message}")
+                }
+            }
+        }
     }
 
     companion object {
