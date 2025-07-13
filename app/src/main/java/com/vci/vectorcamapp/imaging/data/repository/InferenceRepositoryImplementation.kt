@@ -79,6 +79,10 @@ class InferenceRepositoryImplementation @Inject constructor(
             Triple(species, sex, abdomenStatus)
         }
 
+    private suspend fun getClassification(
+        croppedBitmap: Bitmap, classifier: SpecimenClassifier
+    ): Int? = classifier.classify(croppedBitmap)
+
     override fun closeResources() {
         specimenIdRecognizer.close()
         specimenDetector.close()
@@ -86,12 +90,5 @@ class InferenceRepositoryImplementation @Inject constructor(
         sexClassifier.close()
         abdomenStatusClassifier.close()
         GpuDelegateManager.close()
-    }
-
-    private suspend fun getClassification(
-        croppedBitmap: Bitmap,
-        classifier: SpecimenClassifier
-    ): Int? {
-        return classifier.classify(croppedBitmap)
     }
 }

@@ -197,8 +197,8 @@ class TfLiteSpecimenClassifier(
         private const val DEFAULT_TENSOR_HEIGHT = 300
         private const val DEFAULT_TENSOR_WIDTH = 300
         private const val DEFAULT_NUM_CLASSES = 1
-        private const val PIXEL_NORMALIZATION_SCALE = 1f / 255f
 
+        private const val PIXEL_NORMALIZATION_SCALE = 1f / 255f
         private val NORMALIZE_MEAN = Scalar(0.485, 0.456, 0.406)
         private val NORMALIZE_STDDEV = Scalar(0.229, 0.224, 0.225)
     }
