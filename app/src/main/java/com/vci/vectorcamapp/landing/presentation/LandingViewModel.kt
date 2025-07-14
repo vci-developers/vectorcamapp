@@ -12,6 +12,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -28,15 +30,28 @@ class LandingViewModel @Inject constructor(
 ) : CoreViewModel() {
 
     private val _state = MutableStateFlow(LandingState())
-    val state: StateFlow<LandingState> = _state.onStart {
-        loadLandingDetails()
-        observeIncompleteSessionsCount()
+
+    private val _incompleteSessionsCount = sessionRepository.observeIncompleteSessions()
+        .map { it.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), 0)
+
+    val state: StateFlow<LandingState> = combine(
+        _state,
+        _incompleteSessionsCount
+    ) { state, incompleteSessionsCount ->
+        state.copy(incompleteSessionsCount = incompleteSessionsCount)
     }.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000L), LandingState()
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000L),
+        LandingState()
     )
 
     private val _events = Channel<LandingEvent>()
     val events = _events.receiveAsFlow()
+
+    init {
+        loadLandingDetails()
+    }
 
     fun onAction(action: LandingAction) {
         viewModelScope.launch {
@@ -99,9 +114,7 @@ class LandingViewModel @Inject constructor(
                 )
             }
         }
-    }
 
-    private fun observeIncompleteSessionsCount() {
         viewModelScope.launch {
             sessionRepository.observeIncompleteSessions().collect { sessions ->
                 _state.update { it.copy(incompleteSessionsCount = sessions.size) }
@@ -109,3 +122,4 @@ class LandingViewModel @Inject constructor(
         }
     }
 }
+
