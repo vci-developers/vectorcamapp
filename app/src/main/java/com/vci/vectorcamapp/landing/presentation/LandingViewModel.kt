@@ -26,14 +26,14 @@ class LandingViewModel @Inject constructor(
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
     private val programRepository: ProgramRepository,
-    private val sessionRepository: SessionRepository,
+    sessionRepository: SessionRepository,
 ) : CoreViewModel() {
 
     private val _state = MutableStateFlow(LandingState())
 
     private val _incompleteSessionsCount = sessionRepository.observeIncompleteSessions()
         .map { it.size }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), 0)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
 
     val state: StateFlow<LandingState> = combine(
         _state,
@@ -42,7 +42,7 @@ class LandingViewModel @Inject constructor(
         state.copy(incompleteSessionsCount = incompleteSessionsCount)
     }.stateIn(
         viewModelScope,
-        SharingStarted.WhileSubscribed(5000L),
+        SharingStarted.WhileSubscribed(),
         LandingState()
     )
 
@@ -112,12 +112,6 @@ class LandingViewModel @Inject constructor(
                 it.copy(
                     enrolledProgram = program, isLoading = false
                 )
-            }
-        }
-
-        viewModelScope.launch {
-            sessionRepository.observeIncompleteSessions().collect { sessions ->
-                _state.update { it.copy(incompleteSessionsCount = sessions.size) }
             }
         }
     }

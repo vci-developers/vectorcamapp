@@ -25,7 +25,6 @@ import com.vci.vectorcamapp.core.presentation.components.ui.ActionTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LandingActionTile(
     title: String,
