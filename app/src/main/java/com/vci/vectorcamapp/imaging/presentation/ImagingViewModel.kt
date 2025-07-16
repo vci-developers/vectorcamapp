@@ -1,6 +1,8 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.view.OrientationEventListener
 import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
@@ -17,8 +19,8 @@ import com.vci.vectorcamapp.core.data.upload.image.ImageUploadWorker
 import com.vci.vectorcamapp.core.data.upload.metadata.MetadataUploadWorker
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.Specimen
-import com.vci.vectorcamapp.core.domain.model.composites.SpecimenAndBoundingBox
 import com.vci.vectorcamapp.core.domain.model.UploadStatus
+import com.vci.vectorcamapp.core.domain.model.composites.SpecimenAndBoundingBox
 import com.vci.vectorcamapp.core.domain.repository.BoundingBoxRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
@@ -29,7 +31,6 @@ import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
-import com.vci.vectorcamapp.imaging.presentation.extensions.cropToBoundingBoxAndPad
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -48,6 +49,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -76,8 +78,7 @@ class ImagingViewModel @Inject constructor(
                 .map { relations ->
                     relations.map { relation ->
                         SpecimenAndBoundingBox(
-                            specimen = relation.specimen,
-                            boundingBox = relation.boundingBox
+                            specimen = relation.specimen, boundingBox = relation.boundingBox
                         )
                     }
                 }
@@ -213,7 +214,6 @@ class ImagingViewModel @Inject constructor(
 
                 is ImagingAction.CaptureImage -> {
                     _state.update { it.copy(isCapturing = true) }
-
                     val captureResult = cameraRepository.captureImage(action.controller)
                     _state.update { it.copy(isCapturing = false) }
 
@@ -222,18 +222,41 @@ class ImagingViewModel @Inject constructor(
                         val bitmap = image.toUprightBitmap(displayOrientation)
                         image.close()
 
+                        val jpegStream = ByteArrayOutputStream()
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
+                        val jpegByteArray = jpegStream.toByteArray()
+                        val jpegBitmap =
+                            BitmapFactory.decodeByteArray(jpegByteArray, 0, jpegByteArray.size)
+
                         // Avoid issuing error if preview bounding boxes are not yet ready
-                        val boundingBoxesList = inferenceRepository.detectSpecimen(bitmap)
+                        val boundingBoxesList = inferenceRepository.detectSpecimen(jpegBitmap)
 
                         when (boundingBoxesList.size) {
                             0 -> {
                                 emitError(ImagingError.NO_SPECIMEN_FOUND, SnackbarDuration.Short)
                             }
+
                             1 -> {
                                 val boundingBox = boundingBoxesList[0]
-                                val croppedAndPadded = bitmap.cropToBoundingBoxAndPad(boundingBox)
+                                val topLeftXFloat = boundingBox.topLeftX * bitmap.width
+                                val topLeftYFloat = boundingBox.topLeftY * bitmap.height
+                                val widthFloat = boundingBox.width * bitmap.width
+                                val heightFloat = boundingBox.height * bitmap.height
+
+                                val topLeftXAbsolute = topLeftXFloat.toInt()
+                                val topLeftYAbsolute = topLeftYFloat.toInt()
+                                val widthAbsolute = (widthFloat + (topLeftXFloat - topLeftXAbsolute)).toInt()
+                                val heightAbsolute = (heightFloat + (topLeftYFloat - topLeftYAbsolute)).toInt()
+
+                                val croppedBitmap = Bitmap.createBitmap(
+                                    jpegBitmap,
+                                    topLeftXAbsolute,
+                                    topLeftYAbsolute,
+                                    widthAbsolute,
+                                    heightAbsolute
+                                )
                                 val (species, sex, abdomenStatus) = inferenceRepository.classifySpecimen(
-                                    croppedAndPadded
+                                    croppedBitmap
                                 )
 
                                 _state.update {
@@ -243,12 +266,13 @@ class ImagingViewModel @Inject constructor(
                                             sex = sex?.label,
                                             abdomenStatus = abdomenStatus?.label,
                                         ),
-                                        currentImage = bitmap,
+                                        currentImageBytes = jpegByteArray,
                                         captureBoundingBox = boundingBox,
                                         previewBoundingBoxes = emptyList()
                                     )
                                 }
                             }
+
                             else -> {
                                 emitError(
                                     ImagingError.MULTIPLE_SPECIMENS_FOUND, SnackbarDuration.Short
@@ -268,7 +292,7 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 ImagingAction.SaveImageToSession -> {
-                    val bitmap = _state.value.currentImage ?: return@launch
+                    val jpegBytes = _state.value.currentImageBytes ?: return@launch
                     val specimenId = _state.value.currentSpecimen.id
                     val timestamp = System.currentTimeMillis()
                     val filename = buildString {
@@ -284,7 +308,8 @@ class ImagingViewModel @Inject constructor(
                         return@launch
                     }
 
-                    val saveResult = cameraRepository.saveImage(bitmap, filename, currentSession)
+                    val saveResult =
+                        cameraRepository.saveImage(jpegBytes, filename, currentSession)
 
                     saveResult.onSuccess { imageUri ->
                         val specimen = Specimen(
@@ -339,7 +364,7 @@ class ImagingViewModel @Inject constructor(
                 currentSpecimen = it.currentSpecimen.copy(
                     id = "", species = null, sex = null, abdomenStatus = null
                 ),
-                currentImage = null,
+                currentImageBytes = null,
                 captureBoundingBox = null,
                 previewBoundingBoxes = emptyList(),
             )
