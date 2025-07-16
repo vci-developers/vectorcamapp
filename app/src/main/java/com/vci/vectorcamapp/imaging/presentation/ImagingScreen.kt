@@ -54,38 +54,45 @@ fun ImagingScreen(
     HorizontalPager(
         state = pagerState, modifier = modifier.fillMaxSize()
     ) { page ->
-        if (page == 0) {
-            if (state.currentImage != null && state.captureBoundingBox != null) {
+        when (page) {
+            0 -> {
+                if (state.currentImageBytes != null && state.captureBoundingBox != null) {
+                    val specimenBitmap = remember(state.currentImageBytes) {
+                        BitmapFactory.decodeByteArray(state.currentImageBytes, 0, state.currentImageBytes.size)
+                    }
+
+                    CapturedSpecimenOverlay(
+                        specimen = state.currentSpecimen,
+                        boundingBox = state.captureBoundingBox,
+                        modifier = modifier,
+                        specimenBitmap = specimenBitmap,
+                        onSpecimenIdCorrected = { onAction(ImagingAction.CorrectSpecimenId(it)) },
+                        onRetakeImage = { onAction(ImagingAction.RetakeImage) },
+                        onSaveImageToSession = { onAction(ImagingAction.SaveImageToSession) }
+                    )
+                } else {
+                    LiveCameraPreviewPage(
+                        controller = controller,
+                        boundingBoxes = state.previewBoundingBoxes,
+                        onImageCaptured = {
+                            onAction(ImagingAction.CaptureImage(controller))
+                        },
+                        onSaveSessionProgress = { onAction(ImagingAction.SaveSessionProgress) },
+                        onSubmitSession = { onAction(ImagingAction.SubmitSession) },
+                        manualFocusPoint = state.manualFocusPoint,
+                        onAction = onAction,
+                        modifier = modifier
+                    )
+                }
+            }
+            else -> {
+                val specimenIndex = page - 1
                 CapturedSpecimenOverlay(
-                    specimen = state.currentSpecimen,
-                    boundingBox = state.captureBoundingBox,
-                    modifier = modifier,
-                    specimenBitmap = specimenBitmap,
-                    onSpecimenIdCorrected = { onAction(ImagingAction.CorrectSpecimenId(it)) },
-                    onRetakeImage = { onAction(ImagingAction.RetakeImage) },
-                    onSaveImageToSession = { onAction(ImagingAction.SaveImageToSession) }
-                )
-            } else {
-                LiveCameraPreviewPage(
-                    controller = controller,
-                    boundingBoxes = state.previewBoundingBoxes,
-                    onImageCaptured = {
-                        onAction(ImagingAction.CaptureImage(controller))
-                    },
-                    onSaveSessionProgress = { onAction(ImagingAction.SaveSessionProgress) },
-                    onSubmitSession = { onAction(ImagingAction.SubmitSession) },
-                    manualFocusPoint = state.manualFocusPoint,
-                    onAction = onAction,
+                    specimen = state.capturedSpecimensAndBoundingBoxes[specimenIndex].specimen,
+                    boundingBox = state.capturedSpecimensAndBoundingBoxes[specimenIndex].boundingBox,
                     modifier = modifier
                 )
             }
-        } else {
-            val specimenIndex = page - 1
-            CapturedSpecimenOverlay(
-                specimen = state.capturedSpecimensAndBoundingBoxes[specimenIndex].specimen,
-                boundingBox = state.capturedSpecimensAndBoundingBoxes[specimenIndex].boundingBox,
-                modifier = modifier
-            )
         }
     }
 }
