@@ -42,7 +42,7 @@ class LandingViewModel @Inject constructor(
         state.copy(incompleteSessionsCount = incompleteSessionsCount)
     }.stateIn(
         viewModelScope,
-        SharingStarted.WhileSubscribed(),
+        SharingStarted.WhileSubscribed(5000L),
         LandingState()
     )
 
