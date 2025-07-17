@@ -29,17 +29,18 @@ class LandingViewModel @Inject constructor(
     sessionRepository: SessionRepository,
 ) : CoreViewModel() {
 
-    private val _state = MutableStateFlow(LandingState())
-
     private val _incompleteSessionsCount = sessionRepository.observeIncompleteSessions()
         .map { it.size }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
 
+    private val _state = MutableStateFlow(LandingState())
     val state: StateFlow<LandingState> = combine(
         _state,
         _incompleteSessionsCount
     ) { state, incompleteSessionsCount ->
         state.copy(incompleteSessionsCount = incompleteSessionsCount)
+    }.onStart {
+        loadLandingDetails()
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000L),
@@ -48,10 +49,6 @@ class LandingViewModel @Inject constructor(
 
     private val _events = Channel<LandingEvent>()
     val events = _events.receiveAsFlow()
-
-    init {
-        loadLandingDetails()
-    }
 
     fun onAction(action: LandingAction) {
         viewModelScope.launch {
@@ -94,12 +91,14 @@ class LandingViewModel @Inject constructor(
             val programId = deviceCache.getProgramId()
             if (programId == null) {
                 _events.send(LandingEvent.NavigateBackToRegistrationScreen)
+                _state.update { it.copy(isLoading = false) }
                 return@launch
             }
 
             val program = programRepository.getProgramById(programId)
             if (program == null) {
                 _events.send(LandingEvent.NavigateBackToRegistrationScreen)
+                _state.update { it.copy(isLoading = false) }
                 return@launch
             }
 
