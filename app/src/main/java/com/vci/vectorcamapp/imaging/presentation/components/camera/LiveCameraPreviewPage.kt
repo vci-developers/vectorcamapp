@@ -177,7 +177,7 @@ fun LiveCameraPreviewPage(
 
         IconButton(
             onClick = onImageCaptured,
-            enabled = captureEnabled, // <-- disable when not enabled
+            enabled = captureEnabled,
             modifier = Modifier
                 .padding(bottom = 48.dp)
                 .size(64.dp)
