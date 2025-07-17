@@ -52,7 +52,8 @@ fun LiveCameraPreviewPage(
     onSaveSessionProgress: () -> Unit,
     onSubmitSession: () -> Unit,
     onAction: (ImagingAction) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    captureEnabled: Boolean = true
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -118,7 +119,6 @@ fun LiveCameraPreviewPage(
                         }
                     }
             ) {
-
                 manualFocusPoint?.let { focusPoint ->
                     if (containerSize != IntSize.Zero) {
                         val (offsetX, offsetY) = cameraManager.calculateFocusRingOffset(
@@ -177,6 +177,7 @@ fun LiveCameraPreviewPage(
 
         IconButton(
             onClick = onImageCaptured,
+            enabled = captureEnabled, // <-- disable when not enabled
             modifier = Modifier
                 .padding(bottom = 48.dp)
                 .size(64.dp)
