@@ -175,21 +175,22 @@ fun LiveCameraPreviewPage(
             )
         }
 
-        IconButton(
-            onClick = onImageCaptured,
-            enabled = captureEnabled,
-            modifier = Modifier
-                .padding(bottom = 48.dp)
-                .size(64.dp)
-                .background(MaterialTheme.colorScheme.primary, CircleShape)
-                .align(Alignment.BottomCenter)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_camera),
-                contentDescription = "Capture Image",
-                modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.onPrimary
-            )
+        if (captureEnabled) {
+            IconButton(
+                onClick = onImageCaptured,
+                modifier = Modifier
+                    .padding(bottom = 48.dp)
+                    .size(64.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                    .align(Alignment.BottomCenter)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_camera),
+                    contentDescription = "Capture Image",
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
     }
 }
