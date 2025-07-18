@@ -91,7 +91,7 @@ fun ImagingScreen(
                     manualFocusPoint = state.manualFocusPoint,
                     onAction = onAction,
                     modifier = modifier,
-                    captureEnabled = !state.isCapturing
+                    captureEnabled = !state.isProcessing
                 )
             }
         }
