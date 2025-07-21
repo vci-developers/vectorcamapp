@@ -59,15 +59,23 @@ fun ImagingScreen(
     HorizontalPager(
         state = pagerState, modifier = modifier.fillMaxSize()
     ) { page ->
-        if (page == state.capturedSpecimensAndBoundingBoxes.size) {
-            if (state.currentImageBytes != null && state.captureBoundingBox != null) {
+        when {
+            page < state.capturedSpecimensAndInferenceResults.size -> {
+                CapturedSpecimenOverlay(
+                    specimen = state.capturedSpecimensAndInferenceResults[page].specimen,
+                    inferenceResult = state.capturedSpecimensAndInferenceResults[page].inferenceResult,
+                    modifier = modifier
+                )
+            }
+
+            state.currentImageBytes != null -> {
                 val specimenBitmap = remember(state.currentImageBytes) {
                     BitmapFactory.decodeByteArray(state.currentImageBytes, 0, state.currentImageBytes.size)
                 }
 
                 CapturedSpecimenOverlay(
                     specimen = state.currentSpecimen,
-                    boundingBox = state.captureBoundingBox,
+                    inferenceResult = state.currentInferenceResult,
                     modifier = modifier,
                     specimenBitmap = specimenBitmap,
                     onSpecimenIdCorrected = { onAction(ImagingAction.CorrectSpecimenId(it)) },
@@ -77,7 +85,7 @@ fun ImagingScreen(
             } else {
                 LiveCameraPreviewPage(
                     controller = controller,
-                    boundingBoxes = state.previewBoundingBoxes,
+                    inferenceResults = state.previewInferenceResults,
                     onImageCaptured = {
                         onAction(ImagingAction.CaptureImage(controller))
                     },
@@ -85,7 +93,8 @@ fun ImagingScreen(
                     onSubmitSession = { onAction(ImagingAction.SubmitSession) },
                     manualFocusPoint = state.manualFocusPoint,
                     onAction = onAction,
-                    modifier = modifier
+                    modifier = modifier,
+                    captureEnabled = !state.isProcessing
                 )
             }
         } else {
