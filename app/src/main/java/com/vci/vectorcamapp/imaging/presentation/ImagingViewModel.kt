@@ -100,10 +100,16 @@ class ImagingViewModel @Inject constructor(
     }
 
     private val _state = MutableStateFlow(ImagingState())
+
+    private val _isUiReady = MutableStateFlow(false)
+
     val state: StateFlow<ImagingState> = combine(
-        _specimensAndInferenceResults, _state
-    ) { specimensAndInferenceResults, state ->
-        state.copy(capturedSpecimensAndInferenceResults = specimensAndInferenceResults)
+        _specimensAndInferenceResults, _state, _isUiReady
+    ) { specimensAndInferenceResults, state, isUiReady->
+        state.copy(
+            capturedSpecimensAndInferenceResults = specimensAndInferenceResults,
+            isLoading = !isUiReady
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000L),
@@ -127,6 +133,10 @@ class ImagingViewModel @Inject constructor(
     fun onAction(action: ImagingAction) {
         viewModelScope.launch {
             when (action) {
+                is ImagingAction.InitializationComplete -> {
+                    _isUiReady.value = true
+                }
+
                 is ImagingAction.ManualFocusAt -> {
                     _state.update { it.copy(manualFocusPoint = action.offset) }
                 }
