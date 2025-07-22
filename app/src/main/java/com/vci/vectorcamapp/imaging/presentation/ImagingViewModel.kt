@@ -141,6 +141,10 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 is ImagingAction.ProcessFrame -> {
+                    if (!_state.value.isCameraReady) {
+                        _state.update { it.copy(isCameraReady = true) }
+                    }
+
                     try {
                         val displayOrientation = _state.value.displayOrientation
                         val bitmap = action.frame.toUprightBitmap(displayOrientation)
@@ -213,6 +217,8 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 is ImagingAction.CaptureImage -> {
+                    if (!_state.value.isCameraReady) return@launch
+
                     _state.update { it.copy(isCapturing = true) }
                     val captureResult = cameraRepository.captureImage(action.controller)
                     _state.update { it.copy(isCapturing = false) }
@@ -367,6 +373,7 @@ class ImagingViewModel @Inject constructor(
                 currentImageBytes = null,
                 captureBoundingBox = null,
                 previewBoundingBoxes = emptyList(),
+                isCameraReady = false
             )
         }
     }

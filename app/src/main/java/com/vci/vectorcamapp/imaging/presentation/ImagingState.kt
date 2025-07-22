@@ -26,5 +26,6 @@ data class ImagingState(
     val previewBoundingBoxes: List<BoundingBox> = emptyList(),
     val capturedSpecimensAndBoundingBoxes: List<SpecimenAndBoundingBox> = emptyList(),
     val displayOrientation: Int = 0,
-    val manualFocusPoint: Offset? = null
+    val manualFocusPoint: Offset? = null,
+    val isCameraReady: Boolean = false
 )
