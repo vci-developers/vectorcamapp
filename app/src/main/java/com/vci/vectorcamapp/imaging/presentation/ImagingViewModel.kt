@@ -223,8 +223,7 @@ class ImagingViewModel @Inject constructor(
 
                 is ImagingAction.CaptureImage -> {
                     if (!_state.value.isCameraReady) return@launch
-
-                    _state.update { it.copy(isCapturing = true) }
+                    
                     _state.update { it.copy(isProcessing = true) }
                     val captureResult = cameraRepository.captureImage(action.controller)
 
@@ -426,9 +425,7 @@ class ImagingViewModel @Inject constructor(
                     abdomenStatusLogits = null
                 ),
                 currentImageBytes = null,
-                captureBoundingBox = null,
-                previewBoundingBoxes = emptyList(),
-                isCameraReady = false
+                isCameraReady = false,
                 previewInferenceResults = emptyList(),
             )
         }
