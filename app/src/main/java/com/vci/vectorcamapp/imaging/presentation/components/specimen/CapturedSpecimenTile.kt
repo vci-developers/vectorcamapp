@@ -56,14 +56,11 @@ fun CapturedSpecimenTile(
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
-
-    val aspectRatio = 4f / 3f
-
     InfoTile(modifier = modifier) {
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1f / aspectRatio)
+                .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
         ) {
             val containerSize = IntSize(
                 width = with(density) { maxWidth.roundToPx() },

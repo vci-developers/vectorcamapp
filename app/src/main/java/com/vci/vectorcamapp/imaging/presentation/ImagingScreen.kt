@@ -43,7 +43,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
-import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreviewPage
+import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
+import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
+import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreview
 import com.vci.vectorcamapp.imaging.presentation.components.specimen.CapturedSpecimenTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -92,7 +94,7 @@ fun ImagingScreen(
                 )
 
                 Column(
-                    verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxSize()
+                    verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxSize()
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -152,7 +154,7 @@ fun ImagingScreen(
                 }
 
                 Column(
-                    verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxSize()
+                    verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxSize()
                 ) {
                     CapturedSpecimenTile(
                         specimen = state.currentSpecimen,
@@ -179,19 +181,78 @@ fun ImagingScreen(
             }
 
             else -> {
-                LiveCameraPreviewPage(
-                    controller = controller,
-                    inferenceResults = state.previewInferenceResults,
-                    onImageCaptured = {
-                        onAction(ImagingAction.CaptureImage(controller))
-                    },
-                    onSaveSessionProgress = { onAction(ImagingAction.SaveSessionProgress) },
-                    onSubmitSession = { onAction(ImagingAction.SubmitSession) },
-                    manualFocusPoint = state.manualFocusPoint,
-                    onAction = onAction,
-                    modifier = modifier,
-                    captureEnabled = !state.isProcessing
-                )
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    modifier = modifier.fillMaxSize()
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingLarge),
+                        modifier = Modifier.padding(
+                            start = MaterialTheme.dimensions.paddingMedium,
+                            end = MaterialTheme.dimensions.paddingMedium,
+                            top = MaterialTheme.dimensions.paddingLarge
+                        )
+                    ) {
+                        ActionButton(
+                            label = "Save and Exit",
+                            onClick = { onAction(ImagingAction.SaveSessionProgress) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        ActionButton(
+                            label = "Submit",
+                            onClick = { onAction(ImagingAction.SubmitSession) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    InfoTile(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(vertical = MaterialTheme.dimensions.paddingMedium)
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.SpaceEvenly,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Box(
+                                modifier = Modifier.background(
+                                    color = MaterialTheme.colors.accent,
+                                    shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
+                                )
+                            ) {
+                                Text(
+                                    text = "Specimen ${page + 1} in this Session",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colors.textPrimary,
+                                    modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
+                                )
+                            }
+
+                            TextEntryField(
+                                placeholder = "Specimen ID",
+                                value = state.currentSpecimen.id,
+                                onValueChange = { onAction(ImagingAction.CorrectSpecimenId(it)) },
+                                modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                            )
+
+                            LiveCameraPreview(
+                                controller = controller,
+                                inferenceResults = state.previewInferenceResults,
+                                manualFocusPoint = state.manualFocusPoint,
+                                onEnableManualFocus = { onAction(ImagingAction.ManualFocusAt(it)) },
+                                onCancelManualFocus = { onAction(ImagingAction.CancelManualFocus) },
+                            )
+
+                            ActionButton(
+                                label = "Capture",
+                                onClick = { onAction(ImagingAction.CaptureImage(controller)) },
+                                iconPainter = painterResource(id = R.drawable.ic_camera),
+                                modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                            )
+                        }
+                    }
+                }
             }
         }
     }
