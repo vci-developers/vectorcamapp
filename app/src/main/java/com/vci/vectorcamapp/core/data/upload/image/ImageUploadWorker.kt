@@ -20,7 +20,6 @@ import com.vci.vectorcamapp.core.domain.model.UploadStatus
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
-import com.vci.vectorcamapp.core.domain.util.successOrNull
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import io.tus.java.client.TusClient
@@ -180,32 +179,69 @@ class ImageUploadWorker @AssistedInject constructor(
             "imageId" to imageId.toString()
         )
 
-        val uploadResult = attemptUploadWithRetries(file, specimen, sessionId, md5, metadata)
+        val uploadResult: DomainResult<String, NetworkError> = run {
+            for (attempt in 1..MAX_RETRIES) {
+                val result: DomainResult<String, NetworkError> = try {
+                    val uniqueFingerprint = "${specimen.id}-$md5"
+                    val tusPath = "specimens/${specimen.id}/images/tus"
 
-        val finalStatus = if (uploadResult is DomainResult.Success) {
-            UploadStatus.COMPLETED
-        } else {
-            UploadStatus.FAILED
-        }
-        specimenRepository.updateSpecimen(specimen.copy(imageUploadStatus = finalStatus), sessionId)
-        file.delete()
-        return uploadResult
-    }
+                    tusClient.uploadCreationURL = URL(constructUrl(tusPath))
+                    val upload = createTusUpload(file, uniqueFingerprint, metadata)
+                    Log.d("ImageUploadWorker", "Attempt $attempt: Start/resume ${file.name} (fp=$uniqueFingerprint,md5=$md5)")
 
-    private suspend fun attemptUploadWithRetries(
-        file: File,
-        specimen: Specimen,
-        sessionId: UUID,
-        md5: String,
-        metadata: Map<String, String>
-    ): DomainResult<String, NetworkError> {
-        for (attempt in 1..MAX_RETRIES) {
-            try {
-                val result = performUpload(file, specimen, sessionId, md5, metadata)
+                    val uploader: TusUploader = try {
+                        val uploaderInstance = tusClient.resumeOrCreateUpload(upload)
+                        specimenRepository.updateSpecimen(
+                            specimen.copy(imageUploadStatus = UploadStatus.IN_PROGRESS),
+                            sessionId
+                        )
+                        Log.d("ImageUploadWorker", "Connection established for ${specimen.id}.")
+                        uploaderInstance
+                    } catch (e: TusProtocolException) {
+                        if (e.causingConnection?.responseCode == HttpURLConnection.HTTP_CONFLICT) {
+                            val location = e.causingConnection.getHeaderField("Location")
+                            if (location != null) {
+                                Log.i("ImageUploadWorker", "Upload for ${specimen.id} already exists on server (conflict). Treating as success.")
+                                return@run DomainResult.Success(location)
+                            }
+                        }
+                        throw e
+                    }
+
+                    val loopResult = executeUploadLoop(uploader, upload)
+                    if (loopResult is DomainResult.Error) {
+                        loopResult
+                    } else {
+                        when (val finalUrlResult = safeFinish(uploader)) {
+                            is DomainResult.Success -> {
+                                updateProgressNotification("Verifying...")
+                                Log.d("ImageUploadWorker", "Upload finished successfully: ${finalUrlResult.data}")
+                                DomainResult.Success(finalUrlResult.data.toString())
+                            }
+                            is DomainResult.Error -> finalUrlResult
+                        }
+                    }
+                } catch (e: TusProtocolException) {
+                    Log.w("ImageUploadWorker", "Attempt $attempt failed with TusProtocolException.", e)
+                    if (e.shouldRetry()) {
+                        DomainResult.Error(NetworkError.SERVER_ERROR)
+                    } else {
+                        DomainResult.Error(NetworkError.CLIENT_ERROR)
+                    }
+                } catch (e: IOException) {
+                    Log.w("ImageUploadWorker", "Attempt $attempt failed with IOException.", e)
+                    DomainResult.Error(NetworkError.NO_INTERNET)
+                } catch (e: Exception) {
+                    if (isStopped) {
+                        throw CancellationException("Worker was stopped by the system.", e)
+                    }
+                    Log.e("ImageUploadWorker", "Exception on attempt $attempt for specimen ${specimen.id}.", e)
+                    return@run DomainResult.Error(NetworkError.UNKNOWN_ERROR)
+                }
 
                 if (result is DomainResult.Success) {
                     Log.d("ImageUploadWorker", "Success for specimen ${specimen.id} on attempt $attempt")
-                    return result
+                    return@run result
                 }
 
                 result as DomainResult.Error<NetworkError>
@@ -223,103 +259,24 @@ class ImageUploadWorker @AssistedInject constructor(
                 if (!isRetryable || attempt == MAX_RETRIES) {
                     if (!isRetryable) {
                         Log.e("ImageUploadWorker", "Non-retryable error for specimen ${specimen.id}.")
-                    }
-                    return result
-                }
-
-            } catch (e: Exception) {
-                if (isStopped) {
-                    throw CancellationException("Worker was stopped by the system.", e)
-                }
-                Log.e("ImageUploadWorker", "Exception on attempt $attempt for specimen ${specimen.id}.", e)
-                return DomainResult.Error(NetworkError.UNKNOWN_ERROR)
-            }
-        }
-
-        return DomainResult.Error(NetworkError.UNKNOWN_ERROR)
-    }
-
-    private suspend fun performUpload(
-        file: File,
-        specimen: Specimen,
-        sessionId: UUID,
-        md5: String,
-        metadata: Map<String, String>
-    ): DomainResult<String, NetworkError> {
-        val uniqueFingerprint = "${specimen.id}-$md5"
-        val tusPath = "specimens/${specimen.id}/images/tus"
-
-        tusClient.uploadCreationURL = URL(constructUrl(tusPath))
-
-        val upload = createTusUpload(file, uniqueFingerprint, metadata)
-
-        Log.d("ImageUploadWorker", "Start/resume ${file.name} (fp=$uniqueFingerprint,md5=$md5)")
-
-        val uploaderResult = try {
-            val uploader = tusClient.resumeOrCreateUpload(upload)
-
-            Log.d("ImageUploadWorker", "Connection established for ${specimen.id}. Setting status to IN_PROGRESS.")
-            specimenRepository.updateSpecimen(
-                specimen.copy(imageUploadStatus = UploadStatus.IN_PROGRESS),
-                sessionId
-            )
-
-            DomainResult.Success(uploader)
-        } catch (e: TusProtocolException) {
-            return when {
-                e.causingConnection?.responseCode == HttpURLConnection.HTTP_CONFLICT -> {
-                    val location = e.causingConnection.getHeaderField("Location")
-                    if (location != null) {
-                        specimenRepository.updateSpecimen(
-                            specimen.copy(imageUploadStatus = UploadStatus.IN_PROGRESS),
-                            sessionId
-                        )
-                        DomainResult.Success(location)
                     } else {
-                        DomainResult.Error(NetworkError.SERVER_ERROR)
+                        Log.e("ImageUploadWorker", "Max retries reached for specimen ${specimen.id}.")
                     }
-                }
-
-                e.shouldRetry() -> {
-                    Log.w(
-                        "ImageUploadWorker",
-                        "resumeOrCreateUpload failed with a retryable server error.",
-                        e
-                    )
-                    DomainResult.Error(NetworkError.SERVER_ERROR)
-                }
-
-                else -> {
-                    Log.e(
-                        "ImageUploadWorker",
-                        "resumeOrCreateUpload failed with a non-retryable client error.",
-                        e
-                    )
-                    DomainResult.Error(NetworkError.CLIENT_ERROR)
+                    return@run result
                 }
             }
-        } catch (e: IOException) {
-            Log.e("ImageUploadWorker", "resumeOrCreateUpload failed with IOException", e)
-            return DomainResult.Error(NetworkError.NO_INTERNET)
+            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
 
-        val uploader =
-            uploaderResult.successOrNull() ?: return DomainResult.Error(NetworkError.UNKNOWN_ERROR)
 
-        val loopResult = executeUploadLoop(uploader, upload)
-        if (loopResult is DomainResult.Error) {
-            return DomainResult.Error(loopResult.error)
+        val finalStatus = if (uploadResult is DomainResult.Success) {
+            UploadStatus.COMPLETED
+        } else {
+            UploadStatus.FAILED
         }
-
-        return when (val finalUrlResult = safeFinish(uploader)) {
-            is DomainResult.Success -> {
-                updateProgressNotification("Verifying...")
-                Log.d("ImageUploadWorker", "Upload finished successfully: ${finalUrlResult.data}")
-                DomainResult.Success(finalUrlResult.data.toString())
-            }
-
-            is DomainResult.Error -> DomainResult.Error(finalUrlResult.error)
-        }
+        specimenRepository.updateSpecimen(specimen.copy(imageUploadStatus = finalStatus), sessionId)
+        file.delete()
+        return uploadResult
     }
 
     private suspend fun executeUploadLoop(
@@ -400,7 +357,6 @@ class ImageUploadWorker @AssistedInject constructor(
                     }
 
                     recoveryAttempts++
-
                     if (recoveryAttempts >= MAX_RETRIES) {
                         Log.e(
                             "ImageUploadWorker",
