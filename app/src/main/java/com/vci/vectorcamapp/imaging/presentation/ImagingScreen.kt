@@ -233,6 +233,7 @@ fun ImagingScreen(
                                 placeholder = "Specimen ID",
                                 value = state.currentSpecimen.id,
                                 onValueChange = { onAction(ImagingAction.CorrectSpecimenId(it)) },
+                                singleLine = true,
                                 modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingMedium)
                             )
 
@@ -248,6 +249,7 @@ fun ImagingScreen(
                                 label = "Capture",
                                 onClick = { onAction(ImagingAction.CaptureImage(controller)) },
                                 iconPainter = painterResource(id = R.drawable.ic_camera),
+                                enabled = !state.isProcessing,
                                 modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingMedium)
                             )
                         }
