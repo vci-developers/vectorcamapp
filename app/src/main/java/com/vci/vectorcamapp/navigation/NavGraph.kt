@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -151,11 +152,24 @@ fun NavGraph(startDestination: Destination) {
             }
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                ImagingScreen(
-                    state = state,
-                    onAction = viewModel::onAction,
-                    modifier = Modifier.padding(innerPadding)
-                )
+                Box(
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize()
+                ) {
+                    ImagingScreen(
+                        state = state,
+                        onAction = viewModel::onAction,
+                        modifier = Modifier.fillMaxSize()
+                    )
+
+                    if (state.isLoading) {
+                        LoadingAnimation(
+                            text = "Loading...",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
             }
         }
 

@@ -14,5 +14,5 @@ sealed interface ImagingAction {
     data object RetakeImage : ImagingAction
     data class ManualFocusAt(val offset: Offset) : ImagingAction
     data object CancelManualFocus : ImagingAction
-    data object InitializationComplete : ImagingAction
+    data object UiSettled : ImagingAction
 }

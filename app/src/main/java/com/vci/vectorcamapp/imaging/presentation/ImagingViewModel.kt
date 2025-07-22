@@ -133,7 +133,7 @@ class ImagingViewModel @Inject constructor(
     fun onAction(action: ImagingAction) {
         viewModelScope.launch {
             when (action) {
-                is ImagingAction.InitializationComplete -> {
+                is ImagingAction.UiSettled -> {
                     _isUiReady.value = true
                 }
 
