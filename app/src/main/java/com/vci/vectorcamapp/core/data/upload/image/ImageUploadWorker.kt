@@ -29,7 +29,6 @@ import io.tus.java.client.TusUploader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -69,9 +68,8 @@ class ImageUploadWorker @AssistedInject constructor(
         private const val SUCCESS_CHUNK_SIZE_MULTIPLIER = 2
         private const val FAILURE_CHUNK_SIZE_DIVIDER = 2
 
-        private const val BYTE_ARRAY_SIZE = 8192
+        private const val BYTE_ARRAY_SIZE = 8 * 1024
 
-        private const val NETWORK_TIMEOUT_MS = 60_000L
         private const val MAX_RETRIES = 5
 
         private const val CHANNEL_ID = "image_upload_channel"
@@ -103,10 +101,6 @@ class ImageUploadWorker @AssistedInject constructor(
             return WorkerResult.failure()
         }
 
-        Log.i("ImageUploadWorker", "Performing cleanup for session $sessionId...")
-        performStartupCleanup(sessionId)
-        Log.d("ImageUploadWorker", "Startup cleanup complete.")
-
         val sessionWithSpecimens = sessionRepository.getSessionWithSpecimensById(sessionId)
         if (sessionWithSpecimens == null) {
             Log.e("ImageUploadWorker", "Session $sessionId not found in the database.")
@@ -131,7 +125,12 @@ class ImageUploadWorker @AssistedInject constructor(
         var encounteredPermanentFailure = false
 
         specimensToUpload.forEachIndexed { index, specimen ->
-            when (val result = uploadSingleSpecimen(specimen, sessionId, index + 1, specimensToUpload.size)) {
+            notificationTotalImages = specimensToUpload.size
+            notificationCurrentImageIndex = index + 1
+
+            val imageId = 50 // TODO: UPDATE TO REAL IMAGEID
+
+            when (val result = uploadSingleSpecimen(specimen, sessionId, imageId)) {
                 is DomainResult.Success -> {
                     successfulUploads++
             }
@@ -149,13 +148,10 @@ class ImageUploadWorker @AssistedInject constructor(
 
         showFinalStatusNotification(successfulUploads, specimensToUpload.size)
         return if (successfulUploads == specimensToUpload.size) {
-            Log.i("ImageUploadWorker", "Work finished: All images uploaded successfully.")
             WorkerResult.success()
         } else if (encounteredPermanentFailure) {
-            Log.w("ImageUploadWorker", "Work finished: Permanent failure encountered. Not retrying.")
             WorkerResult.failure()
         } else {
-            Log.i("ImageUploadWorker", "Work finished: Transient failures encountered. Requesting retry.")
             WorkerResult.retry()
         }
     }
@@ -163,18 +159,13 @@ class ImageUploadWorker @AssistedInject constructor(
     private suspend fun uploadSingleSpecimen(
         specimen: Specimen,
         sessionId: UUID,
-        currentIndex: Int,
-        totalImages: Int
+        imageId: Int
     ): DomainResult<String, NetworkError> {
-        notificationTotalImages = totalImages
-        notificationCurrentImageIndex = currentIndex
-
         val (file, contentType, md5) = try {
             val (tempFile, type) = prepareFile(context.contentResolver, specimen.imageUri, specimen.id)
             Triple(tempFile, type, calculateMD5(tempFile))
         } catch (e: Exception) {
             if (isStopped) {
-                Log.w("ImageUploadWorker", "Worker was stopped during file preparation.")
                 throw CancellationException("Worker was stopped during file preparation.", e)
             }
             Log.e("ImageUploadWorker", "Failed to prepare file or calculate MD5 for specimen ${specimen.id}.", e)
@@ -182,7 +173,14 @@ class ImageUploadWorker @AssistedInject constructor(
             return DomainResult.Error(NetworkError.CLIENT_ERROR)
         }
 
-        val uploadResult = attemptUploadWithRetries(file, contentType, specimen, sessionId, md5)
+        val metadata = mapOf(
+            "filename" to file.name,
+            "contentType" to contentType,
+            "filemd5" to md5,
+            "imageId" to imageId.toString()
+        )
+
+        val uploadResult = attemptUploadWithRetries(file, specimen, sessionId, md5, metadata)
 
         val finalStatus = if (uploadResult is DomainResult.Success) {
             UploadStatus.COMPLETED
@@ -191,21 +189,19 @@ class ImageUploadWorker @AssistedInject constructor(
         }
         specimenRepository.updateSpecimen(specimen.copy(imageUploadStatus = finalStatus), sessionId)
         file.delete()
-        Log.d("ImageUploadWorker", "Cleaned up cache file: ${file.name}")
-
         return uploadResult
     }
 
     private suspend fun attemptUploadWithRetries(
         file: File,
-        contentType: String?,
         specimen: Specimen,
         sessionId: UUID,
-        md5: String
+        md5: String,
+        metadata: Map<String, String>
     ): DomainResult<String, NetworkError> {
         for (attempt in 1..MAX_RETRIES) {
             try {
-                val result = performUpload(file, contentType, specimen, sessionId, md5)
+                val result = performUpload(file, specimen, sessionId, md5, metadata)
 
                 if (result is DomainResult.Success) {
                     Log.d("ImageUploadWorker", "Success for specimen ${specimen.id} on attempt $attempt")
@@ -233,7 +229,6 @@ class ImageUploadWorker @AssistedInject constructor(
 
             } catch (e: Exception) {
                 if (isStopped) {
-                    Log.w("ImageUploadWorker", "Worker was stopped by the system during attempt $attempt.")
                     throw CancellationException("Worker was stopped by the system.", e)
                 }
                 Log.e("ImageUploadWorker", "Exception on attempt $attempt for specimen ${specimen.id}.", e)
@@ -246,18 +241,17 @@ class ImageUploadWorker @AssistedInject constructor(
 
     private suspend fun performUpload(
         file: File,
-        contentType: String?,
         specimen: Specimen,
         sessionId: UUID,
-        md5: String
+        md5: String,
+        metadata: Map<String, String>
     ): DomainResult<String, NetworkError> {
         val uniqueFingerprint = "${specimen.id}-$md5"
         val tusPath = "specimens/${specimen.id}/images/tus"
 
         tusClient.uploadCreationURL = URL(constructUrl(tusPath))
 
-        // TODO: UPDATE HERE WHEN WE GET REAL IMAGEID
-        val upload = createTusUpload(file, uniqueFingerprint, contentType, md5, "50")
+        val upload = createTusUpload(file, uniqueFingerprint, metadata)
 
         Log.d("ImageUploadWorker", "Start/resume ${file.name} (fp=$uniqueFingerprint,md5=$md5)")
 
@@ -274,11 +268,6 @@ class ImageUploadWorker @AssistedInject constructor(
         } catch (e: TusProtocolException) {
             return when {
                 e.causingConnection?.responseCode == HttpURLConnection.HTTP_CONFLICT -> {
-                    Log.w(
-                        "ImageUploadWorker",
-                        "resumeOrCreateUpload returned with 409 Conflict.",
-                        e
-                    )
                     val location = e.causingConnection.getHeaderField("Location")
                     if (location != null) {
                         specimenRepository.updateSpecimen(
@@ -287,10 +276,6 @@ class ImageUploadWorker @AssistedInject constructor(
                         )
                         DomainResult.Success(location)
                     } else {
-                        Log.e(
-                            "ImageUploadWorker",
-                            "Conflict response received without a Location header."
-                        )
                         DomainResult.Error(NetworkError.SERVER_ERROR)
                     }
                 }
@@ -351,9 +336,7 @@ class ImageUploadWorker @AssistedInject constructor(
             uploader.requestPayloadSize = currentChunkSize
 
             val chunkResult = try {
-                withTimeout(NETWORK_TIMEOUT_MS) {
-                    DomainResult.Success(uploader.uploadChunk())
-                }
+                DomainResult.Success(uploader.uploadChunk())
             } catch (e: SocketTimeoutException) {
                 DomainResult.Error(NetworkError.REQUEST_TIMEOUT)
             } catch (e: TimeoutCancellationException) {
@@ -368,7 +351,6 @@ class ImageUploadWorker @AssistedInject constructor(
                 DomainResult.Error(NetworkError.NO_INTERNET)
             } catch (e: Exception) {
                 if (isStopped) {
-                    Log.w("ImageUploadWorker", "Worker was stopped during chunk upload.")
                     throw CancellationException("Worker was stopped during chunk upload.", e)
                 }
                 DomainResult.Error(NetworkError.UNKNOWN_ERROR)
@@ -378,7 +360,6 @@ class ImageUploadWorker @AssistedInject constructor(
                 is DomainResult.Success -> {
                     val bytesUploaded = chunkResult.data
                     if (bytesUploaded <= -1) {
-                        Log.w("ImageUploadWorker", "File stream ended unexpectedly.")
                         break
                     }
                     val percent =
@@ -413,10 +394,6 @@ class ImageUploadWorker @AssistedInject constructor(
                         (currentChunkSize / FAILURE_CHUNK_SIZE_DIVIDER).coerceAtLeast(
                             MIN_CHUNK_SIZE_BYTES
                         )
-                    Log.w(
-                        "ImageUploadWorker",
-                        "Upload error: $error. Reducing chunk size to $currentChunkSize bytes."
-                    )
 
                     if (error != NetworkError.REQUEST_TIMEOUT && error != NetworkError.NO_INTERNET && error != NetworkError.SERVER_ERROR) {
                         return DomainResult.Error(error)
@@ -436,7 +413,6 @@ class ImageUploadWorker @AssistedInject constructor(
                         uploader = tusClient.resumeOrCreateUpload(upload)
                     } catch (resumeException: Exception) {
                         if (isStopped) {
-                            Log.w("ImageUploadWorker", "Worker was stopped by the system while trying to resume upload.")
                             throw CancellationException("Worker was stopped by the system.", resumeException)
                         }
                         Log.e("ImageUploadWorker", "Failed to resume upload.", resumeException)
@@ -452,17 +428,12 @@ class ImageUploadWorker @AssistedInject constructor(
     private fun createTusUpload(
         file: File,
         fingerprint: String,
-        contentType: String?,
-        md5: String,
-        imageId: String
-    ) = TusUpload(file).apply {
-        this.fingerprint = fingerprint
-        metadata = mapOf(
-            "filename" to file.name,
-            "contentType" to (contentType ?: "application/octet-stream"),
-            "filemd5" to md5,
-            "imageId" to imageId
-        )
+        metadata: Map<String, String>
+    ): TusUpload {
+        return TusUpload(file).apply {
+            this.fingerprint = fingerprint
+            this.metadata = metadata
+        }
     }
 
     private fun calculateMD5(file: File): String {
@@ -481,7 +452,7 @@ class ImageUploadWorker @AssistedInject constructor(
         resolver: ContentResolver,
         source: Uri,
         specimenId: String
-    ): Pair<File, String?> =
+    ): Pair<File, String> =
         withContext(Dispatchers.IO) {
             val mimeType = resolver.getType(source)
             val extension = when (mimeType) {
@@ -491,23 +462,14 @@ class ImageUploadWorker @AssistedInject constructor(
             }
             val filename = "upload_specimen_$specimenId.$extension"
             val destination = File(context.cacheDir, filename)
-            if (destination.exists()) {
-                Log.d(
-                    "ImageUploadWorker",
-                    "Found existing cache file, reusing: ${destination.name}"
-                )
-            } else {
+            if (!destination.exists()) {
                 resolver.openInputStream(source)?.use { input ->
                     FileOutputStream(destination).use { output ->
                         input.copyTo(output)
                     }
                 } ?: throw IOException("Unable to open $source")
-                Log.d(
-                    "ImageUploadWorker",
-                    "Prepared ${destination.name} (${destination.length()} bytes)"
-                )
             }
-            return@withContext destination to mimeType
+            return@withContext Pair(destination, mimeType ?: "application/octet-stream")
         }
 
     private suspend fun safeFinish(uploader: TusUploader): DomainResult<URL, NetworkError> =
@@ -528,36 +490,12 @@ class ImageUploadWorker @AssistedInject constructor(
                 DomainResult.Error(NetworkError.NO_INTERNET)
             } catch (e: Exception) {
                 if (isStopped) {
-                    Log.w("ImageUploadWorker", "Worker was stopped during Tus finish().")
                     throw CancellationException("Worker was stopped during Tus finish().", e)
                 }
                 Log.e("ImageUploadWorker", "finish() failed due to unexpected exception.", e)
                 DomainResult.Error(NetworkError.UNKNOWN_ERROR)
             }
         }
-
-    private suspend fun performStartupCleanup(sessionId: UUID) {
-        Log.i("ImageUploadWorker", "Performing cleanup for session $sessionId...")
-        try {
-            val specimens = specimenRepository.getSpecimensBySession(sessionId)
-
-            val specimensToReset = specimens.filter {
-                it.imageUploadStatus == UploadStatus.IN_PROGRESS || it.imageUploadStatus == UploadStatus.FAILED
-            }
-
-            if (specimensToReset.isNotEmpty()) {
-                specimensToReset.forEach { specimen ->
-                    specimenRepository.updateSpecimen(
-                        specimen.copy(imageUploadStatus = UploadStatus.NOT_STARTED),
-                        sessionId
-                    )
-                }
-            }
-            Log.d("ImageUploadWorker", "Startup cleanup complete.")
-        } catch (e: Exception) {
-            Log.e("ImageUploadWorker", "Error during startup cleanup", e)
-        }
-    }
 
     private fun createNotificationChannel() {
         val channel =
