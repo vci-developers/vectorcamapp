@@ -54,7 +54,6 @@ fun ImagingScreen(
 
     LaunchedEffect(state.capturedSpecimensAndInferenceResults.size) {
         pagerState.scrollToPage(state.capturedSpecimensAndInferenceResults.size)
-        onAction(ImagingAction.UiSettled)
     }
 
     HorizontalPager(

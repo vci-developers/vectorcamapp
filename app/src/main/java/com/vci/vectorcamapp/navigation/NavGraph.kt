@@ -152,23 +152,16 @@ fun NavGraph(startDestination: Destination) {
             }
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                Box(
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize()
-                ) {
-                    ImagingScreen(
+                when (state.isLoading) {
+                    true -> LoadingAnimation(
+                        text = "Loading specimens...", modifier = Modifier.padding(innerPadding)
+                    )
+                    
+                    false -> ImagingScreen(
                         state = state,
                         onAction = viewModel::onAction,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.padding(innerPadding)
                     )
-
-                    if (state.isLoading) {
-                        LoadingAnimation(
-                            text = "Loading...",
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
                 }
             }
         }
