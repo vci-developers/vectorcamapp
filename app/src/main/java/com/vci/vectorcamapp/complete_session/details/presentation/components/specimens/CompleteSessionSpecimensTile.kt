@@ -1,8 +1,10 @@
 package com.vci.vectorcamapp.complete_session.details.presentation.components.specimens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -16,12 +18,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.toSize
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.vci.vectorcamapp.R
@@ -32,6 +38,8 @@ import com.vci.vectorcamapp.ui.extensions.color
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.extensions.displayName
+import net.engawapg.lib.zoomable.rememberZoomState
+import net.engawapg.lib.zoomable.zoomable
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -45,12 +53,27 @@ fun CompleteSessionSpecimensTile(
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
     InfoTile(modifier = modifier) {
-        AsyncImage(
-            model = ImageRequest.Builder(context).data(specimen.imageUri).build(),
-            contentDescription = "Specimen Image: ${specimen.id}",
-            contentScale = ContentScale.Fit,
-            modifier = Modifier.fillMaxSize()
-        )
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
+                .clip(RectangleShape)
+        ) {
+            val containerSize = IntSize(constraints.maxWidth, constraints.maxHeight)
+            val zoomState = rememberZoomState(
+                contentSize = containerSize.toSize(),
+                maxScale = 5f
+            )
+
+            AsyncImage(
+                model = ImageRequest.Builder(context).data(specimen.imageUri).build(),
+                contentDescription = "Specimen Image: ${specimen.id}",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zoomable(zoomState)
+            )
+        }
 
         Column(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),

@@ -162,6 +162,9 @@ dependencies {
     // JSON Serialization Library
     implementation(libs.kotlinx.serialization.json) // Kotlinx JSON serialization library
 
+    // Zoom Gesture Utils Library
+    implementation(libs.zoomable)
+
     // Testing Dependencies
     testImplementation(libs.junit) // JUnit for unit tests
     androidTestImplementation(libs.androidx.junit) // AndroidX JUnit test library

@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,12 +23,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.toSize
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -42,6 +47,8 @@ import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
 import java.util.Locale
+import net.engawapg.lib.zoomable.rememberZoomState
+import net.engawapg.lib.zoomable.zoomable
 
 @Composable
 fun CapturedSpecimenTile(
@@ -61,27 +68,41 @@ fun CapturedSpecimenTile(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
+                .clip(RectangleShape)
         ) {
             val containerSize = IntSize(
                 width = with(density) { maxWidth.roundToPx() },
                 height = with(density) { maxHeight.roundToPx() })
 
-            if (specimenBitmap != null) {
-                Image(
-                    bitmap = specimenBitmap.asImageBitmap(),
-                    contentDescription = specimen.id,
-                    contentScale = ContentScale.FillBounds,
-                )
-            } else if (specimen.imageUri != Uri.EMPTY) {
-                AsyncImage(
-                    model = ImageRequest.Builder(context).data(specimen.imageUri).crossfade(true)
-                        .build(), contentDescription = specimen.id, contentScale = ContentScale.Fit
+            val zoomState = rememberZoomState(
+                contentSize = containerSize.toSize(),
+                maxScale = 5f
+            )
+
+            Box(
+                modifier = Modifier
+                    .zoomable(zoomState)
+            ) {
+                if (specimenBitmap != null) {
+                    Image(
+                        bitmap = specimenBitmap.asImageBitmap(),
+                        contentDescription = specimen.id,
+                        contentScale = ContentScale.FillBounds,
+                    )
+                } else if (specimen.imageUri != Uri.EMPTY) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(context).data(specimen.imageUri)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = specimen.id,
+                        contentScale = ContentScale.Fit
+                    )
+                }
+
+                BoundingBoxOverlay(
+                    inferenceResult = inferenceResult, overlaySize = containerSize
                 )
             }
-
-            BoundingBoxOverlay(
-                inferenceResult = inferenceResult, overlaySize = containerSize
-            )
         }
 
         Column(
