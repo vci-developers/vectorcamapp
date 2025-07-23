@@ -156,15 +156,18 @@ class ImageUploadWorker @AssistedInject constructor(
         sessionId: UUID,
         imageId: Int
     ): DomainResult<String, NetworkError> {
+        var tempFile: File? = null
         val (file, contentType, md5) = try {
-            val (tempFile, type) = prepareFile(context.contentResolver, specimen.imageUri, specimen.id)
-            Triple(tempFile, type, calculateMD5(tempFile))
+            val (prepared, type) = prepareFile(specimen.imageUri, specimen.id)
+            tempFile = prepared
+            Triple(prepared, type, calculateMD5(prepared))
         } catch (e: Exception) {
             if (isStopped) {
                 throw CancellationException("Worker was stopped during file preparation.", e)
             }
             Log.e("ImageUploadWorker", "Failed to prepare file or calculate MD5 for specimen ${specimen.id}.", e)
             specimenRepository.updateSpecimen(specimen.copy(imageUploadStatus = UploadStatus.FAILED), sessionId)
+            tempFile?.takeIf { it.exists() }?.delete()
             return DomainResult.Error(NetworkError.TUS_PERMANENT_ERROR)
         }
 
@@ -178,7 +181,7 @@ class ImageUploadWorker @AssistedInject constructor(
         val uploadResult: DomainResult<String, NetworkError> = run {
             for (attempt in 1..MAX_RETRIES) {
                 val result: DomainResult<String, NetworkError> = try {
-                    val uniqueFingerprint = "${specimen.id}-$md5"
+                    val uniqueFingerprint = "${specimen.id}-${imageId}-$md5"
                     val tusPath = "specimens/${specimen.id}/images/tus"
 
                     tusClient.uploadCreationURL = URL(constructUrl(tusPath))
@@ -198,17 +201,19 @@ class ImageUploadWorker @AssistedInject constructor(
                             val location = e.causingConnection.getHeaderField("Location")
                             if (location != null) {
                                 Log.i("ImageUploadWorker", "Upload for ${specimen.id} already exists on server (conflict). Treating as success.")
+                                specimenRepository.updateSpecimen(specimen.copy(imageUploadStatus = UploadStatus.COMPLETED), sessionId)
                                 return@run DomainResult.Success(location)
                             }
                         }
+                        file.delete()
                         throw e
                     }
 
-                    val loopResult = executeUploadLoop(uploader, upload)
+                    val loopResult = executeUploadLoop(uploader, upload, file)
                     when (loopResult) {
                         is DomainResult.Error -> loopResult
                         is DomainResult.Success -> {
-                            when (val finalUrlResult = safeFinish(uploader)) {
+                            when (val finalUrlResult = safeFinish(uploader, file)) {
                                 is DomainResult.Success -> {
                                     Log.d("ImageUploadWorker", "Upload finished successfully: ${finalUrlResult.data}")
                                     DomainResult.Success(finalUrlResult.data.toString())
@@ -272,7 +277,8 @@ class ImageUploadWorker @AssistedInject constructor(
 
     private suspend fun executeUploadLoop(
         initialUploader: TusUploader,
-        upload: TusUpload
+        upload: TusUpload,
+        file: File,
     ): DomainResult<Unit, NetworkError> {
         var uploader = initialUploader
         var currentChunkSize = INITIAL_CHUNK_SIZE_BYTES
@@ -297,6 +303,7 @@ class ImageUploadWorker @AssistedInject constructor(
                 DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
             } catch (e: Exception) {
                 if (isStopped) {
+                    file.delete()
                     throw CancellationException("Worker was stopped during chunk upload.", e)
                 }
                 DomainResult.Error(NetworkError.UNKNOWN_ERROR)
@@ -358,6 +365,7 @@ class ImageUploadWorker @AssistedInject constructor(
                         uploader = tusClient.resumeOrCreateUpload(upload)
                     } catch (resumeException: Exception) {
                         if (isStopped) {
+                            file.delete()
                             throw CancellationException("Worker was stopped by the system.", resumeException)
                         }
                         Log.e("ImageUploadWorker", "Failed to resume upload.", resumeException)
@@ -394,11 +402,11 @@ class ImageUploadWorker @AssistedInject constructor(
     }
 
     private suspend fun prepareFile(
-        resolver: ContentResolver,
         source: Uri,
         specimenId: String
     ): Pair<File, String> =
         withContext(Dispatchers.IO) {
+            val resolver = context.contentResolver
             val mimeType = resolver.getType(source)
             val extension = when (mimeType) {
                 "image/jpeg" -> "jpg"
@@ -417,7 +425,7 @@ class ImageUploadWorker @AssistedInject constructor(
             return@withContext Pair(destination, mimeType ?: "application/octet-stream")
         }
 
-    private suspend fun safeFinish(uploader: TusUploader): DomainResult<URL, NetworkError> =
+    private suspend fun safeFinish(uploader: TusUploader, file: File): DomainResult<URL, NetworkError> =
         withContext(Dispatchers.IO) {
             try {
                 uploader.finish()
@@ -435,6 +443,7 @@ class ImageUploadWorker @AssistedInject constructor(
                 DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
             } catch (e: Exception) {
                 if (isStopped) {
+                    file.delete()
                     throw CancellationException("Worker was stopped during Tus finish().", e)
                 }
                 Log.e("ImageUploadWorker", "finish() failed due to unexpected exception.", e)
