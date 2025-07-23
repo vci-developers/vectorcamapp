@@ -205,15 +205,16 @@ class ImageUploadWorker @AssistedInject constructor(
                     }
 
                     val loopResult = executeUploadLoop(uploader, upload)
-                    if (loopResult is DomainResult.Error) {
-                        loopResult
-                    } else {
-                        when (val finalUrlResult = safeFinish(uploader)) {
-                            is DomainResult.Success -> {
-                                Log.d("ImageUploadWorker", "Upload finished successfully: ${finalUrlResult.data}")
-                                DomainResult.Success(finalUrlResult.data.toString())
+                    when (loopResult) {
+                        is DomainResult.Error -> loopResult
+                        is DomainResult.Success -> {
+                            when (val finalUrlResult = safeFinish(uploader)) {
+                                is DomainResult.Success -> {
+                                    Log.d("ImageUploadWorker", "Upload finished successfully: ${finalUrlResult.data}")
+                                    DomainResult.Success(finalUrlResult.data.toString())
+                                }
+                                is DomainResult.Error -> finalUrlResult
                             }
-                            is DomainResult.Error -> finalUrlResult
                         }
                     }
                 } catch (e: TusProtocolException) {
