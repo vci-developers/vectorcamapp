@@ -31,6 +31,12 @@
     <!-- Network error: Client Error -->
     <string name="network_error_client_error">The request was invalid. Please check your input and try again.</string>
 
+    <!-- tus Upload Transient Error -->
+    <string name="network_error_tus_transient_error">tus Uploader transient error. Retry Pending.</string>
+
+    <!-- tus Upload Transient Error -->
+    <string name="network_error_tus_permanent_error">tus Uploader permanent error. Please contact support if the issue persists.</string>
+
     <!-- Network error: Unknown error -->
     <string name="network_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 

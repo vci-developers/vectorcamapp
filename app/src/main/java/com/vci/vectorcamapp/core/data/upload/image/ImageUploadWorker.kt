@@ -26,7 +26,6 @@ import io.tus.java.client.TusClient
 import io.tus.java.client.TusUpload
 import io.tus.java.client.TusUploader
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
@@ -131,14 +130,11 @@ class ImageUploadWorker @AssistedInject constructor(
 
             when (val result = uploadSingleSpecimen(specimen, sessionId, imageId)) {
                 is DomainResult.Success -> {
+                    updateProgressNotification("Verifying...")
                     successfulUploads++
             }
                 is DomainResult.Error -> {
-                    if (result.error !in listOf(
-                            NetworkError.REQUEST_TIMEOUT,
-                            NetworkError.NO_INTERNET,
-                            NetworkError.SERVER_ERROR
-                        )) {
+                    if (result.error == NetworkError.TUS_PERMANENT_ERROR) {
                         encounteredPermanentFailure = true
                     }
                 }
@@ -169,7 +165,7 @@ class ImageUploadWorker @AssistedInject constructor(
             }
             Log.e("ImageUploadWorker", "Failed to prepare file or calculate MD5 for specimen ${specimen.id}.", e)
             specimenRepository.updateSpecimen(specimen.copy(imageUploadStatus = UploadStatus.FAILED), sessionId)
-            return DomainResult.Error(NetworkError.CLIENT_ERROR)
+            return DomainResult.Error(NetworkError.TUS_PERMANENT_ERROR)
         }
 
         val metadata = mapOf(
@@ -214,7 +210,6 @@ class ImageUploadWorker @AssistedInject constructor(
                     } else {
                         when (val finalUrlResult = safeFinish(uploader)) {
                             is DomainResult.Success -> {
-                                updateProgressNotification("Verifying...")
                                 Log.d("ImageUploadWorker", "Upload finished successfully: ${finalUrlResult.data}")
                                 DomainResult.Success(finalUrlResult.data.toString())
                             }
@@ -224,15 +219,16 @@ class ImageUploadWorker @AssistedInject constructor(
                 } catch (e: TusProtocolException) {
                     Log.w("ImageUploadWorker", "Attempt $attempt failed with TusProtocolException.", e)
                     if (e.shouldRetry()) {
-                        DomainResult.Error(NetworkError.SERVER_ERROR)
+                        DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                     } else {
-                        DomainResult.Error(NetworkError.CLIENT_ERROR)
+                        DomainResult.Error(NetworkError.TUS_PERMANENT_ERROR)
                     }
                 } catch (e: IOException) {
                     Log.w("ImageUploadWorker", "Attempt $attempt failed with IOException.", e)
-                    DomainResult.Error(NetworkError.NO_INTERNET)
+                    DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                 } catch (e: Exception) {
                     if (isStopped) {
+                        file.delete()
                         throw CancellationException("Worker was stopped by the system.", e)
                     }
                     Log.e("ImageUploadWorker", "Exception on attempt $attempt for specimen ${specimen.id}.", e)
@@ -250,15 +246,9 @@ class ImageUploadWorker @AssistedInject constructor(
                     "Failed attempt $attempt for specimen ${specimen.id} with error: ${result.error}"
                 )
 
-                val isRetryable = result.error in listOf(
-                    NetworkError.REQUEST_TIMEOUT,
-                    NetworkError.NO_INTERNET,
-                    NetworkError.SERVER_ERROR
-                )
-
-                if (!isRetryable || attempt == MAX_RETRIES) {
-                    if (!isRetryable) {
-                        Log.e("ImageUploadWorker", "Non-retryable error for specimen ${specimen.id}.")
+                if (result.error == NetworkError.TUS_PERMANENT_ERROR || attempt == MAX_RETRIES) {
+                    if (result.error == NetworkError.TUS_PERMANENT_ERROR) {
+                        Log.e("ImageUploadWorker", "Permanent error for specimen ${specimen.id}.")
                     } else {
                         Log.e("ImageUploadWorker", "Max retries reached for specimen ${specimen.id}.")
                     }
@@ -295,17 +285,15 @@ class ImageUploadWorker @AssistedInject constructor(
             val chunkResult = try {
                 DomainResult.Success(uploader.uploadChunk())
             } catch (e: SocketTimeoutException) {
-                DomainResult.Error(NetworkError.REQUEST_TIMEOUT)
-            } catch (e: TimeoutCancellationException) {
-                DomainResult.Error(NetworkError.REQUEST_TIMEOUT)
+                DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
             } catch (e: TusProtocolException) {
                 if (e.shouldRetry()) {
-                    DomainResult.Error(NetworkError.SERVER_ERROR)
+                    DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                 } else {
-                    DomainResult.Error(NetworkError.CLIENT_ERROR)
+                    DomainResult.Error(NetworkError.TUS_PERMANENT_ERROR)
                 }
             } catch (e: IOException) {
-                DomainResult.Error(NetworkError.NO_INTERNET)
+                DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
             } catch (e: Exception) {
                 if (isStopped) {
                     throw CancellationException("Worker was stopped during chunk upload.", e)
@@ -352,7 +340,7 @@ class ImageUploadWorker @AssistedInject constructor(
                             MIN_CHUNK_SIZE_BYTES
                         )
 
-                    if (error != NetworkError.REQUEST_TIMEOUT && error != NetworkError.NO_INTERNET && error != NetworkError.SERVER_ERROR) {
+                    if (error == NetworkError.TUS_PERMANENT_ERROR) {
                         return DomainResult.Error(error)
                     }
 
@@ -437,13 +425,13 @@ class ImageUploadWorker @AssistedInject constructor(
             } catch (e: TusProtocolException) {
                 Log.w("ImageUploadWorker", "finish() failed with TusProtocolException.", e)
                 if (e.shouldRetry()) {
-                    DomainResult.Error(NetworkError.SERVER_ERROR)
+                    DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                 } else {
-                    DomainResult.Error(NetworkError.CLIENT_ERROR)
+                    DomainResult.Error(NetworkError.TUS_PERMANENT_ERROR)
                 }
             } catch (e: IOException) {
                 Log.e("ImageUploadWorker", "finish() failed due to IOException.", e)
-                DomainResult.Error(NetworkError.NO_INTERNET)
+                DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
             } catch (e: Exception) {
                 if (isStopped) {
                     throw CancellationException("Worker was stopped during Tus finish().", e)
