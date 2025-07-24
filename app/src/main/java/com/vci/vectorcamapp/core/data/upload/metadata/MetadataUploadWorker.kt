@@ -114,17 +114,17 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
             }
 
-            val specimensAndInferenceResults =
-                specimenRepository.getSpecimensAndInferenceResultsBySession(syncedSession.localId)
-            specimensAndInferenceResults.forEachIndexed { index, (specimen, inferenceResult) ->
-                syncSpecimenAndInferenceResultIfNeeded(
-                    specimen, inferenceResult, syncedSession.localId, syncedSession.remoteId
-                ).onSuccess {
-                    showSpecimenUploadProgress(index + 1, specimensAndInferenceResults.size)
-                }.onError { error ->
-                    return retryOrFailure(error.toString(context))
-                }
-            }
+//            val specimensAndInferenceResults =
+//                specimenRepository.getSpecimensAndInferenceResultsBySession(syncedSession.localId)
+//            specimensAndInferenceResults.forEachIndexed { index, (specimen, inferenceResult) ->
+//                syncSpecimenAndInferenceResultIfNeeded(
+//                    specimen, inferenceResult, syncedSession.localId, syncedSession.remoteId
+//                ).onSuccess {
+//                    showSpecimenUploadProgress(index + 1, specimensAndInferenceResults.size)
+//                }.onError { error ->
+//                    return retryOrFailure(error.toString(context))
+//                }
+//            }
 
             return WorkerResult.success()
         } catch (e: IOException) {
@@ -339,101 +339,101 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
-    private suspend fun syncSpecimenAndInferenceResultIfNeeded(
-        localSpecimen: Specimen,
-        localInferenceResult: InferenceResult,
-        syncedLocalSessionId: UUID,
-        syncedRemoteSessionId: Int
-    ): DomainResult<Unit, NetworkError> {
-        return try {
-            val localSpecimenDto = SpecimenDto(
-                specimenId = localSpecimen.id,
-                sessionId = syncedRemoteSessionId,
-                species = localSpecimen.species,
-                sex = localSpecimen.sex,
-                abdomenStatus = localSpecimen.abdomenStatus,
-                capturedAt = localSpecimen.capturedAt,
-                submittedAt = localSpecimen.submittedAt,
-                inferenceResult = InferenceResultDto(
-                    bboxTopLeftX = localInferenceResult.bboxTopLeftX,
-                    bboxTopLeftY = localInferenceResult.bboxTopLeftY,
-                    bboxWidth = localInferenceResult.bboxWidth,
-                    bboxHeight = localInferenceResult.bboxHeight,
-                    bboxConfidence = localInferenceResult.bboxConfidence,
-                    bboxClassId = localInferenceResult.bboxClassId,
-                    speciesProbabilities = localInferenceResult.speciesLogits,
-                    sexProbabilities = localInferenceResult.sexLogits,
-                    abdomenStatusProbabilities = localInferenceResult.abdomenStatusLogits
-                )
-            )
-
-            val remoteSpecimenDto = when (val remoteSpecimenResult =
-                specimenDataSource.getSpecimenById(localSpecimen.id)) {
-                is DomainResult.Success -> remoteSpecimenResult.data
-                is DomainResult.Error -> {
-                    when (remoteSpecimenResult.error) {
-                        NetworkError.NOT_FOUND -> {
-                            val postSpecimenResult = specimenDataSource.postSpecimen(
-                                localSpecimen, localInferenceResult, syncedRemoteSessionId
-                            )
-                            when (postSpecimenResult) {
-                                is DomainResult.Success -> postSpecimenResult.data.specimen
-                                is DomainResult.Error -> return DomainResult.Error(
-                                    postSpecimenResult.error
-                                )
-                            }
-                        }
-
-                        else -> return DomainResult.Error(remoteSpecimenResult.error)
-                    }
-                }
-            }
-
-            val remoteSpecimen = Specimen(
-                id = remoteSpecimenDto.specimenId,
-                species = remoteSpecimenDto.species,
-                sex = remoteSpecimenDto.sex,
-                abdomenStatus = remoteSpecimenDto.abdomenStatus,
-                imageUri = localSpecimen.imageUri,
-                metadataUploadStatus = localSpecimen.metadataUploadStatus,
-                imageUploadStatus = localSpecimen.imageUploadStatus,
-                capturedAt = remoteSpecimenDto.capturedAt,
-                submittedAt = remoteSpecimenDto.submittedAt,
-            )
-
-            val remoteInferenceResult = InferenceResult(
-                bboxTopLeftX = remoteSpecimenDto.inferenceResult.bboxTopLeftX,
-                bboxTopLeftY = remoteSpecimenDto.inferenceResult.bboxTopLeftY,
-                bboxWidth = remoteSpecimenDto.inferenceResult.bboxWidth,
-                bboxHeight = remoteSpecimenDto.inferenceResult.bboxHeight,
-                bboxConfidence = remoteSpecimenDto.inferenceResult.bboxConfidence,
-                bboxClassId = remoteSpecimenDto.inferenceResult.bboxClassId,
-                speciesLogits = remoteSpecimenDto.inferenceResult.speciesProbabilities,
-                sexLogits = remoteSpecimenDto.inferenceResult.sexProbabilities,
-                abdomenStatusLogits = remoteSpecimenDto.inferenceResult.abdomenStatusProbabilities,
-            )
-
-            if (remoteSpecimenDto != localSpecimenDto) {
-                transactionHelper.runAsTransaction {
-                    specimenRepository.updateSpecimen(remoteSpecimen, syncedLocalSessionId)
-                        .onError {
-                            return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
-                        }
-                    inferenceResultRepository.updateInferenceResult(
-                        remoteInferenceResult, remoteSpecimenDto.specimenId
-                    ).onError {
-                        return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
-                    }
-                }
-            }
-
-            DomainResult.Success(Unit)
-        } catch (e: IOException) {
-            DomainResult.Error(NetworkError.NO_INTERNET)
-        } catch (e: Exception) {
-            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
-        }
-    }
+//    private suspend fun syncSpecimenAndInferenceResultIfNeeded(
+//        localSpecimen: Specimen,
+//        localInferenceResult: InferenceResult,
+//        syncedLocalSessionId: UUID,
+//        syncedRemoteSessionId: Int
+//    ): DomainResult<Unit, NetworkError> {
+//        return try {
+//            val localSpecimenDto = SpecimenDto(
+//                specimenId = localSpecimen.id,
+//                sessionId = syncedRemoteSessionId,
+//                species = localSpecimen.species,
+//                sex = localSpecimen.sex,
+//                abdomenStatus = localSpecimen.abdomenStatus,
+//                capturedAt = localSpecimen.capturedAt,
+//                submittedAt = localSpecimen.submittedAt,
+//                inferenceResult = InferenceResultDto(
+//                    bboxTopLeftX = localInferenceResult.bboxTopLeftX,
+//                    bboxTopLeftY = localInferenceResult.bboxTopLeftY,
+//                    bboxWidth = localInferenceResult.bboxWidth,
+//                    bboxHeight = localInferenceResult.bboxHeight,
+//                    bboxConfidence = localInferenceResult.bboxConfidence,
+//                    bboxClassId = localInferenceResult.bboxClassId,
+//                    speciesLogits = localInferenceResult.speciesLogits,
+//                    sexLogits = localInferenceResult.sexLogits,
+//                    abdomenStatusLogits = localInferenceResult.abdomenStatusLogits
+//                )
+//            )
+//
+//            val remoteSpecimenDto = when (val remoteSpecimenResult =
+//                specimenDataSource.getSpecimenById(localSpecimen.id)) {
+//                is DomainResult.Success -> remoteSpecimenResult.data
+//                is DomainResult.Error -> {
+//                    when (remoteSpecimenResult.error) {
+//                        NetworkError.NOT_FOUND -> {
+//                            val postSpecimenResult = specimenDataSource.postSpecimen(
+//                                localSpecimen, localInferenceResult, syncedRemoteSessionId
+//                            )
+//                            when (postSpecimenResult) {
+//                                is DomainResult.Success -> postSpecimenResult.data.specimen
+//                                is DomainResult.Error -> return DomainResult.Error(
+//                                    postSpecimenResult.error
+//                                )
+//                            }
+//                        }
+//
+//                        else -> return DomainResult.Error(remoteSpecimenResult.error)
+//                    }
+//                }
+//            }
+//
+//            val remoteSpecimen = Specimen(
+//                id = remoteSpecimenDto.specimenId,
+//                species = remoteSpecimenDto.species,
+//                sex = remoteSpecimenDto.sex,
+//                abdomenStatus = remoteSpecimenDto.abdomenStatus,
+//                imageUri = localSpecimen.imageUri,
+//                metadataUploadStatus = localSpecimen.metadataUploadStatus,
+//                imageUploadStatus = localSpecimen.imageUploadStatus,
+//                capturedAt = remoteSpecimenDto.capturedAt,
+//                submittedAt = remoteSpecimenDto.submittedAt,
+//            )
+//
+//            val remoteInferenceResult = InferenceResult(
+//                bboxTopLeftX = remoteSpecimenDto.inferenceResult.bboxTopLeftX,
+//                bboxTopLeftY = remoteSpecimenDto.inferenceResult.bboxTopLeftY,
+//                bboxWidth = remoteSpecimenDto.inferenceResult.bboxWidth,
+//                bboxHeight = remoteSpecimenDto.inferenceResult.bboxHeight,
+//                bboxConfidence = remoteSpecimenDto.inferenceResult.bboxConfidence,
+//                bboxClassId = remoteSpecimenDto.inferenceResult.bboxClassId,
+//                speciesLogits = remoteSpecimenDto.inferenceResult.speciesProbabilities,
+//                sexLogits = remoteSpecimenDto.inferenceResult.sexProbabilities,
+//                abdomenStatusLogits = remoteSpecimenDto.inferenceResult.abdomenStatusProbabilities,
+//            )
+//
+//            if (remoteSpecimenDto != localSpecimenDto) {
+//                transactionHelper.runAsTransaction {
+//                    specimenRepository.updateSpecimen(remoteSpecimen, syncedLocalSessionId)
+//                        .onError {
+//                            return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
+//                        }
+//                    inferenceResultRepository.updateInferenceResult(
+//                        remoteInferenceResult, remoteSpecimenDto.specimenId
+//                    ).onError {
+//                        return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
+//                    }
+//                }
+//            }
+//
+//            DomainResult.Success(Unit)
+//        } catch (e: IOException) {
+//            DomainResult.Error(NetworkError.NO_INTERNET)
+//        } catch (e: Exception) {
+//            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
+//        }
+//    }
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(

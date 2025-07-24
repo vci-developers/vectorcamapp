@@ -5,7 +5,8 @@ import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.dao.SpecimenDao
 import com.vci.vectorcamapp.core.domain.model.Specimen
-import com.vci.vectorcamapp.core.domain.model.composites.SpecimenAndInferenceResult
+import com.vci.vectorcamapp.core.domain.model.composites.SpecimenImageAndInferenceResult
+import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
@@ -43,27 +44,26 @@ class SpecimenRepositoryImplementation @Inject constructor(
         }
     }
 
+    override suspend fun getSpecimenById(id: String): Specimen? {
+        return specimenDao.getSpecimenById(id)?.toDomain()
+    }
+
     override suspend fun deleteSpecimen(specimen: Specimen, sessionId: UUID): Boolean {
         return specimenDao.deleteSpecimen(specimen.toEntity(sessionId)) > 0
     }
 
-    override suspend fun getSpecimensAndInferenceResultsBySession(sessionId: UUID): List<SpecimenAndInferenceResult> {
-        return specimenDao.getSpecimensAndInferenceResultsBySession(sessionId).map {
-            SpecimenAndInferenceResult(
-                specimen = it.specimenEntity.toDomain(),
-                inferenceResult = it.inferenceResultEntity.toDomain()
-            )
-        }
-    }
-
-    override fun observeSpecimensAndInferenceResultsBySession(sessionId: UUID): Flow<List<SpecimenAndInferenceResult>> {
-        return specimenDao.observeSpecimensAndInferenceResultsBySession(sessionId)
-            .map { specimenAndInferenceResultRelations ->
-                specimenAndInferenceResultRelations.map {
-                    SpecimenAndInferenceResult(
-                        specimen = it.specimenEntity.toDomain(),
-                        inferenceResult = it.inferenceResultEntity.toDomain()
-                    )
+    override fun observeSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> {
+        return specimenDao.observeSpecimenImagesAndInferenceResultsBySession(sessionId)
+            .map { specimenWithSpecimenImagesAndInferenceResultsRelations ->
+                specimenWithSpecimenImagesAndInferenceResultsRelations.map { specimenWithSpecimenImagesAndInferenceResultsRelation ->
+                    SpecimenWithSpecimenImagesAndInferenceResults(
+                        specimen = specimenWithSpecimenImagesAndInferenceResultsRelation.specimenEntity.toDomain(),
+                        specimenImagesAndInferenceResults = specimenWithSpecimenImagesAndInferenceResultsRelation.specimenImageAndInferenceResultRelations.map { specimenImageAndInferenceResultRelation ->
+                            SpecimenImageAndInferenceResult(
+                                specimenImage = specimenImageAndInferenceResultRelation.specimenImageEntity.toDomain(),
+                                inferenceResult = specimenImageAndInferenceResultRelation.inferenceResultEntity.toDomain()
+                            )
+                        })
                 }
             }
     }
