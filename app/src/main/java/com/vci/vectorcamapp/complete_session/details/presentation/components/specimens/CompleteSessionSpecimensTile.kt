@@ -27,7 +27,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.toSize
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.vci.vectorcamapp.R
@@ -38,10 +37,9 @@ import com.vci.vectorcamapp.ui.extensions.color
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.extensions.displayName
-import net.engawapg.lib.zoomable.rememberZoomState
-import net.engawapg.lib.zoomable.zoomable
 import java.text.SimpleDateFormat
 import java.util.Locale
+import com.vci.vectorcamapp.core.presentation.util.zoomPanGesture
 
 @Composable
 fun CompleteSessionSpecimensTile(
@@ -60,10 +58,6 @@ fun CompleteSessionSpecimensTile(
                 .clip(RectangleShape)
         ) {
             val containerSize = IntSize(constraints.maxWidth, constraints.maxHeight)
-            val zoomState = rememberZoomState(
-                contentSize = containerSize.toSize(),
-                maxScale = 5f
-            )
 
             AsyncImage(
                 model = ImageRequest.Builder(context).data(specimen.imageUri).build(),
@@ -71,7 +65,7 @@ fun CompleteSessionSpecimensTile(
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxSize()
-                    .zoomable(zoomState)
+                    .zoomPanGesture(containerSize)
             )
         }
 

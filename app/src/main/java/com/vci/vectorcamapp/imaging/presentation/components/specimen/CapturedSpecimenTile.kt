@@ -42,6 +42,7 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
+import com.vci.vectorcamapp.core.presentation.util.zoomPanGesture
 import com.vci.vectorcamapp.imaging.presentation.components.camera.BoundingBoxOverlay
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -74,14 +75,9 @@ fun CapturedSpecimenTile(
                 width = with(density) { maxWidth.roundToPx() },
                 height = with(density) { maxHeight.roundToPx() })
 
-            val zoomState = rememberZoomState(
-                contentSize = containerSize.toSize(),
-                maxScale = 5f
-            )
-
             Box(
                 modifier = Modifier
-                    .zoomable(zoomState)
+                    .zoomPanGesture(containerSize)
             ) {
                 if (specimenBitmap != null) {
                     Image(
