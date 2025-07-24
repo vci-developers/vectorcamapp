@@ -14,6 +14,7 @@ import com.vci.vectorcamapp.core.data.dto.device.DeviceDto
 import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto
 import com.vci.vectorcamapp.core.data.dto.session.SessionDto
 import com.vci.vectorcamapp.core.data.dto.specimen.SpecimenDto
+import com.vci.vectorcamapp.core.data.dto.specimen_image.SpecimenImageDto
 import com.vci.vectorcamapp.core.data.dto.surveillance_form.SurveillanceFormDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
@@ -21,13 +22,16 @@ import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Specimen
+import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.network.api.DeviceDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SessionDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenDataSource
+import com.vci.vectorcamapp.core.domain.network.api.SpecimenImageDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SurveillanceFormDataSource
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
@@ -50,11 +54,13 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val sessionRepository: SessionRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
     private val specimenRepository: SpecimenRepository,
+    private val specimenImageRepository: SpecimenImageRepository,
     private val inferenceResultRepository: InferenceResultRepository,
     private val deviceDataSource: DeviceDataSource,
     private val sessionDataSource: SessionDataSource,
     private val surveillanceFormDataSource: SurveillanceFormDataSource,
-    private val specimenDataSource: SpecimenDataSource
+    private val specimenDataSource: SpecimenDataSource,
+    private val specimenImageDataSource: SpecimenImageDataSource
 ) : CoroutineWorker(context, workerParams) {
 
     private var retryCount = 0
@@ -114,17 +120,29 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
             }
 
-//            val specimensAndInferenceResults =
-//                specimenRepository.getSpecimensAndInferenceResultsBySession(syncedSession.localId)
-//            specimensAndInferenceResults.forEachIndexed { index, (specimen, inferenceResult) ->
-//                syncSpecimenAndInferenceResultIfNeeded(
-//                    specimen, inferenceResult, syncedSession.localId, syncedSession.remoteId
-//                ).onSuccess {
-//                    showSpecimenUploadProgress(index + 1, specimensAndInferenceResults.size)
-//                }.onError { error ->
-//                    return retryOrFailure(error.toString(context))
-//                }
-//            }
+            val localSpecimensWithImagesAndInferenceResults = specimenRepository.getSpecimenImagesAndInferenceResultsBySession(syncedSession.localId)
+            localSpecimensWithImagesAndInferenceResults.forEach { specimenWithImagesAndInferenceResults ->
+                val syncedSpecimen = when (val syncSpecimenResult = syncSpecimenIfNeeded(
+                    specimenWithImagesAndInferenceResults.specimen,
+                    syncedSession.localId,
+                    syncedSession.remoteId
+                )) {
+                    is DomainResult.Success -> syncSpecimenResult.data
+                    is DomainResult.Error -> return retryOrFailure(
+                        syncSpecimenResult.error.toString(context)
+                    )
+                }
+
+                specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEachIndexed { index, (specimenImage, inferenceResult) ->
+                    syncSpecimenImageAndInferenceResultIfNeeded(
+                        specimenImage, inferenceResult, syncedSpecimen.id, syncedSession.localId, syncedSession.remoteId
+                    ).onSuccess {
+
+                    }.onError { error ->
+                        return retryOrFailure(error.toString(context))
+                    }
+                }
+            }
 
             return WorkerResult.success()
         } catch (e: IOException) {
@@ -339,101 +357,156 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
-//    private suspend fun syncSpecimenAndInferenceResultIfNeeded(
-//        localSpecimen: Specimen,
-//        localInferenceResult: InferenceResult,
-//        syncedLocalSessionId: UUID,
-//        syncedRemoteSessionId: Int
-//    ): DomainResult<Unit, NetworkError> {
-//        return try {
-//            val localSpecimenDto = SpecimenDto(
-//                specimenId = localSpecimen.id,
-//                sessionId = syncedRemoteSessionId,
-//                species = localSpecimen.species,
-//                sex = localSpecimen.sex,
-//                abdomenStatus = localSpecimen.abdomenStatus,
-//                capturedAt = localSpecimen.capturedAt,
-//                submittedAt = localSpecimen.submittedAt,
-//                inferenceResult = InferenceResultDto(
-//                    bboxTopLeftX = localInferenceResult.bboxTopLeftX,
-//                    bboxTopLeftY = localInferenceResult.bboxTopLeftY,
-//                    bboxWidth = localInferenceResult.bboxWidth,
-//                    bboxHeight = localInferenceResult.bboxHeight,
-//                    bboxConfidence = localInferenceResult.bboxConfidence,
-//                    bboxClassId = localInferenceResult.bboxClassId,
-//                    speciesLogits = localInferenceResult.speciesLogits,
-//                    sexLogits = localInferenceResult.sexLogits,
-//                    abdomenStatusLogits = localInferenceResult.abdomenStatusLogits
-//                )
-//            )
-//
-//            val remoteSpecimenDto = when (val remoteSpecimenResult =
-//                specimenDataSource.getSpecimenById(localSpecimen.id)) {
-//                is DomainResult.Success -> remoteSpecimenResult.data
-//                is DomainResult.Error -> {
-//                    when (remoteSpecimenResult.error) {
-//                        NetworkError.NOT_FOUND -> {
-//                            val postSpecimenResult = specimenDataSource.postSpecimen(
-//                                localSpecimen, localInferenceResult, syncedRemoteSessionId
-//                            )
-//                            when (postSpecimenResult) {
-//                                is DomainResult.Success -> postSpecimenResult.data.specimen
-//                                is DomainResult.Error -> return DomainResult.Error(
-//                                    postSpecimenResult.error
-//                                )
-//                            }
-//                        }
-//
-//                        else -> return DomainResult.Error(remoteSpecimenResult.error)
-//                    }
-//                }
-//            }
-//
-//            val remoteSpecimen = Specimen(
-//                id = remoteSpecimenDto.specimenId,
-//                species = remoteSpecimenDto.species,
-//                sex = remoteSpecimenDto.sex,
-//                abdomenStatus = remoteSpecimenDto.abdomenStatus,
-//                imageUri = localSpecimen.imageUri,
-//                metadataUploadStatus = localSpecimen.metadataUploadStatus,
-//                imageUploadStatus = localSpecimen.imageUploadStatus,
-//                capturedAt = remoteSpecimenDto.capturedAt,
-//                submittedAt = remoteSpecimenDto.submittedAt,
-//            )
-//
-//            val remoteInferenceResult = InferenceResult(
-//                bboxTopLeftX = remoteSpecimenDto.inferenceResult.bboxTopLeftX,
-//                bboxTopLeftY = remoteSpecimenDto.inferenceResult.bboxTopLeftY,
-//                bboxWidth = remoteSpecimenDto.inferenceResult.bboxWidth,
-//                bboxHeight = remoteSpecimenDto.inferenceResult.bboxHeight,
-//                bboxConfidence = remoteSpecimenDto.inferenceResult.bboxConfidence,
-//                bboxClassId = remoteSpecimenDto.inferenceResult.bboxClassId,
-//                speciesLogits = remoteSpecimenDto.inferenceResult.speciesProbabilities,
-//                sexLogits = remoteSpecimenDto.inferenceResult.sexProbabilities,
-//                abdomenStatusLogits = remoteSpecimenDto.inferenceResult.abdomenStatusProbabilities,
-//            )
-//
-//            if (remoteSpecimenDto != localSpecimenDto) {
-//                transactionHelper.runAsTransaction {
-//                    specimenRepository.updateSpecimen(remoteSpecimen, syncedLocalSessionId)
-//                        .onError {
-//                            return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
-//                        }
-//                    inferenceResultRepository.updateInferenceResult(
-//                        remoteInferenceResult, remoteSpecimenDto.specimenId
-//                    ).onError {
-//                        return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
-//                    }
-//                }
-//            }
-//
-//            DomainResult.Success(Unit)
-//        } catch (e: IOException) {
-//            DomainResult.Error(NetworkError.NO_INTERNET)
-//        } catch (e: Exception) {
-//            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
-//        }
-//    }
+    private suspend fun syncSpecimenIfNeeded(
+        localSpecimen: Specimen,
+        syncedLocalSessionId: UUID,
+        syncedRemoteSessionId: Int
+    ): DomainResult<Specimen, NetworkError> {
+        return try {
+            val localSpecimenDto = SpecimenDto(
+                specimenId = localSpecimen.id,
+                sessionId = syncedRemoteSessionId
+            )
+
+            // TODO: MIGHT NEED TO CHANGE ONCE BACKEND REQUIRES SESSION ID TO GET A SPECIMEN BY ID
+            val remoteSpecimenDto = when (val remoteSpecimenResult =
+                specimenDataSource.getSpecimenById(localSpecimen.id)) {
+                is DomainResult.Success -> remoteSpecimenResult.data
+                is DomainResult.Error -> {
+                    when (remoteSpecimenResult.error) {
+                        NetworkError.NOT_FOUND -> {
+                            val postSpecimenResult = specimenDataSource.postSpecimen(
+                                localSpecimen,
+                                syncedRemoteSessionId
+                            )
+                            when (postSpecimenResult) {
+                                is DomainResult.Success -> postSpecimenResult.data.specimen
+                                is DomainResult.Error -> return DomainResult.Error(
+                                    postSpecimenResult.error
+                                )
+                            }
+                        }
+
+                        else -> return DomainResult.Error(remoteSpecimenResult.error)
+                    }
+                }
+            }
+
+            val remoteSpecimen = Specimen(
+                id = remoteSpecimenDto.specimenId,
+            )
+
+            if (remoteSpecimenDto != localSpecimenDto) {
+                specimenRepository.updateSpecimen(remoteSpecimen, syncedLocalSessionId).onError {
+                    return DomainResult.Error(NetworkError.CLIENT_ERROR)
+                }
+            }
+
+            DomainResult.Success(remoteSpecimen)
+        } catch (e: IOException) {
+            DomainResult.Error(NetworkError.NO_INTERNET)
+        } catch (e: Exception) {
+            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
+        }
+    }
+
+    private suspend fun syncSpecimenImageAndInferenceResultIfNeeded(
+        localSpecimenImage: SpecimenImage,
+        localInferenceResult: InferenceResult,
+        syncedSpecimenId: String,
+        syncedLocalSessionId: UUID,
+        syncedRemoteSessionId: Int
+        ): DomainResult<Unit, NetworkError> {
+        return try {
+            // TODO: ADD FRONTEND ID, SESSION ID TO DTO WHEN BACKEND MAKES IT AVAILABLE
+            val localSpecimenImageDto = SpecimenImageDto(
+                id = localSpecimenImage.remoteId,
+                species = localSpecimenImage.species,
+                sex = localSpecimenImage.sex,
+                abdomenStatus = localSpecimenImage.abdomenStatus,
+                capturedAt = localSpecimenImage.capturedAt,
+                submittedAt = localSpecimenImage.submittedAt,
+                inferenceResult = InferenceResultDto(
+                    bboxTopLeftX = localInferenceResult.bboxTopLeftX,
+                    bboxTopLeftY = localInferenceResult.bboxTopLeftY,
+                    bboxWidth = localInferenceResult.bboxWidth,
+                    bboxHeight = localInferenceResult.bboxHeight,
+                    bboxConfidence = localInferenceResult.bboxConfidence,
+                    bboxClassId = localInferenceResult.bboxClassId,
+                    speciesLogits = localInferenceResult.speciesLogits,
+                    sexLogits = localInferenceResult.sexLogits,
+                    abdomenStatusLogits = localInferenceResult.abdomenStatusLogits
+                )
+            )
+
+            // TODO: Change REMOTE ID when search by frontend ID
+            val remoteSpecimenImageDto = when (val remoteSpecimenImageResult = specimenImageDataSource.getSpecimenImageMetadata(localSpecimenImage.remoteId ?: -1, syncedSpecimenId)) {
+                is DomainResult.Success -> remoteSpecimenImageResult.data
+                is DomainResult.Error -> {
+                    when (remoteSpecimenImageResult.error) {
+                        NetworkError.NOT_FOUND -> {
+                            val postSpecimenImageResult = specimenImageDataSource.postSpecimenImageMetadata(
+                                localSpecimenImage, localInferenceResult, syncedSpecimenId // TODO: ADD REMOTE SESSION ID ONCE BACKEND WORKS
+                            )
+                            when (postSpecimenImageResult) {
+                                is DomainResult.Success -> {
+                                    postSpecimenImageResult.data.image
+                                }
+                                is DomainResult.Error -> return DomainResult.Error(
+                                        postSpecimenImageResult.error
+                                    )
+                            }
+                        }
+
+                        else -> {
+                            return DomainResult.Error(remoteSpecimenImageResult.error)
+                        }
+                    }
+                }
+            }
+
+            val remoteSpecimenImage = SpecimenImage(
+                localId = localSpecimenImage.localId, // TODO: Change to Remote when backend makes it available
+                remoteId = remoteSpecimenImageDto.id,
+                species = remoteSpecimenImageDto.species,
+                sex = remoteSpecimenImageDto.sex,
+                abdomenStatus = remoteSpecimenImageDto.abdomenStatus,
+                imageUri = localSpecimenImage.imageUri,
+                metadataUploadStatus = localSpecimenImage.metadataUploadStatus,
+                imageUploadStatus = localSpecimenImage.imageUploadStatus,
+                capturedAt = remoteSpecimenImageDto.capturedAt,
+                submittedAt = remoteSpecimenImageDto.submittedAt
+            )
+
+            val remoteInferenceResult = InferenceResult(
+                bboxTopLeftX = remoteSpecimenImageDto.inferenceResult.bboxTopLeftX,
+                bboxTopLeftY = remoteSpecimenImageDto.inferenceResult.bboxTopLeftY,
+                bboxWidth = remoteSpecimenImageDto.inferenceResult.bboxWidth,
+                bboxHeight = remoteSpecimenImageDto.inferenceResult.bboxHeight,
+                bboxConfidence = remoteSpecimenImageDto.inferenceResult.bboxConfidence,
+                bboxClassId = remoteSpecimenImageDto.inferenceResult.bboxClassId,
+                speciesLogits = remoteSpecimenImageDto.inferenceResult.speciesLogits,
+                sexLogits = remoteSpecimenImageDto.inferenceResult.sexLogits,
+                abdomenStatusLogits = remoteSpecimenImageDto.inferenceResult.abdomenStatusLogits
+            )
+
+            if (remoteSpecimenImageDto != localSpecimenImageDto) {
+                transactionHelper.runAsTransaction {
+                    specimenImageRepository.updateSpecimenImage(remoteSpecimenImage, syncedSpecimenId, syncedLocalSessionId).onError {
+                        return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
+                    }
+                    inferenceResultRepository.updateInferenceResult(remoteInferenceResult, remoteSpecimenImage.localId)
+                }
+            }
+
+            DomainResult.Success(Unit)
+        } catch (e: IOException) {
+            DomainResult.Error(NetworkError.NO_INTERNET)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
+        }
+    }
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
@@ -444,7 +517,8 @@ class MetadataUploadWorker @AssistedInject constructor(
 
     private fun showInitialMetadataNotification(): ForegroundInfo {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setContentTitle("Registering device and session...").setSmallIcon(R.drawable.ic_cloud_upload)
+            .setContentTitle("Registering device and session...")
+            .setSmallIcon(R.drawable.ic_cloud_upload)
             .setOngoing(true).build()
 
         return ForegroundInfo(

@@ -40,16 +40,13 @@ import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -74,16 +71,16 @@ class ImagingViewModel @Inject constructor(
     @Inject
     lateinit var transactionHelper: TransactionHelper
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val _specimensWithImagesAndInferenceResults: Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> = flow {
-        emit(currentSessionCache.getSession())
-    }.flatMapLatest { session ->
-        if (session == null) {
-            flowOf(emptyList())
-        } else {
-            specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(session.localId)
+    private val _specimensWithImagesAndInferenceResults: Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> =
+        flow {
+            val session = currentSessionCache.getSession()
+            if (session == null) {
+                emit(emptyList())
+            } else {
+                specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(session.localId)
+                    .collect { emit(it) }
+            }
         }
-    }
 
     private val orientationListener = object : OrientationEventListener(context) {
         override fun onOrientationChanged(displayOrientation: Int) {
@@ -216,7 +213,7 @@ class ImagingViewModel @Inject constructor(
 
                 is ImagingAction.CaptureImage -> {
                     if (!_state.value.isCameraReady) return@launch
-                    
+
                     _state.update { it.copy(isProcessing = true) }
                     val captureResult = cameraRepository.captureImage(action.controller)
 
@@ -241,21 +238,29 @@ class ImagingViewModel @Inject constructor(
 
                             1 -> {
                                 val captureInferenceResult = captureInferenceResults.first()
-                                val topLeftXFloat = captureInferenceResult.bboxTopLeftX * bitmap.width
-                                val topLeftYFloat = captureInferenceResult.bboxTopLeftY * bitmap.height
+                                val topLeftXFloat =
+                                    captureInferenceResult.bboxTopLeftX * bitmap.width
+                                val topLeftYFloat =
+                                    captureInferenceResult.bboxTopLeftY * bitmap.height
                                 val widthFloat = captureInferenceResult.bboxWidth * bitmap.width
                                 val heightFloat = captureInferenceResult.bboxHeight * bitmap.height
 
                                 val topLeftXAbsolute = topLeftXFloat.toInt()
                                 val topLeftYAbsolute = topLeftYFloat.toInt()
-                                val widthAbsolute = (widthFloat + (topLeftXFloat - topLeftXAbsolute)).toInt()
-                                val heightAbsolute = (heightFloat + (topLeftYFloat - topLeftYAbsolute)).toInt()
+                                val widthAbsolute =
+                                    (widthFloat + (topLeftXFloat - topLeftXAbsolute)).toInt()
+                                val heightAbsolute =
+                                    (heightFloat + (topLeftYFloat - topLeftYAbsolute)).toInt()
 
                                 // Clamp the crop rectangle to stay within bitmap bounds
-                                val clampedTopLeftX = topLeftXAbsolute.coerceIn(0, jpegBitmap.width - 1)
-                                val clampedTopLeftY = topLeftYAbsolute.coerceIn(0, jpegBitmap.height - 1)
-                                val clampedWidth = widthAbsolute.coerceIn(1, jpegBitmap.width - clampedTopLeftX)
-                                val clampedHeight = heightAbsolute.coerceIn(1, jpegBitmap.height - clampedTopLeftY)
+                                val clampedTopLeftX =
+                                    topLeftXAbsolute.coerceIn(0, jpegBitmap.width - 1)
+                                val clampedTopLeftY =
+                                    topLeftYAbsolute.coerceIn(0, jpegBitmap.height - 1)
+                                val clampedWidth =
+                                    widthAbsolute.coerceIn(1, jpegBitmap.width - clampedTopLeftX)
+                                val clampedHeight =
+                                    heightAbsolute.coerceIn(1, jpegBitmap.height - clampedTopLeftY)
 
                                 if (clampedWidth > 0 && clampedHeight > 0) {
                                     val croppedBitmap = Bitmap.createBitmap(
@@ -265,11 +270,16 @@ class ImagingViewModel @Inject constructor(
                                         clampedWidth,
                                         clampedHeight
                                     )
-                                    var (speciesLogits, sexLogits, abdomenStatusLogits) = inferenceRepository.classifySpecimen(croppedBitmap)
+                                    var (speciesLogits, sexLogits, abdomenStatusLogits) = inferenceRepository.classifySpecimen(
+                                        croppedBitmap
+                                    )
 
-                                    val speciesIndex = speciesLogits?.let { logits -> logits.indexOf(logits.max()) }
-                                    var sexIndex = sexLogits?.let { logits -> logits.indexOf(logits.max()) }
-                                    var abdomenStatusIndex = abdomenStatusLogits?.let { logits -> logits.indexOf(logits.max()) }
+                                    val speciesIndex =
+                                        speciesLogits?.let { logits -> logits.indexOf(logits.max()) }
+                                    var sexIndex =
+                                        sexLogits?.let { logits -> logits.indexOf(logits.max()) }
+                                    var abdomenStatusIndex =
+                                        abdomenStatusLogits?.let { logits -> logits.indexOf(logits.max()) }
 
                                     if (speciesLogits == null || speciesIndex == SpeciesLabel.NON_MOSQUITO.ordinal) {
                                         sexLogits = null
@@ -364,15 +374,26 @@ class ImagingViewModel @Inject constructor(
                         val success = transactionHelper.runAsTransaction {
                             val inferenceResult = _state.value.currentInferenceResult
 
-                            val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(specimenId, currentSession.localId)
+                            val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(
+                                specimenId,
+                                currentSession.localId
+                            )
                             val specimenInsertionResult = if (existingSpecimen == null) {
                                 specimenRepository.insertSpecimen(specimen, currentSession.localId)
                             } else {
                                 Result.Success(Unit)
                             }
-                            val specimenImageInsertionResult = specimenImageRepository.insertSpecimenImage(specimenImage, specimen.id, currentSession.localId)
+                            val specimenImageInsertionResult =
+                                specimenImageRepository.insertSpecimenImage(
+                                    specimenImage,
+                                    specimen.id,
+                                    currentSession.localId
+                                )
                             val inferenceResultInsertionResult =
-                                inferenceResultRepository.insertInferenceResult(inferenceResult, specimenImage.localId)
+                                inferenceResultRepository.insertInferenceResult(
+                                    inferenceResult,
+                                    specimenImage.localId
+                                )
 
                             specimenInsertionResult.onError { error ->
                                 emitError(error)

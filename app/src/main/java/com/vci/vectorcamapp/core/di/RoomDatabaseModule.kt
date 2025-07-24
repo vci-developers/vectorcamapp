@@ -59,6 +59,15 @@ object RoomDatabaseModule {
                         SiteEntity(
                             id = 2,
                             programId = 2,
+                            district = "Adjumani",
+                            subCounty = "County3",
+                            parish = "Parish3",
+                            sentinelSite = "Ofua",
+                            healthCenter = "Health Center 3"
+                        ),
+                        SiteEntity(
+                            id = 3,
+                            programId = 2,
                             district = "Mayuge",
                             subCounty = "County1",
                             parish = "Parish1",
@@ -66,22 +75,13 @@ object RoomDatabaseModule {
                             healthCenter = "Health Center 1"
                         ),
                         SiteEntity(
-                            id = 3,
+                            id = 4,
                             programId = 2,
                             district = "Mayuge",
                             subCounty = "County2",
                             parish = "Parish2",
                             sentinelSite = "Namadhi",
                             healthCenter = "Health Center 2"
-                        ),
-                        SiteEntity(
-                            id = 4,
-                            programId = 2,
-                            district = "Adjumani",
-                            subCounty = "County3",
-                            parish = "Parish3",
-                            sentinelSite = "Ofua",
-                            healthCenter = "Health Center 3"
                         ),
                         SiteEntity(
                             id = 5,

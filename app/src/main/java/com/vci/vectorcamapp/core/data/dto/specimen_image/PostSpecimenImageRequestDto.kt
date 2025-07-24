@@ -1,7 +1,9 @@
 package com.vci.vectorcamapp.core.data.dto.specimen_image
 
 import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class PostSpecimenImageRequestDto(
     val species: String? = null,
     val sex: String? = null,

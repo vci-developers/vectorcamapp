@@ -8,15 +8,12 @@ import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -31,16 +28,17 @@ class CompleteSessionDetailsViewModel @Inject constructor(
     private val specimenRepository: SpecimenRepository,
 ) : CoreViewModel() {
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val _specimensWithImagesAndInferenceResults: Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> = flow {
-        emit(savedStateHandle.get<String>("sessionId")?.let { UUID.fromString(it) })
-    }.flatMapLatest { sessionId ->
-        if (sessionId == null) {
-            flowOf(emptyList())
-        } else {
-            specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(sessionId)
+    private val _specimensWithImagesAndInferenceResults: Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> =
+        flow {
+            val sessionIdString = savedStateHandle.get<String>("sessionId")
+            val sessionId = sessionIdString?.let { UUID.fromString(it) }
+            if (sessionId == null) {
+                emit(emptyList())
+            } else {
+                specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(sessionId)
+                    .collect { emit(it) }
+            }
         }
-    }
 
     private val _state = MutableStateFlow(CompleteSessionDetailsState())
     val state: StateFlow<CompleteSessionDetailsState> = combine(
@@ -72,7 +70,8 @@ class CompleteSessionDetailsViewModel @Inject constructor(
             }
 
             val sessionAndSite = sessionRepository.getSessionAndSiteById(sessionId)
-            val sessionAndSurveillanceForm = sessionRepository.getSessionAndSurveillanceFormById(sessionId)
+            val sessionAndSurveillanceForm =
+                sessionRepository.getSessionAndSurveillanceFormById(sessionId)
 
             val session = sessionAndSite?.session
             val site = sessionAndSite?.site

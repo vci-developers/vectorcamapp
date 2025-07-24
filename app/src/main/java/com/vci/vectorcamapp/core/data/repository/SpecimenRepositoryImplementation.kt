@@ -10,7 +10,11 @@ import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenIma
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 import javax.inject.Inject
@@ -44,7 +48,9 @@ class SpecimenRepositoryImplementation @Inject constructor(
         }
     }
 
-    override suspend fun getSpecimenByIdAndSessionId(specimenId: String, sessionId: UUID): Specimen? {
+    override suspend fun getSpecimenByIdAndSessionId(
+        specimenId: String, sessionId: UUID
+    ): Specimen? {
         return specimenDao.getSpecimenByIdAndSessionId(specimenId, sessionId)?.toDomain()
     }
 
@@ -52,19 +58,49 @@ class SpecimenRepositoryImplementation @Inject constructor(
         return specimenDao.deleteSpecimen(specimen.toEntity(sessionId)) > 0
     }
 
-    override fun observeSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> {
-        return specimenDao.observeSpecimenImagesAndInferenceResultsBySession(sessionId)
-            .map { specimenWithSpecimenImagesAndInferenceResultsRelations ->
-                specimenWithSpecimenImagesAndInferenceResultsRelations.map { specimenWithSpecimenImagesAndInferenceResultsRelation ->
-                    SpecimenWithSpecimenImagesAndInferenceResults(
-                        specimen = specimenWithSpecimenImagesAndInferenceResultsRelation.specimenEntity.toDomain(),
-                        specimenImagesAndInferenceResults = specimenWithSpecimenImagesAndInferenceResultsRelation.specimenImageAndInferenceResultRelations.map { specimenImageAndInferenceResultRelation ->
-                            SpecimenImageAndInferenceResult(
-                                specimenImage = specimenImageAndInferenceResultRelation.specimenImageEntity.toDomain(),
-                                inferenceResult = specimenImageAndInferenceResultRelation.inferenceResultEntity.toDomain()
-                            )
-                        })
-                }
+    override suspend fun getSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): List<SpecimenWithSpecimenImagesAndInferenceResults> {
+        val specimens = specimenDao.getSpecimensBySession(sessionId)
+        return specimens.map { specimenEntity ->
+            val specimenImagesAndResults =
+                specimenDao.getSpecimenImagesAndInferenceResultsBySpecimen(
+                    specimenEntity.id, sessionId
+                )
+
+            SpecimenWithSpecimenImagesAndInferenceResults(
+                specimen = specimenEntity.toDomain(),
+                specimenImagesAndInferenceResults = specimenImagesAndResults.map { relation ->
+                    SpecimenImageAndInferenceResult(
+                        specimenImage = relation.specimenImageEntity.toDomain(),
+                        inferenceResult = relation.inferenceResultEntity.toDomain()
+                    )
+                })
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun observeSpecimenImagesAndInferenceResultsBySession(
+        sessionId: UUID
+    ): Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> {
+        return specimenDao.observeSpecimensBySession(sessionId).flatMapLatest { specimenEntities ->
+            if (specimenEntities.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                combine(
+                    specimenEntities.map { specimenEntity ->
+                        specimenDao.observeSpecimenImagesAndInferenceResultsBySpecimen(
+                            specimenEntity.id, sessionId
+                        ).map { specimenImagesAndResults ->
+                            SpecimenWithSpecimenImagesAndInferenceResults(
+                                specimen = specimenEntity.toDomain(),
+                                specimenImagesAndInferenceResults = specimenImagesAndResults.map { relation ->
+                                    SpecimenImageAndInferenceResult(
+                                        specimenImage = relation.specimenImageEntity.toDomain(),
+                                        inferenceResult = relation.inferenceResultEntity.toDomain()
+                                    )
+                                })
+                        }
+                    }) { it.toList() }
             }
+        }
     }
 }
