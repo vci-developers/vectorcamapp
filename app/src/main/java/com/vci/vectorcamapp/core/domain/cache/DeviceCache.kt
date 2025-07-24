@@ -7,4 +7,7 @@ interface DeviceCache {
     suspend fun saveDevice(device: Device, programId: Int)
     suspend fun getDevice(): Device?
     suspend fun getProgramId(): Int?
+
+    fun getDeviceFlow(): Flow<Device?>
+    fun getProgramIdFlow(): Flow<Int?>
 }
