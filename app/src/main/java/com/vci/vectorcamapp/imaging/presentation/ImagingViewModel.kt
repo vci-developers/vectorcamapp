@@ -364,7 +364,7 @@ class ImagingViewModel @Inject constructor(
                         val success = transactionHelper.runAsTransaction {
                             val inferenceResult = _state.value.currentInferenceResult
 
-                            val existingSpecimen = specimenRepository.getSpecimenById(specimenId)
+                            val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(specimenId, currentSession.localId)
                             val specimenInsertionResult = if (existingSpecimen == null) {
                                 specimenRepository.insertSpecimen(specimen, currentSession.localId)
                             } else {

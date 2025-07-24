@@ -18,8 +18,8 @@ interface SpecimenDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSpecimen(specimen: SpecimenEntity)
 
-    @Query("SELECT * FROM specimen WHERE id = :id")
-    suspend fun getSpecimenById(id: String): SpecimenEntity?
+    @Query("SELECT * FROM specimen WHERE id = :specimenId AND sessionId = :sessionId")
+    suspend fun getSpecimenByIdAndSessionId(specimenId: String, sessionId: UUID): SpecimenEntity?
 
     @Update(onConflict = OnConflictStrategy.ABORT)
     suspend fun updateSpecimen(specimen: SpecimenEntity)

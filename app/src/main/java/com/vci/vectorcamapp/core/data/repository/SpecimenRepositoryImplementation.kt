@@ -44,8 +44,8 @@ class SpecimenRepositoryImplementation @Inject constructor(
         }
     }
 
-    override suspend fun getSpecimenById(id: String): Specimen? {
-        return specimenDao.getSpecimenById(id)?.toDomain()
+    override suspend fun getSpecimenByIdAndSessionId(specimenId: String, sessionId: UUID): Specimen? {
+        return specimenDao.getSpecimenByIdAndSessionId(specimenId, sessionId)?.toDomain()
     }
 
     override suspend fun deleteSpecimen(specimen: Specimen, sessionId: UUID): Boolean {
