@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -23,14 +24,12 @@ class MainViewModel @Inject constructor(
 ) : CoreViewModel() {
 
     private val _state = MutableStateFlow(MainState())
-    val state = _state.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
-
+    val state = _state.onStart {
+        determineStartDestination()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
+    
     private val _events = Channel<MainEvent>()
     val events = _events.receiveAsFlow()
-
-    init {
-        determineStartDestination()
-    }
 
     fun onAction(action: MainAction) {
         viewModelScope.launch {
