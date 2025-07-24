@@ -29,7 +29,7 @@ class MainViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     init {
-        observeDevice()
+        determineStartDestination()
     }
 
     fun onAction(action: MainAction) {
@@ -67,9 +67,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun observeDevice() {
+    private fun determineStartDestination() {
         viewModelScope.launch {
-            deviceCache.observeDeviceFlow()
+            deviceCache.observeDevice()
                 .catch {
                     emit(null)
                     emitError(MainError.DEVICE_FETCH_FAILED)
