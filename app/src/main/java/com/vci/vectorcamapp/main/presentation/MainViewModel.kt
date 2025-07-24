@@ -69,7 +69,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeDevice() {
         viewModelScope.launch {
-            deviceCache.getDeviceFlow()
+            deviceCache.observeDeviceFlow()
                 .catch {
                     emit(null)
                     emitError(MainError.DEVICE_FETCH_FAILED)

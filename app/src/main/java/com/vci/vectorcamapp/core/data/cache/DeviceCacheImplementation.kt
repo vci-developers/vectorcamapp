@@ -30,13 +30,13 @@ class DeviceCacheImplementation @Inject constructor(
         return if (dto.programId == -1) null else dto.programId
     }
 
-    override fun getDeviceFlow(): Flow<Device?> {
+    override fun observeDeviceFlow(): Flow<Device?> {
         return dataStore.data
             .catch { emit(DeviceCacheDto()) }
             .map { it.toDomain() }
     }
 
-    override fun getProgramIdFlow(): Flow<Int?> {
+    override fun observeProgramIdFlow(): Flow<Int?> {
         return dataStore.data
             .catch { emit(DeviceCacheDto()) }
             .map { dto -> if (dto.programId == -1) null else dto.programId }
