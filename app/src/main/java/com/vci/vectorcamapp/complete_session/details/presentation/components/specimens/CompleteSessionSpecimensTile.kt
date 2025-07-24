@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -39,7 +40,7 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.extensions.displayName
 import java.text.SimpleDateFormat
 import java.util.Locale
-import com.vci.vectorcamapp.core.presentation.util.zoomPanGesture
+import com.vci.vectorcamapp.ui.extensions.zoomPanGesture
 
 @Composable
 fun CompleteSessionSpecimensTile(
@@ -47,6 +48,7 @@ fun CompleteSessionSpecimensTile(
 ) {
 
     val context = LocalContext.current
+    var density = LocalDensity.current
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
@@ -57,7 +59,10 @@ fun CompleteSessionSpecimensTile(
                 .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
                 .clip(RectangleShape)
         ) {
-            val containerSize = IntSize(constraints.maxWidth, constraints.maxHeight)
+            val containerSize = IntSize(
+                width = with(density) { maxWidth.roundToPx() },
+                height = with(density) { maxHeight.roundToPx() }
+            )
 
             AsyncImage(
                 model = ImageRequest.Builder(context).data(specimen.imageUri).build(),
