@@ -24,6 +24,7 @@ import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
+import com.vci.vectorcamapp.core.domain.model.UploadStatus
 import com.vci.vectorcamapp.core.domain.network.api.DeviceDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SessionDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenDataSource
@@ -36,7 +37,6 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
-import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -120,8 +120,11 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
             }
 
-            val localSpecimensWithImagesAndInferenceResults = specimenRepository.getSpecimenImagesAndInferenceResultsBySession(syncedSession.localId)
-            localSpecimensWithImagesAndInferenceResults.forEach { specimenWithImagesAndInferenceResults ->
+            val localSpecimensWithImagesAndInferenceResults =
+                specimenRepository.getSpecimenImagesAndInferenceResultsBySession(syncedSession.localId)
+            val totalSpecimens = localSpecimensWithImagesAndInferenceResults.size
+            localSpecimensWithImagesAndInferenceResults.forEachIndexed { specimenIndex, specimenWithImagesAndInferenceResults ->
+                val totalImages = specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
                 val syncedSpecimen = when (val syncSpecimenResult = syncSpecimenIfNeeded(
                     specimenWithImagesAndInferenceResults.specimen,
                     syncedSession.localId,
@@ -133,14 +136,25 @@ class MetadataUploadWorker @AssistedInject constructor(
                     )
                 }
 
-                specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEachIndexed { index, (specimenImage, inferenceResult) ->
-                    syncSpecimenImageAndInferenceResultIfNeeded(
-                        specimenImage, inferenceResult, syncedSpecimen.id, syncedSession.localId, syncedSession.remoteId
-                    ).onSuccess {
-
-                    }.onError { error ->
-                        return retryOrFailure(error.toString(context))
+                specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEachIndexed { imageIndex, (specimenImage, inferenceResult) ->
+                    if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
+                        syncSpecimenImageAndInferenceResultIfNeeded(
+                            specimenImage,
+                            inferenceResult,
+                            syncedSpecimen.id,
+                            syncedSession.localId,
+                            syncedSession.remoteId
+                        ).onError { error ->
+                            return retryOrFailure(error.toString(context))
+                        }
                     }
+                    showSpecimenProgressNotification(
+                        specimenId = syncedSpecimen.id,
+                        currentSpecimenIndex = specimenIndex,
+                        totalSpecimens = totalSpecimens,
+                        currentImageIndex = imageIndex,
+                        totalImagesForSpecimen = totalImages
+                    )
                 }
             }
 
@@ -149,6 +163,26 @@ class MetadataUploadWorker @AssistedInject constructor(
             return retryOrFailure("Lost internet connection while uploading.")
         } catch (e: Exception) {
             return retryOrFailure("An unknown error occurred during upload.")
+        } finally {
+            if (isStopped) {
+                resetInProgressUploads(localSession.localId)
+            }
+        }
+    }
+
+    private suspend fun resetInProgressUploads(sessionId: UUID) {
+        val specimensWithImagesAndInferenceResults =
+            specimenRepository.getSpecimenImagesAndInferenceResultsBySession(sessionId)
+        specimensWithImagesAndInferenceResults.forEach { specimenWithImagesAndInferenceResults ->
+            specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
+                if (specimenImage.metadataUploadStatus == UploadStatus.IN_PROGRESS) {
+                    specimenImageRepository.updateSpecimenImage(
+                        specimenImage.copy(metadataUploadStatus = UploadStatus.PAUSED),
+                        specimenWithImagesAndInferenceResults.specimen.id,
+                        sessionId
+                    )
+                }
+            }
         }
     }
 
@@ -358,14 +392,11 @@ class MetadataUploadWorker @AssistedInject constructor(
     }
 
     private suspend fun syncSpecimenIfNeeded(
-        localSpecimen: Specimen,
-        syncedLocalSessionId: UUID,
-        syncedRemoteSessionId: Int
+        localSpecimen: Specimen, syncedLocalSessionId: UUID, syncedRemoteSessionId: Int
     ): DomainResult<Specimen, NetworkError> {
         return try {
             val localSpecimenDto = SpecimenDto(
-                specimenId = localSpecimen.id,
-                sessionId = syncedRemoteSessionId
+                specimenId = localSpecimen.id, sessionId = syncedRemoteSessionId
             )
 
             // TODO: MIGHT NEED TO CHANGE ONCE BACKEND REQUIRES SESSION ID TO GET A SPECIMEN BY ID
@@ -376,8 +407,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                     when (remoteSpecimenResult.error) {
                         NetworkError.NOT_FOUND -> {
                             val postSpecimenResult = specimenDataSource.postSpecimen(
-                                localSpecimen,
-                                syncedRemoteSessionId
+                                localSpecimen, syncedRemoteSessionId
                             )
                             when (postSpecimenResult) {
                                 is DomainResult.Success -> postSpecimenResult.data.specimen
@@ -416,9 +446,14 @@ class MetadataUploadWorker @AssistedInject constructor(
         syncedSpecimenId: String,
         syncedLocalSessionId: UUID,
         syncedRemoteSessionId: Int
-        ): DomainResult<Unit, NetworkError> {
+    ): DomainResult<Unit, NetworkError> {
         return try {
-            // TODO: ADD FRONTEND ID, SESSION ID TO DTO WHEN BACKEND MAKES IT AVAILABLE
+            specimenImageRepository.updateSpecimenImage(
+                localSpecimenImage.copy(metadataUploadStatus = UploadStatus.IN_PROGRESS),
+                syncedSpecimenId,
+                syncedLocalSessionId
+            )
+            // TODO: ADD FRONTEND ID, REMOTE SESSION ID TO DTO WHEN BACKEND MAKES IT AVAILABLE
             val localSpecimenImageDto = SpecimenImageDto(
                 id = localSpecimenImage.remoteId,
                 species = localSpecimenImage.species,
@@ -440,25 +475,44 @@ class MetadataUploadWorker @AssistedInject constructor(
             )
 
             // TODO: Change REMOTE ID when search by frontend ID
-            val remoteSpecimenImageDto = when (val remoteSpecimenImageResult = specimenImageDataSource.getSpecimenImageMetadata(localSpecimenImage.remoteId ?: -1, syncedSpecimenId)) {
+            val remoteSpecimenImageDto = when (val remoteSpecimenImageResult =
+                specimenImageDataSource.getSpecimenImageMetadata(
+                    localSpecimenImage.remoteId ?: -1, syncedSpecimenId
+                )) {
                 is DomainResult.Success -> remoteSpecimenImageResult.data
                 is DomainResult.Error -> {
                     when (remoteSpecimenImageResult.error) {
                         NetworkError.NOT_FOUND -> {
-                            val postSpecimenImageResult = specimenImageDataSource.postSpecimenImageMetadata(
-                                localSpecimenImage, localInferenceResult, syncedSpecimenId // TODO: ADD REMOTE SESSION ID ONCE BACKEND WORKS
-                            )
+                            val postSpecimenImageResult =
+                                specimenImageDataSource.postSpecimenImageMetadata(
+                                    localSpecimenImage,
+                                    localInferenceResult,
+                                    syncedSpecimenId // TODO: ADD REMOTE SESSION ID ONCE BACKEND WORKS
+                                )
                             when (postSpecimenImageResult) {
                                 is DomainResult.Success -> {
                                     postSpecimenImageResult.data.image
                                 }
-                                is DomainResult.Error -> return DomainResult.Error(
+
+                                is DomainResult.Error -> {
+                                    specimenImageRepository.updateSpecimenImage(
+                                        localSpecimenImage.copy(
+                                            metadataUploadStatus = UploadStatus.PAUSED
+                                        ), syncedSpecimenId, syncedLocalSessionId
+                                    )
+                                    return DomainResult.Error(
                                         postSpecimenImageResult.error
                                     )
+                                }
                             }
                         }
 
                         else -> {
+                            specimenImageRepository.updateSpecimenImage(
+                                localSpecimenImage.copy(
+                                    metadataUploadStatus = UploadStatus.PAUSED
+                                ), syncedSpecimenId, syncedLocalSessionId
+                            )
                             return DomainResult.Error(remoteSpecimenImageResult.error)
                         }
                     }
@@ -492,18 +546,38 @@ class MetadataUploadWorker @AssistedInject constructor(
 
             if (remoteSpecimenImageDto != localSpecimenImageDto) {
                 transactionHelper.runAsTransaction {
-                    specimenImageRepository.updateSpecimenImage(remoteSpecimenImage, syncedSpecimenId, syncedLocalSessionId).onError {
+                    specimenImageRepository.updateSpecimenImage(
+                        remoteSpecimenImage, syncedSpecimenId, syncedLocalSessionId
+                    ).onError {
                         return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
                     }
-                    inferenceResultRepository.updateInferenceResult(remoteInferenceResult, remoteSpecimenImage.localId)
+                    inferenceResultRepository.updateInferenceResult(
+                        remoteInferenceResult, remoteSpecimenImage.localId
+                    ).onError {
+                        return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
+                    }
                 }
             }
 
+            specimenImageRepository.updateSpecimenImage(
+                localSpecimenImage.copy(metadataUploadStatus = UploadStatus.COMPLETED),
+                syncedSpecimenId,
+                syncedLocalSessionId
+            )
             DomainResult.Success(Unit)
         } catch (e: IOException) {
+            specimenImageRepository.updateSpecimenImage(
+                localSpecimenImage.copy(metadataUploadStatus = UploadStatus.PAUSED),
+                syncedSpecimenId,
+                syncedLocalSessionId
+            )
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
-            e.printStackTrace()
+            specimenImageRepository.updateSpecimenImage(
+                localSpecimenImage.copy(metadataUploadStatus = UploadStatus.PAUSED),
+                syncedSpecimenId,
+                syncedLocalSessionId
+            )
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
@@ -518,20 +592,31 @@ class MetadataUploadWorker @AssistedInject constructor(
     private fun showInitialMetadataNotification(): ForegroundInfo {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle("Registering device and session...")
-            .setSmallIcon(R.drawable.ic_cloud_upload)
-            .setOngoing(true).build()
+            .setSmallIcon(R.drawable.ic_cloud_upload).setOngoing(true).build()
 
         return ForegroundInfo(
             NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
         )
     }
 
-    private fun showSpecimenUploadProgress(current: Int, total: Int) {
-        val notification =
-            NotificationCompat.Builder(context, CHANNEL_ID).setContentTitle("Uploading specimens")
-                .setContentText("Uploading $current of $total specimens")
-                .setSmallIcon(R.drawable.ic_cloud_upload).setProgress(total, current, false)
-                .setOngoing(true).build()
+    private fun showSpecimenProgressNotification(
+        specimenId: String,
+        currentSpecimenIndex: Int,
+        totalSpecimens: Int,
+        currentImageIndex: Int,
+        totalImagesForSpecimen: Int
+    ) {
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setContentTitle("Uploading metadata for specimen $specimenId")
+            .setContentText("Specimen ${currentSpecimenIndex + 1} of $totalSpecimens").setStyle(
+                NotificationCompat.BigTextStyle().bigText(
+                    """
+                Specimen ${currentSpecimenIndex + 1} of $totalSpecimens
+                Image ${currentImageIndex + 1} of $totalImagesForSpecimen
+                """.trimIndent()
+                )
+            ).setSmallIcon(R.drawable.ic_cloud_upload)
+            .setProgress(totalSpecimens, currentSpecimenIndex + 1, false).setOngoing(true).build()
 
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
