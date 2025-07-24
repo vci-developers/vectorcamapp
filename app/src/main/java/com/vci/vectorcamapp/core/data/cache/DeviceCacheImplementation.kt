@@ -2,8 +2,6 @@ package com.vci.vectorcamapp.core.data.cache
 
 import androidx.datastore.core.DataStore
 import com.vci.vectorcamapp.core.data.dto.cache.DeviceCacheDto
-import com.vci.vectorcamapp.core.data.mappers.toDomain
-import com.vci.vectorcamapp.core.data.mappers.toDto
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import kotlinx.coroutines.flow.Flow
@@ -17,12 +15,28 @@ class DeviceCacheImplementation @Inject constructor(
 ) : DeviceCache {
     override suspend fun saveDevice(device: Device, programId: Int) {
         dataStore.updateData {
-            device.toDto(programId)
+            DeviceCacheDto(
+                id = device.id,
+                programId = programId,
+                model = device.model,
+                registeredAt = device.registeredAt,
+                submittedAt = device.submittedAt
+            )
         }
     }
 
     override suspend fun getDevice(): Device? {
-        return dataStore.data.first().toDomain()
+        val dto = dataStore.data.first()
+        return if (dto.programId == -1) {
+            null
+        } else {
+            Device(
+                id = dto.id,
+                model = dto.model,
+                registeredAt = dto.registeredAt,
+                submittedAt = dto.submittedAt
+            )
+        }
     }
 
     override suspend fun getProgramId(): Int? {
@@ -33,7 +47,19 @@ class DeviceCacheImplementation @Inject constructor(
     override fun observeDevice(): Flow<Device?> {
         return dataStore.data
             .catch { emit(DeviceCacheDto()) }
-            .map { it.toDomain() }
+            .map {
+                if (it.programId == -1) {
+                    null
+                }
+                else {
+                    Device(
+                        id = it.id,
+                        model = it.model,
+                        registeredAt = it.registeredAt,
+                        submittedAt = it.submittedAt
+                    )
+                }
+            }
     }
 
     override fun observeProgramId(): Flow<Int?> {
