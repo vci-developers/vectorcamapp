@@ -258,7 +258,7 @@ fun ImagingScreen(
                                         onAction(ImagingAction.ConfirmPendingAction)
                                     },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colors.successConfirm
+                                        containerColor = MaterialTheme.colors.error
                                     )
                                 ) {
                                     Text(
@@ -292,7 +292,7 @@ fun ImagingScreen(
                                     Text(
                                         "Back",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colors.error
+                                        color = MaterialTheme.colors.textPrimary
                                     )
                                 }
                             }
