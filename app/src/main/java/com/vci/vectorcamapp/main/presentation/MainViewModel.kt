@@ -3,7 +3,6 @@ package com.vci.vectorcamapp.main.presentation
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.main.domain.util.MainError
 import com.vci.vectorcamapp.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -68,15 +67,14 @@ class MainViewModel @Inject constructor(
 
     private fun determineStartDestination() {
         viewModelScope.launch {
-            deviceCache.observeDevice()
+            deviceCache.observeProgramId()
                 .catch {
-                    emit(null)
-                    emitError(MainError.DEVICE_FETCH_FAILED)
+                    _state.update { it.copy(startDestination = Destination.Registration) }
                 }
-                .onEach { device ->
-                    if (device != null && _state.value.startDestination != Destination.Landing) {
+                .onEach { programId ->
+                    if (programId != -1 && _state.value.startDestination != Destination.Landing) {
                         _state.update { it.copy(startDestination = Destination.Landing) }
-                    } else if (device == null && _state.value.startDestination != Destination.Registration) {
+                    } else if (programId == -1 && _state.value.startDestination != Destination.Registration) {
                         _state.update { it.copy(startDestination = Destination.Registration) }
                     }
                 }

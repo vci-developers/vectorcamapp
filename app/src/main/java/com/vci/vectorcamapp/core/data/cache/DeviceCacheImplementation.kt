@@ -6,7 +6,7 @@ import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -25,9 +25,14 @@ class DeviceCacheImplementation @Inject constructor(
         }
     }
 
+    override suspend fun getProgramId(): Int? {
+        val dto = dataStore.data.firstOrNull()
+        return dto?.programId
+    }
+
     override suspend fun getDevice(): Device? {
-        val dto = dataStore.data.first()
-        return if (dto.programId == -1) {
+        val dto = dataStore.data.firstOrNull()
+        return if (dto == null) {
             null
         } else {
             Device(
@@ -39,32 +44,10 @@ class DeviceCacheImplementation @Inject constructor(
         }
     }
 
-    override suspend fun getProgramId(): Int? {
-        val dto = dataStore.data.first()
-        return if (dto.programId == -1) null else dto.programId
-    }
-
-    override fun observeDevice(): Flow<Device?> {
-        return dataStore.data
-            .catch { emit(DeviceCacheDto()) }
-            .map {
-                if (it.programId == -1) {
-                    null
-                }
-                else {
-                    Device(
-                        id = it.id,
-                        model = it.model,
-                        registeredAt = it.registeredAt,
-                        submittedAt = it.submittedAt
-                    )
-                }
-            }
-    }
-
     override fun observeProgramId(): Flow<Int?> {
         return dataStore.data
             .catch { emit(DeviceCacheDto()) }
-            .map { dto -> if (dto.programId == -1) null else dto.programId }
+            .map { dto -> dto.programId }
     }
 }
+

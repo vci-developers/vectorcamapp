@@ -8,6 +8,5 @@ interface DeviceCache {
     suspend fun getDevice(): Device?
     suspend fun getProgramId(): Int?
 
-    fun observeDevice(): Flow<Device?>
     fun observeProgramId(): Flow<Int?>
 }
