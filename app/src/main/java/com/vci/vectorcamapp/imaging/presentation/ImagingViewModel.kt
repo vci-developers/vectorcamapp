@@ -102,18 +102,13 @@ class ImagingViewModel @Inject constructor(
     private val _state = MutableStateFlow(ImagingState())
 
     val state: StateFlow<ImagingState> = combine(
-        _specimensAndInferenceResults, _state
-    ) { specimensAndInferenceResults, state ->
-        state.copy(
-            capturedSpecimensAndInferenceResults = specimensAndInferenceResults,
-            isLoading = false
-        )
-    }.onStart {
-        loadImagingDetails()
+        _specimensWithImagesAndInferenceResults, _state
+    ) { specimensWithImagesAndInferenceResults, state ->
+        state.copy(specimensWithImagesAndInferenceResults = specimensWithImagesAndInferenceResults)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000L),
-        initialValue = ImagingState(isLoading = true)
+        initialValue = ImagingState()
     )
 
     private val _events = Channel<ImagingEvent>()

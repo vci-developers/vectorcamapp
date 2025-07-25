@@ -79,12 +79,12 @@ fun ImagingScreen(
     }
 
     val pagerState = rememberPagerState(
-        initialPage = state.capturedSpecimensAndInferenceResults.size,
-        pageCount = { state.capturedSpecimensAndInferenceResults.size + 1 }
+        initialPage = state.specimensWithImagesAndInferenceResults.size,
+        pageCount = { state.specimensWithImagesAndInferenceResults.size + 1 }
     )
 
-    LaunchedEffect(state.capturedSpecimensAndInferenceResults.size) {
-        pagerState.scrollToPage(state.capturedSpecimensAndInferenceResults.size)
+    LaunchedEffect(state.specimensWithImagesAndInferenceResults.size) {
+        pagerState.scrollToPage(state.specimensWithImagesAndInferenceResults.size)
     }
 
     HorizontalPager(
