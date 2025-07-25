@@ -10,6 +10,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -26,7 +28,7 @@ class MainViewModel @Inject constructor(
     val state = _state.onStart {
         determineStartDestination()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
-
+    
     private val _events = Channel<MainEvent>()
     val events = _events.receiveAsFlow()
 
@@ -67,8 +69,7 @@ class MainViewModel @Inject constructor(
 
     private fun determineStartDestination() {
         viewModelScope.launch {
-            try {
-                DbSeedStatus.seeded.await()
+            DbSeedStatus.seeded.await()
 
                 val device = deviceCache.getDevice()
                 _state.update {
@@ -77,10 +78,19 @@ class MainViewModel @Inject constructor(
                             Destination.Registration
                         else Destination.Landing
                     )
+            deviceCache.observeProgramId()
+                .catch {
+                    emitError(MainError.DEVICE_FETCH_FAILED)
+                    _state.update { it.copy(startDestination = Destination.Registration) }
                 }
-            } catch (e: Exception) {
-                emitError(MainError.DEVICE_FETCH_FAILED)
-            }
+                .onEach { programId ->
+                    if (programId != -1 && _state.value.startDestination != Destination.Landing) {
+                        _state.update { it.copy(startDestination = Destination.Landing) }
+                    } else if (programId == -1 && _state.value.startDestination != Destination.Registration) {
+                        _state.update { it.copy(startDestination = Destination.Registration) }
+                    }
+                }
+                .collect { }
         }
     }
 }
