@@ -88,7 +88,7 @@ fun ImagingScreen(
     }
 
     HorizontalPager(
-        state = pagerState, modifier = Modifier.fillMaxSize()
+        state = pagerState, modifier = modifier.fillMaxSize()
     ) { page ->
         when {
             page < state.specimensWithImagesAndInferenceResults.size -> {
