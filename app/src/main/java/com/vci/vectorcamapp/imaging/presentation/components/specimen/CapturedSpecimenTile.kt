@@ -84,9 +84,9 @@ fun CapturedSpecimenTile(
                         contentDescription = specimen.id,
                         contentScale = ContentScale.FillBounds,
                     )
-                } else if (specimen.imageUri != Uri.EMPTY) {
+                } else if (specimenImage.imageUri != Uri.EMPTY) {
                     AsyncImage(
-                        model = ImageRequest.Builder(context).data(specimen.imageUri)
+                        model = ImageRequest.Builder(context).data(specimenImage.imageUri)
                             .crossfade(true)
                             .build(),
                         contentDescription = specimen.id,

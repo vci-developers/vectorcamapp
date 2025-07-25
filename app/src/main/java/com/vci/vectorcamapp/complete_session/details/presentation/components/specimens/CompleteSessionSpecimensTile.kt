@@ -69,7 +69,7 @@ fun CompleteSessionSpecimensTile(
             )
 
             AsyncImage(
-                model = ImageRequest.Builder(context).data(specimen.imageUri).build(),
+                model = ImageRequest.Builder(context).data(specimenImage.imageUri).build(),
                 contentDescription = "Specimen Image: ${specimen.id}",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
