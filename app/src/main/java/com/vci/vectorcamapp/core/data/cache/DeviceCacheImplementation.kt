@@ -26,20 +26,20 @@ class DeviceCacheImplementation @Inject constructor(
     }
 
     override suspend fun getProgramId(): Int? {
-        val dto = dataStore.data.firstOrNull()
-        return dto?.programId
+        val deviceCacheDto = dataStore.data.firstOrNull()
+        return deviceCacheDto?.programId
     }
 
     override suspend fun getDevice(): Device? {
-        val dto = dataStore.data.firstOrNull()
-        return if (dto == null) {
+        val deviceCacheDto = dataStore.data.firstOrNull()
+        return if (deviceCacheDto == null) {
             null
         } else {
             Device(
-                id = dto.id,
-                model = dto.model,
-                registeredAt = dto.registeredAt,
-                submittedAt = dto.submittedAt
+                id = deviceCacheDto.id,
+                model = deviceCacheDto.model,
+                registeredAt = deviceCacheDto.registeredAt,
+                submittedAt = deviceCacheDto.submittedAt
             )
         }
     }
@@ -47,7 +47,7 @@ class DeviceCacheImplementation @Inject constructor(
     override fun observeProgramId(): Flow<Int?> {
         return dataStore.data
             .catch { emit(DeviceCacheDto()) }
-            .map { dto -> dto.programId }
+            .map { deviceCacheDto -> deviceCacheDto.programId }
     }
 }
 
