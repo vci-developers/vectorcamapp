@@ -161,6 +161,7 @@ dependencies {
 
     // JSON Serialization Library
     implementation(libs.kotlinx.serialization.json) // Kotlinx JSON serialization library
+    implementation(libs.google.gson)
 
     // Testing Dependencies
     testImplementation(libs.junit) // JUnit for unit tests

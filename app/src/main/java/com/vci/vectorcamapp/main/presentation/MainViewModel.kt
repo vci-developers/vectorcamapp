@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.main.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.room.DbSeedStatus
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.main.domain.util.MainError
@@ -67,10 +68,14 @@ class MainViewModel @Inject constructor(
     private fun determineStartDestination() {
         viewModelScope.launch {
             try {
+                DbSeedStatus.seeded.await()
+
                 val device = deviceCache.getDevice()
                 _state.update {
                     it.copy(
-                        startDestination = if (device == null) Destination.Registration else Destination.Landing
+                        startDestination = if (device == null)
+                            Destination.Registration
+                        else Destination.Landing
                     )
                 }
             } catch (e: Exception) {
