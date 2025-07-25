@@ -37,6 +37,7 @@ import coil3.request.crossfade
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.model.Specimen
+import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
@@ -50,6 +51,7 @@ import java.util.Locale
 @Composable
 fun CapturedSpecimenTile(
     specimen: Specimen,
+    specimenImage: SpecimenImage,
     inferenceResult: InferenceResult,
     modifier: Modifier = Modifier,
     specimenBitmap: Bitmap? = null,
@@ -145,19 +147,19 @@ fun CapturedSpecimenTile(
             }
 
             Text(
-                text = if (specimen.species != null) "Species: ${specimen.species}" else "",
+                text = if (specimenImage.species != null) "Species: ${specimenImage.species}" else "",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colors.textPrimary
             )
 
             Text(
-                text = if (specimen.sex != null) "Sex: ${specimen.sex}" else "",
+                text = if (specimenImage.sex != null) "Sex: ${specimenImage.sex}" else "",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colors.textPrimary
             )
 
             Text(
-                text = if (specimen.abdomenStatus != null) "Abdomen Status: ${specimen.abdomenStatus}" else "",
+                text = if (specimenImage.abdomenStatus != null) "Abdomen Status: ${specimenImage.abdomenStatus}" else "",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colors.textPrimary
             )
@@ -170,7 +172,7 @@ fun CapturedSpecimenTile(
             )
 
             Text(
-                text = "Captured At: ${dateTimeFormatter.format(specimen.capturedAt)}",
+                text = "Captured At: ${dateTimeFormatter.format(specimenImage.capturedAt)}",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colors.textPrimary,
                 modifier = Modifier.padding(
