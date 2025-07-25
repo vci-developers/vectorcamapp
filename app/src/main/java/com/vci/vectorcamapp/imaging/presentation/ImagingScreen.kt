@@ -56,9 +56,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
 @Composable
@@ -236,7 +233,7 @@ fun ImagingScreen(
                         }, confirmButton = {
                             if (state.pendingAction == null) {
                                 OutlinedButton(
-                                    onClick = { onAction(ImagingAction.SetPendingAction(ImagingAction.SubmitSession)) },
+                                    onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SubmitSession)) },
                                     border = BorderStroke(MaterialTheme.dimensions.borderThicknessThick, MaterialTheme.colors.successConfirm)
                                 ) {
                                     Icon(
@@ -271,7 +268,7 @@ fun ImagingScreen(
                         }, dismissButton = {
                             if (state.pendingAction == null) {
                                 OutlinedButton(
-                                    onClick = { onAction(ImagingAction.SetPendingAction(ImagingAction.SaveSessionProgress)) },
+                                    onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SaveSessionProgress)) },
                                     border = BorderStroke(MaterialTheme.dimensions.borderThicknessThick, MaterialTheme.colors.info)
                                 ) {
                                     Icon(

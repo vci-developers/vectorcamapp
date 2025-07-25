@@ -135,8 +135,8 @@ class ImagingViewModel @Inject constructor(
                     _state.update { it.copy(showExitDialog = false, pendingAction = null) }
                 }
 
-                is ImagingAction.SetPendingAction -> {
-                    _state.update { it.copy(pendingAction = action.action) }
+                is ImagingAction.SelectPendingAction -> {
+                    _state.update { it.copy(pendingAction = action.pendingAction) }
                 }
 
                 ImagingAction.ClearPendingAction -> {
