@@ -70,14 +70,6 @@ class MainViewModel @Inject constructor(
     private fun determineStartDestination() {
         viewModelScope.launch {
             DbSeedStatus.seeded.await()
-
-                val device = deviceCache.getDevice()
-                _state.update {
-                    it.copy(
-                        startDestination = if (device == null)
-                            Destination.Registration
-                        else Destination.Landing
-                    )
             deviceCache.observeProgramId()
                 .catch {
                     emitError(MainError.DEVICE_FETCH_FAILED)
