@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenImageAndInferenceResult
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import java.util.UUID
 
 data class CompleteSessionDetailsState(
@@ -25,7 +26,8 @@ data class CompleteSessionDetailsState(
         submittedAt = null,
         notes = "",
         latitude = null,
-        longitude = null
+        longitude = null,
+        type = SessionType.SURVEILLANCE
     ),
     val site: Site = Site(
         id = -1,

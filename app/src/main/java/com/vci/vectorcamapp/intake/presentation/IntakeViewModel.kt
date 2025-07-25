@@ -1,10 +1,12 @@
 package com.vci.vectorcamapp.intake.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
@@ -32,6 +34,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class IntakeViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val validationUseCases: ValidationUseCases,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
@@ -398,7 +401,10 @@ class IntakeViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     isLoading = false,
-                    session = currentSession ?: it.session,
+                    session = currentSession ?: it.session.copy(
+                        type = savedStateHandle.get<SessionType>("sessionType")
+                            ?: SessionType.SURVEILLANCE
+                    ),
                     surveillanceForm = savedForm ?: it.surveillanceForm,
                     allSitesInProgram = allSites,
                     selectedDistrict = district,
@@ -430,8 +436,7 @@ class IntakeViewModel @Inject constructor(
                         session = it.session.copy(
                             latitude = location.latitude.toFloat(),
                             longitude = location.longitude.toFloat(),
-                        ),
-                        locationError = null
+                        ), locationError = null
                     )
                 }
             }.onError { error ->

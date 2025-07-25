@@ -5,7 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.domain.model.UploadStatus
+import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 
 @Composable
 fun UploadStatus.color(): Color = when (this) {

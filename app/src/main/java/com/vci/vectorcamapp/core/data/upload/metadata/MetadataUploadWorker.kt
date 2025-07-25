@@ -24,7 +24,7 @@ import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
-import com.vci.vectorcamapp.core.domain.model.UploadStatus
+import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.network.api.DeviceDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SessionDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenDataSource
@@ -306,7 +306,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                 submittedAt = remoteSessionDto.submittedAt,
                 notes = remoteSessionDto.notes,
                 latitude = remoteSessionDto.latitude,
-                longitude = remoteSessionDto.longitude
+                longitude = remoteSessionDto.longitude,
+                type = localSession.type
             )
 
             if (localSessionDto != remoteSessionDto) {

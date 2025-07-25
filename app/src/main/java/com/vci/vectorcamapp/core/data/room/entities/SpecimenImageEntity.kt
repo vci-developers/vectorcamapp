@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.vci.vectorcamapp.core.domain.model.UploadStatus
+import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import java.util.UUID
 
 @Entity(
@@ -22,7 +22,7 @@ import java.util.UUID
 data class SpecimenImageEntity(
     @PrimaryKey val localId: UUID = UUID(0, 0),
     val specimenId: String = "",
-    val sessionId: UUID,// = UUID(0, 0),
+    val sessionId: UUID = UUID(0, 0),
     val remoteId: Int? = null,
     val species: String? = null,
     val sex: String? = null,

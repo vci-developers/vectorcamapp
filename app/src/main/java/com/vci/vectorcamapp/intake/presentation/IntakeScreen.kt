@@ -56,6 +56,8 @@ fun IntakeScreen(
                 iconPainter = painterResource(R.drawable.ic_info),
                 iconDescription = "General Information Icon"
             ) {
+                InfoPill(text = "Session Type: ${state.session.type.name}", color = MaterialTheme.colors.info)
+
                 TextEntryField(
                     label = "Collector Name",
                     value = state.session.collectorName,

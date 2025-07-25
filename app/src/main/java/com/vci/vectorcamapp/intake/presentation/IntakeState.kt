@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.intake.presentation
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.intake.presentation.model.IntakeErrors
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 
@@ -26,9 +27,10 @@ data class IntakeState(
         createdAt = System.currentTimeMillis(),
         completedAt = null,
         submittedAt = null,
+        notes = "",
         latitude = null,
         longitude = null,
-        notes = ""
+        type = SessionType.SURVEILLANCE
     ),
     val surveillanceForm: SurveillanceForm = SurveillanceForm(
         numPeopleSleptInHouse = 0,

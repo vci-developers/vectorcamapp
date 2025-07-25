@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.core.domain.model
+package com.vci.vectorcamapp.core.domain.model.enums
 
 enum class UploadStatus {
     COMPLETED,
