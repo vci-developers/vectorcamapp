@@ -161,7 +161,6 @@ dependencies {
 
     // JSON Serialization Library
     implementation(libs.kotlinx.serialization.json) // Kotlinx JSON serialization library
-    implementation(libs.google.gson)
 
     // TUS Library
     implementation(libs.tus.android.client)

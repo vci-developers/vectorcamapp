@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 
 @Entity(
     tableName = "site", foreignKeys = [ForeignKey(
@@ -14,6 +15,8 @@ import androidx.room.PrimaryKey
         onUpdate = ForeignKey.CASCADE
     )], indices = [Index("programId")]
 )
+
+@Serializable
 data class SiteEntity(
     @PrimaryKey val id: Int = -1,
     val programId: Int = -1,

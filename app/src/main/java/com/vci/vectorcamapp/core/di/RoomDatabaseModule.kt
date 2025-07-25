@@ -5,7 +5,6 @@ import android.util.Log
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.google.gson.Gson
 import com.vci.vectorcamapp.core.data.room.DbSeedStatus
 import com.vci.vectorcamapp.core.data.room.SeedDataContainer
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
@@ -26,11 +25,13 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import javax.inject.Provider
 import javax.inject.Singleton
 
 private const val DB_NAME = "vectorcam.db"
-private const val SEED_DATA_FILENAME = "seed_data.json"
+private const val PROGRAM_DATA_FILENAME = "programs.json"
+private const val SITE_DATA_FILENAME = "sites.json"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -52,14 +53,19 @@ object RoomDatabaseModule {
                 super.onCreate(db)
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        val json = context.assets.open(SEED_DATA_FILENAME)
+                        val programsJson = context.assets.open(PROGRAM_DATA_FILENAME)
                             .bufferedReader()
                             .use { it.readText() }
-                        val seed = Gson().fromJson(json, SeedDataContainer::class.java)
+                        val programsSeed = Json.decodeFromString<SeedDataContainer>(programsJson)
 
-                        programDaoProvider.get().insertAll(seed.programs)
-                        siteDaoProvider.get().insertAll(seed.sites)
-                        Log.i("RoomCallback", "Seeded ${seed.programs.size} programs, ${seed.sites.size} sites")
+                        val sitesJson = context.assets.open(SITE_DATA_FILENAME)
+                            .bufferedReader()
+                            .use { it.readText() }
+                        val sitesSeed = Json.decodeFromString<SeedDataContainer>(sitesJson)
+
+                        programDaoProvider.get().insertAll(programsSeed.programs)
+                        siteDaoProvider.get().insertAll(sitesSeed.sites)
+                        Log.i("RoomCallback", "Seeded ${programsSeed.programs.size} programs, ${sitesSeed.sites.size} sites")
                     } catch (e: Exception) {
                         Log.e("RoomCallback", "Error seeding DB", e)
                     } finally {

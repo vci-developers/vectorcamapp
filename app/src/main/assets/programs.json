@@ -1,0 +1,14 @@
+{
+  "programs": [
+    {
+      "id": 1,
+      "name": "Uganda Ministry of Health",
+      "country": "Uganda"
+    },
+    {
+      "id": 2,
+      "name": "Colombia Data Collection",
+      "country": "Colombia"
+    }
+  ]
+}

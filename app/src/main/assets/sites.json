@@ -1,31 +1,8 @@
 {
-  "programs": [
-    {
-      "id": 1,
-      "name": "Test Program",
-      "country": "Singapore"
-    },
-    {
-      "id": 2,
-      "name": "Uganda Ministry of Health",
-      "country": "Uganda"
-    },
-    {
-      "id": 3,
-      "name": "Jhpiego",
-      "country": "India"
-    },
-
-    {
-      "id": 4,
-      "name": "Colombia Data Collection",
-      "country": "Colombia"
-    }
-  ],
   "sites": [
     {
-      "id": 2,
-      "programId": 2,
+      "id": 1,
+      "programId": 1,
       "district": "Mayuge",
       "subCounty": "County1",
       "parish": "Parish1",
@@ -33,8 +10,8 @@
       "healthCenter": "Health Center 1"
     },
     {
-      "id": 3,
-      "programId": 2,
+      "id": 2,
+      "programId": 1,
       "district": "Mayuge",
       "subCounty": "County2",
       "parish": "Parish2",
@@ -42,8 +19,8 @@
       "healthCenter": "Health Center 2"
     },
     {
-      "id": 4,
-      "programId": 2,
+      "id": 3,
+      "programId": 1,
       "district": "Adjumani",
       "subCounty": "County3",
       "parish": "Parish3",
@@ -51,18 +28,8 @@
       "healthCenter": "Health Center 3"
     },
     {
-      "id": 5,
-      "programId": 3,
-      "district": "Ahmedabad",
-      "subCounty": "County4",
-      "parish": "Parish4",
-      "sentinelSite": "Vastrapur",
-      "healthCenter": "Health Center 4"
-    },
-
-    {
-      "id": 6,
-      "programId": 4,
+      "id": 4,
+      "programId": 2,
       "district": "Antioquia",
       "subCounty": "County5",
       "parish": "Parish5",
@@ -71,8 +38,8 @@
     },
 
     {
-      "id": 7,
-      "programId": 4,
+      "id": 5,
+      "programId": 2,
       "district": "Antioquia",
       "subCounty": "County6",
       "parish": "Parish6",
@@ -81,8 +48,8 @@
     },
 
     {
-      "id": 8,
-      "programId": 4,
+      "id": 6,
+      "programId": 2,
       "district": "Antioquia",
       "subCounty": "County7",
       "parish": "Parish7",
@@ -91,8 +58,8 @@
     },
 
     {
-      "id": 9,
-      "programId": 4,
+      "id": 7,
+      "programId": 2,
       "district": "Antioquia",
       "subCounty": "County8",
       "parish": "Parish8",
@@ -101,8 +68,8 @@
     },
 
     {
-      "id": 10,
-      "programId": 4,
+      "id": 8,
+      "programId": 2,
       "district": "Putumayo",
       "subCounty": "County9",
       "parish": "Parish9",
@@ -111,8 +78,8 @@
     },
 
     {
-      "id": 11,
-      "programId": 4,
+      "id": 9,
+      "programId": 2,
       "district": "Putumayo",
       "subCounty": "County10",
       "parish": "Parish10",
@@ -121,8 +88,8 @@
     },
 
     {
-      "id": 12,
-      "programId": 4,
+      "id": 10,
+      "programId": 2,
       "district": "Valle del Cauca",
       "subCounty": "County11",
       "parish": "Parish11",
@@ -131,8 +98,8 @@
     },
 
     {
-      "id": 13,
-      "programId": 4,
+      "id": 11,
+      "programId": 2,
       "district": "Chocó",
       "subCounty": "County12",
       "parish": "Parish12",
@@ -141,8 +108,8 @@
     },
 
     {
-      "id": 14,
-      "programId": 4,
+      "id": 12,
+      "programId": 2,
       "district": "Chocó",
       "subCounty": "County13",
       "parish": "Parish13",
@@ -151,8 +118,8 @@
     },
 
     {
-      "id": 15,
-      "programId": 4,
+      "id": 13,
+      "programId": 2,
       "district": "Bogotá D.C",
       "subCounty": "County14",
       "parish": "Parish14",
