@@ -36,5 +36,7 @@ data class ImagingState(
     val capturedSpecimensAndInferenceResults: List<SpecimenAndInferenceResult> = emptyList(),
     val displayOrientation: Int = 0,
     val manualFocusPoint: Offset? = null,
-    val isCameraReady: Boolean = false
+    val isCameraReady: Boolean = false,
+    val showExitDialog: Boolean = false,
+    val pendingAction: ImagingAction? = null
 )
