@@ -89,7 +89,7 @@ fun CompleteSessionSpecimensTile(
                 text = buildAnnotatedString {
                     append("Metadata Upload Status: ")
                     withStyle(SpanStyle(color = specimenImage.metadataUploadStatus.color())) {
-                        append(specimenImage.metadataUploadStatus.displayName())
+                        append(specimenImage.metadataUploadStatus.displayText(context))
                     }
                 },
                 style = MaterialTheme.typography.bodySmall
@@ -99,7 +99,7 @@ fun CompleteSessionSpecimensTile(
                 text = buildAnnotatedString {
                     append("Image Upload Status: ")
                     withStyle(SpanStyle(color = specimenImage.imageUploadStatus.color())) {
-                        append(specimenImage.imageUploadStatus.displayName())
+                        append(specimenImage.imageUploadStatus.displayText(context))
                     }
                 },
                 style = MaterialTheme.typography.bodySmall
