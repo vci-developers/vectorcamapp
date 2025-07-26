@@ -1,13 +1,18 @@
 package com.vci.vectorcamapp.complete_session.details.presentation.components.specimens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,7 +46,8 @@ fun CompleteSessionSpecimensTile(
     session: Session,
     specimen: Specimen,
     specimenImage: SpecimenImage,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    badgeText: String? = null,
 ) {
 
     val context = LocalContext.current
@@ -49,13 +55,34 @@ fun CompleteSessionSpecimensTile(
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
     InfoTile(modifier = modifier) {
-        AsyncImage(
-            model = ImageRequest.Builder(context).data(specimenImage.imageUri).build(),
-            contentDescription = "Specimen Image: ${specimen.id}",
-            contentScale = ContentScale.Fit,
-            modifier = Modifier.fillMaxSize()
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(context).data(specimenImage.imageUri).build(),
+                contentDescription = "Specimen Image: ${specimen.id}",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
 
+            if (badgeText != null) {
+                Badge(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(MaterialTheme.dimensions.paddingSmall),
+                    containerColor = MaterialTheme.colors.info,
+                    contentColor = MaterialTheme.colors.buttonText
+                ) {
+                    Text(
+                        text = badgeText,
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(MaterialTheme.dimensions.paddingSmall)
+                    )
+                }
+            }
+        }
         Column(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
             modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)

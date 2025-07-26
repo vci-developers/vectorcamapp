@@ -52,6 +52,8 @@ import com.vci.vectorcamapp.imaging.presentation.components.specimen.CapturedSpe
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.lazy.itemsIndexed
 
 @Composable
 fun ImagingScreen(
@@ -141,12 +143,17 @@ fun ImagingScreen(
                                 .size(MaterialTheme.dimensions.iconSizeLarge))
                     }
 
-                    LazyColumn {
-                        items(state.specimensWithImagesAndInferenceResults[page].specimenImagesAndInferenceResults) { (specimenImage, inferenceResult) ->
+                    LazyColumn (modifier = Modifier.fillMaxHeight()) {
+                        val imageList = state.specimensWithImagesAndInferenceResults[page].specimenImagesAndInferenceResults
+                        itemsIndexed(imageList) { index, (specimenImage, inferenceResult) ->
                             CapturedSpecimenTile(
                                 specimen = state.specimensWithImagesAndInferenceResults[page].specimen,
                                 specimenImage = specimenImage,
                                 inferenceResult = inferenceResult,
+                                badgeText = if (imageList.size > 1) "${index + 1} of ${imageList.size}" else null,
+                                modifier = Modifier
+                                    .fillParentMaxHeight()
+                                    .fillMaxWidth()
                             )
                         }
                     }
@@ -168,11 +175,13 @@ fun ImagingScreen(
                         specimenImage = state.currentSpecimenImage,
                         inferenceResult = state.currentInferenceResult,
                         specimenBitmap = specimenBitmap,
-                        onSpecimenIdCorrected = { onAction(ImagingAction.CorrectSpecimenId(it)) })
+                        onSpecimenIdCorrected = { onAction(ImagingAction.CorrectSpecimenId(it)) },
+                        modifier = Modifier.weight(1f)
+                    )
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.paddingMedium),
-                        modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.paddingSmall),
+                        modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingSmall)
                     ) {
                         ActionButton(
                             label = "Retake Image",
@@ -182,7 +191,7 @@ fun ImagingScreen(
                         ActionButton(
                             label = "Save To Session",
                             onClick = { onAction(ImagingAction.SaveImageToSession) },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1.1f)
                         )
                     }
                 }
@@ -198,7 +207,7 @@ fun ImagingScreen(
                         modifier = Modifier.padding(
                             start = MaterialTheme.dimensions.paddingMedium,
                             end = MaterialTheme.dimensions.paddingMedium,
-                            top = MaterialTheme.dimensions.paddingLarge
+                            top = MaterialTheme.dimensions.paddingMedium
                         )
                     ) {
                         ActionButton(
@@ -216,7 +225,7 @@ fun ImagingScreen(
                     InfoTile(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(vertical = MaterialTheme.dimensions.paddingMedium)
+                            .padding(vertical = MaterialTheme.dimensions.paddingSmall)
                     ) {
                         Column(
                             verticalArrangement = Arrangement.SpaceEvenly,

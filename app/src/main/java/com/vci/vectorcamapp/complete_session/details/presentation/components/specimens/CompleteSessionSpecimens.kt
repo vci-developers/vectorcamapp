@@ -36,18 +36,21 @@ fun CompleteSessionSpecimens(
             modifier = modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center
         ) {
             items(items = specimensWithImagesAndInferenceResults.asReversed()) { specimenWithSpecimenImagesAndInferenceResults ->
-                Row {
-                    val specimen = specimenWithSpecimenImagesAndInferenceResults.specimen
-                    specimenWithSpecimenImagesAndInferenceResults.specimenImagesAndInferenceResults.map { (specimenImage, _) ->
-                        CompleteSessionSpecimensTile(
-                            session = session,
-                            specimen = specimen,
-                            specimenImage = specimenImage,
-                            modifier = Modifier.width(
-                                screenWidthFraction(0.9f)
-                            )
+                val specimen = specimenWithSpecimenImagesAndInferenceResults.specimen
+                val imageList =
+                    specimenWithSpecimenImagesAndInferenceResults.specimenImagesAndInferenceResults
+                val totalImages = imageList.size
+
+                imageList.mapIndexed { index, (specimenImage, _) ->
+                    CompleteSessionSpecimensTile(
+                        session = session,
+                        specimen = specimen,
+                        specimenImage = specimenImage,
+                        badgeText = if (totalImages > 1) "${index + 1} of $totalImages" else null,
+                        modifier = Modifier.width(
+                            screenWidthFraction(0.9f)
                         )
-                    }
+                    )
                 }
             }
         }
