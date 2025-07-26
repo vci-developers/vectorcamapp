@@ -9,5 +9,5 @@ data class PostSpecimenImageRequestDto(
     val sex: String? = null,
     val abdomenStatus: String? = null,
     val capturedAt: Long = 0L,
-    val inferenceResult: InferenceResultDto = InferenceResultDto()
+    val inferenceResult: InferenceResultDto? = null
 )

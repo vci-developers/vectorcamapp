@@ -48,7 +48,7 @@ import java.util.Locale
 fun CapturedSpecimenTile(
     specimen: Specimen,
     specimenImage: SpecimenImage,
-    inferenceResult: InferenceResult,
+    inferenceResult: InferenceResult?,
     modifier: Modifier = Modifier,
     specimenBitmap: Bitmap? = null,
     onSpecimenIdCorrected: ((String) -> Unit)? = null
@@ -81,9 +81,11 @@ fun CapturedSpecimenTile(
                 )
             }
 
-            BoundingBoxOverlay(
-                inferenceResult = inferenceResult, overlaySize = containerSize
-            )
+            inferenceResult?.let {
+                BoundingBoxOverlay(
+                    inferenceResult = inferenceResult, overlaySize = containerSize
+                )
+            }
         }
 
         Column(

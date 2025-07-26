@@ -63,7 +63,6 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val specimenImageDataSource: SpecimenImageDataSource
 ) : CoroutineWorker(context, workerParams) {
 
-    private var retryCount = 0
     private val notificationManager: NotificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -124,7 +123,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                 specimenRepository.getSpecimenImagesAndInferenceResultsBySession(syncedSession.localId)
             val totalSpecimens = localSpecimensWithImagesAndInferenceResults.size
             localSpecimensWithImagesAndInferenceResults.forEachIndexed { specimenIndex, specimenWithImagesAndInferenceResults ->
-                val totalImages = specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
+                val totalImages =
+                    specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
                 val syncedSpecimen = when (val syncSpecimenResult = syncSpecimenIfNeeded(
                     specimenWithImagesAndInferenceResults.specimen,
                     syncedSession.localId,
@@ -187,8 +187,7 @@ class MetadataUploadWorker @AssistedInject constructor(
     }
 
     private fun retryOrFailure(message: String): WorkerResult {
-        if (retryCount < MAX_RETRIES) {
-            retryCount++
+        if (runAttemptCount < MAX_RETRIES) {
             showUploadRetryNotification(message)
             return WorkerResult.retry()
         } else {
@@ -443,7 +442,7 @@ class MetadataUploadWorker @AssistedInject constructor(
 
     private suspend fun syncSpecimenImageAndInferenceResultIfNeeded(
         localSpecimenImage: SpecimenImage,
-        localInferenceResult: InferenceResult,
+        localInferenceResult: InferenceResult?,
         syncedSpecimenId: String,
         syncedLocalSessionId: UUID,
         syncedRemoteSessionId: Int
@@ -462,18 +461,19 @@ class MetadataUploadWorker @AssistedInject constructor(
                 abdomenStatus = localSpecimenImage.abdomenStatus,
                 capturedAt = localSpecimenImage.capturedAt,
                 submittedAt = localSpecimenImage.submittedAt,
-                inferenceResult = InferenceResultDto(
-                    bboxTopLeftX = localInferenceResult.bboxTopLeftX,
-                    bboxTopLeftY = localInferenceResult.bboxTopLeftY,
-                    bboxWidth = localInferenceResult.bboxWidth,
-                    bboxHeight = localInferenceResult.bboxHeight,
-                    bboxConfidence = localInferenceResult.bboxConfidence,
-                    bboxClassId = localInferenceResult.bboxClassId,
-                    speciesLogits = localInferenceResult.speciesLogits,
-                    sexLogits = localInferenceResult.sexLogits,
-                    abdomenStatusLogits = localInferenceResult.abdomenStatusLogits
-                )
-            )
+                inferenceResult = localInferenceResult?.let {
+                    InferenceResultDto(
+                        bboxTopLeftX = it.bboxTopLeftX,
+                        bboxTopLeftY = it.bboxTopLeftY,
+                        bboxWidth = it.bboxWidth,
+                        bboxHeight = it.bboxHeight,
+                        bboxConfidence = it.bboxConfidence,
+                        bboxClassId = it.bboxClassId,
+                        speciesLogits = it.speciesLogits,
+                        sexLogits = it.sexLogits,
+                        abdomenStatusLogits = it.abdomenStatusLogits
+                    )
+                })
 
             // TODO: Change REMOTE ID when search by frontend ID
             val remoteSpecimenImageDto = when (val remoteSpecimenImageResult =
@@ -533,17 +533,19 @@ class MetadataUploadWorker @AssistedInject constructor(
                 submittedAt = remoteSpecimenImageDto.submittedAt
             )
 
-            val remoteInferenceResult = InferenceResult(
-                bboxTopLeftX = remoteSpecimenImageDto.inferenceResult.bboxTopLeftX,
-                bboxTopLeftY = remoteSpecimenImageDto.inferenceResult.bboxTopLeftY,
-                bboxWidth = remoteSpecimenImageDto.inferenceResult.bboxWidth,
-                bboxHeight = remoteSpecimenImageDto.inferenceResult.bboxHeight,
-                bboxConfidence = remoteSpecimenImageDto.inferenceResult.bboxConfidence,
-                bboxClassId = remoteSpecimenImageDto.inferenceResult.bboxClassId,
-                speciesLogits = remoteSpecimenImageDto.inferenceResult.speciesLogits,
-                sexLogits = remoteSpecimenImageDto.inferenceResult.sexLogits,
-                abdomenStatusLogits = remoteSpecimenImageDto.inferenceResult.abdomenStatusLogits
-            )
+            val remoteInferenceResult = remoteSpecimenImageDto.inferenceResult?.let {
+                InferenceResult(
+                    bboxTopLeftX = it.bboxTopLeftX,
+                    bboxTopLeftY = it.bboxTopLeftY,
+                    bboxWidth = it.bboxWidth,
+                    bboxHeight = it.bboxHeight,
+                    bboxConfidence = it.bboxConfidence,
+                    bboxClassId = it.bboxClassId,
+                    speciesLogits = it.speciesLogits,
+                    sexLogits = it.sexLogits,
+                    abdomenStatusLogits = it.abdomenStatusLogits
+                )
+            }
 
             if (remoteSpecimenImageDto != localSpecimenImageDto) {
                 transactionHelper.runAsTransaction {
@@ -552,10 +554,13 @@ class MetadataUploadWorker @AssistedInject constructor(
                     ).onError {
                         return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
                     }
-                    inferenceResultRepository.updateInferenceResult(
-                        remoteInferenceResult, remoteSpecimenImage.localId
-                    ).onError {
-                        return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
+
+                    remoteInferenceResult?.let { remoteInferenceResult ->
+                        inferenceResultRepository.updateInferenceResult(
+                            remoteInferenceResult, remoteSpecimenImage.localId
+                        ).onError {
+                            return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
+                        }
                     }
                 }
             }

@@ -46,7 +46,7 @@ fun LandingScreen(
 
                 LandingSection(title = "Imaging") {
                     LandingActionTile(
-                        title = "Start New Session",
+                        title = "New Surveillance Session",
                         description = "Begin a new household visit and capture mosquito images.",
                         icon = painterResource(R.drawable.ic_specimen),
                         onClick = { onAction(LandingAction.StartNewSurveillanceSession) })
