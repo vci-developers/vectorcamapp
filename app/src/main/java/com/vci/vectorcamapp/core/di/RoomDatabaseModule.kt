@@ -5,8 +5,10 @@ import android.util.Log
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
+import com.vci.vectorcamapp.core.data.dto.site.SiteDto
+import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.DbSeedStatus
-import com.vci.vectorcamapp.core.data.room.SeedDataContainer
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.room.VectorCamDatabase
 import com.vci.vectorcamapp.core.data.room.dao.InferenceResultDao
@@ -56,16 +58,16 @@ object RoomDatabaseModule {
                         val programsJson = context.assets.open(PROGRAM_DATA_FILENAME)
                             .bufferedReader()
                             .use { it.readText() }
-                        val programsSeed = Json.decodeFromString<SeedDataContainer>(programsJson)
-
                         val sitesJson = context.assets.open(SITE_DATA_FILENAME)
                             .bufferedReader()
                             .use { it.readText() }
-                        val sitesSeed = Json.decodeFromString<SeedDataContainer>(sitesJson)
 
-                        programDaoProvider.get().insertAll(programsSeed.programs)
-                        siteDaoProvider.get().insertAll(sitesSeed.sites)
-                        Log.i("RoomCallback", "Seeded ${programsSeed.programs.size} programs, ${sitesSeed.sites.size} sites")
+                        val programEntities = Json.decodeFromString<List<ProgramDto>>(programsJson).map { it.toEntity() }
+                        val siteEntities = Json.decodeFromString<List<SiteDto>>(sitesJson).map { it.toEntity() }
+
+                        programDaoProvider.get().insertAll(programEntities)
+                        siteDaoProvider.get().insertAll(siteEntities)
+                        Log.i("RoomCallback", "Seeded ${programEntities.size} programs, ${siteEntities.size} sites")
                     } catch (e: Exception) {
                         Log.e("RoomCallback", "Error seeding DB", e)
                     } finally {

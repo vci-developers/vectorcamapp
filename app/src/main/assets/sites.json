@@ -1,130 +1,119 @@
-{
-  "sites": [
-    {
-      "id": 1,
-      "programId": 1,
-      "district": "Mayuge",
-      "subCounty": "County1",
-      "parish": "Parish1",
-      "sentinelSite": "Bukatube",
-      "healthCenter": "Health Center 1"
-    },
-    {
-      "id": 2,
-      "programId": 1,
-      "district": "Mayuge",
-      "subCounty": "County2",
-      "parish": "Parish2",
-      "sentinelSite": "Namadhi",
-      "healthCenter": "Health Center 2"
-    },
-    {
-      "id": 3,
-      "programId": 1,
-      "district": "Adjumani",
-      "subCounty": "County3",
-      "parish": "Parish3",
-      "sentinelSite": "Ofua",
-      "healthCenter": "Health Center 3"
-    },
-    {
-      "id": 4,
-      "programId": 2,
-      "district": "Antioquia",
-      "subCounty": "County5",
-      "parish": "Parish5",
-      "sentinelSite": "Medellin",
-      "healthCenter": "Health Center 5"
-    },
-
-    {
-      "id": 5,
-      "programId": 2,
-      "district": "Antioquia",
-      "subCounty": "County6",
-      "parish": "Parish6",
-      "sentinelSite": "Apartadó",
-      "healthCenter": "Health Center 6"
-    },
-
-    {
-      "id": 6,
-      "programId": 2,
-      "district": "Antioquia",
-      "subCounty": "County7",
-      "parish": "Parish7",
-      "sentinelSite": "Turbo",
-      "healthCenter": "Health Center 7"
-    },
-
-    {
-      "id": 7,
-      "programId": 2,
-      "district": "Antioquia",
-      "subCounty": "County8",
-      "parish": "Parish8",
-      "sentinelSite": "Necoclí",
-      "healthCenter": "Health Center 8"
-    },
-
-    {
-      "id": 8,
-      "programId": 2,
-      "district": "Putumayo",
-      "subCounty": "County9",
-      "parish": "Parish9",
-      "sentinelSite": "Mocoa",
-      "healthCenter": "Health Center 9"
-    },
-
-    {
-      "id": 9,
-      "programId": 2,
-      "district": "Putumayo",
-      "subCounty": "County10",
-      "parish": "Parish10",
-      "sentinelSite": "Orito",
-      "healthCenter": "Health Center 10"
-    },
-
-    {
-      "id": 10,
-      "programId": 2,
-      "district": "Valle del Cauca",
-      "subCounty": "County11",
-      "parish": "Parish11",
-      "sentinelSite": "Cali",
-      "healthCenter": "Health Center 11"
-    },
-
-    {
-      "id": 11,
-      "programId": 2,
-      "district": "Chocó",
-      "subCounty": "County12",
-      "parish": "Parish12",
-      "sentinelSite": "Quibdó",
-      "healthCenter": "Health Center 12"
-    },
-
-    {
-      "id": 12,
-      "programId": 2,
-      "district": "Chocó",
-      "subCounty": "County13",
-      "parish": "Parish13",
-      "sentinelSite": "Angostura",
-      "healthCenter": "Health Center 13"
-    },
-
-    {
-      "id": 13,
-      "programId": 2,
-      "district": "Bogotá D.C",
-      "subCounty": "County14",
-      "parish": "Parish14",
-      "sentinelSite": "Bogotá D.C",
-      "healthCenter": "Health Center 14"
-    }
-  ]
-}
+[
+  {
+    "id": 1,
+    "programId": 1,
+    "district": "Mayuge",
+    "subCounty": "County1",
+    "parish": "Parish1",
+    "sentinelSite": "Bukatube",
+    "healthCenter": "Health Center 1"
+  },
+  {
+    "id": 2,
+    "programId": 1,
+    "district": "Mayuge",
+    "subCounty": "County2",
+    "parish": "Parish2",
+    "sentinelSite": "Namadhi",
+    "healthCenter": "Health Center 2"
+  },
+  {
+    "id": 3,
+    "programId": 1,
+    "district": "Adjumani",
+    "subCounty": "County3",
+    "parish": "Parish3",
+    "sentinelSite": "Ofua",
+    "healthCenter": "Health Center 3"
+  },
+  {
+    "id": 4,
+    "programId": 2,
+    "district": "Antioquia",
+    "subCounty": "County5",
+    "parish": "Parish5",
+    "sentinelSite": "Medellin",
+    "healthCenter": "Health Center 5"
+  },
+  {
+    "id": 5,
+    "programId": 2,
+    "district": "Antioquia",
+    "subCounty": "County6",
+    "parish": "Parish6",
+    "sentinelSite": "Apartadó",
+    "healthCenter": "Health Center 6"
+  },
+  {
+    "id": 6,
+    "programId": 2,
+    "district": "Antioquia",
+    "subCounty": "County7",
+    "parish": "Parish7",
+    "sentinelSite": "Turbo",
+    "healthCenter": "Health Center 7"
+  },
+  {
+    "id": 7,
+    "programId": 2,
+    "district": "Antioquia",
+    "subCounty": "County8",
+    "parish": "Parish8",
+    "sentinelSite": "Necoclí",
+    "healthCenter": "Health Center 8"
+  },
+  {
+    "id": 8,
+    "programId": 2,
+    "district": "Putumayo",
+    "subCounty": "County9",
+    "parish": "Parish9",
+    "sentinelSite": "Mocoa",
+    "healthCenter": "Health Center 9"
+  },
+  {
+    "id": 9,
+    "programId": 2,
+    "district": "Putumayo",
+    "subCounty": "County10",
+    "parish": "Parish10",
+    "sentinelSite": "Orito",
+    "healthCenter": "Health Center 10"
+  },
+  {
+    "id": 10,
+    "programId": 2,
+    "district": "Valle del Cauca",
+    "subCounty": "County11",
+    "parish": "Parish11",
+    "sentinelSite": "Cali",
+    "healthCenter": "Health Center 11"
+  },
+  {
+    "id": 11,
+    "programId": 2,
+    "district": "Chocó",
+    "subCounty": "County12",
+    "parish": "Parish12",
+    "sentinelSite": "Quibdó",
+    "healthCenter": "Health Center 12"
+  },
+  {
+    "id": 12,
+    "programId": 2,
+    "district": "Chocó",
+    "subCounty": "County13",
+    "parish": "Parish13",
+    "sentinelSite": "Angostura",
+    "healthCenter": "Health Center 13"
+  },
+  {
+    "id": 13,
+    "programId": 2,
+    "district": "Bogotá D.C",
+    "subCounty": "County14",
+    "parish": "Parish14",
+    "sentinelSite": "Bogotá D.C",
+    "healthCenter": "Health Center 14"
+  }
+]
