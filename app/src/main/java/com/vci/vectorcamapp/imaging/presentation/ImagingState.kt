@@ -11,6 +11,7 @@ import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenIma
 import java.util.UUID
 
 data class ImagingState(
+    val isLoading: Boolean = false,
     val isProcessing: Boolean = false,
     val currentSpecimen: Specimen = Specimen(id = ""),
     val currentSpecimenImage: SpecimenImage = SpecimenImage(
@@ -41,5 +42,7 @@ data class ImagingState(
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),
     val displayOrientation: Int = 0,
     val manualFocusPoint: Offset? = null,
-    val isCameraReady: Boolean = false
+    val isCameraReady: Boolean = false,
+    val showExitDialog: Boolean = false,
+    val pendingAction: ImagingAction? = null
 )

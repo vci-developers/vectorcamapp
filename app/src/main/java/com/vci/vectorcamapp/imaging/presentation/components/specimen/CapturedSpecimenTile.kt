@@ -25,6 +25,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -44,6 +46,7 @@ import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
 import com.vci.vectorcamapp.imaging.presentation.components.camera.BoundingBoxOverlay
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
+import com.vci.vectorcamapp.ui.extensions.zoomPanGesture
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -79,30 +82,36 @@ fun CapturedSpecimenTile(
                             1f / MaterialTheme.dimensions.aspectRatio,
                             matchHeightConstraintsFirst = false
                         )
+                        .clip(RectangleShape)
                 ) {
                     val containerSize = IntSize(
                         width = with(density) { maxWidth.roundToPx() },
                         height = with(density) { maxHeight.roundToPx() })
 
-                    if (specimenBitmap != null) {
-                        Image(
-                            bitmap = specimenBitmap.asImageBitmap(),
-                            contentDescription = specimenImage.localId.toString(),
-                            contentScale = ContentScale.Fit,
-                        )
-                    } else if (specimenImage.imageUri != Uri.EMPTY) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(context).data(specimenImage.imageUri)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = specimenImage.localId.toString(),
-                            contentScale = ContentScale.Fit
-                        )
-                    }
-
-                    BoundingBoxOverlay(
-                        inferenceResult = inferenceResult, overlaySize = containerSize
+                    Box(
+                modifier = Modifier
+                    .zoomPanGesture(containerSize)
+            ) {
+                if (specimenBitmap != null) {
+                    Image(
+                        bitmap = specimenBitmap.asImageBitmap(),
+                        contentDescription = specimen.id,
+                        contentScale = ContentScale.FillBounds,
                     )
+                } else if (specimenImage.imageUri != Uri.EMPTY) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(context).data(specimenImage.imageUri)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = specimen.id,
+                        contentScale = ContentScale.Fit
+                    )
+                }
+
+                BoundingBoxOverlay(
+                    inferenceResult = inferenceResult, overlaySize = containerSize
+                )
+            }
                 }
 
                 if (badgeText != null) {
