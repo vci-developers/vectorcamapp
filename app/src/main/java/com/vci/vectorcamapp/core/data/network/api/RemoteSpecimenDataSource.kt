@@ -6,7 +6,7 @@ import com.vci.vectorcamapp.core.data.dto.specimen.PostSpecimenResponseDto
 import com.vci.vectorcamapp.core.data.dto.specimen.SpecimenDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.safeCall
-import com.vci.vectorcamapp.core.domain.model.BoundingBox
+import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenDataSource
 import com.vci.vectorcamapp.core.domain.util.Result
@@ -24,7 +24,7 @@ class RemoteSpecimenDataSource @Inject constructor(
 ) : SpecimenDataSource {
 
     override suspend fun postSpecimen(
-        specimen: Specimen, boundingBox: BoundingBox, sessionId: Int
+        specimen: Specimen, sessionId: Int
     ): Result<PostSpecimenResponseDto, NetworkError> {
         return safeCall<PostSpecimenResponseDto> {
             httpClient.post(constructUrl("specimens")) {
@@ -32,17 +32,7 @@ class RemoteSpecimenDataSource @Inject constructor(
                 setBody(
                     PostSpecimenRequestDto(
                         specimenId = specimen.id,
-                        sessionId = sessionId,
-                        species = specimen.species,
-                        sex = specimen.sex,
-                        abdomenStatus = specimen.abdomenStatus,
-                        capturedAt = specimen.capturedAt,
-                        inferenceResult = InferenceResultDto(
-                            bboxTopLeftX = boundingBox.topLeftX,
-                            bboxTopLeftY = boundingBox.topLeftY,
-                            bboxWidth = boundingBox.width,
-                            bboxHeight = boundingBox.height
-                        )
+                        sessionId = sessionId
                     )
                 )
             }

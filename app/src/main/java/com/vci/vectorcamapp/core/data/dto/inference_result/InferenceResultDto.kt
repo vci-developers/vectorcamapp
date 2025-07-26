@@ -8,7 +8,9 @@ data class InferenceResultDto(
     val bboxTopLeftY: Float = 0f,
     val bboxWidth: Float = 0f,
     val bboxHeight: Float = 0f,
-    val speciesProbabilities: List<Float> = listOf(0f, 0f, 0f, 0f, 0f, 0f, 0f),
-    val sexProbabilities: List<Float> = listOf(0f, 0f),
-    val abdomenStatusProbabilities: List<Float> = listOf(0f, 0f, 0f),
+    val bboxConfidence: Float = 0f,
+    val bboxClassId: Int = 0,
+    val speciesLogits: List<Float>? = null,
+    val sexLogits: List<Float>? = null,
+    val abdomenStatusLogits: List<Float>? = null,
 )

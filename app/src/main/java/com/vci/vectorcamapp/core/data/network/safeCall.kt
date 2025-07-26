@@ -15,14 +15,18 @@ suspend inline fun <reified T> safeCall(
     val response = try {
         execute()
     } catch (e: UnresolvedAddressException) {
+        e.printStackTrace()
         return Result.Error(NetworkError.NO_INTERNET)
     } catch (e: UnknownHostException) {
+        e.printStackTrace()
         return Result.Error(NetworkError.NO_INTERNET)
     } catch (e: SerializationException) {
-        return Result.Error(NetworkError.SERIALIZATION)
+        e.printStackTrace()
+        return Result.Error(NetworkError.SERIALIZATION_ERROR)
     } catch (e: Exception) {
         coroutineContext.ensureActive()
-        return Result.Error(NetworkError.UNKNOWN)
+        e.printStackTrace()
+        return Result.Error(NetworkError.UNKNOWN_ERROR)
     }
 
     return responseToResult(response)
