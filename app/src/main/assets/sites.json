@@ -30,90 +30,90 @@
     "id": 4,
     "programId": 2,
     "district": "Antioquia",
-    "subCounty": "County5",
-    "parish": "Parish5",
+    "subCounty": "",
+    "parish": "",
     "sentinelSite": "Medellin",
-    "healthCenter": "Health Center 5"
+    "healthCenter": ""
   },
   {
     "id": 5,
     "programId": 2,
     "district": "Antioquia",
-    "subCounty": "County6",
-    "parish": "Parish6",
+    "subCounty": "",
+    "parish": "",
     "sentinelSite": "Apartadó",
-    "healthCenter": "Health Center 6"
+    "healthCenter": ""
   },
   {
     "id": 6,
     "programId": 2,
     "district": "Antioquia",
-    "subCounty": "County7",
-    "parish": "Parish7",
+    "subCounty": "",
+    "parish": "",
     "sentinelSite": "Turbo",
-    "healthCenter": "Health Center 7"
+    "healthCenter": ""
   },
   {
     "id": 7,
     "programId": 2,
     "district": "Antioquia",
-    "subCounty": "County8",
-    "parish": "Parish8",
+    "subCounty": "",
+    "parish": "",
     "sentinelSite": "Necoclí",
-    "healthCenter": "Health Center 8"
+    "healthCenter": ""
   },
   {
     "id": 8,
     "programId": 2,
     "district": "Putumayo",
-    "subCounty": "County9",
-    "parish": "Parish9",
+    "subCounty": "",
+    "parish": "",
     "sentinelSite": "Mocoa",
-    "healthCenter": "Health Center 9"
+    "healthCenter": ""
   },
   {
     "id": 9,
     "programId": 2,
     "district": "Putumayo",
-    "subCounty": "County10",
-    "parish": "Parish10",
+    "subCounty": "",
+    "parish": "",
     "sentinelSite": "Orito",
-    "healthCenter": "Health Center 10"
+    "healthCenter": ""
   },
   {
     "id": 10,
     "programId": 2,
     "district": "Valle del Cauca",
-    "subCounty": "County11",
-    "parish": "Parish11",
+    "subCounty": "",
+    "parish": "",
     "sentinelSite": "Cali",
-    "healthCenter": "Health Center 11"
+    "healthCenter": ""
   },
   {
     "id": 11,
     "programId": 2,
     "district": "Chocó",
-    "subCounty": "County12",
-    "parish": "Parish12",
+    "subCounty": "",
+    "parish": "",
     "sentinelSite": "Quibdó",
-    "healthCenter": "Health Center 12"
+    "healthCenter": ""
   },
   {
     "id": 12,
     "programId": 2,
     "district": "Chocó",
-    "subCounty": "County13",
-    "parish": "Parish13",
+    "subCounty": "",
+    "parish": "",
     "sentinelSite": "Angostura",
-    "healthCenter": "Health Center 13"
+    "healthCenter": ""
   },
   {
     "id": 13,
     "programId": 2,
     "district": "Bogotá D.C",
-    "subCounty": "County14",
-    "parish": "Parish14",
+    "subCounty": "",
+    "parish": "",
     "sentinelSite": "Bogotá D.C",
-    "healthCenter": "Health Center 14"
+    "healthCenter": ""
   }
 ]
