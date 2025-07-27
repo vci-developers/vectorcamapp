@@ -203,7 +203,7 @@ class ImageUploadWorker @AssistedInject constructor(
         val uploadResult: DomainResult<String, NetworkError> = run {
             for (attempt in 1..MAX_RETRIES) {
                 val result: DomainResult<String, NetworkError> = try {
-                    val uniqueFingerprint = "${task.specimen.id}-${task.image.localId}-$md5"
+                    val uniqueFingerprint = "${task.specimen.remoteId}-${task.image.localId}-$md5"
                     val tusPath = "specimens/${task.specimen.remoteId}/images/tus"
 
                     tusClient.uploadCreationURL = URL(constructUrl(tusPath))
