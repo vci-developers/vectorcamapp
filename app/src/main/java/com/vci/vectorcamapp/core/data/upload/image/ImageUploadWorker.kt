@@ -178,7 +178,7 @@ class ImageUploadWorker @AssistedInject constructor(
         val (file, contentType, md5) = try {
             val (prepared, type) = prepareFile(task.image.imageUri, task.specimen.id)
             tempFile = prepared
-            Triple(prepared, type, calculateMD5(prepared))
+            Triple(prepared, type, task.image.localId)
         } catch (e: Exception) {
             if (isStopped) {
                 throw CancellationException("Worker was stopped during file preparation.", e)
@@ -418,18 +418,6 @@ class ImageUploadWorker @AssistedInject constructor(
             this.fingerprint = fingerprint
             this.metadata = metadata
         }
-    }
-
-    private fun calculateMD5(file: File): String {
-        val md = MessageDigest.getInstance("MD5")
-        FileInputStream(file).use { fis ->
-            val buffer = ByteArray(BYTE_ARRAY_SIZE)
-            var read: Int
-            while (fis.read(buffer).also { read = it } != -1) {
-                md.update(buffer, 0, read)
-            }
-        }
-        return md.digest().joinToString("") { "%02x".format(it) }
     }
 
     private suspend fun prepareFile(
