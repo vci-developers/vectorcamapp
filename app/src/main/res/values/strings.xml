@@ -175,9 +175,6 @@
     <!-- Image Upload Status: Upload in progress -->
     <string name="upload_status_in_progress">In Progress</string>
 
-    <!-- Image Upload Status: Upload paused -->
-    <string name="upload_status_paused">Paused</string>
-
     <!-- Image Upload Status: Upload not started -->
     <string name="upload_status_not_started">Not Started</string>
 

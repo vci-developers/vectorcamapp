@@ -176,7 +176,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
                 if (specimenImage.metadataUploadStatus == UploadStatus.IN_PROGRESS) {
                     specimenImageRepository.updateSpecimenImage(
-                        specimenImage.copy(metadataUploadStatus = UploadStatus.PAUSED),
+                        specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
                         specimenWithImagesAndInferenceResults.specimen.id,
                         sessionId
                     )
@@ -501,7 +501,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                                 is DomainResult.Error -> {
                                     specimenImageRepository.updateSpecimenImage(
                                         localSpecimenImage.copy(
-                                            metadataUploadStatus = UploadStatus.PAUSED
+                                            metadataUploadStatus = UploadStatus.FAILED
                                         ), syncedSpecimen.id, syncedLocalSessionId
                                     )
                                     return DomainResult.Error(
@@ -514,7 +514,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                         else -> {
                             specimenImageRepository.updateSpecimenImage(
                                 localSpecimenImage.copy(
-                                    metadataUploadStatus = UploadStatus.PAUSED
+                                    metadataUploadStatus = UploadStatus.FAILED
                                 ), syncedSpecimen.id, syncedLocalSessionId
                             )
                             return DomainResult.Error(remoteSpecimenImageResult.error)
@@ -576,14 +576,14 @@ class MetadataUploadWorker @AssistedInject constructor(
             DomainResult.Success(Unit)
         } catch (e: IOException) {
             specimenImageRepository.updateSpecimenImage(
-                localSpecimenImage.copy(metadataUploadStatus = UploadStatus.PAUSED),
+                localSpecimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
                 syncedSpecimen.id,
                 syncedLocalSessionId
             )
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
             specimenImageRepository.updateSpecimenImage(
-                localSpecimenImage.copy(metadataUploadStatus = UploadStatus.PAUSED),
+                localSpecimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
                 syncedSpecimen.id,
                 syncedLocalSessionId
             )
