@@ -33,15 +33,7 @@ class CompleteSessionListViewModel @Inject constructor(
     val state = combine(_completeSessionsAndSites, _state) { completeSessionsAndSites, state ->
         state.copy(sessionsAndSites = completeSessionsAndSites)
     }.onStart {
-        viewModelScope.launch {
-            _completeSessionsAndSites.collect { sessionsAndSites ->
-                val sessionIds = sessionsAndSites.map { it.session.localId }
-                workManagerRepository.observeAnySessionUploadRunning(sessionIds)
-                    .collect { isRunning ->
-                        _state.update { it.copy(hasActiveUploads = isRunning) }
-                    }
-            }
-        }
+        loadCompleteSessionListDetails()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
 
     private val _events = Channel<CompleteSessionListEvent>()
@@ -80,6 +72,18 @@ class CompleteSessionListViewModel @Inject constructor(
                         workManagerRepository.enqueueSessionUpload(session.localId, site.id)
                     }
                 }
+            }
+        }
+    }
+
+    private fun loadCompleteSessionListDetails() {
+        viewModelScope.launch {
+            _completeSessionsAndSites.collect { sessionsAndSites ->
+                val sessionIds = sessionsAndSites.map { it.session.localId }
+                workManagerRepository.observeAnySessionUploadRunning(sessionIds)
+                    .collect { isRunning ->
+                        _state.update { it.copy(isUploading = isRunning) }
+                    }
             }
         }
     }

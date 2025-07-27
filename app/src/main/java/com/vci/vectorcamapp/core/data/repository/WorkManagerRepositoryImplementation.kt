@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.core.data.repository
 
-import androidx.lifecycle.asFlow
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
@@ -30,6 +29,10 @@ class WorkManagerRepositoryImplementation @Inject constructor(
         private const val UPLOAD_WORK_CHAIN_PREFIX = "session_upload_chain_"
     }
 
+    private val uploadConstraints = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+
     override fun enqueueSessionUpload(sessionId: UUID, siteId: Int) {
         val chainName = UPLOAD_WORK_CHAIN_PREFIX + sessionId
         workManager.beginUniqueWork(
@@ -42,10 +45,9 @@ class WorkManagerRepositoryImplementation @Inject constructor(
     override fun observeAnySessionUploadRunning(sessionIds: List<UUID>): Flow<Boolean> {
         val chainNames = sessionIds.map { "session_upload_chain_$it" }
         val flows: List<Flow<Boolean>> = chainNames.map { chainName ->
-            workManager.getWorkInfosForUniqueWorkLiveData(chainName)
-                .asFlow()
+            workManager.getWorkInfosForUniqueWorkFlow(chainName)
                 .map { workInfos ->
-                    workInfos.any { it.state == WorkInfo.State.RUNNING }
+                    workInfos.any { it.state in listOf(WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING ) }
                 }
         }
         return when {
@@ -62,7 +64,7 @@ class WorkManagerRepositoryImplementation @Inject constructor(
                 "session_id" to sessionId.toString(),
                 "site_id" to siteId,
             ))
-            .setConstraints(uploadConstraints())
+            .setConstraints(uploadConstraints)
             .setBackoffCriteria(BackoffPolicy.LINEAR, WorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
             .build()
     }
@@ -72,12 +74,8 @@ class WorkManagerRepositoryImplementation @Inject constructor(
             .setInputData(workDataOf(
                 ImageUploadWorker.KEY_SESSION_ID to sessionId.toString()
             ))
-            .setConstraints(uploadConstraints())
+            .setConstraints(uploadConstraints)
             .setBackoffCriteria(BackoffPolicy.LINEAR, WorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
             .build()
     }
-
-    private fun uploadConstraints() = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build()
 }
