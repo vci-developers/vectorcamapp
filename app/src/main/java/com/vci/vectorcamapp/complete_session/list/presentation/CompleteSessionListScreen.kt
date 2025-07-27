@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -11,6 +13,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
@@ -45,19 +49,24 @@ fun CompleteSessionListScreen(
                     })
             }
         }
-        if (!state.hasActiveUploads) {
-            FloatingActionButton(
-                onClick = { onAction(CompleteSessionListAction.UploadAllPendingSessions) },
-                containerColor = MaterialTheme.colors.primary,
-                contentColor = MaterialTheme.colors.buttonText,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(MaterialTheme.dimensions.paddingLarge)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_cloud_upload),
-                    contentDescription = "Upload All"
-                )
+        val (buttonColor, icon, description) = if (!state.hasActiveUploads) {
+            Triple(MaterialTheme.colors.primary, painterResource(id = R.drawable.ic_cloud_upload), "Upload All")
+        } else {
+            Triple(MaterialTheme.colors.warning, Icons.Default.Refresh, "Refresh")
+        }
+
+        FloatingActionButton(
+            onClick = { onAction(CompleteSessionListAction.UploadAllPendingSessions) },
+            containerColor = buttonColor,
+            contentColor = MaterialTheme.colors.buttonText,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(MaterialTheme.dimensions.paddingLarge)
+        ) {
+            if (!state.hasActiveUploads) {
+                Icon(painter = icon as Painter, contentDescription = description)
+            } else {
+                Icon(icon as ImageVector, contentDescription = description)
             }
         }
     }
