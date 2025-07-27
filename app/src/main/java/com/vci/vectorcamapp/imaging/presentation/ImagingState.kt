@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 
 data class ImagingState(
+    val isLoading: Boolean = false,
     val isProcessing: Boolean = false,
     val currentSpecimen: Specimen = Specimen(id = "", remoteId = null),
     val currentSpecimenImage: SpecimenImage = SpecimenImage(
@@ -29,7 +30,9 @@ data class ImagingState(
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),
     val displayOrientation: Int = 0,
     val manualFocusPoint: Offset? = null,
-    val isCameraReady: Boolean = false
+    val isCameraReady: Boolean = false,
+    val showExitDialog: Boolean = false,
+    val pendingAction: ImagingAction? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
