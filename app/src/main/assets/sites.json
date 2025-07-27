@@ -1,33 +1,6 @@
 [
   {
     "id": 1,
-    "programId": 1,
-    "district": "Mayuge",
-    "subCounty": "County1",
-    "parish": "Parish1",
-    "sentinelSite": "Bukatube",
-    "healthCenter": "Health Center 1"
-  },
-  {
-    "id": 2,
-    "programId": 1,
-    "district": "Mayuge",
-    "subCounty": "County2",
-    "parish": "Parish2",
-    "sentinelSite": "Namadhi",
-    "healthCenter": "Health Center 2"
-  },
-  {
-    "id": 3,
-    "programId": 1,
-    "district": "Adjumani",
-    "subCounty": "County3",
-    "parish": "Parish3",
-    "sentinelSite": "Ofua",
-    "healthCenter": "Health Center 3"
-  },
-  {
-    "id": 4,
     "programId": 2,
     "district": "Antioquia",
     "subCounty": "",
@@ -36,7 +9,7 @@
     "healthCenter": ""
   },
   {
-    "id": 5,
+    "id": 2,
     "programId": 2,
     "district": "Antioquia",
     "subCounty": "",
@@ -45,7 +18,7 @@
     "healthCenter": ""
   },
   {
-    "id": 6,
+    "id": 3,
     "programId": 2,
     "district": "Antioquia",
     "subCounty": "",
@@ -54,7 +27,7 @@
     "healthCenter": ""
   },
   {
-    "id": 7,
+    "id": 4,
     "programId": 2,
     "district": "Antioquia",
     "subCounty": "",
@@ -63,7 +36,7 @@
     "healthCenter": ""
   },
   {
-    "id": 8,
+    "id": 5,
     "programId": 2,
     "district": "Putumayo",
     "subCounty": "",
@@ -72,7 +45,7 @@
     "healthCenter": ""
   },
   {
-    "id": 9,
+    "id": 6,
     "programId": 2,
     "district": "Putumayo",
     "subCounty": "",
@@ -81,7 +54,7 @@
     "healthCenter": ""
   },
   {
-    "id": 10,
+    "id": 7,
     "programId": 2,
     "district": "Valle del Cauca",
     "subCounty": "",
@@ -90,7 +63,7 @@
     "healthCenter": ""
   },
   {
-    "id": 11,
+    "id": 8,
     "programId": 2,
     "district": "Chocó",
     "subCounty": "",
@@ -99,7 +72,7 @@
     "healthCenter": ""
   },
   {
-    "id": 12,
+    "id": 9,
     "programId": 2,
     "district": "Chocó",
     "subCounty": "",
@@ -108,7 +81,7 @@
     "healthCenter": ""
   },
   {
-    "id": 13,
+    "id": 10,
     "programId": 2,
     "district": "Bogotá D.C",
     "subCounty": "",
