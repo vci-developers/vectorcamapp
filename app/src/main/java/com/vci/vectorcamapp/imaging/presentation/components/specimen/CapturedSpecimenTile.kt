@@ -53,7 +53,7 @@ import java.util.Locale
 fun CapturedSpecimenTile(
     specimen: Specimen,
     specimenImage: SpecimenImage,
-    inferenceResult: InferenceResult,
+    inferenceResult: InferenceResult?,
     modifier: Modifier = Modifier,
     specimenBitmap: Bitmap? = null,
     badgeText: String? = null,
@@ -107,9 +107,11 @@ fun CapturedSpecimenTile(
                             )
                         }
 
-                        BoundingBoxOverlay(
-                            inferenceResult = inferenceResult, overlaySize = containerSize
-                        )
+                        inferenceResult?.let {
+                            BoundingBoxOverlay(
+                                inferenceResult = inferenceResult, overlaySize = containerSize
+                            )
+                        }
                     }
                 }
 
