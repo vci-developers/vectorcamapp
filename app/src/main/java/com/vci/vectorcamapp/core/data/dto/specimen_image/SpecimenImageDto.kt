@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SpecimenImageDto(
     val id: Int? = null,
+    val filemd5: String = "",
     val species: String? = null,
     val sex: String? = null,
     val abdomenStatus: String? = null,

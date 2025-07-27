@@ -141,9 +141,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                         syncSpecimenImageAndInferenceResultIfNeeded(
                             specimenImage,
                             inferenceResult,
-                            syncedSpecimen.id,
-                            syncedSession.localId,
-                            syncedSession.remoteId
+                            syncedSpecimen,
+                            syncedSession.localId
                         ).onError { error ->
                             return retryOrFailure(error.toString(context))
                         }
@@ -396,12 +395,11 @@ class MetadataUploadWorker @AssistedInject constructor(
     ): DomainResult<Specimen, NetworkError> {
         return try {
             val localSpecimenDto = SpecimenDto(
-                specimenId = localSpecimen.id, sessionId = syncedRemoteSessionId
+                id = localSpecimen.remoteId, specimenId = localSpecimen.id, sessionId = syncedRemoteSessionId
             )
 
-            // TODO: MIGHT NEED TO CHANGE ONCE BACKEND REQUIRES SESSION ID TO GET A SPECIMEN BY ID
             val remoteSpecimenDto = when (val remoteSpecimenResult =
-                specimenDataSource.getSpecimenById(localSpecimen.id)) {
+                specimenDataSource.getSpecimenByIdAndSessionId(localSpecimen.id, syncedRemoteSessionId)) {
                 is DomainResult.Success -> remoteSpecimenResult.data
                 is DomainResult.Error -> {
                     when (remoteSpecimenResult.error) {
@@ -424,6 +422,7 @@ class MetadataUploadWorker @AssistedInject constructor(
 
             val remoteSpecimen = Specimen(
                 id = remoteSpecimenDto.specimenId,
+                remoteId = remoteSpecimenDto.id
             )
 
             if (remoteSpecimenDto != localSpecimenDto) {
@@ -443,19 +442,19 @@ class MetadataUploadWorker @AssistedInject constructor(
     private suspend fun syncSpecimenImageAndInferenceResultIfNeeded(
         localSpecimenImage: SpecimenImage,
         localInferenceResult: InferenceResult?,
-        syncedSpecimenId: String,
-        syncedLocalSessionId: UUID,
-        syncedRemoteSessionId: Int
+        syncedSpecimen: Specimen,
+        syncedLocalSessionId: UUID
     ): DomainResult<Unit, NetworkError> {
         return try {
             specimenImageRepository.updateSpecimenImage(
                 localSpecimenImage.copy(metadataUploadStatus = UploadStatus.IN_PROGRESS),
-                syncedSpecimenId,
+                syncedSpecimen.id,
                 syncedLocalSessionId
             )
-            // TODO: ADD FRONTEND ID, REMOTE SESSION ID TO DTO WHEN BACKEND MAKES IT AVAILABLE
+
             val localSpecimenImageDto = SpecimenImageDto(
                 id = localSpecimenImage.remoteId,
+                filemd5 = localSpecimenImage.localId,
                 species = localSpecimenImage.species,
                 sex = localSpecimenImage.sex,
                 abdomenStatus = localSpecimenImage.abdomenStatus,
@@ -473,12 +472,16 @@ class MetadataUploadWorker @AssistedInject constructor(
                         sexLogits = it.sexLogits,
                         abdomenStatusLogits = it.abdomenStatusLogits
                     )
-                })
+                }
+            )
 
-            // TODO: Change REMOTE ID when search by frontend ID
+            if (syncedSpecimen.remoteId == null) {
+                return DomainResult.Error(NetworkError.CLIENT_ERROR)
+            }
+
             val remoteSpecimenImageDto = when (val remoteSpecimenImageResult =
                 specimenImageDataSource.getSpecimenImageMetadata(
-                    localSpecimenImage.remoteId ?: -1, syncedSpecimenId
+                    localSpecimenImage.localId, syncedSpecimen.remoteId
                 )) {
                 is DomainResult.Success -> remoteSpecimenImageResult.data
                 is DomainResult.Error -> {
@@ -488,7 +491,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                                 specimenImageDataSource.postSpecimenImageMetadata(
                                     localSpecimenImage,
                                     localInferenceResult,
-                                    syncedSpecimenId // TODO: ADD REMOTE SESSION ID ONCE BACKEND WORKS
+                                    syncedSpecimen.remoteId
                                 )
                             when (postSpecimenImageResult) {
                                 is DomainResult.Success -> {
@@ -499,7 +502,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                                     specimenImageRepository.updateSpecimenImage(
                                         localSpecimenImage.copy(
                                             metadataUploadStatus = UploadStatus.PAUSED
-                                        ), syncedSpecimenId, syncedLocalSessionId
+                                        ), syncedSpecimen.id, syncedLocalSessionId
                                     )
                                     return DomainResult.Error(
                                         postSpecimenImageResult.error
@@ -512,7 +515,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                             specimenImageRepository.updateSpecimenImage(
                                 localSpecimenImage.copy(
                                     metadataUploadStatus = UploadStatus.PAUSED
-                                ), syncedSpecimenId, syncedLocalSessionId
+                                ), syncedSpecimen.id, syncedLocalSessionId
                             )
                             return DomainResult.Error(remoteSpecimenImageResult.error)
                         }
@@ -521,7 +524,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             }
 
             val remoteSpecimenImage = SpecimenImage(
-                localId = localSpecimenImage.localId, // TODO: Change to Remote when backend makes it available
+                localId = remoteSpecimenImageDto.filemd5,
                 remoteId = remoteSpecimenImageDto.id,
                 species = remoteSpecimenImageDto.species,
                 sex = remoteSpecimenImageDto.sex,
@@ -550,7 +553,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             if (remoteSpecimenImageDto != localSpecimenImageDto) {
                 transactionHelper.runAsTransaction {
                     specimenImageRepository.updateSpecimenImage(
-                        remoteSpecimenImage, syncedSpecimenId, syncedLocalSessionId
+                        remoteSpecimenImage, syncedSpecimen.id, syncedLocalSessionId
                     ).onError {
                         return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
                     }
@@ -567,21 +570,21 @@ class MetadataUploadWorker @AssistedInject constructor(
 
             specimenImageRepository.updateSpecimenImage(
                 remoteSpecimenImage.copy(metadataUploadStatus = UploadStatus.COMPLETED),
-                syncedSpecimenId,
+                syncedSpecimen.id,
                 syncedLocalSessionId
             )
             DomainResult.Success(Unit)
         } catch (e: IOException) {
             specimenImageRepository.updateSpecimenImage(
                 localSpecimenImage.copy(metadataUploadStatus = UploadStatus.PAUSED),
-                syncedSpecimenId,
+                syncedSpecimen.id,
                 syncedLocalSessionId
             )
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
             specimenImageRepository.updateSpecimenImage(
                 localSpecimenImage.copy(metadataUploadStatus = UploadStatus.PAUSED),
-                syncedSpecimenId,
+                syncedSpecimen.id,
                 syncedLocalSessionId
             )
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)

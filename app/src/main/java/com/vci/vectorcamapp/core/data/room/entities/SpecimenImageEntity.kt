@@ -20,7 +20,7 @@ import java.util.UUID
     ], indices = [Index(value = ["specimenId", "sessionId"])]
 )
 data class SpecimenImageEntity(
-    @PrimaryKey val localId: UUID = UUID(0, 0),
+    @PrimaryKey val localId: String = "",
     val specimenId: String = "",
     val sessionId: UUID = UUID(0, 0),
     val remoteId: Int? = null,

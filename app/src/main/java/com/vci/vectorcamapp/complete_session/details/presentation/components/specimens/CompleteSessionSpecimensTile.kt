@@ -125,7 +125,7 @@ fun CompleteSessionSpecimensTile(
             )
 
             Text(
-                text = "Created At: ${dateTimeFormatter.format(session.createdAt)}",
+                text = "Captured At: ${dateTimeFormatter.format(session.createdAt)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.textPrimary
             )

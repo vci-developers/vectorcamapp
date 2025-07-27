@@ -24,14 +24,14 @@ class RemoteSpecimenImageDataSource @Inject constructor(
     private val httpClient: HttpClient
 ) : SpecimenImageDataSource {
     override suspend fun postSpecimenImageMetadata(
-        specimenImage: SpecimenImage, inferenceResult: InferenceResult?, specimenId: String
+        specimenImage: SpecimenImage, inferenceResult: InferenceResult?, specimenId: Int
     ): Result<PostSpecimenImageResponseDto, NetworkError> {
-        Log.d("postSpecimenImageMetadata", "specimenImage: $specimenImage, inferenceResult: $inferenceResult, specimenId: $specimenId")
         return safeCall<PostSpecimenImageResponseDto> {
             httpClient.post(constructUrl("specimens/${specimenId}/images/data")) {
                 contentType(ContentType.Application.Json)
                 setBody(
                     PostSpecimenImageRequestDto(
+                        filemd5 = specimenImage.localId,
                         species = specimenImage.species,
                         sex = specimenImage.sex,
                         abdomenStatus = specimenImage.abdomenStatus,
@@ -56,7 +56,7 @@ class RemoteSpecimenImageDataSource @Inject constructor(
     }
 
     override suspend fun getSpecimenImageMetadata(
-        specimenImageId: Int, specimenId: String
+        specimenImageId: String, specimenId: Int
     ): Result<SpecimenImageDto, NetworkError> {
         return safeCall<SpecimenImageDto> {
             httpClient.get(constructUrl("specimens/${specimenId}/images/data/${specimenImageId}")) {

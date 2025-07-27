@@ -7,13 +7,12 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
-import java.util.UUID
 
 data class ImagingState(
     val isProcessing: Boolean = false,
-    val currentSpecimen: Specimen = Specimen(id = ""),
+    val currentSpecimen: Specimen = Specimen(id = "", remoteId = null),
     val currentSpecimenImage: SpecimenImage = SpecimenImage(
-        localId = UUID(0, 0),
+        localId = "",
         remoteId = null,
         species = null,
         sex = null,

@@ -5,7 +5,7 @@ import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import java.util.UUID
 
 data class SpecimenImage(
-    val localId: UUID,
+    val localId: String,
     val remoteId: Int?,
     val species: String?,
     val sex: String?,

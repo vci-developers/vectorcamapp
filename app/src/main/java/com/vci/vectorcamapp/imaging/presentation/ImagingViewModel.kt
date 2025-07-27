@@ -51,6 +51,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import java.security.MessageDigest
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -186,8 +187,7 @@ class ImagingViewModel @Inject constructor(
                     if (success) {
                         val workManager = WorkManager.getInstance(context)
                         val uploadConstraints =
-                            Constraints.Builder()
-                                .setRequiredNetworkType(NetworkType.CONNECTED)
+                            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED)
                                 .build()
 
                         Log.d("Imaging View Model", currentSession.localId.toString())
@@ -208,9 +208,7 @@ class ImagingViewModel @Inject constructor(
                                 workDataOf(
                                     ImageUploadWorker.KEY_SESSION_ID to currentSession.localId.toString()
                                 )
-                            )
-                                .setConstraints(uploadConstraints)
-                                .setBackoffCriteria(
+                            ).setConstraints(uploadConstraints).setBackoffCriteria(
                                     BackoffPolicy.LINEAR,
                                     WorkRequest.MIN_BACKOFF_MILLIS,
                                     TimeUnit.MILLISECONDS
@@ -293,13 +291,12 @@ class ImagingViewModel @Inject constructor(
                         return@launch
                     }
 
-                    val saveResult =
-                        cameraRepository.saveImage(jpegBytes, filename, currentSession)
+                    val saveResult = cameraRepository.saveImage(jpegBytes, filename, currentSession)
 
                     saveResult.onSuccess { imageUri ->
-                        val specimen = Specimen(id = specimenId)
+                        val specimen = Specimen(id = specimenId, remoteId = null)
                         val specimenImage = SpecimenImage(
-                            localId = UUID.randomUUID(),
+                            localId = calculateMd5(jpegBytes),
                             remoteId = null,
                             species = _state.value.currentSpecimenImage.species,
                             sex = _state.value.currentSpecimenImage.sex,
@@ -315,8 +312,7 @@ class ImagingViewModel @Inject constructor(
                             val inferenceResult = _state.value.currentInferenceResult
 
                             val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(
-                                specimenId,
-                                currentSession.localId
+                                specimenId, currentSession.localId
                             )
                             val specimenInsertionResult = if (existingSpecimen == null) {
                                 specimenRepository.insertSpecimen(specimen, currentSession.localId)
@@ -325,15 +321,12 @@ class ImagingViewModel @Inject constructor(
                             }
                             val specimenImageInsertionResult =
                                 specimenImageRepository.insertSpecimenImage(
-                                    specimenImage,
-                                    specimen.id,
-                                    currentSession.localId
+                                    specimenImage, specimen.id, currentSession.localId
                                 )
 
                             val inferenceResultInsertionResult = inferenceResult?.let {
                                 inferenceResultRepository.insertInferenceResult(
-                                    inferenceResult,
-                                    specimenImage.localId
+                                    inferenceResult, specimenImage.localId
                                 )
                             } ?: Result.Success(Unit)
 
@@ -373,7 +366,7 @@ class ImagingViewModel @Inject constructor(
                     id = "",
                 ),
                 currentSpecimenImage = it.currentSpecimenImage.copy(
-                    localId = UUID(0, 0),
+                    localId = "",
                     remoteId = null,
                     species = null,
                     sex = null,
@@ -390,6 +383,12 @@ class ImagingViewModel @Inject constructor(
                 previewInferenceResults = emptyList(),
             )
         }
+    }
+
+    private fun calculateMd5(imageByteArray: ByteArray) : String {
+        val md5 = MessageDigest.getInstance("MD5")
+        val digest = md5.digest(imageByteArray)
+        return digest.joinToString("") { "%02x".format(it) }
     }
 
     override fun onCleared() {
