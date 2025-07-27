@@ -13,7 +13,6 @@ fun UploadStatus.color(): Color = when (this) {
     UploadStatus.IN_PROGRESS -> MaterialTheme.colors.warning
     UploadStatus.COMPLETED -> MaterialTheme.colors.successConfirm
     UploadStatus.FAILED -> MaterialTheme.colors.error
-    UploadStatus.PAUSED -> MaterialTheme.colors.error
 }
 
 fun UploadStatus.displayText(context: Context): String {
@@ -22,7 +21,6 @@ fun UploadStatus.displayText(context: Context): String {
         UploadStatus.IN_PROGRESS -> R.string.upload_status_in_progress
         UploadStatus.NOT_STARTED -> R.string.upload_status_not_started
         UploadStatus.FAILED -> R.string.upload_status_retry
-        UploadStatus.PAUSED -> R.string.upload_status_paused
     }
     return context.getString(resId)
 }
