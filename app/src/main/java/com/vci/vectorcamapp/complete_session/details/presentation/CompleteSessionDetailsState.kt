@@ -37,15 +37,6 @@ data class CompleteSessionDetailsState(
         sentinelSite = "",
         healthCenter = ""
     ),
-    val surveillanceForm: SurveillanceForm = SurveillanceForm(
-        numPeopleSleptInHouse = 0,
-        wasIrsConducted = false,
-        monthsSinceIrs = null,
-        numLlinsAvailable = 0,
-        llinType = null,
-        llinBrand = null,
-        numPeopleSleptUnderLlin = null,
-        submittedAt = null
-    ),
+    val surveillanceForm: SurveillanceForm? = null,
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),
 )

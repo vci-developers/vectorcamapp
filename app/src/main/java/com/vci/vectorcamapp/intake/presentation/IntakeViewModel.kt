@@ -16,6 +16,8 @@ import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.intake.domain.repository.LocationRepository
+import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflow
+import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflowFactory
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidationUseCases
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -51,6 +53,10 @@ class IntakeViewModel @Inject constructor(
     @Inject
     lateinit var transactionHelper: TransactionHelper
 
+    @Inject
+    lateinit var surveillanceFormWorkflowFactory: SurveillanceFormWorkflowFactory
+    private lateinit var surveillanceFormWorkflow: SurveillanceFormWorkflow
+
     private val _state = MutableStateFlow(IntakeState())
     val state: StateFlow<IntakeState> = _state.onStart {
         loadFormDetails()
@@ -84,9 +90,9 @@ class IntakeViewModel @Inject constructor(
                     val houseNumberResult =
                         validationUseCases.validateHouseNumber(session.houseNumber)
                     val llinTypeResult =
-                        surveillanceForm.llinType?.let { validationUseCases.validateLlinType(it) }
+                        surveillanceForm?.llinType?.let { validationUseCases.validateLlinType(it) }
                     val llinBrandResult =
-                        surveillanceForm.llinBrand?.let { validationUseCases.validateLlinBrand(it) }
+                        surveillanceForm?.llinBrand?.let { validationUseCases.validateLlinBrand(it) }
                     val collectionDateResult =
                         validationUseCases.validateCollectionDate(session.collectionDate)
                     val collectionMethodResult =
@@ -141,10 +147,12 @@ class IntakeViewModel @Inject constructor(
                                 return@runAsTransaction false
                             }
 
-                            val surveillanceFormResult =
+                            val surveillanceFormResult = surveillanceForm?.let {
                                 surveillanceFormRepository.upsertSurveillanceForm(
                                     surveillanceForm, session.localId
                                 )
+                            } ?: Result.Success(Unit)
+
                             surveillanceFormResult.onError { error ->
                                 emitError(error)
                                 return@runAsTransaction false
@@ -211,7 +219,7 @@ class IntakeViewModel @Inject constructor(
                     numPeopleSleptInHouse?.let { count ->
                         _state.update {
                             it.copy(
-                                surveillanceForm = it.surveillanceForm.copy(
+                                surveillanceForm = it.surveillanceForm?.copy(
                                     numPeopleSleptInHouse = count
                                 )
                             )
@@ -223,7 +231,7 @@ class IntakeViewModel @Inject constructor(
                     val wasIrsConducted = action.isChecked
                     _state.update {
                         it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
                                 wasIrsConducted = wasIrsConducted,
                                 monthsSinceIrs = if (wasIrsConducted) 0 else null
                             )
@@ -237,7 +245,7 @@ class IntakeViewModel @Inject constructor(
                     monthsSinceIrs?.let { count ->
                         _state.update {
                             it.copy(
-                                surveillanceForm = it.surveillanceForm.copy(
+                                surveillanceForm = it.surveillanceForm?.copy(
                                     monthsSinceIrs = count
                                 )
                             )
@@ -251,7 +259,7 @@ class IntakeViewModel @Inject constructor(
                     numLlinsAvailable?.let { count ->
                         _state.update {
                             it.copy(
-                                surveillanceForm = it.surveillanceForm.copy(
+                                surveillanceForm = it.surveillanceForm?.copy(
                                     numLlinsAvailable = count
                                 )
                             )
@@ -259,7 +267,7 @@ class IntakeViewModel @Inject constructor(
                         if (numLlinsAvailable == 0) {
                             _state.update {
                                 it.copy(
-                                    surveillanceForm = it.surveillanceForm.copy(
+                                    surveillanceForm = it.surveillanceForm?.copy(
                                         llinType = null,
                                         llinBrand = null,
                                         numPeopleSleptUnderLlin = null
@@ -269,7 +277,7 @@ class IntakeViewModel @Inject constructor(
                         } else {
                             _state.update {
                                 it.copy(
-                                    surveillanceForm = it.surveillanceForm.copy(
+                                    surveillanceForm = it.surveillanceForm?.copy(
                                         llinType = "", llinBrand = "", numPeopleSleptUnderLlin = 0
                                     )
                                 )
@@ -281,7 +289,7 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.SelectLlinType -> {
                     _state.update {
                         it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
                                 llinType = action.option.label
                             )
                         )
@@ -291,7 +299,7 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.SelectLlinBrand -> {
                     _state.update {
                         it.copy(
-                            surveillanceForm = it.surveillanceForm.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
                                 llinBrand = action.option.label
                             )
                         )
@@ -304,7 +312,7 @@ class IntakeViewModel @Inject constructor(
                     numPeopleSleptUnderLlin?.let { count ->
                         _state.update {
                             it.copy(
-                                surveillanceForm = it.surveillanceForm.copy(
+                                surveillanceForm = it.surveillanceForm?.copy(
                                     numPeopleSleptUnderLlin = count
                                 )
                             )
@@ -398,14 +406,17 @@ class IntakeViewModel @Inject constructor(
                 }
             }
 
+            val effectiveSession = currentSession ?: _state.value.session.copy(
+                type = savedStateHandle.get<SessionType>("sessionType")
+                    ?: SessionType.SURVEILLANCE
+            )
+            surveillanceFormWorkflow = surveillanceFormWorkflowFactory.create(effectiveSession.type)
+
             _state.update {
                 it.copy(
                     isLoading = false,
-                    session = currentSession ?: it.session.copy(
-                        type = savedStateHandle.get<SessionType>("sessionType")
-                            ?: SessionType.SURVEILLANCE
-                    ),
-                    surveillanceForm = savedForm ?: it.surveillanceForm,
+                    session = effectiveSession,
+                    surveillanceForm = savedForm ?: surveillanceFormWorkflow.getSurveillanceForm(),
                     allSitesInProgram = allSites,
                     selectedDistrict = district,
                     selectedSentinelSite = sentinelSite

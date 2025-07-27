@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.imaging.domain.strategy
+package com.vci.vectorcamapp.imaging.domain.strategy.concrete
 
 import android.graphics.Bitmap
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel
 import com.vci.vectorcamapp.imaging.domain.model.CapturedFrameProcessingResult
 import com.vci.vectorcamapp.imaging.domain.model.LiveFrameProcessingResult
 import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
+import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import javax.inject.Inject
 

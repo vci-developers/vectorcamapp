@@ -32,16 +32,7 @@ data class IntakeState(
         longitude = null,
         type = SessionType.SURVEILLANCE
     ),
-    val surveillanceForm: SurveillanceForm = SurveillanceForm(
-        numPeopleSleptInHouse = 0,
-        wasIrsConducted = false,
-        monthsSinceIrs = null,
-        numLlinsAvailable = 0,
-        llinType = null,
-        llinBrand = null,
-        numPeopleSleptUnderLlin = null,
-        submittedAt = null
-    ),
+    val surveillanceForm: SurveillanceForm? = null,
     val intakeErrors: IntakeErrors = IntakeErrors(
         collectorTitle = null,
         collectorName = null,
