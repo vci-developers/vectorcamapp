@@ -136,7 +136,7 @@ class ImageUploadWorker @AssistedInject constructor(
             notificationTotalImages = imagesToUpload.size
             notificationCurrentImageIndex = index + 1
 
-            if (task.specimen.remoteId == null || task.image.remoteId == null) {
+            if (task.image.remoteId == null) {
                 Log.e("ImageUploadWorker", "Image ${task.image.localId} has a null remoteId. Skipping.")
                 specimenImageRepository.updateSpecimenImage(
                     specimenImage = task.image.copy(imageUploadStatus = UploadStatus.FAILED),
