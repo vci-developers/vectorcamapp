@@ -80,5 +80,4 @@ class WorkManagerRepositoryImplementation @Inject constructor(
     private fun uploadConstraints() = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED)
         .build()
-
 }
