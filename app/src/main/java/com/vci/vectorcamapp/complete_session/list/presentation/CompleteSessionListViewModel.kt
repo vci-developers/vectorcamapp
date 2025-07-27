@@ -1,21 +1,28 @@
 package com.vci.vectorcamapp.complete_session.list.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
+import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CompleteSessionListViewModel @Inject constructor(
-    sessionRepository: SessionRepository
+    private val sessionRepository: SessionRepository,
+    private val specimenRepository: SpecimenRepository,
+    private val workManagerRepository: WorkManagerRepository
 ) : CoreViewModel() {
 
     private val _completeSessionsAndSites = sessionRepository.observeCompleteSessionsAndSites()
@@ -31,11 +38,50 @@ class CompleteSessionListViewModel @Inject constructor(
     private val _events = Channel<CompleteSessionListEvent>()
     val events = _events.receiveAsFlow()
 
+    init {
+        viewModelScope.launch {
+            _completeSessionsAndSites.collect { sessionsAndSites ->
+                val sessionIds = sessionsAndSites.map { it.session.localId }
+                workManagerRepository.observeAnySessionUploadRunning(sessionIds)
+                    .collect { isRunning ->
+                        _state.update { it.copy(hasActiveUploads = isRunning) }
+                    }
+            }
+        }
+    }
+
     fun onAction(action: CompleteSessionListAction) {
         when (action) {
             is CompleteSessionListAction.ViewCompleteSessionDetails -> {
                 viewModelScope.launch {
                     _events.send(CompleteSessionListEvent.NavigateToCompleteSessionDetails(action.sessionId))
+                }
+            }
+            is CompleteSessionListAction.UploadAllPendingSessions -> {
+                viewModelScope.launch {
+                    val completeSessionsAndSites =
+                        sessionRepository.observeCompleteSessionsAndSites().first()
+                    for (sessionAndSite in completeSessionsAndSites) {
+                        val session = sessionAndSite.session
+                        val site = sessionAndSite.site
+
+                        val isSessionUploaded = (session.submittedAt != null)
+
+                        val specimens =
+                            specimenRepository.getSpecimenImagesAndInferenceResultsBySession(
+                                session.localId
+                            )
+                        val areSpecimensUploaded = !specimens.any { specimen ->
+                            specimen.specimenImagesAndInferenceResults.any { (image, _) ->
+                                image.metadataUploadStatus != UploadStatus.COMPLETED ||
+                                        image.imageUploadStatus != UploadStatus.COMPLETED
+                            }
+                        }
+
+                        if (isSessionUploaded && areSpecimensUploaded) continue
+
+                        workManagerRepository.enqueueSessionUpload(session.localId, site.id)
+                    }
                 }
             }
         }
