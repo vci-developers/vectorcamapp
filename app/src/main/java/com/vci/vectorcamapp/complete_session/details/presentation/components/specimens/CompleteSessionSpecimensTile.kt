@@ -64,7 +64,7 @@ fun CompleteSessionSpecimensTile(
     InfoTile(modifier = modifier) {
         BoxWithConstraints(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
                 .clip(RectangleShape)
         ) {
@@ -76,12 +76,11 @@ fun CompleteSessionSpecimensTile(
             AsyncImage(
                 model = ImageRequest.Builder(context).data(specimenImage.imageUri).build(),
                 contentDescription = "Specimen Image: ${specimen.id}",
-                contentScale = ContentScale.Fit,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
                     .zoomPanGesture(containerSize)
             )
-        }
 
             if (badgeText != null) {
                 Badge(
@@ -175,3 +174,4 @@ fun CompleteSessionSpecimensTile(
         }
     }
 }
+

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -89,29 +88,29 @@ fun CapturedSpecimenTile(
                         height = with(density) { maxHeight.roundToPx() })
 
                     Box(
-                modifier = Modifier
-                    .zoomPanGesture(containerSize)
-            ) {
-                if (specimenBitmap != null) {
-                    Image(
-                        bitmap = specimenBitmap.asImageBitmap(),
-                        contentDescription = specimen.id,
-                        contentScale = ContentScale.FillBounds,
-                    )
-                } else if (specimenImage.imageUri != Uri.EMPTY) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(context).data(specimenImage.imageUri)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = specimen.id,
-                        contentScale = ContentScale.Fit
-                    )
-                }
+                        modifier = Modifier
+                            .zoomPanGesture(containerSize)
+                    ) {
+                        if (specimenBitmap != null) {
+                            Image(
+                                bitmap = specimenBitmap.asImageBitmap(),
+                                contentDescription = specimen.id,
+                                contentScale = ContentScale.FillBounds,
+                            )
+                        } else if (specimenImage.imageUri != Uri.EMPTY) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(context).data(specimenImage.imageUri)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = specimen.id,
+                                contentScale = ContentScale.Fit
+                            )
+                        }
 
-                BoundingBoxOverlay(
-                    inferenceResult = inferenceResult, overlaySize = containerSize
-                )
-            }
+                        BoundingBoxOverlay(
+                            inferenceResult = inferenceResult, overlaySize = containerSize
+                        )
+                    }
                 }
 
                 if (badgeText != null) {
