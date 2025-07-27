@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -30,15 +31,8 @@ class CompleteSessionListViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(CompleteSessionListState())
     val state = combine(_completeSessionsAndSites, _state) { completeSessionsAndSites, state ->
-        state.copy(
-            sessionsAndSites = completeSessionsAndSites
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
-
-    private val _events = Channel<CompleteSessionListEvent>()
-    val events = _events.receiveAsFlow()
-
-    init {
+        state.copy(sessionsAndSites = completeSessionsAndSites)
+    }.onStart {
         viewModelScope.launch {
             _completeSessionsAndSites.collect { sessionsAndSites ->
                 val sessionIds = sessionsAndSites.map { it.session.localId }
@@ -48,7 +42,10 @@ class CompleteSessionListViewModel @Inject constructor(
                     }
             }
         }
-    }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
+
+    private val _events = Channel<CompleteSessionListEvent>()
+    val events = _events.receiveAsFlow()
 
     fun onAction(action: CompleteSessionListAction) {
         when (action) {
@@ -57,6 +54,7 @@ class CompleteSessionListViewModel @Inject constructor(
                     _events.send(CompleteSessionListEvent.NavigateToCompleteSessionDetails(action.sessionId))
                 }
             }
+
             is CompleteSessionListAction.UploadAllPendingSessions -> {
                 viewModelScope.launch {
                     val completeSessionsAndSites =
@@ -73,8 +71,7 @@ class CompleteSessionListViewModel @Inject constructor(
                             )
                         val areSpecimensUploaded = !specimens.any { specimen ->
                             specimen.specimenImagesAndInferenceResults.any { (image, _) ->
-                                image.metadataUploadStatus != UploadStatus.COMPLETED ||
-                                        image.imageUploadStatus != UploadStatus.COMPLETED
+                                image.metadataUploadStatus != UploadStatus.COMPLETED || image.imageUploadStatus != UploadStatus.COMPLETED
                             }
                         }
 
