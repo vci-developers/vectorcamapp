@@ -79,7 +79,6 @@ object RoomDatabaseModule {
             }
             override fun onOpen(db: SupportSQLiteDatabase) {
                 super.onOpen(db)
-                Log.d("RoomCallback", "onOpen called")
                 if (!DbSeedStatus.seeded.isCompleted) {
                     DbSeedStatus.seeded.complete(Unit)
                 }
