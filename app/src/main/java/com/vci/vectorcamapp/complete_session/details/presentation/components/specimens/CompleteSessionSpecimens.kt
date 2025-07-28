@@ -45,7 +45,7 @@ fun CompleteSessionSpecimens(
                         session = session,
                         specimen = specimen,
                         specimenImage = specimenImage,
-                        badgeText = if (totalImages > 1) "${index + 1} of $totalImages" else null,
+                        badgeText = "${index + 1} of $totalImages",
                         modifier = Modifier.width(
                             screenWidthFraction(0.9f)
                         )

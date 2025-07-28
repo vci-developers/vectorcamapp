@@ -164,7 +164,7 @@ fun ImagingScreen(
                                 specimen = state.specimensWithImagesAndInferenceResults[page].specimen,
                                 specimenImage = specimenImage,
                                 inferenceResult = inferenceResult,
-                                badgeText = if (imageList.size > 1) "${index + 1} of ${imageList.size}" else null,
+                                badgeText = "${index + 1} of ${imageList.size}",
                                 modifier = Modifier
                                     .fillMaxWidth()
                             )

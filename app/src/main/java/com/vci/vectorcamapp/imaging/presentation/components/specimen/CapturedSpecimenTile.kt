@@ -75,16 +75,12 @@ fun CapturedSpecimenTile(
                 modifier = Modifier
                     .padding(horizontal = MaterialTheme.dimensions.paddingLarge)
                     .fillMaxWidth()
-                    .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
                     .align(Alignment.CenterHorizontally)
             ) {
                 BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(
-                            1f / MaterialTheme.dimensions.aspectRatio,
-                            matchHeightConstraintsFirst = false
-                        )
+                        .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
                         .clip(RectangleShape)
                 ) {
                     val containerSize = IntSize(
@@ -180,17 +176,23 @@ fun CapturedSpecimenTile(
                     }
                 }
 
-                listOfNotNull(
-                    specimenImage.species?.let { "Species: $it" },
-                    specimenImage.sex?.let { "Sex: $it" },
-                    specimenImage.abdomenStatus?.let { "Abdomen Status: $it" }
-                ).forEach {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colors.textPrimary
-                    )
-                }
+                Text(
+                    text = if (specimenImage.species != null) "Species: ${specimenImage.species}" else "",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colors.textPrimary
+                )
+
+                Text(
+                    text = if (specimenImage.sex != null) "Sex: ${specimenImage.sex}" else "",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colors.textPrimary
+                )
+
+                Text(
+                    text = if (specimenImage.abdomenStatus != null) "Abdomen Status: ${specimenImage.abdomenStatus}" else "",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colors.textPrimary
+                )
             }
 
             if (onSpecimenIdCorrected == null) {

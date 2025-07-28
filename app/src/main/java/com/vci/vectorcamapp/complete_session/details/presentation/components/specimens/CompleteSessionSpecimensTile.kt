@@ -76,13 +76,13 @@ fun CompleteSessionSpecimensTile(
             AsyncImage(
                 model = ImageRequest.Builder(context).data(specimenImage.imageUri).build(),
                 contentDescription = "Specimen Image: ${specimen.id}",
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxSize()
                     .zoomPanGesture(containerSize)
             )
 
-            if (badgeText != null) {
+            badgeText?.let {
                 Badge(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
