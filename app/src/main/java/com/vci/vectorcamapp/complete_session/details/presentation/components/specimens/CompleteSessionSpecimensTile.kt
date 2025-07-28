@@ -160,13 +160,13 @@ fun CompleteSessionSpecimensTile(
             )
 
             Text(
-                text = "Captured At: ${dateTimeFormatter.format(session.createdAt)}",
+                text = if (specimenImage.abdomenStatus != null) "Abdomen Status: ${specimenImage.abdomenStatus}" else "",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.textPrimary
             )
 
             Text(
-                text = if (specimenImage.abdomenStatus != null) "Abdomen Status: ${specimenImage.abdomenStatus}" else "",
+                text = "Captured At: ${dateTimeFormatter.format(session.createdAt)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.textPrimary
             )
