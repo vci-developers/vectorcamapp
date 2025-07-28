@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -70,8 +71,8 @@ fun NavGraph(startDestination: Destination) {
 
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    LandingEvent.NavigateToNewSessionScreen -> navController.navigate(
-                        Destination.Intake
+                    is LandingEvent.NavigateToIntakeScreen -> navController.navigate(
+                        Destination.Intake(event.sessionType)
                     )
 
                     LandingEvent.NavigateToIncompleteSessionsScreen -> navController.navigate(
@@ -151,11 +152,17 @@ fun NavGraph(startDestination: Destination) {
             }
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                ImagingScreen(
-                    state = state,
-                    onAction = viewModel::onAction,
-                    modifier = Modifier.padding(innerPadding)
-                )
+                when (state.isLoading) {
+                    true -> LoadingAnimation(
+                        text = "Loading specimens...", modifier = Modifier.padding(innerPadding)
+                    )
+                    
+                    false -> ImagingScreen(
+                        state = state,
+                        onAction = viewModel::onAction,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
             }
         }
 
@@ -165,8 +172,8 @@ fun NavGraph(startDestination: Destination) {
 
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    IncompleteSessionEvent.NavigateToIntakeScreen ->
-                        navController.navigate(Destination.Intake)
+                    is IncompleteSessionEvent.NavigateToIntakeScreen ->
+                        navController.navigate(Destination.Intake(event.sessionType))
                     IncompleteSessionEvent.NavigateToLandingScreen -> navController.popBackStack()
                 }
             }
