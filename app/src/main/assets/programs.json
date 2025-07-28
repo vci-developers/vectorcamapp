@@ -1,12 +1,12 @@
 [
   {
     "id": 1,
-    "name": "Uganda Ministry of Health",
+    "name": "National Malaria Elimination Division",
     "country": "Uganda"
   },
   {
     "id": 2,
-    "name": "Colombia Data Collection",
+    "name": "Data Collection",
     "country": "Colombia"
   }
 ]
