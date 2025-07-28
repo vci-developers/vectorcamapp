@@ -31,10 +31,6 @@ class MainViewModel @Inject constructor(
     private val _events = Channel<MainEvent>()
     val events = _events.receiveAsFlow()
 
-    init {
-        determineStartDestination()
-    }
-
     fun onAction(action: MainAction) {
         viewModelScope.launch {
             when (action) {

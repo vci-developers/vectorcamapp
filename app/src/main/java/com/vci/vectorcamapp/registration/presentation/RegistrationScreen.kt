@@ -25,6 +25,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
+import com.vci.vectorcamapp.main.presentation.SplashScreen
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -38,7 +39,7 @@ fun RegistrationScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         if (state.isLoading) {
-            LoadingAnimation(text = "Loading programs…")
+            SplashScreen(Modifier.fillMaxSize())
         } else {
             state.error?.let {
                 Text(
