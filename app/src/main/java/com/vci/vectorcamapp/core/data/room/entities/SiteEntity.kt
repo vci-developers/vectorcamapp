@@ -14,7 +14,6 @@ import androidx.room.PrimaryKey
         onUpdate = ForeignKey.CASCADE
     )], indices = [Index("programId")]
 )
-
 data class SiteEntity(
     @PrimaryKey val id: Int = -1,
     val programId: Int = -1,

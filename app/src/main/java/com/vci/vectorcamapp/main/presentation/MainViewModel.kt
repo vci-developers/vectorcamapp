@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.main.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.vci.vectorcamapp.core.data.room.DbSeedStatus
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.main.domain.util.MainError
@@ -69,7 +68,6 @@ class MainViewModel @Inject constructor(
 
     private fun determineStartDestination() {
         viewModelScope.launch {
-            DbSeedStatus.seeded.await()
             deviceCache.observeProgramId()
                 .catch {
                     emitError(MainError.DEVICE_FETCH_FAILED)

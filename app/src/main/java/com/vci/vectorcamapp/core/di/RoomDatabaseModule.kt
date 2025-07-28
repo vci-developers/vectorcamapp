@@ -8,7 +8,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
 import com.vci.vectorcamapp.core.data.dto.site.SiteDto
 import com.vci.vectorcamapp.core.data.mappers.toEntity
-import com.vci.vectorcamapp.core.data.room.DbSeedStatus
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.room.VectorCamDatabase
 import com.vci.vectorcamapp.core.data.room.dao.InferenceResultDao
@@ -70,17 +69,7 @@ object RoomDatabaseModule {
                         Log.i("RoomCallback", "Seeded ${programEntities.size} programs, ${siteEntities.size} sites")
                     } catch (e: Exception) {
                         Log.e("RoomCallback", "Error seeding DB", e)
-                    } finally {
-                        if (!DbSeedStatus.seeded.isCompleted) {
-                            DbSeedStatus.seeded.complete(Unit)
-                        }
                     }
-                }
-            }
-            override fun onOpen(db: SupportSQLiteDatabase) {
-                super.onOpen(db)
-                if (!DbSeedStatus.seeded.isCompleted) {
-                    DbSeedStatus.seeded.complete(Unit)
                 }
             }
         }).addMigrations(*ALL_MIGRATIONS).build()

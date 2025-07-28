@@ -6,20 +6,12 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
-import com.vci.vectorcamapp.core.data.room.VectorCamDatabase
 import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.opencv.android.OpenCVLoader
 import javax.inject.Inject
-import javax.inject.Provider
 
 @HiltAndroidApp
 class VectorCamApp : Application(), Configuration.Provider {
-
-    @Inject
-    lateinit var dbProvider: Provider<VectorCamDatabase>
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
@@ -31,10 +23,6 @@ class VectorCamApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-
-        CoroutineScope(Dispatchers.IO).launch {
-            dbProvider.get().openHelper.writableDatabase
-        }
 
         try {
             OpenCVLoader.initLocal()
