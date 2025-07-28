@@ -79,13 +79,12 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     else -> {
-                        Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
+                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                             PermissionAndGpsPrompt(
                                 state = state,
                                 onAction = viewModel::onAction,
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(padding)
+                                    .padding(innerPadding)
                             )
                         }
                     }
