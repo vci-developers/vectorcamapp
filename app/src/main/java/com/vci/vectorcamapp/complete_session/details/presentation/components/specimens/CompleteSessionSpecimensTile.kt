@@ -147,32 +147,26 @@ fun CompleteSessionSpecimensTile(
                 style = MaterialTheme.typography.bodySmall
             )
 
-            if (specimenImage.species != null) {
-                Text(
-                    text = "Species: ${specimenImage.species}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colors.textPrimary
-                )
-            }
+            Text(
+                text = if (specimenImage.species != null) "Species: ${specimenImage.species}" else "",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colors.textPrimary
+            )
 
-            if (specimenImage.sex != null) {
-                Text(
-                    text = "Sex: ${specimenImage.sex}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colors.textPrimary
-                )
-            }
-
-            if (specimenImage.abdomenStatus != null) {
-                Text(
-                    text = "Abdomen Status: ${specimenImage.abdomenStatus}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colors.textPrimary
-                )
-            }
+            Text(
+                text = if (specimenImage.sex != null) "Sex: ${specimenImage.sex}" else "",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colors.textPrimary
+            )
 
             Text(
                 text = "Captured At: ${dateTimeFormatter.format(session.createdAt)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colors.textPrimary
+            )
+
+            Text(
+                text = if (specimenImage.abdomenStatus != null) "Abdomen Status: ${specimenImage.abdomenStatus}" else "",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.textPrimary
             )
