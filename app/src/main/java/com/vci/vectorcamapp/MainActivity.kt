@@ -69,19 +69,15 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                LaunchedEffect(Unit) {
-                    checkAndUpdatePermissionStatus()
-                    checkAndUpdateGpsStatus()
-                }
-
-                Log.d("MainActivity", "permission checked ${state.permissionChecked}, gps checked ${state.gpsChecked}, Ready: $isReady, startDestination: ${state.startDestination}")
-                Log.d("MainActivity", "All permissions granted: ${state.allGranted}, GPS enabled: ${state.isGpsEnabled}")
                 when {
                     !isReady ->{
                         SplashScreen(modifier = Modifier.fillMaxSize())
                     }
                     state.allGranted && state.isGpsEnabled -> {
-                        NavGraph(startDestination = state.startDestination!!)
+                        when (val startDestination = state.startDestination) {
+                            null -> SplashScreen(modifier = Modifier.fillMaxSize())
+                            else -> NavGraph(startDestination = startDestination)
+                        }
                     }
                     else -> {
                         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
