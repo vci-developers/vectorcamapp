@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
 import com.vci.vectorcamapp.main.presentation.MainAction
 import com.vci.vectorcamapp.main.presentation.MainState
+import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
 @Composable
@@ -36,7 +37,7 @@ fun PermissionAndGpsPrompt(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(MaterialTheme.dimensions.paddingMedium),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -45,7 +46,7 @@ fun PermissionAndGpsPrompt(
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingLarge))
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             if (!state.allGranted) {
                 Button(onClick = { onAction(MainAction.OpenAppSettings) }) {
@@ -57,7 +58,7 @@ fun PermissionAndGpsPrompt(
                 }
             }
             if (!state.isGpsEnabled) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
                 Button(onClick = { onAction(MainAction.OpenLocationSettings) }) {
                     Text(
                         text = "Enable GPS",

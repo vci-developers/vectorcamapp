@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -68,15 +69,19 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                LaunchedEffect(Unit) {
+                    checkAndUpdatePermissionStatus()
+                    checkAndUpdateGpsStatus()
+                }
+
+                Log.d("MainActivity", "permission checked ${state.permissionChecked}, gps checked ${state.gpsChecked}, Ready: $isReady, startDestination: ${state.startDestination}")
+                Log.d("MainActivity", "All permissions granted: ${state.allGranted}, GPS enabled: ${state.isGpsEnabled}")
                 when {
                     !isReady ->{
                         SplashScreen(modifier = Modifier.fillMaxSize())
                     }
                     state.allGranted && state.isGpsEnabled -> {
-                        when (val startDestination = state.startDestination) {
-                            null -> SplashScreen(modifier = Modifier.fillMaxSize())
-                            else -> NavGraph(startDestination = startDestination)
-                        }
+                        NavGraph(startDestination = state.startDestination!!)
                     }
                     else -> {
                         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
