@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -62,8 +61,6 @@ import androidx.compose.material3.TextButton
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun ImagingScreen(
