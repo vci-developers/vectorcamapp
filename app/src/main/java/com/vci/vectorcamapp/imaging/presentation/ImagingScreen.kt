@@ -60,6 +60,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.TextButton
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.itemsIndexed
 
 @Composable
@@ -116,7 +117,7 @@ fun ImagingScreen(
                     Row(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.padding(vertical = MaterialTheme.dimensions.paddingMedium).fillMaxWidth()
                     ) {
                         if (page > 0) {
                             Icon(
@@ -165,7 +166,6 @@ fun ImagingScreen(
                                 inferenceResult = inferenceResult,
                                 badgeText = if (imageList.size > 1) "${index + 1} of ${imageList.size}" else null,
                                 modifier = Modifier
-                                    .fillParentMaxHeight()
                                     .fillMaxWidth()
                             )
                         }
