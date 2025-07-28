@@ -22,10 +22,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
-import com.vci.vectorcamapp.main.presentation.SplashScreen
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -101,20 +99,22 @@ fun RegistrationScreen(
                             spread = MaterialTheme.dimensions.shadowBlurSmall,
                             cornerRadius = MaterialTheme.dimensions.cornerRadiusSmall,
                         )
-                        .height(MaterialTheme.dimensions.componentHeightExtraLarge),
+                        .height(MaterialTheme.dimensions.componentHeightExtraExtraLarge),
                 ) { program ->
                     Column(
                         verticalArrangement = Arrangement.SpaceEvenly,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .padding(horizontal = MaterialTheme.dimensions.paddingSmall)
+                            .fillMaxWidth()
                     ) {
                         Text(
                             text = program.name,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textPrimary
                         )
                         Text(
                             text = program.country,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textSecondary
                         )
                     }
