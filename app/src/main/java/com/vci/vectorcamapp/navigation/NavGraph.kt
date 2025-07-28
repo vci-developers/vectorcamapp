@@ -72,8 +72,8 @@ fun NavGraph(startDestination: Destination) {
 
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    LandingEvent.NavigateToNewSessionScreen -> navController.navigate(
-                        Destination.Intake
+                    is LandingEvent.NavigateToIntakeScreen -> navController.navigate(
+                        Destination.Intake(event.sessionType)
                     )
 
                     LandingEvent.NavigateToIncompleteSessionsScreen -> navController.navigate(
@@ -171,8 +171,8 @@ fun NavGraph(startDestination: Destination) {
 
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    IncompleteSessionEvent.NavigateToIntakeScreen ->
-                        navController.navigate(Destination.Intake)
+                    is IncompleteSessionEvent.NavigateToIntakeScreen ->
+                        navController.navigate(Destination.Intake(event.sessionType))
                     IncompleteSessionEvent.NavigateToLandingScreen -> navController.popBackStack()
                 }
             }

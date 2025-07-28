@@ -7,13 +7,12 @@ import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
-import java.util.UUID
 import javax.inject.Inject
 
 class InferenceResultRepositoryImplementation @Inject constructor(
     private val inferenceResultDao: InferenceResultDao
 ) : InferenceResultRepository {
-    override suspend fun insertInferenceResult(inferenceResult: InferenceResult, specimenImageId: UUID): Result<Unit, RoomDbError> {
+    override suspend fun insertInferenceResult(inferenceResult: InferenceResult, specimenImageId: String): Result<Unit, RoomDbError> {
         return try {
             inferenceResultDao.insertInferenceResult(inferenceResult.toEntity(specimenImageId))
             Result.Success(Unit)
@@ -24,9 +23,12 @@ class InferenceResultRepositoryImplementation @Inject constructor(
         }
     }
 
-    override suspend fun updateInferenceResult(inferenceResult: InferenceResult, specimenImageId: UUID): Result<Unit, RoomDbError> {
+    override suspend fun updateInferenceResult(inferenceResult: InferenceResult, specimenImageId: String): Result<Unit, RoomDbError> {
         return try {
-            inferenceResultDao.updateInferenceResult(inferenceResult.toEntity(specimenImageId))
+            val updatedRows = inferenceResultDao.updateInferenceResult(inferenceResult.toEntity(specimenImageId))
+            if (updatedRows == 0) {
+                Result.Error(RoomDbError.NO_ROWS_AFFECTED)
+            }
             Result.Success(Unit)
         } catch (e: SQLiteConstraintException) {
             Result.Error(RoomDbError.CONSTRAINT_VIOLATION)
