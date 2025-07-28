@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -66,17 +68,21 @@ fun CapturedSpecimenTile(
 
     InfoTile(modifier = modifier) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .padding(vertical = MaterialTheme.dimensions.paddingLarge)
+                .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxHeight()
+                    .padding(horizontal = MaterialTheme.dimensions.paddingLarge)
+                    .fillMaxWidth()
                     .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
-                    .weight(1f, fill = false)
                     .align(Alignment.CenterHorizontally)
             ) {
                 BoxWithConstraints(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .aspectRatio(
                             1f / MaterialTheme.dimensions.aspectRatio,
                             matchHeightConstraintsFirst = false
@@ -85,21 +91,20 @@ fun CapturedSpecimenTile(
                 ) {
                     val containerSize = IntSize(
                         width = with(density) { maxWidth.roundToPx() },
-                        height = with(density) { maxHeight.roundToPx() })
+                        height = with(density) { maxHeight.roundToPx() }
+                    )
 
-                    Box(
-                        modifier = Modifier
-                            .zoomPanGesture(containerSize)
-                    ) {
+                    Box(modifier = Modifier.zoomPanGesture(containerSize)) {
                         if (specimenBitmap != null) {
                             Image(
                                 bitmap = specimenBitmap.asImageBitmap(),
                                 contentDescription = specimen.id,
-                                contentScale = ContentScale.FillBounds,
+                                contentScale = ContentScale.FillBounds
                             )
                         } else if (specimenImage.imageUri != Uri.EMPTY) {
                             AsyncImage(
-                                model = ImageRequest.Builder(context).data(specimenImage.imageUri)
+                                model = ImageRequest.Builder(context)
+                                    .data(specimenImage.imageUri)
                                     .crossfade(true)
                                     .build(),
                                 contentDescription = specimen.id,
@@ -109,13 +114,13 @@ fun CapturedSpecimenTile(
 
                         inferenceResult?.let {
                             BoundingBoxOverlay(
-                                inferenceResult = inferenceResult, overlaySize = containerSize
+                                inferenceResult = it,
+                                overlaySize = containerSize
                             )
                         }
                     }
                 }
-
-                if (badgeText != null) {
+                badgeText?.let {
                     Badge(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
@@ -124,17 +129,17 @@ fun CapturedSpecimenTile(
                         contentColor = MaterialTheme.colors.buttonText
                     ) {
                         Text(
-                            text = badgeText,
+                            text = it,
                             style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.padding(MaterialTheme.dimensions.paddingSmall)
+                            modifier = Modifier.padding(MaterialTheme.dimensions.paddingExtraSmall)
                         )
                     }
                 }
             }
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
-                modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingLarge)
             ) {
                 if (onSpecimenIdCorrected == null) {
                     Row(
@@ -167,9 +172,8 @@ fun CapturedSpecimenTile(
                             label = "Specimen ID",
                             value = specimen.id,
                             onValueChange = onSpecimenIdCorrected,
-                            singleLine = true,
+                            singleLine = true
                         )
-
                         InfoPill(
                             text = "Please ensure that the specimen ID is correct!",
                             color = MaterialTheme.colors.warning,
@@ -178,23 +182,17 @@ fun CapturedSpecimenTile(
                     }
                 }
 
-                Text(
-                    text = if (specimenImage.species != null) "Species: ${specimenImage.species}" else "",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colors.textPrimary
-                )
-
-                Text(
-                    text = if (specimenImage.sex != null) "Sex: ${specimenImage.sex}" else "",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colors.textPrimary
-                )
-
-                Text(
-                    text = if (specimenImage.abdomenStatus != null) "Abdomen Status: ${specimenImage.abdomenStatus}" else "",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colors.textPrimary
-                )
+                listOfNotNull(
+                    specimenImage.species?.let { "Species: $it" },
+                    specimenImage.sex?.let { "Sex: $it" },
+                    specimenImage.abdomenStatus?.let { "Abdomen Status: $it" }
+                ).forEach {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
             }
 
             if (onSpecimenIdCorrected == null) {
@@ -208,8 +206,9 @@ fun CapturedSpecimenTile(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colors.textPrimary,
                     modifier = Modifier.padding(
-                        horizontal = MaterialTheme.dimensions.paddingLarge,
-                        vertical = MaterialTheme.dimensions.paddingMedium
+                        start = MaterialTheme.dimensions.paddingLarge,
+                        end = MaterialTheme.dimensions.paddingLarge,
+                        top = MaterialTheme.dimensions.paddingSmall
                     )
                 )
             }

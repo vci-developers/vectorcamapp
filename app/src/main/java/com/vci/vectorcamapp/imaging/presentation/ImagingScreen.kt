@@ -62,6 +62,8 @@ import androidx.compose.material3.TextButton
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun ImagingScreen(
@@ -182,7 +184,11 @@ fun ImagingScreen(
                 }
 
                 Column(
-                    verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxSize()
+                    modifier = modifier
+                        .padding(top = MaterialTheme.dimensions.paddingSmall)
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     CapturedSpecimenTile(
                         specimen = state.currentSpecimen,
@@ -190,22 +196,28 @@ fun ImagingScreen(
                         inferenceResult = state.currentInferenceResult,
                         specimenBitmap = specimenBitmap,
                         onSpecimenIdCorrected = { onAction(ImagingAction.CorrectSpecimenId(it)) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = MaterialTheme.dimensions.paddingSmall)
                     )
 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.paddingSmall),
-                        modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingSmall)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
                     ) {
                         ActionButton(
                             label = "Retake Image",
                             onClick = { onAction(ImagingAction.RetakeImage) },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            textSize = MaterialTheme.typography.bodyMedium
                         )
                         ActionButton(
                             label = "Save To Session",
                             onClick = { onAction(ImagingAction.SaveImageToSession) },
-                            modifier = Modifier.weight(1.1f)
+                            modifier = Modifier.weight(1f),
+                            textSize = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
