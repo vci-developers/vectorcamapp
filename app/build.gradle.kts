@@ -174,6 +174,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4) // Compose JUnit testing
     debugImplementation(libs.androidx.ui.tooling) // Debugging tools for Compose
     debugImplementation(libs.androidx.ui.test.manifest) // Debugging Compose manifest tests
+    testImplementation(libs.turbine) // Turbine for testing flows
+    testImplementation(libs.truth) // Truth library for assertions in tests
+    testImplementation(libs.mockito.core) // Mockito for mocking in tests
+    testImplementation(libs.kotlinx.coroutines.test) // Coroutines testing library
 }
 
 sentry {
