@@ -77,7 +77,6 @@ class LandingScreenTest {
         rule.onNodeWithText("Yes, resume").performClick()
         assert(lastAction == LandingAction.ResumeSession)
 
-        // reset and test "No, start new"
         lastAction = null
         rule.onNodeWithText("No, start new").performClick()
         assert(lastAction == LandingAction.DismissResumePrompt)
