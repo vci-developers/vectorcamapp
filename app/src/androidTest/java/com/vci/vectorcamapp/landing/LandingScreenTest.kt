@@ -34,7 +34,7 @@ class LandingScreenTest {
         rule.setContent {
             LandingScreen(state = state, onAction = {}, modifier = Modifier)
         }
-        rule.onNode(hasText("3") and hasParent(hasContentDescription("Action Icon")))
+        rule.onNodeWithText("3", useUnmergedTree = true)
             .assertIsDisplayed()
     }
 
@@ -81,5 +81,48 @@ class LandingScreenTest {
         lastAction = null
         rule.onNodeWithText("No, start new").performClick()
         assert(lastAction == LandingAction.DismissResumePrompt)
+    }
+
+    @Test fun badge_notDisplayed_whenCountZero() {
+        val state = LandingState(
+            enrolledProgram = com.vci.vectorcamapp.core.domain.model.Program(0, "", ""),
+            incompleteSessionsCount = 0
+        )
+        rule.setContent {
+            LandingScreen(state = state, onAction = {}, modifier = Modifier)
+        }
+        rule.onAllNodes(hasText("0")).assertCountEquals(0)
+    }
+
+    @Test fun resumeDialog_notShown_whenFlagFalse() {
+        val state = LandingState(
+            enrolledProgram = com.vci.vectorcamapp.core.domain.model.Program(0, "", ""),
+            showResumeDialog = false
+        )
+        rule.setContent {
+            LandingScreen(state = state, onAction = {}, modifier = Modifier)
+        }
+        rule.onNodeWithText("Resume unfinished session?").assertDoesNotExist()
+    }
+
+    @Test fun sectionHeaders_areRendered() {
+        val state = LandingState(
+            enrolledProgram = com.vci.vectorcamapp.core.domain.model.Program(0, "", "")
+        )
+        rule.setContent {
+            LandingScreen(state = state, onAction = {}, modifier = Modifier)
+        }
+        rule.onNodeWithText("Imaging").assertIsDisplayed()
+        rule.onNodeWithText("Library").assertIsDisplayed()
+    }
+
+    @Test fun tileDescription_showsExpectedText() {
+        val state = LandingState(
+            enrolledProgram = com.vci.vectorcamapp.core.domain.model.Program(0, "", "")
+        )
+        rule.setContent {
+            LandingScreen(state = state, onAction = {}, modifier = Modifier)
+        }
+        rule.onNodeWithText("Begin a new household visit and capture mosquito images.").assertIsDisplayed()
     }
 }

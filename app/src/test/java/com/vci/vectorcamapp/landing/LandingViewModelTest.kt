@@ -14,6 +14,7 @@ import com.vci.vectorcamapp.landing.presentation.LandingEvent
 import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.*
@@ -226,6 +227,63 @@ class LandingViewModelTest {
 
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test
+    fun `initial load with valid program and no session keeps showResumeDialog false`() = runTest {
+        `when`(deviceCache.getProgramId()).thenReturn(7)
+        `when`(programRepo.getProgramById(7))
+            .thenReturn(Program(id = 7, name = "Valid", country = "US"))
+        `when`(currentSessionCache.getSession()).thenReturn(null)
+        `when`(sessionRepo.observeIncompleteSessions())
+            .thenReturn(flowOf(emptyList<Session>()))
+
+        vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
+
+        val stateJob = launch { vm.state.collect { /* no-op */ } }
+        advanceUntilIdle()
+
+        assertThat(vm.state.value.isLoading).isFalse()
+        assertThat(vm.state.value.showResumeDialog).isFalse()
+        assertThat(vm.state.value.enrolledProgram.name).isEqualTo("Valid")
+
+        stateJob.cancel()
+    }
+
+    /**
+     * If the repository emits a new list of incomplete sessions, the StateFlow’s
+     * `incompleteSessionsCount` should update to match.
+     */
+    @Test
+    fun `incompleteSessionsCount updates when underlying flow emits`() = runTest {
+        // MutableSharedFlow lets us push new values after the VM is created
+        val incompleteFlow = MutableSharedFlow<List<Session>>(replay = 1)
+        incompleteFlow.tryEmit(emptyList())           // initial emission
+
+        `when`(deviceCache.getProgramId()).thenReturn(5)
+        `when`(programRepo.getProgramById(5))
+            .thenReturn(Program(id = 5, name = "Prog", country = "XX"))
+        `when`(currentSessionCache.getSession()).thenReturn(null)
+        `when`(sessionRepo.observeIncompleteSessions()).thenReturn(incompleteFlow)
+
+        vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
+
+        // start collection so counts propagate
+        val counts = mutableListOf<Int>()
+        val stateJob = launch {
+            vm.state.collect { counts += it.incompleteSessionsCount }
+        }
+        advanceUntilIdle()            // pick up the initial emptyList() -> 0
+
+        // push two more emissions: 1 item, then 4 items
+        incompleteFlow.emit(listOf(makeSession(SessionType.SURVEILLANCE)))
+        incompleteFlow.emit(List(4) { makeSession(SessionType.DATA_COLLECTION) })
+        advanceUntilIdle()
+
+        // The last collected count should be 4
+        assertThat(counts.last()).isEqualTo(4)
+
+        stateJob.cancel()
     }
 }
 
