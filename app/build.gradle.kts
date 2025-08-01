@@ -6,6 +6,32 @@ if (secretsFile.exists()) {
     secretsFile.inputStream().use { secretsProperties.load(it) }
 }
 
+// Region configuration
+val region = project.findProperty("region")?.toString()?.lowercase() ?: "default"
+println("✅ Building VectorCam for region: $region")
+
+fun getRegionBasedVersionCode(): Int {
+    return when (region) {
+        "colombia" -> 1002
+        "uganda" -> 2000
+        else -> {
+            println("⚠️ Unknown region '$region', using default version code")
+            3000
+        }
+    }
+}
+
+fun getRegionBasedVersionName(): String {
+    return when (region) {
+        "colombia" -> "1.0.2"
+        "uganda" -> "1.0.0"
+        else -> {
+            println("⚠️ Unknown region '$region', using default version name")
+            "1.0.0"
+        }
+    }
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -25,8 +51,9 @@ android {
         applicationId = "com.vci.vectorcamapp"
         minSdk = 29
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+
+        versionCode = getRegionBasedVersionCode()
+        versionName = getRegionBasedVersionName()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
