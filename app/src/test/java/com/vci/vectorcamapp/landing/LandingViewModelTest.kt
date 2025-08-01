@@ -240,7 +240,7 @@ class LandingViewModelTest {
 
         vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
 
-        val stateJob = launch { vm.state.collect { /* no-op */ } }
+        val stateJob = launch { vm.state.collect { } }
         advanceUntilIdle()
 
         assertThat(vm.state.value.isLoading).isFalse()
@@ -250,15 +250,10 @@ class LandingViewModelTest {
         stateJob.cancel()
     }
 
-    /**
-     * If the repository emits a new list of incomplete sessions, the StateFlow’s
-     * `incompleteSessionsCount` should update to match.
-     */
     @Test
     fun `incompleteSessionsCount updates when underlying flow emits`() = runTest {
-        // MutableSharedFlow lets us push new values after the VM is created
         val incompleteFlow = MutableSharedFlow<List<Session>>(replay = 1)
-        incompleteFlow.tryEmit(emptyList())           // initial emission
+        incompleteFlow.tryEmit(emptyList())
 
         `when`(deviceCache.getProgramId()).thenReturn(5)
         `when`(programRepo.getProgramById(5))
@@ -268,19 +263,16 @@ class LandingViewModelTest {
 
         vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
 
-        // start collection so counts propagate
         val counts = mutableListOf<Int>()
         val stateJob = launch {
             vm.state.collect { counts += it.incompleteSessionsCount }
         }
-        advanceUntilIdle()            // pick up the initial emptyList() -> 0
+        advanceUntilIdle()
 
-        // push two more emissions: 1 item, then 4 items
         incompleteFlow.emit(listOf(makeSession(SessionType.SURVEILLANCE)))
         incompleteFlow.emit(List(4) { makeSession(SessionType.DATA_COLLECTION) })
         advanceUntilIdle()
 
-        // The last collected count should be 4
         assertThat(counts.last()).isEqualTo(4)
 
         stateJob.cancel()
