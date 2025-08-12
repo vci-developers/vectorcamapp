@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.landing
+package com.vci.vectorcamapp.landing.presentation.components
 
 import androidx.compose.material3.Text
 import androidx.compose.ui.res.painterResource
@@ -9,8 +9,6 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.landing.presentation.components.LandingActionTile
-import com.vci.vectorcamapp.landing.presentation.components.LandingSection
 import junit.framework.TestCase
 import org.junit.Rule
 import org.junit.Test

@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.landing
+package com.vci.vectorcamapp.landing.presentation
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
@@ -9,40 +9,37 @@ import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
-import com.vci.vectorcamapp.landing.presentation.LandingAction
-import com.vci.vectorcamapp.landing.presentation.LandingEvent
-import com.vci.vectorcamapp.landing.presentation.LandingViewModel
-import kotlinx.coroutines.Dispatchers
+import com.vci.vectorcamapp.core.rules.MainDispatcherRule
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.*
-import org.junit.After
-import org.junit.Before
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestWatcher
-import org.junit.runner.Description
-import org.mockito.Mockito.*
 import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LandingViewModelTest {
 
     @get:Rule
-    val dispatcherRule = StandardTestDispatcherRule()
+    val dispatcherRule = MainDispatcherRule()
 
-    private lateinit var deviceCache: DeviceCache
-    private lateinit var currentSessionCache: CurrentSessionCache
-    private lateinit var programRepo: ProgramRepository
-    private lateinit var sessionRepo: SessionRepository
+    private val deviceCache: DeviceCache                = mockk(relaxed = true)
+    private val currentSessionCache: CurrentSessionCache = mockk(relaxed = true)
+    private val programRepo: ProgramRepository           = mockk(relaxed = true)
+    private val sessionRepo: SessionRepository           = mockk(relaxed = true)
     private lateinit var vm: LandingViewModel
 
     private fun makeSession(type: SessionType) = Session(
-        localId      = UUID.randomUUID(),
-        remoteId     = null,
-        houseNumber  = "1",
+        localId          = UUID.randomUUID(),
+        remoteId         = null,
+        houseNumber      = "1",
         collectorTitle   = "Dr.",
         collectorName    = "Alice",
         collectionDate   = 1_632_000_000L,
@@ -57,27 +54,14 @@ class LandingViewModelTest {
         type             = type
     )
 
-    @Before fun setup() {
-        deviceCache         = mock(DeviceCache::class.java)
-        currentSessionCache = mock(CurrentSessionCache::class.java)
-        programRepo         = mock(ProgramRepository::class.java)
-        sessionRepo         = mock(SessionRepository::class.java)
-    }
-
-    @After fun tearDown() {
-        Dispatchers.resetMain()
-    }
-
     @Test
     fun `when no programId, navigate back immediately`() = runTest {
-        `when`(deviceCache.getProgramId()).thenReturn(null)
-        `when`(sessionRepo.observeIncompleteSessions())
-            .thenReturn(flowOf(emptyList<Session>()))
+        coEvery { deviceCache.getProgramId() } returns null
+        every  { sessionRepo.observeIncompleteSessions() } returns flowOf(emptyList())
 
         vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
 
         val stateJob = launch { vm.state.collect { } }
-
         advanceUntilIdle()
 
         vm.events.test {
@@ -91,18 +75,16 @@ class LandingViewModelTest {
 
         stateJob.cancel()
     }
-
 
     @Test
     fun `when programId present but programRepo returns null, navigate back`() = runTest {
-        `when`(deviceCache.getProgramId()).thenReturn(1)
-        `when`(programRepo.getProgramById(1)).thenReturn(null)
-        `when`(sessionRepo.observeIncompleteSessions())
-            .thenReturn(flowOf(emptyList()))
+        coEvery { deviceCache.getProgramId() } returns 1
+        coEvery { programRepo.getProgramById(1) } returns null
+        every  { sessionRepo.observeIncompleteSessions() } returns flowOf(emptyList())
 
         vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
 
-        val stateJob = launch { vm.state.collect {} }
+        val stateJob = launch { vm.state.collect { } }
         advanceUntilIdle()
 
         vm.events.test {
@@ -112,28 +94,22 @@ class LandingViewModelTest {
         }
 
         advanceUntilIdle()
-
         assertThat(vm.state.value.isLoading).isFalse()
 
         stateJob.cancel()
     }
 
-
     @Test
     fun `when session exists, showResumeDialog is true`() = runTest {
-        `when`(deviceCache.getProgramId()).thenReturn(1)
-        `when`(programRepo.getProgramById(1))
-            .thenReturn(Program(id = 1, name = "Test", country = "XY"))
-
         val dummy = makeSession(SessionType.DATA_COLLECTION)
-        `when`(currentSessionCache.getSession()).thenReturn(dummy)
-        `when`(sessionRepo.observeIncompleteSessions())
-            .thenReturn(flowOf(emptyList()))
+        coEvery { deviceCache.getProgramId() } returns 1
+        coEvery { programRepo.getProgramById(1) } returns Program(1, "Test", "XY")
+        coEvery { currentSessionCache.getSession() } returns dummy
+        every  { sessionRepo.observeIncompleteSessions() } returns flowOf(emptyList())
 
         vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
 
         val stateJob = launch { vm.state.collect { } }
-
         advanceUntilIdle()
 
         assertThat(vm.state.value.showResumeDialog).isTrue()
@@ -142,39 +118,39 @@ class LandingViewModelTest {
         stateJob.cancel()
     }
 
-
-    @Test fun `resume action emits NavigateToIntakeScreen with correct type`() = runTest {
-        `when`(deviceCache.getProgramId()).thenReturn(1)
-        `when`(programRepo.getProgramById(1))
-            .thenReturn(Program(id = 1, name = "X", country = "ZZ"))
-
-        val dummy = makeSession(SessionType.SURVEILLANCE)
-        `when`(currentSessionCache.getSession()).thenReturn(dummy)
-        `when`(sessionRepo.observeIncompleteSessions())
-            .thenReturn(flowOf(emptyList()))
+    @Test
+    fun `resume action emits NavigateToIntakeScreen with correct type`() = runTest {
+        val surv = makeSession(SessionType.SURVEILLANCE)
+        coEvery { deviceCache.getProgramId() } returns 1
+        coEvery { programRepo.getProgramById(1) } returns Program(1, "X", "ZZ")
+        coEvery { currentSessionCache.getSession() } returns surv
+        every  { sessionRepo.observeIncompleteSessions() } returns flowOf(emptyList())
 
         vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
+
+        val stateJob = launch { vm.state.collect { } }
         advanceUntilIdle()
 
         vm.events.test {
             vm.onAction(LandingAction.ResumeSession)
+            advanceUntilIdle()
             assertThat(awaitItem())
                 .isEqualTo(LandingEvent.NavigateToIntakeScreen(SessionType.SURVEILLANCE))
             cancelAndIgnoreRemainingEvents()
         }
+
         assertThat(vm.state.value.showResumeDialog).isFalse()
+
+        stateJob.cancel()
     }
 
     @Test
     fun `dismiss resume clears session and hides dialog`() = runTest {
-        `when`(deviceCache.getProgramId()).thenReturn(1)
-        `when`(programRepo.getProgramById(1))
-            .thenReturn(Program(id = 1, name = "P", country = "CC"))
-
         val dummy = makeSession(SessionType.DATA_COLLECTION)
-        `when`(currentSessionCache.getSession()).thenReturn(dummy)
-        `when`(sessionRepo.observeIncompleteSessions())
-            .thenReturn(flowOf(emptyList<Session>()))
+        coEvery { deviceCache.getProgramId() } returns 1
+        coEvery { programRepo.getProgramById(1) } returns Program(1, "P", "CC")
+        coEvery { currentSessionCache.getSession() } returns dummy
+        every  { sessionRepo.observeIncompleteSessions() } returns flowOf(emptyList())
 
         vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
 
@@ -184,26 +160,22 @@ class LandingViewModelTest {
         vm.onAction(LandingAction.DismissResumePrompt)
         advanceUntilIdle()
 
-        // assert
-        verify(currentSessionCache).clearSession()
+        coVerify { currentSessionCache.clearSession() }
         assertThat(vm.state.value.showResumeDialog).isFalse()
 
         stateJob.cancel()
     }
 
-
-    @Test fun `action tiles emit correct events`() = runTest {
-        `when`(deviceCache.getProgramId()).thenReturn(1)
-        `when`(programRepo.getProgramById(1))
-            .thenReturn(Program(id = 1, name = "P", country = "CC"))
-
-        `when`(currentSessionCache.getSession()).thenReturn(null)
+    @Test
+    fun `action tiles emit correct events`() = runTest {
+        coEvery { deviceCache.getProgramId() } returns 1
+        coEvery { programRepo.getProgramById(1) } returns Program(1, "P", "CC")
+        coEvery { currentSessionCache.getSession() } returns null
         val list = listOf(
             makeSession(SessionType.SURVEILLANCE),
             makeSession(SessionType.DATA_COLLECTION)
         )
-        `when`(sessionRepo.observeIncompleteSessions())
-            .thenReturn(flowOf(list))
+        every { sessionRepo.observeIncompleteSessions() } returns flowOf(list)
 
         vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
         advanceUntilIdle()
@@ -231,12 +203,10 @@ class LandingViewModelTest {
 
     @Test
     fun `initial load with valid program and no session keeps showResumeDialog false`() = runTest {
-        `when`(deviceCache.getProgramId()).thenReturn(7)
-        `when`(programRepo.getProgramById(7))
-            .thenReturn(Program(id = 7, name = "Valid", country = "US"))
-        `when`(currentSessionCache.getSession()).thenReturn(null)
-        `when`(sessionRepo.observeIncompleteSessions())
-            .thenReturn(flowOf(emptyList<Session>()))
+        coEvery { deviceCache.getProgramId() } returns 7
+        coEvery { programRepo.getProgramById(7) } returns Program(7, "Valid", "US")
+        coEvery { currentSessionCache.getSession() } returns null
+        every  { sessionRepo.observeIncompleteSessions() } returns flowOf(emptyList())
 
         vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
 
@@ -252,21 +222,16 @@ class LandingViewModelTest {
 
     @Test
     fun `incompleteSessionsCount updates when underlying flow emits`() = runTest {
-        val incompleteFlow = MutableSharedFlow<List<Session>>(replay = 1)
-        incompleteFlow.tryEmit(emptyList())
-
-        `when`(deviceCache.getProgramId()).thenReturn(5)
-        `when`(programRepo.getProgramById(5))
-            .thenReturn(Program(id = 5, name = "Prog", country = "XX"))
-        `when`(currentSessionCache.getSession()).thenReturn(null)
-        `when`(sessionRepo.observeIncompleteSessions()).thenReturn(incompleteFlow)
+        val incompleteFlow = MutableSharedFlow<List<Session>>(replay = 1).apply { tryEmit(emptyList()) }
+        coEvery { deviceCache.getProgramId() } returns 5
+        coEvery { programRepo.getProgramById(5) } returns Program(5, "Prog", "XX")
+        coEvery { currentSessionCache.getSession() } returns null
+        every { sessionRepo.observeIncompleteSessions() } returns incompleteFlow
 
         vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
 
         val counts = mutableListOf<Int>()
-        val stateJob = launch {
-            vm.state.collect { counts += it.incompleteSessionsCount }
-        }
+        val stateJob = launch { vm.state.collect { counts += it.incompleteSessionsCount } }
         advanceUntilIdle()
 
         incompleteFlow.emit(listOf(makeSession(SessionType.SURVEILLANCE)))
@@ -276,18 +241,5 @@ class LandingViewModelTest {
         assertThat(counts.last()).isEqualTo(4)
 
         stateJob.cancel()
-    }
-}
-
-@OptIn(ExperimentalCoroutinesApi::class)
-class StandardTestDispatcherRule(
-    private val testDispatcher: TestDispatcher = StandardTestDispatcher()
-) : TestWatcher() {
-    override fun starting(description: Description?) {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    override fun finished(description: Description?) {
-        Dispatchers.resetMain()
     }
 }

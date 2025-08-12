@@ -1,11 +1,13 @@
-package com.vci.vectorcamapp.landing
+package com.vci.vectorcamapp.landing.presentation
 
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.vci.vectorcamapp.landing.presentation.LandingAction
-import com.vci.vectorcamapp.landing.presentation.LandingScreen
-import com.vci.vectorcamapp.landing.presentation.LandingState
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import com.vci.vectorcamapp.core.domain.model.Program
 import org.junit.Rule
 import org.junit.Test
 
@@ -17,31 +19,34 @@ class LandingScreenTest {
     private val dummyProgramName = "My Program"
     private val dummyCountryName = "My Country"
 
-    @Test fun header_showsProgramName() {
-        val state = LandingState(enrolledProgram = com.vci.vectorcamapp.core.domain.model.Program(0, dummyProgramName, dummyCountryName))
+    @Test
+    fun header_showsProgramName() {
+        val state = LandingState(enrolledProgram = Program(0, dummyProgramName, dummyCountryName))
         rule.setContent {
-            LandingScreen(state = state, onAction = {}, modifier = Modifier)
+            LandingScreen(state = state, onAction = {}, modifier = Modifier.Companion)
         }
         rule.onNodeWithText("Program: $dummyProgramName")
             .assertIsDisplayed()
     }
 
-    @Test fun incompleteBadge_showsCount() {
+    @Test
+    fun incompleteBadge_showsCount() {
         val state = LandingState(
-            enrolledProgram = com.vci.vectorcamapp.core.domain.model.Program(0, "", ""),
+            enrolledProgram = Program(0, "", ""),
             incompleteSessionsCount = 3
         )
         rule.setContent {
-            LandingScreen(state = state, onAction = {}, modifier = Modifier)
+            LandingScreen(state = state, onAction = {}, modifier = Modifier.Companion)
         }
         rule.onNodeWithText("3", useUnmergedTree = true)
             .assertIsDisplayed()
     }
 
-    @Test fun clickingTiles_triggersCallbacks() {
+    @Test
+    fun clickingTiles_triggersCallbacks() {
         var lastAction: LandingAction? = null
         val state = LandingState(
-            enrolledProgram = com.vci.vectorcamapp.core.domain.model.Program(0, "", ""),
+            enrolledProgram = Program(0, "", ""),
             incompleteSessionsCount = 0
         )
 
@@ -62,10 +67,11 @@ class LandingScreenTest {
         assert(lastAction == LandingAction.ViewCompleteSessions)
     }
 
-    @Test fun showResumeDialog_whenFlagTrue() {
+    @Test
+    fun showResumeDialog_whenFlagTrue() {
         var lastAction: LandingAction? = null
         val state = LandingState(
-            enrolledProgram = com.vci.vectorcamapp.core.domain.model.Program(0, "", ""),
+            enrolledProgram = Program(0, "", ""),
             showResumeDialog = true
         )
 
@@ -82,45 +88,49 @@ class LandingScreenTest {
         assert(lastAction == LandingAction.DismissResumePrompt)
     }
 
-    @Test fun badge_notDisplayed_whenCountZero() {
+    @Test
+    fun badge_notDisplayed_whenCountZero() {
         val state = LandingState(
-            enrolledProgram = com.vci.vectorcamapp.core.domain.model.Program(0, "", ""),
+            enrolledProgram = Program(0, "", ""),
             incompleteSessionsCount = 0
         )
         rule.setContent {
-            LandingScreen(state = state, onAction = {}, modifier = Modifier)
+            LandingScreen(state = state, onAction = {}, modifier = Modifier.Companion)
         }
         rule.onAllNodes(hasText("0")).assertCountEquals(0)
     }
 
-    @Test fun resumeDialog_notShown_whenFlagFalse() {
+    @Test
+    fun resumeDialog_notShown_whenFlagFalse() {
         val state = LandingState(
-            enrolledProgram = com.vci.vectorcamapp.core.domain.model.Program(0, "", ""),
+            enrolledProgram = Program(0, "", ""),
             showResumeDialog = false
         )
         rule.setContent {
-            LandingScreen(state = state, onAction = {}, modifier = Modifier)
+            LandingScreen(state = state, onAction = {}, modifier = Modifier.Companion)
         }
         rule.onNodeWithText("Resume unfinished session?").assertDoesNotExist()
     }
 
-    @Test fun sectionHeaders_areRendered() {
+    @Test
+    fun sectionHeaders_areRendered() {
         val state = LandingState(
-            enrolledProgram = com.vci.vectorcamapp.core.domain.model.Program(0, "", "")
+            enrolledProgram = Program(0, "", "")
         )
         rule.setContent {
-            LandingScreen(state = state, onAction = {}, modifier = Modifier)
+            LandingScreen(state = state, onAction = {}, modifier = Modifier.Companion)
         }
         rule.onNodeWithText("Imaging").assertIsDisplayed()
         rule.onNodeWithText("Library").assertIsDisplayed()
     }
 
-    @Test fun tileDescription_showsExpectedText() {
+    @Test
+    fun tileDescription_showsExpectedText() {
         val state = LandingState(
-            enrolledProgram = com.vci.vectorcamapp.core.domain.model.Program(0, "", "")
+            enrolledProgram = Program(0, "", "")
         )
         rule.setContent {
-            LandingScreen(state = state, onAction = {}, modifier = Modifier)
+            LandingScreen(state = state, onAction = {}, modifier = Modifier.Companion)
         }
         rule.onNodeWithText("Begin a new household visit and capture mosquito images.").assertIsDisplayed()
     }

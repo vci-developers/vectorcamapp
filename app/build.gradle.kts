@@ -168,16 +168,16 @@ dependencies {
 
     // Testing Dependencies
     testImplementation(libs.junit) // JUnit for unit tests
+    testImplementation(libs.truth) // Google truth library for assertions
+    testImplementation(libs.kotlinx.coroutines.test) // Kotlin coroutines test library
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
     androidTestImplementation(libs.androidx.junit) // AndroidX JUnit test library
     androidTestImplementation(libs.androidx.espresso.core) // Espresso for UI testing
     androidTestImplementation(platform(libs.androidx.compose.bom)) // Compose testing BOM
     androidTestImplementation(libs.androidx.ui.test.junit4) // Compose JUnit testing
     debugImplementation(libs.androidx.ui.tooling) // Debugging tools for Compose
     debugImplementation(libs.androidx.ui.test.manifest) // Debugging Compose manifest tests
-    testImplementation(libs.turbine) // Turbine for testing flows
-    testImplementation(libs.truth) // Truth library for assertions in tests
-    testImplementation(libs.mockito.core) // Mockito for mocking in tests
-    testImplementation(libs.kotlinx.coroutines.test) // Coroutines testing library
 }
 
 sentry {
