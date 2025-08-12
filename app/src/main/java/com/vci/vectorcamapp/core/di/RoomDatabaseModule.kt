@@ -7,7 +7,6 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
 import com.vci.vectorcamapp.core.data.dto.site.SiteDto
-import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.room.VectorCamDatabase
 import com.vci.vectorcamapp.core.data.room.dao.InferenceResultDao
@@ -23,11 +22,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import javax.inject.Provider
 import javax.inject.Singleton
 
 private const val DB_NAME = "vectorcam.db"
@@ -42,34 +37,100 @@ object RoomDatabaseModule {
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context,
-        programDaoProvider: Provider<ProgramDao>,
-        siteDaoProvider: Provider<SiteDao>,
     ): VectorCamDatabase {
         return Room.databaseBuilder(
             context,
             VectorCamDatabase::class.java,
             DB_NAME,
         ).addCallback(object : RoomDatabase.Callback() {
-            override fun onCreate(db: SupportSQLiteDatabase) {
-                super.onCreate(db)
-                CoroutineScope(Dispatchers.IO).launch {
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                super.onOpen(db)
+
+                try {
+                    val programsJson = context.assets.open(PROGRAM_DATA_FILENAME).bufferedReader()
+                        .use { it.readText() }
+                    val sitesJson = context.assets.open(SITE_DATA_FILENAME).bufferedReader()
+                        .use { it.readText() }
+
+                    val programs = Json.decodeFromString<List<ProgramDto>>(programsJson)
+                    val sites = Json.decodeFromString<List<SiteDto>>(sitesJson)
+
+                    db.beginTransaction()
                     try {
-                        val programsJson = context.assets.open(PROGRAM_DATA_FILENAME)
-                            .bufferedReader()
-                            .use { it.readText() }
-                        val sitesJson = context.assets.open(SITE_DATA_FILENAME)
-                            .bufferedReader()
-                            .use { it.readText() }
+                        // Use direct SQL to avoid circular dependency
+                        programs.forEach { program ->
+                            db.execSQL(
+                                """
+                                    INSERT OR IGNORE INTO `program` (`id`, `name`, `country`) VALUES (?, ?, ?)
+                                """.trimIndent(), arrayOf(program.id, program.name, program.country)
+                            )
 
-                        val programEntities = Json.decodeFromString<List<ProgramDto>>(programsJson).map { it.toEntity() }
-                        val siteEntities = Json.decodeFromString<List<SiteDto>>(sitesJson).map { it.toEntity() }
+                            db.execSQL(
+                                """
+                                    UPDATE `program`
+                                        SET `name` = ?, `country` = ?
+                                    WHERE `id` = ?
+                                        AND (`name` != ? OR `country` != ?)
+                                """.trimIndent(), arrayOf(
+                                    program.name,
+                                    program.country,
+                                    program.id,
+                                    program.name,
+                                    program.country
+                                )
+                            )
+                        }
 
-                        programDaoProvider.get().insertAll(programEntities)
-                        siteDaoProvider.get().insertAll(siteEntities)
-                        Log.i("RoomCallback", "Seeded ${programEntities.size} programs, ${siteEntities.size} sites")
-                    } catch (e: Exception) {
-                        Log.e("RoomCallback", "Error seeding DB", e)
+                        sites.forEach { site ->
+                            db.execSQL(
+                                """
+                                    INSERT OR IGNORE INTO `site` 
+                                        (`id`, `programId`, `district`, `subCounty`, `parish`, `sentinelSite`, `healthCenter`) 
+                                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                                """.trimIndent(), arrayOf(
+                                    site.id,
+                                    site.programId,
+                                    site.district,
+                                    site.subCounty,
+                                    site.parish,
+                                    site.sentinelSite,
+                                    site.healthCenter
+                                )
+                            )
+
+                            db.execSQL(
+                                """
+                                    UPDATE `site`
+                                        SET `programId` = ?, `district` = ?, `subCounty` = ?, `parish` = ?, `sentinelSite` = ?, `healthCenter` = ?
+                                    WHERE `id` = ?
+                                        AND (`programId` != ? OR `district` != ? OR `subCounty` != ? OR `parish` != ? OR `sentinelSite` != ? OR `healthCenter` != ?)
+                                """.trimIndent(), arrayOf(
+                                    site.programId,
+                                    site.district,
+                                    site.subCounty,
+                                    site.parish,
+                                    site.sentinelSite,
+                                    site.healthCenter,
+                                    site.id,
+                                    site.programId,
+                                    site.district,
+                                    site.subCounty,
+                                    site.parish,
+                                    site.sentinelSite,
+                                    site.healthCenter
+                                )
+                            )
+                        }
+
+                        db.setTransactionSuccessful()
+                        Log.i(
+                            "RoomCallback", "Seeded ${programs.size} programs, ${sites.size} sites"
+                        )
+                    } finally {
+                        db.endTransaction()
                     }
+                } catch (e: Exception) {
+                    Log.e("RoomCallback", "Error seeding database", e)
                 }
             }
         }).addMigrations(*ALL_MIGRATIONS).build()
@@ -91,7 +152,8 @@ object RoomDatabaseModule {
     fun provideInferenceResultDao(db: VectorCamDatabase): InferenceResultDao = db.inferenceResultDao
 
     @Provides
-    fun provideSurveillanceFormDao(db: VectorCamDatabase): SurveillanceFormDao = db.surveillanceFormDao
+    fun provideSurveillanceFormDao(db: VectorCamDatabase): SurveillanceFormDao =
+        db.surveillanceFormDao
 
     @Provides
     fun provideProgramDao(db: VectorCamDatabase): ProgramDao = db.programDao

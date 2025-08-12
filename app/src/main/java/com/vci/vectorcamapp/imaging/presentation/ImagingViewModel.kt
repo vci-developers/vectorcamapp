@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.view.OrientationEventListener
 import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
@@ -25,6 +24,7 @@ import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
+import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -54,7 +54,8 @@ class ImagingViewModel @Inject constructor(
     private val specimenImageRepository: SpecimenImageRepository,
     private val inferenceResultRepository: InferenceResultRepository,
     private val cameraRepository: CameraRepository,
-    private val workRepository: WorkManagerRepository
+    private val workRepository: WorkManagerRepository,
+    private val validateSpecimenIdUseCase: ValidateSpecimenIdUseCase,
 ) : CoreViewModel() {
 
     @Inject
@@ -74,15 +75,6 @@ class ImagingViewModel @Inject constructor(
                     .collect { emit(it) }
             }
         }
-
-    private val orientationListener = object : OrientationEventListener(context) {
-        override fun onOrientationChanged(displayOrientation: Int) {
-            val currentRotation = _state.value.displayOrientation
-            if (currentRotation != displayOrientation) {
-                _state.update { it.copy(displayOrientation = displayOrientation) }
-            }
-        }
-    }
 
     private val _state = MutableStateFlow(ImagingState())
     val state: StateFlow<ImagingState> = combine(
@@ -150,14 +142,21 @@ class ImagingViewModel @Inject constructor(
                     }
 
                     try {
-                        val displayOrientation = _state.value.displayOrientation
-                        val bitmap = action.frame.toUprightBitmap(displayOrientation)
+                        val bitmap = action.frame.toUprightBitmap()
 
                         val liveFrameProcessingResult = imagingWorkflow.processLiveFrame(bitmap)
+                        validateSpecimenIdUseCase(
+                            liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
+                        ).onSuccess { correctedSpecimenId ->
+                            _state.update {
+                                it.copy(
+                                    currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId),
+                                )
+                            }
+                        }
 
                         _state.update {
                             it.copy(
-                                currentSpecimen = it.currentSpecimen.copy(id = liveFrameProcessingResult.specimenId),
                                 previewInferenceResults = liveFrameProcessingResult.previewInferenceResults
                             )
                         }
@@ -184,7 +183,9 @@ class ImagingViewModel @Inject constructor(
 
                     val success = sessionRepository.markSessionAsComplete(currentSession.localId)
                     if (success) {
-                        workRepository.enqueueSessionUpload(currentSession.localId, currentSessionSiteId)
+                        workRepository.enqueueSessionUpload(
+                            currentSession.localId, currentSessionSiteId
+                        )
                         currentSessionCache.clearSession()
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
                     }
@@ -197,8 +198,7 @@ class ImagingViewModel @Inject constructor(
                     val captureResult = cameraRepository.captureImage(action.controller)
 
                     captureResult.onSuccess { image ->
-                        val displayOrientation = _state.value.displayOrientation
-                        val bitmap = image.toUprightBitmap(displayOrientation)
+                        val bitmap = image.toUprightBitmap()
                         image.close()
 
                         val jpegStream = ByteArrayOutputStream()
@@ -240,20 +240,29 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 ImagingAction.SaveImageToSession -> {
+                    val currentSession = currentSessionCache.getSession()
+                    if (currentSession == null) {
+                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        return@launch
+                    }
+
+                    val specimenId = when (val validationResult = validateSpecimenIdUseCase(
+                        _state.value.currentSpecimen.id, shouldAutoCorrect = false
+                    )) {
+                        is Result.Success -> validationResult.data
+                        is Result.Error -> {
+                            emitError(validationResult.error)
+                            return@launch
+                        }
+                    }
+
                     val jpegBytes = _state.value.currentImageBytes ?: return@launch
-                    val specimenId = _state.value.currentSpecimen.id
                     val timestamp = System.currentTimeMillis()
                     val filename = buildString {
                         append(specimenId)
                         append("_")
                         append(timestamp)
                         append(".jpg")
-                    }
-
-                    val currentSession = currentSessionCache.getSession()
-                    if (currentSession == null) {
-                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                        return@launch
                     }
 
                     val saveResult = cameraRepository.saveImage(jpegBytes, filename, currentSession)
@@ -329,6 +338,7 @@ class ImagingViewModel @Inject constructor(
             it.copy(
                 currentSpecimen = it.currentSpecimen.copy(
                     id = "",
+                    remoteId = null,
                 ),
                 currentSpecimenImage = it.currentSpecimenImage.copy(
                     localId = "",
@@ -359,7 +369,6 @@ class ImagingViewModel @Inject constructor(
 
     private fun loadImagingDetails() {
         viewModelScope.launch {
-            orientationListener.enable()
             val session = currentSessionCache.getSession()
             if (session != null) {
                 imagingWorkflow = imagingWorkflowFactory.create(session.type)
@@ -372,8 +381,6 @@ class ImagingViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-
-        orientationListener.disable()
         imagingWorkflow.close()
     }
 }
