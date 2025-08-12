@@ -9,17 +9,22 @@ import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
+import com.vci.vectorcamapp.landing.domain.util.LandingError
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.util.UUID
@@ -28,218 +33,305 @@ import java.util.UUID
 class LandingViewModelTest {
 
     @get:Rule
-    val dispatcherRule = MainDispatcherRule()
+    val mainDispatcherRule = MainDispatcherRule()
 
-    private val deviceCache: DeviceCache                = mockk(relaxed = true)
-    private val currentSessionCache: CurrentSessionCache = mockk(relaxed = true)
-    private val programRepo: ProgramRepository           = mockk(relaxed = true)
-    private val sessionRepo: SessionRepository           = mockk(relaxed = true)
-    private lateinit var vm: LandingViewModel
+    private lateinit var deviceCache: DeviceCache
+    private lateinit var sessionCache: CurrentSessionCache
+    private lateinit var programRepository: ProgramRepository
+    private lateinit var sessionRepository: SessionRepository
+    private lateinit var viewModel: LandingViewModel
+
+    // Observed by VM to derive incompleteSessionsCount
+    private lateinit var incompleteFlow: MutableStateFlow<List<Session>>
+
+    @Before
+    fun setUp() {
+        // Error bus
+        mockkObject(ErrorMessageBus)
+        coEvery { ErrorMessageBus.emit(any(), any()) } returns Unit
+
+        // Mocks
+        deviceCache = mockk(relaxed = true)
+        sessionCache = mockk(relaxed = true)
+        programRepository = mockk()
+        sessionRepository = mockk()
+
+        // Default flow
+        incompleteFlow = MutableStateFlow(emptyList())
+        every { sessionRepository.observeIncompleteSessions() } returns incompleteFlow
+    }
+
+    @After
+    fun tearDown() {
+        unmockkObject(ErrorMessageBus)
+    }
+
+    // ========================================
+    // Test Harness / Helpers
+    // ========================================
 
     private fun makeSession(type: SessionType) = Session(
-        localId          = UUID.randomUUID(),
-        remoteId         = null,
-        houseNumber      = "1",
-        collectorTitle   = "Dr.",
-        collectorName    = "Alice",
-        collectionDate   = 1_632_000_000L,
+        localId = UUID.randomUUID(),
+        remoteId = null,
+        houseNumber = "1",
+        collectorTitle = "Dr.",
+        collectorName = "Alice",
+        collectionDate = 1_632_000_000L,
         collectionMethod = "Net",
-        specimenCondition= "Good",
-        createdAt        = 1_632_000_100L,
-        completedAt      = null,
-        submittedAt      = null,
-        notes            = "",
-        latitude         = null,
-        longitude        = null,
-        type             = type
+        specimenCondition = "Good",
+        createdAt = 1_632_000_100L,
+        completedAt = null,
+        submittedAt = null,
+        notes = "",
+        latitude = null,
+        longitude = null,
+        type = type
     )
 
+    private fun initVm(
+        programId: Int? = 1,
+        program: Program? = Program(1, "Program A", "AA"),
+        currentSession: Session? = null
+    ) {
+        coEvery { deviceCache.getProgramId() } returns programId
+        if (programId != null) {
+            coEvery { programRepository.getProgramById(programId) } returns program
+        }
+        coEvery { sessionCache.getSession() } returns currentSession
+        viewModel = LandingViewModel(
+            deviceCache = deviceCache,
+            currentSessionCache = sessionCache,
+            programRepository = programRepository,
+            sessionRepository = sessionRepository
+        )
+    }
+
+    // ========================================
+    // A. Initialization & State
+    // ========================================
+
     @Test
-    fun `when no programId, navigate back immediately`() = runTest {
-        coEvery { deviceCache.getProgramId() } returns null
-        every  { sessionRepo.observeIncompleteSessions() } returns flowOf(emptyList())
+    fun landVm_a01_noProgramId_navigatesBackAndStopsLoading() = runTest {
+        initVm(programId = null)
 
-        vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
+        viewModel.state.test {
+            awaitItem() // triggers onStart -> loadLandingDetails
 
-        val stateJob = launch { vm.state.collect { } }
-        advanceUntilIdle()
+            // Now that loading started, collect events
+            viewModel.events.test {
+                assertThat(awaitItem()).isEqualTo(LandingEvent.NavigateBackToRegistrationScreen)
+                expectNoEvents()
+            }
 
-        vm.events.test {
-            assertThat(awaitItem())
-                .isEqualTo(LandingEvent.NavigateBackToRegistrationScreen)
+            val afterLoad = awaitItem()
+            assertThat(afterLoad.isLoading).isFalse()
             cancelAndIgnoreRemainingEvents()
         }
-
-        advanceUntilIdle()
-        assertThat(vm.state.value.isLoading).isFalse()
-
-        stateJob.cancel()
     }
 
     @Test
-    fun `when programId present but programRepo returns null, navigate back`() = runTest {
-        coEvery { deviceCache.getProgramId() } returns 1
-        coEvery { programRepo.getProgramById(1) } returns null
-        every  { sessionRepo.observeIncompleteSessions() } returns flowOf(emptyList())
+    fun landVm_a02_programMissing_navigatesBackAndStopsLoading() = runTest {
+        initVm(programId = 7, program = null)
 
-        vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
+        viewModel.state.test {
+            awaitItem()
 
-        val stateJob = launch { vm.state.collect { } }
-        advanceUntilIdle()
+            viewModel.events.test {
+                assertThat(awaitItem()).isEqualTo(LandingEvent.NavigateBackToRegistrationScreen)
+                expectNoEvents()
+            }
 
-        vm.events.test {
-            assertThat(awaitItem())
-                .isEqualTo(LandingEvent.NavigateBackToRegistrationScreen)
+            val after = awaitItem()
+            assertThat(after.isLoading).isFalse()
             cancelAndIgnoreRemainingEvents()
         }
-
-        advanceUntilIdle()
-        assertThat(vm.state.value.isLoading).isFalse()
-
-        stateJob.cancel()
     }
 
     @Test
-    fun `when session exists, showResumeDialog is true`() = runTest {
-        val dummy = makeSession(SessionType.DATA_COLLECTION)
-        coEvery { deviceCache.getProgramId() } returns 1
-        coEvery { programRepo.getProgramById(1) } returns Program(1, "Test", "XY")
-        coEvery { currentSessionCache.getSession() } returns dummy
-        every  { sessionRepo.observeIncompleteSessions() } returns flowOf(emptyList())
-
-        vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
-
-        val stateJob = launch { vm.state.collect { } }
+    fun landVm_a03_validProgram_setsProgram_andNoResumeDialogWhenNoSession() = runTest {
+        val program = Program(5, "Valid", "US")
+        initVm(programId = 5, program = program, currentSession = null)
         advanceUntilIdle()
 
-        assertThat(vm.state.value.showResumeDialog).isTrue()
-        assertThat(vm.state.value.enrolledProgram.name).isEqualTo("Test")
+        viewModel.state.test {
+            awaitItem()
+            val loaded = awaitItem()
+            assertThat(loaded.isLoading).isFalse()
+            assertThat(loaded.enrolledProgram).isEqualTo(program)
+            assertThat(loaded.showResumeDialog).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 
-        stateJob.cancel()
+    // ========================================
+    // B. Resume / Dismiss Resume
+    // ========================================
+
+    @Test
+    fun landVm_b01_existingSession_showsResumeDialog() = runTest {
+        val sess = makeSession(SessionType.DATA_COLLECTION)
+        initVm(programId = 1, program = Program(1, "P", "C"), currentSession = sess)
+        advanceUntilIdle()
+
+        viewModel.state.test {
+            awaitItem()
+            val loaded = awaitItem()
+            assertThat(loaded.showResumeDialog).isTrue()
+            assertThat(loaded.enrolledProgram.name).isEqualTo("P")
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
-    fun `resume action emits NavigateToIntakeScreen with correct type`() = runTest {
-        val surv = makeSession(SessionType.SURVEILLANCE)
-        coEvery { deviceCache.getProgramId() } returns 1
-        coEvery { programRepo.getProgramById(1) } returns Program(1, "X", "ZZ")
-        coEvery { currentSessionCache.getSession() } returns surv
-        every  { sessionRepo.observeIncompleteSessions() } returns flowOf(emptyList())
+    fun landVm_b02_resume_emitsNavigateWithCorrectType_andHidesDialog() = runTest {
+        val sess = makeSession(SessionType.SURVEILLANCE)
+        initVm(programId = 1, program = Program(1, "P", "C"), currentSession = sess)
 
-        vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
+        viewModel.state.test {
+            awaitItem()
+            val loaded = awaitItem()
+            assertThat(loaded.showResumeDialog).isTrue()
 
-        val stateJob = launch { vm.state.collect { } }
+            viewModel.events.test {
+                viewModel.onAction(LandingAction.ResumeSession)
+                assertThat(awaitItem()).isEqualTo(
+                    LandingEvent.NavigateToIntakeScreen(SessionType.SURVEILLANCE)
+                )
+                expectNoEvents()
+            }
+
+            val after = awaitItem()
+            assertThat(after.showResumeDialog).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+
+    @Test
+    fun landVm_b03_resume_whenNoSession_emitsError_andNoNavigation() = runTest {
+        initVm(programId = 1, program = Program(1, "P", "C"), currentSession = null)
         advanceUntilIdle()
 
-        vm.events.test {
-            vm.onAction(LandingAction.ResumeSession)
+        viewModel.events.test {
+            viewModel.onAction(LandingAction.ResumeSession)
             advanceUntilIdle()
-            assertThat(awaitItem())
-                .isEqualTo(LandingEvent.NavigateToIntakeScreen(SessionType.SURVEILLANCE))
-            cancelAndIgnoreRemainingEvents()
+            expectNoEvents()
         }
 
-        assertThat(vm.state.value.showResumeDialog).isFalse()
-
-        stateJob.cancel()
+        coVerify(exactly = 1) { ErrorMessageBus.emit(LandingError.SESSION_NOT_FOUND, any()) }
     }
 
     @Test
-    fun `dismiss resume clears session and hides dialog`() = runTest {
-        val dummy = makeSession(SessionType.DATA_COLLECTION)
-        coEvery { deviceCache.getProgramId() } returns 1
-        coEvery { programRepo.getProgramById(1) } returns Program(1, "P", "CC")
-        coEvery { currentSessionCache.getSession() } returns dummy
-        every  { sessionRepo.observeIncompleteSessions() } returns flowOf(emptyList())
+    fun landVm_b04_dismissResume_clearsSession_andHidesDialog() = runTest {
+        val sess = makeSession(SessionType.DATA_COLLECTION)
+        initVm(programId = 1, program = Program(1, "P", "C"), currentSession = sess)
 
-        vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
+        viewModel.state.test {
+            awaitItem()
+            val loaded = awaitItem()
+            assertThat(loaded.showResumeDialog).isTrue()
 
-        val stateJob = launch { vm.state.collect { } }
-        advanceUntilIdle()
+            viewModel.onAction(LandingAction.DismissResumePrompt)
 
-        vm.onAction(LandingAction.DismissResumePrompt)
-        advanceUntilIdle()
+            val after = awaitItem()
+            assertThat(after.showResumeDialog).isFalse()
 
-        coVerify { currentSessionCache.clearSession() }
-        assertThat(vm.state.value.showResumeDialog).isFalse()
+            coVerify(exactly = 1) { sessionCache.clearSession() }
 
-        stateJob.cancel()
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
+    // ========================================
+    // C. Action Tiles -> Events
+    // ========================================
+
     @Test
-    fun `action tiles emit correct events`() = runTest {
-        coEvery { deviceCache.getProgramId() } returns 1
-        coEvery { programRepo.getProgramById(1) } returns Program(1, "P", "CC")
-        coEvery { currentSessionCache.getSession() } returns null
-        val list = listOf(
+    fun landVm_c01_actionTiles_emitCorrectEvents() = runTest {
+        initVm(programId = 1, program = Program(1, "P", "C"), currentSession = null)
+        incompleteFlow.value = listOf(
             makeSession(SessionType.SURVEILLANCE),
             makeSession(SessionType.DATA_COLLECTION)
         )
-        every { sessionRepo.observeIncompleteSessions() } returns flowOf(list)
-
-        vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
         advanceUntilIdle()
 
-        vm.events.test {
-            vm.onAction(LandingAction.StartNewSurveillanceSession)
-            assertThat(awaitItem())
-                .isEqualTo(LandingEvent.NavigateToIntakeScreen(SessionType.SURVEILLANCE))
+        viewModel.events.test {
+            viewModel.onAction(LandingAction.StartNewSurveillanceSession)
+            advanceUntilIdle()
+            assertThat(awaitItem()).isEqualTo(
+                LandingEvent.NavigateToIntakeScreen(SessionType.SURVEILLANCE)
+            )
 
-            vm.onAction(LandingAction.StartNewDataCollectionSession)
-            assertThat(awaitItem())
-                .isEqualTo(LandingEvent.NavigateToIntakeScreen(SessionType.DATA_COLLECTION))
+            viewModel.onAction(LandingAction.StartNewDataCollectionSession)
+            advanceUntilIdle()
+            assertThat(awaitItem()).isEqualTo(
+                LandingEvent.NavigateToIntakeScreen(SessionType.DATA_COLLECTION)
+            )
 
-            vm.onAction(LandingAction.ViewIncompleteSessions)
-            assertThat(awaitItem())
-                .isEqualTo(LandingEvent.NavigateToIncompleteSessionsScreen)
+            viewModel.onAction(LandingAction.ViewIncompleteSessions)
+            advanceUntilIdle()
+            assertThat(awaitItem()).isEqualTo(LandingEvent.NavigateToIncompleteSessionsScreen)
 
-            vm.onAction(LandingAction.ViewCompleteSessions)
-            assertThat(awaitItem())
-                .isEqualTo(LandingEvent.NavigateToCompleteSessionsScreen)
+            viewModel.onAction(LandingAction.ViewCompleteSessions)
+            advanceUntilIdle()
+            assertThat(awaitItem()).isEqualTo(LandingEvent.NavigateToCompleteSessionsScreen)
+
+            expectNoEvents()
+        }
+    }
+
+    // ========================================
+    // D. Incomplete Count Updates
+    // ========================================
+
+    @Test
+    fun landVm_d01_incompleteSessionsCount_updatesWithFlow() = runTest {
+        initVm(programId = 5, program = Program(5, "Prog", "XX"), currentSession = null)
+
+        viewModel.state.test {
+            val s0 = awaitItem()
+            val s1 = awaitItem()
+            assertThat(s1.incompleteSessionsCount).isEqualTo(0)
+
+            incompleteFlow.value = listOf(makeSession(SessionType.SURVEILLANCE))
+            advanceUntilIdle()
+            val s2 = awaitItem()
+            assertThat(s2.incompleteSessionsCount).isEqualTo(1)
+
+            incompleteFlow.value = List(4) { makeSession(SessionType.DATA_COLLECTION) }
+            advanceUntilIdle()
+            val s3 = awaitItem()
+            assertThat(s3.incompleteSessionsCount).isEqualTo(4)
 
             cancelAndIgnoreRemainingEvents()
         }
     }
 
-    @Test
-    fun `initial load with valid program and no session keeps showResumeDialog false`() = runTest {
-        coEvery { deviceCache.getProgramId() } returns 7
-        coEvery { programRepo.getProgramById(7) } returns Program(7, "Valid", "US")
-        coEvery { currentSessionCache.getSession() } returns null
-        every  { sessionRepo.observeIncompleteSessions() } returns flowOf(emptyList())
-
-        vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
-
-        val stateJob = launch { vm.state.collect { } }
-        advanceUntilIdle()
-
-        assertThat(vm.state.value.isLoading).isFalse()
-        assertThat(vm.state.value.showResumeDialog).isFalse()
-        assertThat(vm.state.value.enrolledProgram.name).isEqualTo("Valid")
-
-        stateJob.cancel()
-    }
+    // ========================================
+    // E. Ordering / Side-effects
+    // ========================================
 
     @Test
-    fun `incompleteSessionsCount updates when underlying flow emits`() = runTest {
-        val incompleteFlow = MutableSharedFlow<List<Session>>(replay = 1).apply { tryEmit(emptyList()) }
-        coEvery { deviceCache.getProgramId() } returns 5
-        coEvery { programRepo.getProgramById(5) } returns Program(5, "Prog", "XX")
-        coEvery { currentSessionCache.getSession() } returns null
-        every { sessionRepo.observeIncompleteSessions() } returns incompleteFlow
-
-        vm = LandingViewModel(deviceCache, currentSessionCache, programRepo, sessionRepo)
-
-        val counts = mutableListOf<Int>()
-        val stateJob = launch { vm.state.collect { counts += it.incompleteSessionsCount } }
+    fun landVm_e01_dismissThenStartNew_ordersAreRespected_noExtraErrors() = runTest {
+        val sess = makeSession(SessionType.SURVEILLANCE)
+        initVm(programId = 2, program = Program(2, "Q", "YY"), currentSession = sess)
         advanceUntilIdle()
 
-        incompleteFlow.emit(listOf(makeSession(SessionType.SURVEILLANCE)))
-        incompleteFlow.emit(List(4) { makeSession(SessionType.DATA_COLLECTION) })
-        advanceUntilIdle()
+        viewModel.events.test {
+            viewModel.onAction(LandingAction.DismissResumePrompt)
+            advanceUntilIdle()
 
-        assertThat(counts.last()).isEqualTo(4)
+            viewModel.onAction(LandingAction.StartNewDataCollectionSession)
+            advanceUntilIdle()
+            assertThat(awaitItem()).isEqualTo(
+                LandingEvent.NavigateToIntakeScreen(SessionType.DATA_COLLECTION)
+            )
+            expectNoEvents()
+        }
 
-        stateJob.cancel()
+        coVerifyOrder {
+            sessionCache.clearSession()
+        }
+        coVerify(exactly = 0) { ErrorMessageBus.emit(LandingError.SESSION_NOT_FOUND, any()) }
     }
 }

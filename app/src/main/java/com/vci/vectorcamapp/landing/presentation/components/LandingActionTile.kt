@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
@@ -32,11 +33,13 @@ fun LandingActionTile(
     icon: Painter,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    badgeCount: Int = 0
+    badgeCount: Int = 0,
+    testTag: String? = null,
+    badgeTag: String? = null,
 ) {
-
     ActionTile(
-        onClick = onClick, modifier = modifier
+        onClick = onClick,
+        modifier = modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -67,7 +70,8 @@ fun LandingActionTile(
                             .offset(
                                 x = MaterialTheme.dimensions.paddingExtraSmall,
                                 y = -MaterialTheme.dimensions.paddingExtraSmall
-                            ),
+                            )
+                            .then(if (badgeTag != null) Modifier.testTag(badgeTag) else Modifier),
                         containerColor = MaterialTheme.colors.error
                     ) {
                         Text(
