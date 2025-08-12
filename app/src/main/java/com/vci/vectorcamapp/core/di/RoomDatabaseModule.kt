@@ -38,14 +38,13 @@ object RoomDatabaseModule {
     fun provideDatabase(
         @ApplicationContext context: Context,
     ): VectorCamDatabase {
-        lateinit var db: VectorCamDatabase
-        db = Room.databaseBuilder(
+        return Room.databaseBuilder(
             context,
             VectorCamDatabase::class.java,
             DB_NAME,
         ).addCallback(object : RoomDatabase.Callback() {
-            override fun onOpen(sqLiteDb: SupportSQLiteDatabase) {
-                super.onOpen(sqLiteDb)
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                super.onOpen(db)
 
                 try {
                     val programsJson = context.assets.open(PROGRAM_DATA_FILENAME).bufferedReader()
@@ -56,11 +55,11 @@ object RoomDatabaseModule {
                     val programs = Json.decodeFromString<List<ProgramDto>>(programsJson)
                     val sites = Json.decodeFromString<List<SiteDto>>(sitesJson)
 
-                    sqLiteDb.beginTransaction()
+                    db.beginTransaction()
                     try {
                         // Use direct SQL to avoid circular dependency
                         programs.forEach { program ->
-                            sqLiteDb.execSQL(
+                            db.execSQL(
                                 """
                                     INSERT INTO program (id, name, country) 
                                     VALUES (?, ?, ?)
@@ -75,7 +74,7 @@ object RoomDatabaseModule {
                         }
 
                         sites.forEach { site ->
-                            sqLiteDb.execSQL(
+                            db.execSQL(
                                 """
                                     INSERT INTO site (id, programId, district, subCounty, parish, sentinelSite, healthCenter)
                                     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -106,21 +105,18 @@ object RoomDatabaseModule {
                             )
                         }
 
-                        sqLiteDb.setTransactionSuccessful()
+                        db.setTransactionSuccessful()
                         Log.i(
                             "RoomCallback", "Seeded ${programs.size} programs, ${sites.size} sites"
                         )
                     } finally {
-                        sqLiteDb.endTransaction()
-                        db.invalidationTracker.refreshAsync()
+                        db.endTransaction()
                     }
                 } catch (e: Exception) {
                     Log.e("RoomCallback", "Error seeding database", e)
                 }
             }
         }).addMigrations(*ALL_MIGRATIONS).build()
-
-        return db
     }
 
     @Provides
