@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertTextEquals
@@ -95,6 +96,22 @@ class LandingScreenTest {
         composeRule.onNodeWithText("Review fully completed sessions and uploaded data.").assertIsDisplayed()
     }
 
+    @Test
+    fun landUi_a03_rootScreenHasTag_andHeaderVisible() {
+        launchLandingScreen(
+            initialState = LandingState(enrolledProgram = Program(0, dummyProgramName, dummyCountryName))
+        )
+        composeRule.onNodeWithTag(LandingTestTags.SCREEN).assertExists()
+        composeRule.onNodeWithText("Welcome to VectorCam!").assertIsDisplayed()
+    }
+
+    @Test
+    fun landUi_a04_sectionHeadersTextPresent() {
+        launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", "")))
+        composeRule.onNodeWithText("Imaging").assertIsDisplayed()
+        composeRule.onNodeWithText("Library").assertIsDisplayed()
+    }
+
     // =========================
     // B. Tile Click Actions
     // =========================
@@ -118,6 +135,15 @@ class LandingScreenTest {
 
         clickTile(LandingTestTags.TILE_COMPLETE)
         assert(lastAction == LandingAction.ViewCompleteSessions)
+    }
+
+    @Test
+    fun landUi_b02_tilesHaveClickActions() {
+        launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", "")))
+        composeRule.onNodeWithTag(LandingTestTags.TILE_NEW_SURVEILLANCE).assertExists().assertHasClickAction()
+        composeRule.onNodeWithTag(LandingTestTags.TILE_DATA_COLLECTION).assertExists().assertHasClickAction()
+        composeRule.onNodeWithTag(LandingTestTags.TILE_INCOMPLETE).assertExists().assertHasClickAction()
+        composeRule.onNodeWithTag(LandingTestTags.TILE_COMPLETE).assertExists().assertHasClickAction()
     }
 
     // =========================
@@ -151,6 +177,29 @@ class LandingScreenTest {
         )
         composeRule.onNodeWithTag(LandingTestTags.BADGE_INCOMPLETE).assertDoesNotExist()
         composeRule.onAllNodesWithText("0", useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test
+    fun landUi_c03_badgeUpdatesAcrossRelaunch() {
+        launchLandingScreen(
+            initialState = LandingState(
+                enrolledProgram = Program(0, "", ""),
+                incompleteSessionsCount = 0
+            )
+        )
+        composeRule.onNodeWithTag(LandingTestTags.BADGE_INCOMPLETE).assertDoesNotExist()
+
+        launchLandingScreen(
+            initialState = LandingState(
+                enrolledProgram = Program(0, "", ""),
+                incompleteSessionsCount = 7
+            )
+        )
+        composeRule.onNodeWithTag(LandingTestTags.BADGE_INCOMPLETE, useUnmergedTree = true)
+            .assertExists()
+        composeRule.onNodeWithText("7", useUnmergedTree = true)
+            .assertIsDisplayed()
+            .assertTextEquals("7")
     }
 
     // =========================
@@ -197,5 +246,45 @@ class LandingScreenTest {
             )
         )
         composeRule.onNodeWithText("Resume unfinished session?").assertDoesNotExist()
+    }
+
+    // =========================
+    // E. Edge Cases
+    // =========================
+
+    @Test
+    fun landUi_d03_resumeDialog_hasTestTag_andButtonsEnabled() {
+        launchLandingScreen(
+            initialState = LandingState(
+                enrolledProgram = Program(0, "", ""),
+                showResumeDialog = true
+            )
+        )
+        composeRule.onNodeWithTag(LandingTestTags.RESUME_DIALOG).assertExists()
+        composeRule.onNodeWithText("Resume unfinished session?").assertIsDisplayed()
+        composeRule.onNodeWithTag(LandingTestTags.RESUME_CONFIRM).assertIsEnabled()
+        composeRule.onNodeWithTag(LandingTestTags.RESUME_DISMISS).assertIsEnabled()
+        composeRule.onNodeWithText("Yes, resume").assertIsDisplayed()
+        composeRule.onNodeWithText("No, start new").assertIsDisplayed()
+    }
+
+    @Test
+    fun landUi_e01_handlesVeryLongProgramName_withoutCrashing() {
+        val longName = "P".repeat(200)
+        launchLandingScreen(
+            initialState = LandingState(
+                enrolledProgram = Program(0, longName, dummyCountryName)
+            )
+        )
+        composeRule.onNodeWithText("Program: $longName").assertIsDisplayed()
+    }
+
+    @Test
+    fun landUi_e02_clickingTiles_withNoCallback_doesNotCrash() {
+        launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", "")))
+        clickTile(LandingTestTags.TILE_NEW_SURVEILLANCE)
+        clickTile(LandingTestTags.TILE_DATA_COLLECTION)
+        clickTile(LandingTestTags.TILE_INCOMPLETE)
+        clickTile(LandingTestTags.TILE_COMPLETE)
     }
 }
