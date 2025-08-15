@@ -16,12 +16,12 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 fun LandingSection(
     title: String,
     modifier: Modifier = Modifier,
-    sectionTag: String? = null,
+    testTag: String? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = modifier
-            .then(if (sectionTag != null) Modifier.testTag(sectionTag) else Modifier)
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             .fillMaxWidth()
     ) {
         Text(

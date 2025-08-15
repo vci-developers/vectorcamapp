@@ -4,11 +4,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyChild
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -123,12 +126,11 @@ class LandingScreenTest {
 
     private fun assertOnWithArgPattern(
         dest: KClass<out Destination>,
-        argName: String
     ) {
         composeRule.waitForIdle()
         val route = navController.currentDestination?.route
             ?: error("No current destination")
-        assertThat(route).isEqualTo("${dest.qualifiedName}/{$argName}")
+        assertThat(route).isEqualTo("${dest.qualifiedName}/{sessionType}")
     }
 
 
@@ -223,7 +225,7 @@ class LandingScreenTest {
                 incompleteSessionsCount = 3
             )
         )
-        composeRule.onNodeWithTag(LandingTestTags.BADGE_INCOMPLETE, useUnmergedTree = true)
+        composeRule.onNodeWithTag(LandingTestTags.LANDING_BADGE, useUnmergedTree = true)
             .assertExists()
 
         composeRule.onNodeWithText("3", useUnmergedTree = true)
@@ -240,7 +242,7 @@ class LandingScreenTest {
                 incompleteSessionsCount = 0
             )
         )
-        composeRule.onNodeWithTag(LandingTestTags.BADGE_INCOMPLETE).assertDoesNotExist()
+        composeRule.onNodeWithTag(LandingTestTags.LANDING_BADGE).assertDoesNotExist()
         composeRule.onAllNodesWithText("0", useUnmergedTree = true).assertCountEquals(0)
     }
 
@@ -252,7 +254,7 @@ class LandingScreenTest {
                 incompleteSessionsCount = 0
             )
         )
-        composeRule.onNodeWithTag(LandingTestTags.BADGE_INCOMPLETE).assertDoesNotExist()
+        composeRule.onNodeWithTag(LandingTestTags.LANDING_BADGE).assertDoesNotExist()
 
         launchLandingScreen(
             initialState = LandingState(
@@ -260,11 +262,8 @@ class LandingScreenTest {
                 incompleteSessionsCount = 7
             )
         )
-        composeRule.onNodeWithTag(LandingTestTags.BADGE_INCOMPLETE, useUnmergedTree = true)
-            .assertExists()
-        composeRule.onNodeWithText("7", useUnmergedTree = true)
-            .assertIsDisplayed()
-            .assertTextEquals("7")
+        composeRule.onNodeWithTag(LandingTestTags.LANDING_BADGE, useUnmergedTree = true)
+            .assertExists().assert(hasAnyChild(hasText("7")))
     }
 
     // =========================
@@ -304,10 +303,6 @@ class LandingScreenTest {
         composeRule.onNodeWithText("Resume unfinished session?").assertDoesNotExist()
     }
 
-    // =========================
-    // E. Edge Cases
-    // =========================
-
     @Test
     fun landUi_d03_resumeDialog_hasTestTag_andButtonsEnabled() {
         launchLandingScreen(
@@ -323,6 +318,10 @@ class LandingScreenTest {
         composeRule.onNodeWithText("Yes, resume").assertIsDisplayed()
         composeRule.onNodeWithText("No, start new").assertIsDisplayed()
     }
+
+    // =========================
+    // E. Edge Cases
+    // =========================
 
     @Test
     fun landUi_e01_handlesVeryLongProgramName_withoutCrashing() {
@@ -355,7 +354,7 @@ class LandingScreenTest {
     fun landUi_f01_clickNewSurveillance_navigatesToIntake() {
         launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", "")))
         clickTile(LandingTestTags.TILE_NEW_SURVEILLANCE)
-        assertOnWithArgPattern(Destination.Intake::class, "sessionType")
+        assertOnWithArgPattern(Destination.Intake::class)
         val intakeRoute = navController.currentBackStackEntry!!.toRoute<Destination.Intake>()
         assertThat(intakeRoute.sessionType).isEqualTo(SessionType.SURVEILLANCE)
     }
@@ -364,7 +363,7 @@ class LandingScreenTest {
     fun landUi_f02_clickDataCollection_navigatesToIntake() {
         launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", "")))
         clickTile(LandingTestTags.TILE_DATA_COLLECTION)
-        assertOnWithArgPattern(Destination.Intake::class, "sessionType")
+        assertOnWithArgPattern(Destination.Intake::class)
         val intakeRoute = navController.currentBackStackEntry!!.toRoute<Destination.Intake>()
         assertThat(intakeRoute.sessionType).isEqualTo(SessionType.DATA_COLLECTION)
     }
@@ -390,7 +389,7 @@ class LandingScreenTest {
     fun landUi_f05_resumeConfirm_navigatesToIntake() {
         launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", ""), showResumeDialog = true))
         composeRule.onNodeWithTag(LandingTestTags.RESUME_CONFIRM).performClick()
-        assertOnWithArgPattern(Destination.Intake::class, "sessionType")
+        assertOnWithArgPattern(Destination.Intake::class)
         val intake = navController.currentBackStackEntry!!.toRoute<Destination.Intake>()
         assertThat(intake.sessionType).isEqualTo(SessionType.SURVEILLANCE)
     }

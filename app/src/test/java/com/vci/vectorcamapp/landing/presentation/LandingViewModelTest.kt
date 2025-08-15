@@ -88,7 +88,7 @@ class LandingViewModelTest {
         type = type
     )
 
-    private fun initVm(
+    private fun initViewModel(
         programId: Int? = 1,
         program: Program? = Program(1, "Program A", "AA"),
         currentSession: Session? = null
@@ -112,7 +112,7 @@ class LandingViewModelTest {
 
     @Test
     fun landVm_a01_noProgramId_navigatesBackAndStopsLoading() = runTest {
-        initVm(programId = null)
+        initViewModel(programId = null)
 
         viewModel.state.test {
             awaitItem() // triggers onStart -> loadLandingDetails
@@ -131,7 +131,7 @@ class LandingViewModelTest {
 
     @Test
     fun landVm_a02_programMissing_navigatesBackAndStopsLoading() = runTest {
-        initVm(programId = 7, program = null)
+        initViewModel(programId = 7, program = null)
 
         viewModel.state.test {
             awaitItem()
@@ -150,7 +150,7 @@ class LandingViewModelTest {
     @Test
     fun landVm_a03_validProgram_setsProgram_andNoResumeDialogWhenNoSession() = runTest {
         val program = Program(5, "Valid", "US")
-        initVm(programId = 5, program = program, currentSession = null)
+        initViewModel(programId = 5, program = program, currentSession = null)
         advanceUntilIdle()
 
         viewModel.state.test {
@@ -169,8 +169,8 @@ class LandingViewModelTest {
 
     @Test
     fun landVm_b01_existingSession_showsResumeDialog() = runTest {
-        val sess = makeSession(SessionType.DATA_COLLECTION)
-        initVm(programId = 1, program = Program(1, "P", "C"), currentSession = sess)
+        val session = makeSession(SessionType.DATA_COLLECTION)
+        initViewModel(programId = 1, program = Program(1, "P", "C"), currentSession = session)
         advanceUntilIdle()
 
         viewModel.state.test {
@@ -184,8 +184,8 @@ class LandingViewModelTest {
 
     @Test
     fun landVm_b02_resume_emitsNavigateWithCorrectType_andHidesDialog() = runTest {
-        val sess = makeSession(SessionType.SURVEILLANCE)
-        initVm(programId = 1, program = Program(1, "P", "C"), currentSession = sess)
+        val session = makeSession(SessionType.SURVEILLANCE)
+        initViewModel(programId = 1, program = Program(1, "P", "C"), currentSession = session)
 
         viewModel.state.test {
             awaitItem()
@@ -209,7 +209,7 @@ class LandingViewModelTest {
 
     @Test
     fun landVm_b03_resume_whenNoSession_emitsError_andNoNavigation() = runTest {
-        initVm(programId = 1, program = Program(1, "P", "C"), currentSession = null)
+        initViewModel(programId = 1, program = Program(1, "P", "C"), currentSession = null)
         advanceUntilIdle()
 
         viewModel.events.test {
@@ -223,8 +223,8 @@ class LandingViewModelTest {
 
     @Test
     fun landVm_b04_dismissResume_clearsSession_andHidesDialog() = runTest {
-        val sess = makeSession(SessionType.DATA_COLLECTION)
-        initVm(programId = 1, program = Program(1, "P", "C"), currentSession = sess)
+        val session = makeSession(SessionType.DATA_COLLECTION)
+        initViewModel(programId = 1, program = Program(1, "P", "C"), currentSession = session)
 
         viewModel.state.test {
             awaitItem()
@@ -248,7 +248,7 @@ class LandingViewModelTest {
 
     @Test
     fun landVm_c01_actionTiles_emitCorrectEvents() = runTest {
-        initVm(programId = 1, program = Program(1, "P", "C"), currentSession = null)
+        initViewModel(programId = 1, program = Program(1, "P", "C"), currentSession = null)
         incompleteFlow.value = listOf(
             makeSession(SessionType.SURVEILLANCE),
             makeSession(SessionType.DATA_COLLECTION)
@@ -286,10 +286,10 @@ class LandingViewModelTest {
 
     @Test
     fun landVm_d01_incompleteSessionsCount_updatesWithFlow() = runTest {
-        initVm(programId = 5, program = Program(5, "Prog", "XX"), currentSession = null)
+        initViewModel(programId = 5, program = Program(5, "Prog", "XX"), currentSession = null)
 
         viewModel.state.test {
-            val s0 = awaitItem()
+            awaitItem()
             val s1 = awaitItem()
             assertThat(s1.incompleteSessionsCount).isEqualTo(0)
 
@@ -313,8 +313,8 @@ class LandingViewModelTest {
 
     @Test
     fun landVm_e01_dismissThenStartNew_ordersAreRespected_noExtraErrors() = runTest {
-        val sess = makeSession(SessionType.SURVEILLANCE)
-        initVm(programId = 2, program = Program(2, "Q", "YY"), currentSession = sess)
+        val session = makeSession(SessionType.SURVEILLANCE)
+        initViewModel(programId = 2, program = Program(2, "Q", "YY"), currentSession = session)
         advanceUntilIdle()
 
         viewModel.events.test {

@@ -11,7 +11,7 @@ object LandingTestTags {
     const val TILE_INCOMPLETE = "landing_tile_incomplete_sessions"
     const val TILE_COMPLETE = "landing_tile_complete_sessions"
 
-    const val BADGE_INCOMPLETE = "landing_badge_incomplete"
+    const val LANDING_BADGE = "landing_badge_incomplete"
 
     const val RESUME_DIALOG = "landing_resume_dialog"
     const val RESUME_CONFIRM = "landing_resume_confirm"

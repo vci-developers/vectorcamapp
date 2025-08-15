@@ -37,7 +37,7 @@ fun LandingScreen(
             ) {
                 LandingSection(
                     title = "Imaging",
-                    sectionTag = LandingTestTags.SECTION_IMAGING
+                    testTag = LandingTestTags.SECTION_IMAGING
                 ) {
                     LandingActionTile(
                         title = "New Surveillance Session",
@@ -58,7 +58,7 @@ fun LandingScreen(
 
                 LandingSection(
                     title = "Library",
-                    sectionTag = LandingTestTags.SECTION_LIBRARY
+                    testTag = LandingTestTags.SECTION_LIBRARY
                 ) {
                     LandingActionTile(
                         title = "View Incomplete Sessions",
@@ -67,7 +67,6 @@ fun LandingScreen(
                         onClick = { onAction(LandingAction.ViewIncompleteSessions) },
                         badgeCount = state.incompleteSessionsCount,
                         testTag = LandingTestTags.TILE_INCOMPLETE,
-                        badgeTag = LandingTestTags.BADGE_INCOMPLETE
                     )
 
                     LandingActionTile(

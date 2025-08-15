@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,6 +22,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
+import com.vci.vectorcamapp.landing.presentation.util.LandingTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
@@ -35,7 +35,6 @@ fun LandingActionTile(
     modifier: Modifier = Modifier,
     badgeCount: Int = 0,
     testTag: String? = null,
-    badgeTag: String? = null,
 ) {
     ActionTile(
         onClick = onClick,
@@ -69,9 +68,9 @@ fun LandingActionTile(
                             .align(Alignment.TopEnd)
                             .offset(
                                 x = MaterialTheme.dimensions.paddingExtraSmall,
-                                y = -MaterialTheme.dimensions.paddingExtraSmall
+                                y = -MaterialTheme.dimensions.paddingExtraSmall,
                             )
-                            .then(if (badgeTag != null) Modifier.testTag(badgeTag) else Modifier),
+                            .testTag(LandingTestTags.LANDING_BADGE),
                         containerColor = MaterialTheme.colors.error
                     ) {
                         Text(
