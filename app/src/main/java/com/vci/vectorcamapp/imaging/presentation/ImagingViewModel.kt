@@ -29,6 +29,7 @@ import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +45,7 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import javax.inject.Inject
+import androidx.core.graphics.createBitmap
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
@@ -137,33 +139,30 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 is ImagingAction.ProcessFrame -> {
-                    if (!_state.value.isCameraReady) {
-                        _state.update { it.copy(isCameraReady = true) }
-                    }
-
-                    try {
-                        val bitmap = action.frame.toUprightBitmap()
-
-                        val liveFrameProcessingResult = imagingWorkflow.processLiveFrame(bitmap)
-                        validateSpecimenIdUseCase(
-                            liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
-                        ).onSuccess { correctedSpecimenId ->
-                            _state.update {
-                                it.copy(
-                                    currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId),
-                                )
+                    viewModelScope.launch(Dispatchers.Default) {
+                        try {
+                            if (!_state.value.isCameraReady) {
+                                _state.update { it.copy(isCameraReady = true) }
                             }
-                        }
 
-                        _state.update {
-                            it.copy(
-                                previewInferenceResults = liveFrameProcessingResult.previewInferenceResults
-                            )
+                            val liveFrameProcessingResult = imagingWorkflow.processLiveFrame(action.frame)
+
+                            validateSpecimenIdUseCase(
+                                liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
+                            ).onSuccess { correctedSpecimenId ->
+                                _state.update {
+                                    it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
+                                }
+                            }
+
+                            _state.update {
+                                it.copy(previewInferenceResults = liveFrameProcessingResult.previewInferenceResults)
+                            }
+                        } catch (e: Exception) {
+                            emitError(ImagingError.PROCESSING_ERROR)
+                        } finally {
+                            action.frame.recycle()
                         }
-                    } catch (e: Exception) {
-                        emitError(ImagingError.PROCESSING_ERROR)
-                    } finally {
-                        action.frame.close()
                     }
                 }
 
@@ -194,45 +193,45 @@ class ImagingViewModel @Inject constructor(
                 is ImagingAction.CaptureImage -> {
                     if (!_state.value.isCameraReady) return@launch
 
-                    _state.update { it.copy(isProcessing = true) }
-                    val captureResult = cameraRepository.captureImage(action.controller)
+                    viewModelScope.launch(Dispatchers.Default) {
+                        _state.update { it.copy(isProcessing = true) }
+                        val captureResult = cameraRepository.captureImage(action.controller)
 
-                    captureResult.onSuccess { image ->
-                        val bitmap = image.toUprightBitmap()
-                        image.close()
+                        captureResult.onSuccess { image ->
+                            val bitmap = image.toUprightBitmap()
+                            image.close()
 
-                        val jpegStream = ByteArrayOutputStream()
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
-                        val jpegByteArray = jpegStream.toByteArray()
-                        val jpegBitmap =
-                            BitmapFactory.decodeByteArray(jpegByteArray, 0, jpegByteArray.size)
+                            val jpegStream = ByteArrayOutputStream()
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
+                            val jpegByteArray = jpegStream.toByteArray()
+                            val jpegBitmap = BitmapFactory.decodeByteArray(jpegByteArray, 0, jpegByteArray.size)
 
-                        val capturedFrameProcessingResult =
-                            imagingWorkflow.processCapturedFrame(jpegBitmap)
+                            val capturedFrameProcessingResult = imagingWorkflow.processCapturedFrame(jpegBitmap)
 
-                        capturedFrameProcessingResult.onSuccess { result ->
-                            _state.update {
-                                it.copy(
-                                    currentSpecimenImage = it.currentSpecimenImage.copy(
-                                        species = result.species,
-                                        sex = result.sex,
-                                        abdomenStatus = result.abdomenStatus
-                                    ),
-                                    currentImageBytes = jpegByteArray,
-                                    currentInferenceResult = result.capturedInferenceResult,
-                                    previewInferenceResults = emptyList()
-                                )
+                            capturedFrameProcessingResult.onSuccess { result ->
+                                _state.update {
+                                    it.copy(
+                                        currentSpecimenImage = it.currentSpecimenImage.copy(
+                                            species = result.species,
+                                            sex = result.sex,
+                                            abdomenStatus = result.abdomenStatus
+                                        ),
+                                        currentImageBytes = jpegByteArray,
+                                        currentInferenceResult = result.capturedInferenceResult,
+                                        previewInferenceResults = emptyList()
+                                    )
+                                }
+                            }.onError { error ->
+                                emitError(error, SnackbarDuration.Short)
                             }
                         }.onError { error ->
-                            emitError(error, SnackbarDuration.Short)
+                            if (error == ImagingError.NO_ACTIVE_SESSION) {
+                                viewModelScope.launch { _events.send(ImagingEvent.NavigateBackToLandingScreen) }
+                            }
+                            emitError(error)
                         }
-                    }.onError { error ->
-                        if (error == ImagingError.NO_ACTIVE_SESSION) {
-                            _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                        }
-                        emitError(error)
+                        _state.update { it.copy(isProcessing = false) }
                     }
-                    _state.update { it.copy(isProcessing = false) }
                 }
 
                 ImagingAction.RetakeImage -> {
