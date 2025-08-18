@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.imaging.presentation
 
-import android.graphics.Bitmap
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.ui.geometry.Offset
