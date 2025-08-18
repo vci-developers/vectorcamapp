@@ -10,7 +10,7 @@ object GpuDelegateManager {
 
     fun getDelegate(): GpuDelegate {
         return gpuDelegate ?: synchronized(this) {
-            gpuDelegate ?: createDelegate().also { gpuDelegate = it }
+            createDelegate().also { gpuDelegate = it }
         }
     }
 
