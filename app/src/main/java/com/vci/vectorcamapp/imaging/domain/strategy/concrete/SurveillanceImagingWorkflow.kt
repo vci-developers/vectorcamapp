@@ -3,7 +3,6 @@ package com.vci.vectorcamapp.imaging.domain.strategy.concrete
 import android.graphics.Bitmap
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.util.Result
-import com.vci.vectorcamapp.imaging.data.GpuDelegateManager
 import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel

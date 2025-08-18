@@ -82,7 +82,12 @@ class TfLiteSpecimenDetector(
                     outputNumElements = it.getOutputTensor(0).shape()[2]
                 }
 
-                warmDetector()
+                if (isGpuDelegateInitialized) {
+                    warmDetector()
+                }
+                else {
+                    Log.d(TAG, "Skipping detector warmup (CPU mode).")
+                }
                 Log.d(TAG, "TFLite interpreter initialized")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
@@ -269,18 +274,15 @@ class TfLiteSpecimenDetector(
     }
 
     private fun warmDetector() {
-        if (isGpuDelegateInitialized) {
-            detector?.let { interpreter ->
-                val inputShape = interpreter.getInputTensor(0).shape()
-                val outputShape = interpreter.getOutputTensor(0).shape()
-                val dummyInputBuffer = TensorBuffer.createFixedSize(inputShape, DataType.FLOAT32).buffer
-                val dummyOutputBuffer = TensorBuffer.createFixedSize(outputShape, DataType.FLOAT32).buffer
+        detector?.let { interpreter ->
+            val inputShape = interpreter.getInputTensor(0).shape()
+            val outputShape = interpreter.getOutputTensor(0).shape()
+            val dummyInputBuffer = TensorBuffer.createFixedSize(inputShape, DataType.FLOAT32).buffer
+            val dummyOutputBuffer =
+                TensorBuffer.createFixedSize(outputShape, DataType.FLOAT32).buffer
 
-                interpreter.run(dummyInputBuffer, dummyOutputBuffer)
-                Log.d(TAG, "Detector warmed up with GPU delegate.")
-            }
-        } else {
-            Log.d(TAG, "Skipping detector warmup (CPU mode).")
+            interpreter.run(dummyInputBuffer, dummyOutputBuffer)
+            Log.d(TAG, "Detector warmed up with GPU delegate.")
         }
     }
 
