@@ -172,7 +172,6 @@ dependencies {
     implementation(libs.litert.gpu)
     implementation(libs.litert.gpu.api)
     implementation(libs.litert.support)
-//    implementation(libs.tensorflow.lite.support)
 
     // Room Database Dependencies
     implementation(libs.androidx.room.runtime)
