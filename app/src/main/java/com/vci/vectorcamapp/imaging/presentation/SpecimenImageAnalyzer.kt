@@ -6,7 +6,7 @@ import androidx.camera.core.ImageProxy
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 
 class SpecimenImageAnalyzer(
-    private val onFrameReady: (Bitmap) -> Unit
+    private val onFrameReady: (ImageProxy) -> Unit
 ) : ImageAnalysis.Analyzer {
     companion object {
         const val FRAME_SKIP_RATE = 15
@@ -17,8 +17,7 @@ class SpecimenImageAnalyzer(
     override fun analyze(frame: ImageProxy) {
         try {
             if (frameCounter % FRAME_SKIP_RATE == 0) {
-                val bmp = frame.toUprightBitmap()
-                onFrameReady(bmp)
+                onFrameReady(frame)
             }
         } finally {
             frame.close()

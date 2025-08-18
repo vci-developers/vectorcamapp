@@ -22,8 +22,6 @@ import org.opencv.imgproc.Imgproc
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.CompatibilityList
-import org.tensorflow.lite.gpu.GpuDelegate
-import org.tensorflow.lite.gpu.GpuDelegateFactory
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import kotlin.coroutines.resume
@@ -36,7 +34,6 @@ class TfLiteSpecimenDetector(
 ) : SpecimenDetector {
 
     private var detector: Interpreter? = null
-    private var gpuDelegate: GpuDelegate? = null
 
     private val detectorLock = Any()
     private var isClosed = false
@@ -49,6 +46,8 @@ class TfLiteSpecimenDetector(
 
     private var outputNumChannels = DEFAULT_NUM_CHANNELS
     private var outputNumElements = DEFAULT_NUM_ELEMENTS
+
+    private var isGpuDelegateInitialized = false
 
     init {
         handler.post { initializeInterpreter() }
@@ -65,6 +64,7 @@ class TfLiteSpecimenDetector(
                 if (CompatibilityList().isDelegateSupportedOnThisDevice) {
                     try {
                         options.addDelegate(GpuDelegateManager.getDelegate())
+                        isGpuDelegateInitialized = true
                         Log.d(TAG, "GPU delegate initialized for Detector")
                     } catch (e: Exception) {
                         Log.w(TAG, "GPU delegate for Detector failed: ${e.message}. Falling back to CPU.")
@@ -269,13 +269,18 @@ class TfLiteSpecimenDetector(
     }
 
     private fun warmDetector() {
-        if (gpuDelegate != null) {
-            val inputShape = detector!!.getInputTensor(0).shape()
-            val outputShape = detector!!.getOutputTensor(0).shape()
-            val dummyInputBuffer = TensorBuffer.createFixedSize(inputShape, DataType.FLOAT32).buffer
-            val dummyOutputBuffer = TensorBuffer.createFixedSize(outputShape, DataType.FLOAT32).buffer
+        if (isGpuDelegateInitialized) {
+            detector?.let { interpreter ->
+                val inputShape = interpreter.getInputTensor(0).shape()
+                val outputShape = interpreter.getOutputTensor(0).shape()
+                val dummyInputBuffer = TensorBuffer.createFixedSize(inputShape, DataType.FLOAT32).buffer
+                val dummyOutputBuffer = TensorBuffer.createFixedSize(outputShape, DataType.FLOAT32).buffer
 
-            detector?.run(dummyInputBuffer, dummyOutputBuffer)
+                interpreter.run(dummyInputBuffer, dummyOutputBuffer)
+                Log.d(TAG, "Detector warmed up with GPU delegate.")
+            }
+        } else {
+            Log.d(TAG, "Skipping detector warmup (CPU mode).")
         }
     }
 
@@ -288,8 +293,6 @@ class TfLiteSpecimenDetector(
                 try {
                     detector?.close()
                     detector = null
-                    gpuDelegate?.close()
-                    gpuDelegate = null
                     handlerThread.quitSafely()
                     Log.d(TAG, "Detector closed")
                 } catch (e: Exception) {

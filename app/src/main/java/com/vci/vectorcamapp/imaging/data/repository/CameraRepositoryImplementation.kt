@@ -29,22 +29,20 @@ class CameraRepositoryImplementation @Inject constructor(
     @ApplicationContext private val context: Context
 ) : CameraRepository {
     override suspend fun captureImage(controller: LifecycleCameraController): Result<ImageProxy, ImagingError> {
-        return withContext(Dispatchers.Main) {
-            suspendCoroutine { continuation ->
-                controller.takePicture(
-                    ContextCompat.getMainExecutor(context),
-                    object : OnImageCapturedCallback() {
-                        override fun onCaptureSuccess(image: ImageProxy) {
-                            super.onCaptureSuccess(image)
-                            continuation.resume(Result.Success(image))
-                        }
+        return suspendCoroutine { continuation ->
+            controller.takePicture(
+                ContextCompat.getMainExecutor(context),
+                object : OnImageCapturedCallback() {
+                    override fun onCaptureSuccess(image: ImageProxy) {
+                        super.onCaptureSuccess(image)
+                        continuation.resume(Result.Success(image))
+                    }
 
-                        override fun onError(exception: ImageCaptureException) {
-                            super.onError(exception)
-                            continuation.resume(Result.Error(ImagingError.CAPTURE_ERROR))
-                        }
-                    })
-            }
+                    override fun onError(exception: ImageCaptureException) {
+                        super.onError(exception)
+                        continuation.resume(Result.Error(ImagingError.CAPTURE_ERROR))
+                    }
+                })
         }
     }
 

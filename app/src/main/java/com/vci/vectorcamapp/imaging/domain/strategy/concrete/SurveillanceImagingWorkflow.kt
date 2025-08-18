@@ -111,6 +111,5 @@ class SurveillanceImagingWorkflow @Inject constructor(
 
     override fun close() {
         inferenceRepository.closeResources()
-        GpuDelegateManager.close()
     }
 }
