@@ -29,6 +29,7 @@ data class ImagingState(
     val previewInferenceResults: List<InferenceResult> = emptyList(),
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),
     val manualFocusPoint: Offset? = null,
+    val autofocusPoint: Offset? = null,
     val isCameraReady: Boolean = false,
     val showExitDialog: Boolean = false,
     val pendingAction: ImagingAction? = null

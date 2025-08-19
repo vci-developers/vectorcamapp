@@ -32,6 +32,7 @@ fun LiveCameraPreview(
     onEnableManualFocus: (Offset) -> Unit,
     onCancelManualFocus: () -> Unit,
     modifier: Modifier = Modifier,
+    autofocusPoint: Offset? = null
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -51,10 +52,10 @@ fun LiveCameraPreview(
         )
     }
 
-    LaunchedEffect(inferenceResults, manualFocusPoint) {
+    LaunchedEffect(inferenceResults, manualFocusPoint, autofocusPoint) {
         if (manualFocusPoint == null) {
-            if (inferenceResults.isNotEmpty()) {
-                cameraFocusController.autoFocusAt(inferenceResults.first())
+            if (autofocusPoint != null) {
+                cameraFocusController.autoFocusAt(autofocusPoint)
             } else {
                 cameraFocusController.cancelFocus()
             }

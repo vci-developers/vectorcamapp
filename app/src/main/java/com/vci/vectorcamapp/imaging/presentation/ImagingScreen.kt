@@ -365,6 +365,7 @@ fun ImagingScreen(
                                 manualFocusPoint = state.manualFocusPoint,
                                 onEnableManualFocus = { onAction(ImagingAction.ManualFocusAt(it)) },
                                 onCancelManualFocus = { onAction(ImagingAction.CancelManualFocus) },
+                                autofocusPoint = state.autofocusPoint
                             )
 
                             ActionButton(

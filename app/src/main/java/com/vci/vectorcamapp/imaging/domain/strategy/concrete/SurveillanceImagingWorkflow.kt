@@ -17,9 +17,11 @@ class SurveillanceImagingWorkflow @Inject constructor(
     private val inferenceRepository: InferenceRepository
 ) : ImagingWorkflow {
     override suspend fun processLiveFrame(bitmap: Bitmap): LiveFrameProcessingResult {
+        val previewInferenceResults = inferenceRepository.detectSpecimen(bitmap)
         return LiveFrameProcessingResult(
             specimenId = inferenceRepository.readSpecimenId(bitmap),
-            previewInferenceResults = inferenceRepository.detectSpecimen(bitmap)
+            previewInferenceResults = previewInferenceResults,
+            autofocusPoint = inferenceRepository.computeAutofocusCentroid(bitmap, previewInferenceResults)
         )
     }
 

@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
@@ -157,7 +158,8 @@ class ImagingViewModel @Inject constructor(
 
                         _state.update {
                             it.copy(
-                                previewInferenceResults = liveFrameProcessingResult.previewInferenceResults
+                                previewInferenceResults = liveFrameProcessingResult.previewInferenceResults,
+                                autofocusPoint = liveFrameProcessingResult.autofocusPoint
                             )
                         }
                     } catch (e: Exception) {

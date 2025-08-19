@@ -6,7 +6,6 @@ import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.camera.view.PreviewView.StreamState
 import androidx.compose.ui.geometry.Offset
-import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.imaging.domain.camera.CameraFocusController
 
 class CameraFocusControllerImplementation (
@@ -20,15 +19,26 @@ class CameraFocusControllerImplementation (
             ?: Log.w("CameraFocusManager", "focusAt(): cameraControl not ready yet")
     }
 
-    override fun autoFocusAt(inferenceResult: InferenceResult) {
-        if (previewView.previewStreamState.value == StreamState.STREAMING) {
-            val focusX = (inferenceResult.bboxTopLeftX + inferenceResult.bboxWidth / 2f) * previewView.width
-            val focusY = (inferenceResult.bboxTopLeftY + inferenceResult.bboxHeight / 2f) * previewView.height
-
-            controller.cameraControl
-                ?.startFocusAndMetering(buildFocusAction(focusX, focusY))
-                ?: Log.w("CameraFocusManager", "autoFocusOn(): cameraControl not ready yet")
+    override fun autoFocusAt(offset: Offset) {
+        if (previewView.previewStreamState.value != StreamState.STREAMING) {
+            Log.d("CameraFocusManager", "autoFocusAt(normalized): stream not ready; skip")
+            return
         }
+        val w = previewView.width
+        val h = previewView.height
+        if (w == 0 || h == 0) {
+            Log.d("CameraFocusManager", "autoFocusAt(normalized): preview size 0; skip")
+            return
+        }
+
+        val fx = offset.x * w
+        val fy = offset.y * h
+        Log.d("CameraFocusManager", "autoFocusAt(normalized): focusing at px=($fx,$fy) from norm=(${offset.x},${offset.y})")
+
+        val action = buildFocusAction(fx, fy)
+        controller.cameraControl
+            ?.startFocusAndMetering(action)
+            ?: Log.w("CameraFocusManager", "autoFocusAt(normalized): cameraControl not ready yet")
     }
 
     private fun buildFocusAction(x: Float, y: Float): FocusMeteringAction {
