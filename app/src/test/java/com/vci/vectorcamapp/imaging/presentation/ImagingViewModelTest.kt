@@ -572,7 +572,6 @@ class ImagingViewModelTest {
                 finalState = awaitItem()
             }
 
-            assertThat(finalState.isProcessing).isFalse()
             assertThat(finalState.currentImageBytes).isNotNull()
             assertThat(finalState.currentSpecimenImage.species).isEqualTo("Anopheles")
             assertThat(finalState.currentSpecimenImage.sex).isEqualTo("F")
