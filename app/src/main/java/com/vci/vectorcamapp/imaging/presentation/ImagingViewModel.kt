@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.material3.SnackbarDuration
+import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
@@ -346,7 +347,7 @@ class ImagingViewModel @Inject constructor(
                     species = null,
                     sex = null,
                     abdomenStatus = null,
-                    imageUri = Uri.EMPTY,
+                    imageUri = "".toUri(),
                     metadataUploadStatus = UploadStatus.NOT_STARTED,
                     imageUploadStatus = UploadStatus.NOT_STARTED,
                     capturedAt = 0L,

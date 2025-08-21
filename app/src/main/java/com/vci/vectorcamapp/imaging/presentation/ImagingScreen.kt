@@ -62,6 +62,8 @@ import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.platform.testTag
+import com.vci.vectorcamapp.imaging.presentation.util.ImagingTestTags
 
 @Composable
 fun ImagingScreen(
@@ -97,7 +99,7 @@ fun ImagingScreen(
     }
 
     HorizontalPager(
-        state = pagerState, modifier = modifier.fillMaxSize()
+        state = pagerState, modifier = modifier.fillMaxSize().testTag(ImagingTestTags.PAGER)
     ) { page ->
         when {
             page < state.specimensWithImagesAndInferenceResults.size -> {
@@ -112,7 +114,7 @@ fun ImagingScreen(
                 )
 
                 Column(
-                    verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxSize()
+                    verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxSize().testTag(ImagingTestTags.SCREEN)
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -183,7 +185,8 @@ fun ImagingScreen(
                 Column(
                     modifier = modifier
                         .padding(top = MaterialTheme.dimensions.paddingSmall)
-                        .fillMaxSize(),
+                        .fillMaxSize()
+                        .testTag(ImagingTestTags.SCREEN),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -207,13 +210,13 @@ fun ImagingScreen(
                         ActionButton(
                             label = "Retake Image",
                             onClick = { onAction(ImagingAction.RetakeImage) },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).testTag(ImagingTestTags.BUTTON_RETAKE),
                             textSize = MaterialTheme.typography.bodyMedium
                         )
                         ActionButton(
                             label = "Save To Session",
                             onClick = { onAction(ImagingAction.SaveImageToSession) },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).testTag(ImagingTestTags.BUTTON_SAVE_TO_SESSION),
                             textSize = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -223,7 +226,7 @@ fun ImagingScreen(
             else -> {
                 Column(
                     verticalArrangement = Arrangement.Center,
-                    modifier = modifier.fillMaxSize()
+                    modifier = modifier.fillMaxSize().testTag(ImagingTestTags.SCREEN)
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingLarge),
@@ -236,7 +239,7 @@ fun ImagingScreen(
                         ActionButton(
                             label = "Exit",
                             onClick = { onAction(ImagingAction.ShowExitDialog) },
-                            modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                            modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingMedium).testTag(ImagingTestTags.BUTTON_EXIT)
                         )
                     }
 
@@ -267,7 +270,8 @@ fun ImagingScreen(
                             if (state.pendingAction == null) {
                                 OutlinedButton(
                                     onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SubmitSession)) },
-                                    border = BorderStroke(MaterialTheme.dimensions.borderThicknessThick, MaterialTheme.colors.successConfirm)
+                                    border = BorderStroke(MaterialTheme.dimensions.borderThicknessThick, MaterialTheme.colors.successConfirm),
+                                    modifier = Modifier.testTag(ImagingTestTags.EXIT_SELECT_SUBMIT)
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_cloud_upload),
@@ -289,7 +293,8 @@ fun ImagingScreen(
                                     },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colors.error
-                                    )
+                                    ),
+                                    modifier = Modifier.testTag(ImagingTestTags.EXIT_CONFIRM)
                                 ) {
                                     Text(
                                         text = "Yes, Confirm",
@@ -302,7 +307,8 @@ fun ImagingScreen(
                             if (state.pendingAction == null) {
                                 OutlinedButton(
                                     onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SaveSessionProgress)) },
-                                    border = BorderStroke(MaterialTheme.dimensions.borderThicknessThick, MaterialTheme.colors.info)
+                                    border = BorderStroke(MaterialTheme.dimensions.borderThicknessThick, MaterialTheme.colors.info),
+                                    modifier = Modifier.testTag(ImagingTestTags.EXIT_SELECT_SAVE)
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_save),
@@ -318,7 +324,10 @@ fun ImagingScreen(
                                     )
                                 }
                             } else {
-                                TextButton(onClick = { onAction(ImagingAction.ClearPendingAction) }) {
+                                TextButton(onClick = {
+                                    onAction(ImagingAction.ClearPendingAction) },
+                                    modifier = Modifier.testTag(ImagingTestTags.EXIT_BACK)
+                                ) {
                                     Text(
                                         "Back",
                                         style = MaterialTheme.typography.bodyMedium,
@@ -326,7 +335,7 @@ fun ImagingScreen(
                                     )
                                 }
                             }
-                        })
+                        }, modifier = Modifier.testTag(ImagingTestTags.EXIT_DIALOG))
                     }
 
                     InfoTile(
@@ -365,6 +374,7 @@ fun ImagingScreen(
                                 manualFocusPoint = state.manualFocusPoint,
                                 onEnableManualFocus = { onAction(ImagingAction.ManualFocusAt(it)) },
                                 onCancelManualFocus = { onAction(ImagingAction.CancelManualFocus) },
+                                modifier = Modifier.testTag(ImagingTestTags.CAMERA_PREVIEW)
                             )
 
                             ActionButton(
@@ -373,6 +383,7 @@ fun ImagingScreen(
                                 iconPainter = painterResource(id = R.drawable.ic_camera),
                                 enabled = (!state.isProcessing && state.isCameraReady),
                                 modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                                    .testTag(ImagingTestTags.BUTTON_CAPTURE)
                             )
                         }
                     }

@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import androidx.core.net.toUri
 
 data class ImagingState(
     val isLoading: Boolean = false,
@@ -18,7 +19,7 @@ data class ImagingState(
         species = null,
         sex = null,
         abdomenStatus = null,
-        imageUri = Uri.EMPTY,
+        imageUri = "".toUri(),
         metadataUploadStatus = UploadStatus.NOT_STARTED,
         imageUploadStatus = UploadStatus.NOT_STARTED,
         capturedAt = 0L,

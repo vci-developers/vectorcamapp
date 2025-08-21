@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntSize
 import coil3.compose.AsyncImage
@@ -43,6 +44,9 @@ import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
 import com.vci.vectorcamapp.imaging.presentation.components.camera.BoundingBoxOverlay
+import com.vci.vectorcamapp.imaging.presentation.util.ImagingTestTags
+import com.vci.vectorcamapp.imaging.presentation.util.ImagingTestTags.CAPTURED_SPECIMEN_PILL_CORRECT_ID_WARNING
+import com.vci.vectorcamapp.imaging.presentation.util.ImagingTestTags.CAPTURED_SPECIMEN_TEXT_FIELD_SPECIMEN_ID
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.extensions.zoomPanGesture
@@ -64,7 +68,7 @@ fun CapturedSpecimenTile(
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
-    InfoTile(modifier = modifier) {
+    InfoTile(modifier = modifier.testTag(ImagingTestTags.SPECIMEN_CAPTURED_SPECIMEN_TILE)) {
         Column(
             modifier = Modifier
                 .padding(vertical = MaterialTheme.dimensions.paddingLarge)
@@ -118,7 +122,8 @@ fun CapturedSpecimenTile(
                     Badge(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(MaterialTheme.dimensions.paddingSmall),
+                            .padding(MaterialTheme.dimensions.paddingSmall)
+                            .testTag(ImagingTestTags.SPECIMEN_BADGE_IMAGE_INDEX),
                         containerColor = MaterialTheme.colors.info,
                         contentColor = MaterialTheme.colors.buttonText
                     ) {
@@ -166,12 +171,14 @@ fun CapturedSpecimenTile(
                             label = "Specimen ID",
                             value = specimen.id,
                             onValueChange = onSpecimenIdCorrected,
-                            singleLine = true
+                            singleLine = true,
+                            modifier = Modifier.testTag(CAPTURED_SPECIMEN_TEXT_FIELD_SPECIMEN_ID)
                         )
                         InfoPill(
                             text = "Please ensure that the specimen ID is correct!",
                             color = MaterialTheme.colors.warning,
-                            iconPainter = painterResource(R.drawable.ic_warning)
+                            iconPainter = painterResource(R.drawable.ic_warning),
+                            modifier = Modifier.testTag(CAPTURED_SPECIMEN_PILL_CORRECT_ID_WARNING)
                         )
                     }
                 }
