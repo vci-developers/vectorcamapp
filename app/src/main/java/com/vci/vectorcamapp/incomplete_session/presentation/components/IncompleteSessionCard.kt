@@ -22,6 +22,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
+import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionAction
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
@@ -31,6 +32,7 @@ import java.util.Locale
 fun IncompleteSessionCard(
     session: Session,
     onClick: () -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
 
@@ -40,6 +42,7 @@ fun IncompleteSessionCard(
 
     ActionTile(
         onClick = onClick,
+        onDelete = onDelete,
         modifier = modifier
     ) {
         Row(

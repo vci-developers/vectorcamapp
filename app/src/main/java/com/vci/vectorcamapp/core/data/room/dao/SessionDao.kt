@@ -39,6 +39,9 @@ interface SessionDao {
     @Query("SELECT * FROM session WHERE localId = :sessionId")
     suspend fun getSessionAndSiteById(sessionId: UUID): SessionAndSiteRelation?
 
+    @Query("SELECT imageUri FROM specimen_image WHERE sessionId = :sessionId")
+    suspend fun getImageUrisBySessionId(sessionId: UUID): List<String>
+
     @Query("SELECT * FROM session WHERE completedAt IS NULL")
     fun observeIncompleteSessions(): Flow<List<SessionEntity>>
 

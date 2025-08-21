@@ -154,6 +154,9 @@
     <!-- Incomplete session error: Session retrieval failed -->
     <string name="incomplete_session_error_session_retrieval_failed">Unable to retrieve session. Please try again.</string>
 
+    <!-- Incomplete session error: Session deletion failed -->
+    <string name="incomplete_session_error_session_deletion_failed">Unable to delete session."</string>
+
     <!-- Incomplete session error: Unknown error -->
     <string name="incomplete_session_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
