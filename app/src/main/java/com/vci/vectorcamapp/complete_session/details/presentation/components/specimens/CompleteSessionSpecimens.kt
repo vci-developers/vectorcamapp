@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -18,6 +20,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.complete_session.details.presentation.util.matchesQuery
@@ -42,6 +46,7 @@ fun CompleteSessionSpecimens(
         )
     } else {
         var searchQuery by remember { mutableStateOf("") }
+        var executedQuery by remember { mutableStateOf("") }
 
         val allImages = remember(specimensWithImagesAndInferenceResults) {
             specimensWithImagesAndInferenceResults.asReversed().flatMap { specimenWithImages ->
@@ -54,12 +59,12 @@ fun CompleteSessionSpecimens(
             }
         }
 
-        val filteredImages = remember(searchQuery, allImages) {
-            if (searchQuery.isBlank()) {
+        val filteredImages = remember(executedQuery, allImages) {
+            if (executedQuery.isBlank()) {
                 allImages
             } else {
                 allImages.filter { (specimen, specimenImage, _) ->
-                    matchesQuery(searchQuery, specimen, specimenImage)
+                    matchesQuery(executedQuery, specimen, specimenImage)
                 }
             }
         }
@@ -68,6 +73,8 @@ fun CompleteSessionSpecimens(
             modifier = modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val keyboardController = LocalSoftwareKeyboardController.current
+
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -75,7 +82,16 @@ fun CompleteSessionSpecimens(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Search
+                ),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        executedQuery = searchQuery
+                        keyboardController?.hide()
+                    },
+                )
             )
 
             if (filteredImages.isEmpty()) {

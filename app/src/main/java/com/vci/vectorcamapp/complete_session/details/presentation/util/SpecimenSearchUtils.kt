@@ -4,29 +4,39 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import java.text.Normalizer
 
-private val TOKEN_REGEX = Regex("[\\p{L}\\p{N}]+")
-
 private fun normalize(text: String): String {
     val lower = text.lowercase().trim()
     val decomp = Normalizer.normalize(lower, Normalizer.Form.NFD)
     return decomp.replace(Regex("\\p{Mn}+"), "")
 }
 
-private fun tokensOf(text: String?): List<String> {
-    if (text.isNullOrBlank()) return emptyList()
-    return TOKEN_REGEX.findAll(normalize(text)).map { it.value }.toList()
+private fun evaluateTerm(needle: String, searchTargetTexts: List<String>): Boolean {
+    val pattern = Regex("\\b" + Regex.escape(needle))
+    return searchTargetTexts.any { fieldText -> pattern.containsMatchIn(fieldText) }
 }
 
 fun matchesQuery(query: String, specimen: Specimen, specimenImage: SpecimenImage): Boolean {
-    val needles = tokensOf(query)
-    if (needles.isEmpty()) return true
+    if (query.isBlank()) return true
 
-    val haystack = buildList {
-        addAll(tokensOf(specimen.id))
-        addAll(tokensOf(specimenImage.species))
-        addAll(tokensOf(specimenImage.sex))
-        addAll(tokensOf(specimenImage.abdomenStatus))
+    val searchTargetTexts = listOfNotNull(
+        specimen.id,
+        specimenImage.species,
+        specimenImage.sex,
+        specimenImage.abdomenStatus
+    ).map { normalize(it) }
+
+    val orGroups = query.split(',')
+
+    return orGroups.any { orGroup ->
+        val trimmedGroup = orGroup.trim()
+        if (trimmedGroup.isBlank()) {
+            false
+        } else {
+            val andTerms = trimmedGroup.split(' ').filter { it.isNotBlank() }
+
+            andTerms.all { term ->
+                evaluateTerm(normalize(term), searchTargetTexts)
+            }
+        }
     }
-
-    return needles.all { needle -> haystack.any { token -> token.startsWith(needle) } }
 }
