@@ -6,6 +6,7 @@ import androidx.compose.ui.geometry.Offset
 
 sealed interface ImagingAction {
     data class CorrectSpecimenId(val specimenId: String) : ImagingAction
+    data class VerifySpecimenIdCorrectness(val specimenIdVerified: Boolean) : ImagingAction
     data class ProcessFrame(val frame: ImageProxy) : ImagingAction
     data object SaveSessionProgress : ImagingAction
     data object SubmitSession : ImagingAction

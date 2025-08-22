@@ -31,5 +31,6 @@ data class ImagingState(
     val manualFocusPoint: Offset? = null,
     val isCameraReady: Boolean = false,
     val showExitDialog: Boolean = false,
+    val specimenIdVerified: Boolean = false,
     val pendingAction: ImagingAction? = null
 )
