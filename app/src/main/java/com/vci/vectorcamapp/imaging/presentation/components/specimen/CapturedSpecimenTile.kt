@@ -2,10 +2,8 @@ package com.vci.vectorcamapp.imaging.presentation.components.specimen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,13 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.IntSize
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -36,10 +30,8 @@ import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
-import com.vci.vectorcamapp.imaging.presentation.components.camera.BoundingBoxOverlay
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
-import com.vci.vectorcamapp.ui.extensions.zoomPanGesture
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -52,7 +44,6 @@ fun CapturedSpecimenTile(
     badgeText: String? = null,
 ) {
     val context = LocalContext.current
-    val density = LocalDensity.current
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
@@ -69,35 +60,19 @@ fun CapturedSpecimenTile(
                     .fillMaxWidth()
                     .align(Alignment.CenterHorizontally)
             ) {
-                BoxWithConstraints(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
-                        .clip(RectangleShape)
+                SpecimenImageOverlay(
+                    inferenceResult = inferenceResult
                 ) {
-                    val containerSize = IntSize(
-                        width = with(density) { maxWidth.roundToPx() },
-                        height = with(density) { maxHeight.roundToPx() }
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(specimenImage.imageUri)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = specimen.id,
+                        contentScale = ContentScale.Fit
                     )
-
-                    Box(modifier = Modifier.zoomPanGesture(containerSize)) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(context)
-                                .data(specimenImage.imageUri)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = specimen.id,
-                            contentScale = ContentScale.Fit
-                        )
-
-                        inferenceResult?.let {
-                            BoundingBoxOverlay(
-                                inferenceResult = it,
-                                overlaySize = containerSize
-                            )
-                        }
-                    }
                 }
+
                 badgeText?.let {
                     Badge(
                         modifier = Modifier

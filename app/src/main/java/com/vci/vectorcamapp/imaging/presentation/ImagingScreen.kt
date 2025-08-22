@@ -16,11 +16,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,8 +47,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -58,7 +54,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.vci.vectorcamapp.R
@@ -67,12 +62,11 @@ import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.CheckboxField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
-import com.vci.vectorcamapp.imaging.presentation.components.camera.BoundingBoxOverlay
+import com.vci.vectorcamapp.imaging.presentation.components.specimen.SpecimenImageOverlay
 import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreview
 import com.vci.vectorcamapp.imaging.presentation.components.specimen.CapturedSpecimenTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
-import com.vci.vectorcamapp.ui.extensions.zoomPanGesture
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
 @Composable
@@ -371,29 +365,14 @@ fun ImagingScreen(
                             )
                         }
 
-                        BoxWithConstraints(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
-                                .clip(RectangleShape)
+                        SpecimenImageOverlay(
+                            inferenceResult = state.currentInferenceResult
                         ) {
-                            val containerSize = IntSize(
-                                width = with(density) { maxWidth.roundToPx() },
-                                height = with(density) { maxHeight.roundToPx() })
-
-                            Box(modifier = Modifier.zoomPanGesture(containerSize)) {
-                                Image(
-                                    bitmap = specimenBitmap.asImageBitmap(),
-                                    contentDescription = state.currentSpecimen.id,
-                                    contentScale = ContentScale.FillBounds
-                                )
-
-                                state.currentInferenceResult?.let {
-                                    BoundingBoxOverlay(
-                                        inferenceResult = it, overlaySize = containerSize
-                                    )
-                                }
-                            }
+                            Image(
+                                bitmap = specimenBitmap.asImageBitmap(),
+                                contentDescription = state.currentSpecimen.id,
+                                contentScale = ContentScale.FillBounds
+                            )
                         }
 
                     } else {
