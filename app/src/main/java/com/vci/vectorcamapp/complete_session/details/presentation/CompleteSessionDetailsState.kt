@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.complete_session.details.presentation
 
 import com.vci.vectorcamapp.complete_session.details.presentation.enums.CompleteSessionDetailsTab
+import com.vci.vectorcamapp.complete_session.domain.model.SpecimenImageItem
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.Specimen
@@ -39,4 +40,7 @@ data class CompleteSessionDetailsState(
     ),
     val surveillanceForm: SurveillanceForm? = null,
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),
+    val searchQuery: String = "",
+    val executedQuery: String = "",
+    val filteredSpecimenImageItems: List<SpecimenImageItem> = emptyList()
 )

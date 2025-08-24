@@ -62,8 +62,8 @@ fun CompleteSessionDetailsScreen(
                 )
 
                 CompleteSessionDetailsTab.SESSION_SPECIMENS -> CompleteSessionSpecimens(
-                    session = state.session,
-                    specimensWithImagesAndInferenceResults = state.specimensWithImagesAndInferenceResults,
+                    state = state,
+                    onAction = onAction,
                     modifier = modifier
                 )
             }
