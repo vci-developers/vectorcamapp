@@ -50,9 +50,13 @@ object UploadVerificationUtils {
                     Log.w(TAG, "Upload incomplete - offset: $currentOffset < expected: $expectedSize")
                     DomainResult.Success(false)
                 }
-                else -> {
-                    Log.w(TAG, "Upload size mismatch - offset: $currentOffset > expected: $expectedSize")
+                currentOffset > expectedSize -> {
+                    Log.e(TAG, "Upload size exceeds expected - offset: $currentOffset > expected: $expectedSize")
                     DomainResult.Error(NetworkError.TUS_PERMANENT_ERROR)
+                }
+                else -> {
+                    Log.e(TAG, "Unexpected upload state during verification")
+                    DomainResult.Error(NetworkError.UNKNOWN_ERROR)
                 }
             }
         } catch (e: TusProtocolException) {

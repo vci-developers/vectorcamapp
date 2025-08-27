@@ -171,7 +171,19 @@ class ImageUploadWorker @AssistedInject constructor(
             resetInProgressUploads(sessionId)
         }
         
-        return if (successfulUploads == imagesToUpload.size) {
+        return shouldRetryUpload(successfulUploads, imagesToUpload.size, encounteredPermanentFailure)
+    }
+
+    /**
+     * Helper method to determine if we should retry or fail based on current state.
+     * Similar to MetadataUploadWorker's retry logic.
+     */
+    private fun shouldRetryUpload(
+        successfulUploads: Int,
+        totalUploads: Int,
+        encounteredPermanentFailure: Boolean
+    ): WorkerResult {
+        return if (successfulUploads == totalUploads) {
             WorkerResult.success()
         } else if (encounteredPermanentFailure) {
             WorkerResult.failure()
@@ -207,6 +219,7 @@ class ImageUploadWorker @AssistedInject constructor(
         val (file, contentType, md5) = try {
             val (prepared, type) = prepareFile(task.image.imageUri, task.specimen.id)
             tempFile = prepared
+            // Note: Using localId as file identifier (not actual MD5 hash)
             Triple(prepared, type, task.image.localId)
         } catch (e: Exception) {
             if (isStopped) {
@@ -236,6 +249,7 @@ class ImageUploadWorker @AssistedInject constructor(
         val uploadResult: DomainResult<String, NetworkError> = run {
             for (attempt in 1..MAX_RETRIES) {
                 val result: DomainResult<String, NetworkError> = try {
+                    // Generate unique fingerprint for TUS deduplication
                     val uniqueFingerprint = "${task.specimen.remoteId}-${task.image.localId}-$md5"
                     val tusPath = "specimens/${task.specimen.remoteId}/images/tus"
 
@@ -275,7 +289,12 @@ class ImageUploadWorker @AssistedInject constructor(
                                             }
                                             UploadVerificationUtils.ConflictResolution.CAN_RESUME -> {
                                                 Log.i(TAG, "Upload for ${task.image.localId} can be resumed.")
-                                                // Try to resume the existing upload
+                                                // Resume the existing upload and mark as in progress
+                                                specimenImageRepository.updateSpecimenImage(
+                                                    specimenImage = task.image.copy(imageUploadStatus = UploadStatus.IN_PROGRESS),
+                                                    specimenId = task.specimen.id,
+                                                    sessionId = sessionId
+                                                )
                                                 tusClient.resumeUpload(URL(location))
                                             }
                                         }
@@ -568,6 +587,7 @@ class ImageUploadWorker @AssistedInject constructor(
             .setContentTitle(title)
             .setContentText(message)
             .setSmallIcon(icon)
+            .setOngoing(false) // Allow dismissal of final notification
             .build()
         notificationManager.notify(notificationId, notification)
     }
