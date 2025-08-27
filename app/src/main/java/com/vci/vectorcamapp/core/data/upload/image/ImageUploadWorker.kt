@@ -20,6 +20,10 @@ import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
+import com.vci.vectorcamapp.core.data.upload.image.util.UploadVerificationUtils
+import com.vci.vectorcamapp.core.data.upload.image.util.getLocationHeader
+import com.vci.vectorcamapp.core.data.upload.image.util.isUploadConflict
+import com.vci.vectorcamapp.core.data.upload.image.util.shouldRetry
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -57,9 +61,11 @@ class ImageUploadWorker @AssistedInject constructor(
 
     companion object {
         const val KEY_SESSION_ID = "session_id"
-
         const val KEY_PROGRESS_UPLOADED = "progress_uploaded"
         const val KEY_PROGRESS_TOTAL = "progress_total"
+
+        private const val MAX_RETRIES = 5
+        private const val MAX_RECOVERY_ATTEMPTS = 5
 
         private const val INITIAL_CHUNK_SIZE_BYTES = 64 * 1024
         private const val MIN_CHUNK_SIZE_BYTES = 16 * 1024
@@ -68,10 +74,10 @@ class ImageUploadWorker @AssistedInject constructor(
         private const val SUCCESS_CHUNK_SIZE_MULTIPLIER = 2
         private const val FAILURE_CHUNK_SIZE_DIVIDER = 2
 
-        private const val MAX_RETRIES = 5
-
         private const val CHANNEL_ID = "image_upload_channel"
         private const val CHANNEL_NAME = "Image Upload Channel"
+        
+        private const val TAG = "ImageUploadWorker"
     }
 
     private val notificationManager =
@@ -87,20 +93,20 @@ class ImageUploadWorker @AssistedInject constructor(
     override suspend fun doWork(): WorkerResult {
         val sessionIdStr = inputData.getString(KEY_SESSION_ID)
         if (sessionIdStr == null) {
-            Log.e("ImageUploadWorker", "Session ID missing from worker input data.")
+            Log.e(TAG, "Session ID missing from worker input data.")
             return WorkerResult.failure()
         }
 
         val sessionId = try {
             UUID.fromString(sessionIdStr)
         } catch (e: IllegalArgumentException) {
-            Log.e("ImageUploadWorker", "Invalid session ID format provided: $sessionIdStr", e)
+            Log.e(TAG, "Invalid session ID format provided: $sessionIdStr", e)
             return WorkerResult.failure()
         }
 
         val session = sessionRepository.getSessionById(sessionId)
         if (session == null) {
-            Log.e("ImageUploadWorker", "Session $sessionId not found in the database.")
+            Log.e(TAG, "Session $sessionId not found in the database.")
             return WorkerResult.failure()
         }
 
@@ -116,7 +122,7 @@ class ImageUploadWorker @AssistedInject constructor(
         }
 
         if (imagesToUpload.isEmpty()) {
-            Log.d("ImageUploadWorker", "No images to upload for session $sessionId.")
+            Log.d(TAG, "No images to upload for session $sessionId.")
             return WorkerResult.success()
         }
 
@@ -134,10 +140,7 @@ class ImageUploadWorker @AssistedInject constructor(
             notificationCurrentImageIndex = index + 1
 
             if (task.image.remoteId == null) {
-                Log.e(
-                    "ImageUploadWorker",
-                    "Image ${task.image.localId} has a null remoteId. Skipping."
-                )
+                Log.e(TAG, "Image ${task.image.localId} has a null remoteId. Skipping.")
                 specimenImageRepository.updateSpecimenImage(
                     specimenImage = task.image.copy(imageUploadStatus = UploadStatus.FAILED),
                     specimenId = task.specimen.id,
@@ -162,12 +165,37 @@ class ImageUploadWorker @AssistedInject constructor(
         }
 
         showFinalStatusNotification(successfulUploads, imagesToUpload.size)
+        
+        // Reset any uploads that were in progress when worker was stopped
+        if (isStopped) {
+            resetInProgressUploads(sessionId)
+        }
+        
         return if (successfulUploads == imagesToUpload.size) {
             WorkerResult.success()
         } else if (encounteredPermanentFailure) {
             WorkerResult.failure()
         } else {
             WorkerResult.retry()
+        }
+    }
+
+    /**
+     * Reset any uploads that are marked as IN_PROGRESS back to FAILED state
+     * when the worker is stopped unexpectedly.
+     */
+    private suspend fun resetInProgressUploads(sessionId: UUID) {
+        val specimensWithImages = specimenRepository.getSpecimenImagesAndInferenceResultsBySession(sessionId)
+        specimensWithImages.forEach { specimenWithData ->
+            specimenWithData.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
+                if (specimenImage.imageUploadStatus == UploadStatus.IN_PROGRESS) {
+                    specimenImageRepository.updateSpecimenImage(
+                        specimenImage.copy(imageUploadStatus = UploadStatus.FAILED),
+                        specimenWithData.specimen.id,
+                        sessionId
+                    )
+                }
+            }
         }
     }
 
@@ -185,7 +213,7 @@ class ImageUploadWorker @AssistedInject constructor(
                 throw CancellationException("Worker was stopped during file preparation.", e)
             }
             Log.e(
-                "ImageUploadWorker",
+                TAG,
                 "Failed to prepare file or calculate MD5 for specimen ${task.image.localId}.",
                 e
             )
@@ -213,10 +241,7 @@ class ImageUploadWorker @AssistedInject constructor(
 
                     tusClient.uploadCreationURL = URL(constructUrl(tusPath))
                     val upload = createTusUpload(file, uniqueFingerprint, metadata)
-                    Log.d(
-                        "ImageUploadWorker",
-                        "Attempt $attempt: Start/resume ${file.name} (fp=$uniqueFingerprint,md5=$md5)"
-                    )
+                    Log.d(TAG, "Attempt $attempt: Start/resume ${file.name} (fp=$uniqueFingerprint,md5=$md5)")
 
                     val uploader: TusUploader = try {
                         val uploaderInstance = tusClient.resumeOrCreateUpload(upload)
@@ -225,29 +250,48 @@ class ImageUploadWorker @AssistedInject constructor(
                             specimenId = task.specimen.id,
                             sessionId = sessionId
                         )
-                        Log.d(
-                            "ImageUploadWorker",
-                            "Connection established for ${task.image.localId}."
-                        )
+                        Log.d(TAG, "Connection established for ${task.image.localId}.")
                         uploaderInstance
                     } catch (e: TusProtocolException) {
-                        if (e.causingConnection?.responseCode == HttpURLConnection.HTTP_CONFLICT) {
-                            val location = e.causingConnection.getHeaderField("Location")
+                        if (e.isUploadConflict()) {
+                            val location = e.getLocationHeader()
                             if (location != null) {
-                                Log.i(
-                                    "ImageUploadWorker",
-                                    "Upload for ${task.image.localId} already exists on server (conflict). Treating as success."
-                                )
-                                specimenImageRepository.updateSpecimenImage(
-                                    specimenImage = task.image.copy(imageUploadStatus = UploadStatus.COMPLETED),
-                                    specimenId = task.specimen.id,
-                                    sessionId = sessionId
-                                )
-                                return@run DomainResult.Success(location)
+                                Log.i(TAG, "Upload conflict detected for ${task.image.localId}. Verifying completion...")
+                                
+                                // CRITICAL FIX: Verify upload completion before marking as complete
+                                when (val conflictResult = UploadVerificationUtils.handleUploadConflict(
+                                    tusClient, upload, location
+                                )) {
+                                    is DomainResult.Success -> {
+                                        when (conflictResult.data) {
+                                            UploadVerificationUtils.ConflictResolution.UPLOAD_COMPLETE -> {
+                                                Log.i(TAG, "Upload for ${task.image.localId} verified as complete.")
+                                                specimenImageRepository.updateSpecimenImage(
+                                                    specimenImage = task.image.copy(imageUploadStatus = UploadStatus.COMPLETED),
+                                                    specimenId = task.specimen.id,
+                                                    sessionId = sessionId
+                                                )
+                                                return@run DomainResult.Success(location)
+                                            }
+                                            UploadVerificationUtils.ConflictResolution.CAN_RESUME -> {
+                                                Log.i(TAG, "Upload for ${task.image.localId} can be resumed.")
+                                                // Try to resume the existing upload
+                                                tusClient.resumeUpload(URL(location))
+                                            }
+                                        }
+                                    }
+                                    is DomainResult.Error -> {
+                                        Log.w(TAG, "Failed to verify conflict resolution: ${conflictResult.error}")
+                                        throw e // Fall back to original exception handling
+                                    }
+                                }
+                            } else {
+                                Log.w(TAG, "Upload conflict without location header for ${task.image.localId}")
+                                throw e
                             }
+                        } else {
+                            throw e
                         }
-                        file.delete()
-                        throw e
                     }
 
                     when (val loopResult = executeUploadLoop(uploader, upload, file)) {
@@ -255,69 +299,45 @@ class ImageUploadWorker @AssistedInject constructor(
                         is DomainResult.Success -> {
                             when (val finalUrlResult = safeFinish(uploader, file)) {
                                 is DomainResult.Success -> {
-                                    Log.d(
-                                        "ImageUploadWorker",
-                                        "Upload finished successfully: ${finalUrlResult.data}"
-                                    )
+                                    Log.d(TAG, "Upload finished successfully: ${finalUrlResult.data}")
                                     DomainResult.Success(finalUrlResult.data.toString())
                                 }
-
                                 is DomainResult.Error -> finalUrlResult
                             }
                         }
                     }
                 } catch (e: TusProtocolException) {
-                    Log.w(
-                        "ImageUploadWorker",
-                        "Attempt $attempt failed with TusProtocolException.",
-                        e
-                    )
+                    Log.w(TAG, "Attempt $attempt failed with TusProtocolException.", e)
                     if (e.shouldRetry()) {
                         DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                     } else {
                         DomainResult.Error(NetworkError.TUS_PERMANENT_ERROR)
                     }
                 } catch (e: IOException) {
-                    Log.w("ImageUploadWorker", "Attempt $attempt failed with IOException.", e)
+                    Log.w(TAG, "Attempt $attempt failed with IOException.", e)
                     DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                 } catch (e: Exception) {
                     if (isStopped) {
                         file.delete()
                         throw CancellationException("Worker was stopped by the system.", e)
                     }
-                    Log.e(
-                        "ImageUploadWorker",
-                        "Exception on attempt $attempt for specimen ${task.image.localId}.",
-                        e
-                    )
+                    Log.e(TAG, "Exception on attempt $attempt for specimen ${task.image.localId}.", e)
                     return@run DomainResult.Error(NetworkError.UNKNOWN_ERROR)
                 }
 
                 if (result is DomainResult.Success) {
-                    Log.d(
-                        "ImageUploadWorker",
-                        "Success for specimen ${task.image.localId} on attempt $attempt"
-                    )
+                    Log.d(TAG, "Success for specimen ${task.image.localId} on attempt $attempt")
                     return@run result
                 }
 
                 result as DomainResult.Error<NetworkError>
-                Log.w(
-                    "ImageUploadWorker",
-                    "Failed attempt $attempt for specimen ${task.image.localId} with error: ${result.error}"
-                )
+                Log.w(TAG, "Failed attempt $attempt for specimen ${task.image.localId} with error: ${result.error}")
 
                 if (result.error == NetworkError.TUS_PERMANENT_ERROR || attempt == MAX_RETRIES) {
                     if (result.error == NetworkError.TUS_PERMANENT_ERROR) {
-                        Log.e(
-                            "ImageUploadWorker",
-                            "Permanent error for specimen ${task.image.localId}."
-                        )
+                        Log.e(TAG, "Permanent error for specimen ${task.image.localId}.")
                     } else {
-                        Log.e(
-                            "ImageUploadWorker",
-                            "Max retries reached for specimen ${task.image.localId}."
-                        )
+                        Log.e(TAG, "Max retries reached for specimen ${task.image.localId}.")
                     }
                     return@run result
                 }
@@ -397,10 +417,7 @@ class ImageUploadWorker @AssistedInject constructor(
                             (currentChunkSize * SUCCESS_CHUNK_SIZE_MULTIPLIER).coerceAtMost(
                                 MAX_CHUNK_SIZE_BYTES
                             )
-                        Log.i(
-                            "ImageUploadWorker",
-                            "Increasing chunk size to $currentChunkSize bytes."
-                        )
+                        Log.i(TAG, "Increasing chunk size to $currentChunkSize bytes.")
                         successfulUploadsInARow = 0
                     }
                 }
@@ -418,11 +435,8 @@ class ImageUploadWorker @AssistedInject constructor(
                     }
 
                     recoveryAttempts++
-                    if (recoveryAttempts >= MAX_RETRIES) {
-                        Log.e(
-                            "ImageUploadWorker",
-                            "Exceeded max recovery attempts for a single image upload. Failing."
-                        )
+                    if (recoveryAttempts >= MAX_RECOVERY_ATTEMPTS) {
+                        Log.e(TAG, "Exceeded max recovery attempts for a single image upload. Failing.")
                         return DomainResult.Error(error)
                     }
 
@@ -436,13 +450,13 @@ class ImageUploadWorker @AssistedInject constructor(
                                 resumeException
                             )
                         }
-                        Log.e("ImageUploadWorker", "Failed to resume upload.", resumeException)
+                        Log.e(TAG, "Failed to resume upload.", resumeException)
                         return DomainResult.Error(NetworkError.UNKNOWN_ERROR)
                     }
                 }
             }
         }
-        Log.d("ImageUploadWorker", "Upload loop finished. Final offset: ${uploader.offset}")
+        Log.d(TAG, "Upload loop finished. Final offset: ${uploader.offset}")
         return DomainResult.Success(Unit)
     }
 
@@ -488,24 +502,24 @@ class ImageUploadWorker @AssistedInject constructor(
         withContext(Dispatchers.IO) {
             try {
                 uploader.finish()
-                Log.d("ImageUploadWorker", "Tus finish() successful.")
+                Log.d(TAG, "Tus finish() successful.")
                 DomainResult.Success(uploader.uploadURL)
             } catch (e: TusProtocolException) {
-                Log.w("ImageUploadWorker", "finish() failed with TusProtocolException.", e)
+                Log.w(TAG, "finish() failed with TusProtocolException.", e)
                 if (e.shouldRetry()) {
                     DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                 } else {
                     DomainResult.Error(NetworkError.TUS_PERMANENT_ERROR)
                 }
             } catch (e: IOException) {
-                Log.e("ImageUploadWorker", "finish() failed due to IOException.", e)
+                Log.e(TAG, "finish() failed due to IOException.", e)
                 DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
             } catch (e: Exception) {
                 if (isStopped) {
                     file.delete()
                     throw CancellationException("Worker was stopped during Tus finish().", e)
                 }
-                Log.e("ImageUploadWorker", "finish() failed due to unexpected exception.", e)
+                Log.e(TAG, "finish() failed due to unexpected exception.", e)
                 DomainResult.Error(NetworkError.UNKNOWN_ERROR)
             }
         }
