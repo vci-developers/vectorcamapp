@@ -17,11 +17,12 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 fun ToggleField(
     label: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = MaterialTheme.dimensions.paddingSmall)
     ) {
