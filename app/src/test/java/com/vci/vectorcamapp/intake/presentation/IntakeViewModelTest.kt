@@ -308,10 +308,10 @@ class IntakeViewModelTest {
         initializeIntakeViewModel(programIdentifier = 1, allSites = listOf(site))
 
         intakeViewModel.state.test {
-            var loaded: IntakeState
+            var isLoaded: IntakeState
             do {
-                loaded = awaitItem()
-            } while (loaded.allSitesInProgram.isEmpty())
+                isLoaded = awaitItem()
+            } while (isLoaded.allSitesInProgram.isEmpty())
 
             intakeViewModel.onAction(IntakeAction.SelectDistrict("District A"))
             val afterDistrictA = awaitItem()
@@ -358,8 +358,8 @@ class IntakeViewModelTest {
         coEvery { surveillanceFormRepository.upsertSurveillanceForm(any(), any()) } returns Result.Success(Unit)
 
         intakeViewModel.state.test {
-            var s: IntakeState
-            do { s = awaitItem() } while (s.allSitesInProgram.isEmpty())
+            var state: IntakeState
+            do { state = awaitItem() } while (state.allSitesInProgram.isEmpty())
 
             intakeViewModel.onAction(IntakeAction.SelectDistrict("Kampala"))
             awaitItem()
