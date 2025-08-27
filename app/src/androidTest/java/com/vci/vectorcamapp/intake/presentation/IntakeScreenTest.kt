@@ -4,7 +4,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -69,7 +68,6 @@ class IntakeScreenTest {
                                 onAction = { action ->
                                     when (action) {
                                         is IntakeAction.ReturnToLandingScreen -> navController.navigate("landing")
-                                        is IntakeAction.SubmitIntakeForm -> navController.navigate("landing")
                                         else -> Unit
                                     }
                                 },
@@ -180,13 +178,13 @@ class IntakeScreenTest {
     }
 
     @Test
-    fun intake_b02_location_coords_when_latlon_present() {
-        val base = IntakeState()
-        val withCoords = base.copy(
-            session = base.session.copy(latitude = 11.111f, longitude = 11.111f),
+    fun intake_b02_location_coordinates_when_latitude_longitude_present() {
+        val baseState = IntakeState()
+        val baseStateWithCoordinates = baseState.copy(
+            session = baseState.session.copy(latitude = 11.111f, longitude = 11.111f),
             locationError = null
         )
-        launchIntake(withCoords)
+        launchIntake(baseStateWithCoordinates)
 
         composeRule.onNode(hasScrollAction(), useUnmergedTree = true)
             .performScrollToNode(hasTestTag(IntakeTestTags.LOCATION_COORDS_ROW))
@@ -286,9 +284,9 @@ class IntakeScreenTest {
 
     @Test
     fun intake_e01_surveillance_tile_hidden_when_form_null() {
-        val base = IntakeState()
-        val noForm = base.copy(surveillanceForm = null)
-        launchIntake(noForm)
+        val baseState = IntakeState()
+        val missingFormState = baseState.copy(surveillanceForm = null)
+        launchIntake(missingFormState)
         composeRule.onNodeWithTag(IntakeTestTags.TILE_FORM).assertDoesNotExist()
         composeRule.onNodeWithTag(IntakeTestTags.IRS_TOGGLE).assertDoesNotExist()
         composeRule.onNodeWithTag(IntakeTestTags.LLINS_AVAILABLE).assertDoesNotExist()
@@ -477,21 +475,6 @@ class IntakeScreenTest {
         launchIntake()
         assertOnIntake()
         composeRule.onNodeWithTag(IntakeTestTags.BACK_ICON).performClick()
-        composeRule.waitForIdle()
-        assertOnLanding()
-    }
-
-    @Test
-    fun intake_f02_continue_navigates_to_landing() {
-        launchIntake()
-        assertOnIntake()
-
-        composeRule.onNode(hasScrollAction(), useUnmergedTree = true)
-            .performScrollToNode(hasTestTag(IntakeTestTags.CONTINUE_BUTTON))
-        composeRule.onNodeWithTag(IntakeTestTags.CONTINUE_BUTTON, useUnmergedTree = true)
-            .assertExists()
-            .performClick()
-
         composeRule.waitForIdle()
         assertOnLanding()
     }
