@@ -9,6 +9,6 @@ interface InferenceRepository {
     suspend fun readSpecimenId(bitmap: Bitmap): String
     suspend fun detectSpecimen(bitmap: Bitmap): List<InferenceResult>
     suspend fun classifySpecimen(croppedBitmap: Bitmap): Triple<ClassifierResult?, ClassifierResult?, ClassifierResult?>
-    suspend fun computeAutofocusCentroid (bitmap: Bitmap, detectionResults: List<InferenceResult>): Offset?
+    suspend fun computeAutofocusCentroid(bitmap: Bitmap, detection: InferenceResult): Offset?
     fun closeResources()
 }

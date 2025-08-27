@@ -123,12 +123,12 @@ class ImagingViewModel @Inject constructor(
                     actionToConfirm?.let { onAction(it) }
                 }
 
-                is ImagingAction.ManualFocusAt -> {
-                    _state.update { it.copy(manualFocusPoint = action.offset) }
+                is ImagingAction.FocusAt -> {
+                    _state.update { it.copy(focusPoint = action.offset, isAutofocusing = false) }
                 }
 
-                is ImagingAction.CancelManualFocus -> {
-                    _state.update { it.copy(manualFocusPoint = null) }
+                ImagingAction.CancelFocus -> {
+                    _state.update { it.copy(focusPoint = null, isAutofocusing = true) }
                 }
 
                 is ImagingAction.CorrectSpecimenId -> {
@@ -158,10 +158,30 @@ class ImagingViewModel @Inject constructor(
                             }
                         }
 
-                        _state.update {
-                            it.copy(
+                        val suggestedAutofocusPoint = liveFrameProcessingResult.autofocusPoint
+
+                        _state.update { current ->
+                            val shouldUseAutofocusThisFrame =
+                                current.isAutofocusing || (current.focusPoint == null && suggestedAutofocusPoint != null)
+
+                            val nextFocusPoint =
+                                if (shouldUseAutofocusThisFrame) {
+                                    suggestedAutofocusPoint ?: current.focusPoint
+                                } else {
+                                    current.focusPoint
+                                }
+
+                            val nextIsAutofocusing =
+                                when {
+                                    current.isAutofocusing -> true
+                                    current.focusPoint == null && suggestedAutofocusPoint != null -> true
+                                    else -> false
+                                }
+
+                            current.copy(
                                 previewInferenceResults = liveFrameProcessingResult.previewInferenceResults,
-                                autofocusPoint = liveFrameProcessingResult.autofocusPoint
+                                focusPoint = nextFocusPoint,
+                                isAutofocusing = nextIsAutofocusing
                             )
                         }
                     } catch (e: Exception) {
@@ -371,6 +391,8 @@ class ImagingViewModel @Inject constructor(
                 currentImageBytes = null,
                 isCameraReady = false,
                 previewInferenceResults = emptyList(),
+                focusPoint = null,
+                isAutofocusing = false
             )
         }
     }

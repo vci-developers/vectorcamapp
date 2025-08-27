@@ -28,11 +28,11 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 fun LiveCameraPreview(
     controller: LifecycleCameraController,
     inferenceResults: List<InferenceResult>,
-    manualFocusPoint: Offset?,
-    onEnableManualFocus: (Offset) -> Unit,
-    onCancelManualFocus: () -> Unit,
+    focusPoint: Offset?,
+    onFocusAt: (Offset) -> Unit,
+    onCancelFocus: () -> Unit,
     modifier: Modifier = Modifier,
-    autofocusPoint: Offset? = null
+    isAutofocusing: Boolean
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -52,13 +52,11 @@ fun LiveCameraPreview(
         )
     }
 
-    LaunchedEffect(inferenceResults, manualFocusPoint, autofocusPoint) {
-        if (manualFocusPoint == null) {
-            if (autofocusPoint != null) {
-                cameraFocusController.autoFocusAt(autofocusPoint)
-            } else {
-                cameraFocusController.cancelFocus()
-            }
+    LaunchedEffect(focusPoint) {
+        if (focusPoint == null) {
+            cameraFocusController.cancelFocus()
+        } else {
+            cameraFocusController.focusAt(focusPoint)
         }
     }
 
@@ -84,19 +82,33 @@ fun LiveCameraPreview(
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) {
-                    detectTapGestures { offset ->
-                        cameraFocusController.manualFocusAt(offset)
-                        onEnableManualFocus(offset)
+                    detectTapGestures { tapOffsetInPixels ->
+                        if (containerSize.width > 0 && containerSize.height > 0) {
+                            val normalizedTap = Offset(
+                                x = tapOffsetInPixels.x / containerSize.width.toFloat(),
+                                y = tapOffsetInPixels.y / containerSize.height.toFloat()
+                            )
+                            onFocusAt(normalizedTap)
+                        }
                     }
                 }
         ) {
-            manualFocusPoint?.let { focusPoint ->
-                if (containerSize != IntSize.Zero) {
-                    AutofocusRingOverlay(
-                        focusPoint = focusPoint, overlaySize = containerSize, onCancel = {
-                            cameraFocusController.cancelFocus()
-                            onCancelManualFocus()
-                        })
+            if (!isAutofocusing) {
+                focusPoint?.let { normalized ->
+                    if (containerSize != IntSize.Zero) {
+                        val ringOffsetInPixels = Offset(
+                            x = normalized.x * containerSize.width,
+                            y = normalized.y * containerSize.height
+                        )
+                        AutofocusRingOverlay(
+                            focusPoint = ringOffsetInPixels,
+                            overlaySize = containerSize,
+                            onCancel = {
+                                cameraFocusController.cancelFocus()
+                                onCancelFocus()
+                            }
+                        )
+                    }
                 }
             }
         }

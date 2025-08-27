@@ -74,16 +74,13 @@ class InferenceRepositoryImplementation @Inject constructor(
 
     override suspend fun computeAutofocusCentroid(
         bitmap: Bitmap,
-        detections: List<InferenceResult>
+        detection: InferenceResult
     ): Offset? = withContext(Dispatchers.Default) {
-        if (detections.isEmpty()) return@withContext null
 
-        val det = detections.maxByOrNull { it.bboxConfidence } ?: return@withContext null
-
-        val x1 = (det.bboxTopLeftX * bitmap.width).toInt().coerceIn(0, bitmap.width - 1)
-        val y1 = (det.bboxTopLeftY * bitmap.height).toInt().coerceIn(0, bitmap.height - 1)
-        val x2 = ((det.bboxTopLeftX + det.bboxWidth) * bitmap.width).toInt().coerceIn(0, bitmap.width)
-        val y2 = ((det.bboxTopLeftY + det.bboxHeight) * bitmap.height).toInt().coerceIn(0, bitmap.height)
+        val x1 = (detection.bboxTopLeftX * bitmap.width).toInt().coerceIn(0, bitmap.width - 1)
+        val y1 = (detection.bboxTopLeftY * bitmap.height).toInt().coerceIn(0, bitmap.height - 1)
+        val x2 = ((detection.bboxTopLeftX + detection.bboxWidth) * bitmap.width).toInt().coerceIn(0, bitmap.width)
+        val y2 = ((detection.bboxTopLeftY + detection.bboxHeight) * bitmap.height).toInt().coerceIn(0, bitmap.height)
         if (x2 <= x1 || y2 <= y1) return@withContext null
 
         val cropped = Bitmap.createBitmap(bitmap, x1, y1, x2 - x1, y2 - y1)

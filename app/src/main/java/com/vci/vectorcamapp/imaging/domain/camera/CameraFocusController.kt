@@ -4,7 +4,6 @@ import androidx.compose.ui.geometry.Offset
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 
 interface CameraFocusController {
-    fun manualFocusAt(offset: Offset)
-    fun autoFocusAt(offset: Offset)
+    fun focusAt(offset: Offset)
     fun cancelFocus()
 }
