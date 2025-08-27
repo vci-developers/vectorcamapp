@@ -16,6 +16,7 @@ import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import kotlin.coroutines.resume
@@ -40,6 +41,7 @@ class TfLiteSpecimenClassifier(
     private var inputTensorWidth = DEFAULT_TENSOR_WIDTH
 
     private var outputNumClasses = DEFAULT_NUM_CLASSES
+    private var isGpuDelegateInitialized = false
 
     init {
         handler.post { initializeInterpreter() }
@@ -53,7 +55,24 @@ class TfLiteSpecimenClassifier(
                 val model = FileUtil.loadMappedFile(context, filePath)
                 val options = Interpreter.Options()
 
-                options.setNumThreads(Runtime.getRuntime().availableProcessors())
+                // GPU delegate setup for classifiers
+                if (CompatibilityList().isDelegateSupportedOnThisDevice) {
+                    try {
+                        val gpuDelegate = GpuDelegateManager.getDelegate()
+                        options.addDelegate(gpuDelegate)
+                        isGpuDelegateInitialized = true
+                        Log.d(TAG, "GPU delegate initialized for Classifier ($filePath) on thread: ${Thread.currentThread().name}")
+                    } catch (e: Exception) {
+                        Log.w(TAG, "GPU delegate for Classifier ($filePath) failed: ${e.message}. Falling back to CPU.")
+                        isGpuDelegateInitialized = false
+                    }
+                }
+
+                // Optimize CPU threads only if GPU is not available
+                if (!isGpuDelegateInitialized) {
+                    options.setNumThreads(minOf(Runtime.getRuntime().availableProcessors(), 4))
+                }
+
                 classifier = Interpreter(model, options)
 
                 classifier?.let {
@@ -63,9 +82,9 @@ class TfLiteSpecimenClassifier(
                     outputNumClasses = it.getOutputTensor(0).shape()[1]
                 }
 
-                Log.d(TAG, "TFLite interpreter initialized")
+                Log.d(TAG, "TFLite classifier initialized with ${if (isGpuDelegateInitialized) "GPU" else "CPU"} delegate for $filePath")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
+                Log.e(TAG, "Failed to initialize TFLite classifier for $filePath: ${e.message}")
             }
         }
     }
@@ -182,8 +201,14 @@ class TfLiteSpecimenClassifier(
                 try {
                     classifier?.close()
                     classifier = null
+                    
+                    // Close the GPU delegate for this thread
+                    if (isGpuDelegateInitialized) {
+                        GpuDelegateManager.closeCurrentThreadDelegate()
+                    }
+                    
                     handlerThread.quitSafely()
-                    Log.d(TAG, "Classifier closed")
+                    Log.d(TAG, "Classifier closed and GPU delegate cleaned up for $filePath")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error during classifier close: ${e.message}")
                 }

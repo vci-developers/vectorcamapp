@@ -24,6 +24,7 @@ import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
@@ -38,7 +39,9 @@ class TfLiteSpecimenDetector(
     private val detectorLock = Any()
     private var isClosed = false
 
-    private val handlerThread = HandlerThread("TFLiteSpecimenDetectorThread").apply { start() }
+    private val handlerThread = HandlerThread("TFLiteSpecimenDetectorThread").apply { 
+        start()
+    }
     private val handler = Handler(handlerThread.looper)
 
     private var inputTensorHeight = DEFAULT_TENSOR_HEIGHT
@@ -48,6 +51,7 @@ class TfLiteSpecimenDetector(
     private var outputNumElements = DEFAULT_NUM_ELEMENTS
 
     private var isGpuDelegateInitialized = false
+    private val isInferenceRunning = AtomicBoolean(false)
 
     init {
         handler.post { initializeInterpreter() }
@@ -61,17 +65,24 @@ class TfLiteSpecimenDetector(
                 val model = FileUtil.loadMappedFile(context, "detect.tflite")
                 val options = Interpreter.Options()
 
+                // GPU delegate setup with proper error handling
                 if (CompatibilityList().isDelegateSupportedOnThisDevice) {
                     try {
-                        options.addDelegate(GpuDelegateManager.getDelegate())
+                        val gpuDelegate = GpuDelegateManager.getDelegate()
+                        options.addDelegate(gpuDelegate)
                         isGpuDelegateInitialized = true
-                        Log.d(TAG, "GPU delegate initialized for Detector")
+                        Log.d(TAG, "GPU delegate initialized for Detector on thread: ${Thread.currentThread().name}")
                     } catch (e: Exception) {
                         Log.w(TAG, "GPU delegate for Detector failed: ${e.message}. Falling back to CPU.")
+                        isGpuDelegateInitialized = false
                     }
                 }
 
-                options.setNumThreads(Runtime.getRuntime().availableProcessors())
+                // Optimize CPU threads only if GPU is not available
+                if (!isGpuDelegateInitialized) {
+                    options.setNumThreads(minOf(Runtime.getRuntime().availableProcessors(), 4))
+                }
+
                 detector = Interpreter(model, options)
 
                 detector?.let {
@@ -82,13 +93,14 @@ class TfLiteSpecimenDetector(
                     outputNumElements = it.getOutputTensor(0).shape()[2]
                 }
 
+                // Warm up the detector with GPU if available
                 if (isGpuDelegateInitialized) {
                     warmDetector()
-                }
-                else {
+                } else {
                     Log.d(TAG, "Skipping detector warmup (CPU mode).")
                 }
-                Log.d(TAG, "TFLite interpreter initialized")
+                
+                Log.d(TAG, "TFLite interpreter initialized with ${if (isGpuDelegateInitialized) "GPU" else "CPU"} delegate")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
             }
@@ -102,11 +114,18 @@ class TfLiteSpecimenDetector(
     override suspend fun detect(bitmap: Bitmap): List<InferenceResult> {
         if (!isReady()) return emptyList()
 
+        // For live frames, skip if inference is already running to prevent stutter
+        if (!isInferenceRunning.compareAndSet(false, true)) {
+            Log.d(TAG, "Skipping inference - previous inference still running")
+            return emptyList()
+        }
+
         return suspendCoroutine { continuation ->
             handler.post {
                 try {
+                    val startTime = System.currentTimeMillis()
+                    
                     val inputMatrix = prepareInputMatrix(bitmap)
-
                     val preprocessedMatrix = preprocessMatrix(inputMatrix)
                     val preprocessedMatrixHeight = preprocessedMatrix.height()
                     val preprocessedMatrixWidth = preprocessedMatrix.width()
@@ -135,10 +154,16 @@ class TfLiteSpecimenDetector(
                         getDetectedResults(outputTensor.floatArray)
                     }
 
+                    val inferenceTime = System.currentTimeMillis() - startTime
+                    Log.d(TAG, "Inference completed in ${inferenceTime}ms, found ${result.size} detections")
+                    
                     continuation.resume(result)
                 } catch (e: Exception) {
                     Log.e(TAG, "Inference failed: ${e.message}")
                     continuation.resume(emptyList())
+                } finally {
+                    // Always reset the inference flag
+                    isInferenceRunning.set(false)
                 }
             }
         }
@@ -295,8 +320,14 @@ class TfLiteSpecimenDetector(
                 try {
                     detector?.close()
                     detector = null
+                    
+                    // Close the GPU delegate for this thread
+                    if (isGpuDelegateInitialized) {
+                        GpuDelegateManager.closeCurrentThreadDelegate()
+                    }
+                    
                     handlerThread.quitSafely()
-                    Log.d(TAG, "Detector closed")
+                    Log.d(TAG, "Detector closed and GPU delegate cleaned up")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error during detector close: ${e.message}")
                 }

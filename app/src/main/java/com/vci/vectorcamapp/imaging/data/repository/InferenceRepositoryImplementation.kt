@@ -77,6 +77,6 @@ class InferenceRepositoryImplementation @Inject constructor(
         speciesClassifier.close()
         sexClassifier.close()
         abdomenStatusClassifier.close()
-        GpuDelegateManager.close()
+        GpuDelegateManager.closeAll()
     }
 }
