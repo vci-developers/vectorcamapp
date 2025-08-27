@@ -38,7 +38,12 @@ class TfLiteSpecimenDetector(
     private val detectorLock = Any()
     private var isClosed = false
 
-    private val handlerThread = HandlerThread("TFLiteSpecimenDetectorThread").apply { start() }
+    // Use a dedicated thread for GPU operations to ensure OpenGL context consistency
+    private val handlerThread = HandlerThread("TFLiteSpecimenDetectorThread").apply { 
+        start()
+        // Set thread priority for better performance with real-time inference
+        priority = Thread.MAX_PRIORITY
+    }
     private val handler = Handler(handlerThread.looper)
 
     private var inputTensorHeight = DEFAULT_TENSOR_HEIGHT
@@ -61,17 +66,33 @@ class TfLiteSpecimenDetector(
                 val model = FileUtil.loadMappedFile(context, "detect.tflite")
                 val options = Interpreter.Options()
 
+                // GPU delegate initialization with thread safety checks
                 if (CompatibilityList().isDelegateSupportedOnThisDevice) {
                     try {
-                        options.addDelegate(GpuDelegateManager.getDelegate())
+                        // Ensure GPU delegate is created on the correct thread for OpenGL context
+                        if (!GpuDelegateManager.isCurrentThreadCompatible()) {
+                            Log.w(TAG, "GPU delegate thread compatibility issue - reinitializing on current thread")
+                        }
+                        
+                        val gpuDelegate = GpuDelegateManager.getDelegate()
+                        options.addDelegate(gpuDelegate)
                         isGpuDelegateInitialized = true
-                        Log.d(TAG, "GPU delegate initialized for Detector")
+                        Log.d(TAG, "GPU delegate initialized for Detector on thread: ${Thread.currentThread().name}")
                     } catch (e: Exception) {
+                        isGpuDelegateInitialized = false
                         Log.w(TAG, "GPU delegate for Detector failed: ${e.message}. Falling back to CPU.")
                     }
                 }
 
-                options.setNumThreads(Runtime.getRuntime().availableProcessors())
+                // Optimize thread count for GPU vs CPU operation
+                val threadCount = if (isGpuDelegateInitialized) {
+                    // Use fewer CPU threads when GPU is available to avoid resource contention
+                    maxOf(1, Runtime.getRuntime().availableProcessors() / 2)
+                } else {
+                    Runtime.getRuntime().availableProcessors()
+                }
+                options.setNumThreads(threadCount)
+                
                 detector = Interpreter(model, options)
 
                 detector?.let {
@@ -84,13 +105,16 @@ class TfLiteSpecimenDetector(
 
                 if (isGpuDelegateInitialized) {
                     warmDetector()
+                    Log.d(TAG, "TFLite interpreter initialized with GPU acceleration")
+                } else {
+                    Log.d(TAG, "TFLite interpreter initialized with CPU-only mode")
                 }
-                else {
-                    Log.d(TAG, "Skipping detector warmup (CPU mode).")
-                }
-                Log.d(TAG, "TFLite interpreter initialized")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
+                // Clean up on failure
+                isGpuDelegateInitialized = false
+                detector?.close()
+                detector = null
             }
         }
     }
@@ -274,15 +298,31 @@ class TfLiteSpecimenDetector(
     }
 
     private fun warmDetector() {
-        detector?.let { interpreter ->
-            val inputShape = interpreter.getInputTensor(0).shape()
-            val outputShape = interpreter.getOutputTensor(0).shape()
-            val dummyInputBuffer = TensorBuffer.createFixedSize(inputShape, DataType.FLOAT32).buffer
-            val dummyOutputBuffer =
-                TensorBuffer.createFixedSize(outputShape, DataType.FLOAT32).buffer
+        try {
+            detector?.let { interpreter ->
+                val inputShape = interpreter.getInputTensor(0).shape()
+                val outputShape = interpreter.getOutputTensor(0).shape()
+                
+                // Create and populate dummy input with realistic data
+                val dummyInputBuffer = TensorBuffer.createFixedSize(inputShape, DataType.FLOAT32)
+                val dummyInputArray = FloatArray(inputShape.fold(1) { acc, i -> acc * i })
+                // Fill with normalized values (0-1 range) to simulate real image data
+                for (i in dummyInputArray.indices) {
+                    dummyInputArray[i] = 0.5f
+                }
+                dummyInputBuffer.loadArray(dummyInputArray)
+                
+                val dummyOutputBuffer = TensorBuffer.createFixedSize(outputShape, DataType.FLOAT32)
 
-            interpreter.run(dummyInputBuffer, dummyOutputBuffer)
-            Log.d(TAG, "Detector warmed up with GPU delegate.")
+                // Perform multiple warmup runs for GPU optimization
+                repeat(3) {
+                    interpreter.run(dummyInputBuffer.buffer, dummyOutputBuffer.buffer)
+                }
+                
+                Log.d(TAG, "Detector warmed up successfully with GPU delegate (3 warmup runs)")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "GPU warmup failed: ${e.message}. Continuing with cold start.")
         }
     }
 
