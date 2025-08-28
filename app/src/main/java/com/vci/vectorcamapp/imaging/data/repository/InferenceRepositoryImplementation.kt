@@ -77,49 +77,61 @@ class InferenceRepositoryImplementation @Inject constructor(
         detection: InferenceResult
     ): Offset? = withContext(Dispatchers.Default) {
 
-        val x1 = (detection.bboxTopLeftX * bitmap.width).toInt().coerceIn(0, bitmap.width - 1)
-        val y1 = (detection.bboxTopLeftY * bitmap.height).toInt().coerceIn(0, bitmap.height - 1)
-        val x2 = ((detection.bboxTopLeftX + detection.bboxWidth) * bitmap.width).toInt().coerceIn(0, bitmap.width)
-        val y2 = ((detection.bboxTopLeftY + detection.bboxHeight) * bitmap.height).toInt().coerceIn(0, bitmap.height)
-        if (x2 <= x1 || y2 <= y1) return@withContext null
+        val topLeftX = (detection.bboxTopLeftX * bitmap.width).toInt()
+        val topLeftY = (detection.bboxTopLeftY * bitmap.height).toInt()
+        val cropWidth = (detection.bboxWidth * bitmap.width).toInt()
+        val cropHeight = (detection.bboxHeight * bitmap.height).toInt()
 
-        val cropped = Bitmap.createBitmap(bitmap, x1, y1, x2 - x1, y2 - y1)
+        val validCropWidth = (topLeftX + cropWidth).coerceAtMost(bitmap.width) - topLeftX
+        val validCropHeight = (topLeftY + cropHeight).coerceAtMost(bitmap.height) - topLeftY
 
-        val mat = Mat()
-        Utils.bitmapToMat(cropped, mat)
+        if (validCropWidth <= 0 || validCropHeight <= 0) {
+            return@withContext null
+        }
 
-        val gray = Mat()
-        Imgproc.cvtColor(mat, gray, Imgproc.COLOR_BGR2GRAY)
+        val croppedBitmap = Bitmap.createBitmap(
+            bitmap,
+            topLeftX,
+            topLeftY,
+            validCropWidth,
+            validCropHeight
+        )
 
-        val thresh = Mat()
+        val sourceImageMatrix = Mat()
+        Utils.bitmapToMat(croppedBitmap, sourceImageMatrix)
+
+        val grayscaleImageMatrix = Mat()
+        Imgproc.cvtColor(sourceImageMatrix, grayscaleImageMatrix, Imgproc.COLOR_BGR2GRAY)
+
+        val thresholdForegroundMaskMatrix = Mat()
         Imgproc.threshold(
-            gray, thresh, 0.0, 255.0,
+            grayscaleImageMatrix, thresholdForegroundMaskMatrix, 0.0, 255.0,
             Imgproc.THRESH_BINARY_INV or Imgproc.THRESH_OTSU
         )
 
-        val nonzero = Mat()
-        Core.findNonZero(thresh, nonzero)
-        if (nonzero.empty()) return@withContext null
+        val nonZeroLocationsMatrix = Mat()
+        Core.findNonZero(thresholdForegroundMaskMatrix, nonZeroLocationsMatrix)
+        if (nonZeroLocationsMatrix.empty()) return@withContext null
 
-        val n = nonzero.rows()
+        val n = nonZeroLocationsMatrix.rows()
         val xs = IntArray(n)
         val ys = IntArray(n)
         for (i in 0 until n) {
-            val p = nonzero.get(i, 0)
+            val p = nonZeroLocationsMatrix.get(i, 0)
             xs[i] = p[0].toInt()
             ys[i] = p[1].toInt()
         }
         xs.sort(); ys.sort()
-        val medianX = xs[xs.size / 2]
-        val medianY = ys[ys.size / 2]
+        val medianXCoordinate = xs[xs.size / 2]
+        val medianYCoordinate = ys[ys.size / 2]
 
-        val absX = x1 + medianX
-        val absY = y1 + medianY
-        val normX = absX.toFloat() / bitmap.width
-        val normY = absY.toFloat() / bitmap.height
+        val absolutePixelX = topLeftX + medianXCoordinate
+        val absolutePixelY = topLeftY + medianYCoordinate
+        val normalizedFocusX = absolutePixelX.toFloat() / bitmap.width
+        val normalizedFocusY = absolutePixelY.toFloat() / bitmap.height
 
-        Log.d("Repository", "AF centroid (norm)=($normX,$normY)")
-        Offset(normX, normY)
+        Log.d("Repository", "AF centroid (norm)=($normalizedFocusX,$normalizedFocusY)")
+        Offset(normalizedFocusX, normalizedFocusY)
     }
 
     private suspend fun getClassification(
