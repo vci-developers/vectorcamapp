@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.data.room.dao
 
+import android.net.Uri
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
@@ -40,7 +41,7 @@ interface SessionDao {
     suspend fun getSessionAndSiteById(sessionId: UUID): SessionAndSiteRelation?
 
     @Query("SELECT imageUri FROM specimen_image WHERE sessionId = :sessionId")
-    suspend fun getImageUrisBySessionId(sessionId: UUID): List<String>
+    suspend fun getImageUrisBySessionId(sessionId: UUID): List<Uri>
 
     @Query("SELECT * FROM session WHERE completedAt IS NULL")
     fun observeIncompleteSessions(): Flow<List<SessionEntity>>

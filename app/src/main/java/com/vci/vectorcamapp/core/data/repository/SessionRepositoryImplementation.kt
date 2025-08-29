@@ -63,9 +63,7 @@ class SessionRepositoryImplementation @Inject constructor(
     }
 
     override suspend fun getImageUrisBySessionId(sessionId: UUID): List<Uri> {
-        return sessionDao.getImageUrisBySessionId(sessionId).map { uriString ->
-                uriString.toUri()
-        }
+        return sessionDao.getImageUrisBySessionId(sessionId)
     }
 
     override suspend fun getSessionAndSiteById(sessionId: UUID): SessionAndSite? {

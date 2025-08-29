@@ -58,7 +58,7 @@ fun IncompleteSessionScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        onAction(IncompleteSessionAction.ConfirmDeleteSession(state.deleteDialogSessionId!!))
+                        onAction(IncompleteSessionAction.ConfirmDeleteSession(state.deleteDialogSessionId))
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colors.error
