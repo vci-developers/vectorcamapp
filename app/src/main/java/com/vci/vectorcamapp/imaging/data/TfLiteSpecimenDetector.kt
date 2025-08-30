@@ -47,6 +47,8 @@ class TfLiteSpecimenDetector(
     private var outputNumChannels = DEFAULT_NUM_CHANNELS
     private var outputNumElements = DEFAULT_NUM_ELEMENTS
 
+    private var isGpuDelegateInitialized = false
+
     init {
         handler.post { initializeInterpreter() }
     }
@@ -59,14 +61,15 @@ class TfLiteSpecimenDetector(
                 val model = FileUtil.loadMappedFile(context, "detect.tflite")
                 val options = Interpreter.Options()
 
-//                if (CompatibilityList().isDelegateSupportedOnThisDevice) {
-//                    try {
-//                        options.addDelegate(GpuDelegateManager.getDelegate())
-//                        Log.d(TAG, "GPU delegate initialized")
-//                    } catch (e: Exception) {
-//                        Log.w(TAG, "GPU delegate failed: ${e.message}. Falling back to CPU.")
-//                    }
-//                }
+                if (CompatibilityList().isDelegateSupportedOnThisDevice) {
+                    try {
+                        options.addDelegate(GpuDelegateManager.getDelegate())
+                        isGpuDelegateInitialized = true
+                        Log.d(TAG, "GPU delegate initialized for Detector")
+                    } catch (e: Exception) {
+                        Log.w(TAG, "GPU delegate for Detector failed: ${e.message}. Falling back to CPU.")
+                    }
+                }
 
                 options.setNumThreads(Runtime.getRuntime().availableProcessors())
                 detector = Interpreter(model, options)
@@ -79,6 +82,12 @@ class TfLiteSpecimenDetector(
                     outputNumElements = it.getOutputTensor(0).shape()[2]
                 }
 
+                if (isGpuDelegateInitialized) {
+                    warmDetector()
+                }
+                else {
+                    Log.d(TAG, "Skipping detector warmup (CPU mode).")
+                }
                 Log.d(TAG, "TFLite interpreter initialized")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
@@ -264,6 +273,19 @@ class TfLiteSpecimenDetector(
         return finalInferenceResults
     }
 
+    private fun warmDetector() {
+        detector?.let { interpreter ->
+            val inputShape = interpreter.getInputTensor(0).shape()
+            val outputShape = interpreter.getOutputTensor(0).shape()
+            val dummyInputBuffer = TensorBuffer.createFixedSize(inputShape, DataType.FLOAT32).buffer
+            val dummyOutputBuffer =
+                TensorBuffer.createFixedSize(outputShape, DataType.FLOAT32).buffer
+
+            interpreter.run(dummyInputBuffer, dummyOutputBuffer)
+            Log.d(TAG, "Detector warmed up with GPU delegate.")
+        }
+    }
+
     override fun close() {
         synchronized(detectorLock) {
             if (isClosed) return
@@ -288,8 +310,8 @@ class TfLiteSpecimenDetector(
         private const val DEFAULT_TENSOR_WIDTH = 640
         private const val DEFAULT_NUM_CHANNELS = 25200
         private const val DEFAULT_NUM_ELEMENTS = 6
-        private const val CONFIDENCE_THRESHOLD = 0.5f
-        private const val IOU_THRESHOLD = 0.5f
+        private const val CONFIDENCE_THRESHOLD = 0.4f
+        private const val IOU_THRESHOLD = 0.25f
 
         private const val PIXEL_NORMALIZATION_SCALE = 1f / 255f
         private const val ASPECT_RATIO = 4f / 3f
