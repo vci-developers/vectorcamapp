@@ -27,8 +27,10 @@ import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.complete_session.domain.model.SpecimenImageItem
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.ui.extensions.colors
+import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.screenWidthFraction
 
 @Composable
@@ -79,13 +81,11 @@ fun CompleteSessionSpecimens(
             modifier = modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            OutlinedTextField(
+            TextEntryField(
                 value = searchQuery,
                 onValueChange = { newSearchQuery -> searchQuery = newSearchQuery },
-                label = { Text("Search by specimen ID, species, etc.") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                placeholder = "Search by specimen ID, species, etc.",
+                modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.spacingMedium),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(
