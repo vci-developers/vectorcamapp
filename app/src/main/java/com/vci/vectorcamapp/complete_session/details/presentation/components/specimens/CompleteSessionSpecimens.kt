@@ -3,7 +3,6 @@ package com.vci.vectorcamapp.complete_session.details.presentation.components.sp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -11,7 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,7 +22,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.vci.vectorcamapp.complete_session.domain.model.SpecimenImageItem
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
@@ -66,13 +63,13 @@ fun CompleteSessionSpecimens(
                 SearchUtils.matchesQuery(executedQuery, fieldsForSearch)
             }
 
-        val itemsToDisplay = filteredSpecimenResults.flatMap { result ->
-            val totalImageCount = result.specimenImagesAndInferenceResults.size
-            result.specimenImagesAndInferenceResults.mapIndexed { index, imageAndResult ->
-                SpecimenImageItem(
-                    specimen = result.specimen,
-                    specimenImage = imageAndResult.specimenImage,
-                    badgeText = "${index + 1} of $totalImageCount"
+        val itemsToDisplay = filteredSpecimenResults.flatMap { specimenGroup ->
+            val totalImageCount = specimenGroup.specimenImagesAndInferenceResults.size
+            specimenGroup.specimenImagesAndInferenceResults.mapIndexed { imageIndex, imageAndInferenceResult ->
+                Triple(
+                    specimenGroup.specimen,
+                    imageAndInferenceResult.specimenImage,
+                    "${imageIndex + 1} of $totalImageCount"
                 )
             }
         }
@@ -111,13 +108,13 @@ fun CompleteSessionSpecimens(
                 ) {
                     items(
                         items = itemsToDisplay,
-                        key = { it.specimenImage.localId }
-                    ) { item ->
+                        key = { specimenImageTile -> specimenImageTile.second.localId }
+                    ) { specimenImageTile  ->
                         CompleteSessionSpecimensTile(
                             session = session,
-                            specimen = item.specimen,
-                            specimenImage = item.specimenImage,
-                            badgeText = item.badgeText,
+                            specimen = specimenImageTile.first,
+                            specimenImage = specimenImageTile.second,
+                            badgeText = specimenImageTile.third,
                             modifier = Modifier.width(screenWidthFraction(0.9f))
                         )
                     }
