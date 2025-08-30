@@ -5,8 +5,8 @@ import java.text.Normalizer
 object SearchUtils {
     private fun normalize(text: String): String {
         val lower = text.lowercase().trim()
-        val decomp = Normalizer.normalize(lower, Normalizer.Form.NFD)
-        return decomp.replace(Regex("\\p{Mn}+"), "")
+        val decomposedText = Normalizer.normalize(lower, Normalizer.Form.NFD)
+        return decomposedText.replace(Regex("\\p{Mn}+"), "")
     }
 
     private fun evaluateTerm(needle: String, searchTargetTexts: List<String>): Boolean {

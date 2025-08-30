@@ -3,12 +3,10 @@ package com.vci.vectorcamapp.complete_session.details.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError
-import com.vci.vectorcamapp.complete_session.domain.model.SpecimenImageItem
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -46,39 +44,9 @@ class CompleteSessionDetailsViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(CompleteSessionDetailsState())
     val state: StateFlow<CompleteSessionDetailsState> =
-        combine(_specimensWithImagesAndInferenceResults, _state) { specimensWithImagesAndInferenceResults, current ->
-            val allItems =
-                specimensWithImagesAndInferenceResults.flatMap { specimenWithImagesAndResults ->
-                    val total = specimenWithImagesAndResults.specimenImagesAndInferenceResults.size
-                    specimenWithImagesAndResults.specimenImagesAndInferenceResults.mapIndexed { index, (specimenImage, _) ->
-                        SpecimenImageItem(
-                            specimen = specimenWithImagesAndResults.specimen,
-                            specimenImage = specimenImage,
-                            badgeText = "${index + 1} of $total"
-                        )
-                    }
-                }
-
-            val query = current.executedQuery
-            val filtered = if (query.isBlank()) {
-                allItems
-            } else {
-                allItems.filter { item ->
-                    SearchUtils.matchesQuery(
-                        query,
-                        listOf(
-                            item.specimen.id,
-                            item.specimenImage.species,
-                            item.specimenImage.sex,
-                            item.specimenImage.abdomenStatus
-                        )
-                    )
-                }
-            }
-
-            current.copy(
-                specimensWithImagesAndInferenceResults = specimensWithImagesAndInferenceResults,
-                filteredSpecimenImageItems = filtered
+        combine(_specimensWithImagesAndInferenceResults, _state) { specimensWithImagesAndInferenceResults, currentState ->
+            currentState.copy(
+                specimensWithImagesAndInferenceResults = specimensWithImagesAndInferenceResults
             )
         }
             .onStart { loadCompleteSessionDetails() }
@@ -97,11 +65,8 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                 is CompleteSessionDetailsAction.ChangeSelectedTab -> {
                     _state.update { it.copy(selectedTab = action.selectedTab) }
                 }
-                is CompleteSessionDetailsAction.UpdateQuery -> {
-                    _state.update { it.copy(searchQuery = action.value) }
-                }
-                CompleteSessionDetailsAction.ExecuteQuery -> {
-                    _state.update { it.copy(executedQuery = it.searchQuery) }
+                is CompleteSessionDetailsAction.PerformSearch -> {
+                    _state.update { it.copy(searchQuery = action.searchQuery) }
                 }
             }
         }
