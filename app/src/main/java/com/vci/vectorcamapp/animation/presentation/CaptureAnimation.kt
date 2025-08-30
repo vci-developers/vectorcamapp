@@ -66,10 +66,10 @@ fun CaptureAnimation(
             label = "scan_progress"
         )
 
-        val scannerHeight = MaterialTheme.dimensions.scannerLineHeight
-        val cornerLength = MaterialTheme.dimensions.cornerLength
-        val cornerStroke = MaterialTheme.dimensions.cornerStroke
-        val cornerColor = MaterialTheme.colors.animationCornerColor
+        val scannerHeight = MaterialTheme.dimensions.borderThicknessThick
+        val cornerLength = MaterialTheme.dimensions.paddingLarge
+        val cornerStroke = MaterialTheme.dimensions.borderThicknessThick
+        val cornerColor = MaterialTheme.colors.appBackground
 
         val density = LocalDensity.current
         val (lineHpx, cornerLenPx, strokePx) = remember(density) {
@@ -90,7 +90,7 @@ fun CaptureAnimation(
         ) {
             Box(Modifier
                     .matchParentSize()
-                    .background(MaterialTheme.colors.animationOverlayColor)
+                    .background(MaterialTheme.colors.overlayColor)
             )
 
             Box(Modifier
@@ -112,7 +112,7 @@ fun CaptureAnimation(
                         translationY = (t * (containerHeightPx - lineHpx)).coerceAtLeast(0f)
                     }
                     .background(Brush.horizontalGradient(
-                        listOf(Color.Transparent, MaterialTheme.colors.animationScanColor, Color.Transparent)
+                        listOf(Color.Transparent, MaterialTheme.colors.primary, Color.Transparent)
                     ))
             )
 
@@ -120,7 +120,7 @@ fun CaptureAnimation(
             Box(Modifier
                     .matchParentSize()
                     .graphicsLayer { alpha = pulseAlpha }
-                    .background(MaterialTheme.colors.animationScanColor)
+                    .background(MaterialTheme.colors.primary)
             )
 
             Text(
