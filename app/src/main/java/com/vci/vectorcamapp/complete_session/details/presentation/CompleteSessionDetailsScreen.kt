@@ -63,7 +63,7 @@ fun CompleteSessionDetailsScreen(
 
                 CompleteSessionDetailsTab.SESSION_SPECIMENS -> CompleteSessionSpecimens(
                     session = state.session,
-                    specimenResults = state.specimensWithImagesAndInferenceResults,
+                    specimensWithImagesAndInferenceResults = state.specimensWithImagesAndInferenceResults,
                     executedQuery = state.searchQuery,
                     onPerformSearch = { executedQuery ->
                         onAction(CompleteSessionDetailsAction.PerformSearch(executedQuery))

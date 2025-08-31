@@ -33,7 +33,7 @@ import com.vci.vectorcamapp.ui.theme.screenWidthFraction
 @Composable
 fun CompleteSessionSpecimens(
     session: Session,
-    specimenResults: List<SpecimenWithSpecimenImagesAndInferenceResults>,
+    specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults>,
     executedQuery: String,
     onPerformSearch: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -42,7 +42,7 @@ fun CompleteSessionSpecimens(
 
     var searchQuery by rememberSaveable { mutableStateOf(executedQuery) }
 
-    if (specimenResults.isEmpty()) {
+    if (specimensWithImagesAndInferenceResults.isEmpty()) {
         Text(
             "No specimens were captured during this session.",
             style = MaterialTheme.typography.headlineSmall,
@@ -51,7 +51,7 @@ fun CompleteSessionSpecimens(
             modifier = modifier.fillMaxSize()
         )
     } else {
-        val filteredSpecimenResults = specimenResults.filter { specimenGroup ->
+        val filteredSpecimenResults = specimensWithImagesAndInferenceResults.filter { specimenGroup ->
                 val fieldsForSearch = buildList {
                     add(specimenGroup.specimen.id)
                     specimenGroup.specimenImagesAndInferenceResults.forEach { imageAndInferenceResult ->
