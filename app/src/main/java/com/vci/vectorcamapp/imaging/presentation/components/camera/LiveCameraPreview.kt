@@ -32,7 +32,7 @@ fun LiveCameraPreview(
     onFocusAt: (Offset) -> Unit,
     onCancelFocus: () -> Unit,
     modifier: Modifier = Modifier,
-    isAutofocusing: Boolean
+    isManualFocusing: Boolean
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -93,14 +93,14 @@ fun LiveCameraPreview(
                     }
                 }
         ) {
-            if (!isAutofocusing) {
+            if (isManualFocusing) {
                 focusPoint?.let { normalized ->
                     if (containerSize != IntSize.Zero) {
                         val ringOffsetInPixels = Offset(
                             x = normalized.x * containerSize.width,
                             y = normalized.y * containerSize.height
                         )
-                        AutofocusRingOverlay(
+                        ManualFocusRingOverlay(
                             focusPoint = ringOffsetInPixels,
                             overlaySize = containerSize,
                             onCancel = {

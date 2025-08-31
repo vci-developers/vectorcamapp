@@ -361,10 +361,10 @@ fun ImagingScreen(
                                 controller = controller,
                                 inferenceResults = state.previewInferenceResults,
                                 focusPoint = state.focusPoint,
-                                onFocusAt = { normalized -> onAction(ImagingAction.FocusAt(normalized)) },
+                                onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
                                 onCancelFocus = { onAction(ImagingAction.CancelFocus) },
                                 modifier = Modifier.fillMaxWidth(),
-                                isAutofocusing = state.isAutofocusing
+                                isManualFocusing = state.isManualFocusing
                             )
 
                             ActionButton(

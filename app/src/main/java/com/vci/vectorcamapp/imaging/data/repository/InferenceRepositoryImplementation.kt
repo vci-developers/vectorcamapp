@@ -122,11 +122,11 @@ class InferenceRepositoryImplementation @Inject constructor(
             ys[i] = p[1].toInt()
         }
         xs.sort(); ys.sort()
-        val medianXCoordinate = xs[xs.size / 2]
-        val medianYCoordinate = ys[ys.size / 2]
+        val medianX = xs[xs.size / 2]
+        val medianY = ys[ys.size / 2]
 
-        val absolutePixelX = topLeftX + medianXCoordinate
-        val absolutePixelY = topLeftY + medianYCoordinate
+        val absolutePixelX = topLeftX + medianX
+        val absolutePixelY = topLeftY + medianY
         val normalizedFocusX = absolutePixelX.toFloat() / bitmap.width
         val normalizedFocusY = absolutePixelY.toFloat() / bitmap.height
 

@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
@@ -124,11 +123,11 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 is ImagingAction.FocusAt -> {
-                    _state.update { it.copy(focusPoint = action.offset, isAutofocusing = false) }
+                    _state.update { it.copy(focusPoint = action.offset, isManualFocusing = true) }
                 }
 
                 ImagingAction.CancelFocus -> {
-                    _state.update { it.copy(focusPoint = null, isAutofocusing = true) }
+                    _state.update { it.copy(focusPoint = null, isManualFocusing = false) }
                 }
 
                 is ImagingAction.CorrectSpecimenId -> {
@@ -162,7 +161,7 @@ class ImagingViewModel @Inject constructor(
 
                         _state.update { current ->
                             val shouldUseAutofocusThisFrame =
-                                current.isAutofocusing || (current.focusPoint == null && suggestedAutofocusPoint != null)
+                                !current.isManualFocusing || (current.focusPoint == null && suggestedAutofocusPoint != null)
 
                             val nextFocusPoint =
                                 if (shouldUseAutofocusThisFrame) {
@@ -173,7 +172,7 @@ class ImagingViewModel @Inject constructor(
 
                             val nextIsAutofocusing =
                                 when {
-                                    current.isAutofocusing -> true
+                                    !current.isManualFocusing -> true
                                     current.focusPoint == null && suggestedAutofocusPoint != null -> true
                                     else -> false
                                 }
@@ -181,7 +180,7 @@ class ImagingViewModel @Inject constructor(
                             current.copy(
                                 previewInferenceResults = liveFrameProcessingResult.previewInferenceResults,
                                 focusPoint = nextFocusPoint,
-                                isAutofocusing = nextIsAutofocusing
+                                isManualFocusing = !nextIsAutofocusing
                             )
                         }
                     } catch (e: Exception) {
@@ -392,7 +391,7 @@ class ImagingViewModel @Inject constructor(
                 isCameraReady = false,
                 previewInferenceResults = emptyList(),
                 focusPoint = null,
-                isAutofocusing = false
+                isManualFocusing = false
             )
         }
     }
