@@ -59,6 +59,7 @@ android {
 
         buildConfigField("String", "POSTHOG_API_KEY", "\"${secretsProperties["POSTHOG_API_KEY"]}\"")
         buildConfigField("String", "POSTHOG_HOST", "\"${secretsProperties["POSTHOG_HOST"]}\"")
+        buildConfigField("String", "VECTORCAM_API_KEY", "\"${secretsProperties["VECTORCAM_API_KEY"]}\"")
 
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a")
@@ -167,11 +168,11 @@ dependencies {
     // Open CV Library
     implementation(libs.opencv)
 
-    // TensorFlow Lite Library
-    implementation(libs.tensorflow.lite)
-    implementation(libs.tensorflow.lite.support)
-    implementation(libs.tensorflow.lite.gpu)
-    implementation(libs.tensorflow.lite.gpu.api)
+    // LiteRT Library
+    implementation(libs.litert)
+    implementation(libs.litert.gpu)
+    implementation(libs.litert.gpu.api)
+    implementation(libs.litert.support)
 
     // Room Database Dependencies
     implementation(libs.androidx.room.runtime)
