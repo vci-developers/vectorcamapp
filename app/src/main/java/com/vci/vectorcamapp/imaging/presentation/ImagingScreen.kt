@@ -385,7 +385,8 @@ fun ImagingScreen(
                                 onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
                                 onCancelFocus = { onAction(ImagingAction.CancelFocus) },
                                 modifier = Modifier.fillMaxWidth(),
-                                isManualFocusing = state.isManualFocusing
+                                isManualFocusing = state.isManualFocusing,
+                                isProcessing = state.isProcessing
                             )
 
                             ActionButton(

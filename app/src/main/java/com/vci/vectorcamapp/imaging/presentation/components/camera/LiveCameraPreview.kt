@@ -18,7 +18,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.vci.vectorcamapp.animation.presentation.CaptureAnimation
@@ -34,7 +33,8 @@ fun LiveCameraPreview(
     onFocusAt: (Offset) -> Unit,
     onCancelFocus: () -> Unit,
     modifier: Modifier = Modifier,
-    isManualFocusing: Boolean
+    isManualFocusing: Boolean,
+    isProcessing: Boolean
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
