@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.data.network.api
 
+import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.data.dto.session.PostSessionRequestDto
 import com.vci.vectorcamapp.core.data.dto.session.PostSessionResponseDto
 import com.vci.vectorcamapp.core.data.dto.session.SessionDto
@@ -10,6 +11,7 @@ import com.vci.vectorcamapp.core.domain.network.api.SessionDataSource
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import io.ktor.client.HttpClient
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -31,6 +33,7 @@ class RemoteSessionDataSource @Inject constructor(
 
         return safeCall<PostSessionResponseDto> {
             httpClient.post(constructUrl("sessions")) {
+                bearerAuth(BuildConfig.VECTORCAM_API_KEY)
                 contentType(ContentType.Application.Json)
                 setBody(
                     PostSessionRequestDto(
@@ -58,6 +61,7 @@ class RemoteSessionDataSource @Inject constructor(
     override suspend fun getSessionByFrontendId(localId: UUID): Result<SessionDto, NetworkError> {
         return safeCall<SessionDto> {
             httpClient.get(constructUrl("sessions/$localId")) {
+                bearerAuth(BuildConfig.VECTORCAM_API_KEY)
                 contentType(ContentType.Application.Json)
             }
         }
