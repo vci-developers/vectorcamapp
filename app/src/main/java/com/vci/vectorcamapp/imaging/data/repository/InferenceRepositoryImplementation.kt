@@ -113,17 +113,17 @@ class InferenceRepositoryImplementation @Inject constructor(
         Core.findNonZero(thresholdForegroundMaskMatrix, nonZeroLocationsMatrix)
         if (nonZeroLocationsMatrix.empty()) return@withContext null
 
-        val n = nonZeroLocationsMatrix.rows()
-        val xs = IntArray(n)
-        val ys = IntArray(n)
-        for (i in 0 until n) {
-            val p = nonZeroLocationsMatrix.get(i, 0)
-            xs[i] = p[0].toInt()
-            ys[i] = p[1].toInt()
+        val foregroundPixelCount = nonZeroLocationsMatrix.rows()
+        val foregroundXCoordinates = IntArray(foregroundPixelCount)
+        val foregroundYCoordinates = IntArray(foregroundPixelCount)
+        for (i in 0 until foregroundPixelCount) {
+            val pixelLocation = nonZeroLocationsMatrix.get(i, 0)
+            foregroundXCoordinates[i] = pixelLocation[0].toInt()
+            foregroundYCoordinates[i] = pixelLocation[1].toInt()
         }
-        xs.sort(); ys.sort()
-        val medianX = xs[xs.size / 2]
-        val medianY = ys[ys.size / 2]
+        foregroundXCoordinates.sort(); foregroundYCoordinates.sort()
+        val medianX = foregroundXCoordinates[foregroundXCoordinates.size / 2]
+        val medianY = foregroundYCoordinates[foregroundYCoordinates.size / 2]
 
         val absolutePixelX = topLeftX + medianX
         val absolutePixelY = topLeftY + medianY
