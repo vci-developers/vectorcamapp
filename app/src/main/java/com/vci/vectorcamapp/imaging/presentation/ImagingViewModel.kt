@@ -196,60 +196,54 @@ class ImagingViewModel @Inject constructor(
 
                     _state.update { it.copy(isProcessing = true) }
 
-                    withContext(Dispatchers.Main) {
-                        val captureResult = cameraRepository.captureImage(action.controller)
+                    val captureResult = cameraRepository.captureImage(action.controller)
 
-                        withContext(Dispatchers.Default) {
-                            captureResult.onSuccess { image ->
-                                val bitmap = image.toUprightBitmap()
-                                image.close()
+                    withContext(Dispatchers.Default) {
+                        captureResult.onSuccess { image ->
+                            val bitmap = image.toUprightBitmap()
+                            image.close()
 
-                                val jpegStream = ByteArrayOutputStream()
-                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
-                                val jpegByteArray = jpegStream.toByteArray()
-                                val jpegBitmap =
-                                    BitmapFactory.decodeByteArray(
-                                        jpegByteArray,
-                                        0,
-                                        jpegByteArray.size
-                                    )
+                            val jpegStream = ByteArrayOutputStream()
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
+                            val jpegByteArray = jpegStream.toByteArray()
+                            val jpegBitmap =
+                                BitmapFactory.decodeByteArray(
+                                    jpegByteArray,
+                                    0,
+                                    jpegByteArray.size
+                                )
 
-                                val capturedFrameProcessingResult =
-                                    imagingWorkflow.processCapturedFrame(jpegBitmap)
+                            val capturedFrameProcessingResult =
+                                imagingWorkflow.processCapturedFrame(jpegBitmap)
 
-                                withContext(Dispatchers.Main) {
-                                    capturedFrameProcessingResult.onSuccess { result ->
-                                        _state.update {
-                                            it.copy(
-                                                currentSpecimenImage = it.currentSpecimenImage.copy(
-                                                    species = result.species,
-                                                    sex = result.sex,
-                                                    abdomenStatus = result.abdomenStatus
-                                                ),
-                                                currentImageBytes = jpegByteArray,
-                                                currentInferenceResult = result.capturedInferenceResult,
-                                                previewInferenceResults = emptyList()
-                                            )
-                                        }
-                                    }
-                                }.onError { error ->
-                                    withContext(Dispatchers.Main) {
-                                        emitError(error, SnackbarDuration.Short)
+                            withContext(Dispatchers.Main) {
+                                capturedFrameProcessingResult.onSuccess { result ->
+                                    _state.update {
+                                        it.copy(
+                                            currentSpecimenImage = it.currentSpecimenImage.copy(
+                                                species = result.species,
+                                                sex = result.sex,
+                                                abdomenStatus = result.abdomenStatus
+                                            ),
+                                            currentImageBytes = jpegByteArray,
+                                            currentInferenceResult = result.capturedInferenceResult,
+                                            previewInferenceResults = emptyList()
+                                        )
                                     }
                                 }
                             }.onError { error ->
-                                withContext(Dispatchers.Main) {
-                                    if (error == ImagingError.NO_ACTIVE_SESSION) {
-                                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                                    }
-                                    emitError(error)
+                                emitError(error, SnackbarDuration.Short)
+                            }
+                        }.onError { error ->
+                            withContext(Dispatchers.Main) {
+                                if (error == ImagingError.NO_ACTIVE_SESSION) {
+                                    _events.send(ImagingEvent.NavigateBackToLandingScreen)
                                 }
+                                emitError(error)
                             }
                         }
                     }
-                    withContext(Dispatchers.Main) {
-                        _state.update { it.copy(isProcessing = false) }
-                    }
+                    _state.update { it.copy(isProcessing = false) }
                 }
 
                 ImagingAction.RetakeImage -> {
