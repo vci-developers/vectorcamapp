@@ -99,245 +99,253 @@ class ImagingViewModel @Inject constructor(
 
     fun onAction(action: ImagingAction) {
         viewModelScope.launch {
-            when (action) {
-                ImagingAction.ShowExitDialog -> {
-                    _state.update { it.copy(showExitDialog = true) }
-                }
-
-                ImagingAction.DismissExitDialog -> {
-                    _state.update { it.copy(showExitDialog = false, pendingAction = null) }
-                }
-
-                is ImagingAction.SelectPendingAction -> {
-                    _state.update { it.copy(pendingAction = action.pendingAction) }
-                }
-
-                ImagingAction.ClearPendingAction -> {
-                    _state.update { it.copy(pendingAction = null) }
-                }
-
-                ImagingAction.ConfirmPendingAction -> {
-                    val actionToConfirm = _state.value.pendingAction
-                    _state.update { it.copy(showExitDialog = false, pendingAction = null) }
-                    actionToConfirm?.let { onAction(it) }
-                }
-
-                is ImagingAction.ManualFocusAt -> {
-                    _state.update { it.copy(manualFocusPoint = action.offset) }
-                }
-
-                is ImagingAction.CancelManualFocus -> {
-                    _state.update { it.copy(manualFocusPoint = null) }
-                }
-
-                is ImagingAction.CorrectSpecimenId -> {
-                    _state.update {
-                        it.copy(
-                            currentSpecimen = it.currentSpecimen.copy(id = action.specimenId)
-                        )
+            withContext(Dispatchers.Main) {
+                when (action) {
+                    ImagingAction.ShowExitDialog -> {
+                        _state.update { it.copy(showExitDialog = true) }
                     }
-                }
 
-                is ImagingAction.ProcessFrame -> {
-                    try {
-                        if (!_state.value.isCameraReady) {
-                            _state.update { it.copy(isCameraReady = true) }
-                        }
+                    ImagingAction.DismissExitDialog -> {
+                        _state.update { it.copy(showExitDialog = false, pendingAction = null) }
+                    }
 
-                        val bitmap = action.frame.toUprightBitmap()
+                    is ImagingAction.SelectPendingAction -> {
+                        _state.update { it.copy(pendingAction = action.pendingAction) }
+                    }
 
-                        val liveFrameProcessingResult =
-                            imagingWorkflow.processLiveFrame(bitmap)
+                    ImagingAction.ClearPendingAction -> {
+                        _state.update { it.copy(pendingAction = null) }
+                    }
 
-                        validateSpecimenIdUseCase(
-                            liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
-                        ).onSuccess { correctedSpecimenId ->
-                            _state.update {
-                                it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
-                            }
-                        }
+                    ImagingAction.ConfirmPendingAction -> {
+                        val actionToConfirm = _state.value.pendingAction
+                        _state.update { it.copy(showExitDialog = false, pendingAction = null) }
+                        actionToConfirm?.let { onAction(it) }
+                    }
 
+                    is ImagingAction.ManualFocusAt -> {
+                        _state.update { it.copy(manualFocusPoint = action.offset) }
+                    }
+
+                    is ImagingAction.CancelManualFocus -> {
+                        _state.update { it.copy(manualFocusPoint = null) }
+                    }
+
+                    is ImagingAction.CorrectSpecimenId -> {
                         _state.update {
-                            it.copy(previewInferenceResults = liveFrameProcessingResult.previewInferenceResults)
+                            it.copy(
+                                currentSpecimen = it.currentSpecimen.copy(id = action.specimenId)
+                            )
                         }
-                    } catch (e: Exception) {
-                        emitError(ImagingError.PROCESSING_ERROR)
-                    } finally {
-                        action.frame.close()
-                    }
-                }
-
-                ImagingAction.SaveSessionProgress -> {
-                    currentSessionCache.clearSession()
-                    _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                }
-
-                ImagingAction.SubmitSession -> {
-                    val currentSession = currentSessionCache.getSession()
-                    val currentSessionSiteId = currentSessionCache.getSiteId()
-
-                    if (currentSession == null || currentSessionSiteId == null) {
-                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                        return@launch
                     }
 
-                    val success = sessionRepository.markSessionAsComplete(currentSession.localId)
-                    if (success) {
-                        workRepository.enqueueSessionUpload(
-                            currentSession.localId, currentSessionSiteId
-                        )
+                    is ImagingAction.ProcessFrame -> {
+                        try {
+                            if (!_state.value.isCameraReady) {
+                                _state.update { it.copy(isCameraReady = true) }
+                            }
+
+                            val bitmap = action.frame.toUprightBitmap()
+
+                            val liveFrameProcessingResult =
+                                imagingWorkflow.processLiveFrame(bitmap)
+
+                            validateSpecimenIdUseCase(
+                                liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
+                            ).onSuccess { correctedSpecimenId ->
+                                _state.update {
+                                    it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
+                                }
+                            }
+
+                            _state.update {
+                                it.copy(previewInferenceResults = liveFrameProcessingResult.previewInferenceResults)
+                            }
+                        } catch (e: Exception) {
+                            emitError(ImagingError.PROCESSING_ERROR)
+                        } finally {
+                            action.frame.close()
+                        }
+                    }
+
+                    ImagingAction.SaveSessionProgress -> {
                         currentSessionCache.clearSession()
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
                     }
-                }
 
-                is ImagingAction.CaptureImage -> {
-                    if (!_state.value.isCameraReady) return@launch
+                    ImagingAction.SubmitSession -> {
+                        val currentSession = currentSessionCache.getSession()
+                        val currentSessionSiteId = currentSessionCache.getSiteId()
 
-                    _state.update { it.copy(isProcessing = true) }
+                        if (currentSession == null || currentSessionSiteId == null) {
+                            _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                            return@withContext
+                        }
 
-                    val captureResult = cameraRepository.captureImage(action.controller)
+                        val success =
+                            sessionRepository.markSessionAsComplete(currentSession.localId)
+                        if (success) {
+                            workRepository.enqueueSessionUpload(
+                                currentSession.localId, currentSessionSiteId
+                            )
+                            currentSessionCache.clearSession()
+                            _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        }
+                    }
 
-                    withContext(Dispatchers.Default) {
-                        captureResult.onSuccess { image ->
-                            val bitmap = image.toUprightBitmap()
-                            image.close()
+                    is ImagingAction.CaptureImage -> {
+                        if (!_state.value.isCameraReady) return@withContext
 
-                            val jpegStream = ByteArrayOutputStream()
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
-                            val jpegByteArray = jpegStream.toByteArray()
-                            val jpegBitmap =
-                                BitmapFactory.decodeByteArray(
-                                    jpegByteArray,
-                                    0,
-                                    jpegByteArray.size
-                                )
+                        _state.update { it.copy(isProcessing = true) }
 
-                            val capturedFrameProcessingResult =
-                                imagingWorkflow.processCapturedFrame(jpegBitmap)
+                        val captureResult = cameraRepository.captureImage(action.controller)
 
-                            withContext(Dispatchers.Main) {
-                                capturedFrameProcessingResult.onSuccess { result ->
-                                    _state.update {
-                                        it.copy(
-                                            currentSpecimenImage = it.currentSpecimenImage.copy(
-                                                species = result.species,
-                                                sex = result.sex,
-                                                abdomenStatus = result.abdomenStatus
-                                            ),
-                                            currentImageBytes = jpegByteArray,
-                                            currentInferenceResult = result.capturedInferenceResult,
-                                            previewInferenceResults = emptyList()
-                                        )
+                        withContext(Dispatchers.Default) {
+                            captureResult.onSuccess { image ->
+                                val bitmap = image.toUprightBitmap()
+                                image.close()
+
+                                val jpegStream = ByteArrayOutputStream()
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
+                                val jpegByteArray = jpegStream.toByteArray()
+                                val jpegBitmap =
+                                    BitmapFactory.decodeByteArray(
+                                        jpegByteArray,
+                                        0,
+                                        jpegByteArray.size
+                                    )
+
+                                val capturedFrameProcessingResult =
+                                    imagingWorkflow.processCapturedFrame(jpegBitmap)
+
+                                withContext(Dispatchers.Main) {
+                                    capturedFrameProcessingResult.onSuccess { result ->
+                                        _state.update {
+                                            it.copy(
+                                                currentSpecimenImage = it.currentSpecimenImage.copy(
+                                                    species = result.species,
+                                                    sex = result.sex,
+                                                    abdomenStatus = result.abdomenStatus
+                                                ),
+                                                currentImageBytes = jpegByteArray,
+                                                currentInferenceResult = result.capturedInferenceResult,
+                                                previewInferenceResults = emptyList()
+                                            )
+                                        }
                                     }
+                                }.onError { error ->
+                                    emitError(error, SnackbarDuration.Short)
                                 }
                             }.onError { error ->
-                                emitError(error, SnackbarDuration.Short)
+                                withContext(Dispatchers.Main) {
+                                    if (error == ImagingError.NO_ACTIVE_SESSION) {
+                                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                                    }
+                                    emitError(error)
+                                }
+                            }
+                        }
+                        _state.update { it.copy(isProcessing = false) }
+                    }
+
+                    ImagingAction.RetakeImage -> {
+                        clearStateFields()
+                    }
+
+                    ImagingAction.SaveImageToSession -> {
+                        val currentSession = currentSessionCache.getSession()
+                        if (currentSession == null) {
+                            _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                            return@withContext
+                        }
+
+                        val specimenId = when (val validationResult = validateSpecimenIdUseCase(
+                            _state.value.currentSpecimen.id, shouldAutoCorrect = false
+                        )) {
+                            is Result.Success -> validationResult.data
+                            is Result.Error -> {
+                                emitError(validationResult.error)
+                                return@withContext
+                            }
+                        }
+
+                        val jpegBytes = _state.value.currentImageBytes ?: return@withContext
+                        val timestamp = System.currentTimeMillis()
+                        val filename = buildString {
+                            append(specimenId)
+                            append("_")
+                            append(timestamp)
+                            append(".jpg")
+                        }
+
+                        val saveResult =
+                            cameraRepository.saveImage(jpegBytes, filename, currentSession)
+
+                        saveResult.onSuccess { imageUri ->
+                            val specimen = Specimen(id = specimenId, remoteId = null)
+                            val specimenImage = SpecimenImage(
+                                localId = calculateMd5(jpegBytes),
+                                remoteId = null,
+                                species = _state.value.currentSpecimenImage.species,
+                                sex = _state.value.currentSpecimenImage.sex,
+                                abdomenStatus = _state.value.currentSpecimenImage.abdomenStatus,
+                                imageUri = imageUri,
+                                imageUploadStatus = UploadStatus.NOT_STARTED,
+                                metadataUploadStatus = UploadStatus.NOT_STARTED,
+                                capturedAt = timestamp,
+                                submittedAt = null
+                            )
+
+                            val success = transactionHelper.runAsTransaction {
+                                val inferenceResult = _state.value.currentInferenceResult
+
+                                val existingSpecimen =
+                                    specimenRepository.getSpecimenByIdAndSessionId(
+                                        specimenId, currentSession.localId
+                                    )
+                                val specimenInsertionResult = if (existingSpecimen == null) {
+                                    specimenRepository.insertSpecimen(
+                                        specimen,
+                                        currentSession.localId
+                                    )
+                                } else {
+                                    Result.Success(Unit)
+                                }
+                                val specimenImageInsertionResult =
+                                    specimenImageRepository.insertSpecimenImage(
+                                        specimenImage, specimen.id, currentSession.localId
+                                    )
+
+                                val inferenceResultInsertionResult = inferenceResult?.let {
+                                    inferenceResultRepository.insertInferenceResult(
+                                        inferenceResult, specimenImage.localId
+                                    )
+                                } ?: Result.Success(Unit)
+
+                                specimenInsertionResult.onError { error ->
+                                    emitError(error)
+                                }
+
+                                specimenImageInsertionResult.onError { error ->
+                                    emitError(error)
+                                }
+
+                                inferenceResultInsertionResult.onError { error ->
+                                    emitError(error)
+                                }
+
+                                (specimenInsertionResult !is Result.Error) && (specimenImageInsertionResult !is Result.Error) && (inferenceResultInsertionResult !is Result.Error)
+                            }
+
+                            if (success) {
+                                clearStateFields()
+                            } else {
+                                emitError(ImagingError.SAVE_ERROR)
+                                cameraRepository.deleteSavedImage(imageUri)
                             }
                         }.onError { error ->
-                            withContext(Dispatchers.Main) {
-                                if (error == ImagingError.NO_ACTIVE_SESSION) {
-                                    _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                                }
-                                emitError(error)
-                            }
+                            emitError(error)
                         }
-                    }
-                    _state.update { it.copy(isProcessing = false) }
-                }
-
-                ImagingAction.RetakeImage -> {
-                    clearStateFields()
-                }
-
-                ImagingAction.SaveImageToSession -> {
-                    val currentSession = currentSessionCache.getSession()
-                    if (currentSession == null) {
-                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                        return@launch
-                    }
-
-                    val specimenId = when (val validationResult = validateSpecimenIdUseCase(
-                        _state.value.currentSpecimen.id, shouldAutoCorrect = false
-                    )) {
-                        is Result.Success -> validationResult.data
-                        is Result.Error -> {
-                            emitError(validationResult.error)
-                            return@launch
-                        }
-                    }
-
-                    val jpegBytes = _state.value.currentImageBytes ?: return@launch
-                    val timestamp = System.currentTimeMillis()
-                    val filename = buildString {
-                        append(specimenId)
-                        append("_")
-                        append(timestamp)
-                        append(".jpg")
-                    }
-
-                    val saveResult = cameraRepository.saveImage(jpegBytes, filename, currentSession)
-
-                    saveResult.onSuccess { imageUri ->
-                        val specimen = Specimen(id = specimenId, remoteId = null)
-                        val specimenImage = SpecimenImage(
-                            localId = calculateMd5(jpegBytes),
-                            remoteId = null,
-                            species = _state.value.currentSpecimenImage.species,
-                            sex = _state.value.currentSpecimenImage.sex,
-                            abdomenStatus = _state.value.currentSpecimenImage.abdomenStatus,
-                            imageUri = imageUri,
-                            imageUploadStatus = UploadStatus.NOT_STARTED,
-                            metadataUploadStatus = UploadStatus.NOT_STARTED,
-                            capturedAt = timestamp,
-                            submittedAt = null
-                        )
-
-                        val success = transactionHelper.runAsTransaction {
-                            val inferenceResult = _state.value.currentInferenceResult
-
-                            val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(
-                                specimenId, currentSession.localId
-                            )
-                            val specimenInsertionResult = if (existingSpecimen == null) {
-                                specimenRepository.insertSpecimen(specimen, currentSession.localId)
-                            } else {
-                                Result.Success(Unit)
-                            }
-                            val specimenImageInsertionResult =
-                                specimenImageRepository.insertSpecimenImage(
-                                    specimenImage, specimen.id, currentSession.localId
-                                )
-
-                            val inferenceResultInsertionResult = inferenceResult?.let {
-                                inferenceResultRepository.insertInferenceResult(
-                                    inferenceResult, specimenImage.localId
-                                )
-                            } ?: Result.Success(Unit)
-
-                            specimenInsertionResult.onError { error ->
-                                emitError(error)
-                            }
-
-                            specimenImageInsertionResult.onError { error ->
-                                emitError(error)
-                            }
-
-                            inferenceResultInsertionResult.onError { error ->
-                                emitError(error)
-                            }
-
-                            (specimenInsertionResult !is Result.Error) && (specimenImageInsertionResult !is Result.Error) && (inferenceResultInsertionResult !is Result.Error)
-                        }
-
-                        if (success) {
-                            clearStateFields()
-                        } else {
-                            emitError(ImagingError.SAVE_ERROR)
-                            cameraRepository.deleteSavedImage(imageUri)
-                        }
-                    }.onError { error ->
-                        emitError(error)
                     }
                 }
             }
