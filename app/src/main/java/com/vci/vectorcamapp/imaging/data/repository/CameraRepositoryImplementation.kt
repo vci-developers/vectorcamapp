@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.imaging.data.repository
 
+import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
@@ -18,6 +19,7 @@ import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -101,7 +103,40 @@ class CameraRepositoryImplementation @Inject constructor(
     }
 
     override suspend fun deleteSavedImage(uri: Uri) {
-        val resolver = context.contentResolver
-        resolver.delete(uri, null, null)
+        withContext(Dispatchers.IO) {
+            try {
+                val resolver = context.contentResolver
+
+                val relativePath = resolver.query(
+                    uri,
+                    arrayOf(MediaStore.MediaColumns.RELATIVE_PATH),
+                    null, null, null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        cursor.getString(0)
+                    } else null
+                }
+
+                val deleted = resolver.delete(uri, null, null) > 0
+
+                if (deleted && relativePath != null) {
+                    try {
+                        val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                        val selection = "${MediaStore.MediaColumns.RELATIVE_PATH} = ?"
+
+                        resolver.query(collection, arrayOf(MediaStore.MediaColumns._ID), selection, arrayOf(relativePath), null)?.use { cursor ->
+                            if (cursor.count == 0) {
+                                val folder = File(Environment.getExternalStorageDirectory(), relativePath)
+                                if (folder.exists() && folder.isDirectory && folder.listFiles()?.isEmpty() == true) {
+                                    folder.delete()
+                                }
+                            }
+                        }
+                    } catch (_: Exception) {
+                    }
+                }
+            } catch (_: Exception) {
+            }
+        }
     }
 }
