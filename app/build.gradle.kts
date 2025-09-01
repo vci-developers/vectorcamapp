@@ -59,6 +59,7 @@ android {
 
         buildConfigField("String", "POSTHOG_API_KEY", "\"${secretsProperties["POSTHOG_API_KEY"]}\"")
         buildConfigField("String", "POSTHOG_HOST", "\"${secretsProperties["POSTHOG_HOST"]}\"")
+        buildConfigField("String", "VECTORCAM_API_KEY", "\"${secretsProperties["VECTORCAM_API_KEY"]}\"")
 
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a")
