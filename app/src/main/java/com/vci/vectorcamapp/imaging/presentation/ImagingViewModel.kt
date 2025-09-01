@@ -139,34 +139,31 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 is ImagingAction.ProcessFrame -> {
-                    withContext(Dispatchers.Main) {
-                        try {
-                            if (!_state.value.isCameraReady) {
-                                _state.update { it.copy(isCameraReady = true) }
-                            }
-                            withContext(Dispatchers.Default) {
-                                val bitmap = action.frame.toUprightBitmap()
-                                val liveFrameProcessingResult = imagingWorkflow.processLiveFrame(bitmap)
-
-                                withContext(Dispatchers.Main) {
-                                    validateSpecimenIdUseCase(
-                                        liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
-                                    ).onSuccess { correctedSpecimenId ->
-                                        _state.update {
-                                            it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
-                                        }
-                                    }
-
-                                    _state.update {
-                                        it.copy(previewInferenceResults = liveFrameProcessingResult.previewInferenceResults)
-                                    }
-                                }
-                            }
-                        } catch (e: Exception) {
-                            emitError(ImagingError.PROCESSING_ERROR)
-                        } finally {
-                            action.frame.close()
+                    try {
+                        if (!_state.value.isCameraReady) {
+                            _state.update { it.copy(isCameraReady = true) }
                         }
+
+                        val bitmap = action.frame.toUprightBitmap()
+
+                        val liveFrameProcessingResult =
+                            imagingWorkflow.processLiveFrame(bitmap)
+
+                        validateSpecimenIdUseCase(
+                            liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
+                        ).onSuccess { correctedSpecimenId ->
+                            _state.update {
+                                it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
+                            }
+                        }
+
+                        _state.update {
+                            it.copy(previewInferenceResults = liveFrameProcessingResult.previewInferenceResults)
+                        }
+                    } catch (e: Exception) {
+                        emitError(ImagingError.PROCESSING_ERROR)
+                    } finally {
+                        action.frame.close()
                     }
                 }
 
