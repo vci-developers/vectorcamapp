@@ -65,7 +65,7 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                 is CompleteSessionDetailsAction.ChangeSelectedTab -> {
                     _state.update { it.copy(selectedTab = action.selectedTab) }
                 }
-                is CompleteSessionDetailsAction.PerformSearch -> {
+                is CompleteSessionDetailsAction.UpdateSearchQuery -> {
                     _state.update { it.copy(searchQuery = action.searchQuery) }
                 }
             }

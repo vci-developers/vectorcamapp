@@ -34,13 +34,11 @@ import com.vci.vectorcamapp.ui.theme.screenWidthFraction
 fun CompleteSessionSpecimens(
     session: Session,
     specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults>,
-    executedQuery: String,
-    onPerformSearch: (String) -> Unit,
+    searchQuery: String,
+    onUpdateQuery: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    var searchQuery by rememberSaveable { mutableStateOf(executedQuery) }
 
     if (specimensWithImagesAndInferenceResults.isEmpty()) {
         Text(
@@ -60,7 +58,7 @@ fun CompleteSessionSpecimens(
                         add(imageAndInferenceResult.specimenImage.abdomenStatus)
                     }
                 }
-                SearchUtils.matchesQuery(executedQuery, fieldsForSearch)
+                SearchUtils.matchesQuery(searchQuery, fieldsForSearch)
             }
 
         val itemsToDisplay = filteredSpecimenResults.flatMap { specimenGroup ->
@@ -80,14 +78,13 @@ fun CompleteSessionSpecimens(
         ) {
             TextEntryField(
                 value = searchQuery,
-                onValueChange = { newSearchQuery -> searchQuery = newSearchQuery },
+                onValueChange = { newSearchQuery -> onUpdateQuery(newSearchQuery) },
                 placeholder = "Search by specimen ID, species, etc.",
                 modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.spacingMedium),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(
                     onSearch = {
-                        onPerformSearch(searchQuery)
                         keyboardController?.hide()
                     }
                 )
