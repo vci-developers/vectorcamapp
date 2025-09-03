@@ -13,12 +13,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
-fun AutofocusRingOverlay(
+fun ManualFocusRingOverlay(
     focusPoint: Offset,
     overlaySize: IntSize,
     onCancel: () -> Unit,

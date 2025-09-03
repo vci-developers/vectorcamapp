@@ -381,9 +381,11 @@ fun ImagingScreen(
                             LiveCameraPreview(
                                 controller = controller,
                                 inferenceResults = state.previewInferenceResults,
-                                manualFocusPoint = state.manualFocusPoint,
-                                onEnableManualFocus = { onAction(ImagingAction.ManualFocusAt(it)) },
-                                onCancelManualFocus = { onAction(ImagingAction.CancelManualFocus) },
+                                focusPoint = state.focusPoint,
+                                onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
+                                onCancelFocus = { onAction(ImagingAction.CancelFocus) },
+                                modifier = Modifier.fillMaxWidth(),
+                                isManualFocusing = state.isManualFocusing,
                                 isProcessing = state.isProcessing
                             )
 
