@@ -1,5 +1,7 @@
 package com.vci.vectorcamapp.complete_session.list.presentation
 
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -21,6 +24,14 @@ import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import androidx.compose.ui.draw.rotate
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloatAsState
+
+object CompleteSessionListScreenConstants {
+    const val ROTATION_DURATION_MS = 2000
+}
 
 @Composable
 fun CompleteSessionListScreen(
@@ -28,6 +39,22 @@ fun CompleteSessionListScreen(
     onAction: (CompleteSessionListAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val rotation by animateFloatAsState(
+        targetValue = if (state.isUploading) 360f else 0f,
+        animationSpec = if (state.isUploading) {
+            infiniteRepeatable(
+                animation = tween(
+                    durationMillis = CompleteSessionListScreenConstants.ROTATION_DURATION_MS,
+                    easing = LinearEasing
+                ),
+                repeatMode = RepeatMode.Restart
+            )
+        } else {
+            tween(0)
+        },
+        label = "rotation"
+    )
+
     Box(modifier = modifier.fillMaxSize()) {
         ScreenHeader(
             title = "Complete Sessions",
@@ -49,13 +76,17 @@ fun CompleteSessionListScreen(
                 items = state.sessionsAndSites.asReversed(),
                 key = { it.session.localId }) { sessionAndSite ->
                 CompleteSessionListTile(
-                    session = sessionAndSite.session, site = sessionAndSite.site, onClick = {
+                    session = sessionAndSite.session,
+                    site = sessionAndSite.site,
+                    specimens = state.specimensBySession[sessionAndSite.session.localId] ?: emptyList(),
+                    onClick = {
                         onAction(
                             CompleteSessionListAction.ViewCompleteSessionDetails(
                                 sessionAndSite.session.localId
                             )
                         )
-                    })
+                    }
+                )
             }
         }
 
@@ -73,7 +104,9 @@ fun CompleteSessionListScreen(
                 ),
                 contentDescription = if (state.isUploading) "Refresh" else "Upload",
                 tint = MaterialTheme.colors.buttonText,
-                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                modifier = Modifier
+                    .size(MaterialTheme.dimensions.iconSizeMedium)
+                    .rotate(if (state.isUploading) rotation else 0f)
             )
         }
     }
