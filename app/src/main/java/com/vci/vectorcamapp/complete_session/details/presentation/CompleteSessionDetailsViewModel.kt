@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenIma
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -45,8 +46,24 @@ class CompleteSessionDetailsViewModel @Inject constructor(
     private val _state = MutableStateFlow(CompleteSessionDetailsState())
     val state: StateFlow<CompleteSessionDetailsState> =
         combine(_specimensWithImagesAndInferenceResults, _state) { specimensWithImagesAndInferenceResults, currentState ->
+            val filteredList = if (currentState.searchQuery.isBlank()) {
+                specimensWithImagesAndInferenceResults
+            } else {
+                specimensWithImagesAndInferenceResults.filter { specimenGroup ->
+                    val fieldsForSearch = buildList {
+                        add(specimenGroup.specimen.id)
+                        specimenGroup.specimenImagesAndInferenceResults.forEach { imageAndInferenceResult ->
+                            add(imageAndInferenceResult.specimenImage.species)
+                            add(imageAndInferenceResult.specimenImage.sex)
+                            add(imageAndInferenceResult.specimenImage.abdomenStatus)
+                        }
+                    }
+                    SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
+                }
+            }
+
             currentState.copy(
-                specimensWithImagesAndInferenceResults = specimensWithImagesAndInferenceResults
+                specimensWithImagesAndInferenceResults = filteredList
             )
         }
             .onStart { loadCompleteSessionDetails() }
