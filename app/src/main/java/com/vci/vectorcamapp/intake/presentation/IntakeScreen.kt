@@ -100,7 +100,7 @@ fun IntakeScreen(
                 )
 
                 val isOtherCollectionMethod =
-                    state.session.collectionMethod.startsWith("Other:", ignoreCase = true)
+                    state.session.collectionMethod.startsWith(IntakeDropdownOptions.CollectionMethodOption.OTHER.label, ignoreCase = true)
 
                 DropdownField(
                     label = "Collection Method",
@@ -109,13 +109,7 @@ fun IntakeScreen(
                         IntakeDropdownOptions.CollectionMethodOption.OTHER
                     else
                         IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
-                    onOptionSelected = { opt ->
-                        if (opt == IntakeDropdownOptions.CollectionMethodOption.OTHER) {
-                            onAction(IntakeAction.UpdateCollectionMethod("Other: "))
-                        } else {
-                            onAction(IntakeAction.UpdateCollectionMethod(opt.label))
-                        }
-                    },
+                    onOptionSelected = { onAction(IntakeAction.UpdateCollectionMethod(it.label)) },
                     error = state.intakeErrors.collectionMethod,
                     modifier = Modifier.fillMaxWidth()
                 ) { collectionMethod ->
@@ -129,17 +123,15 @@ fun IntakeScreen(
                 if (isOtherCollectionMethod) {
                     TextEntryField(
                         label = "Other Collection Method",
-                        value = state.session.collectionMethod.removePrefix("Other: ").trimStart(),
-                        onValueChange = { typed ->
-                            onAction(IntakeAction.UpdateCollectionMethod("Other: $typed"))
-                        },
+                        value = state.session.collectionMethod.removePrefix(IntakeDropdownOptions.CollectionMethodOption.OTHER.label).trimStart(),
+                        onValueChange = { onAction(IntakeAction.UpdateCollectionMethod("${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it")) },
                         singleLine = true,
                         error = state.intakeErrors.collectionMethod
                     )
                 }
 
                 val isOtherSpecimenCondition =
-                    state.session.specimenCondition.startsWith("Other:", ignoreCase = true)
+                    state.session.specimenCondition.startsWith(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label, ignoreCase = true)
 
                 DropdownField(
                     label = "Specimen Condition",
@@ -148,13 +140,7 @@ fun IntakeScreen(
                         IntakeDropdownOptions.SpecimenConditionOption.OTHER
                     else
                         IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition },
-                    onOptionSelected = { opt ->
-                        if (opt == IntakeDropdownOptions.SpecimenConditionOption.OTHER) {
-                            onAction(IntakeAction.UpdateSpecimenCondition("Other: "))
-                        } else {
-                            onAction(IntakeAction.UpdateSpecimenCondition(opt.label))
-                        }
-                    },
+                    onOptionSelected = { onAction(IntakeAction.UpdateSpecimenCondition(it.label)) },
                     error = state.intakeErrors.specimenCondition,
                     modifier = Modifier.fillMaxWidth()
                 ) { specimenCondition ->
@@ -168,10 +154,8 @@ fun IntakeScreen(
                 if (isOtherSpecimenCondition) {
                     TextEntryField(
                         label = "Other Specimen Condition",
-                        value = state.session.specimenCondition.removePrefix("Other: ").trimStart(),
-                        onValueChange = { typed ->
-                            onAction(IntakeAction.UpdateSpecimenCondition("Other: $typed"))
-                        },
+                        value = state.session.specimenCondition.removePrefix(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label).trimStart(),
+                        onValueChange = { onAction(IntakeAction.UpdateSpecimenCondition("${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it")) },
                         singleLine = true,
                         error = state.intakeErrors.specimenCondition
                     )
