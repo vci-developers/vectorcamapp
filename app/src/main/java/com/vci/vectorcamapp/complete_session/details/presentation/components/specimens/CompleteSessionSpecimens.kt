@@ -44,17 +44,6 @@ fun CompleteSessionSpecimens(
             modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
         )
     } else {
-        val itemsToDisplay = specimensWithImagesAndInferenceResults.flatMap { specimenWithImagesAndInferenceResults ->
-            val totalImageCount = specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
-            specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.mapIndexed { imageIndex, imageAndInferenceResult ->
-                Triple(
-                    specimenWithImagesAndInferenceResults.specimen,
-                    imageAndInferenceResult.specimenImage,
-                    "${imageIndex + 1} of $totalImageCount"
-                )
-            }
-        }
-
         Column(
             modifier = modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -73,7 +62,7 @@ fun CompleteSessionSpecimens(
                 )
             )
 
-            if (itemsToDisplay.isEmpty()) {
+            if (specimensWithImagesAndInferenceResults.sumOf { it.specimenImagesAndInferenceResults.size } == 0) {
                 Text(
                     text = "No matching specimens found.",
                     style = MaterialTheme.typography.headlineSmall,
@@ -86,17 +75,22 @@ fun CompleteSessionSpecimens(
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    items(
-                        items = itemsToDisplay,
-                        key = { specimenImageTile -> specimenImageTile.second.localId }
-                    ) { specimenImageTile  ->
-                        CompleteSessionSpecimensTile(
-                            session = session,
-                            specimen = specimenImageTile.first,
-                            specimenImage = specimenImageTile.second,
-                            badgeText = specimenImageTile.third,
-                            modifier = Modifier.width(screenWidthFraction(0.9f))
-                        )
+                    items(items = specimensWithImagesAndInferenceResults.asReversed()) { specimenWithSpecimenImagesAndInferenceResults ->
+                        val specimen = specimenWithSpecimenImagesAndInferenceResults.specimen
+                        val imageList =
+                            specimenWithSpecimenImagesAndInferenceResults.specimenImagesAndInferenceResults
+                        val totalImages = imageList.size
+                        imageList.mapIndexed { index, (specimenImage, _) ->
+                            CompleteSessionSpecimensTile(
+                                session = session,
+                                specimen = specimen,
+                                specimenImage = specimenImage,
+                                badgeText = "${index + 1} of $totalImages",
+                                modifier = Modifier.width(
+                                    screenWidthFraction(0.9f)
+                                )
+                            )
+                        }
                     }
                 }
             }
