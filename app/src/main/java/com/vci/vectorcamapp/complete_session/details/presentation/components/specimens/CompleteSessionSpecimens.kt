@@ -41,7 +41,7 @@ fun CompleteSessionSpecimens(
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colors.textSecondary,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
         )
     } else {
         val itemsToDisplay = specimensWithImagesAndInferenceResults.flatMap { specimenGroup ->
@@ -79,7 +79,7 @@ fun CompleteSessionSpecimens(
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colors.textSecondary,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
                 )
             } else {
                 LazyRow(

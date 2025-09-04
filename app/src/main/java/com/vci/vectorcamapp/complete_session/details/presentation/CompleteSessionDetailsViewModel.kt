@@ -49,10 +49,10 @@ class CompleteSessionDetailsViewModel @Inject constructor(
             val filteredList = if (currentState.searchQuery.isBlank()) {
                 specimensWithImagesAndInferenceResults
             } else {
-                specimensWithImagesAndInferenceResults.filter { specimenGroup ->
+                specimensWithImagesAndInferenceResults.filter { specimenWithImagesAndInferenceResults ->
                     val fieldsForSearch = buildList {
-                        add(specimenGroup.specimen.id)
-                        specimenGroup.specimenImagesAndInferenceResults.forEach { imageAndInferenceResult ->
+                        add(specimenWithImagesAndInferenceResults.specimen.id)
+                        specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { imageAndInferenceResult ->
                             add(imageAndInferenceResult.specimenImage.species)
                             add(imageAndInferenceResult.specimenImage.sex)
                             add(imageAndInferenceResult.specimenImage.abdomenStatus)
