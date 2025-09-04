@@ -44,11 +44,11 @@ fun CompleteSessionSpecimens(
             modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
         )
     } else {
-        val itemsToDisplay = specimensWithImagesAndInferenceResults.flatMap { specimenGroup ->
-            val totalImageCount = specimenGroup.specimenImagesAndInferenceResults.size
-            specimenGroup.specimenImagesAndInferenceResults.mapIndexed { imageIndex, imageAndInferenceResult ->
+        val itemsToDisplay = specimensWithImagesAndInferenceResults.flatMap { specimenWithImagesAndInferenceResults ->
+            val totalImageCount = specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
+            specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.mapIndexed { imageIndex, imageAndInferenceResult ->
                 Triple(
-                    specimenGroup.specimen,
+                    specimenWithImagesAndInferenceResults.specimen,
                     imageAndInferenceResult.specimenImage,
                     "${imageIndex + 1} of $totalImageCount"
                 )
