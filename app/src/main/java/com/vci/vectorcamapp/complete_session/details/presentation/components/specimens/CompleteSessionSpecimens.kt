@@ -62,7 +62,7 @@ fun CompleteSessionSpecimens(
                 )
             )
 
-            if (specimensWithImagesAndInferenceResults.sumOf { it.specimenImagesAndInferenceResults.size } == 0) {
+            if (specimensWithImagesAndInferenceResults.isEmpty()) {
                 Text(
                     text = "No matching specimens found.",
                     style = MaterialTheme.typography.headlineSmall,
