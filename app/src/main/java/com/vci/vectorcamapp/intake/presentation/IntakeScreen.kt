@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -100,16 +99,22 @@ fun IntakeScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                val isOtherCollectionMethod =
+                    state.session.collectionMethod.startsWith("Other:", ignoreCase = true)
+
                 DropdownField(
                     label = "Collection Method",
                     options = IntakeDropdownOptions.CollectionMethodOption.entries,
-                    selectedOption = IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
-                    onOptionSelected = {
-                        onAction(
-                            IntakeAction.SelectCollectionMethod(
-                                it
-                            )
-                        )
+                    selectedOption = if (isOtherCollectionMethod)
+                        IntakeDropdownOptions.CollectionMethodOption.OTHER
+                    else
+                        IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
+                    onOptionSelected = { opt ->
+                        if (opt == IntakeDropdownOptions.CollectionMethodOption.OTHER) {
+                            onAction(IntakeAction.UpdateCollectionMethod("Other: "))
+                        } else {
+                            onAction(IntakeAction.UpdateCollectionMethod(opt.label))
+                        }
                     },
                     error = state.intakeErrors.collectionMethod,
                     modifier = Modifier.fillMaxWidth()
@@ -121,11 +126,35 @@ fun IntakeScreen(
                     )
                 }
 
+                if (isOtherCollectionMethod) {
+                    TextEntryField(
+                        label = "Other Collection Method",
+                        value = state.session.collectionMethod.removePrefix("Other: ").trimStart(),
+                        onValueChange = { typed ->
+                            onAction(IntakeAction.UpdateCollectionMethod("Other: $typed"))
+                        },
+                        singleLine = true,
+                        error = state.intakeErrors.collectionMethod
+                    )
+                }
+
+                val isOtherSpecimenCondition =
+                    state.session.specimenCondition.startsWith("Other:", ignoreCase = true)
+
                 DropdownField(
                     label = "Specimen Condition",
                     options = IntakeDropdownOptions.SpecimenConditionOption.entries,
-                    selectedOption = IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition },
-                    onOptionSelected = { onAction(IntakeAction.SelectSpecimenCondition(it)) },
+                    selectedOption = if (isOtherSpecimenCondition)
+                        IntakeDropdownOptions.SpecimenConditionOption.OTHER
+                    else
+                        IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition },
+                    onOptionSelected = { opt ->
+                        if (opt == IntakeDropdownOptions.SpecimenConditionOption.OTHER) {
+                            onAction(IntakeAction.UpdateSpecimenCondition("Other: "))
+                        } else {
+                            onAction(IntakeAction.UpdateSpecimenCondition(opt.label))
+                        }
+                    },
                     error = state.intakeErrors.specimenCondition,
                     modifier = Modifier.fillMaxWidth()
                 ) { specimenCondition ->
@@ -133,6 +162,18 @@ fun IntakeScreen(
                         text = specimenCondition.label,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colors.textPrimary
+                    )
+                }
+
+                if (isOtherSpecimenCondition) {
+                    TextEntryField(
+                        label = "Other Specimen Condition",
+                        value = state.session.specimenCondition.removePrefix("Other: ").trimStart(),
+                        onValueChange = { typed ->
+                            onAction(IntakeAction.UpdateSpecimenCondition("Other: $typed"))
+                        },
+                        singleLine = true,
+                        error = state.intakeErrors.specimenCondition
                     )
                 }
             }

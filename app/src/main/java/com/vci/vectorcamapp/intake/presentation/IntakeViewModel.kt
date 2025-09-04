@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.intake.presentation
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
@@ -330,21 +331,20 @@ class IntakeViewModel @Inject constructor(
                     }
                 }
 
-                is IntakeAction.SelectCollectionMethod -> {
+                is IntakeAction.UpdateCollectionMethod -> {
                     _state.update {
                         it.copy(
-                            session = it.session.copy(
-                                collectionMethod = action.option.label
+                            session = it.session.copy(collectionMethod = action.collectionMethod
                             )
                         )
                     }
                 }
 
-                is IntakeAction.SelectSpecimenCondition -> {
+                is IntakeAction.UpdateSpecimenCondition -> {
                     _state.update {
                         it.copy(
                             session = it.session.copy(
-                                specimenCondition = action.option.label
+                                specimenCondition = action.specimenCondition
                             )
                         )
                     }

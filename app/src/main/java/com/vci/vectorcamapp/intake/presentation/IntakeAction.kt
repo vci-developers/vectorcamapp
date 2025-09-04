@@ -1,9 +1,7 @@
 package com.vci.vectorcamapp.intake.presentation
 
-import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions.CollectionMethodOption
 import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions.LlinBrandOption
 import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions.LlinTypeOption
-import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions.SpecimenConditionOption
 
 sealed interface IntakeAction {
     data object ReturnToLandingScreen: IntakeAction
@@ -21,8 +19,8 @@ sealed interface IntakeAction {
     data class SelectLlinBrand(val option: LlinBrandOption) : IntakeAction
     data class EnterNumPeopleSleptUnderLlin(val count: String) : IntakeAction
     data class PickCollectionDate(val date: Long) : IntakeAction
-    data class SelectCollectionMethod(val option: CollectionMethodOption) : IntakeAction
-    data class SelectSpecimenCondition(val option: SpecimenConditionOption) : IntakeAction
+    data class UpdateCollectionMethod(val collectionMethod: String) : IntakeAction
+    data class UpdateSpecimenCondition(val specimenCondition: String) : IntakeAction
     data class EnterNotes(val text: String) : IntakeAction
     data object RetryLocation: IntakeAction
 }
