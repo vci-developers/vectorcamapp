@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.data.network.api
 
+import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.data.dto.device.DeviceDto
 import com.vci.vectorcamapp.core.data.dto.device.RegisterDeviceRequestDto
 import com.vci.vectorcamapp.core.data.dto.device.RegisterDeviceResponseDto
@@ -10,6 +11,7 @@ import com.vci.vectorcamapp.core.domain.network.api.DeviceDataSource
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import io.ktor.client.HttpClient
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -25,6 +27,7 @@ class RemoteDeviceDataSource @Inject constructor(
     ): Result<RegisterDeviceResponseDto, NetworkError> {
         return safeCall<RegisterDeviceResponseDto> {
             httpClient.post(constructUrl("devices/register")) {
+                bearerAuth(BuildConfig.VECTORCAM_API_KEY)
                 contentType(ContentType.Application.Json)
                 setBody(
                     RegisterDeviceRequestDto(
@@ -40,6 +43,7 @@ class RemoteDeviceDataSource @Inject constructor(
     override suspend fun getDeviceById(deviceId: Int): Result<DeviceDto, NetworkError> {
         return safeCall<DeviceDto> {
             httpClient.get(constructUrl("devices/$deviceId")) {
+                bearerAuth(BuildConfig.VECTORCAM_API_KEY)
                 contentType(ContentType.Application.Json)
             }
         }

@@ -12,8 +12,8 @@ sealed interface ImagingAction {
     data class CaptureImage(val controller: LifecycleCameraController) : ImagingAction
     data object SaveImageToSession : ImagingAction
     data object RetakeImage : ImagingAction
-    data class ManualFocusAt(val offset: Offset) : ImagingAction
-    data object CancelManualFocus : ImagingAction
+    data class FocusAt(val offset: Offset) : ImagingAction
+    data object CancelFocus : ImagingAction
     data object ShowExitDialog : ImagingAction
     data object DismissExitDialog : ImagingAction
     data class SelectPendingAction(val pendingAction: ImagingAction) : ImagingAction
