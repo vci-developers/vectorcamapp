@@ -47,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -365,24 +366,36 @@ fun ImagingScreen(
                             )
                         }
 
-                        SpecimenImageOverlay(
-                            inferenceResult = state.currentInferenceResult
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                                .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
                         ) {
-                            Image(
-                                bitmap = specimenBitmap.asImageBitmap(),
-                                contentDescription = state.currentSpecimen.id,
-                                contentScale = ContentScale.FillBounds
-                            )
+                            SpecimenImageOverlay(
+                                inferenceResult = state.currentInferenceResult
+                            ) {
+                                Image(
+                                    bitmap = specimenBitmap.asImageBitmap(),
+                                    contentDescription = state.currentSpecimen.id,
+                                    contentScale = ContentScale.FillBounds
+                                )
+                            }
                         }
 
                     } else {
-                        LiveCameraPreview(
-                            controller = controller,
-                            inferenceResults = state.previewInferenceResults,
-                            manualFocusPoint = state.manualFocusPoint,
-                            onEnableManualFocus = { onAction(ImagingAction.ManualFocusAt(it)) },
-                            onCancelManualFocus = { onAction(ImagingAction.CancelManualFocus) },
-                        )
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                                .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
+                        ) {
+                            LiveCameraPreview(
+                                controller = controller,
+                                inferenceResults = state.previewInferenceResults,
+                                manualFocusPoint = state.manualFocusPoint,
+                                onEnableManualFocus = { onAction(ImagingAction.ManualFocusAt(it)) },
+                                onCancelManualFocus = { onAction(ImagingAction.CancelManualFocus) },
+                            )
+                        }
                     }
 
                     InfoTile {
@@ -399,15 +412,6 @@ fun ImagingScreen(
                                         onAction(ImagingAction.CorrectSpecimenId(it))
                                     }, singleLine = true
                                 )
-
-                                CheckboxField(
-                                    label = "I have verified the ID of this specimen.",
-                                    checked = state.specimenIdVerified,
-                                    onCheckedChange = {
-                                        onAction(
-                                            ImagingAction.VerifySpecimenIdCorrectness(it)
-                                        )
-                                    })
 
                                 Row(
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -448,7 +452,6 @@ fun ImagingScreen(
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = MaterialTheme.colors.successConfirm
                                         ),
-                                        enabled = state.specimenIdVerified,
                                         shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
                                     ) {
                                         Text(

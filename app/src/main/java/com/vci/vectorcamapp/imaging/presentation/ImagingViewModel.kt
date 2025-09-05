@@ -138,14 +138,6 @@ class ImagingViewModel @Inject constructor(
                     }
                 }
 
-                is ImagingAction.VerifySpecimenIdCorrectness -> {
-                    _state.update {
-                        it.copy(
-                            specimenIdVerified = action.specimenIdVerified
-                        )
-                    }
-                }
-
                 is ImagingAction.ProcessFrame -> {
                     try {
                         if (!_state.value.isCameraReady) {
