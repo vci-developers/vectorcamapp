@@ -407,7 +407,7 @@ fun ImagingScreen(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(MaterialTheme.dimensions.paddingMedium),
-                                verticalArrangement = Arrangement.SpaceEvenly
+                                verticalArrangement = Arrangement.SpaceBetween
                             ) {
                                 TextEntryField(
                                     label = "Specimen ID",
