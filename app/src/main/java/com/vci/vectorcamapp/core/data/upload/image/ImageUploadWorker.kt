@@ -177,7 +177,7 @@ class ImageUploadWorker @AssistedInject constructor(
     ): DomainResult<String, NetworkError> {
         var tempFile: File? = null
         val (file, contentType, md5) = try {
-            val (prepared, type) = prepareFile(task.image.imageUri, task.specimen.id, imageId = task.image.localId)
+            val (prepared, type) = prepareFile(task.image.imageUri, task.specimen.id, task.image.localId)
             tempFile = prepared
             Triple(prepared, type, task.image.localId)
         } catch (e: Exception) {
