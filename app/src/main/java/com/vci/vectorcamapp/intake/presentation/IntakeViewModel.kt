@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.cache.IntakeDefaultCache
+import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
@@ -40,6 +42,7 @@ class IntakeViewModel @Inject constructor(
     private val validationUseCases: ValidationUseCases,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
+    private val intakeFormCache: IntakeDefaultCache,
     private val siteRepository: SiteRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
     private val sessionRepository: SessionRepository,
@@ -162,6 +165,12 @@ class IntakeViewModel @Inject constructor(
 
                         if (success) {
                             currentSessionCache.saveSession(session, selectedSite.id)
+                            intakeFormCache.saveIntakeDefaultValues(
+                                collectorName = session.collectorName,
+                                collectorTitle = session.collectorTitle,
+                                district = _state.value.selectedDistrict,
+                                sentinelSite = _state.value.selectedSentinelSite
+                            )
                             _events.send(IntakeEvent.NavigateToImagingScreen)
                         }
                     }
@@ -390,11 +399,13 @@ class IntakeViewModel @Inject constructor(
             val currentSession = currentSessionCache.getSession()
             val allSites = siteRepository.getAllSitesByProgramId(programId)
 
+            var effectiveSession: Session
             var savedForm: SurveillanceForm? = null
             var district = ""
             var sentinelSite = ""
 
             if (currentSession != null) {
+                effectiveSession = currentSession
                 savedForm =
                     surveillanceFormRepository.getSurveillanceFormBySessionId(currentSession.localId)
 
@@ -404,12 +415,37 @@ class IntakeViewModel @Inject constructor(
                     district = site.district
                     sentinelSite = site.sentinelSite
                 }
+            } else {
+                val sessionType = savedStateHandle.get<SessionType>("sessionType") ?: SessionType.SURVEILLANCE
+                var cachedCollectorName = ""
+                var cachedCollectorTitle = ""
+
+                intakeFormCache.getIntakeDefaultValues()?.let { defaults ->
+                    cachedCollectorName = defaults.collectorName
+                    cachedCollectorTitle = defaults.collectorTitle
+
+                    val validDistrict = defaults.district
+                        .takeIf { d -> allSites.any { it.district == d } }
+                        .orEmpty()
+
+                    val validSentinel = defaults.sentinelSite
+                        .takeIf { s ->
+                            validDistrict.isNotBlank() &&
+                                    allSites.any { it.district == validDistrict && it.sentinelSite == s }
+                        }
+                        .orEmpty()
+
+                    district = validDistrict
+                    sentinelSite = validSentinel
+                }
+
+                effectiveSession = _state.value.session.copy(
+                    type = sessionType,
+                    collectorName = cachedCollectorName,
+                    collectorTitle = cachedCollectorTitle
+                )
             }
 
-            val effectiveSession = currentSession ?: _state.value.session.copy(
-                type = savedStateHandle.get<SessionType>("sessionType")
-                    ?: SessionType.SURVEILLANCE
-            )
             surveillanceFormWorkflow = surveillanceFormWorkflowFactory.create(effectiveSession.type)
 
             _state.update {
