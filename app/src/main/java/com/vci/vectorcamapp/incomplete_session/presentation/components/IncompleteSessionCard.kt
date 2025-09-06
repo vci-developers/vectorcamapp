@@ -21,7 +21,7 @@ import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
-import com.vci.vectorcamapp.core.presentation.components.swipe.SwipeToReveal
+import com.vci.vectorcamapp.core.presentation.components.gestures.SwipeToReveal
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -37,16 +37,15 @@ fun IncompleteSessionCard(
 ) {
     val titleFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
     val detailFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
-    val deleteWidth = MaterialTheme.dimensions.spacingExtraLarge * 2
 
     SwipeToReveal(
         backgroundContent = {
             IncompleteSessionDeleteBackground(
                 onDelete = onDelete,
-                deleteWidth = deleteWidth
+                deleteWidth = MaterialTheme.dimensions.spacingExtraExtraExtraLarge
             )
         },
-        revealWidth = deleteWidth,
+        revealWidth = MaterialTheme.dimensions.spacingExtraExtraExtraLarge,
         modifier = modifier
     ) {
         ActionTile(onClick = onClick) {

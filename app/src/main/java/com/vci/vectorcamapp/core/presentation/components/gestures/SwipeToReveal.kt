@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.core.presentation.components.swipe
+package com.vci.vectorcamapp.core.presentation.components.gestures
 
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box

@@ -20,6 +20,7 @@ data class Dimensions(
     val spacingLarge: Dp = 32.dp,
     val spacingExtraLarge: Dp = 48.dp,
     val spacingExtraExtraLarge: Dp = 64.dp,
+    val spacingExtraExtraExtraLarge: Dp = 72.dp,
 
     // Component Heights
     val componentHeightSmall: Dp = 36.dp,

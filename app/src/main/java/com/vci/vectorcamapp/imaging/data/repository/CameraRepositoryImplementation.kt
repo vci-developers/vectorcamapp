@@ -103,39 +103,31 @@ class CameraRepositoryImplementation @Inject constructor(
     }
 
     override suspend fun deleteSavedImage(uri: Uri) {
-        withContext(Dispatchers.IO) {
-            try {
-                val resolver = context.contentResolver
+        val resolver = context.contentResolver
 
-                val relativePath = resolver.query(
-                    uri,
-                    arrayOf(MediaStore.MediaColumns.RELATIVE_PATH),
-                    null, null, null
-                )?.use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        cursor.getString(0)
-                    } else null
-                }
+        val relativePath = resolver.query(
+            uri,
+            arrayOf(MediaStore.MediaColumns.RELATIVE_PATH),
+            null, null, null
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                cursor.getString(0)
+            } else null
+        }
 
-                val deleted = resolver.delete(uri, null, null) > 0
+        val isDeleted = resolver.delete(uri, null, null) > 0
 
-                if (deleted && relativePath != null) {
-                    try {
-                        val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-                        val selection = "${MediaStore.MediaColumns.RELATIVE_PATH} = ?"
+        if (isDeleted && relativePath != null) {
+            val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val selection = "${MediaStore.MediaColumns.RELATIVE_PATH} = ?"
 
-                        resolver.query(collection, arrayOf(MediaStore.MediaColumns._ID), selection, arrayOf(relativePath), null)?.use { cursor ->
-                            if (cursor.count == 0) {
-                                val folder = File(Environment.getExternalStorageDirectory(), relativePath)
-                                if (folder.exists() && folder.isDirectory && folder.listFiles()?.isEmpty() == true) {
-                                    folder.delete()
-                                }
-                            }
-                        }
-                    } catch (_: Exception) {
+            resolver.query(collection, arrayOf(MediaStore.MediaColumns._ID), selection, arrayOf(relativePath), null)?.use { cursor ->
+                if (cursor.count == 0) {
+                    val folder = File(Environment.getExternalStorageDirectory(), relativePath)
+                    if (folder.exists() && folder.isDirectory && folder.listFiles()?.isEmpty() == true) {
+                        folder.delete()
                     }
                 }
-            } catch (_: Exception) {
             }
         }
     }
