@@ -42,19 +42,30 @@ class WorkManagerRepositoryImplementation @Inject constructor(
         ).then(buildSessionImageWork(sessionId)).enqueue()
     }
 
-    override fun observeAnySessionUploadRunning(sessionIds: List<UUID>): Flow<Boolean> {
-        val chainNames = sessionIds.map { "session_upload_chain_$it" }
-        val flows: List<Flow<Boolean>> = chainNames.map { chainName ->
+    override fun observeActiveUploadingSessions(sessionIds: List<UUID>): Flow<Set<UUID>> {
+        val chainNames = sessionIds.map { sessionId ->
+            "session_upload_chain_$sessionId" to sessionId
+        }
+
+        val flows: List<Flow<Pair<UUID, Boolean>>> = chainNames.map { (chainName, sessionId) ->
             workManager.getWorkInfosForUniqueWorkFlow(chainName)
                 .map { workInfos ->
-                    workInfos.any { it.state in listOf(WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING ) }
+                    val isRunning = workInfos.any { it.state in listOf(WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING) }
+                    sessionId to isRunning
                 }
         }
+
         return when {
-            flows.isEmpty() -> flowOf(false)
-            else -> combine(flows) { runningArray: Array<Boolean> ->
-                runningArray.any { it }
+            flows.isEmpty() -> flowOf(emptySet())
+            else -> combine(flows) { runningPairs: Array<Pair<UUID, Boolean>> ->
+                runningPairs.filter { it.second }.map { it.first }.toSet()
             }
+        }
+    }
+
+    override fun observeAnySessionUploadRunning(sessionIds: List<UUID>): Flow<Boolean> {
+        return observeActiveUploadingSessions(sessionIds).map { activeSet ->
+            activeSet.isNotEmpty()
         }
     }
 

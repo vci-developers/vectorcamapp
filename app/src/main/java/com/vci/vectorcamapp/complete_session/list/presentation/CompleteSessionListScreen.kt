@@ -29,22 +29,20 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloatAsState
 
-object CompleteSessionListScreenConstants {
-    const val ROTATION_DURATION_MS = 2000
-}
-
 @Composable
 fun CompleteSessionListScreen(
     state: CompleteSessionListState,
     onAction: (CompleteSessionListAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val rotationDuration = 2000
+
     val rotation by animateFloatAsState(
         targetValue = if (state.isUploading) 360f else 0f,
         animationSpec = if (state.isUploading) {
             infiniteRepeatable(
                 animation = tween(
-                    durationMillis = CompleteSessionListScreenConstants.ROTATION_DURATION_MS,
+                    durationMillis = rotationDuration,
                     easing = LinearEasing
                 ),
                 repeatMode = RepeatMode.Restart
@@ -75,10 +73,14 @@ fun CompleteSessionListScreen(
             items(
                 items = state.sessionsAndSites.asReversed(),
                 key = { it.session.localId }) { sessionAndSite ->
+                val uploadCount = state.sessionUploadCounts
+                    .find { it.first == sessionAndSite.session.localId }?.second
+
                 CompleteSessionListTile(
                     session = sessionAndSite.session,
                     site = sessionAndSite.site,
-                    specimens = state.specimensBySession[sessionAndSite.session.localId] ?: emptyList(),
+                    uploadCount = uploadCount,
+                    isActivelyUploading = sessionAndSite.session.localId in state.activeUploadSessions,
                     onClick = {
                         onAction(
                             CompleteSessionListAction.ViewCompleteSessionDetails(

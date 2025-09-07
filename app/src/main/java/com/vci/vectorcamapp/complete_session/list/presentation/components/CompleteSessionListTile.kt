@@ -1,5 +1,11 @@
 package com.vci.vectorcamapp.complete_session.list.presentation.components
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,23 +17,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.complete_session.list.domain.model.CompleteSessionListUploadCount
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
-import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
-import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -35,26 +40,25 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+object CompleteSessionListTileConstants {
+    const val UPLOAD_ICON_ANIMATION_DURATION_MS = 1000
+    const val UPLOAD_ICON_MIN_ALPHA = 0.3f
+    const val UPLOAD_ICON_MAX_ALPHA = 1f
+    const val PROGRESS_BAR_MEDIUM_THRESHOLD = 0.5f
+    const val PROGRESS_BAR_COMPLETE_THRESHOLD = 1f
+}
+
 @Composable
 fun CompleteSessionListTile(
     session: Session,
     site: Site,
-    specimens: List<SpecimenWithSpecimenImagesAndInferenceResults>,
+    uploadCount: CompleteSessionListUploadCount?,
+    isActivelyUploading: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
-    val dateTimeFormatter =
-        remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
-
-    val totalImages = specimens.sumOf { it.specimenImagesAndInferenceResults.size }
-    val uploadedImages = specimens.sumOf { specimen ->
-        specimen.specimenImagesAndInferenceResults.count { (specimenImage, _) ->
-            specimenImage.metadataUploadStatus == UploadStatus.COMPLETED &&
-                    specimenImage.imageUploadStatus == UploadStatus.COMPLETED
-        }
-    }
-    val uploadProgress = if (totalImages > 0) uploadedImages.toFloat() / totalImages else 0f
+    val dateTimeFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
     session.completedAt?.let { completedAt ->
         ActionTile(
@@ -62,11 +66,11 @@ fun CompleteSessionListTile(
             modifier = modifier,
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
-                modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
+                modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -161,38 +165,79 @@ fun CompleteSessionListTile(
 
                     Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
-                    if (totalImages > 0) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Upload Progress",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colors.textSecondary
-                            )
-                            Text(
-                                text = "$uploadedImages / $totalImages images",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colors.textSecondary
-                            )
-                        }
+                    uploadCount?.let { count ->
+                        if (count.totalImages > 0) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                                ) {
+                                    Text(
+                                        text = "Upload Progress",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colors.textSecondary
+                                    )
+                                    if (isActivelyUploading) {
+                                        val infiniteTransition = rememberInfiniteTransition(label = "upload_pulse")
+                                        val alpha by infiniteTransition.animateFloat(
+                                            initialValue = CompleteSessionListTileConstants.UPLOAD_ICON_MIN_ALPHA,
+                                            targetValue = CompleteSessionListTileConstants.UPLOAD_ICON_MAX_ALPHA,
+                                            animationSpec = infiniteRepeatable(
+                                                animation = tween(
+                                                    durationMillis = CompleteSessionListTileConstants.UPLOAD_ICON_ANIMATION_DURATION_MS,
+                                                    easing = LinearEasing
+                                                ),
+                                                repeatMode = RepeatMode.Reverse
+                                            ),
+                                            label = "alpha"
+                                        )
 
-                        LinearProgressIndicator(
-                            progress = { uploadProgress },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall),
-                            color = if (uploadProgress == 1f) MaterialTheme.colors.primary else MaterialTheme.colors.secondary,
-                            trackColor = MaterialTheme.colors.divider,
-                            strokeCap = StrokeCap.Butt,
-                            gapSize = 0.dp,
-                            drawStopIndicator = {}
-                        )
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_cloud_upload),
+                                            contentDescription = "Currently uploading",
+                                            tint = MaterialTheme.colors.textSecondary,
+                                            modifier = Modifier
+                                                .padding(horizontal = MaterialTheme.dimensions.paddingExtraSmall)
+                                                .size(MaterialTheme.dimensions.iconSizeExtraSmall)
+                                                .alpha(alpha)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = "${count.uploadedImages} / ${count.totalImages} images",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colors.textSecondary
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall)
+                                    .background(
+                                        MaterialTheme.colors.divider,
+                                        RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
+                                    )
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(count.progress)
+                                        .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall)
+                                        .background(
+                                            if (count.progress == CompleteSessionListTileConstants.PROGRESS_BAR_COMPLETE_THRESHOLD) MaterialTheme.colors.primary
+                                            else if (count.progress >= CompleteSessionListTileConstants.PROGRESS_BAR_MEDIUM_THRESHOLD) MaterialTheme.colors.warning
+                                            else MaterialTheme.colors.error,
+                                            RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
+                                        )
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
-

@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -31,15 +30,44 @@ class CompleteSessionListViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _state = MutableStateFlow(CompleteSessionListState())
+
     val state = combine(_completeSessionsAndSites, _state) { completeSessionsAndSites, state ->
         state.copy(sessionsAndSites = completeSessionsAndSites)
     }.onStart {
-        loadCompleteSessionListDetails()
-        observeAllSessionSpecimens()
+        loadCompleteSessionDetails()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
 
     private val _events = Channel<CompleteSessionListEvent>()
     val events = _events.receiveAsFlow()
+
+    private fun loadCompleteSessionDetails() {
+        viewModelScope.launch {
+            _completeSessionsAndSites.collect { sessionsAndSites ->
+                val sessionIds = sessionsAndSites.map { it.session.localId }
+
+                launch {
+                    specimenRepository.observeSessionUploadCounts().collect { uploadCounts ->
+                        val countPairs = uploadCounts.map { count ->
+                            count.sessionId to count
+                        }
+                        _state.update { it.copy(sessionUploadCounts = countPairs) }
+                    }
+                }
+
+                launch {
+                    workManagerRepository.observeActiveUploadingSessions(sessionIds)
+                        .collect { activeSessionIds ->
+                            _state.update { it.copy(activeUploadSessions = activeSessionIds) }
+                        }
+                }
+
+                workManagerRepository.observeAnySessionUploadRunning(sessionIds)
+                    .collect { isRunning ->
+                        _state.update { it.copy(isUploading = isRunning) }
+                    }
+            }
+        }
+    }
 
     fun onAction(action: CompleteSessionListAction) {
         viewModelScope.launch {
@@ -75,41 +103,6 @@ class CompleteSessionListViewModel @Inject constructor(
 
                         workManagerRepository.enqueueSessionUpload(session.localId, site.id)
                     }
-                }
-            }
-        }
-    }
-
-    private fun loadCompleteSessionListDetails() {
-        viewModelScope.launch {
-            _completeSessionsAndSites.collect { sessionsAndSites ->
-                val sessionIds = sessionsAndSites.map { it.session.localId }
-                workManagerRepository.observeAnySessionUploadRunning(sessionIds)
-                    .collect { isRunning ->
-                        _state.update { it.copy(isUploading = isRunning) }
-                    }
-            }
-        }
-    }
-
-    private fun observeAllSessionSpecimens() {
-        viewModelScope.launch {
-            _completeSessionsAndSites.collect { sessionsAndSites ->
-                val sessionFlows = sessionsAndSites.map { sessionAndSite ->
-                    specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(sessionAndSite.session.localId)
-                        .map { specimens ->
-                            sessionAndSite.session.localId to specimens
-                        }
-                }
-
-                if (sessionFlows.isNotEmpty()) {
-                    combine(sessionFlows) { sessionSpecimenArrays ->
-                        sessionSpecimenArrays.toMap()
-                    }.collect { sessionSpecimensMap ->
-                        _state.update { it.copy(specimensBySession = sessionSpecimensMap) }
-                    }
-                } else {
-                    _state.update { it.copy(specimensBySession = emptyMap()) }
                 }
             }
         }
