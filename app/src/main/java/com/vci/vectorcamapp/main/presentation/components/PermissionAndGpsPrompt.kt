@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
 import com.vci.vectorcamapp.main.presentation.MainAction
 import com.vci.vectorcamapp.main.presentation.MainState
+import com.vci.vectorcamapp.main.presentation.util.PermissionAndGpsPromptTestTags
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
@@ -44,12 +46,16 @@ fun PermissionAndGpsPrompt(
         Text(
             text = "This app needs access to your camera and location to function properly. " + "Camera access is essential for capturing images of specimens, while location access helps identify where the specimens were collected. " + "It looks like you’ve denied one or more of these permissions. " + "To continue using the app, please enable these permissions in the app settings. ",
             style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.testTag(PermissionAndGpsPromptTestTags.PROMPT_TEXT)
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingLarge))
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             if (!state.allGranted) {
-                Button(onClick = { onAction(MainAction.OpenAppSettings) }) {
+                Button(
+                    onClick = { onAction(MainAction.OpenAppSettings) },
+                    modifier = Modifier.testTag(PermissionAndGpsPromptTestTags.GRANT_PERMISSIONS_BUTTON)
+                ) {
                     Text(
                         text = "Grant Permissions",
                         style = MaterialTheme.typography.bodyLarge,
@@ -59,7 +65,10 @@ fun PermissionAndGpsPrompt(
             }
             if (!state.isGpsEnabled) {
                 Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
-                Button(onClick = { onAction(MainAction.OpenLocationSettings) }) {
+                Button(
+                    onClick = { onAction(MainAction.OpenLocationSettings) },
+                    modifier = Modifier.testTag(PermissionAndGpsPromptTestTags.ENABLE_GPS_BUTTON)
+                ) {
                     Text(
                         text = "Enable GPS",
                         style = MaterialTheme.typography.bodyLarge,
