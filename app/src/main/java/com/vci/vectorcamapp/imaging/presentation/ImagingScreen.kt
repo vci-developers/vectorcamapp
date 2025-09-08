@@ -60,7 +60,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
-import com.vci.vectorcamapp.core.presentation.components.form.CheckboxField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
 import com.vci.vectorcamapp.imaging.presentation.components.specimen.SpecimenImageOverlay
