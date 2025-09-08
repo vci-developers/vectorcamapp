@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
@@ -218,7 +217,6 @@ fun IntakeScreen(
                         onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it.filter { character -> character.isDigit() })) },
                         placeholder = "0",
                         singleLine = true,
-                        keyboardType = KeyboardType.Number,
                     )
                 }
 
@@ -312,7 +310,6 @@ fun IntakeScreen(
                             },
                             placeholder = "0",
                             singleLine = true,
-                            keyboardType = KeyboardType.Number,
                         )
                     }
 
@@ -322,7 +319,6 @@ fun IntakeScreen(
                         onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it.filter { character -> character.isDigit() })) },
                         placeholder = "0",
                         singleLine = true,
-                        keyboardType = KeyboardType.Number
                     )
 
                     surveillanceForm.llinType?.let { current ->
@@ -370,7 +366,6 @@ fun IntakeScreen(
                             },
                             placeholder = "0",
                             singleLine = true,
-                            keyboardType = KeyboardType.Number
                         )
                     }
                 }
@@ -386,7 +381,9 @@ fun IntakeScreen(
                 TextEntryField(
                     label = "Notes",
                     value = state.session.notes,
-                    onValueChange = { onAction(IntakeAction.EnterNotes(it)) })
+                    onValueChange = { onAction(IntakeAction.EnterNotes(it)) },
+                    placeholder = "1000 character limit...",
+                )
             }
         }
 
