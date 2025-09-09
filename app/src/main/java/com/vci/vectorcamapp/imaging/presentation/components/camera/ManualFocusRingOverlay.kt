@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.imaging.presentation.util.ImagingTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -44,6 +43,6 @@ fun ManualFocusRingOverlay(
                 shape = CircleShape
             )
             .clickable(onClick = onCancel)
-            .testTag(ImagingTestTags.AUTOFOCUS_RING)
+            .testTag(ImagingTestTags.MANUAL_FOCUS_RING)
     )
 }

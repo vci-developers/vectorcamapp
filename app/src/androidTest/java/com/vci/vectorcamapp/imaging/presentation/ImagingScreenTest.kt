@@ -183,11 +183,11 @@ class ImagingScreenTest {
                                             }
                                         }
 
-                                        is ImagingAction.ManualFocusAt ->
-                                            state = state.copy(manualFocusPoint = a.offset)
+                                        is ImagingAction.FocusAt ->
+                                            state = state.copy(focusPoint = a.offset, isManualFocusing = true)
 
-                                        ImagingAction.CancelManualFocus ->
-                                            state = state.copy(manualFocusPoint = null)
+                                        ImagingAction.CancelFocus ->
+                                            state = state.copy(focusPoint = null, isManualFocusing = false)
 
                                         ImagingAction.RetakeImage ->
                                             state = state.copy(currentImageBytes = null)
@@ -262,9 +262,9 @@ class ImagingScreenTest {
     @Test fun img_a04_tapPreviewShowsAndCancelsManualFocus() {
         launchImagingScreen(initial = ImagingState(isCameraReady = true))
         composeRule.onNodeWithTag(ImagingTestTags.CAMERA_PREVIEW).performTouchInput { click(center) }
-        composeRule.onNodeWithTag(ImagingTestTags.AUTOFOCUS_RING).assertIsDisplayed()
-        composeRule.onNodeWithTag(ImagingTestTags.AUTOFOCUS_RING).performClick()
-        composeRule.onNodeWithTag(ImagingTestTags.AUTOFOCUS_RING).assertDoesNotExist()
+        composeRule.onNodeWithTag(ImagingTestTags.MANUAL_FOCUS_RING).assertIsDisplayed()
+        composeRule.onNodeWithTag(ImagingTestTags.MANUAL_FOCUS_RING).performClick()
+        composeRule.onNodeWithTag(ImagingTestTags.MANUAL_FOCUS_RING).assertDoesNotExist()
     }
 
     @Test

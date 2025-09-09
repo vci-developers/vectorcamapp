@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.imaging.presentation
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -59,7 +58,6 @@ class ImagingViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var appContext: Context
     private lateinit var sessionCache: CurrentSessionCache
     private lateinit var sessionRepository: SessionRepository
     private lateinit var specimenRepository: SpecimenRepository
@@ -79,7 +77,6 @@ class ImagingViewModelTest {
     private lateinit var fakeUri: Uri
 
     private fun newViewModel(): ImagingViewModel = ImagingViewModel(
-        context = appContext,
         currentSessionCache = sessionCache,
         sessionRepository = sessionRepository,
         specimenRepository = specimenRepository,
@@ -131,7 +128,6 @@ class ImagingViewModelTest {
         mockkObject(ErrorMessageBus)
         coEvery { ErrorMessageBus.emit(any(), any()) } returns Unit
 
-        appContext = mockk(relaxed = true)
         sessionCache = mockk(relaxed = true)
         sessionRepository = mockk(relaxed = true)
         specimenRepository = mockk(relaxed = true)
@@ -230,13 +226,13 @@ class ImagingViewModelTest {
 
         viewModel.state.test {
             awaitItem()
-            viewModel.onAction(ImagingAction.ManualFocusAt(p))
+            viewModel.onAction(ImagingAction.FocusAt(p))
             advanceUntilIdle()
-            assertThat(awaitItem().manualFocusPoint).isEqualTo(p)
+            assertThat(awaitItem().focusPoint).isEqualTo(p)
 
-            viewModel.onAction(ImagingAction.CancelManualFocus)
+            viewModel.onAction(ImagingAction.CancelFocus)
             advanceUntilIdle()
-            assertThat(awaitItem().manualFocusPoint).isNull()
+            assertThat(awaitItem().focusPoint).isNull()
         }
     }
 

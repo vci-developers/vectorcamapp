@@ -17,7 +17,7 @@ object ImagingTestTags {
     const val EXIT_CONFIRM = "imaging_exit_confirm"
     const val EXIT_BACK = "imaging_exit_back"
 
-    const val AUTOFOCUS_RING = "imaging_autofocus_ring"
+    const val MANUAL_FOCUS_RING = "imaging_autofocus_ring"
 
     const val CAPTURED_SPECIMEN_TEXT_FIELD_SPECIMEN_ID = "imaging_text_field_specimen_id"
     const val CAPTURED_SPECIMEN_PILL_CORRECT_ID_WARNING = "imaging_pill_correct_id_warning"
