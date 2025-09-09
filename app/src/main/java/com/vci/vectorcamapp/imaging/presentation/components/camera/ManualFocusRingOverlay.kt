@@ -20,7 +20,7 @@ import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
-fun AutofocusRingOverlay(
+fun ManualFocusRingOverlay(
     focusPoint: Offset,
     overlaySize: IntSize,
     onCancel: () -> Unit,

@@ -15,7 +15,7 @@ class SpecimenImageAnalyzer(
     override fun analyze(frame: ImageProxy) {
         if (frameCounter % FRAME_SKIP_RATE == 0) {
             onFrameReady(frame)
-            frameCounter = 0
+            frameCounter = 1
         } else {
             frame.close()
             frameCounter++

@@ -177,7 +177,7 @@ class ImageUploadWorker @AssistedInject constructor(
     ): DomainResult<String, NetworkError> {
         var tempFile: File? = null
         val (file, contentType, md5) = try {
-            val (prepared, type) = prepareFile(task.image.imageUri, task.specimen.id)
+            val (prepared, type) = prepareFile(task.image.imageUri, task.specimen.id, task.image.localId)
             tempFile = prepared
             Triple(prepared, type, task.image.localId)
         } catch (e: Exception) {
@@ -356,7 +356,7 @@ class ImageUploadWorker @AssistedInject constructor(
 
             val chunkResult = try {
                 DomainResult.Success(uploader.uploadChunk())
-            } catch (e: SocketTimeoutException) {
+            } catch (_: SocketTimeoutException) {
                 DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
             } catch (e: TusProtocolException) {
                 if (e.shouldRetry()) {
@@ -364,7 +364,7 @@ class ImageUploadWorker @AssistedInject constructor(
                 } else {
                     DomainResult.Error(NetworkError.TUS_PERMANENT_ERROR)
                 }
-            } catch (e: IOException) {
+            } catch (_: IOException) {
                 DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
             } catch (e: Exception) {
                 if (isStopped) {
@@ -459,7 +459,8 @@ class ImageUploadWorker @AssistedInject constructor(
 
     private suspend fun prepareFile(
         source: Uri,
-        specimenId: String
+        specimenId: String,
+        imageId: String
     ): Pair<File, String> =
         withContext(Dispatchers.IO) {
             val resolver = context.contentResolver
@@ -469,7 +470,7 @@ class ImageUploadWorker @AssistedInject constructor(
                 "image/png" -> "png"
                 else -> "bin"
             }
-            val filename = "upload_specimen_$specimenId.$extension"
+            val filename = "upload_${specimenId}_${imageId}.$extension"
             val destination = File(context.cacheDir, filename)
             if (!destination.exists()) {
                 resolver.openInputStream(source)?.use { input ->
