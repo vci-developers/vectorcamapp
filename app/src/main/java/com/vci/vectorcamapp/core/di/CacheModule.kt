@@ -2,10 +2,10 @@ package com.vci.vectorcamapp.core.di
 
 import com.vci.vectorcamapp.core.data.cache.CurrentSessionCacheImplementation
 import com.vci.vectorcamapp.core.data.cache.DeviceCacheImplementation
-import com.vci.vectorcamapp.core.data.cache.IntakeDefaultCacheImplementation
+import com.vci.vectorcamapp.core.data.cache.DefaultIntakeFieldsCacheImplementation
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.domain.cache.IntakeDefaultCache
+import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -30,7 +30,7 @@ abstract class CacheModule {
 
     @Binds
     @Singleton
-    abstract fun bindIntakeDefaultCache(
-        intakeDefaultCacheImplementation: IntakeDefaultCacheImplementation
-    ): IntakeDefaultCache
+    abstract fun bindDefaultIntakeFieldsCache(
+        defaultIntakeFieldsCacheImplementation: DefaultIntakeFieldsCacheImplementation
+    ): DefaultIntakeFieldsCache
 }

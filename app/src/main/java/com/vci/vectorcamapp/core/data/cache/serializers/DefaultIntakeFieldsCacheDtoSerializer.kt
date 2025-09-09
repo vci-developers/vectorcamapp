@@ -1,14 +1,14 @@
 package com.vci.vectorcamapp.core.data.cache.serializers
 
 import androidx.datastore.core.Serializer
-import com.vci.vectorcamapp.core.data.dto.cache.IntakeDefaultCacheDto
+import com.vci.vectorcamapp.core.data.dto.cache.DefaultIntakeFieldsCacheDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.InputStream
 import java.io.OutputStream
 
-object IntakeDefaultCacheDtoSerializer : Serializer<IntakeDefaultCacheDto> {
+object DefaultIntakeFieldsCacheDtoSerializer : Serializer<DefaultIntakeFieldsCacheDto> {
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -16,12 +16,12 @@ object IntakeDefaultCacheDtoSerializer : Serializer<IntakeDefaultCacheDto> {
         prettyPrint = false
     }
 
-    override val defaultValue: IntakeDefaultCacheDto = IntakeDefaultCacheDto()
+    override val defaultValue: DefaultIntakeFieldsCacheDto = DefaultIntakeFieldsCacheDto()
 
-    override suspend fun readFrom(input: InputStream): IntakeDefaultCacheDto {
+    override suspend fun readFrom(input: InputStream): DefaultIntakeFieldsCacheDto {
         return try {
             json.decodeFromString(
-                deserializer = IntakeDefaultCacheDto.serializer(),
+                deserializer = DefaultIntakeFieldsCacheDto.serializer(),
                 string = input.readBytes().decodeToString()
             )
         } catch (e: Exception) {
@@ -30,11 +30,11 @@ object IntakeDefaultCacheDtoSerializer : Serializer<IntakeDefaultCacheDto> {
         }
     }
 
-    override suspend fun writeTo(t: IntakeDefaultCacheDto, output: OutputStream) {
+    override suspend fun writeTo(t: DefaultIntakeFieldsCacheDto, output: OutputStream) {
         withContext(Dispatchers.IO) {
             output.write(
                 json.encodeToString(
-                    serializer = IntakeDefaultCacheDto.serializer(),
+                    serializer = DefaultIntakeFieldsCacheDto.serializer(),
                     value = t
                 ).encodeToByteArray()
             )

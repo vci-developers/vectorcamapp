@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.domain.cache.IntakeDefaultCache
+import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
@@ -42,7 +42,7 @@ class IntakeViewModel @Inject constructor(
     private val validationUseCases: ValidationUseCases,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
-    private val intakeFormCache: IntakeDefaultCache,
+    private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache,
     private val siteRepository: SiteRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
     private val sessionRepository: SessionRepository,
@@ -165,7 +165,7 @@ class IntakeViewModel @Inject constructor(
 
                         if (success) {
                             currentSessionCache.saveSession(session, selectedSite.id)
-                            intakeFormCache.saveIntakeDefaultValues(
+                            defaultIntakeFieldsCache.saveDefaultIntakeFields(
                                 collectorName = session.collectorName,
                                 collectorTitle = session.collectorTitle,
                                 district = _state.value.selectedDistrict,
@@ -399,7 +399,7 @@ class IntakeViewModel @Inject constructor(
             val currentSession = currentSessionCache.getSession()
             val allSites = siteRepository.getAllSitesByProgramId(programId)
 
-            var effectiveSession: Session
+            val effectiveSession: Session
             var savedForm: SurveillanceForm? = null
             var district = ""
             var sentinelSite = ""
@@ -420,18 +420,18 @@ class IntakeViewModel @Inject constructor(
                 var cachedCollectorName = ""
                 var cachedCollectorTitle = ""
 
-                intakeFormCache.getIntakeDefaultValues()?.let { defaults ->
+                defaultIntakeFieldsCache.getDefaultIntakeFields()?.let { defaults ->
                     cachedCollectorName = defaults.collectorName
                     cachedCollectorTitle = defaults.collectorTitle
 
                     val validDistrict = defaults.district
-                        .takeIf { d -> allSites.any { it.district == d } }
+                        .takeIf { currentDistrict -> allSites.any { it.district == currentDistrict } }
                         .orEmpty()
 
                     val validSentinel = defaults.sentinelSite
-                        .takeIf { s ->
+                        .takeIf { currentSession ->
                             validDistrict.isNotBlank() &&
-                                    allSites.any { it.district == validDistrict && it.sentinelSite == s }
+                                    allSites.any { it.district == validDistrict && it.sentinelSite == currentSession }
                         }
                         .orEmpty()
 
