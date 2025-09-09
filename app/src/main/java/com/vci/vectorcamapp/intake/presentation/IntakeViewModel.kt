@@ -4,9 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
-import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
-import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
@@ -399,13 +398,11 @@ class IntakeViewModel @Inject constructor(
             val currentSession = currentSessionCache.getSession()
             val allSites = siteRepository.getAllSitesByProgramId(programId)
 
-            val effectiveSession: Session
             var savedForm: SurveillanceForm? = null
             var district = ""
             var sentinelSite = ""
 
             if (currentSession != null) {
-                effectiveSession = currentSession
                 savedForm =
                     surveillanceFormRepository.getSurveillanceFormBySessionId(currentSession.localId)
 
@@ -415,6 +412,12 @@ class IntakeViewModel @Inject constructor(
                     district = site.district
                     sentinelSite = site.sentinelSite
                 }
+
+                _state.update { currentState ->
+                    currentState.copy(session = currentSession)
+                }
+
+                surveillanceFormWorkflow = surveillanceFormWorkflowFactory.create(currentSession.type)
             } else {
                 val sessionType = savedStateHandle.get<SessionType>("sessionType") ?: SessionType.SURVEILLANCE
                 var cachedCollectorName = ""
@@ -439,19 +442,21 @@ class IntakeViewModel @Inject constructor(
                     sentinelSite = validSentinel
                 }
 
-                effectiveSession = _state.value.session.copy(
-                    type = sessionType,
-                    collectorName = cachedCollectorName,
-                    collectorTitle = cachedCollectorTitle
-                )
-            }
+                _state.update { currentState ->
+                    val newSession = currentState.session.copy(
+                        type = sessionType,
+                        collectorName = cachedCollectorName,
+                        collectorTitle = cachedCollectorTitle
+                    )
+                    currentState.copy(session = newSession)
+                }
 
-            surveillanceFormWorkflow = surveillanceFormWorkflowFactory.create(effectiveSession.type)
+                surveillanceFormWorkflow = surveillanceFormWorkflowFactory.create(sessionType)
+            }
 
             _state.update {
                 it.copy(
                     isLoading = false,
-                    session = effectiveSession,
                     surveillanceForm = savedForm ?: surveillanceFormWorkflow.getSurveillanceForm(),
                     allSitesInProgram = allSites,
                     selectedDistrict = district,
