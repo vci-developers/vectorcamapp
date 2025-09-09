@@ -115,7 +115,9 @@ fun ImagingScreen(
                     Row(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(vertical = MaterialTheme.dimensions.paddingMedium).fillMaxWidth()
+                        modifier = Modifier
+                            .padding(vertical = MaterialTheme.dimensions.paddingMedium)
+                            .fillMaxWidth()
                     ) {
                         if (page > 0) {
                             Icon(
@@ -155,8 +157,9 @@ fun ImagingScreen(
                                 .size(MaterialTheme.dimensions.iconSizeLarge))
                     }
 
-                    LazyColumn (modifier = Modifier.fillMaxHeight()) {
-                        val imageList = state.specimensWithImagesAndInferenceResults[page].specimenImagesAndInferenceResults
+                    LazyColumn(modifier = Modifier.fillMaxHeight()) {
+                        val imageList =
+                            state.specimensWithImagesAndInferenceResults[page].specimenImagesAndInferenceResults
                         itemsIndexed(imageList) { index, (specimenImage, inferenceResult) ->
                             CapturedSpecimenTile(
                                 specimen = state.specimensWithImagesAndInferenceResults[page].specimen,
@@ -264,8 +267,17 @@ fun ImagingScreen(
                         }, confirmButton = {
                             if (state.pendingAction == null) {
                                 OutlinedButton(
-                                    onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SubmitSession)) },
-                                    border = BorderStroke(MaterialTheme.dimensions.borderThicknessThick, MaterialTheme.colors.successConfirm)
+                                    onClick = {
+                                        onAction(
+                                            ImagingAction.SelectPendingAction(
+                                                ImagingAction.SubmitSession
+                                            )
+                                        )
+                                    },
+                                    border = BorderStroke(
+                                        MaterialTheme.dimensions.borderThicknessThick,
+                                        MaterialTheme.colors.successConfirm
+                                    )
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_cloud_upload),
@@ -299,8 +311,17 @@ fun ImagingScreen(
                         }, dismissButton = {
                             if (state.pendingAction == null) {
                                 OutlinedButton(
-                                    onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SaveSessionProgress)) },
-                                    border = BorderStroke(MaterialTheme.dimensions.borderThicknessThick, MaterialTheme.colors.info)
+                                    onClick = {
+                                        onAction(
+                                            ImagingAction.SelectPendingAction(
+                                                ImagingAction.SaveSessionProgress
+                                            )
+                                        )
+                                    },
+                                    border = BorderStroke(
+                                        MaterialTheme.dimensions.borderThicknessThick,
+                                        MaterialTheme.colors.info
+                                    )
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_save),
@@ -360,9 +381,12 @@ fun ImagingScreen(
                             LiveCameraPreview(
                                 controller = controller,
                                 inferenceResults = state.previewInferenceResults,
-                                manualFocusPoint = state.manualFocusPoint,
-                                onEnableManualFocus = { onAction(ImagingAction.ManualFocusAt(it)) },
-                                onCancelManualFocus = { onAction(ImagingAction.CancelManualFocus) },
+                                focusPoint = state.focusPoint,
+                                onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
+                                onCancelFocus = { onAction(ImagingAction.CancelFocus) },
+                                modifier = Modifier.fillMaxWidth(),
+                                isManualFocusing = state.isManualFocusing,
+                                isProcessing = state.isProcessing
                             )
 
                             ActionButton(

@@ -32,6 +32,7 @@ data class Colors(
     val cardBackground: Color = Color(0xFFFFFFFF),
     val appBackground: Color = Color(0xFFF7F8F7),
     val transparent: Color = Color(0x00000000),
+    val overlayColor: Color = Color(0x80000000),
 )
 
 val LocalColors = staticCompositionLocalOf { Colors() }

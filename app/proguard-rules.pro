@@ -234,6 +234,7 @@
 -keep class com.vci.vectorcamapp.BuildConfig {
     public static final java.lang.String POSTHOG_API_KEY;
     public static final java.lang.String POSTHOG_HOST;
+    public static final java.lang.String VECTORCAM_API_KEY;
     public static final java.lang.String BASE_URL;
 }
 

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -108,17 +107,17 @@ fun IntakeScreen(
                         .testTag(IntakeTestTags.COLLECTION_DATE)
                 )
 
+                val isOtherCollectionMethod =
+                    state.session.collectionMethod.startsWith(IntakeDropdownOptions.CollectionMethodOption.OTHER.label, ignoreCase = true)
+
                 DropdownField(
                     label = "Collection Method",
                     options = IntakeDropdownOptions.CollectionMethodOption.entries,
-                    selectedOption = IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
-                    onOptionSelected = {
-                        onAction(
-                            IntakeAction.SelectCollectionMethod(
-                                it
-                            )
-                        )
-                    },
+                    selectedOption = if (isOtherCollectionMethod)
+                        IntakeDropdownOptions.CollectionMethodOption.OTHER
+                    else
+                        IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
+                    onOptionSelected = { onAction(IntakeAction.UpdateCollectionMethod(it.label)) },
                     error = state.intakeErrors.collectionMethod,
                     modifier = Modifier.fillMaxWidth()
                         .testTag(IntakeTestTags.COLLECTION_METHOD_DD)
@@ -130,11 +129,27 @@ fun IntakeScreen(
                     )
                 }
 
+                if (isOtherCollectionMethod) {
+                    TextEntryField(
+                        label = "Other Collection Method",
+                        value = state.session.collectionMethod.removePrefix(IntakeDropdownOptions.CollectionMethodOption.OTHER.label).trimStart(),
+                        onValueChange = { onAction(IntakeAction.UpdateCollectionMethod("${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it")) },
+                        singleLine = true,
+                        error = state.intakeErrors.collectionMethod
+                    )
+                }
+
+                val isOtherSpecimenCondition =
+                    state.session.specimenCondition.startsWith(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label, ignoreCase = true)
+
                 DropdownField(
                     label = "Specimen Condition",
                     options = IntakeDropdownOptions.SpecimenConditionOption.entries,
-                    selectedOption = IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition },
-                    onOptionSelected = { onAction(IntakeAction.SelectSpecimenCondition(it)) },
+                    selectedOption = if (isOtherSpecimenCondition)
+                        IntakeDropdownOptions.SpecimenConditionOption.OTHER
+                    else
+                        IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition },
+                    onOptionSelected = { onAction(IntakeAction.UpdateSpecimenCondition(it.label)) },
                     error = state.intakeErrors.specimenCondition,
                     modifier = Modifier.fillMaxWidth()
                         .testTag(IntakeTestTags.SPECIMEN_CONDITION_DD)
@@ -143,6 +158,16 @@ fun IntakeScreen(
                         text = specimenCondition.label,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colors.textPrimary
+                    )
+                }
+
+                if (isOtherSpecimenCondition) {
+                    TextEntryField(
+                        label = "Other Specimen Condition",
+                        value = state.session.specimenCondition.removePrefix(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label).trimStart(),
+                        onValueChange = { onAction(IntakeAction.UpdateSpecimenCondition("${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it")) },
+                        singleLine = true,
+                        error = state.intakeErrors.specimenCondition
                     )
                 }
             }
