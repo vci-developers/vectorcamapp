@@ -7,10 +7,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.incomplete_session.presentation.components.IncompleteSessionCard
+import com.vci.vectorcamapp.incomplete_session.presentation.util.IncompleteSessionTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
@@ -20,6 +22,8 @@ fun IncompleteSessionScreen(
     onAction: (IncompleteSessionAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val reversed = state.sessions.asReversed()
+
     ScreenHeader(
         title = "Incomplete Sessions",
         subtitle = "Click on a session to resume",
@@ -32,7 +36,8 @@ fun IncompleteSessionScreen(
                     .size(MaterialTheme.dimensions.iconSizeMedium)
                     .clickable {
                         onAction(IncompleteSessionAction.ReturnToLandingScreen)
-                    })
+                    }
+                    .testTag(IncompleteSessionTestTags.BACK_BUTTON) )
         },
         modifier = modifier
     ) {
@@ -40,9 +45,11 @@ fun IncompleteSessionScreen(
             items = state.sessions.asReversed(),
             key = { it.localId }
         ) { session ->
+            val index = reversed.indexOf(session)
             IncompleteSessionCard(
                 session = session,
-                onClick = { onAction(IncompleteSessionAction.ResumeSession(session.localId)) }
+                onClick = { onAction(IncompleteSessionAction.ResumeSession(session.localId)) },
+                modifier = Modifier.testTag("${IncompleteSessionTestTags.CARD_PREFIX}-$index")
             )
         }
     }
