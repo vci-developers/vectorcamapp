@@ -1,9 +1,11 @@
 package com.vci.vectorcamapp.incomplete_session.presentation
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
 import com.vci.vectorcamapp.incomplete_session.logging.IncompleteSessionSentryLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class IncompleteSessionViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
-    private val currentSessionCache: CurrentSessionCache
+    private val currentSessionCache: CurrentSessionCache,
+    private val cameraRepository: CameraRepository
 ) : CoreViewModel() {
 
     private val _incompleteSessions = sessionRepository.observeIncompleteSessions()
@@ -51,6 +54,44 @@ class IncompleteSessionViewModel @Inject constructor(
                         emitError(IncompleteSessionError.SESSION_RETRIEVAL_FAILED)
                         IncompleteSessionSentryLogger.logSessionRetrievalFailure(Exception(IncompleteSessionError.SESSION_RETRIEVAL_FAILED.name, e), action.sessionId)
                     }
+                }
+
+                is IncompleteSessionAction.DeleteSession -> {
+                    _state.value = _state.value.copy(deleteDialogSessionId = action.sessionId)
+                }
+
+                is IncompleteSessionAction.ConfirmDeleteSession -> {
+                    try {
+                        val sessionAndSite = sessionRepository.getSessionAndSiteById(action.sessionId)
+                        if (sessionAndSite != null) {
+                            val imageUris = sessionRepository.getImageUrisBySessionId(action.sessionId)
+                            imageUris.forEach { uri ->
+                                try {
+                                    cameraRepository.deleteSavedImage(uri)
+                                } catch (e: Exception) {
+                                    Log.e("IncompleteSessionViewModel", "Failed to delete image: $uri", e)
+                                }
+                            }
+
+                            val deleteSuccess = sessionRepository.deleteSession(sessionAndSite.session, sessionAndSite.site.id)
+                            if (deleteSuccess) {
+                                Log.d("IncompleteSessionViewModel", "Successfully deleted session and images for ID: ${action.sessionId}")
+                            } else {
+                                emitError(IncompleteSessionError.SESSION_DELETION_FAILED)
+                            }
+                        } else {
+                            emitError(IncompleteSessionError.SESSION_NOT_FOUND)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("IncompleteSessionViewModel", "Failed to delete session: ${action.sessionId}", e)
+                        emitError(IncompleteSessionError.SESSION_DELETION_FAILED)
+                    } finally {
+                        _state.value = _state.value.copy(deleteDialogSessionId = null)
+                    }
+                }
+
+                is IncompleteSessionAction.DismissDeleteDialog -> {
+                    _state.value = _state.value.copy(deleteDialogSessionId = null)
                 }
 
                 is IncompleteSessionAction.ReturnToLandingScreen -> {

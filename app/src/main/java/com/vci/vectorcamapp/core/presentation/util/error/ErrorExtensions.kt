@@ -65,6 +65,7 @@ fun Error.toString(context: Context): String {
         is IncompleteSessionError -> when (this) {
             IncompleteSessionError.SESSION_NOT_FOUND -> R.string.incomplete_session_error_session_not_found
             IncompleteSessionError.SESSION_RETRIEVAL_FAILED -> R.string.incomplete_session_error_session_retrieval_failed
+            IncompleteSessionError.SESSION_DELETION_FAILED -> R.string.incomplete_session_error_session_deletion_failed
             IncompleteSessionError.UNKNOWN_ERROR -> R.string.incomplete_session_error_unknown_error
         }
 
