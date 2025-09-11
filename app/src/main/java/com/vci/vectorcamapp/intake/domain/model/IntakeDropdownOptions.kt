@@ -38,6 +38,7 @@ object IntakeDropdownOptions {
         PYRETHROID_PBO("Pyrethroid + PBO"),
         PYRETHROID_CHLORFENAPYR("Pyrethroid + Chlorfenapyr"),
         PYRETHROID_PYRIPROXYFEN("Pyrethroid + Pyriproxyfen"),
+        UNSURE("Unsure"),
         OTHER("Other")
     }
 
