@@ -54,8 +54,8 @@ fun IncompleteSessionScreen(
             IncompleteSessionCard(
                 session = session,
                 onClick = { onAction(IncompleteSessionAction.ResumeSession(session.localId)) },
+                onDelete = { onAction(IncompleteSessionAction.DeleteSession(session.localId)) },
                 modifier = Modifier.testTag("${IncompleteSessionTestTags.CARD_PREFIX}-$index")
-                onDelete = { onAction(IncompleteSessionAction.DeleteSession(session.localId)) }
             )
         }
     }

@@ -8,23 +8,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.filter
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.onChild
-import androidx.compose.ui.test.onChildren
-import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onParent
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipe
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -134,6 +136,18 @@ class IncompleteSessionScreenTest {
                                         is IncompleteSessionAction.ReturnToLandingScreen -> {
                                             navController.navigate(TestDestinations.Landing)
                                         }
+                                        is IncompleteSessionAction.DeleteSession -> {
+                                            state = state.copy(deleteDialogSessionId = action.sessionId)
+                                        }
+                                        is IncompleteSessionAction.ConfirmDeleteSession -> {
+                                            state = state.copy(
+                                                sessions = state.sessions.filterNot { it.localId == action.sessionId },
+                                                deleteDialogSessionId = null
+                                            )
+                                        }
+                                        IncompleteSessionAction.DismissDeleteDialog -> {
+                                            state = state.copy(deleteDialogSessionId = null)
+                                        }
                                     }
                                 },
                                 modifier = Modifier.padding(innerPadding)
@@ -163,6 +177,30 @@ class IncompleteSessionScreenTest {
         assertThat(navController.currentDestination?.route).isEqualTo(TestDestinations.Intake)
         val lastArg = navController.currentBackStackEntry?.arguments?.getString("type")
         assertThat(lastArg).isEqualTo(type.name)
+    }
+
+    private fun clickableDescendantUnderCard(index: Int) =
+        composeRule.onNode(
+            hasClickAction()
+                .and(hasAnyAncestor(hasTestTag("${IncompleteSessionTestTags.CARD_PREFIX}-$index")))
+                .and(hasAnyDescendant(hasContentDescription("Resume"))),
+            useUnmergedTree = true
+        )
+
+    private fun swipeLeftToRevealDelete(index: Int) {
+        composeRule.onNodeWithTag("${IncompleteSessionTestTags.CARD_PREFIX}-$index", useUnmergedTree = true)
+            .performTouchInput {
+                val startX = this.visibleSize.width * 0.9f
+                val endX = this.visibleSize.width * 0.1f
+                val y = this.visibleSize.height / 2f
+
+                swipe(
+                    start = androidx.compose.ui.geometry.Offset(startX, y),
+                    end = androidx.compose.ui.geometry.Offset(endX, y),
+                    durationMillis = 300
+                )
+            }
+        composeRule.waitForIdle()
     }
 
     // ========================================
@@ -222,29 +260,26 @@ class IncompleteSessionScreenTest {
         val middleSession = sessions[1]
         launchIncompleteSessionScreen(IncompleteSessionState(sessions = sessions))
 
-        val cardSemanticsNode = composeRule.onNodeWithTag(
-            "${IncompleteSessionTestTags.CARD_PREFIX}-1",
-            useUnmergedTree = true
-        )
-
+        val cardMatcher = hasTestTag("${IncompleteSessionTestTags.CARD_PREFIX}-1")
         val titleFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+        val expectedTitle = "Incomplete Session on ${titleFormatter.format(middleSession.createdAt)}"
+        val expectedPillText = "Session Type: ${middleSession.type.name}"
 
-        cardSemanticsNode
-            .onChildren()
-            .filter(hasTestTag(IncompleteSessionTestTags.CARD_TITLE))
-            .onFirst()
-            .assert(hasText("Incomplete Session on ${titleFormatter.format(middleSession.createdAt)}"))
+        // Assert title text is correct and within the correct card
+        composeRule.onNode(
+            hasText(expectedTitle)
+                .and(hasTestTag(IncompleteSessionTestTags.CARD_TITLE))
+                .and(hasAnyAncestor(cardMatcher)),
+            useUnmergedTree = true
+        ).assertIsDisplayed()
 
-        val typePillContainerNode = cardSemanticsNode
-            .onChildren()
-            .filter(hasTestTag(IncompleteSessionTestTags.CARD_TYPE_PILL))
-            .onFirst()
-
-        typePillContainerNode
-            .onChildren()
-            .filter(hasText("Session Type: ${middleSession.type.name}"))
-            .onFirst()
-            .assert(hasText("Session Type: ${middleSession.type.name}"))
+        // Assert pill text is correct and within the correct card
+        composeRule.onNode(
+            hasText(expectedPillText)
+                .and(hasAnyAncestor(hasTestTag(IncompleteSessionTestTags.CARD_TYPE_PILL)))
+                .and(hasAnyAncestor(cardMatcher)),
+            useUnmergedTree = true
+        ).assertIsDisplayed()
     }
 
     @Test
@@ -253,21 +288,23 @@ class IncompleteSessionScreenTest {
         val middleSession = sessionList[1]
         launchIncompleteSessionScreen(IncompleteSessionState(sessions = sessionList))
 
-        val cardTag = "${IncompleteSessionTestTags.CARD_PREFIX}-1"
-        val cardNode = composeRule.onNodeWithTag(cardTag, useUnmergedTree = true)
-
         val detailFormatter = SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault())
+        val expected = "Created: ${detailFormatter.format(middleSession.createdAt)}"
 
-        cardNode.onChildren()
-            .filter(hasTestTag(IncompleteSessionTestTags.CARD_CREATED_TEXT))
-            .onFirst()
-            .assert(hasText("Created: ${detailFormatter.format(middleSession.createdAt)}"))
+        composeRule.onNode(
+            hasText(expected).and(
+                hasAnyAncestor(hasTestTag("${IncompleteSessionTestTags.CARD_PREFIX}-1"))
+            ),
+            useUnmergedTree = true
+        ).assertIsDisplayed()
 
         // TODO: Implement when we implement update time
-//        cardNode.onChildren()
-//            .filter(hasTestTag(IncompleteSessionTestTags.CARD_UPDATED_TEXT))
-//            .onFirst()
-//            .assert(hasText("Last Updated: placeholder"))
+        // composeRule.onNode(
+        //      hasText("Last Updated: ...").and(
+        //           hasAnyAncestor(hasTestTag("${IncompleteSessionTestTags.CARD_PREFIX}-1"))
+        //      ),
+        //      useUnmergedTree = true
+        // ).assertIsDisplayed()
     }
 
     // ========================================
@@ -287,11 +324,10 @@ class IncompleteSessionScreenTest {
     @Test
     fun incUi_c02_clickingNewestCardNavigatesToIntakeWithCorrectType() {
         val sessions = sampleSessions()
-        val expectedType = sessions.last().type
+        val expectedType = sessions.last().type // The list is reversed in the UI
         launchIncompleteSessionScreen(IncompleteSessionState(sessions = sessions))
-        composeRule.onNodeWithTag("${IncompleteSessionTestTags.CARD_PREFIX}-0")
-            .assertHasClickAction()
-            .performClick()
+
+        clickableDescendantUnderCard(0).performClick()
         assertOnIntakeFor(expectedType)
     }
 
@@ -301,10 +337,7 @@ class IncompleteSessionScreenTest {
         val expectedType = sessions[1].type
         launchIncompleteSessionScreen(IncompleteSessionState(sessions = sessions))
 
-        composeRule.onNodeWithTag("${IncompleteSessionTestTags.CARD_PREFIX}-1")
-            .assertHasClickAction()
-            .performClick()
-
+        clickableDescendantUnderCard(1).performClick()
         assertOnIntakeFor(expectedType)
     }
 
@@ -329,7 +362,66 @@ class IncompleteSessionScreenTest {
     fun incUi_e01_cardsAreClickableWhenPresent() {
         val sessions = sampleSessions()
         launchIncompleteSessionScreen(IncompleteSessionState(sessions = sessions))
-        composeRule.onNodeWithTag("${IncompleteSessionTestTags.CARD_PREFIX}-1")
-            .assertHasClickAction()
+        clickableDescendantUnderCard(1).assertHasClickAction()
+    }
+
+    // ========================================
+    // F. Session Deletion Workflow
+    // ========================================
+
+    @Test
+    fun incUi_f01_tappingDeleteIconShowsDialog() {
+        val sessionList = sampleSessions()
+        launchIncompleteSessionScreen(IncompleteSessionState(sessions = sessionList))
+
+        swipeLeftToRevealDelete(index = 0)
+
+        composeRule.onNode(
+            hasContentDescription("Delete")
+                .and(hasAnyAncestor(hasTestTag("${IncompleteSessionTestTags.CARD_PREFIX}-0"))),
+            useUnmergedTree = true
+        ).onParent().performClick()
+
+        composeRule.onNodeWithText("Delete Session?").assertIsDisplayed()
+        composeRule.onNodeWithText("Yes, Delete", ignoreCase = true).assertIsDisplayed().assertHasClickAction()
+        composeRule.onNodeWithText("Cancel", ignoreCase = true).assertIsDisplayed().assertHasClickAction()
+    }
+
+    @Test
+    fun incUi_f02_cancelDismissesDialogAndKeepsList() {
+        val sessionList = sampleSessions()
+        launchIncompleteSessionScreen(IncompleteSessionState(sessions = sessionList))
+
+        swipeLeftToRevealDelete(index = 0)
+        composeRule.onNode(
+            hasContentDescription("Delete")
+                .and(hasAnyAncestor(hasTestTag("${IncompleteSessionTestTags.CARD_PREFIX}-0"))),
+            useUnmergedTree = true
+        ).onParent().performClick()
+
+        composeRule.onNodeWithText("Cancel", ignoreCase = true).performClick()
+
+        composeRule.onNodeWithText("Delete Session?").assertDoesNotExist()
+        composeRule.onAllNodesWithTag(IncompleteSessionTestTags.CARD_TITLE, useUnmergedTree = true)
+            .assertCountEquals(sessionList.size)
+    }
+
+    @Test
+    fun incUi_f03_confirmDeletesCardAndHidesDialog() {
+        val sessionList = sampleSessions()
+        launchIncompleteSessionScreen(IncompleteSessionState(sessions = sessionList))
+
+        swipeLeftToRevealDelete(index = 0)
+        composeRule.onNode(
+            hasContentDescription("Delete")
+                .and(hasAnyAncestor(hasTestTag("${IncompleteSessionTestTags.CARD_PREFIX}-0"))),
+            useUnmergedTree = true
+        ).onParent().performClick()
+
+        composeRule.onNodeWithText("Yes, Delete", ignoreCase = true).performClick()
+
+        composeRule.onNodeWithText("Delete Session?").assertDoesNotExist()
+        composeRule.onAllNodesWithTag(IncompleteSessionTestTags.CARD_TITLE, useUnmergedTree = true)
+            .assertCountEquals(sessionList.size - 1)
     }
 }
