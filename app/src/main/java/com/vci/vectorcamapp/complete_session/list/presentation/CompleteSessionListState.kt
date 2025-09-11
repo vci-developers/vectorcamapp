@@ -4,5 +4,6 @@ import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 
 data class CompleteSessionListState(
     val sessionsAndSites: List<SessionAndSite> = emptyList(),
-    val isUploading: Boolean = false
+    val isUploading: Boolean = false,
+    val searchQuery: String = ""
 )

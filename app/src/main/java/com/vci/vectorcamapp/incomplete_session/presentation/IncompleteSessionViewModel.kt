@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
 import com.vci.vectorcamapp.incomplete_session.logging.IncompleteSessionSentryLogger
@@ -28,10 +29,24 @@ class IncompleteSessionViewModel @Inject constructor(
     private val _incompleteSessions = sessionRepository.observeIncompleteSessions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
     private val _state = MutableStateFlow(IncompleteSessionState())
-    val state = combine(_incompleteSessions, _state) { incompleteSessions, state ->
-        state.copy(
-            sessions = incompleteSessions
-        )
+
+    val state = combine(_incompleteSessions, _state) { incompleteSessions, currentState ->
+        val filteredSessions = if (currentState.searchQuery.isBlank()) {
+            incompleteSessions
+        } else {
+            incompleteSessions.filter { session ->
+                val fieldsForSearch = buildList {
+                    add(session.collectorName)
+                    add(session.collectorTitle)
+                    add(session.houseNumber)
+                    add(session.collectionMethod)
+                    add(session.specimenCondition)
+                    add(session.type.name)
+                }
+                SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
+            }
+        }
+        currentState.copy(sessions = filteredSessions)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), IncompleteSessionState())
 
     private val _events = Channel<IncompleteSessionEvent>()
@@ -96,6 +111,10 @@ class IncompleteSessionViewModel @Inject constructor(
 
                 is IncompleteSessionAction.ReturnToLandingScreen -> {
                     _events.send(IncompleteSessionEvent.NavigateBackToLandingScreen)
+                }
+
+                is IncompleteSessionAction.UpdateSearchQuery -> {
+                    _state.value = _state.value.copy(searchQuery = action.searchQuery)
                 }
             }
         }

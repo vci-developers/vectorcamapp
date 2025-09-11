@@ -1,8 +1,12 @@
 package com.vci.vectorcamapp.incomplete_session.presentation
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -12,8 +16,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.incomplete_session.presentation.components.IncompleteSessionCard
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -25,6 +33,8 @@ fun IncompleteSessionScreen(
     onAction: (IncompleteSessionAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     ScreenHeader(
         title = "Incomplete Sessions",
         subtitle = "Click on a session to resume",
@@ -41,6 +51,38 @@ fun IncompleteSessionScreen(
         },
         modifier = modifier
     ) {
+        item {
+            TextEntryField(
+                value = state.searchQuery,
+                onValueChange = { q -> onAction(IncompleteSessionAction.UpdateSearchQuery(q)) },
+                placeholder = "Search by collector, house number, type, etc.",
+                modifier = Modifier
+                    .padding(
+                        top = MaterialTheme.dimensions.paddingSmall,
+                        start = MaterialTheme.dimensions.paddingMedium,
+                        end = MaterialTheme.dimensions.paddingMedium
+                    ),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() })
+            )
+        }
+
+        if (state.sessions.isEmpty()) {
+            item {
+                Text(
+                    text = if (state.searchQuery.isBlank())
+                        "No incomplete sessions found."
+                    else
+                        "No matching sessions found.",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colors.textSecondary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium).fillMaxWidth()
+                )
+            }
+        }
+
         items(
             items = state.sessions.asReversed(),
             key = { it.localId }

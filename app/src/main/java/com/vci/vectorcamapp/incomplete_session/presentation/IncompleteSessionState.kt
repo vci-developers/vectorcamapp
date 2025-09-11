@@ -5,5 +5,6 @@ import java.util.UUID
 
 data class IncompleteSessionState(
     val sessions: List<Session> = emptyList(),
-    val deleteDialogSessionId: UUID? = null
+    val deleteDialogSessionId: UUID? = null,
+    val searchQuery: String = ""
 )

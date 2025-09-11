@@ -6,6 +6,7 @@ import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,8 +31,31 @@ class CompleteSessionListViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _state = MutableStateFlow(CompleteSessionListState())
-    val state = combine(_completeSessionsAndSites, _state) { completeSessionsAndSites, state ->
-        state.copy(sessionsAndSites = completeSessionsAndSites)
+    val state = combine(_completeSessionsAndSites, _state) { completeSessionsAndSites, currentState ->
+        val filteredSessionAndSites = if (currentState.searchQuery.isBlank()) {
+            completeSessionsAndSites
+        } else {
+            completeSessionsAndSites.filter { sessionAndSite ->
+                val session = sessionAndSite.session
+                val site = sessionAndSite.site
+                val fieldsForSearch = buildList {
+                    add(session.collectorName)
+                    add(session.collectorTitle)
+                    add(session.houseNumber)
+                    add(session.collectionMethod)
+                    add(session.specimenCondition)
+                    add(session.type.name)
+
+                    add(site.district)
+                    add(site.subCounty)
+                    add(site.parish)
+                    add(site.sentinelSite)
+                    add(site.healthCenter)
+                }
+                SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
+            }
+        }
+        currentState.copy(sessionsAndSites = filteredSessionAndSites)
     }.onStart {
         loadCompleteSessionListDetails()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
@@ -73,6 +97,10 @@ class CompleteSessionListViewModel @Inject constructor(
 
                         workManagerRepository.enqueueSessionUpload(session.localId, site.id)
                     }
+                }
+
+                is CompleteSessionListAction.UpdateSearchQuery -> {
+                    _state.update { it.copy(searchQuery = action.searchQuery) }
                 }
             }
         }
