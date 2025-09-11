@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -33,6 +34,7 @@ import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
+import com.vci.vectorcamapp.intake.presentation.util.IntakeTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
@@ -60,15 +62,18 @@ fun IntakeScreen(
                     .clickable {
                         onAction(IntakeAction.ReturnToLandingScreen)
                     }
+                    .testTag(IntakeTestTags.BACK_ICON)
             )
         },
-        modifier = modifier
+        modifier = modifier.testTag(IntakeTestTags.INTAKE_SCREEN)
     ) {
         item {
             IntakeTile(
                 title = "General Information",
                 iconPainter = painterResource(R.drawable.ic_info),
-                iconDescription = "General Information Icon"
+                iconDescription = "General Information Icon",
+                modifier = Modifier.testTag(IntakeTestTags.TILE_GENERAL)
+
             ) {
                 InfoPill(
                     text = "Session Type: ${state.session.type.name}",
@@ -80,7 +85,8 @@ fun IntakeScreen(
                     value = state.session.collectorName,
                     onValueChange = { onAction(IntakeAction.EnterCollectorName(it)) },
                     singleLine = true,
-                    error = state.intakeErrors.collectorName
+                    error = state.intakeErrors.collectorName,
+                    modifier = Modifier.testTag(IntakeTestTags.COLLECTOR_NAME)
                 )
 
                 TextEntryField(
@@ -88,7 +94,8 @@ fun IntakeScreen(
                     value = state.session.collectorTitle,
                     onValueChange = { onAction(IntakeAction.EnterCollectorTitle(it)) },
                     singleLine = true,
-                    error = state.intakeErrors.collectorTitle
+                    error = state.intakeErrors.collectorTitle,
+                    modifier = Modifier.testTag(IntakeTestTags.COLLECTOR_TITLE)
                 )
 
                 DatePickerField(
@@ -97,6 +104,7 @@ fun IntakeScreen(
                     onDateSelected = { onAction(IntakeAction.PickCollectionDate(it)) },
                     error = state.intakeErrors.collectionDate,
                     modifier = Modifier.fillMaxWidth()
+                        .testTag(IntakeTestTags.COLLECTION_DATE)
                 )
 
                 val isOtherCollectionMethod =
@@ -112,6 +120,7 @@ fun IntakeScreen(
                     onOptionSelected = { onAction(IntakeAction.UpdateCollectionMethod(it.label)) },
                     error = state.intakeErrors.collectionMethod,
                     modifier = Modifier.fillMaxWidth()
+                        .testTag(IntakeTestTags.COLLECTION_METHOD_DD)
                 ) { collectionMethod ->
                     Text(
                         text = collectionMethod.label,
@@ -143,6 +152,7 @@ fun IntakeScreen(
                     onOptionSelected = { onAction(IntakeAction.UpdateSpecimenCondition(it.label)) },
                     error = state.intakeErrors.specimenCondition,
                     modifier = Modifier.fillMaxWidth()
+                        .testTag(IntakeTestTags.SPECIMEN_CONDITION_DD)
                 ) { specimenCondition ->
                     Text(
                         text = specimenCondition.label,
@@ -167,7 +177,8 @@ fun IntakeScreen(
             IntakeTile(
                 title = "Geographical Information",
                 iconPainter = painterResource(id = R.drawable.ic_pin),
-                iconDescription = "Geographical Information Icon"
+                iconDescription = "Geographical Information Icon",
+                modifier = Modifier.testTag(IntakeTestTags.TILE_GEOGRAPHICAL)
             ) {
                 DropdownField(
                     label = "District",
@@ -175,6 +186,7 @@ fun IntakeScreen(
                     selectedOption = state.selectedDistrict,
                     onOptionSelected = { onAction(IntakeAction.SelectDistrict(it)) },
                     error = state.intakeErrors.district,
+                    modifier = Modifier.testTag(IntakeTestTags.DISTRICT_DD)
                 ) { district ->
                     Text(
                         text = district,
@@ -193,7 +205,7 @@ fun IntakeScreen(
                             onAction(IntakeAction.SelectSentinelSite(it))
                         },
                         error = state.intakeErrors.sentinelSite,
-
+                        modifier = Modifier.testTag(IntakeTestTags.SENTINEL_SITE_DD)
                         ) { sentinelSite ->
                         Text(
                             text = sentinelSite,
@@ -208,7 +220,8 @@ fun IntakeScreen(
                     value = state.session.houseNumber,
                     onValueChange = { onAction(IntakeAction.EnterHouseNumber(it)) },
                     singleLine = true,
-                    error = state.intakeErrors.houseNumber
+                    error = state.intakeErrors.houseNumber,
+                    modifier = Modifier.testTag(IntakeTestTags.HOUSE_NUMBER)
                 )
 
                 state.surveillanceForm?.let { surveillanceForm ->
@@ -219,6 +232,7 @@ fun IntakeScreen(
                         placeholder = "0",
                         singleLine = true,
                         keyboardType = KeyboardType.Number,
+                        modifier = Modifier.testTag(IntakeTestTags.NUM_PEOPLE_IN_HOUSE)
                     )
                 }
 
@@ -227,6 +241,7 @@ fun IntakeScreen(
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
                             modifier = Modifier.fillMaxWidth()
+                                .testTag(IntakeTestTags.LOCATION_COORDS_ROW)
                         ) {
                             InfoPill(
                                 text = "Latitude: ${state.session.latitude}",
@@ -242,7 +257,10 @@ fun IntakeScreen(
                     }
 
                     state.locationError != null -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                            modifier = Modifier.testTag(IntakeTestTags.LOCATION_ERROR_TEXT)
+                        ) {
                             Text(
                                 text = "Could not get location: ${
                                     state.locationError.toString(
@@ -258,6 +276,7 @@ fun IntakeScreen(
                                     label = "Retry Location",
                                     onClick = { onAction(IntakeAction.RetryLocation) },
                                     modifier = Modifier.fillMaxWidth()
+                                        .testTag(IntakeTestTags.LOCATION_RETRY_BUTTON)
                                 )
                             }
                         }
@@ -268,6 +287,7 @@ fun IntakeScreen(
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
+                                .testTag(IntakeTestTags.LOCATION_LOADING_ROW)
                         ) {
                             CircularProgressIndicator(
                                 color = MaterialTheme.colors.secondary,
@@ -289,7 +309,8 @@ fun IntakeScreen(
                 IntakeTile(
                     title = "Surveillance Form",
                     iconPainter = painterResource(id = R.drawable.ic_clipboard),
-                    iconDescription = "Surveillance Form Icon"
+                    iconDescription = "Surveillance Form Icon",
+                    modifier = Modifier.testTag(IntakeTestTags.TILE_FORM)
                 ) {
                     ToggleField(
                         label = "Was IRS conducted in this household?",
@@ -300,7 +321,8 @@ fun IntakeScreen(
                                     it
                                 )
                             )
-                        })
+                        },
+                        modifier = Modifier.testTag(IntakeTestTags.IRS_TOGGLE))
 
                     if (surveillanceForm.wasIrsConducted) {
                         TextEntryField(
@@ -313,6 +335,7 @@ fun IntakeScreen(
                             placeholder = "0",
                             singleLine = true,
                             keyboardType = KeyboardType.Number,
+                            modifier = Modifier.testTag(IntakeTestTags.MONTHS_SINCE_IRS)
                         )
                     }
 
@@ -322,7 +345,8 @@ fun IntakeScreen(
                         onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it.filter { character -> character.isDigit() })) },
                         placeholder = "0",
                         singleLine = true,
-                        keyboardType = KeyboardType.Number
+                        keyboardType = KeyboardType.Number,
+                        modifier = Modifier.testTag(IntakeTestTags.LLINS_AVAILABLE)
                     )
 
                     surveillanceForm.llinType?.let { current ->
@@ -334,6 +358,7 @@ fun IntakeScreen(
                                 onAction(IntakeAction.SelectLlinType(it))
                             },
                             error = state.intakeErrors.llinType,
+                            modifier = Modifier.testTag(IntakeTestTags.LLIN_TYPE_DD)
                         ) { llinType ->
                             Text(
                                 text = llinType.label,
@@ -352,6 +377,7 @@ fun IntakeScreen(
                                 onAction(IntakeAction.SelectLlinBrand(it))
                             },
                             error = state.intakeErrors.llinBrand,
+                            modifier = Modifier.testTag(IntakeTestTags.LLIN_BRAND_DD)
                         ) { llinBrand ->
                             Text(
                                 text = llinBrand.label,
@@ -370,7 +396,8 @@ fun IntakeScreen(
                             },
                             placeholder = "0",
                             singleLine = true,
-                            keyboardType = KeyboardType.Number
+                            keyboardType = KeyboardType.Number,
+                            modifier = Modifier.testTag(IntakeTestTags.NUM_PEOPLE_UNDER_LLIN)
                         )
                     }
                 }
@@ -381,12 +408,14 @@ fun IntakeScreen(
             IntakeTile(
                 title = "Additional Notes",
                 iconPainter = painterResource(id = R.drawable.ic_notes),
-                iconDescription = "Additional Notes Icon"
+                iconDescription = "Additional Notes Icon",
+                modifier = Modifier.testTag(IntakeTestTags.TILE_NOTES)
             ) {
                 TextEntryField(
                     label = "Notes",
                     value = state.session.notes,
-                    onValueChange = { onAction(IntakeAction.EnterNotes(it)) })
+                    onValueChange = { onAction(IntakeAction.EnterNotes(it)) },
+                    modifier = Modifier.testTag(IntakeTestTags.NOTES))
             }
         }
 
@@ -395,6 +424,7 @@ fun IntakeScreen(
                 label = "Continue",
                 onClick = { onAction(IntakeAction.SubmitIntakeForm) },
                 modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
+                    .testTag(IntakeTestTags.CONTINUE_BUTTON)
             )
         }
     }
@@ -402,7 +432,7 @@ fun IntakeScreen(
 
 @PreviewLightDark
 @Composable
-fun SurveillanceFormScreenPreview() {
+fun IntakeScreenPreview() {
     VectorcamappTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             IntakeScreen(
