@@ -189,4 +189,10 @@
 
     <!-- Image Upload Status: Upload failed -->
     <string name="upload_status_retry">Retry</string>
+
+    <!-- Session Type: Surveillance -->
+    <string name="session_type_surveillance">Surveillance</string>
+
+    <!-- Session Type: Data Collection -->
+    <string name="session_type_data_collection">Data Collection</string>
 </resources>
