@@ -351,12 +351,14 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.EnterNotes -> {
-                    _state.update {
-                        it.copy(
-                            session = it.session.copy(
-                                notes = action.text
+                    if (action.text.length <= 1000) {
+                        _state.update {
+                            it.copy(
+                                session = it.session.copy(
+                                    notes = action.text
+                                )
                             )
-                        )
+                        }
                     }
                 }
 
