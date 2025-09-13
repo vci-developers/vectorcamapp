@@ -489,6 +489,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                         speciesLogits = it.speciesLogits,
                         sexLogits = it.sexLogits,
                         abdomenStatusLogits = it.abdomenStatusLogits,
+                        bboxDetectionDuration = it.bboxDetectionDuration,
                         speciesInferenceDuration = it.speciesInferenceDuration,
                         sexInferenceDuration = it.sexInferenceDuration,
                         abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration
@@ -567,6 +568,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                     speciesLogits = it.speciesLogits,
                     sexLogits = it.sexLogits,
                     abdomenStatusLogits = it.abdomenStatusLogits,
+                    bboxDetectionDuration = it.bboxDetectionDuration,
                     speciesInferenceDuration = it.speciesInferenceDuration,
                     sexInferenceDuration = it.sexInferenceDuration,
                     abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration,
