@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.data.repository
 
+import android.net.Uri
 import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.dao.SessionDao
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 class SessionRepositoryImplementation @Inject constructor(
     private val sessionDao: SessionDao
@@ -61,6 +63,10 @@ class SessionRepositoryImplementation @Inject constructor(
                 surveillanceForm = it.surveillanceFormEntity?.toDomain()
             )
         }
+    }
+
+    override suspend fun getImageUrisBySessionId(sessionId: UUID): List<Uri> {
+        return sessionDao.getImageUrisBySessionId(sessionId)
     }
 
     override suspend fun getSessionAndSiteById(sessionId: UUID): SessionAndSite? {

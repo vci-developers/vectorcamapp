@@ -7,7 +7,7 @@ import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenIma
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.intake.presentation.IntakeEvent
+import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -44,15 +44,30 @@ class CompleteSessionDetailsViewModel @Inject constructor(
         }
 
     private val _state = MutableStateFlow(CompleteSessionDetailsState())
-    val state: StateFlow<CompleteSessionDetailsState> = combine(
-        _specimensWithImagesAndInferenceResults, _state
-    ) { specimensWithImagesAndInferenceResults, state ->
-        state.copy(
-            specimensWithImagesAndInferenceResults = specimensWithImagesAndInferenceResults
-        )
-    }.onStart {
-        loadCompleteSessionDetails()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionDetailsState())
+    val state: StateFlow<CompleteSessionDetailsState> =
+        combine(_specimensWithImagesAndInferenceResults, _state) { specimensWithImagesAndInferenceResults, currentState ->
+            val filteredSpecimensWithImagesAndInferenceResults = if (currentState.searchQuery.isBlank()) {
+                specimensWithImagesAndInferenceResults
+            } else {
+                specimensWithImagesAndInferenceResults.filter { specimenWithImagesAndInferenceResults ->
+                    val fieldsForSearch = buildList {
+                        add(specimenWithImagesAndInferenceResults.specimen.id)
+                        specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { imageAndInferenceResult ->
+                            add(imageAndInferenceResult.specimenImage.species)
+                            add(imageAndInferenceResult.specimenImage.sex)
+                            add(imageAndInferenceResult.specimenImage.abdomenStatus)
+                        }
+                    }
+                    SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
+                }
+            }
+
+            currentState.copy(
+                specimensWithImagesAndInferenceResults = filteredSpecimensWithImagesAndInferenceResults
+            )
+        }
+            .onStart { loadCompleteSessionDetails() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionDetailsState())
 
     private val _events = Channel<CompleteSessionDetailsEvent>()
     val events = _events.receiveAsFlow()
@@ -66,6 +81,9 @@ class CompleteSessionDetailsViewModel @Inject constructor(
 
                 is CompleteSessionDetailsAction.ChangeSelectedTab -> {
                     _state.update { it.copy(selectedTab = action.selectedTab) }
+                }
+                is CompleteSessionDetailsAction.UpdateSearchQuery -> {
+                    _state.update { it.copy(searchQuery = action.searchQuery) }
                 }
             }
         }
