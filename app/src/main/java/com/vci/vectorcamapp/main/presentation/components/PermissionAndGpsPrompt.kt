@@ -46,7 +46,7 @@ fun PermissionAndGpsPrompt(
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingExtraLarge))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingLarge))
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             if (!state.allGranted) {
                 Button(onClick = { onAction(MainAction.OpenAppSettings) }) {
