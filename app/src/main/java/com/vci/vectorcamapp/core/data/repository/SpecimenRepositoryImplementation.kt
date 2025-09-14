@@ -1,11 +1,9 @@
 package com.vci.vectorcamapp.core.data.repository
 
 import android.database.sqlite.SQLiteConstraintException
-import com.vci.vectorcamapp.complete_session.list.domain.model.CompleteSessionListUploadCount
 import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.dao.SpecimenDao
-import com.vci.vectorcamapp.core.data.room.dao.SpecimenImageDao
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenImageAndInferenceResult
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
@@ -22,8 +20,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 class SpecimenRepositoryImplementation @Inject constructor(
-    private val specimenDao: SpecimenDao,
-    private val specimenImageDao: SpecimenImageDao,
+    private val specimenDao: SpecimenDao
 ) : SpecimenRepository {
     override suspend fun insertSpecimen(
         specimen: Specimen, sessionId: UUID
@@ -108,9 +105,5 @@ class SpecimenRepositoryImplementation @Inject constructor(
                     }) { it.toList() }
             }
         }
-    }
-
-    override fun observeSessionUploadCounts(): Flow<List<CompleteSessionListUploadCount>> {
-        return specimenImageDao.observeSessionUploadCounts()
     }
 }

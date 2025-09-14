@@ -7,18 +7,20 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CompleteSessionListViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
@@ -26,48 +28,32 @@ class CompleteSessionListViewModel @Inject constructor(
     private val workManagerRepository: WorkManagerRepository
 ) : CoreViewModel() {
 
-    private val _completeSessionsAndSites = sessionRepository.observeCompleteSessionsAndSites()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-
-    private val _state = MutableStateFlow(CompleteSessionListState())
-
-    val state = combine(_completeSessionsAndSites, _state) { completeSessionsAndSites, state ->
-        state.copy(sessionsAndSites = completeSessionsAndSites)
-    }.onStart {
-        loadCompleteSessionDetails()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
-
     private val _events = Channel<CompleteSessionListEvent>()
     val events = _events.receiveAsFlow()
 
-    private fun loadCompleteSessionDetails() {
-        viewModelScope.launch {
-            _completeSessionsAndSites.collect { sessionsAndSites ->
-                val sessionIds = sessionsAndSites.map { it.session.localId }
+    private val sessionsAndSites = sessionRepository.observeCompleteSessionsAndSites()
 
-                launch {
-                    specimenRepository.observeSessionUploadCounts().collect { uploadCounts ->
-                        val countPairs = uploadCounts.map { count ->
-                            count.sessionId to count
-                        }
-                        _state.update { it.copy(sessionUploadCounts = countPairs) }
-                    }
-                }
-
-                launch {
-                    workManagerRepository.observeActiveUploadingSessions(sessionIds)
-                        .collect { activeSessionIds ->
-                            _state.update { it.copy(activeUploadSessions = activeSessionIds) }
-                        }
-                }
-
-                workManagerRepository.observeAnySessionUploadRunning(sessionIds)
-                    .collect { isRunning ->
-                        _state.update { it.copy(isUploading = isRunning) }
-                    }
+    private val activeUploadingSessions = sessionsAndSites
+        .flatMapLatest { sessions ->
+            val sessionIds = sessions.map { it.session.localId }
+            if (sessionIds.isEmpty()) {
+                flowOf(emptySet())
+            } else {
+                workManagerRepository.observeActiveUploadingSessions(sessionIds)
+                    .map { it.toSet() }
             }
         }
-    }
+
+    val state = combine(
+        sessionsAndSites,
+        activeUploadingSessions
+    ) { sessionsAndSites, activeUploadingSessions ->
+        CompleteSessionListState(
+            sessionsAndSites = sessionsAndSites,
+            activeUploadingSessions = activeUploadingSessions
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
+
 
     fun onAction(action: CompleteSessionListAction) {
         viewModelScope.launch {

@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.core.domain.repository
 
-import com.vci.vectorcamapp.complete_session.list.domain.model.CompleteSessionListUploadCount
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.domain.util.Result
@@ -15,5 +14,4 @@ interface SpecimenRepository {
     suspend fun deleteSpecimen(specimen: Specimen, sessionId: UUID): Boolean
     suspend fun getSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): List<SpecimenWithSpecimenImagesAndInferenceResults>
     fun observeSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>>
-    fun observeSessionUploadCounts(): Flow<List<CompleteSessionListUploadCount>>
 }

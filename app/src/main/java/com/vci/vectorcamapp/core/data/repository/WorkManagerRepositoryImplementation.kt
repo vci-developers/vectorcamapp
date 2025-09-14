@@ -63,12 +63,6 @@ class WorkManagerRepositoryImplementation @Inject constructor(
         }
     }
 
-    override fun observeAnySessionUploadRunning(sessionIds: List<UUID>): Flow<Boolean> {
-        return observeActiveUploadingSessions(sessionIds).map { activeSet ->
-            activeSet.isNotEmpty()
-        }
-    }
-
     private fun buildSessionMetadataWork(sessionId: UUID, siteId: Int): OneTimeWorkRequest {
         return OneTimeWorkRequestBuilder<MetadataUploadWorker>()
             .setInputData(workDataOf(

@@ -30,9 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.complete_session.list.domain.model.CompleteSessionListUploadCount
-import com.vci.vectorcamapp.core.domain.model.Session
-import com.vci.vectorcamapp.core.domain.model.Site
+import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -40,23 +38,19 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-object CompleteSessionListTileConstants {
-    const val UPLOAD_ICON_ANIMATION_DURATION_MS = 1000
-    const val UPLOAD_ICON_MIN_ALPHA = 0.3f
-    const val UPLOAD_ICON_MAX_ALPHA = 1f
-    const val PROGRESS_BAR_MEDIUM_THRESHOLD = 0.5f
-    const val PROGRESS_BAR_COMPLETE_THRESHOLD = 1f
-}
-
 @Composable
 fun CompleteSessionListTile(
-    session: Session,
-    site: Site,
-    uploadCount: CompleteSessionListUploadCount?,
+    sessionAndSite: SessionAndSite,
     isActivelyUploading: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val UPLOAD_ICON_ANIMATION_DURATION_MS = 1000
+    val UPLOAD_ICON_MIN_ALPHA = 0.3f
+    val UPLOAD_ICON_MAX_ALPHA = 1f
+
+    val session = sessionAndSite.session
+    val site = sessionAndSite.site
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
     val dateTimeFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
@@ -165,76 +159,73 @@ fun CompleteSessionListTile(
 
                     Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
-                    uploadCount?.let { count ->
-                        if (count.totalImages > 0) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
-                                ) {
-                                    Text(
-                                        text = "Upload Progress",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colors.textSecondary
-                                    )
-                                    if (isActivelyUploading) {
-                                        val infiniteTransition = rememberInfiniteTransition(label = "upload_pulse")
-                                        val alpha by infiniteTransition.animateFloat(
-                                            initialValue = CompleteSessionListTileConstants.UPLOAD_ICON_MIN_ALPHA,
-                                            targetValue = CompleteSessionListTileConstants.UPLOAD_ICON_MAX_ALPHA,
-                                            animationSpec = infiniteRepeatable(
-                                                animation = tween(
-                                                    durationMillis = CompleteSessionListTileConstants.UPLOAD_ICON_ANIMATION_DURATION_MS,
-                                                    easing = LinearEasing
-                                                ),
-                                                repeatMode = RepeatMode.Reverse
-                                            ),
-                                            label = "alpha"
-                                        )
-
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_cloud_upload),
-                                            contentDescription = "Currently uploading",
-                                            tint = MaterialTheme.colors.textSecondary,
-                                            modifier = Modifier
-                                                .padding(horizontal = MaterialTheme.dimensions.paddingExtraSmall)
-                                                .size(MaterialTheme.dimensions.iconSizeExtraSmall)
-                                                .alpha(alpha)
-                                        )
-                                    }
-                                }
-                                Text(
-                                    text = "${count.uploadedImages} / ${count.totalImages} images",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colors.textSecondary
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                        ) {
+                            Text(
+                                text = "Upload Progress",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colors.textSecondary
+                            )
+                            if (isActivelyUploading) {
+                                val infiniteTransition = rememberInfiniteTransition(label = "upload_pulse")
+                                val alpha by infiniteTransition.animateFloat(
+                                    initialValue = UPLOAD_ICON_MIN_ALPHA,
+                                    targetValue = UPLOAD_ICON_MAX_ALPHA,
+                                    animationSpec = infiniteRepeatable(
+                                        animation = tween(
+                                            durationMillis = UPLOAD_ICON_ANIMATION_DURATION_MS,
+                                            easing = LinearEasing
+                                        ),
+                                        repeatMode = RepeatMode.Reverse
+                                    ),
+                                    label = "alpha"
                                 )
-                            }
 
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall)
-                                    .background(
-                                        MaterialTheme.colors.divider,
-                                        RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
-                                    )
-                            ) {
-                                Box(
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_cloud_upload),
+                                    contentDescription = "Currently uploading",
+                                    tint = MaterialTheme.colors.textSecondary,
                                     modifier = Modifier
-                                        .fillMaxWidth(count.progress)
-                                        .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall)
-                                        .background(
-                                            if (count.progress == CompleteSessionListTileConstants.PROGRESS_BAR_COMPLETE_THRESHOLD) MaterialTheme.colors.primary
-                                            else if (count.progress >= CompleteSessionListTileConstants.PROGRESS_BAR_MEDIUM_THRESHOLD) MaterialTheme.colors.warning
-                                            else MaterialTheme.colors.error,
-                                            RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
-                                        )
+                                        .padding(horizontal = MaterialTheme.dimensions.paddingExtraSmall)
+                                        .size(MaterialTheme.dimensions.iconSizeExtraSmall)
+                                        .alpha(alpha)
                                 )
                             }
                         }
+                        Text(
+                            text = if (session.totalImages == 0) "No images"
+                                else "${session.uploadedImages} / ${session.totalImages} images",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colors.textSecondary
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall)
+                            .background(
+                                MaterialTheme.colors.divider,
+                                RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
+                            )
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(session.uploadProgress)
+                                .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall)
+                                .background(
+                                    if (session.uploadProgress == 1f) MaterialTheme.colors.primary
+                                    else if (isActivelyUploading) MaterialTheme.colors.warning
+                                    else MaterialTheme.colors.error,
+                                    RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
+                                )
+                        )
                     }
                 }
             }

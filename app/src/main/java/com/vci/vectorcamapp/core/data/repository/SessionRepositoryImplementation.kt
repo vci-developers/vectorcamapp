@@ -10,7 +10,10 @@ import com.vci.vectorcamapp.core.domain.model.composites.SessionWithSpecimens
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 import javax.inject.Inject
@@ -70,15 +73,35 @@ class SessionRepositoryImplementation @Inject constructor(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeCompleteSessionsAndSites(): Flow<List<SessionAndSite>> {
-        return sessionDao.observeCompleteSessionsAndSites().map { sessionAndSiteRelations ->
-            sessionAndSiteRelations.map { sessionAndSiteRelation ->
-                SessionAndSite(
-                    session = sessionAndSiteRelation.session.toDomain(),
-                    site = sessionAndSiteRelation.site.toDomain()
-                )
+        return sessionDao.observeCompleteSessionsAndSites()
+            .flatMapLatest { sessionsAndSites ->
+                val sessionIds = sessionsAndSites.map { it.session.localId }
+
+                if (sessionIds.isEmpty()) {
+                    flowOf(sessionsAndSites.map { sessionAndSite ->
+                        SessionAndSite(
+                            session = sessionAndSite.session.toDomain(),
+                            site = sessionAndSite.site.toDomain()
+                        )
+                    })
+                } else {
+                    sessionDao.observeSessionCounts(sessionIds).map { counts ->
+                        val countsMap = counts.associateBy { it.sessionId }
+                        sessionsAndSites.map { sessionAndSite ->
+                            val sessionCounts = countsMap[sessionAndSite.session.localId]
+                            SessionAndSite(
+                                session = sessionAndSite.session.toDomain(
+                                    uploadedImages = sessionCounts?.uploadedImages ?: 0,
+                                    totalImages = sessionCounts?.totalImages ?: 0
+                                ),
+                                site = sessionAndSite.site.toDomain()
+                            )
+                        }
+                    }
+                }
             }
-        }
     }
 
     override fun observeIncompleteSessions(): Flow<List<Session>> {

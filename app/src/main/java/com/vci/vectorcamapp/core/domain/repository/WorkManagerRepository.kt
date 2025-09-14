@@ -5,6 +5,5 @@ import java.util.UUID
 
 interface WorkManagerRepository {
     fun enqueueSessionUpload(sessionId: UUID, siteId: Int)
-    fun observeAnySessionUploadRunning(sessionIds: List<UUID>): Flow<Boolean>
     fun observeActiveUploadingSessions(sessionIds: List<UUID>): Flow<Set<UUID>>
 }

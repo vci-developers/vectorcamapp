@@ -38,8 +38,8 @@ fun CompleteSessionListScreen(
     val rotationDuration = 2000
 
     val rotation by animateFloatAsState(
-        targetValue = if (state.isUploading) 360f else 0f,
-        animationSpec = if (state.isUploading) {
+        targetValue = if (state.activeUploadingSessions.isNotEmpty()) 360f else 0f,
+        animationSpec = if (state.activeUploadingSessions.isNotEmpty()) {
             infiniteRepeatable(
                 animation = tween(
                     durationMillis = rotationDuration,
@@ -73,14 +73,10 @@ fun CompleteSessionListScreen(
             items(
                 items = state.sessionsAndSites.asReversed(),
                 key = { it.session.localId }) { sessionAndSite ->
-                val uploadCount = state.sessionUploadCounts
-                    .find { it.first == sessionAndSite.session.localId }?.second
 
                 CompleteSessionListTile(
-                    session = sessionAndSite.session,
-                    site = sessionAndSite.site,
-                    uploadCount = uploadCount,
-                    isActivelyUploading = sessionAndSite.session.localId in state.activeUploadSessions,
+                    sessionAndSite = sessionAndSite,
+                    isActivelyUploading = state.activeUploadingSessions.contains(sessionAndSite.session.localId),
                     onClick = {
                         onAction(
                             CompleteSessionListAction.ViewCompleteSessionDetails(
@@ -94,21 +90,21 @@ fun CompleteSessionListScreen(
 
         FloatingActionButton(
             onClick = { onAction(CompleteSessionListAction.UploadAllPendingSessions) },
-            containerColor = if (state.isUploading) MaterialTheme.colors.warning else MaterialTheme.colors.primary,
+            containerColor = if (state.activeUploadingSessions.isNotEmpty()) MaterialTheme.colors.warning else MaterialTheme.colors.primary,
             contentColor = MaterialTheme.colors.buttonText,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(MaterialTheme.dimensions.paddingLarge)
         ) {
             Icon(
-                painter = if (state.isUploading) painterResource(id = R.drawable.ic_refresh) else painterResource(
+                painter = if (state.activeUploadingSessions.isNotEmpty()) painterResource(id = R.drawable.ic_refresh) else painterResource(
                     id = R.drawable.ic_cloud_upload
                 ),
-                contentDescription = if (state.isUploading) "Refresh" else "Upload",
+                contentDescription = if (state.activeUploadingSessions.isNotEmpty()) "Refresh" else "Upload",
                 tint = MaterialTheme.colors.buttonText,
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeMedium)
-                    .rotate(if (state.isUploading) rotation else 0f)
+                    .rotate(if (state.activeUploadingSessions.isNotEmpty()) rotation else 0f)
             )
         }
     }
