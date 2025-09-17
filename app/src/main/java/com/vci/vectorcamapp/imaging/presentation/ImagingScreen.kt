@@ -282,7 +282,7 @@ fun ImagingScreen(
                                     )
                                 }
 
-                                if (state.specimensWithImagesAndInferenceResults.isEmpty()) {
+                                if (state.specimensWithImagesAndInferenceResults.isEmpty() && state.pendingAction is ImagingAction.SubmitSession) {
                                     Spacer(Modifier.size(MaterialTheme.dimensions.paddingMedium))
                                     Text(
                                         text = "Warning: You are about to submit a session with zero specimens.",
