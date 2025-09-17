@@ -7,7 +7,6 @@ fun SessionEntity.toDomain(): Session {
     return Session(
         localId = this.localId,
         remoteId = this.remoteId,
-        houseNumber = this.houseNumber,
         collectorTitle = this.collectorTitle,
         collectorName = this.collectorName,
         collectionDate = this.collectionDate,
@@ -28,7 +27,6 @@ fun Session.toEntity(siteId: Int): SessionEntity {
         localId = this.localId,
         siteId = siteId,
         remoteId = this.remoteId,
-        houseNumber = this.houseNumber,
         collectorTitle = this.collectorTitle,
         collectorName = this.collectorName,
         collectionDate = this.collectionDate,

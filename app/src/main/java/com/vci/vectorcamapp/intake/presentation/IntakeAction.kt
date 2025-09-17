@@ -9,8 +9,8 @@ sealed interface IntakeAction {
     data class EnterCollectorTitle(val text: String) : IntakeAction
     data class EnterCollectorName(val text: String) : IntakeAction
     data class SelectDistrict(val district: String) : IntakeAction
-    data class SelectSentinelSite(val sentinelSite: String) : IntakeAction
-    data class EnterHouseNumber(val text: String) : IntakeAction
+    data class SelectVillageName(val villageName: String) : IntakeAction
+    data class SelectHouseNumber(val houseNumber: String) : IntakeAction
     data class EnterNumPeopleSleptInHouse(val count: String) : IntakeAction
     data class ToggleIrsConducted(val isChecked : Boolean) : IntakeAction
     data class EnterMonthsSinceIrs(val count: String) : IntakeAction

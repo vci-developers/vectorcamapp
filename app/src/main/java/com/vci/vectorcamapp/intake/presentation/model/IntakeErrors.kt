@@ -6,7 +6,7 @@ data class IntakeErrors(
     val collectorTitle: FormValidationError?,
     val collectorName: FormValidationError?,
     val district: FormValidationError?,
-    val sentinelSite: FormValidationError?,
+    val villageName: FormValidationError?,
     val houseNumber: FormValidationError?,
     val llinType: FormValidationError?,
     val llinBrand: FormValidationError?,

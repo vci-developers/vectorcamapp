@@ -38,7 +38,6 @@ class RemoteSessionDataSource @Inject constructor(
                 setBody(
                     PostSessionRequestDto(
                         frontendId = session.localId,
-                        houseNumber = session.houseNumber,
                         collectorTitle = session.collectorTitle,
                         collectorName = session.collectorName,
                         collectionDate = session.collectionDate,

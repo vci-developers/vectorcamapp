@@ -9,6 +9,8 @@ data class SiteDto(
     val district: String,
     val subCounty: String,
     val parish: String,
-    val sentinelSite: String,
-    val healthCenter: String
+    val villageName: String,
+    val houseNumber: String,
+    val healthCenter: String,
+    val isActive: Boolean
 )

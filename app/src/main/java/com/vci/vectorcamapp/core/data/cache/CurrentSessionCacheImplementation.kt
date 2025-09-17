@@ -16,7 +16,6 @@ class CurrentSessionCacheImplementation @Inject constructor(
                 localId = session.localId,
                 siteId = siteId,
                 remoteId = session.remoteId,
-                houseNumber = session.houseNumber,
                 collectorTitle = session.collectorTitle,
                 collectorName = session.collectorName,
                 collectionDate = session.collectionDate,
@@ -41,7 +40,6 @@ class CurrentSessionCacheImplementation @Inject constructor(
             Session(
                 localId = currentSessionCacheDto.localId,
                 remoteId = currentSessionCacheDto.remoteId,
-                houseNumber = currentSessionCacheDto.houseNumber,
                 collectorTitle = currentSessionCacheDto.collectorTitle,
                 collectorName = currentSessionCacheDto.collectorName,
                 collectionDate = currentSessionCacheDto.collectionDate,
