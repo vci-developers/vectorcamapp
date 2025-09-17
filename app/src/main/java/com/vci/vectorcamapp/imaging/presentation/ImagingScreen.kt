@@ -49,7 +49,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
 import androidx.core.content.ContextCompat
@@ -273,24 +272,12 @@ fun ImagingScreen(
                                 is ImagingAction.SubmitSession -> "Are you sure you want to submit the session?"
                                 else -> ""
                             }
-                            Column {
-                                if (dialogText.isNotEmpty()) {
-                                    Text(
-                                        text = dialogText,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colors.textSecondary
-                                    )
-                                }
-
-                                if (state.specimensWithImagesAndInferenceResults.isEmpty()) {
-                                    Spacer(Modifier.size(MaterialTheme.dimensions.paddingMedium))
-                                    Text(
-                                        text = "Warning: You are about to submit a session with zero specimens.",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = MaterialTheme.colors.error
-                                    )
-                                }
+                            if (dialogText.isNotEmpty()) {
+                                Text(
+                                    text = dialogText,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textSecondary
+                                )
                             }
                         }, confirmButton = {
                             if (state.pendingAction == null) {
