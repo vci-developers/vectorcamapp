@@ -6,7 +6,7 @@ data class ValidationUseCases @Inject constructor(
     val validateCollectorTitle: ValidateCollectorTitleUseCase,
     val validateCollectorName: ValidateCollectorNameUseCase,
     val validateDistrict: ValidateDistrictUseCase,
-    val validateSentinelSite: ValidateSentinelSiteUseCase,
+    val validateVillageName: ValidateVillageNameUseCase,
     val validateHouseNumber: ValidateHouseNumberUseCase,
     val validateLlinType: ValidateLlinTypeUseCase,
     val validateLlinBrand: ValidateLlinBrandUseCase,
