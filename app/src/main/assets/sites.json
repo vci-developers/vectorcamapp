@@ -6,7 +6,7 @@
     "subCounty": "",
     "parish": "",
     "villageName": "Medellin",
-    "houseNumber": "",
+    "houseNumber": "N/A",
     "healthCenter": "",
     "isActive": true
   },
@@ -17,7 +17,7 @@
     "subCounty": "",
     "parish": "",
     "villageName": "Apartadó",
-    "houseNumber": "",
+    "houseNumber": "N/A",
     "healthCenter": "",
     "isActive": true
   },
@@ -28,7 +28,7 @@
     "subCounty": "",
     "parish": "",
     "villageName": "Turbo",
-    "houseNumber": "",
+    "houseNumber": "N/A",
     "healthCenter": "",
     "isActive": true
   },
@@ -39,7 +39,7 @@
     "subCounty": "",
     "parish": "",
     "villageName": "Necoclí",
-    "houseNumber": "",
+    "houseNumber": "N/A",
     "healthCenter": "",
     "isActive": true
   },
@@ -50,7 +50,7 @@
     "subCounty": "",
     "parish": "",
     "villageName": "Mocoa",
-    "houseNumber": "",
+    "houseNumber": "N/A",
     "healthCenter": "",
     "isActive": true
   },
@@ -61,7 +61,7 @@
     "subCounty": "",
     "parish": "",
     "villageName": "Orito",
-    "houseNumber": "",
+    "houseNumber": "N/A",
     "healthCenter": "",
     "isActive": true
   },
@@ -72,7 +72,7 @@
     "subCounty": "",
     "parish": "",
     "villageName": "Cali",
-    "houseNumber": "",
+    "houseNumber": "N/A",
     "healthCenter": "",
     "isActive": true
   },
@@ -83,7 +83,7 @@
     "subCounty": "",
     "parish": "",
     "villageName": "Quibdó",
-    "houseNumber": "",
+    "houseNumber": "N/A",
     "healthCenter": "",
     "isActive": true
   },
@@ -94,7 +94,7 @@
     "subCounty": "",
     "parish": "",
     "villageName": "Angostura",
-    "houseNumber": "",
+    "houseNumber": "N/A",
     "healthCenter": "",
     "isActive": true
   },
@@ -105,7 +105,7 @@
     "subCounty": "",
     "parish": "",
     "villageName": "Bogotá D.C",
-    "houseNumber": "",
+    "houseNumber": "N/A",
     "healthCenter": "",
     "isActive": true
   },
