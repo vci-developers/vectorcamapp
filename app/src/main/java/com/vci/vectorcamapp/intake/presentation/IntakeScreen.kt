@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
@@ -95,17 +94,17 @@ fun IntakeScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                val isOtherCollectionMethod =
+                    state.session.collectionMethod.startsWith(IntakeDropdownOptions.CollectionMethodOption.OTHER.label, ignoreCase = true)
+
                 DropdownField(
                     label = "Collection Method",
                     options = IntakeDropdownOptions.CollectionMethodOption.entries,
-                    selectedOption = IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
-                    onOptionSelected = {
-                        onAction(
-                            IntakeAction.SelectCollectionMethod(
-                                it
-                            )
-                        )
-                    },
+                    selectedOption = if (isOtherCollectionMethod)
+                        IntakeDropdownOptions.CollectionMethodOption.OTHER
+                    else
+                        IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
+                    onOptionSelected = { onAction(IntakeAction.UpdateCollectionMethod(it.label)) },
                     error = state.intakeErrors.collectionMethod,
                     modifier = Modifier.fillMaxWidth()
                 ) { collectionMethod ->
@@ -116,11 +115,27 @@ fun IntakeScreen(
                     )
                 }
 
+                if (isOtherCollectionMethod) {
+                    TextEntryField(
+                        label = "Other Collection Method",
+                        value = state.session.collectionMethod.removePrefix(IntakeDropdownOptions.CollectionMethodOption.OTHER.label).trimStart(),
+                        onValueChange = { onAction(IntakeAction.UpdateCollectionMethod("${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it")) },
+                        singleLine = true,
+                        error = state.intakeErrors.collectionMethod
+                    )
+                }
+
+                val isOtherSpecimenCondition =
+                    state.session.specimenCondition.startsWith(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label, ignoreCase = true)
+
                 DropdownField(
                     label = "Specimen Condition",
                     options = IntakeDropdownOptions.SpecimenConditionOption.entries,
-                    selectedOption = IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition },
-                    onOptionSelected = { onAction(IntakeAction.SelectSpecimenCondition(it)) },
+                    selectedOption = if (isOtherSpecimenCondition)
+                        IntakeDropdownOptions.SpecimenConditionOption.OTHER
+                    else
+                        IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition },
+                    onOptionSelected = { onAction(IntakeAction.UpdateSpecimenCondition(it.label)) },
                     error = state.intakeErrors.specimenCondition,
                     modifier = Modifier.fillMaxWidth()
                 ) { specimenCondition ->
@@ -128,6 +143,16 @@ fun IntakeScreen(
                         text = specimenCondition.label,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colors.textPrimary
+                    )
+                }
+
+                if (isOtherSpecimenCondition) {
+                    TextEntryField(
+                        label = "Other Specimen Condition",
+                        value = state.session.specimenCondition.removePrefix(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label).trimStart(),
+                        onValueChange = { onAction(IntakeAction.UpdateSpecimenCondition("${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it")) },
+                        singleLine = true,
+                        error = state.intakeErrors.specimenCondition
                     )
                 }
             }
@@ -188,7 +213,6 @@ fun IntakeScreen(
                         onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it.filter { character -> character.isDigit() })) },
                         placeholder = "0",
                         singleLine = true,
-                        keyboardType = KeyboardType.Number,
                     )
                 }
 
@@ -282,7 +306,6 @@ fun IntakeScreen(
                             },
                             placeholder = "0",
                             singleLine = true,
-                            keyboardType = KeyboardType.Number,
                         )
                     }
 
@@ -292,7 +315,6 @@ fun IntakeScreen(
                         onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it.filter { character -> character.isDigit() })) },
                         placeholder = "0",
                         singleLine = true,
-                        keyboardType = KeyboardType.Number
                     )
 
                     surveillanceForm.llinType?.let { current ->
@@ -340,7 +362,6 @@ fun IntakeScreen(
                             },
                             placeholder = "0",
                             singleLine = true,
-                            keyboardType = KeyboardType.Number
                         )
                     }
                 }
@@ -356,7 +377,9 @@ fun IntakeScreen(
                 TextEntryField(
                     label = "Notes",
                     value = state.session.notes,
-                    onValueChange = { onAction(IntakeAction.EnterNotes(it)) })
+                    onValueChange = { onAction(IntakeAction.EnterNotes(it)) },
+                    placeholder = "1000 character limit...",
+                )
             }
         }
 

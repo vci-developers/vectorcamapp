@@ -330,33 +330,35 @@ class IntakeViewModel @Inject constructor(
                     }
                 }
 
-                is IntakeAction.SelectCollectionMethod -> {
+                is IntakeAction.UpdateCollectionMethod -> {
                     _state.update {
                         it.copy(
                             session = it.session.copy(
-                                collectionMethod = action.option.label
+                                collectionMethod = action.collectionMethod
                             )
                         )
                     }
                 }
 
-                is IntakeAction.SelectSpecimenCondition -> {
+                is IntakeAction.UpdateSpecimenCondition -> {
                     _state.update {
                         it.copy(
                             session = it.session.copy(
-                                specimenCondition = action.option.label
+                                specimenCondition = action.specimenCondition
                             )
                         )
                     }
                 }
 
                 is IntakeAction.EnterNotes -> {
-                    _state.update {
-                        it.copy(
-                            session = it.session.copy(
-                                notes = action.text
+                    if (action.text.length <= 1000) {
+                        _state.update {
+                            it.copy(
+                                session = it.session.copy(
+                                    notes = action.text
+                                )
                             )
-                        )
+                        }
                     }
                 }
 

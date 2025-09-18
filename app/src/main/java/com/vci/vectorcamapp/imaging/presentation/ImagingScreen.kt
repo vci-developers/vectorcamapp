@@ -13,6 +13,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -60,6 +62,7 @@ import com.vci.vectorcamapp.imaging.presentation.components.specimen.CapturedSpe
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import kotlinx.coroutines.launch
 
 @Composable
 fun ImagingScreen(
@@ -68,6 +71,8 @@ fun ImagingScreen(
     val context = LocalContext.current
     val density = LocalDensity.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    val scope = rememberCoroutineScope()
 
     val analyzer = remember {
         SpecimenImageAnalyzer { frame ->
@@ -126,7 +131,12 @@ fun ImagingScreen(
                                 tint = MaterialTheme.colors.icon,
                                 modifier = Modifier
                                     .offset { IntOffset((-arrowOffsetX).toInt(), 0) }
-                                    .size(MaterialTheme.dimensions.iconSizeLarge))
+                                    .size(MaterialTheme.dimensions.iconSizeLarge)
+                                    .clickable {
+                                        scope.launch {
+                                            pagerState.animateScrollToPage(page - 1)
+                                        }
+                                    })
                         } else {
                             EmptySpace(
                                 width = MaterialTheme.dimensions.iconSizeLarge,
@@ -154,7 +164,12 @@ fun ImagingScreen(
                             tint = MaterialTheme.colors.icon,
                             modifier = Modifier
                                 .offset { IntOffset(arrowOffsetX.toInt(), 0) }
-                                .size(MaterialTheme.dimensions.iconSizeLarge))
+                                .size(MaterialTheme.dimensions.iconSizeLarge)
+                                .clickable {
+                                    scope.launch {
+                                        pagerState.animateScrollToPage(page + 1)
+                                    }
+                                })
                     }
 
                     LazyColumn(modifier = Modifier.fillMaxHeight()) {

@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.domain.repository
 
+import android.net.Uri
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
@@ -17,6 +18,7 @@ interface SessionRepository {
     suspend fun getSessionWithSpecimensById(sessionId: UUID): SessionWithSpecimens?
     suspend fun getSessionAndSurveillanceFormById(sessionId: UUID): SessionAndSurveillanceForm?
     suspend fun getSessionAndSiteById(sessionId: UUID): SessionAndSite?
+    suspend fun getImageUrisBySessionId(sessionId: UUID): List<Uri>
     fun observeIncompleteSessions(): Flow<List<Session>>
     fun observeCompleteSessionsAndSites(): Flow<List<SessionAndSite>>
     fun observeSessionWithSpecimens(sessionId: UUID): Flow<SessionWithSpecimens?>
