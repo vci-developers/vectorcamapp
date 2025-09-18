@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.ui.extensions
+package com.vci.vectorcamapp.core.presentation.extensions
 
 import android.content.Context
 import com.vci.vectorcamapp.R

@@ -17,12 +17,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
+import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
@@ -32,6 +34,7 @@ import java.util.Locale
 fun CompleteSessionListTile(
     session: Session, site: Site, onClick: () -> Unit, modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
 
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
     val dateTimeFormatter =
@@ -72,7 +75,7 @@ fun CompleteSessionListTile(
                     }
                 }
 
-                InfoPill(text = "Session Type: ${session.type}", color = MaterialTheme.colors.info)
+                InfoPill(text = "Session Type: ${session.type.displayText(context)}", color = MaterialTheme.colors.info)
             }
 
             Column(
