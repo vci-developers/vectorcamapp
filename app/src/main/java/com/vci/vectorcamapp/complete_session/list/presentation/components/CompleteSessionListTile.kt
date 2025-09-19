@@ -106,13 +106,13 @@ fun CompleteSessionListTile(
                 CompleteSessionListDetailRow(
                     iconPainter = painterResource(R.drawable.ic_clipboard),
                     iconDescription = "Clipboard",
-                    text = "Sentinel Site: ${site.sentinelSite}",
+                    text = "Village Name: ${site.villageName}",
                 )
 
                 CompleteSessionListDetailRow(
                     iconPainter = painterResource(R.drawable.ic_house),
                     iconDescription = "House",
-                    text = "House Number: ${session.houseNumber}",
+                    text = "House Number: ${site.houseNumber}",
                 )
             }
 

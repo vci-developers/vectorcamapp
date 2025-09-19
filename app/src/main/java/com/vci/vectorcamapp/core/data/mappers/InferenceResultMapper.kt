@@ -2,7 +2,6 @@ package com.vci.vectorcamapp.core.data.mappers
 
 import com.vci.vectorcamapp.core.data.room.entities.InferenceResultEntity
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
-import java.util.UUID
 
 fun InferenceResultEntity.toDomain() : InferenceResult {
     return InferenceResult(
@@ -15,6 +14,7 @@ fun InferenceResultEntity.toDomain() : InferenceResult {
         speciesLogits = this.speciesLogits,
         sexLogits = this.sexLogits,
         abdomenStatusLogits = this.abdomenStatusLogits,
+        bboxDetectionDuration = this.bboxDetectionDuration,
         speciesInferenceDuration = this.speciesInferenceDuration,
         sexInferenceDuration = this.sexInferenceDuration,
         abdomenStatusInferenceDuration = this.abdomenStatusInferenceDuration
@@ -33,6 +33,7 @@ fun InferenceResult.toEntity(specimenImageId: String) : InferenceResultEntity {
         speciesLogits = this.speciesLogits,
         sexLogits = this.sexLogits,
         abdomenStatusLogits = this.abdomenStatusLogits,
+        bboxDetectionDuration = this.bboxDetectionDuration,
         speciesInferenceDuration = this.speciesInferenceDuration,
         sexInferenceDuration = this.sexInferenceDuration,
         abdomenStatusInferenceDuration = this.abdomenStatusInferenceDuration

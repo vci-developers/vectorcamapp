@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ProgramDto(
-    val id: Int,
-    val name: String,
-    val country: String
+    val id: Int = -1,
+    val name: String = "",
+    val country: String = ""
 )

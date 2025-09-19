@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
-import com.vci.vectorcamapp.core.domain.model.InferenceResult
+import com.vci.vectorcamapp.core.domain.model.results.DetectorResult
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import org.opencv.android.Utils
 import org.opencv.core.CvType
@@ -99,12 +99,13 @@ class TfLiteSpecimenDetector(
 
     override fun getOutputTensorShape(): Pair<Int, Int> = outputNumChannels to outputNumElements
 
-    override suspend fun detect(bitmap: Bitmap): List<InferenceResult> {
+    override suspend fun detect(bitmap: Bitmap): List<DetectorResult> {
         if (!isReady()) return emptyList()
 
         return suspendCoroutine { continuation ->
             handler.post {
                 try {
+                    val startTime = System.currentTimeMillis()
                     val inputMatrix = prepareInputMatrix(bitmap)
 
                     val preprocessedMatrix = preprocessMatrix(inputMatrix)
@@ -132,7 +133,17 @@ class TfLiteSpecimenDetector(
                     val result = synchronized(detectorLock) {
                         if (!isReady()) return@post continuation.resume(emptyList())
                         detector?.run(inputTensor.buffer, outputTensor.buffer)
-                        getDetectedResults(outputTensor.floatArray)
+                        getDetectedResults(outputTensor.floatArray).map { bboxPrediction ->
+                            DetectorResult(
+                                bboxTopLeftX = bboxPrediction[0],
+                                bboxTopLeftY = bboxPrediction[1],
+                                bboxWidth = bboxPrediction[2],
+                                bboxHeight = bboxPrediction[3],
+                                bboxConfidence = bboxPrediction[4],
+                                bboxClassId = bboxPrediction[5].roundToInt(),
+                                bboxDetectionDuration = System.currentTimeMillis() - startTime
+                            )
+                        }
                     }
 
                     continuation.resume(result)
@@ -179,7 +190,7 @@ class TfLiteSpecimenDetector(
         return paddedMatrix
     }
 
-    private fun getDetectedResults(boxes: FloatArray): List<InferenceResult> {
+    private fun getDetectedResults(boxes: FloatArray): List<FloatArray> {
         val predictions = mutableListOf<FloatArray>()
 
         for (i in 0 until outputNumChannels) {
@@ -230,7 +241,7 @@ class TfLiteSpecimenDetector(
         if (indicesMatrix.empty()) return emptyList()
 
         val selectedIndices = indicesMatrix.toArray()
-        val finalInferenceResults = mutableListOf<InferenceResult>()
+        val finalBboxPredictions = mutableListOf<FloatArray>()
 
         for (index in selectedIndices) {
             val prediction = predictions[index]
@@ -240,7 +251,7 @@ class TfLiteSpecimenDetector(
             var width = prediction[2]
             val height = prediction[3]
             val confidence = prediction[4]
-            val classId = prediction[5].roundToInt()
+            val classId = prediction[5]
 
             val offset =
                 ((inputTensorWidth - (inputTensorWidth / ASPECT_RATIO)) / 2f) / inputTensorWidth
@@ -250,27 +261,12 @@ class TfLiteSpecimenDetector(
 
             val topLeftX = (centerX - width / 2f).coerceAtLeast(0f)
             val topLeftY = (centerY - height / 2f).coerceAtLeast(0f)
-
-            val inferenceResult = InferenceResult(
-                bboxTopLeftX = topLeftX,
-                bboxTopLeftY = topLeftY,
-                bboxWidth = width,
-                bboxHeight = height,
-                bboxConfidence = confidence,
-                bboxClassId = classId,
-                speciesLogits = null,
-                sexLogits = null,
-                abdomenStatusLogits = null,
-                speciesInferenceDuration = null,
-                sexInferenceDuration = null,
-                abdomenStatusInferenceDuration = null,
-            )
             Log.d("InferenceResult", "($topLeftX, $topLeftY) -> ($width, $height)")
 
-            finalInferenceResults.add(inferenceResult)
+            finalBboxPredictions.add(floatArrayOf(topLeftX, topLeftY, width, height, confidence, classId))
         }
 
-        return finalInferenceResults
+        return finalBboxPredictions
     }
 
     private fun warmDetector() {
