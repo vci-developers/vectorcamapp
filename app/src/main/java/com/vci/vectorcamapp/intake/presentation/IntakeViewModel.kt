@@ -87,10 +87,10 @@ class IntakeViewModel @Inject constructor(
                         validationUseCases.validateCollectorName(session.collectorName)
                     val districtResult =
                         validationUseCases.validateDistrict(_state.value.selectedDistrict)
-                    val sentinelSiteResult =
-                        validationUseCases.validateSentinelSite(_state.value.selectedSentinelSite)
+                    val villageNameResult =
+                        validationUseCases.validateVillageName(_state.value.selectedVillageName)
                     val houseNumberResult =
-                        validationUseCases.validateHouseNumber(session.houseNumber)
+                        validationUseCases.validateHouseNumber(_state.value.selectedHouseNumber)
                     val llinTypeResult =
                         surveillanceForm?.llinType?.let { validationUseCases.validateLlinType(it) }
                     val llinBrandResult =
@@ -108,7 +108,7 @@ class IntakeViewModel @Inject constructor(
                                 collectorTitle = collectorTitleResult.errorOrNull(),
                                 collectorName = collectorNameResult.errorOrNull(),
                                 district = districtResult.errorOrNull(),
-                                sentinelSite = sentinelSiteResult.errorOrNull(),
+                                villageName = villageNameResult.errorOrNull(),
                                 houseNumber = houseNumberResult.errorOrNull(),
                                 llinType = llinTypeResult?.errorOrNull(),
                                 llinBrand = llinBrandResult?.errorOrNull(),
@@ -123,7 +123,7 @@ class IntakeViewModel @Inject constructor(
                         collectorTitleResult,
                         collectorNameResult,
                         districtResult,
-                        sentinelSiteResult,
+                        villageNameResult,
                         houseNumberResult,
                         llinTypeResult,
                         llinBrandResult,
@@ -134,7 +134,7 @@ class IntakeViewModel @Inject constructor(
 
                     if (!hasError) {
                         val selectedSite = _state.value.allSitesInProgram.find {
-                            it.district == _state.value.selectedDistrict && it.sentinelSite == _state.value.selectedSentinelSite
+                            it.district == _state.value.selectedDistrict && it.villageName == _state.value.selectedVillageName
                         }
                         if (selectedSite == null) {
                             emitError(IntakeError.SITE_NOT_FOUND)
@@ -198,25 +198,23 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.SelectDistrict -> {
                     _state.update {
                         it.copy(
-                            selectedDistrict = action.district, selectedSentinelSite = ""
+                            selectedDistrict = action.district, selectedVillageName = ""
                         )
                     }
                 }
 
-                is IntakeAction.SelectSentinelSite -> {
+                is IntakeAction.SelectVillageName -> {
                     _state.update {
                         it.copy(
-                            selectedSentinelSite = action.sentinelSite
+                            selectedVillageName = action.villageName
                         )
                     }
                 }
 
-                is IntakeAction.EnterHouseNumber -> {
+                is IntakeAction.SelectHouseNumber -> {
                     _state.update {
                         it.copy(
-                            session = it.session.copy(
-                                houseNumber = action.text
-                            )
+                            selectedHouseNumber = action.houseNumber
                         )
                     }
                 }
@@ -338,33 +336,35 @@ class IntakeViewModel @Inject constructor(
                     }
                 }
 
-                is IntakeAction.SelectCollectionMethod -> {
+                is IntakeAction.UpdateCollectionMethod -> {
                     _state.update {
                         it.copy(
                             session = it.session.copy(
-                                collectionMethod = action.option.label
+                                collectionMethod = action.collectionMethod
                             )
                         )
                     }
                 }
 
-                is IntakeAction.SelectSpecimenCondition -> {
+                is IntakeAction.UpdateSpecimenCondition -> {
                     _state.update {
                         it.copy(
                             session = it.session.copy(
-                                specimenCondition = action.option.label
+                                specimenCondition = action.specimenCondition
                             )
                         )
                     }
                 }
 
                 is IntakeAction.EnterNotes -> {
-                    _state.update {
-                        it.copy(
-                            session = it.session.copy(
-                                notes = action.text
+                    if (action.text.length <= 1000) {
+                        _state.update {
+                            it.copy(
+                                session = it.session.copy(
+                                    notes = action.text
+                                )
                             )
-                        )
+                        }
                     }
                 }
 
@@ -400,7 +400,8 @@ class IntakeViewModel @Inject constructor(
 
             var savedForm: SurveillanceForm? = null
             var district = ""
-            var sentinelSite = ""
+            var villageName = ""
+            var houseNumber = ""
             var finalSessionType: SessionType? = null
 
             if (currentSession != null) {
@@ -411,7 +412,8 @@ class IntakeViewModel @Inject constructor(
                 val site = allSites.find { it.id == siteId }
                 if (site != null) {
                     district = site.district
-                    sentinelSite = site.sentinelSite
+                    villageName = site.villageName
+                    houseNumber = site.houseNumber
                 }
 
                 _state.update { currentState ->
@@ -460,10 +462,12 @@ class IntakeViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     isLoading = false,
-                    surveillanceForm = savedForm ?: surveillanceFormWorkflow.getSurveillanceForm(),
+                    session = effectiveSession,
+                    surveillanceForm = savedForm ?: surveillanceFormWorkflow.createNewSurveillanceForm(),
                     allSitesInProgram = allSites,
                     selectedDistrict = district,
-                    selectedSentinelSite = sentinelSite
+                    selectedVillageName = villageName,
+                    selectedHouseNumber = houseNumber
                 )
             }
 

@@ -65,6 +65,7 @@ fun Error.toString(context: Context): String {
         is IncompleteSessionError -> when (this) {
             IncompleteSessionError.SESSION_NOT_FOUND -> R.string.incomplete_session_error_session_not_found
             IncompleteSessionError.SESSION_RETRIEVAL_FAILED -> R.string.incomplete_session_error_session_retrieval_failed
+            IncompleteSessionError.SESSION_DELETION_FAILED -> R.string.incomplete_session_error_session_deletion_failed
             IncompleteSessionError.UNKNOWN_ERROR -> R.string.incomplete_session_error_unknown_error
         }
 
@@ -95,7 +96,7 @@ fun Error.toString(context: Context): String {
             FormValidationError.BLANK_COLLECTOR_TITLE -> R.string.form_validation_error_blank_collector_title
             FormValidationError.BLANK_COLLECTOR_NAME -> R.string.form_validation_error_blank_collector_name
             FormValidationError.BLANK_DISTRICT -> R.string.form_validation_error_blank_district
-            FormValidationError.BLANK_SENTINEL_SITE -> R.string.form_validation_error_blank_sentinel_site
+            FormValidationError.BLANK_VILLAGE_NAME -> R.string.form_validation_error_blank_village_name
             FormValidationError.BLANK_HOUSE_NUMBER -> R.string.form_validation_error_blank_house_number
             FormValidationError.BLANK_LLIN_TYPE -> R.string.form_validation_error_blank_llin_type
             FormValidationError.BLANK_LLIN_BRAND -> R.string.form_validation_error_blank_llin_brand

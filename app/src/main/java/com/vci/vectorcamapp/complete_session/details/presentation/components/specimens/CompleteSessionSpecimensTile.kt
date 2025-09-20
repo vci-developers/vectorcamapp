@@ -49,7 +49,6 @@ import com.vci.vectorcamapp.ui.extensions.zoomPanGesture
 
 @Composable
 fun CompleteSessionSpecimensTile(
-    session: Session,
     specimen: Specimen,
     specimenImage: SpecimenImage,
     modifier: Modifier = Modifier,
@@ -57,7 +56,7 @@ fun CompleteSessionSpecimensTile(
 ) {
 
     val context = LocalContext.current
-    var density = LocalDensity.current
+    val density = LocalDensity.current
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
@@ -166,7 +165,7 @@ fun CompleteSessionSpecimensTile(
             )
 
             Text(
-                text = "Captured At: ${dateTimeFormatter.format(session.createdAt)}",
+                text = "Captured On: ${dateTimeFormatter.format(specimenImage.capturedAt)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.textPrimary
             )

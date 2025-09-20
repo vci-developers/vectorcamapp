@@ -49,8 +49,8 @@
     <!-- Form validation error: Blank district -->
     <string name="form_validation_error_blank_district">District is required.</string>
 
-    <!-- Form validation error: Blank sentinel site -->
-    <string name="form_validation_error_blank_sentinel_site">Sentinel site is required.</string>
+    <!-- Form validation error: Blank village name -->
+    <string name="form_validation_error_blank_village_name">Village name is required.</string>
 
     <!-- Form validation error: Blank household number -->
     <string name="form_validation_error_blank_house_number">House number is required.</string>
@@ -162,6 +162,9 @@
 
     <!-- Incomplete session error: Session retrieval failed -->
     <string name="incomplete_session_error_session_retrieval_failed">Unable to retrieve session. Please try again.</string>
+
+    <!-- Incomplete session error: Session deletion failed -->
+    <string name="incomplete_session_error_session_deletion_failed">Unable to delete session."</string>
 
     <!-- Incomplete session error: Unknown error -->
     <string name="incomplete_session_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>

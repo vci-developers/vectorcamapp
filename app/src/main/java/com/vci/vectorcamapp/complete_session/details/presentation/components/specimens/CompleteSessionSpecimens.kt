@@ -27,7 +27,6 @@ import com.vci.vectorcamapp.ui.theme.screenWidthFraction
 
 @Composable
 fun CompleteSessionSpecimens(
-    session: Session,
     specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults>,
     searchQuery: String,
     onUpdateSearchQuery: (String) -> Unit,
@@ -82,7 +81,6 @@ fun CompleteSessionSpecimens(
                         val totalImages = imageList.size
                         imageList.mapIndexed { index, (specimenImage, _) ->
                             CompleteSessionSpecimensTile(
-                                session = session,
                                 specimen = specimen,
                                 specimenImage = specimenImage,
                                 badgeText = "${index + 1} of $totalImages",
