@@ -134,7 +134,9 @@ class IntakeViewModel @Inject constructor(
 
                     if (!hasError) {
                         val selectedSite = _state.value.allSitesInProgram.find {
-                            it.district == _state.value.selectedDistrict && it.villageName == _state.value.selectedVillageName
+                            it.district == _state.value.selectedDistrict &&
+                                    it.villageName == _state.value.selectedVillageName &&
+                                    it.houseNumber == _state.value.selectedHouseNumber
                         }
                         if (selectedSite == null) {
                             emitError(IntakeError.SITE_NOT_FOUND)
@@ -168,7 +170,8 @@ class IntakeViewModel @Inject constructor(
                                 collectorName = session.collectorName,
                                 collectorTitle = session.collectorTitle,
                                 district = _state.value.selectedDistrict,
-                                sentinelSite = _state.value.selectedSentinelSite
+                                villageName = _state.value.selectedVillageName,
+                                houseNumber = _state.value.selectedHouseNumber
                             )
                             _events.send(IntakeEvent.NavigateToImagingScreen)
                         }
@@ -198,7 +201,9 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.SelectDistrict -> {
                     _state.update {
                         it.copy(
-                            selectedDistrict = action.district, selectedVillageName = ""
+                            selectedDistrict = action.district,
+                            selectedVillageName = "",
+                            selectedHouseNumber = ""
                         )
                     }
                 }
@@ -206,7 +211,9 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.SelectVillageName -> {
                     _state.update {
                         it.copy(
-                            selectedVillageName = action.villageName
+                            selectedVillageName = action.villageName,
+                            selectedHouseNumber = ""
+
                         )
                     }
                 }
@@ -434,15 +441,23 @@ class IntakeViewModel @Inject constructor(
                         .takeIf { currentDistrict -> allSites.any { it.district == currentDistrict } }
                         .orEmpty()
 
-                    val validSentinel = defaults.sentinelSite
-                        .takeIf { currentSession ->
+                    val validVillageName = defaults.villageName
+                        .takeIf { currentVillageName ->
                             validDistrict.isNotBlank() &&
-                                    allSites.any { it.district == validDistrict && it.sentinelSite == currentSession }
+                                    allSites.any { it.district == validDistrict && it.villageName == currentVillageName }
+                        }
+                        .orEmpty()
+
+                    val validHouseNumber = defaults.houseNumber
+                        .takeIf { currentHouseNumber ->
+                            validDistrict.isNotBlank() &&
+                                    allSites.any { it.district == validDistrict && it.villageName == validVillageName && it.houseNumber == currentHouseNumber}
                         }
                         .orEmpty()
 
                     district = validDistrict
-                    sentinelSite = validSentinel
+                    villageName = validVillageName
+                    houseNumber = validHouseNumber
                 }
 
                 _state.update { currentState ->
@@ -462,7 +477,6 @@ class IntakeViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     isLoading = false,
-                    session = effectiveSession,
                     surveillanceForm = savedForm ?: surveillanceFormWorkflow.createNewSurveillanceForm(),
                     allSitesInProgram = allSites,
                     selectedDistrict = district,

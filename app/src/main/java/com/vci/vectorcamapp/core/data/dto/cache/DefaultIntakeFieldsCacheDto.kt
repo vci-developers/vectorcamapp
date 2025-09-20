@@ -7,5 +7,6 @@ data class DefaultIntakeFieldsCacheDto(
     val collectorName: String = "",
     val collectorTitle: String = "",
     val district: String = "",
-    val sentinelSite: String = "",
+    val villageName: String = "",
+    val houseNumber: String = ""
 )

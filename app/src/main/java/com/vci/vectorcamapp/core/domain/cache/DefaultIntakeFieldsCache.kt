@@ -7,7 +7,8 @@ interface DefaultIntakeFieldsCache {
         collectorName: String,
         collectorTitle: String,
         district: String,
-        sentinelSite: String
+        villageName: String,
+        houseNumber: String
     )
 
     suspend fun getDefaultIntakeFields(): DefaultIntakeFieldsCacheDto?
