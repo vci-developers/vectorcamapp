@@ -1,9 +1,8 @@
 package com.vci.vectorcamapp.complete_session.list.presentation
 
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
-import java.util.UUID
+import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 
 data class CompleteSessionListState(
-    val sessionsAndSites: List<SessionAndSite> = emptyList(),
-    val activeUploadingSessions: Set<UUID> = emptySet()
+    val sessionAndSiteToUploadProgress: Map<SessionAndSite, SessionUploadProgress> = emptyMap()
 )

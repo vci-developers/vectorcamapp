@@ -79,35 +79,15 @@ class SessionRepositoryImplementation @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeCompleteSessionsAndSites(): Flow<List<SessionAndSite>> {
-        return sessionDao.observeCompleteSessionsAndSites()
-            .flatMapLatest { sessionsAndSites ->
-                val sessionIds = sessionsAndSites.map { it.session.localId }
-
-                if (sessionIds.isEmpty()) {
-                    flowOf(sessionsAndSites.map { sessionAndSite ->
-                        SessionAndSite(
-                            session = sessionAndSite.session.toDomain(),
-                            site = sessionAndSite.site.toDomain()
-                        )
-                    })
-                } else {
-                    sessionDao.observeSessionCounts(sessionIds).map { counts ->
-                        val countsMap = counts.associateBy { it.sessionId }
-                        sessionsAndSites.map { sessionAndSite ->
-                            val sessionCounts = countsMap[sessionAndSite.session.localId]
-                            SessionAndSite(
-                                session = sessionAndSite.session.toDomain(
-                                    uploadedImages = sessionCounts?.uploadedImages ?: 0,
-                                    totalImages = sessionCounts?.totalImages ?: 0
-                                ),
-                                site = sessionAndSite.site.toDomain()
-                            )
-                        }
-                    }
-                }
+        return sessionDao.observeCompleteSessionsAndSites().map { sessionAndSiteRelations ->
+            sessionAndSiteRelations.map { sessionAndSiteRelation ->
+                SessionAndSite(
+                    session = sessionAndSiteRelation.session.toDomain(),
+                    site = sessionAndSiteRelation.site.toDomain()
+                )
             }
+        }
     }
 
     override fun observeIncompleteSessions(): Flow<List<Session>> {

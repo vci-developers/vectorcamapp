@@ -3,10 +3,7 @@ package com.vci.vectorcamapp.core.data.mappers
 import com.vci.vectorcamapp.core.data.room.entities.SessionEntity
 import com.vci.vectorcamapp.core.domain.model.Session
 
-fun SessionEntity.toDomain(
-    uploadedImages: Int = 0,
-    totalImages: Int = 0
-): Session {
+fun SessionEntity.toDomain(): Session {
     return Session(
         localId = localId,
         remoteId = remoteId,
@@ -22,14 +19,8 @@ fun SessionEntity.toDomain(
         notes = notes,
         latitude = latitude,
         longitude = longitude,
-        type = type,
-        uploadedImages = uploadedImages,
-        totalImages = totalImages
+        type = type
     )
-}
-
-fun SessionEntity.toDomain(): Session {
-    return toDomain(uploadedImages = 0, totalImages = 0)
 }
 
 fun Session.toEntity(siteId: Int): SessionEntity {

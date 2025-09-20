@@ -19,8 +19,4 @@ data class Session(
     val latitude: Float?,
     val longitude: Float?,
     val type: SessionType,
-    val uploadedImages: Int = 0,
-    val totalImages: Int = 0
-) {
-    val uploadProgress: Float = if (totalImages > 0) uploadedImages.toFloat() / totalImages else 1f
-}
+)

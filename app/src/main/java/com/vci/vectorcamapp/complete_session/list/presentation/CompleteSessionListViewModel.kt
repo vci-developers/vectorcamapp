@@ -2,19 +2,21 @@ package com.vci.vectorcamapp.complete_session.list.presentation
 
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
+import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -25,35 +27,44 @@ import javax.inject.Inject
 class CompleteSessionListViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
+    private val specimenImageRepository: SpecimenImageRepository,
     private val workManagerRepository: WorkManagerRepository
 ) : CoreViewModel() {
 
     private val _events = Channel<CompleteSessionListEvent>()
     val events = _events.receiveAsFlow()
 
-    private val sessionsAndSites = sessionRepository.observeCompleteSessionsAndSites()
-
-    private val activeUploadingSessions = sessionsAndSites
+    private val _sessionAndSiteToUploadProgress = sessionRepository.observeCompleteSessionsAndSites()
         .flatMapLatest { sessions ->
-            val sessionIds = sessions.map { it.session.localId }
-            if (sessionIds.isEmpty()) {
-                flowOf(emptySet())
+            if (sessions.isEmpty()) {
+                flowOf(emptyMap())
             } else {
-                workManagerRepository.observeActiveUploadingSessions(sessionIds)
-                    .map { it.toSet() }
+                combine(
+                    sessions.map { sessionAndSite ->
+                        val sessionId = sessionAndSite.session.localId
+                        combine(
+                            specimenImageRepository.observeUploadedImageCountForSession(sessionId),
+                            workManagerRepository.observeIsSessionActivelyUploading(sessionId),
+                        ) { uploadedCount, isUploading ->
+                            sessionAndSite to SessionUploadProgress(
+                                uploadedImageCount = uploadedCount,
+                                totalImageCount = specimenImageRepository.getTotalImageCountForSession(
+                                    sessionId
+                                ),
+                                isUploading = isUploading
+                            )
+                        }
+                    }
+                ) { progress ->
+                    progress.toMap()
+                }
             }
         }
 
-    val state = combine(
-        sessionsAndSites,
-        activeUploadingSessions
-    ) { sessionsAndSites, activeUploadingSessions ->
-        CompleteSessionListState(
-            sessionsAndSites = sessionsAndSites,
-            activeUploadingSessions = activeUploadingSessions
-        )
+    private val _state = MutableStateFlow(CompleteSessionListState())
+    val state = combine(_sessionAndSiteToUploadProgress, _state) { sessionAndSiteToUploadProgress, state ->
+        state.copy(sessionAndSiteToUploadProgress = sessionAndSiteToUploadProgress)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
-
 
     fun onAction(action: CompleteSessionListAction) {
         viewModelScope.launch {

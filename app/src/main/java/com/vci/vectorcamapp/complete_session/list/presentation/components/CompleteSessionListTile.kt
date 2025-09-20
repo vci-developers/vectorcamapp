@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
+import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -41,7 +42,7 @@ import java.util.Locale
 @Composable
 fun CompleteSessionListTile(
     sessionAndSite: SessionAndSite,
-    isActivelyUploading: Boolean,
+    sessionUploadProgress: SessionUploadProgress,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -52,7 +53,8 @@ fun CompleteSessionListTile(
     val session = sessionAndSite.session
     val site = sessionAndSite.site
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
-    val dateTimeFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
+    val dateTimeFormatter =
+        remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
     session.completedAt?.let { completedAt ->
         ActionTile(
@@ -93,7 +95,10 @@ fun CompleteSessionListTile(
                             )
                         }
                     }
-                    InfoPill(text = "Session Type: ${session.type}", color = MaterialTheme.colors.info)
+                    InfoPill(
+                        text = "Session Type: ${session.type}",
+                        color = MaterialTheme.colors.info
+                    )
                 }
 
                 Column(
@@ -172,8 +177,9 @@ fun CompleteSessionListTile(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colors.textSecondary
                             )
-                            if (isActivelyUploading) {
-                                val infiniteTransition = rememberInfiniteTransition(label = "upload_pulse")
+                            if (sessionUploadProgress.isUploading) {
+                                val infiniteTransition =
+                                    rememberInfiniteTransition(label = "upload_pulse")
                                 val alpha by infiniteTransition.animateFloat(
                                     initialValue = UPLOAD_ICON_MIN_ALPHA,
                                     targetValue = UPLOAD_ICON_MAX_ALPHA,
@@ -199,8 +205,8 @@ fun CompleteSessionListTile(
                             }
                         }
                         Text(
-                            text = if (session.totalImages == 0) "No images"
-                                else "${session.uploadedImages} / ${session.totalImages} images",
+                            text = if (sessionUploadProgress.totalImageCount == 0) "No images"
+                            else "${sessionUploadProgress.uploadedImageCount} / ${sessionUploadProgress.totalImageCount} images",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textSecondary
                         )
@@ -217,11 +223,11 @@ fun CompleteSessionListTile(
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(session.uploadProgress)
+                                .fillMaxWidth(sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat())
                                 .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall)
                                 .background(
-                                    if (session.uploadProgress == 1f) MaterialTheme.colors.primary
-                                    else if (isActivelyUploading) MaterialTheme.colors.warning
+                                    if ((sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()) == 1f) MaterialTheme.colors.primary
+                                    else if (sessionUploadProgress.isUploading) MaterialTheme.colors.warning
                                     else MaterialTheme.colors.error,
                                     RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
                                 )

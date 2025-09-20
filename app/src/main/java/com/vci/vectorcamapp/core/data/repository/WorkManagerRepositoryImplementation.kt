@@ -41,26 +41,18 @@ class WorkManagerRepositoryImplementation @Inject constructor(
             buildSessionMetadataWork(sessionId, siteId)
         ).then(buildSessionImageWork(sessionId)).enqueue()
     }
-
-    override fun observeActiveUploadingSessions(sessionIds: List<UUID>): Flow<Set<UUID>> {
-        val chainNames = sessionIds.map { sessionId ->
-            "session_upload_chain_$sessionId" to sessionId
-        }
-
-        val flows: List<Flow<Pair<UUID, Boolean>>> = chainNames.map { (chainName, sessionId) ->
-            workManager.getWorkInfosForUniqueWorkFlow(chainName)
-                .map { workInfos ->
-                    val isRunning = workInfos.any { it.state in listOf(WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING) }
-                    sessionId to isRunning
+    
+    override fun observeIsSessionActivelyUploading(sessionId: UUID): Flow<Boolean> {
+        val chainName = "session_upload_chain_$sessionId"
+        return workManager.getWorkInfosForUniqueWorkFlow(chainName)
+            .map { workInfos ->
+                workInfos.any {
+                    it.state in listOf(
+                        WorkInfo.State.ENQUEUED,
+                        WorkInfo.State.RUNNING
+                    )
                 }
-        }
-
-        return when {
-            flows.isEmpty() -> flowOf(emptySet())
-            else -> combine(flows) { runningPairs: Array<Pair<UUID, Boolean>> ->
-                runningPairs.filter { it.second }.map { it.first }.toSet()
             }
-        }
     }
 
     private fun buildSessionMetadataWork(sessionId: UUID, siteId: Int): OneTimeWorkRequest {
