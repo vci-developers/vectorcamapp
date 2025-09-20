@@ -450,7 +450,7 @@ class IntakeViewModel @Inject constructor(
 
                     val validHouseNumber = defaults.houseNumber
                         .takeIf { currentHouseNumber ->
-                            validDistrict.isNotBlank() &&
+                            validDistrict.isNotBlank() && validVillageName.isNotBlank() &&
                                     allSites.any { it.district == validDistrict && it.villageName == validVillageName && it.houseNumber == currentHouseNumber}
                         }
                         .orEmpty()
