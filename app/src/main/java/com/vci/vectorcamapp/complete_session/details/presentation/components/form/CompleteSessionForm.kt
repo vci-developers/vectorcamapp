@@ -107,13 +107,13 @@ fun CompleteSessionForm(
                 )
 
                 Text(
-                    text = "Sentinel Site: ${site.sentinelSite}",
+                    text = "Village Name: ${site.villageName}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
                 Text(
-                    text = "House Number: ${session.houseNumber}",
+                    text = "House Number: ${site.houseNumber}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )

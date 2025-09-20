@@ -237,6 +237,68 @@ fun CompleteSessionListTile(
                         )
                     }
                 }
+
+                InfoPill(text = "Session Type: ${session.type}", color = MaterialTheme.colors.info)
+            }
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+                modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
+            ) {
+                CompleteSessionListDetailRow(
+                    iconPainter = painterResource(R.drawable.ic_person),
+                    iconDescription = "Person",
+                    text = "Collector: ${session.collectorName}, ${session.collectorTitle}",
+                )
+
+                CompleteSessionListDetailRow(
+                    iconPainter = painterResource(R.drawable.ic_pin),
+                    iconDescription = "Pin",
+                    text = "District: ${site.district}",
+                )
+
+                CompleteSessionListDetailRow(
+                    iconPainter = painterResource(R.drawable.ic_map),
+                    iconDescription = "Map",
+                    text = "Sub-County: ${site.subCounty}",
+                )
+
+                CompleteSessionListDetailRow(
+                    iconPainter = painterResource(R.drawable.ic_navigation),
+                    iconDescription = "Navigation",
+                    text = "Parish: ${site.parish}",
+                )
+
+                CompleteSessionListDetailRow(
+                    iconPainter = painterResource(R.drawable.ic_clipboard),
+                    iconDescription = "Clipboard",
+                    text = "Village Name: ${site.villageName}",
+                )
+
+                CompleteSessionListDetailRow(
+                    iconPainter = painterResource(R.drawable.ic_house),
+                    iconDescription = "House",
+                    text = "House Number: ${site.houseNumber}",
+                )
+            }
+
+            HorizontalDivider(color = MaterialTheme.colors.divider, thickness = MaterialTheme.dimensions.dividerThickness)
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
+            ) {
+                Text(
+                    text = "Created At: ${dateTimeFormatter.format(session.createdAt)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colors.textSecondary
+                )
+
+                Text(
+                    text = "Completed At: ${dateTimeFormatter.format(session.completedAt)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colors.textSecondary
+                )
             }
         }
     }

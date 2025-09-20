@@ -4,10 +4,10 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import javax.inject.Inject
 
-class ValidateSentinelSiteUseCase @Inject constructor() {
-    operator fun invoke(sentinelSite: String) : Result<Unit, FormValidationError> {
-        return if (sentinelSite.isBlank()) {
-            Result.Error(FormValidationError.BLANK_SENTINEL_SITE)
+class ValidateVillageNameUseCase @Inject constructor() {
+    operator fun invoke(villageName: String) : Result<Unit, FormValidationError> {
+        return if (villageName.isBlank()) {
+            Result.Error(FormValidationError.BLANK_VILLAGE_NAME)
         } else {
             Result.Success(Unit)
         }
