@@ -106,7 +106,7 @@ fun CompleteSessionListScreen(
                 tint = MaterialTheme.colors.buttonText,
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeMedium)
-                    .rotate(if (hasActiveUploads) rotation else 0f)
+                    .rotate(rotation)
             )
         }
     }
