@@ -62,8 +62,8 @@ fun CompleteSessionListTile(
             modifier = modifier,
         ) {
             Column(
-                modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+                modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)

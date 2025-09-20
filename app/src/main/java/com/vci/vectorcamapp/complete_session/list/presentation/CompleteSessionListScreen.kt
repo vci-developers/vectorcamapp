@@ -35,7 +35,7 @@ fun CompleteSessionListScreen(
     onAction: (CompleteSessionListAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val rotationDuration = 2000
+    val ROTATION_DURATION = 2000
 
     val hasActiveUploads = state.sessionAndSiteToUploadProgress.values.any { it.isUploading }
 
@@ -44,7 +44,7 @@ fun CompleteSessionListScreen(
         animationSpec = if (hasActiveUploads) {
             infiniteRepeatable(
                 animation = tween(
-                    durationMillis = rotationDuration,
+                    durationMillis = ROTATION_DURATION,
                     easing = LinearEasing
                 ),
                 repeatMode = RepeatMode.Restart
