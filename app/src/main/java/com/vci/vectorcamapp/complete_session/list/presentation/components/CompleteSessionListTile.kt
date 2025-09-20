@@ -205,7 +205,7 @@ fun CompleteSessionListTile(
                             }
                         }
                         Text(
-                            text = if (sessionUploadProgress.totalImageCount == 0) "No images"
+                            text = if (sessionUploadProgress.totalImageCount == 0) "No images to upload"
                             else "${sessionUploadProgress.uploadedImageCount} / ${sessionUploadProgress.totalImageCount} images",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textSecondary
@@ -223,10 +223,13 @@ fun CompleteSessionListTile(
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat())
+                                .fillMaxWidth(
+                                    if (sessionUploadProgress.totalImageCount == 0) 1f
+                                    else sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()
+                                )
                                 .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall)
                                 .background(
-                                    if ((sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()) == 1f) MaterialTheme.colors.primary
+                                    if (sessionUploadProgress.totalImageCount == 0 || (sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()) == 1f) MaterialTheme.colors.primary
                                     else if (sessionUploadProgress.isUploading) MaterialTheme.colors.warning
                                     else MaterialTheme.colors.error,
                                     RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
