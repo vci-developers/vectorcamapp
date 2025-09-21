@@ -2,42 +2,69 @@ package com.vci.vectorcamapp.complete_session.list.presentation
 
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
+import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CompleteSessionListViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
+    private val specimenImageRepository: SpecimenImageRepository,
     private val workManagerRepository: WorkManagerRepository
 ) : CoreViewModel() {
 
-    private val _completeSessionsAndSites = sessionRepository.observeCompleteSessionsAndSites()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-
-    private val _state = MutableStateFlow(CompleteSessionListState())
-    val state = combine(_completeSessionsAndSites, _state) { completeSessionsAndSites, state ->
-        state.copy(sessionsAndSites = completeSessionsAndSites)
-    }.onStart {
-        loadCompleteSessionListDetails()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
-
     private val _events = Channel<CompleteSessionListEvent>()
     val events = _events.receiveAsFlow()
+
+    private val _sessionAndSiteToUploadProgress = sessionRepository.observeCompleteSessionsAndSites()
+        .flatMapLatest { sessions ->
+            if (sessions.isEmpty()) {
+                flowOf(emptyMap())
+            } else {
+                combine(
+                    sessions.map { sessionAndSite ->
+                        val sessionId = sessionAndSite.session.localId
+                        combine(
+                            specimenImageRepository.observeUploadedImageCountForSession(sessionId),
+                            workManagerRepository.observeIsSessionActivelyUploading(sessionId),
+                        ) { uploadedCount, isUploading ->
+                            sessionAndSite to SessionUploadProgress(
+                                uploadedImageCount = uploadedCount,
+                                totalImageCount = specimenImageRepository.getTotalImageCountForSession(
+                                    sessionId
+                                ),
+                                isUploading = isUploading
+                            )
+                        }
+                    }
+                ) { progress ->
+                    progress.toMap()
+                }
+            }
+        }
+
+    private val _state = MutableStateFlow(CompleteSessionListState())
+    val state = combine(_sessionAndSiteToUploadProgress, _state) { sessionAndSiteToUploadProgress, state ->
+        state.copy(sessionAndSiteToUploadProgress = sessionAndSiteToUploadProgress)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
 
     fun onAction(action: CompleteSessionListAction) {
         viewModelScope.launch {
@@ -74,18 +101,6 @@ class CompleteSessionListViewModel @Inject constructor(
                         workManagerRepository.enqueueSessionUpload(session.localId, site.id)
                     }
                 }
-            }
-        }
-    }
-
-    private fun loadCompleteSessionListDetails() {
-        viewModelScope.launch {
-            _completeSessionsAndSites.collect { sessionsAndSites ->
-                val sessionIds = sessionsAndSites.map { it.session.localId }
-                workManagerRepository.observeAnySessionUploadRunning(sessionIds)
-                    .collect { isRunning ->
-                        _state.update { it.copy(isUploading = isRunning) }
-                    }
             }
         }
     }
