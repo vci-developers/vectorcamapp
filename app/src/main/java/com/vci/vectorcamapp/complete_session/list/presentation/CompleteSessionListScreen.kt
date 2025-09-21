@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.complete_session.list.presentation
 
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -24,10 +25,10 @@ import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
-import androidx.compose.ui.draw.rotate
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.draw.rotate
 
 @Composable
 fun CompleteSessionListScreen(
@@ -39,19 +40,14 @@ fun CompleteSessionListScreen(
 
     val hasActiveUploads = state.sessionAndSiteToUploadProgress.values.any { it.isUploading }
 
-    val rotation by animateFloatAsState(
-        targetValue = if (hasActiveUploads) 360f else 0f,
-        animationSpec = if (hasActiveUploads) {
-            infiniteRepeatable(
-                animation = tween(
-                    durationMillis = ROTATION_DURATION,
-                    easing = LinearEasing
-                ),
-                repeatMode = RepeatMode.Restart
-            )
-        } else {
-            tween(0)
-        },
+    val infiniteTransition = rememberInfiniteTransition(label = "rotation")
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(ROTATION_DURATION, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
         label = "rotation"
     )
 
@@ -106,7 +102,7 @@ fun CompleteSessionListScreen(
                 tint = MaterialTheme.colors.buttonText,
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeMedium)
-                    .rotate(rotation)
+                    .rotate(if (hasActiveUploads) rotation else 0f)
             )
         }
     }
