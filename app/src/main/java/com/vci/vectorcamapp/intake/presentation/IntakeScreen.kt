@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
@@ -100,7 +99,10 @@ fun IntakeScreen(
                 )
 
                 val isOtherCollectionMethod =
-                    state.session.collectionMethod.startsWith(IntakeDropdownOptions.CollectionMethodOption.OTHER.label, ignoreCase = true)
+                    state.session.collectionMethod.startsWith(
+                        IntakeDropdownOptions.CollectionMethodOption.OTHER.label,
+                        ignoreCase = true
+                    )
 
                 DropdownField(
                     label = "Collection Method",
@@ -123,7 +125,8 @@ fun IntakeScreen(
                 if (isOtherCollectionMethod) {
                     TextEntryField(
                         label = "Other Collection Method",
-                        value = state.session.collectionMethod.removePrefix(IntakeDropdownOptions.CollectionMethodOption.OTHER.label).trimStart(),
+                        value = state.session.collectionMethod.removePrefix(IntakeDropdownOptions.CollectionMethodOption.OTHER.label)
+                            .trimStart(),
                         onValueChange = { onAction(IntakeAction.UpdateCollectionMethod("${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it")) },
                         singleLine = true,
                         error = state.intakeErrors.collectionMethod
@@ -131,7 +134,10 @@ fun IntakeScreen(
                 }
 
                 val isOtherSpecimenCondition =
-                    state.session.specimenCondition.startsWith(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label, ignoreCase = true)
+                    state.session.specimenCondition.startsWith(
+                        IntakeDropdownOptions.SpecimenConditionOption.OTHER.label,
+                        ignoreCase = true
+                    )
 
                 DropdownField(
                     label = "Specimen Condition",
@@ -154,7 +160,8 @@ fun IntakeScreen(
                 if (isOtherSpecimenCondition) {
                     TextEntryField(
                         label = "Other Specimen Condition",
-                        value = state.session.specimenCondition.removePrefix(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label).trimStart(),
+                        value = state.session.specimenCondition.removePrefix(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label)
+                            .trimStart(),
                         onValueChange = { onAction(IntakeAction.UpdateSpecimenCondition("${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it")) },
                         singleLine = true,
                         error = state.intakeErrors.specimenCondition
@@ -185,31 +192,39 @@ fun IntakeScreen(
 
                 if (state.selectedDistrict.isNotBlank()) {
                     DropdownField(
-                        label = "Sentinel Site",
+                        label = "Village Name",
                         options = state.allSitesInProgram.filter { it.district == state.selectedDistrict }
-                            .map { it.sentinelSite }.distinct(),
-                        selectedOption = state.selectedSentinelSite,
+                            .map { it.villageName }.distinct(),
+                        selectedOption = state.selectedVillageName,
                         onOptionSelected = {
-                            onAction(IntakeAction.SelectSentinelSite(it))
+                            onAction(IntakeAction.SelectVillageName(it))
                         },
-                        error = state.intakeErrors.sentinelSite,
-
-                        ) { sentinelSite ->
+                        error = state.intakeErrors.villageName,
+                    ) { villageName ->
                         Text(
-                            text = sentinelSite,
+                            text = villageName,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textPrimary
                         )
                     }
                 }
 
-                TextEntryField(
-                    label = "House Number",
-                    value = state.session.houseNumber,
-                    onValueChange = { onAction(IntakeAction.EnterHouseNumber(it)) },
-                    singleLine = true,
-                    error = state.intakeErrors.houseNumber
-                )
+                if (state.selectedVillageName.isNotBlank()) {
+                    DropdownField(
+                        label = "House Number",
+                        options = state.allSitesInProgram.filter { it.district == state.selectedDistrict && it.villageName == state.selectedVillageName }
+                            .map { it.houseNumber }.distinct(),
+                        selectedOption = state.selectedHouseNumber,
+                        onOptionSelected = { onAction(IntakeAction.SelectHouseNumber(it)) },
+                        error = state.intakeErrors.houseNumber,
+                    ) { houseNumber ->
+                        Text(
+                            text = houseNumber,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.textPrimary
+                        )
+                    }
+                }
 
                 state.surveillanceForm?.let { surveillanceForm ->
                     TextEntryField(
@@ -218,7 +233,6 @@ fun IntakeScreen(
                         onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it.filter { character -> character.isDigit() })) },
                         placeholder = "0",
                         singleLine = true,
-                        keyboardType = KeyboardType.Number,
                     )
                 }
 
@@ -312,7 +326,6 @@ fun IntakeScreen(
                             },
                             placeholder = "0",
                             singleLine = true,
-                            keyboardType = KeyboardType.Number,
                         )
                     }
 
@@ -322,7 +335,6 @@ fun IntakeScreen(
                         onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it.filter { character -> character.isDigit() })) },
                         placeholder = "0",
                         singleLine = true,
-                        keyboardType = KeyboardType.Number
                     )
 
                     surveillanceForm.llinType?.let { current ->
@@ -370,7 +382,6 @@ fun IntakeScreen(
                             },
                             placeholder = "0",
                             singleLine = true,
-                            keyboardType = KeyboardType.Number
                         )
                     }
                 }
@@ -386,7 +397,9 @@ fun IntakeScreen(
                 TextEntryField(
                     label = "Notes",
                     value = state.session.notes,
-                    onValueChange = { onAction(IntakeAction.EnterNotes(it)) })
+                    onValueChange = { onAction(IntakeAction.EnterNotes(it)) },
+                    placeholder = "1000 character limit...",
+                )
             }
         }
 

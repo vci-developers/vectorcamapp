@@ -10,6 +10,7 @@ data class InferenceResult(
     val speciesLogits: List<Float>?,
     val sexLogits: List<Float>?,
     val abdomenStatusLogits: List<Float>?,
+    val bboxDetectionDuration: Long,
     val speciesInferenceDuration: Long?,
     val sexInferenceDuration: Long?,
     val abdomenStatusInferenceDuration: Long?
