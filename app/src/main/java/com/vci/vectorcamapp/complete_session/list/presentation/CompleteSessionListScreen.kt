@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -16,15 +14,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListAction.UpdateSearchQuery
 import com.vci.vectorcamapp.complete_session.list.presentation.components.CompleteSessionListTile
-import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
+import com.vci.vectorcamapp.core.presentation.components.form.SearchTextField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -36,8 +32,6 @@ fun CompleteSessionListScreen(
     onAction: (CompleteSessionListAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-
     Box(modifier = modifier.fillMaxSize()) {
         ScreenHeader(
             title = "Complete Sessions",
@@ -56,18 +50,16 @@ fun CompleteSessionListScreen(
             modifier = modifier
         ) {
             item {
-                TextEntryField(
-                    value = state.searchQuery,
-                    onValueChange = { newSearchQuery -> onAction(UpdateSearchQuery(newSearchQuery)) },
-                    placeholder = "Search by collector, district, session type, etc.",
+                SearchTextField(
+                    searchQueryText = state.searchQuery,
+                    onSearchQueryTextChange = { newSearchQueryText ->
+                        onAction(UpdateSearchQuery(newSearchQueryText))
+                    },
+                    placeholderText = "Search by collector, district, session type, etc.",
                     modifier = Modifier.padding(
                         top = MaterialTheme.dimensions.paddingSmall,
                         start = MaterialTheme.dimensions.paddingMedium,
-                        end = MaterialTheme.dimensions.paddingMedium),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(
-                        onSearch = { keyboardController?.hide() }
+                        end = MaterialTheme.dimensions.paddingMedium
                     )
                 )
             }

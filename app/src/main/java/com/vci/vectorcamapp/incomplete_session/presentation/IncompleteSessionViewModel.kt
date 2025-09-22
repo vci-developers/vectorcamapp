@@ -39,8 +39,6 @@ class IncompleteSessionViewModel @Inject constructor(
                     add(session.collectorName)
                     add(session.collectorTitle)
                     add(session.houseNumber)
-                    add(session.collectionMethod)
-                    add(session.specimenCondition)
                     add(session.type.name)
                 }
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)

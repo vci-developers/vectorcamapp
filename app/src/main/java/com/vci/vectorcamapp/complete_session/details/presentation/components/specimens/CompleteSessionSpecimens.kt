@@ -7,20 +7,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
-import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
+import com.vci.vectorcamapp.core.presentation.components.form.SearchTextField
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.screenWidthFraction
@@ -33,8 +28,6 @@ fun CompleteSessionSpecimens(
     onUpdateSearchQuery: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-
     if (specimensWithImagesAndInferenceResults.isEmpty() && searchQuery.isBlank()) {
         Text(
             "No specimens were captured during this session.",
@@ -48,18 +41,13 @@ fun CompleteSessionSpecimens(
             modifier = modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            TextEntryField(
-                value = searchQuery,
-                onValueChange = { newSearchQuery -> onUpdateSearchQuery(newSearchQuery) },
-                placeholder = "Search by specimen ID, species, etc.",
-                modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.spacingMedium),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        keyboardController?.hide()
-                    }
-                )
+            SearchTextField(
+                searchQueryText = searchQuery,
+                onSearchQueryTextChange = { newSearchQueryText ->
+                    onUpdateSearchQuery(newSearchQueryText)
+                },
+                placeholderText = "Search by specimen ID, species, etc.",
+                modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.spacingMedium)
             )
 
             if (specimensWithImagesAndInferenceResults.isEmpty()) {
