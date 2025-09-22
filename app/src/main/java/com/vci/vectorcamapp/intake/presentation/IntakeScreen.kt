@@ -48,7 +48,7 @@ fun IntakeScreen(
     }
 
     ScreenHeader(
-        title = "${state.session.type.displayText(context)} Session Intake",
+        title = "${state.session.type.displayText(context)} Intake",
         subtitle = "Please fill out the information below",
         leadingIcon = {
             Icon(
