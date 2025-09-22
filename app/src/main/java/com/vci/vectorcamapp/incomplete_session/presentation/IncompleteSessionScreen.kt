@@ -51,9 +51,8 @@ fun IncompleteSessionScreen(
                 onSearchQueryTextChange = { newSearchQueryText ->
                     onAction(IncompleteSessionAction.UpdateSearchQuery(newSearchQueryText))
                 },
-                placeholderText = "Search by collector, house number, type, etc.",
+                placeholderText = "Search by session type, etc.",
                 modifier = Modifier.padding(
-                    top = MaterialTheme.dimensions.paddingSmall,
                     start = MaterialTheme.dimensions.paddingMedium,
                     end = MaterialTheme.dimensions.paddingMedium
                 )

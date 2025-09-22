@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -32,41 +33,7 @@ class CompleteSessionListViewModel @Inject constructor(
     private val workManagerRepository: WorkManagerRepository
 ) : CoreViewModel() {
 
-    private val _completeSessionsAndSites = sessionRepository.observeCompleteSessionsAndSites()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-
     private val _state = MutableStateFlow(CompleteSessionListState())
-    val state = combine(_completeSessionsAndSites, _state) { completeSessionsAndSites, currentState ->
-        val filteredSessionAndSites = if (currentState.searchQuery.isBlank()) {
-            completeSessionsAndSites
-        } else {
-            completeSessionsAndSites.filter { sessionAndSite ->
-                val session = sessionAndSite.session
-                val site = sessionAndSite.site
-                val fieldsForSearch = buildList {
-                    add(session.collectorName)
-                    add(session.collectorTitle)
-                    add(session.houseNumber)
-                    add(session.collectionMethod)
-                    add(session.specimenCondition)
-                    add(session.type.name)
-
-                    add(site.district)
-                    add(site.subCounty)
-                    add(site.parish)
-                    add(site.sentinelSite)
-                    add(site.healthCenter)
-                }
-                SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
-            }
-        }
-        currentState.copy(sessionsAndSites = filteredSessionAndSites)
-    }.onStart {
-        loadCompleteSessionListDetails()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
-
-    private val _events = Channel<CompleteSessionListEvent>()
-    val events = _events.receiveAsFlow()
 
     private val _sessionAndSiteToUploadProgress = sessionRepository.observeCompleteSessionsAndSites()
         .flatMapLatest { sessions ->
@@ -95,10 +62,37 @@ class CompleteSessionListViewModel @Inject constructor(
             }
         }
 
-    private val _state = MutableStateFlow(CompleteSessionListState())
-    val state = combine(_sessionAndSiteToUploadProgress, _state) { sessionAndSiteToUploadProgress, state ->
-        state.copy(sessionAndSiteToUploadProgress = sessionAndSiteToUploadProgress)
+    val state = combine(
+        _sessionAndSiteToUploadProgress,
+        _state
+    ) { sessionAndSiteToUploadProgress, currentState ->
+        val filteredProgressMap = if (currentState.searchQuery.isBlank()) {
+            sessionAndSiteToUploadProgress
+        } else {
+            sessionAndSiteToUploadProgress.filter { (sessionAndSite, _) ->
+                val session = sessionAndSite.session
+                val site = sessionAndSite.site
+                val fieldsForSearch = buildList {
+                    add(session.collectorName)
+                    add(session.collectorTitle)
+                    add(session.collectionMethod)
+                    add(session.specimenCondition)
+                    add(session.type.name)
+                    add(site.district)
+                    add(site.subCounty)
+                    add(site.parish)
+                    add(site.villageName)
+                    add(site.houseNumber)
+                    add(site.healthCenter)
+                }
+                SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
+            }
+        }
+        currentState.copy(sessionAndSiteToUploadProgress = filteredProgressMap)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
+
+    private val _events = Channel<CompleteSessionListEvent>()
+    val events = _events.receiveAsFlow()
 
     fun onAction(action: CompleteSessionListAction) {
         viewModelScope.launch {

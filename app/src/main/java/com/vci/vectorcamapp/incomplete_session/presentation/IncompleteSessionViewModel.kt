@@ -38,7 +38,6 @@ class IncompleteSessionViewModel @Inject constructor(
                 val fieldsForSearch = buildList {
                     add(session.collectorName)
                     add(session.collectorTitle)
-                    add(session.houseNumber)
                     add(session.type.name)
                 }
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)

@@ -80,14 +80,13 @@ fun CompleteSessionListScreen(
                     },
                     placeholderText = "Search by collector, district, session type, etc.",
                     modifier = Modifier.padding(
-                        top = MaterialTheme.dimensions.paddingSmall,
                         start = MaterialTheme.dimensions.paddingMedium,
                         end = MaterialTheme.dimensions.paddingMedium
                     )
                 )
             }
 
-            if (state.sessionsAndSites.isEmpty()) {
+            if (state.sessionAndSiteToUploadProgress.isEmpty()) {
                 item {
                     Text(
                         text = if (state.searchQuery.isBlank())
