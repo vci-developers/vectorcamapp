@@ -1,5 +1,8 @@
 package com.vci.vectorcamapp.complete_session.list.presentation
 
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -21,6 +25,10 @@ import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.draw.rotate
 
 @Composable
 fun CompleteSessionListScreen(
@@ -28,6 +36,21 @@ fun CompleteSessionListScreen(
     onAction: (CompleteSessionListAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val ROTATION_DURATION = 2000
+
+    val hasActiveUploads = state.sessionAndSiteToUploadProgress.values.any { it.isUploading }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "rotation")
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(ROTATION_DURATION, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "rotation"
+    )
+
     Box(modifier = modifier.fillMaxSize()) {
         ScreenHeader(
             title = "Complete Sessions",
@@ -46,34 +69,40 @@ fun CompleteSessionListScreen(
             modifier = modifier
         ) {
             items(
-                items = state.sessionsAndSites.asReversed(),
-                key = { it.session.localId }) { sessionAndSite ->
+                items = state.sessionAndSiteToUploadProgress.toList().asReversed(),
+                key = { it.first.session.localId }) { (sessionAndSite, sessionUploadProgress) ->
+
                 CompleteSessionListTile(
-                    session = sessionAndSite.session, site = sessionAndSite.site, onClick = {
+                    sessionAndSite = sessionAndSite,
+                    sessionUploadProgress = sessionUploadProgress,
+                    onClick = {
                         onAction(
                             CompleteSessionListAction.ViewCompleteSessionDetails(
                                 sessionAndSite.session.localId
                             )
                         )
-                    })
+                    }
+                )
             }
         }
 
         FloatingActionButton(
             onClick = { onAction(CompleteSessionListAction.UploadAllPendingSessions) },
-            containerColor = if (state.isUploading) MaterialTheme.colors.warning else MaterialTheme.colors.primary,
+            containerColor = if (hasActiveUploads) MaterialTheme.colors.warning else MaterialTheme.colors.primary,
             contentColor = MaterialTheme.colors.buttonText,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(MaterialTheme.dimensions.paddingLarge)
         ) {
             Icon(
-                painter = if (state.isUploading) painterResource(id = R.drawable.ic_refresh) else painterResource(
+                painter = if (hasActiveUploads) painterResource(id = R.drawable.ic_refresh) else painterResource(
                     id = R.drawable.ic_cloud_upload
                 ),
-                contentDescription = if (state.isUploading) "Refresh" else "Upload",
+                contentDescription = if (hasActiveUploads) "Refresh" else "Upload",
                 tint = MaterialTheme.colors.buttonText,
-                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                modifier = Modifier
+                    .size(MaterialTheme.dimensions.iconSizeMedium)
+                    .rotate(if (hasActiveUploads) rotation else 0f)
             )
         }
     }

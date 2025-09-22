@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 import javax.inject.Inject
-import androidx.core.net.toUri
 
 class SessionRepositoryImplementation @Inject constructor(
     private val sessionDao: SessionDao

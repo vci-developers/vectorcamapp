@@ -13,7 +13,8 @@ data class InferenceResultDto(
     val speciesLogits: List<Float>? = null,
     val sexLogits: List<Float>? = null,
     val abdomenStatusLogits: List<Float>? = null,
-    val speciesInferenceDuration: Long?,
-    val sexInferenceDuration: Long?,
-    val abdomenStatusInferenceDuration: Long?,
+    val bboxDetectionDuration: Long = 0L,
+    val speciesInferenceDuration: Long? = null,
+    val sexInferenceDuration: Long? = null,
+    val abdomenStatusInferenceDuration: Long? = null,
 )
