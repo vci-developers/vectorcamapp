@@ -75,15 +75,12 @@ class CompleteSessionListViewModel @Inject constructor(
                 val fieldsForSearch = buildList {
                     add(session.collectorName)
                     add(session.collectorTitle)
-                    add(session.collectionMethod)
-                    add(session.specimenCondition)
                     add(session.type.name)
                     add(site.district)
                     add(site.subCounty)
                     add(site.parish)
                     add(site.villageName)
                     add(site.houseNumber)
-                    add(site.healthCenter)
                 }
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
             }

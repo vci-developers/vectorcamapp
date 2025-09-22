@@ -76,12 +76,12 @@ fun IncompleteSessionScreen(
 
         items(
             items = state.sessions.asReversed(),
-            key = { it.localId }
-        ) { session ->
+            key = { it.session.localId }
+        ) { sessionAndSite ->
             IncompleteSessionCard(
-                session = session,
-                onClick = { onAction(IncompleteSessionAction.ResumeSession(session.localId)) },
-                onDelete = { onAction(IncompleteSessionAction.DeleteSession(session.localId)) }
+                sessionAndSite = sessionAndSite,
+                onClick = { onAction(IncompleteSessionAction.ResumeSession(sessionAndSite.session.localId)) },
+                onDelete = { onAction(IncompleteSessionAction.DeleteSession(sessionAndSite.session.localId)) }
             )
         }
     }

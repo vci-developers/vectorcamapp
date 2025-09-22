@@ -26,19 +26,26 @@ class IncompleteSessionViewModel @Inject constructor(
     private val cameraRepository: CameraRepository
 ) : CoreViewModel() {
 
-    private val _incompleteSessions = sessionRepository.observeIncompleteSessions()
+    private val _incompleteSessionsAndSites = sessionRepository.observeIncompleteSessionsAndSites()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
     private val _state = MutableStateFlow(IncompleteSessionState())
 
-    val state = combine(_incompleteSessions, _state) { incompleteSessions, currentState ->
+    val state = combine(_incompleteSessionsAndSites, _state) { incompleteSessionsAndSites, currentState ->
         val filteredSessions = if (currentState.searchQuery.isBlank()) {
-            incompleteSessions
+            incompleteSessionsAndSites
         } else {
-            incompleteSessions.filter { session ->
+            incompleteSessionsAndSites.filter { sessionAndSite ->
+                val session = sessionAndSite.session
+                val site = sessionAndSite.site
                 val fieldsForSearch = buildList {
                     add(session.collectorName)
                     add(session.collectorTitle)
                     add(session.type.name)
+                    add(site.district)
+                    add(site.subCounty)
+                    add(site.parish)
+                    add(site.villageName)
+                    add(site.houseNumber)
                 }
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
             }
