@@ -69,7 +69,7 @@ class IncompleteSessionViewModel @Inject constructor(
                                 try {
                                     cameraRepository.deleteSavedImage(uri)
                                 } catch (e: Exception) {
-                                    Log.e("IncompleteSessionViewModel", "Failed to delete image: $uri", e)
+                                    IncompleteSessionSentryLogger.logImageDeletionFailure(e, action.sessionId, uri)
                                 }
                             }
 
