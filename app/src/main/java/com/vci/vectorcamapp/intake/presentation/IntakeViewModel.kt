@@ -20,6 +20,7 @@ import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflow
 import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflowFactory
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidationUseCases
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
+import com.vci.vectorcamapp.intake.logging.IntakeSentryLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
@@ -136,6 +137,7 @@ class IntakeViewModel @Inject constructor(
                         }
                         if (selectedSite == null) {
                             emitError(IntakeError.SITE_NOT_FOUND)
+                            IntakeSentryLogger.logSiteNotFound(Exception(IntakeError.SITE_NOT_FOUND.name))
                             return@launch
                         }
 
@@ -144,6 +146,7 @@ class IntakeViewModel @Inject constructor(
                                 sessionRepository.upsertSession(session, selectedSite.id)
                             sessionResult.onError { error ->
                                 emitError(error)
+                                IntakeSentryLogger.logSessionUpsertFailed(Exception(error.name), session.localId, selectedSite.id)
                                 return@runAsTransaction false
                             }
 
@@ -155,6 +158,7 @@ class IntakeViewModel @Inject constructor(
 
                             surveillanceFormResult.onError { error ->
                                 emitError(error)
+                                IntakeSentryLogger.logSurveillanceFormUpsertFailed(Exception(error.name), session.localId)
                                 return@runAsTransaction false
                             }
                             true
@@ -382,6 +386,7 @@ class IntakeViewModel @Inject constructor(
             val programId = deviceCache.getProgramId()
             if (programId == null) {
                 emitError(IntakeError.PROGRAM_NOT_FOUND)
+                IntakeSentryLogger.logProgramNotFound(Exception(IntakeError.PROGRAM_NOT_FOUND.name))
                 _events.send(IntakeEvent.NavigateBackToRegistrationScreen)
                 _state.update { it.copy(isLoading = false) }
                 return@launch
@@ -438,6 +443,7 @@ class IntakeViewModel @Inject constructor(
             } catch (e: TimeoutCancellationException) {
                 Result.Error(IntakeError.LOCATION_GPS_TIMEOUT)
             } catch (e: Exception) {
+                IntakeSentryLogger.logLocationFetchFailed(e)
                 Result.Error(IntakeError.UNKNOWN_ERROR)
             }
 

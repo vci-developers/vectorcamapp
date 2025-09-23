@@ -8,6 +8,7 @@ import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
+import com.vci.vectorcamapp.registration.logging.RegistrationSentryLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,6 +55,7 @@ class RegistrationViewModel @Inject constructor(
                     val selectedProgram = state.value.selectedProgram
                     if (selectedProgram == null) {
                         emitError(RegistrationError.PROGRAM_NOT_FOUND)
+                        RegistrationSentryLogger.logProgramNotFound(IllegalStateException("Program not found during registration"))
                         return@launch
                     }
 
@@ -69,6 +71,7 @@ class RegistrationViewModel @Inject constructor(
                         _events.send(RegistrationEvent.NavigateToLandingScreen)
                     } catch (e: Exception) {
                         emitError(RegistrationError.UNKNOWN_ERROR)
+                        RegistrationSentryLogger.logUnknownError(e, selectedProgram)
                     }
                 }
             }
