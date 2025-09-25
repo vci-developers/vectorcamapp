@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.imaging.presentation
 
-import android.graphics.BitmapFactory
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
@@ -12,7 +11,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,7 +46,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -57,6 +54,9 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
@@ -359,11 +359,6 @@ fun ImagingScreen(
                     }
 
                     if (state.currentImageBytes != null) {
-                        val specimenBitmap = remember(state.currentImageBytes) {
-                            BitmapFactory.decodeByteArray(
-                                state.currentImageBytes, 0, state.currentImageBytes.size
-                            )
-                        }
 
                         Box(
                             modifier = Modifier
@@ -373,14 +368,16 @@ fun ImagingScreen(
                             SpecimenImageOverlay(
                                 inferenceResult = state.currentInferenceResult
                             ) {
-                                Image(
-                                    bitmap = specimenBitmap.asImageBitmap(),
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(state.currentImageBytes)
+                                        .crossfade(true)
+                                        .build(),
                                     contentDescription = state.currentSpecimen.id,
-                                    contentScale = ContentScale.FillBounds
+                                    contentScale = ContentScale.Fit
                                 )
                             }
                         }
-
                     } else {
                         Box(
                             modifier = Modifier
