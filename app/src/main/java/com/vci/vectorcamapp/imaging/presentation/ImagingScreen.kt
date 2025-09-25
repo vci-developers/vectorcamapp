@@ -214,22 +214,22 @@ fun ImagingScreen(
                             else -> ""
                         }
                         Column {
-                                if (dialogText.isNotEmpty()) {
-                                    Text(
-                                        text = dialogText,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colors.textSecondary
-                                    )
-                                }
+                            if (dialogText.isNotEmpty()) {
+                                Text(
+                                    text = dialogText,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textSecondary
+                                )
+                            }
 
-                                if (state.specimensWithImagesAndInferenceResults.isEmpty() && state.pendingAction is ImagingAction.SubmitSession) {
-                                    Text(
-                                        text = "Warning: You are about to submit a session with zero specimens.",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        color = MaterialTheme.colors.error,
-                                        modifier = Modifier.padding(top = MaterialTheme.dimensions.paddingMedium)
-                                    )
-                                }
+                            if (state.specimensWithImagesAndInferenceResults.isEmpty() && state.pendingAction is ImagingAction.SubmitSession) {
+                                Text(
+                                    text = "Warning: You are about to submit a session with zero specimens.",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colors.error,
+                                    modifier = Modifier.padding(top = MaterialTheme.dimensions.paddingMedium)
+                                )
+                            }
                         }
                     }, confirmButton = {
                         if (state.pendingAction == null) {
