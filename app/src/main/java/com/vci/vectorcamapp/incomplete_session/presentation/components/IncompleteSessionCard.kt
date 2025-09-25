@@ -96,37 +96,37 @@ fun IncompleteSessionCard(
                     modifier = Modifier.padding(vertical = MaterialTheme.dimensions.paddingSmall),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
                 ) {
-                    CompleteSessionListDetailRow(
+                    IncompleteSessionListDetailRow(
                         iconPainter = painterResource(R.drawable.ic_person),
                         iconDescription = "Person",
                         text = "Collector: ${sessionAndSite.session.collectorName}, ${sessionAndSite.session.collectorTitle}",
                     )
 
-                    CompleteSessionListDetailRow(
+                    IncompleteSessionListDetailRow(
                         iconPainter = painterResource(R.drawable.ic_pin),
                         iconDescription = "Pin",
                         text = "District: ${sessionAndSite.site.district}",
                     )
 
-                    CompleteSessionListDetailRow(
+                    IncompleteSessionListDetailRow(
                         iconPainter = painterResource(R.drawable.ic_map),
                         iconDescription = "Map",
                         text = "Sub-County: ${sessionAndSite.site.subCounty}",
                     )
 
-                    CompleteSessionListDetailRow(
+                    IncompleteSessionListDetailRow(
                         iconPainter = painterResource(R.drawable.ic_navigation),
                         iconDescription = "Navigation",
                         text = "Parish: ${sessionAndSite.site.parish}",
                     )
 
-                    CompleteSessionListDetailRow(
+                    IncompleteSessionListDetailRow(
                         iconPainter = painterResource(R.drawable.ic_clipboard),
                         iconDescription = "Clipboard",
                         text = "Village Name: ${sessionAndSite.site.villageName}",
                     )
 
-                    CompleteSessionListDetailRow(
+                    IncompleteSessionListDetailRow(
                         iconPainter = painterResource(R.drawable.ic_house),
                         iconDescription = "House",
                         text = "House Number: ${sessionAndSite.site.houseNumber}",

@@ -50,7 +50,7 @@ class IncompleteSessionViewModel @Inject constructor(
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
             }
         }
-        currentState.copy(sessions = filteredSessions)
+        currentState.copy(sessionAndSites = filteredSessions)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), IncompleteSessionState())
 
     private val _events = Channel<IncompleteSessionEvent>()

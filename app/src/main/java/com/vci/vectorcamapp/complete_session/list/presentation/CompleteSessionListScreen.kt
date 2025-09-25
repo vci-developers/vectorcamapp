@@ -22,9 +22,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListAction.UpdateSearchQuery
 import com.vci.vectorcamapp.complete_session.list.presentation.components.CompleteSessionListTile
-import com.vci.vectorcamapp.core.presentation.components.form.SearchTextField
+import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -74,11 +73,11 @@ fun CompleteSessionListScreen(
         ) {
             item {
                 SearchTextField(
-                    searchQueryText = state.searchQuery,
-                    onSearchQueryTextChange = { newSearchQueryText ->
-                        onAction(UpdateSearchQuery(newSearchQueryText))
+                    searchQuery = state.searchQuery,
+                    onSearchQueryChange = { newSearchQueryText ->
+                        onAction(CompleteSessionListAction.UpdateSearchQuery(newSearchQueryText))
                     },
-                    placeholderText = "Search by collector, district, session type, etc.",
+                    placeholder = "Search by collector, district, session type, etc.",
                     modifier = Modifier.padding(
                         start = MaterialTheme.dimensions.paddingMedium,
                         end = MaterialTheme.dimensions.paddingMedium

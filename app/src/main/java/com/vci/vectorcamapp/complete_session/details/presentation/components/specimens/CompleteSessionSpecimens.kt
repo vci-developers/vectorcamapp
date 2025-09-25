@@ -13,9 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
-import com.vci.vectorcamapp.core.presentation.components.form.SearchTextField
+import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.screenWidthFraction
@@ -41,11 +40,11 @@ fun CompleteSessionSpecimens(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             SearchTextField(
-                searchQueryText = searchQuery,
-                onSearchQueryTextChange = { newSearchQueryText ->
+                searchQuery = searchQuery,
+                onSearchQueryChange = { newSearchQueryText ->
                     onUpdateSearchQuery(newSearchQueryText)
                 },
-                placeholderText = "Search by specimen ID, species, etc.",
+                placeholder = "Search by specimen ID, species, etc.",
                 modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.spacingMedium)
             )
 

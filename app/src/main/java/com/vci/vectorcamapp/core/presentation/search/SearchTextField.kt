@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.core.presentation.components.form
+package com.vci.vectorcamapp.core.presentation.search
 
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -6,12 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
+import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 
 @Composable
 fun SearchTextField(
-    searchQueryText: String,
-    onSearchQueryTextChange: (String) -> Unit,
-    placeholderText: String,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    placeholder: String,
     modifier: Modifier = Modifier,
     isSingleLine: Boolean = true,
     onSearchSubmitted: (() -> Unit)? = null
@@ -19,9 +20,9 @@ fun SearchTextField(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     TextEntryField(
-        value = searchQueryText,
-        onValueChange = { newSearchQueryText -> onSearchQueryTextChange(newSearchQueryText) },
-        placeholder = placeholderText,
+        value = searchQuery,
+        onValueChange = { newSearchQueryText -> onSearchQueryChange(newSearchQueryText) },
+        placeholder = placeholder,
         modifier = modifier,
         singleLine = isSingleLine,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),

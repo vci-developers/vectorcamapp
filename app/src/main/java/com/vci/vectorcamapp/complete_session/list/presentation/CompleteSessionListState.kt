@@ -5,6 +5,5 @@ import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 
 data class CompleteSessionListState(
     val sessionAndSiteToUploadProgress: Map<SessionAndSite, SessionUploadProgress> = emptyMap(),
-    val isUploading: Boolean = false,
     val searchQuery: String = ""
 )

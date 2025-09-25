@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.presentation.components.form.SearchTextField
+import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.incomplete_session.presentation.components.IncompleteSessionCard
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -47,11 +47,11 @@ fun IncompleteSessionScreen(
     ) {
         item {
             SearchTextField(
-                searchQueryText = state.searchQuery,
-                onSearchQueryTextChange = { newSearchQueryText ->
+                searchQuery = state.searchQuery,
+                onSearchQueryChange = { newSearchQueryText ->
                     onAction(IncompleteSessionAction.UpdateSearchQuery(newSearchQueryText))
                 },
-                placeholderText = "Search by session type, etc.",
+                placeholder = "Search by session type, etc.",
                 modifier = Modifier.padding(
                     start = MaterialTheme.dimensions.paddingMedium,
                     end = MaterialTheme.dimensions.paddingMedium
@@ -59,7 +59,7 @@ fun IncompleteSessionScreen(
             )
         }
 
-        if (state.sessions.isEmpty()) {
+        if (state.sessionAndSites.isEmpty()) {
             item {
                 Text(
                     text = if (state.searchQuery.isBlank())
@@ -75,7 +75,7 @@ fun IncompleteSessionScreen(
         }
 
         items(
-            items = state.sessions.asReversed(),
+            items = state.sessionAndSites.asReversed(),
             key = { it.session.localId }
         ) { sessionAndSite ->
             IncompleteSessionCard(
