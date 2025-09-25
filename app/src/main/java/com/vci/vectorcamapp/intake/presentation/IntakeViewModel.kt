@@ -409,7 +409,7 @@ class IntakeViewModel @Inject constructor(
             var district = ""
             var villageName = ""
             var houseNumber = ""
-            var finalSessionType: SessionType? = null
+            var sessionType: SessionType? = null
 
             if (currentSession != null) {
                 savedForm =
@@ -427,9 +427,9 @@ class IntakeViewModel @Inject constructor(
                     currentState.copy(session = currentSession)
                 }
 
-                finalSessionType = currentSession.type
+                sessionType = currentSession.type
             } else {
-                val sessionType = savedStateHandle.get<SessionType>("sessionType") ?: SessionType.SURVEILLANCE
+                sessionType = savedStateHandle.get<SessionType>("sessionType") ?: SessionType.SURVEILLANCE
                 var cachedCollectorName = ""
                 var cachedCollectorTitle = ""
 
@@ -469,10 +469,9 @@ class IntakeViewModel @Inject constructor(
                     currentState.copy(session = newSession)
                 }
 
-                finalSessionType = sessionType
             }
 
-            surveillanceFormWorkflow = surveillanceFormWorkflowFactory.create(finalSessionType)
+            surveillanceFormWorkflow = surveillanceFormWorkflowFactory.create(sessionType)
 
             _state.update {
                 it.copy(
