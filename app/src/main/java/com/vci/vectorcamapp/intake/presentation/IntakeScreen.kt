@@ -35,6 +35,7 @@ import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
+import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
 @Composable
@@ -51,7 +52,7 @@ fun IntakeScreen(
     }
 
     ScreenHeader(
-        title = "Session Intake",
+        title = "${state.session.type.displayText(context)} Intake",
         subtitle = "Please fill out the information below",
         leadingIcon = {
             Icon(
@@ -76,11 +77,6 @@ fun IntakeScreen(
                 iconPainter = painterResource(R.drawable.ic_info),
                 iconDescription = "General Information Icon"
             ) {
-                InfoPill(
-                    text = "Session Type: ${state.session.type.name}",
-                    color = MaterialTheme.colors.info
-                )
-
                 TextEntryField(
                     label = "Collector Name",
                     value = state.session.collectorName,
@@ -412,7 +408,7 @@ fun IntakeScreen(
 
         item {
             ActionButton(
-                label = "Continue",
+                label = "Begin ${state.session.type.displayText(context)} Imaging",
                 onClick = { onAction(IntakeAction.SubmitIntakeForm) },
                 modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
             )
