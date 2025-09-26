@@ -371,6 +371,10 @@ class IntakeViewModel @Inject constructor(
                     }
                     getLocation()
                 }
+
+                is IntakeAction.SetCollectionMethodInfoVisibility -> {
+                    _state.update { it.copy(showCollectionMethodInfo = action.isVisible) }
+                }
             }
         }
     }
