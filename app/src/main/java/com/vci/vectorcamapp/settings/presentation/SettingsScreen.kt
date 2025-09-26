@@ -17,8 +17,9 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
+import com.vci.vectorcamapp.settings.presentation.components.SettingsActionTile
+import com.vci.vectorcamapp.settings.presentation.components.SettingsInfoTile
 import com.vci.vectorcamapp.settings.presentation.components.SettingsSection
-import com.vci.vectorcamapp.settings.presentation.components.SettingsTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
@@ -46,14 +47,14 @@ fun SettingsScreen(
     ) {
         item {
             SettingsSection(title = "Actions",) {
-                SettingsTile(
+                SettingsActionTile(
                     title = "Start Data Collection",
                     onClick = { onAction(SettingsAction.StartNewDataCollectionSession) },
                     modifier = modifier
                 )
             }
             SettingsSection("System Information") {
-                SettingsTile(
+                SettingsInfoTile(
                     title = "Device Information",
                     modifier = modifier
                 ) {
@@ -77,7 +78,7 @@ fun SettingsScreen(
                         )
                     }
                 }
-                SettingsTile(
+                SettingsInfoTile(
                     title = "Program Information",
                     modifier = modifier
                 ) {
@@ -101,7 +102,7 @@ fun SettingsScreen(
                         )
                     }
                 }
-                SettingsTile(
+                SettingsInfoTile(
                     title = "App Information",
                     modifier = modifier
                 ) {
