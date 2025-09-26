@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -23,6 +24,8 @@ import com.vci.vectorcamapp.settings.presentation.components.SettingsSection
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun SettingsScreen(
@@ -30,6 +33,9 @@ fun SettingsScreen(
     onAction: (SettingsAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val dateTimeFormatter =
+        remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
+
     ScreenHeader(
         title = "Settings",
         subtitle = "Configure app preferences",
@@ -72,7 +78,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colors.textSecondary
                         )
                         Text(
-                            text = "Registered At: ${state.device.registeredAt}",
+                            text = "Registered At: ${dateTimeFormatter.format(state.device.registeredAt)}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textSecondary
                         )
