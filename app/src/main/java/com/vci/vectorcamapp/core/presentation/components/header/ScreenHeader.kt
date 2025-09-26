@@ -66,7 +66,7 @@ fun ScreenHeader(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         leadingIcon()
-
+                        Spacer(modifier = Modifier.weight(1f))
                         trailingIcon()
                     }
 

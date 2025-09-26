@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
@@ -43,7 +44,10 @@ fun IntakeScreen(
     val context = LocalContext.current
 
     BackHandler {
-        onAction(IntakeAction.ReturnToLandingScreen)
+        when (state.session.type) {
+            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
+            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
+        }
     }
 
     ScreenHeader(
@@ -57,7 +61,10 @@ fun IntakeScreen(
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeMedium)
                     .clickable {
-                        onAction(IntakeAction.ReturnToLandingScreen)
+                        when (state.session.type) {
+                            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
+                            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
+                        }
                     }
             )
         },

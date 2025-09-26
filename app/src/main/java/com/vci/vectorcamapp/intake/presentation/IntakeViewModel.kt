@@ -75,6 +75,11 @@ class IntakeViewModel @Inject constructor(
                     _events.send(IntakeEvent.NavigateBackToLandingScreen)
                 }
 
+                IntakeAction.ReturnToSettingsScreen -> {
+                    currentSessionCache.clearSession()
+                    _events.send(IntakeEvent.NavigateBackToSettingsScreen)
+                }
+
                 IntakeAction.SubmitIntakeForm -> {
                     val session = _state.value.session
                     val surveillanceForm = _state.value.surveillanceForm
