@@ -129,7 +129,6 @@ fun IntakeScreen(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .fillMaxWidth()
                         .clickable { onAction(IntakeAction.SetCollectionMethodInfoVisibility(true)) }
                 ) {
                     Icon(
