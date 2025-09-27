@@ -335,10 +335,37 @@ fun ImagingScreen(
                                 }
                             }
                         } else {
-                            EmptySpace(
-                                width = MaterialTheme.dimensions.iconSizeLarge,
-                                height = MaterialTheme.dimensions.iconSizeLarge
+                            val infiniteTransition = rememberInfiniteTransition(label = "prev_arrow_live")
+                            val arrowOffsetX by infiniteTransition.animateFloat(
+                                initialValue = with(density) { MaterialTheme.dimensions.spacingSmall.toPx() },
+                                targetValue = with(density) { -(MaterialTheme.dimensions.spacingSmall.toPx()) },
+                                animationSpec = infiniteRepeatable(
+                                    animation = tween(durationMillis = 800),
+                                    repeatMode = RepeatMode.Reverse
+                                ),
+                                label = "arrow_offset_live"
                             )
+
+                            if (page > 0) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_arrow_left),
+                                    contentDescription = "Previous Icon",
+                                    tint = MaterialTheme.colors.icon,
+                                    modifier = Modifier
+                                        .offset { IntOffset((-arrowOffsetX).toInt(), 0) }
+                                        .size(MaterialTheme.dimensions.iconSizeLarge)
+                                        .clickable {
+                                            scope.launch {
+                                                pagerState.animateScrollToPage(page - 1)
+                                            }
+                                        }
+                                )
+                            } else {
+                                EmptySpace(
+                                    width = MaterialTheme.dimensions.iconSizeLarge,
+                                    height = MaterialTheme.dimensions.iconSizeLarge
+                                )
+                            }
                         }
 
                         Box(
