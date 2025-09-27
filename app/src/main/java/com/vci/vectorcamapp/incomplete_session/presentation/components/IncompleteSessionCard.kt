@@ -65,11 +65,11 @@ fun IncompleteSessionCard(
                         style = MaterialTheme.typography.headlineMedium
                     )
 
-                    Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
+                    Spacer(Modifier.height(MaterialTheme.dimensions.spacingExtraSmall))
 
                     InfoPill(text = "Session Type: ${session.type.displayText(context)}", color = MaterialTheme.colors.info)
 
-                    Spacer(Modifier.height(MaterialTheme.dimensions.spacingSmall))
+                    Spacer(Modifier.height(MaterialTheme.dimensions.spacingExtraSmall))
 
                     Text(
                         text = "Created: ${detailFormatter.format(session.createdAt)}",
@@ -81,7 +81,7 @@ fun IncompleteSessionCard(
                     )
                 }
 
-                Spacer(Modifier.width(MaterialTheme.dimensions.spacingSmall))
+                Spacer(Modifier.width(MaterialTheme.dimensions.spacingExtraSmall))
 
                 Icon(
                     painter = painterResource(id = R.drawable.ic_arrow_right),

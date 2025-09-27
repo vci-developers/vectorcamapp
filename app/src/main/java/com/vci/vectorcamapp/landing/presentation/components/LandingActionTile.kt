@@ -82,7 +82,7 @@ fun LandingActionTile(
             }
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall),
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = MaterialTheme.dimensions.paddingSmall)

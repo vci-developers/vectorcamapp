@@ -89,7 +89,7 @@ fun ScreenHeader(
         }
 
         item {
-            Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
+            Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingExtraSmall))
         }
 
         content()

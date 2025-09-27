@@ -56,7 +56,7 @@ fun <T> DropdownField(
     var expanded by remember { mutableStateOf(false) }
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall),
         modifier = Modifier.fillMaxWidth()
     ) {
         label?.let {
