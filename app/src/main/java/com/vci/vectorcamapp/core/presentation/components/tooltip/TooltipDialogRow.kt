@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.intake.presentation.components
+package com.vci.vectorcamapp.core.presentation.components.tooltip
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -19,33 +19,42 @@ import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
-fun IntakeCollectionMethodRow(
-    methodTitle: String,
-    methodDescription: String,
-    iconPainter: Painter,
-    iconDescription: String,
-    modifier: Modifier = Modifier
+fun TooltipDialogRow(
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    description: String? = null,
+    iconPainter: Painter? = null,
+    iconDescription: String = "",
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
         modifier = modifier.fillMaxWidth()
     ) {
-        Icon(
-            painter = iconPainter,
-            contentDescription = iconDescription,
-            tint = MaterialTheme.colors.icon,
-            modifier = Modifier
-                .size(MaterialTheme.dimensions.iconSizeLarge)
-                .padding(end = MaterialTheme.dimensions.spacingSmall)
-        )
+        if (iconPainter != null) {
+            Icon(
+                painter = iconPainter,
+                contentDescription = iconDescription,
+                tint = MaterialTheme.colors.icon,
+                modifier = Modifier
+                    .size(MaterialTheme.dimensions.iconSizeLarge)
+                    .padding(end = MaterialTheme.dimensions.spacingSmall)
+            )
+        }
         Text(
             buildAnnotatedString {
                 withStyle(SpanStyle(color = MaterialTheme.colors.textPrimary)) {
-                    append("${methodTitle}: ")
+                    if (title != null) {
+                        append("$title")
+                        if (description != null) {
+                            append(": ")
+                        }
+                    }
                 }
                 withStyle(SpanStyle(color = MaterialTheme.colors.textSecondary)) {
-                    append(methodDescription)
+                    if (description != null) {
+                    append("$description")
+                        }
                 }
             },
             style = MaterialTheme.typography.bodyMedium

@@ -11,7 +11,6 @@ import java.util.UUID
 
 data class IntakeState(
     val isLoading: Boolean = false,
-    val showCollectionMethodInfo: Boolean = false,
     val locationError: IntakeError? = null,
     val allSitesInProgram: List<Site> = emptyList(),
     val selectedDistrict: String = "",
@@ -45,5 +44,6 @@ data class IntakeState(
         collectionDate = null,
         collectionMethod = null,
         specimenCondition = null,
-    )
+    ),
+    val showCollectionMethodTooltip: Boolean = false,
 )
