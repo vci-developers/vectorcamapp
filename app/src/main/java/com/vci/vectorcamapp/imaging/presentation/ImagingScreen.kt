@@ -5,14 +5,8 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -42,7 +35,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -52,9 +44,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.IntOffset
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.compose.AsyncImage
@@ -64,10 +54,11 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
+import com.vci.vectorcamapp.core.presentation.components.icon.AnimatedArrowIcon
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
-import com.vci.vectorcamapp.imaging.presentation.components.specimen.SpecimenImageOverlay
 import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreview
 import com.vci.vectorcamapp.imaging.presentation.components.specimen.CapturedSpecimenTile
+import com.vci.vectorcamapp.imaging.presentation.components.specimen.SpecimenImageOverlay
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
@@ -112,16 +103,6 @@ fun ImagingScreen(
     ) { page ->
         when {
             page < state.specimensWithImagesAndInferenceResults.size -> {
-                val infiniteTransition = rememberInfiniteTransition(label = "arrow_animation")
-                val arrowOffsetX by infiniteTransition.animateFloat(
-                    initialValue = with(density) { MaterialTheme.dimensions.spacingSmall.toPx() },
-                    targetValue = with(density) { -(MaterialTheme.dimensions.spacingSmall.toPx()) },
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(durationMillis = 800), repeatMode = RepeatMode.Reverse
-                    ),
-                    label = "arrow_offset"
-                )
-
                 Column(
                     verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxSize()
                 ) {
@@ -132,25 +113,11 @@ fun ImagingScreen(
                             .padding(vertical = MaterialTheme.dimensions.paddingMedium)
                             .fillMaxWidth()
                     ) {
-                        if (page > 0) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_arrow_left),
-                                contentDescription = "Previous Icon",
-                                tint = MaterialTheme.colors.icon,
-                                modifier = Modifier
-                                    .offset { IntOffset((-arrowOffsetX).toInt(), 0) }
-                                    .size(MaterialTheme.dimensions.iconSizeLarge)
-                                    .clickable {
-                                        scope.launch {
-                                            pagerState.animateScrollToPage(page - 1)
-                                        }
-                                    })
-                        } else {
-                            EmptySpace(
-                                width = MaterialTheme.dimensions.iconSizeLarge,
-                                height = MaterialTheme.dimensions.iconSizeLarge
-                            )
-                        }
+                        AnimatedArrowIcon(
+                            isLeft = true,
+                            enabled = page > 0,
+                            onClick = { scope.launch { pagerState.animateScrollToPage(page - 1) } }
+                        )
 
                         Box(
                             modifier = Modifier.background(
@@ -166,18 +133,11 @@ fun ImagingScreen(
                             )
                         }
 
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_right),
-                            contentDescription = "Next Icon",
-                            tint = MaterialTheme.colors.icon,
-                            modifier = Modifier
-                                .offset { IntOffset(arrowOffsetX.toInt(), 0) }
-                                .size(MaterialTheme.dimensions.iconSizeLarge)
-                                .clickable {
-                                    scope.launch {
-                                        pagerState.animateScrollToPage(page + 1)
-                                    }
-                                })
+                        AnimatedArrowIcon(
+                            isLeft = false,
+                            enabled = true,
+                            onClick = { scope.launch { pagerState.animateScrollToPage(page + 1) } }
+                        )
                     }
 
                     LazyColumn(modifier = Modifier.fillMaxHeight()) {
@@ -335,37 +295,11 @@ fun ImagingScreen(
                                 }
                             }
                         } else {
-                            val infiniteTransition = rememberInfiniteTransition(label = "prev_arrow_live")
-                            val arrowOffsetX by infiniteTransition.animateFloat(
-                                initialValue = with(density) { MaterialTheme.dimensions.spacingSmall.toPx() },
-                                targetValue = with(density) { -(MaterialTheme.dimensions.spacingSmall.toPx()) },
-                                animationSpec = infiniteRepeatable(
-                                    animation = tween(durationMillis = 800),
-                                    repeatMode = RepeatMode.Reverse
-                                ),
-                                label = "arrow_offset_live"
+                            AnimatedArrowIcon(
+                                isLeft = true,
+                                enabled = page > 0,
+                                onClick = { scope.launch { pagerState.animateScrollToPage(page - 1) } }
                             )
-
-                            if (page > 0) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_arrow_left),
-                                    contentDescription = "Previous Icon",
-                                    tint = MaterialTheme.colors.icon,
-                                    modifier = Modifier
-                                        .offset { IntOffset((-arrowOffsetX).toInt(), 0) }
-                                        .size(MaterialTheme.dimensions.iconSizeLarge)
-                                        .clickable {
-                                            scope.launch {
-                                                pagerState.animateScrollToPage(page - 1)
-                                            }
-                                        }
-                                )
-                            } else {
-                                EmptySpace(
-                                    width = MaterialTheme.dimensions.iconSizeLarge,
-                                    height = MaterialTheme.dimensions.iconSizeLarge
-                                )
-                            }
                         }
 
                         Box(
