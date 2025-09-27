@@ -36,13 +36,13 @@ class SurveillanceImagingWorkflow @Inject constructor(
         }
         val highestConfidenceDetection =
             previewInferenceResults.maxByOrNull { it.bboxConfidence }
-        val autofocusPoint = highestConfidenceDetection?.let { detection ->
-            inferenceRepository.computeAutofocusCentroid(bitmap, detection)
+        val specimenCentroid = highestConfidenceDetection?.let { detection ->
+            inferenceRepository.computeSpecimenCentroid(bitmap, detection)
         }
         return LiveFrameProcessingResult(
             specimenId = inferenceRepository.readSpecimenId(bitmap),
             previewInferenceResults = previewInferenceResults,
-            autofocusPoint = autofocusPoint
+            specimenCentroid = specimenCentroid
         )
     }
 

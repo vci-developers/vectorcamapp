@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.imaging.presentation.components.camera
 
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -23,6 +24,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.vci.vectorcamapp.animation.presentation.CaptureAnimation
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.imaging.data.camera.CameraFocusControllerImplementation
+import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
@@ -30,6 +32,7 @@ fun LiveCameraPreview(
     controller: LifecycleCameraController,
     inferenceResults: List<InferenceResult>,
     focusPoint: Offset?,
+    specimenCentroid: Offset?,
     onFocusAt: (Offset) -> Unit,
     onCancelFocus: () -> Unit,
     modifier: Modifier = Modifier,
@@ -95,6 +98,25 @@ fun LiveCameraPreview(
                     }
                 }
         ) {
+            specimenCentroid?.let { normalized ->
+                if (containerSize != IntSize.Zero) {
+                    val centerPx = Offset(
+                        x = normalized.x * containerSize.width,
+                        y = normalized.y * containerSize.height
+                    )
+                    val radiusPx = with(density) { MaterialTheme.dimensions.dotRadius.toPx() }
+                    val dotColor = MaterialTheme.colors.primary
+
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        drawCircle(
+                            color = dotColor,
+                            radius = radiusPx,
+                            center = centerPx
+                        )
+                    }
+                }
+            }
+
             if (isManualFocusing) {
                 focusPoint?.let { normalized ->
                     if (containerSize != IntSize.Zero) {

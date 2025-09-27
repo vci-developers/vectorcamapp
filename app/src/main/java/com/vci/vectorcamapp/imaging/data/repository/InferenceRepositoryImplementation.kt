@@ -73,7 +73,7 @@ class InferenceRepositoryImplementation @Inject constructor(
             Triple(speciesResult, sexResult, abdomenStatusResult)
         }
 
-    override suspend fun computeAutofocusCentroid(
+    override suspend fun computeSpecimenCentroid(
         bitmap: Bitmap,
         detection: InferenceResult
     ): Offset? = withContext(Dispatchers.Default) {

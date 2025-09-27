@@ -154,7 +154,7 @@ class ImagingViewModel @Inject constructor(
                             }
                         }
 
-                        val suggestedAutofocusPoint = liveFrameProcessingResult.autofocusPoint
+                        val suggestedAutofocusPoint = liveFrameProcessingResult.specimenCentroid
 
                         _state.update { current ->
                             val shouldUseAutofocusThisFrame =
@@ -175,6 +175,7 @@ class ImagingViewModel @Inject constructor(
                                 }
 
                             current.copy(
+                                specimenCentroid = liveFrameProcessingResult.specimenCentroid,
                                 previewInferenceResults = liveFrameProcessingResult.previewInferenceResults,
                                 focusPoint = nextFocusPoint,
                                 isManualFocusing = !nextIsAutofocusing

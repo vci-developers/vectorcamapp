@@ -415,6 +415,7 @@ fun ImagingScreen(
                                 controller = controller,
                                 inferenceResults = state.previewInferenceResults,
                                 focusPoint = state.focusPoint,
+                                specimenCentroid = state.specimenCentroid,
                                 onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
                                 onCancelFocus = { onAction(ImagingAction.CancelFocus) },
                                 modifier = Modifier.fillMaxWidth(),
