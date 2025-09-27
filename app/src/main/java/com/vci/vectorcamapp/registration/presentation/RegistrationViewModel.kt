@@ -71,7 +71,7 @@ class RegistrationViewModel @Inject constructor(
                         _events.send(RegistrationEvent.NavigateToLandingScreen)
                     } catch (e: Exception) {
                         emitError(RegistrationError.UNKNOWN_ERROR)
-                        RegistrationSentryLogger.logUnknownError(e, selectedProgram.id)
+                        RegistrationSentryLogger.logDeviceRegistrationFailure(e, selectedProgram.id)
                     }
                 }
             }

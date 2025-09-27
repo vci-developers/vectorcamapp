@@ -28,21 +28,26 @@ object RegistrationSentryLogger {
         )
     }
 
-    fun logUnknownError(e: Exception, failedProgramId: Int) {
+    fun logDeviceRegistrationFailure(e: Exception, failedProgramId: Int) {
         Crashy.exception(
             throwable = e,
             context = CrashyContext(
                 screen = "Registration",
-                action = "ConfirmRegistration",
+                feature = "DeviceRegistration",
+                action = "device_registration_failure",
                 programId = failedProgramId.toString()
             ),
             tags = mapOf(
-                "error_type" to "unknown_registration_error",
-                "device_model" to "${Build.MANUFACTURER} ${Build.MODEL}"
+                "error_type" to "device_registration_failure",
+                "device_model" to "${Build.MANUFACTURER} ${Build.MODEL}",
+                "critical" to "true",
+                "user_blocking" to "true"
             ),
             extras = mapOf(
                 "requested_program_id" to failedProgramId,
+                "recovery_action" to "User may need to re-register device",
                 "registration_timestamp" to System.currentTimeMillis(),
+                "possible_causes" to "Device cache corrupted"
             )
         )
     }
