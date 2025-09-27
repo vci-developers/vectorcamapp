@@ -73,7 +73,6 @@ class LandingViewModelTest {
     private fun makeSession(type: SessionType) = Session(
         localId = UUID.randomUUID(),
         remoteId = null,
-        houseNumber = "1",
         collectorTitle = "Dr.",
         collectorName = "Alice",
         collectionDate = 1_632_000_000L,

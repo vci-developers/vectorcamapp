@@ -3,7 +3,6 @@ package com.vci.vectorcamapp.core.data.room.entities
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import java.util.UUID
 
 @Entity(
     tableName = "inference_result", foreignKeys = [
@@ -27,7 +26,8 @@ data class InferenceResultEntity(
     val speciesLogits: List<Float>? = null,
     val sexLogits: List<Float>? = null,
     val abdomenStatusLogits: List<Float>? = null,
-    val speciesInferenceDuration: Long?,
-    val sexInferenceDuration: Long?,
-    val abdomenStatusInferenceDuration: Long?
+    val bboxDetectionDuration: Long = 0L,
+    val speciesInferenceDuration: Long? = null,
+    val sexInferenceDuration: Long? = null,
+    val abdomenStatusInferenceDuration: Long? = null,
 )
