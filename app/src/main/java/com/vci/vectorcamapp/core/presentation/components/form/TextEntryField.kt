@@ -33,6 +33,7 @@ fun TextEntryField(
     placeholder: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    maxCharacters: Int = 200,
 ) {
     val context = LocalContext.current
 
@@ -50,7 +51,11 @@ fun TextEntryField(
 
         OutlinedTextField(
             value = value,
-            onValueChange = onValueChange,
+            onValueChange = { newValue ->
+                if (newValue.all { it.isLetterOrDigit() } && newValue.length <= maxCharacters) {
+                    onValueChange(newValue)
+                }
+            },
             isError = error != null,
             singleLine = singleLine,
             keyboardOptions = keyboardOptions,
