@@ -45,12 +45,12 @@ plugins {
 
 android {
     namespace = "com.vci.vectorcamapp"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.vci.vectorcamapp"
         minSdk = 29
-        targetSdk = 35
+        targetSdk = 36
 
         versionCode = getRegionBasedVersionCode()
         versionName = getRegionBasedVersionName()

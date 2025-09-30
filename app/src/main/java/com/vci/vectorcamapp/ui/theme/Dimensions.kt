@@ -3,7 +3,7 @@ package com.vci.vectorcamapp.ui.theme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -79,14 +79,14 @@ val LocalDimensions = staticCompositionLocalOf { Dimensions() }
 
 @Composable
 fun screenWidthFraction(fraction: Float): Dp {
-    val displayMetrics = LocalContext.current.resources.displayMetrics
+    val displayMetrics = LocalResources.current.displayMetrics
     val screenWidthDp = displayMetrics.widthPixels.toFloat() / displayMetrics.density
     return remember(fraction, screenWidthDp) { (screenWidthDp * fraction).dp }
 }
 
 @Composable
 fun screenHeightFraction(fraction: Float): Dp {
-    val displayMetrics = LocalContext.current.resources.displayMetrics
+    val displayMetrics = LocalResources.current.displayMetrics
     val screenHeightDp = displayMetrics.heightPixels.toFloat() / displayMetrics.density
     return remember(fraction, screenHeightDp) { (screenHeightDp * fraction).dp }
 }
