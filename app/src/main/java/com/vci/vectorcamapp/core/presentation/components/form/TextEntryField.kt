@@ -52,7 +52,10 @@ fun TextEntryField(
         OutlinedTextField(
             value = value,
             onValueChange = { newValue ->
-                if (newValue.all { it.isLetterOrDigit() } && newValue.length <= maxCharacters) {
+                val hasValidCharacters = newValue.all { character ->
+                    character.code <= 255 || character.isWhitespace()
+                }
+                if (hasValidCharacters && newValue.length <= maxCharacters) {
                     onValueChange(newValue)
                 }
             },
