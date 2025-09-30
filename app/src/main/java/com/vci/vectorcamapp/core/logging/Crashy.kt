@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.core.logging
 
-import android.util.Log
 import com.vci.vectorcamapp.core.domain.model.Device
 import io.sentry.Attachment
 import io.sentry.Breadcrumb
