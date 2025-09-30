@@ -32,7 +32,4 @@ object SearchUtils {
             }
         }
     }
-
-    fun matchesQuery(query: String, text: String): Boolean =
-        matchesQuery(query, listOf(text))
 }
