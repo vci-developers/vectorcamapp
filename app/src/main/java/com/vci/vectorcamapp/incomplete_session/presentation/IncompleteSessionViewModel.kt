@@ -88,7 +88,7 @@ class IncompleteSessionViewModel @Inject constructor(
                                 try {
                                     cameraRepository.deleteSavedImage(uri)
                                 } catch (e: Exception) {
-                                    Log.e("IncompleteSessionViewModel", "Failed to delete image: $uri", e)
+                                    IncompleteSessionSentryLogger.logImageDeletionFailure(e, action.sessionId, uri)
                                 }
                             }
 
@@ -97,13 +97,15 @@ class IncompleteSessionViewModel @Inject constructor(
                                 Log.d("IncompleteSessionViewModel", "Successfully deleted session and images for ID: ${action.sessionId}")
                             } else {
                                 emitError(IncompleteSessionError.SESSION_DELETION_FAILED)
+                                IncompleteSessionSentryLogger.logSessionDeletionFailure(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name), action.sessionId)
                             }
                         } else {
                             emitError(IncompleteSessionError.SESSION_NOT_FOUND)
+                            IncompleteSessionSentryLogger.logSessionNotFound(Exception(IncompleteSessionError.SESSION_NOT_FOUND.name), action.sessionId)
                         }
                     } catch (e: Exception) {
-                        Log.e("IncompleteSessionViewModel", "Failed to delete session: ${action.sessionId}", e)
                         emitError(IncompleteSessionError.SESSION_DELETION_FAILED)
+                        IncompleteSessionSentryLogger.logSessionDeletionFailure(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name, e), action.sessionId)
                     } finally {
                         _state.value = _state.value.copy(deleteDialogSessionId = null)
                     }
