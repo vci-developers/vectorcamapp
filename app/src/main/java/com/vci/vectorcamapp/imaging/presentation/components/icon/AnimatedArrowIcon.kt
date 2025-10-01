@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.core.presentation.components.icon
+package com.vci.vectorcamapp.imaging.presentation.components.icon
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
