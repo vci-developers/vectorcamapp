@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.TextUnit
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
+import com.vci.vectorcamapp.ui.theme.screenWidthFraction
 
 @Composable
 fun SplashScreen(
@@ -50,7 +52,7 @@ fun SplashScreen(
                 painter = painterResource(R.drawable.splash_logo),
                 contentDescription = "Splash logo",
                 modifier = Modifier
-                    .fillMaxWidth(0.8f)
+                    .width(screenWidthFraction(0.8f))
                     .wrapContentHeight()
             )
             Text(
