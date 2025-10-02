@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
@@ -27,6 +28,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -40,6 +42,7 @@ class IntakeViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val validationUseCases: ValidationUseCases,
     private val deviceCache: DeviceCache,
+    private val collectorRepository: CollectorRepository,
     private val currentSessionCache: CurrentSessionCache,
     private val siteRepository: SiteRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
@@ -58,8 +61,18 @@ class IntakeViewModel @Inject constructor(
     lateinit var surveillanceFormWorkflowFactory: SurveillanceFormWorkflowFactory
     private lateinit var surveillanceFormWorkflow: SurveillanceFormWorkflow
 
+    private val _allCollectors = collectorRepository.observeAllCollectors()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+
     private val _state = MutableStateFlow(IntakeState())
-    val state: StateFlow<IntakeState> = _state.onStart {
+    val state: StateFlow<IntakeState> = combine(
+        _allCollectors,
+        _state
+    ) { allCollectors, state ->
+        state.copy(
+            allCollectors = allCollectors
+        )
+    }.onStart {
         loadFormDetails()
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000L), IntakeState()
