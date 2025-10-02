@@ -29,7 +29,7 @@ fun SettingsActionTile(
     onClick: (() -> Unit),
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
-    val tileContent: @Composable () -> Unit = {
+    ActionTile(onClick = onClick, modifier = modifier) {
         Column(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
             modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
@@ -67,10 +67,4 @@ fun SettingsActionTile(
             }
         }
     }
-
-    ActionTile(
-        onClick = onClick,
-        modifier = modifier,
-        content = tileContent
-    )
 }

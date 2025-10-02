@@ -45,7 +45,7 @@ fun SettingsInfoTile(
         label = "chevron_rotation"
     )
 
-    val tileContent: @Composable () -> Unit = {
+    ActionTile(onClick = { isExpanded = !isExpanded }, modifier = modifier) {
         Column(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
             modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
@@ -93,10 +93,4 @@ fun SettingsInfoTile(
             }
         }
     }
-
-    ActionTile(
-        onClick = { isExpanded = !isExpanded },
-        modifier = modifier,
-        content = tileContent
-    )
 }
