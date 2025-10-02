@@ -8,7 +8,7 @@ val MIGRATION_13_14_ADD_COLLECTOR_TABLE = object : Migration(13, 14) {
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `collector` (
-                `id` INTEGER NOT NULL,
+                `id` TEXT NOT NULL,
                 `name` TEXT NOT NULL,
                 `title` TEXT NOT NULL,
                 PRIMARY KEY(`id`)

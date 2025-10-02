@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
+import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.registration.presentation.util.RegistrationTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
@@ -54,7 +55,7 @@ fun RegistrationScreen(
                 topEnd = MaterialTheme.dimensions.cornerRadiusMedium
             ),
             modifier = modifier
-                .height(screenHeightFraction(0.4f))
+                .height(screenHeightFraction(0.6f))
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
         ) {
@@ -115,6 +116,20 @@ fun RegistrationScreen(
                         )
                     }
                 }
+
+                TextEntryField(
+                    label = "Collector Name",
+                    value = state.collector.name,
+                    onValueChange = { onAction(RegistrationAction.EnterCollectorName(it)) },
+                    singleLine = true,
+                )
+
+                TextEntryField(
+                    label = "Collector Title",
+                    value = state.collector.title,
+                    onValueChange = { onAction(RegistrationAction.EnterCollectorTitle(it)) },
+                    singleLine = true,
+                )
 
                 ActionButton(
                     label = "Confirm",

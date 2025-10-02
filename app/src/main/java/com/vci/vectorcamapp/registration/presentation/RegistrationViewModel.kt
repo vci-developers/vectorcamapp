@@ -4,9 +4,12 @@ import android.os.Build
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.Device
+import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.intake.presentation.IntakeAction
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.registration.logging.RegistrationSentryLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,12 +22,14 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
+    private val collectorRepository: CollectorRepository,
     programRepository: ProgramRepository
 ) : CoreViewModel() {
 
@@ -51,6 +56,27 @@ class RegistrationViewModel @Inject constructor(
                     _state.update { it.copy(selectedProgram = action.program) }
                 }
 
+                is RegistrationAction.EnterCollectorName -> {
+                    _state.update {
+                        it.copy(
+                            collector = it.collector.copy(
+                                name = action.text
+                            )
+                        )
+                    }
+                }
+
+
+                is RegistrationAction.EnterCollectorTitle -> {
+                    _state.update {
+                        it.copy(
+                            collector = it.collector.copy(
+                                title = action.text
+                            )
+                        )
+                    }
+                }
+
                 RegistrationAction.ConfirmRegistration -> {
                     val selectedProgram = state.value.selectedProgram
                     if (selectedProgram == null) {
@@ -68,6 +94,7 @@ class RegistrationViewModel @Inject constructor(
                         )
                         deviceCache.saveDevice(device, selectedProgram.id)
                         currentSessionCache.clearSession()
+                        collectorRepository.upsertCollector(_state.value.collector)
                         _events.send(RegistrationEvent.NavigateToLandingScreen)
                     } catch (e: Exception) {
                         emitError(RegistrationError.UNKNOWN_ERROR)
