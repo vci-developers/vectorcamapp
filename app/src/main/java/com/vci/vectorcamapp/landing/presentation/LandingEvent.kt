@@ -7,4 +7,5 @@ sealed interface LandingEvent {
     data object NavigateToIncompleteSessionsScreen: LandingEvent
     data object NavigateToCompleteSessionsScreen: LandingEvent
     data object NavigateBackToRegistrationScreen: LandingEvent
+    data object NavigateToSettingsScreen: LandingEvent
 }
