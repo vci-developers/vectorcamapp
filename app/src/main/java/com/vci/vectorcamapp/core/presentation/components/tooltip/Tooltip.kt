@@ -1,12 +1,16 @@
 package com.vci.vectorcamapp.core.presentation.components.tooltip
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,12 +22,16 @@ import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
-fun TooltipButton(
+fun Tooltip(
+    isVisible: Boolean,
     onClick: () -> Unit,
-    text: String? = null,
+    onDismiss: () -> Unit,
+    buttonText: String? = null,
+    confirmText: String = "Done",
     iconSize: Dp = MaterialTheme.dimensions.iconSizeSmall,
-    textStyle: TextStyle = MaterialTheme.typography.bodySmall
-) {
+    textStyle: TextStyle = MaterialTheme.typography.bodySmall,
+    content: @Composable (() -> Unit)
+){
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -36,13 +44,34 @@ fun TooltipButton(
             modifier = Modifier
                 .size(iconSize)
         )
-        if (text != null) {
+        if (buttonText != null) {
             Text(
-                text = text,
+                text = buttonText,
                 style = textStyle,
                 color = MaterialTheme.colors.textSecondary,
                 modifier = Modifier.padding(start = MaterialTheme.dimensions.spacingSmall)
             )
         }
     }
+
+    if (!isVisible) return
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        text = {
+            Column {
+                Spacer(modifier = Modifier.size(MaterialTheme.dimensions.spacingSmall))
+                content()
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onDismiss() }) {
+                Text(
+                    text = confirmText,
+                    color = MaterialTheme.colors.icon,
+                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                )
+            }
+        }
+    )
 }

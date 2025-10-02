@@ -373,11 +373,11 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.ShowCollectionMethodTooltipDialog -> {
-                    _state.update { it.copy(showCollectionMethodTooltip = true) }
+                    _state.update { it.copy(isCollectionMethodTooltipVisible = true) }
                 }
 
                 is IntakeAction.HideCollectionMethodTooltipDialog -> {
-                    _state.update { it.copy(showCollectionMethodTooltip = false) }
+                    _state.update { it.copy(isCollectionMethodTooltipVisible = false) }
                 }
             }
         }

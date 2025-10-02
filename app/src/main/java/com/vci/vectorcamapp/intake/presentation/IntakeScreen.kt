@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
@@ -28,12 +29,11 @@ import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
-import com.vci.vectorcamapp.core.presentation.components.tooltip.TooltipButton
-import com.vci.vectorcamapp.core.presentation.components.tooltip.TooltipDialog
+import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
-import com.vci.vectorcamapp.core.presentation.components.tooltip.TooltipDialogRow
+import com.vci.vectorcamapp.intake.presentation.components.CollectionMethodTooltipRow
 import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -125,36 +125,42 @@ fun IntakeScreen(
                     )
                 }
 
-                TooltipButton(
+                Tooltip(
+                    isVisible = state.isCollectionMethodTooltipVisible,
                     onClick = { onAction(IntakeAction.ShowCollectionMethodTooltipDialog) },
-                    text = "Tap to learn more about collection methods"
-                )
-
-                TooltipDialog(
-                    isVisible = state.showCollectionMethodTooltip,
-                    title = "Collection Methods",
                     onDismiss = { onAction(IntakeAction.HideCollectionMethodTooltipDialog) },
-                    content = {
-                        TooltipDialogRow(
+                    buttonText = "Tap to learn more about collection methods"
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                    ) {
+                        Text(
+                            text = "Collection Methods",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colors.textPrimary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = MaterialTheme.dimensions.paddingSmall)
+                        )
+                        CollectionMethodTooltipRow(
                             title = "CDC Light Trap",
                             description = "A light trap that uses a battery to attract and collect mosquitoes during the night.",
                             iconPainter = painterResource(id = R.drawable.ic_light),
                             iconDescription = "CDC Light Trap Icon"
                         )
-                        TooltipDialogRow(
+                        CollectionMethodTooltipRow(
                             title = "Human Landing Catch",
                             description = "A person exposes part of their body and collects mosquitoes that land on the skin.",
                             iconPainter = painterResource(id = R.drawable.ic_human),
                             iconDescription = "Human Landing Catch Icon"
                         )
-                        TooltipDialogRow(
+                        CollectionMethodTooltipRow(
                             title = "Pyrethrum Spray Catch",
                             description = "A pyrethrum insecticide spray is used inside houses to knock down mosquitoes so they can be collected.",
                             iconPainter = painterResource(id = R.drawable.ic_spray),
                             iconDescription = "Pyrethrum Spray Catch"
                         )
                     }
-                )
+                }
 
                 if (isOtherCollectionMethod) {
                     TextEntryField(

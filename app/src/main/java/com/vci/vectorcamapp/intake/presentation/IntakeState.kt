@@ -45,5 +45,5 @@ data class IntakeState(
         collectionMethod = null,
         specimenCondition = null,
     ),
-    val showCollectionMethodTooltip: Boolean = false,
+    val isCollectionMethodTooltipVisible: Boolean = false,
 )
