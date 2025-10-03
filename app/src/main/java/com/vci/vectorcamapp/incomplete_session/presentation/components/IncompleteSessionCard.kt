@@ -96,10 +96,6 @@ fun IncompleteSessionCard(
                         text = "Created: ${detailFormatter.format(sessionAndSite.session.createdAt)}",
                         style = MaterialTheme.typography.bodySmall
                     )
-                    Text(
-                        text = "Last Updated: placeholder",
-                        style = MaterialTheme.typography.bodySmall
-                    )
                 }
 
                 Column(
