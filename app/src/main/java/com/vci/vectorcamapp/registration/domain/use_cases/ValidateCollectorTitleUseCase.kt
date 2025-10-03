@@ -1,13 +1,14 @@
-package com.vci.vectorcamapp.intake.domain.use_cases
+package com.vci.vectorcamapp.registration.domain.use_cases
 
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.intake.domain.util.FormValidationError
+import com.vci.vectorcamapp.registration.domain.util.RegistrationValidationError
 import javax.inject.Inject
 
 class ValidateCollectorTitleUseCase @Inject constructor() {
-    operator fun invoke(collectorTitle: String) : Result<Unit, FormValidationError> {
+    operator fun invoke(collectorTitle: String) : Result<Unit, RegistrationValidationError> {
         return if (collectorTitle.isBlank()) {
-            Result.Error(FormValidationError.BLANK_COLLECTOR_TITLE)
+            Result.Error(RegistrationValidationError.BLANK_COLLECTOR_TITLE)
         } else {
             Result.Success(Unit)
         }

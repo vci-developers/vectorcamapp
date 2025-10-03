@@ -55,7 +55,7 @@ fun RegistrationScreen(
                 topEnd = MaterialTheme.dimensions.cornerRadiusMedium
             ),
             modifier = modifier
-                .height(screenHeightFraction(0.6f))
+                .height(screenHeightFraction(0.55f))
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
         ) {
@@ -122,6 +122,7 @@ fun RegistrationScreen(
                     value = state.collector.name,
                     onValueChange = { onAction(RegistrationAction.EnterCollectorName(it)) },
                     singleLine = true,
+                    error = state.registrationErrors.collectorName
                 )
 
                 TextEntryField(
@@ -129,12 +130,15 @@ fun RegistrationScreen(
                     value = state.collector.title,
                     onValueChange = { onAction(RegistrationAction.EnterCollectorTitle(it)) },
                     singleLine = true,
+                    error = state.registrationErrors.collectorTitle
                 )
 
                 ActionButton(
                     label = "Confirm",
                     onClick = { onAction(RegistrationAction.ConfirmRegistration) },
-                    enabled = state.selectedProgram != null,
+                    enabled = state.selectedProgram != null &&
+                            state.collector.name.isNotBlank() &&
+                            state.collector.title.isNotBlank(),
                     testTag = RegistrationTestTags.CONFIRM_PROGRAM_BUTTON,
                     modifier = modifier
                 )

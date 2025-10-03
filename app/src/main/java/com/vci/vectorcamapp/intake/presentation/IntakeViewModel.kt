@@ -19,7 +19,7 @@ import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.intake.domain.repository.LocationRepository
 import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflow
 import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflowFactory
-import com.vci.vectorcamapp.intake.domain.use_cases.ValidationUseCases
+import com.vci.vectorcamapp.intake.domain.use_cases.IntakeValidationUseCases
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.logging.IntakeSentryLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,9 +40,9 @@ import javax.inject.Inject
 @HiltViewModel
 class IntakeViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val validationUseCases: ValidationUseCases,
+    private val intakeValidationUseCases: IntakeValidationUseCases,
     private val deviceCache: DeviceCache,
-    private val collectorRepository: CollectorRepository,
+    collectorRepository: CollectorRepository,
     private val currentSessionCache: CurrentSessionCache,
     private val siteRepository: SiteRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
@@ -98,32 +98,26 @@ class IntakeViewModel @Inject constructor(
                     val session = _state.value.session
                     val surveillanceForm = _state.value.surveillanceForm
 
-                    val collectorTitleResult =
-                        validationUseCases.validateCollectorTitle(session.collectorTitle)
-                    val collectorNameResult =
-                        validationUseCases.validateCollectorName(session.collectorName)
                     val districtResult =
-                        validationUseCases.validateDistrict(_state.value.selectedDistrict)
+                        intakeValidationUseCases.validateDistrict(_state.value.selectedDistrict)
                     val villageNameResult =
-                        validationUseCases.validateVillageName(_state.value.selectedVillageName)
+                        intakeValidationUseCases.validateVillageName(_state.value.selectedVillageName)
                     val houseNumberResult =
-                        validationUseCases.validateHouseNumber(_state.value.selectedHouseNumber)
+                        intakeValidationUseCases.validateHouseNumber(_state.value.selectedHouseNumber)
                     val llinTypeResult =
-                        surveillanceForm?.llinType?.let { validationUseCases.validateLlinType(it) }
+                        surveillanceForm?.llinType?.let { intakeValidationUseCases.validateLlinType(it) }
                     val llinBrandResult =
-                        surveillanceForm?.llinBrand?.let { validationUseCases.validateLlinBrand(it) }
+                        surveillanceForm?.llinBrand?.let { intakeValidationUseCases.validateLlinBrand(it) }
                     val collectionDateResult =
-                        validationUseCases.validateCollectionDate(session.collectionDate)
+                        intakeValidationUseCases.validateCollectionDate(session.collectionDate)
                     val collectionMethodResult =
-                        validationUseCases.validateCollectionMethod(session.collectionMethod)
+                        intakeValidationUseCases.validateCollectionMethod(session.collectionMethod)
                     val specimenConditionResult =
-                        validationUseCases.validateSpecimenCondition(session.specimenCondition)
+                        intakeValidationUseCases.validateSpecimenCondition(session.specimenCondition)
 
                     _state.update {
                         it.copy(
                             intakeErrors = it.intakeErrors.copy(
-                                collectorTitle = collectorTitleResult.errorOrNull(),
-                                collectorName = collectorNameResult.errorOrNull(),
                                 district = districtResult.errorOrNull(),
                                 villageName = villageNameResult.errorOrNull(),
                                 houseNumber = houseNumberResult.errorOrNull(),
@@ -137,8 +131,6 @@ class IntakeViewModel @Inject constructor(
                     }
 
                     val hasError = listOf(
-                        collectorTitleResult,
-                        collectorNameResult,
                         districtResult,
                         villageNameResult,
                         houseNumberResult,
@@ -189,21 +181,12 @@ class IntakeViewModel @Inject constructor(
                     }
                 }
 
-                is IntakeAction.EnterCollectorTitle -> {
+                is IntakeAction.SelectCollector -> {
                     _state.update {
                         it.copy(
                             session = it.session.copy(
-                                collectorTitle = action.text
-                            )
-                        )
-                    }
-                }
-
-                is IntakeAction.EnterCollectorName -> {
-                    _state.update {
-                        it.copy(
-                            session = it.session.copy(
-                                collectorName = action.text
+                                collectorName = action.collector.name,
+                                collectorTitle = action.collector.title
                             )
                         )
                     }

@@ -2,9 +2,7 @@ package com.vci.vectorcamapp.intake.domain.use_cases
 
 import javax.inject.Inject
 
-data class ValidationUseCases @Inject constructor(
-    val validateCollectorTitle: ValidateCollectorTitleUseCase,
-    val validateCollectorName: ValidateCollectorNameUseCase,
+data class IntakeValidationUseCases @Inject constructor(
     val validateDistrict: ValidateDistrictUseCase,
     val validateVillageName: ValidateVillageNameUseCase,
     val validateHouseNumber: ValidateHouseNumberUseCase,

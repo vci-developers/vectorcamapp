@@ -4,14 +4,16 @@ import android.os.Build
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.intake.presentation.IntakeAction
+import com.vci.vectorcamapp.registration.domain.use_cases.RegistrationValidationUseCases
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.registration.logging.RegistrationSentryLogger
+import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +24,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -30,6 +31,7 @@ class RegistrationViewModel @Inject constructor(
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
     private val collectorRepository: CollectorRepository,
+    private val registrationValidationUseCases: RegistrationValidationUseCases,
     programRepository: ProgramRepository
 ) : CoreViewModel() {
 
@@ -79,6 +81,23 @@ class RegistrationViewModel @Inject constructor(
 
                 RegistrationAction.ConfirmRegistration -> {
                     val selectedProgram = state.value.selectedProgram
+
+                    val collector = state.value.collector
+                    val nameValidationResult = registrationValidationUseCases.validateCollectorName(collector.name)
+                    val titleValidationResult = registrationValidationUseCases.validateCollectorTitle(collector.title)
+
+                    _state.update { currentState ->
+                        currentState.copy(
+                            registrationErrors = RegistrationErrors(
+                                collectorName = nameValidationResult.errorOrNull(),
+                                collectorTitle = titleValidationResult.errorOrNull(),
+                            )
+                        )
+                    }
+
+                    val hasError = listOf(nameValidationResult, titleValidationResult).any { it is Result.Error }
+                    if (hasError) return@launch
+
                     if (selectedProgram == null) {
                         emitError(RegistrationError.PROGRAM_NOT_FOUND)
                         RegistrationSentryLogger.logProgramNotFound(IllegalStateException("Program not found during registration"))

@@ -13,6 +13,7 @@ import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.landing.domain.util.LandingError
+import com.vci.vectorcamapp.registration.domain.util.RegistrationValidationError
 
 fun Error.toString(context: Context): String {
     val resId = when (this) {
@@ -93,8 +94,6 @@ fun Error.toString(context: Context): String {
         }
 
         is FormValidationError -> when (this) {
-            FormValidationError.BLANK_COLLECTOR_TITLE -> R.string.form_validation_error_blank_collector_title
-            FormValidationError.BLANK_COLLECTOR_NAME -> R.string.form_validation_error_blank_collector_name
             FormValidationError.BLANK_DISTRICT -> R.string.form_validation_error_blank_district
             FormValidationError.BLANK_VILLAGE_NAME -> R.string.form_validation_error_blank_village_name
             FormValidationError.BLANK_HOUSE_NUMBER -> R.string.form_validation_error_blank_house_number
@@ -103,6 +102,11 @@ fun Error.toString(context: Context): String {
             FormValidationError.FUTURE_COLLECTION_DATE -> R.string.form_validation_error_future_collection_date
             FormValidationError.BLANK_COLLECTION_METHOD -> R.string.form_validation_error_blank_collection_method
             FormValidationError.BLANK_SPECIMEN_CONDITION -> R.string.form_validation_error_blank_specimen_condition
+        }
+
+        is RegistrationValidationError -> when (this) {
+            RegistrationValidationError.BLANK_COLLECTOR_TITLE -> R.string.form_validation_error_blank_collector_title
+            RegistrationValidationError.BLANK_COLLECTOR_NAME -> R.string.form_validation_error_blank_collector_name
         }
 
         else -> R.string.error_fallback

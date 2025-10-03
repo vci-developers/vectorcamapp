@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
@@ -77,21 +78,24 @@ fun IntakeScreen(
                 iconPainter = painterResource(R.drawable.ic_info),
                 iconDescription = "General Information Icon"
             ) {
-                TextEntryField(
-                    label = "Collector Name",
-                    value = state.session.collectorName,
-                    onValueChange = { onAction(IntakeAction.EnterCollectorName(it)) },
-                    singleLine = true,
-                    error = state.intakeErrors.collectorName
-                )
-
-                TextEntryField(
-                    label = "Collector Title",
-                    value = state.session.collectorTitle,
-                    onValueChange = { onAction(IntakeAction.EnterCollectorTitle(it)) },
-                    singleLine = true,
-                    error = state.intakeErrors.collectorTitle
-                )
+                DropdownField(
+                    label = "Collector",
+                    options = state.allCollectors,
+                    selectedOption = state.allCollectors.firstOrNull { c ->
+                        c.name == state.session.collectorName && c.title == state.session.collectorTitle
+                    },
+                    onOptionSelected = { selected: Collector ->
+                        onAction(IntakeAction.SelectCollector(selected))
+                    },
+                    error = state.intakeErrors.collectorName ?: state.intakeErrors.collectorTitle,
+                    modifier = Modifier.fillMaxWidth()
+                ) { collector ->
+                    Text(
+                        text = collector.name + ", " + collector.title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
 
                 DatePickerField(
                     label = "Collection Date",
