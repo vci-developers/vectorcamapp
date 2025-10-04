@@ -29,6 +29,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -394,25 +396,6 @@ class IntakeViewModel @Inject constructor(
             }
 
             val currentSession = currentSessionCache.getSession()
-            val allSites = siteRepository.getAllSitesByProgramId(programId)
-
-            var savedForm: SurveillanceForm? = null
-            var district = ""
-            var villageName = ""
-            var houseNumber = ""
-
-            if (currentSession != null) {
-                savedForm =
-                    surveillanceFormRepository.getSurveillanceFormBySessionId(currentSession.localId)
-
-                val siteId = currentSessionCache.getSiteId()
-                val site = allSites.find { it.id == siteId }
-                if (site != null) {
-                    district = site.district
-                    villageName = site.villageName
-                    houseNumber = site.houseNumber
-                }
-            }
 
             val effectiveSession = currentSession ?: _state.value.session.copy(
                 type = savedStateHandle.get<SessionType>("sessionType")
@@ -420,15 +403,27 @@ class IntakeViewModel @Inject constructor(
             )
             surveillanceFormWorkflow = surveillanceFormWorkflowFactory.create(effectiveSession.type)
 
+            val (allSites, savedForm) = combine(
+                siteRepository.observeAllSitesByProgramId(programId),
+                currentSession?.let {
+                    surveillanceFormRepository.observeSurveillanceFormBySessionId(it.localId)
+                } ?: flowOf<SurveillanceForm?>(null)
+            ) { currentAllSites, currentSavedForm ->
+                Pair(currentAllSites, currentSavedForm)
+            }.first()
+
+            val siteId = currentSessionCache.getSiteId()
+            val currentSite = allSites.find { it.id == siteId }
+
             _state.update {
                 it.copy(
                     isLoading = false,
                     session = effectiveSession,
                     surveillanceForm = savedForm ?: surveillanceFormWorkflow.createNewSurveillanceForm(),
                     allSitesInProgram = allSites,
-                    selectedDistrict = district,
-                    selectedVillageName = villageName,
-                    selectedHouseNumber = houseNumber
+                    selectedDistrict = currentSite?.district.orEmpty(),
+                    selectedVillageName = currentSite?.villageName.orEmpty(),
+                    selectedHouseNumber = currentSite?.houseNumber.orEmpty()
                 )
             }
 
