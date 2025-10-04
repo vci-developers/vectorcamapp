@@ -1,41 +1,49 @@
 package com.vci.vectorcamapp.settings.presentation
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.util.errorOrNull
+import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.landing.domain.util.LandingError
-import com.vci.vectorcamapp.landing.logging.LandingSentryLogger
-import com.vci.vectorcamapp.landing.presentation.LandingEvent
-import com.vci.vectorcamapp.landing.presentation.LandingState
+import com.vci.vectorcamapp.settings.domain.use_cases.SettingsValidationUseCases
+import com.vci.vectorcamapp.settings.presentation.model.SettingsErrors
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor (
     private val deviceCache: DeviceCache,
-    private val programRepository: ProgramRepository
+    private val programRepository: ProgramRepository,
+    private val collectorRepository: CollectorRepository,
+    private val settingsValidationUseCases: SettingsValidationUseCases
 ): CoreViewModel(){
-    private val _state = MutableStateFlow(SettingsState())
 
-    val state: StateFlow<SettingsState> = _state
-        .onStart { loadSettingsDetails() }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000L),
-            SettingsState()
+    private val _collectors = collectorRepository.observeAllCollectors()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+
+    private val _state = MutableStateFlow(SettingsState())
+    val state = combine(_collectors, _state) { collectors, state ->
+        state.copy(
+            collectors = collectors
         )
+    }
+    .onStart { loadSettingsDetails() }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), SettingsState())
 
     private val _events = Channel<SettingsEvent>()
     val events = _events.receiveAsFlow()
@@ -48,6 +56,111 @@ class SettingsViewModel @Inject constructor (
                 }
                 SettingsAction.ReturnToLandingScreen -> {
                     _events.send(SettingsEvent.NavigateBackToLandingScreen)
+                }
+                SettingsAction.ShowAddCollectorDialog -> {
+                    _state.update {
+                        it.copy(
+                            dialogCollector = Collector(
+                                id = UUID.randomUUID(),
+                                name = "",
+                                title = ""
+                            ),
+                            isCollectorDialogEditMode = false
+                        )
+                    }
+                }
+                is SettingsAction.ShowEditCollectorDialog -> {
+                    _state.update {
+                        it.copy(
+                            dialogCollector = action.collector,
+                            isCollectorDialogEditMode = true
+                        )
+                    }
+                }
+                SettingsAction.DismissCollectorDialog -> {
+                    _state.update {
+                        it.copy(
+                            dialogCollector = null,
+                            isCollectorDialogEditMode = false,
+                            settingsErrors = it.settingsErrors.copy(
+                                collectorName = null,
+                                collectorTitle = null
+                            )
+                        )
+                    }
+                }
+                is SettingsAction.EnterCollectorName -> {
+                    _state.update {
+                        it.copy(
+                            dialogCollector = it.dialogCollector?.copy(
+                                name = action.name
+                            )
+                        )
+                    }
+                }
+                is SettingsAction.EnterCollectorTitle -> {
+                    _state.update {
+                        it.copy(
+                            dialogCollector = it.dialogCollector?.copy(
+                                title = action.title
+                            )
+                        )
+                    }
+                }
+                SettingsAction.SaveCollector -> {
+                    val collector = state.value.dialogCollector ?: return@launch
+
+                    val nameValidationResult = settingsValidationUseCases.validateCollectorName(collector.name)
+                    val titleValidationResult = settingsValidationUseCases.validateCollectorTitle(collector.title)
+
+                    _state.update { currentState ->
+                        currentState.copy(
+                            settingsErrors = SettingsErrors(
+                                collectorName = nameValidationResult.errorOrNull(),
+                                collectorTitle = titleValidationResult.errorOrNull()
+                            )
+                        )
+                    }
+
+                    val hasError = listOf(nameValidationResult, titleValidationResult).any { it is Result.Error }
+                    if (hasError) return@launch
+
+                    try {
+                        collectorRepository.upsertCollector(collector)
+                        _state.update {
+                            it.copy(
+                                dialogCollector = null,
+                                isCollectorDialogEditMode = false
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.e("SettingsViewModel", "Error saving collector", e)
+                    }
+                }
+                SettingsAction.ShowDeleteProfileDialog -> {
+                    _state.update {
+                        it.copy(isDeleteProfileDialogVisible = true)
+                    }
+                }
+                SettingsAction.DismissDeleteProfileDialog -> {
+                    _state.update {
+                        it.copy(isDeleteProfileDialogVisible = false)
+                    }
+                }
+                SettingsAction.ConfirmDeleteCollector -> {
+                    val collector = state.value.dialogCollector ?: return@launch
+                    try {
+                        collectorRepository.deleteCollector(collector)
+                        _state.update {
+                            it.copy(
+                                dialogCollector = null,
+                                isCollectorDialogEditMode = false,
+                                isDeleteProfileDialogVisible = false
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.e("SettingsViewModel", "Error deleting collector", e)
+                    }
                 }
             }
         }
