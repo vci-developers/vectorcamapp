@@ -6,9 +6,12 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
+import com.vci.vectorcamapp.core.domain.repository.CollectorRepository // NEW
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.util.Result // NEW
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
+import com.vci.vectorcamapp.registration.domain.use_cases.RegistrationValidationUseCases // NEW
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -35,6 +38,10 @@ class RegistrationViewModelTest {
     private lateinit var deviceCache: DeviceCache
     private lateinit var sessionCache: CurrentSessionCache
     private lateinit var programRepository: ProgramRepository
+
+    private lateinit var collectorRepository: CollectorRepository
+    private lateinit var registrationValidationUseCases: RegistrationValidationUseCases
+
     private lateinit var viewModel: RegistrationViewModel
     private lateinit var programsFlow: MutableStateFlow<List<Program>>
 
@@ -53,10 +60,23 @@ class RegistrationViewModelTest {
         sessionCache = mockk(relaxed = true)
         programRepository = mockk()
 
+        collectorRepository = mockk(relaxed = true)
+        coEvery { collectorRepository.upsertCollector(any()) } returns Result.Success(Unit)
+
+        registrationValidationUseCases = mockk()
+        every { registrationValidationUseCases.validateCollectorName(any()) } returns Result.Success(Unit)
+        every { registrationValidationUseCases.validateCollectorTitle(any()) } returns Result.Success(Unit)
+
         programsFlow = MutableStateFlow(testPrograms)
         every { programRepository.observeAllPrograms() } returns programsFlow
 
-        viewModel = RegistrationViewModel(deviceCache, sessionCache, programRepository)
+        viewModel = RegistrationViewModel(
+            deviceCache = deviceCache,
+            currentSessionCache = sessionCache,
+            collectorRepository = collectorRepository,
+            registrationValidationUseCases = registrationValidationUseCases,
+            programRepository = programRepository
+        )
     }
 
     @After
@@ -71,6 +91,7 @@ class RegistrationViewModelTest {
     private fun selectProgram(program: Program) = runTest {
         viewModel.state.test {
             awaitItem()
+            advanceUntilIdle()
             awaitItem() 
             viewModel.onAction(RegistrationAction.SelectProgram(program))
             advanceUntilIdle()
@@ -98,13 +119,14 @@ class RegistrationViewModelTest {
 
     @Test
     fun regVm_a02_stateEmitsProgramsFromRepositoryAfterInitialization() = runTest {
-        advanceUntilIdle()
-
         viewModel.state.test {
-            awaitItem() 
+            awaitItem()
+            advanceUntilIdle()
+            awaitItem()
             val stateWithPrograms = awaitItem()
             assertThat(stateWithPrograms.programs).isEqualTo(testPrograms)
             assertThat(stateWithPrograms.selectedProgram).isNull()
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
@@ -216,6 +238,7 @@ class RegistrationViewModelTest {
         coVerifyOrder {
             deviceCache.saveDevice(match { it.id == -1 }, selectedProgram.id)
             sessionCache.clearSession()
+            collectorRepository.upsertCollector(any())
         }
     }
 
@@ -291,6 +314,7 @@ class RegistrationViewModelTest {
 
         coVerify(exactly = 1) { deviceCache.saveDevice(any(), selectedProgram.id) }
         coVerify(exactly = 0) { sessionCache.clearSession() }
+        coVerify(exactly = 0) { collectorRepository.upsertCollector(any()) }
         coVerify(exactly = 1) { ErrorMessageBus.emit(RegistrationError.UNKNOWN_ERROR, any()) }
     }
 
@@ -309,6 +333,7 @@ class RegistrationViewModelTest {
 
         coVerify(exactly = 1) { deviceCache.saveDevice(any(), selectedProgram.id) }
         coVerify(exactly = 1) { sessionCache.clearSession() }
+        coVerify(exactly = 0) { collectorRepository.upsertCollector(any()) }
         coVerify(exactly = 1) { ErrorMessageBus.emit(RegistrationError.UNKNOWN_ERROR, any()) }
     }
 
@@ -316,13 +341,7 @@ class RegistrationViewModelTest {
     fun regVm_e03_differentExceptionTypesAreHandledCorrectly() = runTest {
         val selectedProgram = testPrograms[0]
         selectProgram(selectedProgram)
-
-        coEvery {
-            deviceCache.saveDevice(
-                any(),
-                any()
-            )
-        } throws IllegalStateException("Custom error")
+        coEvery { deviceCache.saveDevice(any(), any()) } throws IllegalStateException("Custom error")
 
         viewModel.events.test {
             viewModel.onAction(RegistrationAction.ConfirmRegistration)
@@ -341,7 +360,14 @@ class RegistrationViewModelTest {
     fun regVm_f01_emptyRepositoryEmitsErrorOnConfirmation() = runTest {
         val emptyFlow = MutableStateFlow(emptyList<Program>())
         every { programRepository.observeAllPrograms() } returns emptyFlow
-        val emptyRepoViewModel = RegistrationViewModel(deviceCache, sessionCache, programRepository)
+
+        val emptyRepoViewModel = RegistrationViewModel(
+            deviceCache = deviceCache,
+            currentSessionCache = sessionCache,
+            collectorRepository = collectorRepository,
+            registrationValidationUseCases = registrationValidationUseCases,
+            programRepository = programRepository
+        )
 
         emptyRepoViewModel.onAction(RegistrationAction.ConfirmRegistration)
         advanceUntilIdle()
@@ -363,5 +389,6 @@ class RegistrationViewModelTest {
 
         coVerify(exactly = 1) { deviceCache.saveDevice(any(), selectedProgram.id) }
         coVerify(exactly = 1) { sessionCache.clearSession() }
+        coVerify(exactly = 1) { collectorRepository.upsertCollector(any()) } // NEW
     }
 }
