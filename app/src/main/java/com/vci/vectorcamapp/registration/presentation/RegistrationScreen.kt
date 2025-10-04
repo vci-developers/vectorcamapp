@@ -72,7 +72,7 @@ fun RegistrationScreen(
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                 ) {
                     Text(
-                        text = "Register Device",
+                        text = "Register",
                         style = MaterialTheme.typography.displayMedium,
                         color = MaterialTheme.colors.textPrimary
                     )

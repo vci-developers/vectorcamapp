@@ -44,12 +44,12 @@ class IntakeViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val intakeValidationUseCases: IntakeValidationUseCases,
     private val deviceCache: DeviceCache,
-    collectorRepository: CollectorRepository,
     private val currentSessionCache: CurrentSessionCache,
     private val siteRepository: SiteRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
     private val sessionRepository: SessionRepository,
     private val locationRepository: LocationRepository,
+    private val collectorRepository: CollectorRepository,
 ) : CoreViewModel() {
 
     companion object {
@@ -63,18 +63,8 @@ class IntakeViewModel @Inject constructor(
     lateinit var surveillanceFormWorkflowFactory: SurveillanceFormWorkflowFactory
     private lateinit var surveillanceFormWorkflow: SurveillanceFormWorkflow
 
-    private val _allCollectors = collectorRepository.observeAllCollectors()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-
     private val _state = MutableStateFlow(IntakeState())
-    val state: StateFlow<IntakeState> = combine(
-        _allCollectors,
-        _state
-    ) { allCollectors, state ->
-        state.copy(
-            allCollectors = allCollectors
-        )
-    }.onStart {
+    val state: StateFlow<IntakeState> = _state.onStart {
         loadFormDetails()
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000L), IntakeState()
@@ -100,6 +90,8 @@ class IntakeViewModel @Inject constructor(
                     val session = _state.value.session
                     val surveillanceForm = _state.value.surveillanceForm
 
+                    val collectorValidationResult =
+                        intakeValidationUseCases.validateCollector(_state.value.session.collectorName, _state.value.session.collectorTitle)
                     val districtResult =
                         intakeValidationUseCases.validateDistrict(_state.value.selectedDistrict)
                     val villageNameResult =
@@ -120,6 +112,7 @@ class IntakeViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             intakeErrors = it.intakeErrors.copy(
+                                collector = collectorValidationResult.errorOrNull(),
                                 district = districtResult.errorOrNull(),
                                 villageName = villageNameResult.errorOrNull(),
                                 houseNumber = houseNumberResult.errorOrNull(),
@@ -133,6 +126,7 @@ class IntakeViewModel @Inject constructor(
                     }
 
                     val hasError = listOf(
+                        collectorValidationResult,
                         districtResult,
                         villageNameResult,
                         houseNumberResult,
@@ -403,29 +397,30 @@ class IntakeViewModel @Inject constructor(
             )
             surveillanceFormWorkflow = surveillanceFormWorkflowFactory.create(effectiveSession.type)
 
-            val (allSites, savedForm) = combine(
+            val siteId = currentSessionCache.getSiteId()
+
+            combine(
                 siteRepository.observeAllSitesByProgramId(programId),
                 currentSession?.let {
                     surveillanceFormRepository.observeSurveillanceFormBySessionId(it.localId)
-                } ?: flowOf<SurveillanceForm?>(null)
-            ) { currentAllSites, currentSavedForm ->
-                Pair(currentAllSites, currentSavedForm)
+                } ?: flowOf<SurveillanceForm?>(null),
+                collectorRepository.observeAllCollectors()
+            ) { currentAllSites, currentSavedForm, currentAllCollectors ->
+                val currentSite = currentAllSites.find { it.id == siteId }
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        session = effectiveSession,
+                        surveillanceForm = currentSavedForm
+                            ?: surveillanceFormWorkflow.createNewSurveillanceForm(),
+                        allSitesInProgram = currentAllSites,
+                        allCollectors = currentAllCollectors,
+                        selectedDistrict = currentSite?.district.orEmpty(),
+                        selectedVillageName = currentSite?.villageName.orEmpty(),
+                        selectedHouseNumber = currentSite?.houseNumber.orEmpty()
+                    )
+                }
             }.first()
-
-            val siteId = currentSessionCache.getSiteId()
-            val currentSite = allSites.find { it.id == siteId }
-
-            _state.update {
-                it.copy(
-                    isLoading = false,
-                    session = effectiveSession,
-                    surveillanceForm = savedForm ?: surveillanceFormWorkflow.createNewSurveillanceForm(),
-                    allSitesInProgram = allSites,
-                    selectedDistrict = currentSite?.district.orEmpty(),
-                    selectedVillageName = currentSite?.villageName.orEmpty(),
-                    selectedHouseNumber = currentSite?.houseNumber.orEmpty()
-                )
-            }
 
             getLocation()
         }

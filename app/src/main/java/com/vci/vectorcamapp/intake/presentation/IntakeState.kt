@@ -37,8 +37,7 @@ data class IntakeState(
     ),
     val surveillanceForm: SurveillanceForm? = null,
     val intakeErrors: IntakeErrors = IntakeErrors(
-        collectorTitle = null,
-        collectorName = null,
+        collector = null,
         district = null,
         villageName = null,
         houseNumber = null,

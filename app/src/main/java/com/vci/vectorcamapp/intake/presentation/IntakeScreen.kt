@@ -81,13 +81,13 @@ fun IntakeScreen(
                 DropdownField(
                     label = "Collector",
                     options = state.allCollectors,
-                    selectedOption = state.allCollectors.firstOrNull { c ->
-                        c.name == state.session.collectorName && c.title == state.session.collectorTitle
+                    selectedOption = state.allCollectors.firstOrNull { collector ->
+                        collector.name == state.session.collectorName && collector.title == state.session.collectorTitle
                     },
                     onOptionSelected = { selected: Collector ->
                         onAction(IntakeAction.SelectCollector(selected))
                     },
-                    error = state.intakeErrors.collectorName ?: state.intakeErrors.collectorTitle,
+                    error = state.intakeErrors.collector,
                     modifier = Modifier.fillMaxWidth()
                 ) { collector ->
                     Text(

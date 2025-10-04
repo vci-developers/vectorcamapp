@@ -13,7 +13,7 @@ class SiteRepositoryImplementation @Inject constructor(
 ) : SiteRepository {
 
     override fun observeAllSitesByProgramId(programId: Int): Flow<List<Site>> {
-        return siteDao.observeAllSitesByProgramId(programId).map { list -> list.map { it.toDomain() } }
+        return siteDao.observeAllSitesByProgramId(programId).map { siteEntities -> siteEntities.map { it.toDomain() } }
     }
 
     override suspend fun getSiteById(id: Int): Site? {

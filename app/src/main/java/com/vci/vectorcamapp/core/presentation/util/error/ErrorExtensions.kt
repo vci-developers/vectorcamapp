@@ -95,6 +95,7 @@ fun Error.toString(context: Context): String {
         }
 
         is FormValidationError -> when (this) {
+            FormValidationError.BLANK_COLLECTOR -> R.string.form_validation_error_blank_collector
             FormValidationError.BLANK_DISTRICT -> R.string.form_validation_error_blank_district
             FormValidationError.BLANK_VILLAGE_NAME -> R.string.form_validation_error_blank_village_name
             FormValidationError.BLANK_HOUSE_NUMBER -> R.string.form_validation_error_blank_house_number
@@ -106,13 +107,13 @@ fun Error.toString(context: Context): String {
         }
 
         is RegistrationValidationError -> when (this) {
-            RegistrationValidationError.BLANK_COLLECTOR_TITLE -> R.string.form_validation_error_blank_collector_title
-            RegistrationValidationError.BLANK_COLLECTOR_NAME -> R.string.form_validation_error_blank_collector_name
+            RegistrationValidationError.BLANK_COLLECTOR_TITLE -> R.string.registration_validation_error_blank_collector_title
+            RegistrationValidationError.BLANK_COLLECTOR_NAME -> R.string.registration_validation_error_blank_collector_name
         }
 
         is SettingsValidationError -> when (this) {
-            SettingsValidationError.BLANK_COLLECTOR_TITLE -> R.string.form_validation_error_blank_collector_title
-            SettingsValidationError.BLANK_COLLECTOR_NAME -> R.string.form_validation_error_blank_collector_name
+            SettingsValidationError.BLANK_COLLECTOR_TITLE -> R.string.settings_validation_error_blank_collector_title
+            SettingsValidationError.BLANK_COLLECTOR_NAME -> R.string.settings_validation_error_blank_collector_name
         }
 
         else -> R.string.error_fallback
