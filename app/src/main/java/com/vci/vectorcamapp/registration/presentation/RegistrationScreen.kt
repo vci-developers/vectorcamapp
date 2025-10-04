@@ -25,6 +25,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
+import com.vci.vectorcamapp.registration.domain.model.RegistrationDropdownOptions
 import com.vci.vectorcamapp.registration.presentation.util.RegistrationTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
@@ -55,7 +56,7 @@ fun RegistrationScreen(
                 topEnd = MaterialTheme.dimensions.cornerRadiusMedium
             ),
             modifier = modifier
-                .height(screenHeightFraction(0.55f))
+                .height(screenHeightFraction(0.68f))
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
         ) {
@@ -68,11 +69,11 @@ fun RegistrationScreen(
                     .fillMaxSize(), verticalArrangement = Arrangement.SpaceAround
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                 ) {
                     Text(
-                        text = "Register Program",
-                        style = MaterialTheme.typography.displayLarge,
+                        text = "Register Device",
+                        style = MaterialTheme.typography.displayMedium,
                         color = MaterialTheme.colors.textPrimary
                     )
 
@@ -83,55 +84,69 @@ fun RegistrationScreen(
                     )
                 }
 
-                DropdownField(
-                    options = state.programs,
-                    selectedOption = state.selectedProgram,
-                    onOptionSelected = { onAction(RegistrationAction.SelectProgram(it)) },
-                    menuTestTag = RegistrationTestTags.PROGRAM_DROPDOWN,
-                    menuItemTestTagPrefix = RegistrationTestTags.PROGRAM_OPTION,
-                    modifier = modifier
-                        .customShadow(
-                            color = Color.Black.copy(alpha = 0.1f),
-                            blurRadius = MaterialTheme.dimensions.shadowBlurMedium,
-                            spread = MaterialTheme.dimensions.shadowBlurSmall,
-                            cornerRadius = MaterialTheme.dimensions.cornerRadiusSmall,
-                        )
-                        .height(MaterialTheme.dimensions.componentHeightExtraExtraLarge),
-                ) { program ->
-                    Column(
-                        verticalArrangement = Arrangement.SpaceEvenly,
-                        modifier = Modifier
-                            .padding(horizontal = MaterialTheme.dimensions.paddingSmall)
-                            .fillMaxWidth()
-                    ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                ) {
+                    DropdownField(
+                        label = "Program",
+                        options = state.programs,
+                        selectedOption = state.selectedProgram,
+                        onOptionSelected = { onAction(RegistrationAction.SelectProgram(it)) },
+                        menuTestTag = RegistrationTestTags.PROGRAM_DROPDOWN,
+                        menuItemTestTagPrefix = RegistrationTestTags.PROGRAM_OPTION,
+                        modifier = modifier
+                            .customShadow(
+                                color = Color.Black.copy(alpha = 0.1f),
+                                blurRadius = MaterialTheme.dimensions.shadowBlurMedium,
+                                spread = MaterialTheme.dimensions.shadowBlurSmall,
+                                cornerRadius = MaterialTheme.dimensions.cornerRadiusSmall,
+                            )
+                            .height(MaterialTheme.dimensions.componentHeightExtraExtraLarge),
+                    ) { program ->
+                        Column(
+                            verticalArrangement = Arrangement.SpaceEvenly,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            Text(
+                                text = program.name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colors.textPrimary
+                            )
+                            Text(
+                                text = program.country,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colors.textSecondary
+                            )
+                        }
+                    }
+
+                    TextEntryField(
+                        label = "Collector Name",
+                        value = state.collector.name,
+                        onValueChange = { onAction(RegistrationAction.EnterCollectorName(it)) },
+                        singleLine = true,
+                        error = state.registrationErrors.collectorName
+                    )
+
+                    DropdownField(
+                        label = "Collector Title",
+                        options = RegistrationDropdownOptions.CollectorTitleOption.entries,
+                        selectedOption = RegistrationDropdownOptions.CollectorTitleOption.entries.firstOrNull { it.label == state.collector.title },
+                        onOptionSelected = { option ->
+                            onAction(RegistrationAction.EnterCollectorTitle(option.label))
+                        },
+                        error = state.registrationErrors.collectorTitle,
+                        modifier = modifier.fillMaxWidth()
+                            .height(MaterialTheme.dimensions.componentHeightLarge)
+                    ) { option ->
                         Text(
-                            text = program.name,
+                            text = option.label,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textPrimary
                         )
-                        Text(
-                            text = program.country,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colors.textSecondary
-                        )
                     }
                 }
-
-                TextEntryField(
-                    label = "Collector Name",
-                    value = state.collector.name,
-                    onValueChange = { onAction(RegistrationAction.EnterCollectorName(it)) },
-                    singleLine = true,
-                    error = state.registrationErrors.collectorName
-                )
-
-                TextEntryField(
-                    label = "Collector Title",
-                    value = state.collector.title,
-                    onValueChange = { onAction(RegistrationAction.EnterCollectorTitle(it)) },
-                    singleLine = true,
-                    error = state.registrationErrors.collectorTitle
-                )
 
                 ActionButton(
                     label = "Confirm",
