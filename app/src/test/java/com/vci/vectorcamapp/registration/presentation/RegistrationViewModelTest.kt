@@ -91,8 +91,7 @@ class RegistrationViewModelTest {
     private fun selectProgram(program: Program) = runTest {
         viewModel.state.test {
             awaitItem()
-            advanceUntilIdle()
-            awaitItem() 
+            awaitItem()
             viewModel.onAction(RegistrationAction.SelectProgram(program))
             advanceUntilIdle()
             val selectedState = awaitItem()
