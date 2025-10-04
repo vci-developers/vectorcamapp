@@ -14,6 +14,7 @@ import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.landing.domain.util.LandingError
 import com.vci.vectorcamapp.registration.domain.util.RegistrationValidationError
+import com.vci.vectorcamapp.settings.domain.util.SettingsValidationError
 
 fun Error.toString(context: Context): String {
     val resId = when (this) {
@@ -107,6 +108,11 @@ fun Error.toString(context: Context): String {
         is RegistrationValidationError -> when (this) {
             RegistrationValidationError.BLANK_COLLECTOR_TITLE -> R.string.form_validation_error_blank_collector_title
             RegistrationValidationError.BLANK_COLLECTOR_NAME -> R.string.form_validation_error_blank_collector_name
+        }
+
+        is SettingsValidationError -> when (this) {
+            SettingsValidationError.BLANK_COLLECTOR_TITLE -> R.string.form_validation_error_blank_collector_title
+            SettingsValidationError.BLANK_COLLECTOR_NAME -> R.string.form_validation_error_blank_collector_name
         }
 
         else -> R.string.error_fallback
