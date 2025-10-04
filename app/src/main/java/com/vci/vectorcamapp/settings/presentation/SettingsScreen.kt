@@ -2,13 +2,13 @@ package com.vci.vectorcamapp.settings.presentation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
@@ -37,7 +37,6 @@ import com.vci.vectorcamapp.settings.presentation.components.SettingsSection
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
-import com.vci.vectorcamapp.ui.theme.screenHeightFraction
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -104,7 +103,9 @@ fun SettingsScreen(
                                         .size(MaterialTheme.dimensions.iconSizeMedium)
                                 )
                                 Column(
-                                    modifier = Modifier.padding(vertical = MaterialTheme.dimensions.paddingSmall)
+                                    modifier = Modifier
+                                        .padding(vertical = MaterialTheme.dimensions.paddingSmall)
+                                        .weight(1f)
                                 ) {
                                     Text(
                                         text = collector.name,
@@ -117,13 +118,19 @@ fun SettingsScreen(
                                         color = MaterialTheme.colors.textSecondary
                                     )
                                 }
-                                Spacer(modifier = Modifier.weight(1f))
-                                Text(
-                                    text = "Edit",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colors.icon,
-                                    modifier = Modifier.padding(end = MaterialTheme.dimensions.paddingSmall)
-                                )
+
+                                Box(
+                                    modifier = Modifier
+                                        .padding(end = MaterialTheme.dimensions.paddingSmall),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    Text(
+                                        text = "Edit",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.icon,
+                                        maxLines = 1
+                                    )
+                                }
                             }
 
                             if (index < state.collectors.lastIndex) {
