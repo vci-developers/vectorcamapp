@@ -259,7 +259,7 @@ fun IntakeScreen(
                     }
 
                     state.locationError != null -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)) {
                             Text(
                                 text = "Could not get location: ${
                                     state.locationError.toString(

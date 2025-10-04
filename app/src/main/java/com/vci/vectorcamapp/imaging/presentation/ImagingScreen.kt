@@ -114,8 +114,8 @@ fun ImagingScreen(
             page < state.specimensWithImagesAndInferenceResults.size -> {
                 val infiniteTransition = rememberInfiniteTransition(label = "arrow_animation")
                 val arrowOffsetX by infiniteTransition.animateFloat(
-                    initialValue = with(density) { MaterialTheme.dimensions.spacingSmall.toPx() },
-                    targetValue = with(density) { -(MaterialTheme.dimensions.spacingSmall.toPx()) },
+                    initialValue = with(density) { MaterialTheme.dimensions.spacingExtraSmall.toPx() },
+                    targetValue = with(density) { -(MaterialTheme.dimensions.spacingExtraSmall.toPx()) },
                     animationSpec = infiniteRepeatable(
                         animation = tween(durationMillis = 800), repeatMode = RepeatMode.Reverse
                     ),

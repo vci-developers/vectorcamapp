@@ -35,7 +35,7 @@ fun InfoPill(
         contentAlignment = Alignment.Center,
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             iconPainter?.let { painter ->
