@@ -24,65 +24,83 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 @Composable
 fun CollectorDialog(
     collector: Collector,
-    isEditMode: Boolean,
     nameError: SettingsValidationError?,
     titleError: SettingsValidationError?,
     onNameChange: (String) -> Unit,
     onTitleChange: (String) -> Unit,
     onDismiss: () -> Unit,
     onSave: () -> Unit,
-    onDelete: (() -> Unit)?,
+    onDelete: () -> Unit,
+    onConfirmDelete: () -> Unit,
+    onDismissDeleteDialog: () -> Unit,
+    isEditDialogVisible: Boolean,
+    isDeleteDialogVisible: Boolean,
     modifier: Modifier = Modifier
 ) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = if (isEditMode) "Edit Profile" else "Add Profile")
+            Text(
+                text = if (isDeleteDialogVisible) "Delete Profile?"
+                else if (isEditDialogVisible) "Edit Profile"
+                else "Add Profile"
+            )
         },
         text = {
-            Column {
-                TextEntryField(
-                    label = "Collector Name",
-                    value = collector.name,
-                    onValueChange = onNameChange,
-                    singleLine = true,
-                    error = nameError,
+            if (isDeleteDialogVisible) {
+                Text(
+                    text = "This will permanently delete this collector profile. This action cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colors.textSecondary
                 )
-
-                Spacer(modifier = Modifier.size(MaterialTheme.dimensions.spacingSmall))
-
-                DropdownField(
-                    label = "Collector Title",
-                    options = SettingsDropdownOptions.CollectorTitleOption.entries,
-                    selectedOption = SettingsDropdownOptions.CollectorTitleOption.entries.firstOrNull { it.label == collector.title },
-                    onOptionSelected = { option ->
-                        onTitleChange(option.label)
-                    },
-                    error = titleError,
-                    modifier = modifier.fillMaxWidth().height(MaterialTheme.dimensions.componentHeightLarge)
-                ) { option ->
-                    Text(
-                        text = option.label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colors.textPrimary
+            }
+            else {
+                Column {
+                    TextEntryField(
+                        label = "Collector Name",
+                        value = collector.name,
+                        onValueChange = onNameChange,
+                        singleLine = true,
+                        error = nameError,
                     )
+
+                    Spacer(modifier = Modifier.size(MaterialTheme.dimensions.spacingSmall))
+
+                    DropdownField(
+                        label = "Collector Title",
+                        options = SettingsDropdownOptions.CollectorTitleOption.entries,
+                        selectedOption = SettingsDropdownOptions.CollectorTitleOption.entries.firstOrNull { it.label == collector.title },
+                        onOptionSelected = { option ->
+                            onTitleChange(option.label)
+                        },
+                        error = titleError,
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .height(MaterialTheme.dimensions.componentHeightLarge)
+                    ) { option ->
+                        Text(
+                            text = option.label,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.textPrimary
+                        )
+                    }
                 }
             }
         },
         confirmButton = {
             Button(
-                onClick = onSave,
+                onClick = if (isDeleteDialogVisible) onConfirmDelete else onSave,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colors.secondary,
+                    containerColor = if (isDeleteDialogVisible) MaterialTheme.colors.error else MaterialTheme.colors.secondary,
                     contentColor = MaterialTheme.colors.buttonText
                 )
             ) {
-                Text(text = "Submit", style = MaterialTheme.typography.bodyMedium)
+                Text(text = if (isDeleteDialogVisible) "Yes, Delete" else "Submit", style = MaterialTheme.typography.bodyMedium)
             }
         },
         dismissButton = {
-            if (isEditMode && onDelete != null) {
+            if (isEditDialogVisible && !isDeleteDialogVisible) {
                 TextButton(onClick = onDelete) {
                     Text(
                         text = "Delete",
@@ -91,7 +109,7 @@ fun CollectorDialog(
                     )
                 }
             } else {
-                TextButton(onClick = onDismiss) {
+                TextButton(onClick = if (isDeleteDialogVisible) onDismissDeleteDialog else onDismiss) {
                     Text(
                         text = "Cancel",
                         color = MaterialTheme.colors.textSecondary,

@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.registration.domain.use_cases
 
 import com.vci.vectorcamapp.core.domain.util.Result
-import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.registration.domain.util.RegistrationValidationError
 import javax.inject.Inject
 

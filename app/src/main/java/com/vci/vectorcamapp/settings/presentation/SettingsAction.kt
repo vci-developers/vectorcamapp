@@ -11,7 +11,7 @@ interface SettingsAction {
     data class EnterCollectorName(val name: String) : SettingsAction
     data class EnterCollectorTitle(val title: String) : SettingsAction
     data object SaveCollector : SettingsAction
-    data object ShowDeleteProfileDialog : SettingsAction
-    data object DismissDeleteProfileDialog : SettingsAction
+    data object ShowDeleteCollectorDialog : SettingsAction
+    data object DismissDeleteCollectorDialog : SettingsAction
     data object ConfirmDeleteCollector : SettingsAction
 }

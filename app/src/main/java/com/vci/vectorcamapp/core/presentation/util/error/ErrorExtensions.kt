@@ -14,6 +14,7 @@ import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.landing.domain.util.LandingError
 import com.vci.vectorcamapp.registration.domain.util.RegistrationValidationError
+import com.vci.vectorcamapp.settings.domain.util.SettingsError
 import com.vci.vectorcamapp.settings.domain.util.SettingsValidationError
 
 fun Error.toString(context: Context): String {
@@ -109,6 +110,11 @@ fun Error.toString(context: Context): String {
         is RegistrationValidationError -> when (this) {
             RegistrationValidationError.BLANK_COLLECTOR_TITLE -> R.string.registration_validation_error_blank_collector_title
             RegistrationValidationError.BLANK_COLLECTOR_NAME -> R.string.registration_validation_error_blank_collector_name
+        }
+
+        is SettingsError -> when (this) {
+            SettingsError.COLLECTOR_SAVE_FAILED -> R.string.settings_error_collector_save_failed
+            SettingsError.COLLECTOR_DELETION_FAILED -> R.string.settings_error_collector_deletion_failed
         }
 
         is SettingsValidationError -> when (this) {

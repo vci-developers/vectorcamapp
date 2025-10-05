@@ -22,7 +22,7 @@ data class SettingsState (
         collectorTitle = null
     ),
     val collectors: List<Collector> = emptyList(),
-    val dialogCollector: Collector? = null,
-    val isCollectorDialogEditMode: Boolean = false,
-    val isDeleteProfileDialogVisible: Boolean = false
+    val selectedCollector: Collector? = null,
+    val isEditCollectorDialogVisible: Boolean = false,
+    val isDeleteCollectorDialogVisible: Boolean = false
 )

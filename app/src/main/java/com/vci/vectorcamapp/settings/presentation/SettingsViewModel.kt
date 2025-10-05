@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.settings.presentation
 
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Collector
@@ -11,6 +10,7 @@ import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.settings.domain.use_cases.SettingsValidationUseCases
+import com.vci.vectorcamapp.settings.domain.util.SettingsError
 import com.vci.vectorcamapp.settings.presentation.model.SettingsErrors
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -60,28 +60,28 @@ class SettingsViewModel @Inject constructor (
                 SettingsAction.ShowAddCollectorDialog -> {
                     _state.update {
                         it.copy(
-                            dialogCollector = Collector(
+                            selectedCollector = Collector(
                                 id = UUID.randomUUID(),
                                 name = "",
                                 title = ""
                             ),
-                            isCollectorDialogEditMode = false
+                            isEditCollectorDialogVisible = false
                         )
                     }
                 }
                 is SettingsAction.ShowEditCollectorDialog -> {
                     _state.update {
                         it.copy(
-                            dialogCollector = action.collector,
-                            isCollectorDialogEditMode = true
+                            selectedCollector = action.collector,
+                            isEditCollectorDialogVisible = true
                         )
                     }
                 }
                 SettingsAction.DismissCollectorDialog -> {
                     _state.update {
                         it.copy(
-                            dialogCollector = null,
-                            isCollectorDialogEditMode = false,
+                            selectedCollector = null,
+                            isEditCollectorDialogVisible = false,
                             settingsErrors = it.settingsErrors.copy(
                                 collectorName = null,
                                 collectorTitle = null
@@ -92,7 +92,7 @@ class SettingsViewModel @Inject constructor (
                 is SettingsAction.EnterCollectorName -> {
                     _state.update {
                         it.copy(
-                            dialogCollector = it.dialogCollector?.copy(
+                            selectedCollector = it.selectedCollector?.copy(
                                 name = action.name
                             )
                         )
@@ -101,14 +101,14 @@ class SettingsViewModel @Inject constructor (
                 is SettingsAction.EnterCollectorTitle -> {
                     _state.update {
                         it.copy(
-                            dialogCollector = it.dialogCollector?.copy(
+                            selectedCollector = it.selectedCollector?.copy(
                                 title = action.title
                             )
                         )
                     }
                 }
                 SettingsAction.SaveCollector -> {
-                    val collector = state.value.dialogCollector ?: return@launch
+                    val collector = state.value.selectedCollector ?: return@launch
 
                     val nameValidationResult = settingsValidationUseCases.validateCollectorName(collector.name)
                     val titleValidationResult = settingsValidationUseCases.validateCollectorTitle(collector.title)
@@ -129,37 +129,37 @@ class SettingsViewModel @Inject constructor (
                         collectorRepository.upsertCollector(collector)
                         _state.update {
                             it.copy(
-                                dialogCollector = null,
-                                isCollectorDialogEditMode = false
+                                selectedCollector = null,
+                                isEditCollectorDialogVisible = false
                             )
                         }
                     } catch (e: Exception) {
-                        Log.e("SettingsViewModel", "Error saving collector", e)
+                        emitError(SettingsError.COLLECTOR_SAVE_FAILED)
                     }
                 }
-                SettingsAction.ShowDeleteProfileDialog -> {
+                SettingsAction.ShowDeleteCollectorDialog -> {
                     _state.update {
-                        it.copy(isDeleteProfileDialogVisible = true)
+                        it.copy(isDeleteCollectorDialogVisible = true)
                     }
                 }
-                SettingsAction.DismissDeleteProfileDialog -> {
+                SettingsAction.DismissDeleteCollectorDialog -> {
                     _state.update {
-                        it.copy(isDeleteProfileDialogVisible = false)
+                        it.copy(isDeleteCollectorDialogVisible = false)
                     }
                 }
                 SettingsAction.ConfirmDeleteCollector -> {
-                    val collector = state.value.dialogCollector ?: return@launch
+                    val collector = state.value.selectedCollector ?: return@launch
                     try {
                         collectorRepository.deleteCollector(collector)
                         _state.update {
                             it.copy(
-                                dialogCollector = null,
-                                isCollectorDialogEditMode = false,
-                                isDeleteProfileDialogVisible = false
+                                selectedCollector = null,
+                                isEditCollectorDialogVisible = false,
+                                isDeleteCollectorDialogVisible = false
                             )
                         }
                     } catch (e: Exception) {
-                        Log.e("SettingsViewModel", "Error deleting collector", e)
+                        emitError(SettingsError.COLLECTOR_DELETION_FAILED)
                     }
                 }
             }
