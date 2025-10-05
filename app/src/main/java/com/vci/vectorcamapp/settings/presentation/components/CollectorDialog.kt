@@ -39,7 +39,7 @@ fun CollectorDialog(
 ) {
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = if (isDeleteDialogVisible) onDismissDeleteDialog else onDismiss,
         title = {
             Text(
                 text = if (isDeleteDialogVisible) "Delete Profile?"
@@ -91,6 +91,7 @@ fun CollectorDialog(
         confirmButton = {
             Button(
                 onClick = if (isDeleteDialogVisible) onConfirmDelete else onSave,
+                enabled = isDeleteDialogVisible || (collector.name.isNotBlank() && collector.title.isNotBlank()),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isDeleteDialogVisible) MaterialTheme.colors.error else MaterialTheme.colors.secondary,
                     contentColor = MaterialTheme.colors.buttonText

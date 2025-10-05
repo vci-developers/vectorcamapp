@@ -82,6 +82,7 @@ class SettingsViewModel @Inject constructor (
                         it.copy(
                             selectedCollector = null,
                             isEditCollectorDialogVisible = false,
+                            isDeleteCollectorDialogVisible = false,
                             settingsErrors = it.settingsErrors.copy(
                                 collectorName = null,
                                 collectorTitle = null
