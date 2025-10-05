@@ -144,8 +144,8 @@ fun IntakeScreen(
                         CollectionMethodTooltipRow(
                             title = "CDC Light Trap",
                             description = "A light trap that uses a battery to attract and collect mosquitoes during the night.",
-                            iconPainter = painterResource(id = R.drawable.ic_light),
-                            iconDescription = "CDC Light Trap Icon"
+                            iconPainter = painterResource(id = R.drawable.ic_light_trap),
+                            iconDescription = "CDC Light Trap Icon",
                         )
                         CollectionMethodTooltipRow(
                             title = "Human Landing Catch",
@@ -155,7 +155,7 @@ fun IntakeScreen(
                         )
                         CollectionMethodTooltipRow(
                             title = "Pyrethrum Spray Catch",
-                            description = "A pyrethrum insecticide spray is used inside houses to knock down mosquitoes so they can be collected.",
+                            description = "A battery powered trap that uses a light to attract and collect mosquitoes at night.",
                             iconPainter = painterResource(id = R.drawable.ic_spray),
                             iconDescription = "Pyrethrum Spray Catch"
                         )
