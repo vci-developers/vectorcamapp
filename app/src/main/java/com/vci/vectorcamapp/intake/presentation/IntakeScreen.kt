@@ -21,6 +21,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
@@ -34,6 +36,7 @@ import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
+import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 
 @Composable
@@ -43,11 +46,14 @@ fun IntakeScreen(
     val context = LocalContext.current
 
     BackHandler {
-        onAction(IntakeAction.ReturnToLandingScreen)
+        when (state.session.type) {
+            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
+            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
+        }
     }
 
     ScreenHeader(
-        title = "Session Intake",
+        title = "${state.session.type.displayText(context)} Intake",
         subtitle = "Please fill out the information below",
         leadingIcon = {
             Icon(
@@ -57,7 +63,10 @@ fun IntakeScreen(
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeMedium)
                     .clickable {
-                        onAction(IntakeAction.ReturnToLandingScreen)
+                        when (state.session.type) {
+                            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
+                            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
+                        }
                     }
             )
         },
@@ -69,26 +78,24 @@ fun IntakeScreen(
                 iconPainter = painterResource(R.drawable.ic_info),
                 iconDescription = "General Information Icon"
             ) {
-                InfoPill(
-                    text = "Session Type: ${state.session.type.name}",
-                    color = MaterialTheme.colors.info
-                )
-
-                TextEntryField(
-                    label = "Collector Name",
-                    value = state.session.collectorName,
-                    onValueChange = { onAction(IntakeAction.EnterCollectorName(it)) },
-                    singleLine = true,
-                    error = state.intakeErrors.collectorName
-                )
-
-                TextEntryField(
-                    label = "Collector Title",
-                    value = state.session.collectorTitle,
-                    onValueChange = { onAction(IntakeAction.EnterCollectorTitle(it)) },
-                    singleLine = true,
-                    error = state.intakeErrors.collectorTitle
-                )
+                DropdownField(
+                    label = "Collector",
+                    options = state.allCollectors,
+                    selectedOption = state.allCollectors.firstOrNull { collector ->
+                        collector.name == state.session.collectorName && collector.title == state.session.collectorTitle
+                    },
+                    onOptionSelected = { selected: Collector ->
+                        onAction(IntakeAction.SelectCollector(selected))
+                    },
+                    error = state.intakeErrors.collector,
+                    modifier = Modifier.fillMaxWidth()
+                ) { collector ->
+                    Text(
+                        text = collector.name + ", " + collector.title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
 
                 DatePickerField(
                     label = "Collection Date",
@@ -256,7 +263,7 @@ fun IntakeScreen(
                     }
 
                     state.locationError != null -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)) {
                             Text(
                                 text = "Could not get location: ${
                                     state.locationError.toString(
@@ -405,7 +412,7 @@ fun IntakeScreen(
 
         item {
             ActionButton(
-                label = "Continue",
+                label = "Begin ${state.session.type.displayText(context)} Imaging",
                 onClick = { onAction(IntakeAction.SubmitIntakeForm) },
                 modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
             )

@@ -59,16 +59,16 @@ class LandingViewModel @Inject constructor(
                     _events.send(LandingEvent.NavigateToIntakeScreen(SessionType.SURVEILLANCE))
                 }
 
-                LandingAction.StartNewDataCollectionSession -> {
-                    _events.send(LandingEvent.NavigateToIntakeScreen(SessionType.DATA_COLLECTION))
-                }
-
                 LandingAction.ViewIncompleteSessions -> {
                     _events.send(LandingEvent.NavigateToIncompleteSessionsScreen)
                 }
 
                 LandingAction.ViewCompleteSessions -> {
                     _events.send(LandingEvent.NavigateToCompleteSessionsScreen)
+                }
+
+                LandingAction.OpenSettings -> {
+                    _events.send(LandingEvent.NavigateToSettingsScreen)
                 }
 
                 LandingAction.ResumeSession -> {

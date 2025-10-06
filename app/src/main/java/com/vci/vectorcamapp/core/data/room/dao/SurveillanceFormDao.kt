@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 @Dao
@@ -14,4 +15,7 @@ interface SurveillanceFormDao {
 
     @Query("SELECT * FROM surveillance_form WHERE sessionId = :sessionId")
     suspend fun getSurveillanceFormBySessionId(sessionId: UUID): SurveillanceFormEntity?
+
+    @Query("SELECT * FROM surveillance_form WHERE sessionId = :sessionId LIMIT 1")
+    fun observeSurveillanceFormBySessionId(sessionId: UUID): Flow<SurveillanceFormEntity?>
 }
