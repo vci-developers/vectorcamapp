@@ -87,16 +87,8 @@ fun IncompleteSessionCard(
                             )
                         }
                     }
-                    Spacer(Modifier.height(MaterialTheme.dimensions.spacingExtraSmall))
 
                     InfoPill(text = "Session Type: ${sessionAndSite.session.type}", color = MaterialTheme.colors.info)
-
-                    Spacer(Modifier.height(MaterialTheme.dimensions.spacingExtraSmall))
-
-                    Text(
-                        text = "Created: ${detailFormatter.format(sessionAndSite.session.createdAt)}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
                 }
 
                 Column(
@@ -108,7 +100,6 @@ fun IncompleteSessionCard(
                         iconDescription = "Person",
                         text = "Collector: ${sessionAndSite.session.collectorName}, ${sessionAndSite.session.collectorTitle}",
                     )
-                Spacer(Modifier.width(MaterialTheme.dimensions.spacingExtraSmall))
 
                     IncompleteSessionListDetailRow(
                         iconPainter = painterResource(R.drawable.ic_pin),
