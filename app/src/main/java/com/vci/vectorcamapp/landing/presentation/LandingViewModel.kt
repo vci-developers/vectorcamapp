@@ -31,7 +31,7 @@ class LandingViewModel @Inject constructor(
     sessionRepository: SessionRepository,
 ) : CoreViewModel() {
 
-    private val _incompleteSessionsCount = sessionRepository.observeIncompleteSessions()
+    private val _incompleteSessionsCount = sessionRepository.observeIncompleteSessionsAndSites()
         .map { it.size }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
 

@@ -70,7 +70,7 @@ fun CompleteSessionListTile(
                 modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,

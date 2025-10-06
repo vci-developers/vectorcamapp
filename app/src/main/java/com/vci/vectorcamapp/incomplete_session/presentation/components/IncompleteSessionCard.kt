@@ -1,6 +1,8 @@
 package com.vci.vectorcamapp.incomplete_session.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,8 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,11 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.domain.model.Session
-import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
+import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.presentation.components.gestures.SwipeToReveal
+import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
-import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
@@ -32,13 +33,11 @@ import java.util.Locale
 
 @Composable
 fun IncompleteSessionCard(
-    session: Session,
+    sessionAndSite: SessionAndSite,
     onClick: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-
     val titleFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
     val detailFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
@@ -53,45 +52,100 @@ fun IncompleteSessionCard(
         modifier = modifier
     ) {
         ActionTile(onClick = onClick) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(MaterialTheme.dimensions.paddingLarge),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+                modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = "Incomplete Session on ${titleFormatter.format(session.createdAt)}",
-                        style = MaterialTheme.typography.headlineMedium
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Incomplete Session on\n${titleFormatter.format(sessionAndSite.session.createdAt)}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colors.textPrimary
+                        )
+
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(MaterialTheme.dimensions.componentHeightSmall)
+                                .background(
+                                    color = MaterialTheme.colors.iconBackground,
+                                    shape = CircleShape
+                                )
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_arrow_right),
+                                contentDescription = "Arrow Right",
+                                tint = MaterialTheme.colors.icon,
+                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                            )
+                        }
+                    }
+
+                    InfoPill(text = "Session Type: ${sessionAndSite.session.type}", color = MaterialTheme.colors.info)
+                }
+
+                Column(
+                    modifier = Modifier.padding(vertical = MaterialTheme.dimensions.paddingSmall),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                ) {
+                    IncompleteSessionListDetailRow(
+                        iconPainter = painterResource(R.drawable.ic_person),
+                        iconDescription = "Person",
+                        text = "Collector: ${sessionAndSite.session.collectorName}, ${sessionAndSite.session.collectorTitle}",
                     )
 
-                    Spacer(Modifier.height(MaterialTheme.dimensions.spacingExtraSmall))
-
-                    InfoPill(text = "Session Type: ${session.type.displayText(context)}", color = MaterialTheme.colors.info)
-
-                    Spacer(Modifier.height(MaterialTheme.dimensions.spacingExtraSmall))
-
-                    Text(
-                        text = "Created: ${detailFormatter.format(session.createdAt)}",
-                        style = MaterialTheme.typography.bodySmall
+                    IncompleteSessionListDetailRow(
+                        iconPainter = painterResource(R.drawable.ic_pin),
+                        iconDescription = "Pin",
+                        text = "District: ${sessionAndSite.site.district}",
                     )
-                    Text(
-                        text = "Last Updated: placeholder",
-                        style = MaterialTheme.typography.bodySmall
+
+                    IncompleteSessionListDetailRow(
+                        iconPainter = painterResource(R.drawable.ic_map),
+                        iconDescription = "Map",
+                        text = "Sub-County: ${sessionAndSite.site.subCounty}",
+                    )
+
+                    IncompleteSessionListDetailRow(
+                        iconPainter = painterResource(R.drawable.ic_navigation),
+                        iconDescription = "Navigation",
+                        text = "Parish: ${sessionAndSite.site.parish}",
+                    )
+
+                    IncompleteSessionListDetailRow(
+                        iconPainter = painterResource(R.drawable.ic_clipboard),
+                        iconDescription = "Clipboard",
+                        text = "Village Name: ${sessionAndSite.site.villageName}",
+                    )
+
+                    IncompleteSessionListDetailRow(
+                        iconPainter = painterResource(R.drawable.ic_house),
+                        iconDescription = "House",
+                        text = "House Number: ${sessionAndSite.site.houseNumber}",
                     )
                 }
 
-                Spacer(Modifier.width(MaterialTheme.dimensions.spacingExtraSmall))
-
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_arrow_right),
-                    contentDescription = "Resume",
-                    modifier = Modifier
-                        .size(MaterialTheme.dimensions.iconSizeLarge + MaterialTheme.dimensions.paddingExtraSmall)
-                        .background(MaterialTheme.colors.iconBackground, CircleShape)
-                        .padding(MaterialTheme.dimensions.paddingExtraSmall),
-                    tint = MaterialTheme.colors.icon
+                HorizontalDivider(
+                    color = MaterialTheme.colors.divider,
+                    thickness = MaterialTheme.dimensions.dividerThickness
                 )
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                ) {
+                    Text(
+                        text = "Created At: ${detailFormatter.format(sessionAndSite.session.createdAt)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textSecondary
+                    )
+                }
             }
         }
     }
