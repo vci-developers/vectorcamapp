@@ -70,43 +70,39 @@ fun CompleteSessionListTile(
                 modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                 ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Completed Session on\n${dateFormatter.format(completedAt)}",
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = MaterialTheme.colors.textPrimary
-                            )
-
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier
-                                    .size(MaterialTheme.dimensions.componentHeightSmall)
-                                    .background(
-                                        color = MaterialTheme.colors.iconBackground,
-                                        shape = CircleShape
-                                    )
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_arrow_right),
-                                    contentDescription = "Arrow Right",
-                                    tint = MaterialTheme.colors.icon,
-                                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
-                                )
-                            }
-                        }
-                        InfoPill(
-                            text = "Session Type: ${session.type.displayText(context)}",
-                            color = MaterialTheme.colors.info
+                        Text(
+                            text = "Completed Session on\n${dateFormatter.format(completedAt)}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colors.textPrimary
                         )
+
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(MaterialTheme.dimensions.componentHeightSmall)
+                                .background(
+                                    color = MaterialTheme.colors.iconBackground,
+                                    shape = CircleShape
+                                )
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_arrow_right),
+                                contentDescription = "Arrow Right",
+                                tint = MaterialTheme.colors.icon,
+                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                            )
+                        }
                     }
+                    InfoPill(
+                        text = "Session Type: ${session.type.displayText(context)}",
+                        color = MaterialTheme.colors.info
+                    )
                 }
 
                 Column(
