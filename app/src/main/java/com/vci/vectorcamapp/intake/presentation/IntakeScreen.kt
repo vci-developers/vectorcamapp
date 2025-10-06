@@ -21,6 +21,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
@@ -44,7 +46,10 @@ fun IntakeScreen(
     val context = LocalContext.current
 
     BackHandler {
-        onAction(IntakeAction.ReturnToLandingScreen)
+        when (state.session.type) {
+            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
+            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
+        }
     }
 
     ScreenHeader(
@@ -58,7 +63,10 @@ fun IntakeScreen(
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeMedium)
                     .clickable {
-                        onAction(IntakeAction.ReturnToLandingScreen)
+                        when (state.session.type) {
+                            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
+                            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
+                        }
                     }
             )
         },
@@ -70,21 +78,24 @@ fun IntakeScreen(
                 iconPainter = painterResource(R.drawable.ic_info),
                 iconDescription = "General Information Icon"
             ) {
-                TextEntryField(
-                    label = "Collector Name",
-                    value = state.session.collectorName,
-                    onValueChange = { onAction(IntakeAction.EnterCollectorName(it)) },
-                    singleLine = true,
-                    error = state.intakeErrors.collectorName
-                )
-
-                TextEntryField(
-                    label = "Collector Title",
-                    value = state.session.collectorTitle,
-                    onValueChange = { onAction(IntakeAction.EnterCollectorTitle(it)) },
-                    singleLine = true,
-                    error = state.intakeErrors.collectorTitle
-                )
+                DropdownField(
+                    label = "Collector",
+                    options = state.allCollectors,
+                    selectedOption = state.allCollectors.firstOrNull { collector ->
+                        collector.name == state.session.collectorName && collector.title == state.session.collectorTitle
+                    },
+                    onOptionSelected = { selected: Collector ->
+                        onAction(IntakeAction.SelectCollector(selected))
+                    },
+                    error = state.intakeErrors.collector,
+                    modifier = Modifier.fillMaxWidth()
+                ) { collector ->
+                    Text(
+                        text = collector.name + ", " + collector.title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
 
                 DatePickerField(
                     label = "Collection Date",
@@ -252,7 +263,7 @@ fun IntakeScreen(
                     }
 
                     state.locationError != null -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)) {
                             Text(
                                 text = "Could not get location: ${
                                     state.locationError.toString(

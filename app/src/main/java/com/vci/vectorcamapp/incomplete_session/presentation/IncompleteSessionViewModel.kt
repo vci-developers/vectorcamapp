@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
 import com.vci.vectorcamapp.incomplete_session.logging.IncompleteSessionSentryLogger
@@ -25,13 +26,31 @@ class IncompleteSessionViewModel @Inject constructor(
     private val cameraRepository: CameraRepository
 ) : CoreViewModel() {
 
-    private val _incompleteSessions = sessionRepository.observeIncompleteSessions()
+    private val _incompleteSessionsAndSites = sessionRepository.observeIncompleteSessionsAndSites()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
     private val _state = MutableStateFlow(IncompleteSessionState())
-    val state = combine(_incompleteSessions, _state) { incompleteSessions, state ->
-        state.copy(
-            sessions = incompleteSessions
-        )
+
+    val state = combine(_incompleteSessionsAndSites, _state) { incompleteSessionsAndSites, currentState ->
+        val filteredSessions = if (currentState.searchQuery.isBlank()) {
+            incompleteSessionsAndSites
+        } else {
+            incompleteSessionsAndSites.filter { sessionAndSite ->
+                val session = sessionAndSite.session
+                val site = sessionAndSite.site
+                val fieldsForSearch = buildList {
+                    add(session.collectorName)
+                    add(session.collectorTitle)
+                    add(session.type.name)
+                    add(site.district)
+                    add(site.subCounty)
+                    add(site.parish)
+                    add(site.villageName)
+                    add(site.houseNumber)
+                }
+                SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
+            }
+        }
+        currentState.copy(sessionAndSites = filteredSessions)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), IncompleteSessionState())
 
     private val _events = Channel<IncompleteSessionEvent>()
@@ -69,7 +88,7 @@ class IncompleteSessionViewModel @Inject constructor(
                                 try {
                                     cameraRepository.deleteSavedImage(uri)
                                 } catch (e: Exception) {
-                                    Log.e("IncompleteSessionViewModel", "Failed to delete image: $uri", e)
+                                    IncompleteSessionSentryLogger.logImageDeletionFailure(e, action.sessionId, uri)
                                 }
                             }
 
@@ -78,13 +97,15 @@ class IncompleteSessionViewModel @Inject constructor(
                                 Log.d("IncompleteSessionViewModel", "Successfully deleted session and images for ID: ${action.sessionId}")
                             } else {
                                 emitError(IncompleteSessionError.SESSION_DELETION_FAILED)
+                                IncompleteSessionSentryLogger.logSessionDeletionFailure(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name), action.sessionId)
                             }
                         } else {
                             emitError(IncompleteSessionError.SESSION_NOT_FOUND)
+                            IncompleteSessionSentryLogger.logSessionNotFound(Exception(IncompleteSessionError.SESSION_NOT_FOUND.name), action.sessionId)
                         }
                     } catch (e: Exception) {
-                        Log.e("IncompleteSessionViewModel", "Failed to delete session: ${action.sessionId}", e)
                         emitError(IncompleteSessionError.SESSION_DELETION_FAILED)
+                        IncompleteSessionSentryLogger.logSessionDeletionFailure(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name, e), action.sessionId)
                     } finally {
                         _state.value = _state.value.copy(deleteDialogSessionId = null)
                     }
@@ -96,6 +117,10 @@ class IncompleteSessionViewModel @Inject constructor(
 
                 is IncompleteSessionAction.ReturnToLandingScreen -> {
                     _events.send(IncompleteSessionEvent.NavigateBackToLandingScreen)
+                }
+
+                is IncompleteSessionAction.UpdateSearchQuery -> {
+                    _state.value = _state.value.copy(searchQuery = action.searchQuery)
                 }
             }
         }

@@ -4,7 +4,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -28,7 +37,17 @@ fun LandingScreen(
     ScreenHeader(
         title = "Welcome to VectorCam!",
         subtitle = "Program: ${state.enrolledProgram.name}",
-        modifier = modifier.testTag(LandingTestTags.SCREEN)
+        modifier = modifier.testTag(LandingTestTags.SCREEN),
+        trailingIcon = {
+            IconButton(onClick = { onAction(LandingAction.OpenSettings) }) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_settings),
+                    contentDescription = "Settings Icon",
+                    modifier = Modifier
+                        .size(MaterialTheme.dimensions.iconSizeMedium)
+                )
+            }
+        }
     ) {
         item {
             Column(
@@ -45,14 +64,6 @@ fun LandingScreen(
                         icon = painterResource(R.drawable.ic_specimen),
                         onClick = { onAction(LandingAction.StartNewSurveillanceSession) },
                         testTag = LandingTestTags.TILE_NEW_SURVEILLANCE
-                    )
-
-                    LandingActionTile(
-                        title = "Data Collection Mode",
-                        description = "Capture and upload mosquito images without filling forms.",
-                        icon = painterResource(R.drawable.ic_database),
-                        onClick = { onAction(LandingAction.StartNewDataCollectionSession) },
-                        testTag = LandingTestTags.TILE_DATA_COLLECTION
                     )
                 }
 

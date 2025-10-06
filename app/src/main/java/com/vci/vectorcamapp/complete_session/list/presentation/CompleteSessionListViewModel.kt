@@ -8,6 +8,7 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,8 +33,7 @@ class CompleteSessionListViewModel @Inject constructor(
     private val workManagerRepository: WorkManagerRepository
 ) : CoreViewModel() {
 
-    private val _events = Channel<CompleteSessionListEvent>()
-    val events = _events.receiveAsFlow()
+    private val _state = MutableStateFlow(CompleteSessionListState())
 
     private val _sessionAndSiteToUploadProgress = sessionRepository.observeCompleteSessionsAndSites()
         .flatMapLatest { sessions ->
@@ -61,10 +62,34 @@ class CompleteSessionListViewModel @Inject constructor(
             }
         }
 
-    private val _state = MutableStateFlow(CompleteSessionListState())
-    val state = combine(_sessionAndSiteToUploadProgress, _state) { sessionAndSiteToUploadProgress, state ->
-        state.copy(sessionAndSiteToUploadProgress = sessionAndSiteToUploadProgress)
+    val state = combine(
+        _sessionAndSiteToUploadProgress,
+        _state
+    ) { sessionAndSiteToUploadProgress, currentState ->
+        val filteredProgressMap = if (currentState.searchQuery.isBlank()) {
+            sessionAndSiteToUploadProgress
+        } else {
+            sessionAndSiteToUploadProgress.filter { (sessionAndSite, _) ->
+                val session = sessionAndSite.session
+                val site = sessionAndSite.site
+                val fieldsForSearch = buildList {
+                    add(session.collectorName)
+                    add(session.collectorTitle)
+                    add(session.type.name)
+                    add(site.district)
+                    add(site.subCounty)
+                    add(site.parish)
+                    add(site.villageName)
+                    add(site.houseNumber)
+                }
+                SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
+            }
+        }
+        currentState.copy(sessionAndSiteToUploadProgress = filteredProgressMap)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
+
+    private val _events = Channel<CompleteSessionListEvent>()
+    val events = _events.receiveAsFlow()
 
     fun onAction(action: CompleteSessionListAction) {
         viewModelScope.launch {
@@ -100,6 +125,10 @@ class CompleteSessionListViewModel @Inject constructor(
 
                         workManagerRepository.enqueueSessionUpload(session.localId, site.id)
                     }
+                }
+
+                is CompleteSessionListAction.UpdateSearchQuery -> {
+                    _state.update { it.copy(searchQuery = action.searchQuery) }
                 }
             }
         }
