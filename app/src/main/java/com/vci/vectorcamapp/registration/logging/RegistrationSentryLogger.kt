@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.registration.logging
 
 import android.os.Build
-import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.logging.Crashy
 import com.vci.vectorcamapp.core.logging.CrashyContext
 

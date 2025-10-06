@@ -3,8 +3,7 @@ package com.vci.vectorcamapp.intake.presentation.model
 import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 
 data class IntakeErrors(
-    val collectorTitle: FormValidationError?,
-    val collectorName: FormValidationError?,
+    val collector: FormValidationError?,
     val district: FormValidationError?,
     val villageName: FormValidationError?,
     val houseNumber: FormValidationError?,

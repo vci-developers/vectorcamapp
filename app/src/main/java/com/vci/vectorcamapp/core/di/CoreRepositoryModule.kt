@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.di
 
+import com.vci.vectorcamapp.core.data.repository.CollectorRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.InferenceResultRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.ProgramRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SessionRepositoryImplementation
@@ -8,6 +9,7 @@ import com.vci.vectorcamapp.core.data.repository.SpecimenImageRepositoryImplemen
 import com.vci.vectorcamapp.core.data.repository.SpecimenRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SurveillanceFormRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.WorkManagerRepositoryImplementation
+import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
@@ -67,6 +69,12 @@ abstract class CoreRepositoryModule {
     abstract fun bindProgramRepository(
         programRepositoryImplementation: ProgramRepositoryImplementation
     ): ProgramRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCollectorRepository(
+        collectorRepositoryImplementation: CollectorRepositoryImplementation
+    ): CollectorRepository
 
     @Binds
     abstract fun bindWorkManagerRepository(
