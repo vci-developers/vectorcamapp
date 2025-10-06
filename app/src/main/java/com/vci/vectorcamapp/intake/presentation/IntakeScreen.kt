@@ -97,6 +97,52 @@ fun IntakeScreen(
                     )
                 }
 
+                if (state.isCurrentCollectorMissing) {
+                    Column(
+                        modifier = Modifier.padding(MaterialTheme.dimensions.paddingExtraSmall),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_info),
+                                contentDescription = "Warning icon",
+                                tint = MaterialTheme.colors.error,
+                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                            )
+
+                            Text(
+                                text = "Collector not found.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colors.error
+                            )
+                        }
+                        Text(
+                            text = "Name: ${state.session.collectorName}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.textPrimary
+                        )
+
+                        Text(
+                            text = "Title: ${state.session.collectorTitle}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.textPrimary
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            ActionButton(
+                                label = "Add to Collectors",
+                                onClick = { onAction(IntakeAction.RegisterMissingCollector) }
+                            )
+                        }
+                    }
+                }
+
                 DatePickerField(
                     label = "Collection Date",
                     selectedDateInMillis = state.session.collectionDate,

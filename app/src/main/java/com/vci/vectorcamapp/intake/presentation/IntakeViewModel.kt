@@ -6,6 +6,7 @@ import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
@@ -38,6 +39,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -74,6 +76,8 @@ class IntakeViewModel @Inject constructor(
 
     private val _events = Channel<IntakeEvent>()
     val events = _events.receiveAsFlow()
+
+    private var allCollectorInRepository: Set<Pair<String, String>> = emptySet()
 
     fun onAction(action: IntakeAction) {
         viewModelScope.launch {
@@ -189,12 +193,20 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.SelectCollector -> {
+                    val updatedName = action.collector.name
+                    val updatedTitle = action.collector.title
+
+                    val isMissingNow = updatedName.isNotBlank() &&
+                            updatedTitle.isNotBlank() &&
+                            !allCollectorInRepository.contains(Pair(updatedName, updatedTitle))
+
                     _state.update {
                         it.copy(
                             session = it.session.copy(
-                                collectorName = action.collector.name,
-                                collectorTitle = action.collector.title
-                            )
+                                collectorName = updatedName,
+                                collectorTitle = updatedTitle
+                            ),
+                            isCurrentCollectorMissing = isMissingNow
                         )
                     }
                 }
@@ -387,6 +399,33 @@ class IntakeViewModel @Inject constructor(
                     }
                     getLocation()
                 }
+
+                IntakeAction.RegisterMissingCollector -> {
+                    val name = _state.value.session.collectorName
+                    val title = _state.value.session.collectorTitle
+
+                    if (name.isBlank() || title.isBlank()) {
+                        return@launch
+                    }
+
+                    when (collectorRepository.upsertCollector(
+                        Collector(
+                            id = UUID.randomUUID(),
+                            name = name,
+                            title = title
+                        )
+                    )) {
+                        is Result.Success -> {
+                            _state.update { it.copy(
+                                isCurrentCollectorMissing = false
+                            ) }
+                        }
+                        is Result.Error -> {
+                            emitError(IntakeError.UNKNOWN_ERROR)
+                        }
+                    }
+                }
+
             }
         }
     }
@@ -469,16 +508,42 @@ class IntakeViewModel @Inject constructor(
                         else -> ""
                     }
 
+                allCollectorInRepository = currentAllCollectors
+                    .map { it.name to it.title }
+                    .toSet()
+
+                val sessionCollectorName = effectiveSession.collectorName
+                val sessionCollectorTitle = effectiveSession.collectorTitle
+
+                val hasMatchingCollector = currentAllCollectors.any { collector ->
+                    collector.name == sessionCollectorName && collector.title == sessionCollectorTitle
+                }
+
+                val isCollectorMissing = sessionCollectorName.isNotBlank() &&
+                        sessionCollectorTitle.isNotBlank() &&
+                        !hasMatchingCollector
+
+                val allCollectorsWithTemporary = if (isCollectorMissing) {
+                    currentAllCollectors + Collector(
+                        id = UUID.randomUUID(),
+                        name = sessionCollectorName,
+                        title = sessionCollectorTitle
+                    )
+                } else {
+                    currentAllCollectors
+                }
+
                 _state.update {
                     it.copy(
                         isLoading = false,
                         session = effectiveSession,
                         surveillanceForm = currentSavedForm ?: surveillanceFormWorkflow.createNewSurveillanceForm(),
                         allSitesInProgram = currentAllSites,
-                        allCollectors = currentAllCollectors,
+                        allCollectors = allCollectorsWithTemporary,
                         selectedDistrict = validatedDistrict,
                         selectedVillageName = validatedVillageName,
-                        selectedHouseNumber = validatedHouseNumber
+                        selectedHouseNumber = validatedHouseNumber,
+                        isCurrentCollectorMissing = isCollectorMissing
                     )
                 }
             }.first()

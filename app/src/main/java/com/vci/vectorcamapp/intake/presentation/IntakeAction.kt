@@ -8,6 +8,7 @@ sealed interface IntakeAction {
     data object ReturnToLandingScreen: IntakeAction
     data object ReturnToSettingsScreen: IntakeAction
     data object SubmitIntakeForm: IntakeAction
+    data object RegisterMissingCollector : IntakeAction
     data class SelectCollector(val collector: Collector) : IntakeAction
     data class SelectDistrict(val district: String) : IntakeAction
     data class SelectVillageName(val villageName: String) : IntakeAction
