@@ -35,6 +35,9 @@ import com.vci.vectorcamapp.intake.presentation.IntakeEvent
 import com.vci.vectorcamapp.intake.presentation.IntakeScreen
 import com.vci.vectorcamapp.intake.presentation.IntakeViewModel
 import com.vci.vectorcamapp.main.presentation.SplashScreen
+import com.vci.vectorcamapp.settings.presentation.SettingsEvent
+import com.vci.vectorcamapp.settings.presentation.SettingsScreen
+import com.vci.vectorcamapp.settings.presentation.SettingsViewModel
 
 @Composable
 fun NavGraph(startDestination: Destination) {
@@ -87,6 +90,10 @@ fun NavGraph(startDestination: Destination) {
                     LandingEvent.NavigateBackToRegistrationScreen -> navController.popBackStack(
                         Destination.Registration, false
                     )
+
+                    LandingEvent.NavigateToSettingsScreen -> navController.navigate(
+                        Destination.Settings
+                    )
                 }
             }
 
@@ -115,6 +122,10 @@ fun NavGraph(startDestination: Destination) {
 
                     IntakeEvent.NavigateBackToLandingScreen -> navController.popBackStack(
                         Destination.Landing, false
+                    )
+
+                    IntakeEvent.NavigateBackToSettingsScreen -> navController.popBackStack(
+                        Destination.Settings, false
                     )
 
                     IntakeEvent.NavigateBackToRegistrationScreen -> navController.popBackStack(
@@ -222,6 +233,31 @@ fun NavGraph(startDestination: Destination) {
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 CompleteSessionDetailsScreen(
+                    state = state,
+                    onAction = viewModel::onAction,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+        }
+
+        composable<Destination.Settings> {
+            val viewModel = hiltViewModel<SettingsViewModel>()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+
+            ObserveAsEvents(events = viewModel.events) { event ->
+                when (event) {
+                    is SettingsEvent.NavigateToIntakeScreen -> navController.navigate(
+                        Destination.Intake(event.sessionType)
+                    )
+
+                    SettingsEvent.NavigateBackToLandingScreen -> navController.popBackStack(
+                        Destination.Landing, false
+                    )
+                }
+            }
+
+            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                SettingsScreen(
                     state = state,
                     onAction = viewModel::onAction,
                     modifier = Modifier.padding(innerPadding)

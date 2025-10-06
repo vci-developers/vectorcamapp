@@ -58,7 +58,7 @@ fun PermissionAndGpsPrompt(
                 }
             }
             if (!state.isGpsEnabled) {
-                Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
+                Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingExtraSmall))
                 Button(onClick = { onAction(MainAction.OpenLocationSettings) }) {
                     Text(
                         text = "Enable GPS",

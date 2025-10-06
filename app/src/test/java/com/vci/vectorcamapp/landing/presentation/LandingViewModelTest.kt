@@ -275,12 +275,6 @@ class LandingViewModelTest {
                 LandingEvent.NavigateToIntakeScreen(SessionType.SURVEILLANCE)
             )
 
-            viewModel.onAction(LandingAction.StartNewDataCollectionSession)
-            advanceUntilIdle()
-            assertThat(awaitItem()).isEqualTo(
-                LandingEvent.NavigateToIntakeScreen(SessionType.DATA_COLLECTION)
-            )
-
             viewModel.onAction(LandingAction.ViewIncompleteSessions)
             advanceUntilIdle()
             assertThat(awaitItem()).isEqualTo(LandingEvent.NavigateToIncompleteSessionsScreen)
@@ -334,12 +328,7 @@ class LandingViewModelTest {
         viewModel.events.test {
             viewModel.onAction(LandingAction.DismissResumePrompt)
             advanceUntilIdle()
-
-            viewModel.onAction(LandingAction.StartNewDataCollectionSession)
-            advanceUntilIdle()
-            assertThat(awaitItem()).isEqualTo(
-                LandingEvent.NavigateToIntakeScreen(SessionType.DATA_COLLECTION)
-            )
+            
             expectNoEvents()
         }
 
