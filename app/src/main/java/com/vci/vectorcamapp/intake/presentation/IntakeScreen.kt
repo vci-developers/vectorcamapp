@@ -136,7 +136,7 @@ fun IntakeScreen(
                             horizontalArrangement = Arrangement.End
                         ) {
                             ActionButton(
-                                label = "Add to Collectors",
+                                label = "Register New Collector",
                                 onClick = { onAction(IntakeAction.RegisterMissingCollector) }
                             )
                         }
