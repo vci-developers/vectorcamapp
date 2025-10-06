@@ -38,6 +38,7 @@ import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import java.util.UUID
 
 @Composable
 fun IntakeScreen(
@@ -78,12 +79,22 @@ fun IntakeScreen(
                 iconPainter = painterResource(R.drawable.ic_info),
                 iconDescription = "General Information Icon"
             ) {
+                val selectedCollector = if (state.isCurrentCollectorMissing) {
+                    Collector(
+                        id = UUID.randomUUID(),
+                        name = state.session.collectorName,
+                        title = state.session.collectorTitle
+                    )
+                } else {
+                    state.allCollectors.firstOrNull { collector ->
+                        collector.name == state.session.collectorName && collector.title == state.session.collectorTitle
+                    }
+                }
+
                 DropdownField(
                     label = "Collector",
                     options = state.allCollectors,
-                    selectedOption = state.allCollectors.firstOrNull { collector ->
-                        collector.name == state.session.collectorName && collector.title == state.session.collectorTitle
-                    },
+                    selectedOption = selectedCollector,
                     onOptionSelected = { selected: Collector ->
                         onAction(IntakeAction.SelectCollector(selected))
                     },

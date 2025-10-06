@@ -77,8 +77,6 @@ class IntakeViewModel @Inject constructor(
     private val _events = Channel<IntakeEvent>()
     val events = _events.receiveAsFlow()
 
-    private var allCollectorInRepository: Set<Pair<String, String>> = emptySet()
-
     fun onAction(action: IntakeAction) {
         viewModelScope.launch {
             when (action) {
@@ -196,17 +194,13 @@ class IntakeViewModel @Inject constructor(
                     val updatedName = action.collector.name
                     val updatedTitle = action.collector.title
 
-                    val isMissingNow = updatedName.isNotBlank() &&
-                            updatedTitle.isNotBlank() &&
-                            !allCollectorInRepository.contains(Pair(updatedName, updatedTitle))
-
                     _state.update {
                         it.copy(
                             session = it.session.copy(
                                 collectorName = updatedName,
                                 collectorTitle = updatedTitle
                             ),
-                            isCurrentCollectorMissing = isMissingNow
+                            isCurrentCollectorMissing = false
                         )
                     }
                 }
@@ -416,9 +410,13 @@ class IntakeViewModel @Inject constructor(
                         )
                     )) {
                         is Result.Success -> {
-                            _state.update { it.copy(
-                                isCurrentCollectorMissing = false
-                            ) }
+                            val updatedCollectors = collectorRepository.observeAllCollectors().first()
+                            _state.update {
+                                it.copy(
+                                    isCurrentCollectorMissing = false,
+                                    allCollectors = updatedCollectors
+                                )
+                            }
                         }
                         is Result.Error -> {
                             emitError(IntakeError.UNKNOWN_ERROR)
@@ -508,10 +506,6 @@ class IntakeViewModel @Inject constructor(
                         else -> ""
                     }
 
-                allCollectorInRepository = currentAllCollectors
-                    .map { it.name to it.title }
-                    .toSet()
-
                 val sessionCollectorName = effectiveSession.collectorName
                 val sessionCollectorTitle = effectiveSession.collectorTitle
 
@@ -523,23 +517,13 @@ class IntakeViewModel @Inject constructor(
                         sessionCollectorTitle.isNotBlank() &&
                         !hasMatchingCollector
 
-                val allCollectorsWithTemporary = if (isCollectorMissing) {
-                    currentAllCollectors + Collector(
-                        id = UUID.randomUUID(),
-                        name = sessionCollectorName,
-                        title = sessionCollectorTitle
-                    )
-                } else {
-                    currentAllCollectors
-                }
-
                 _state.update {
                     it.copy(
                         isLoading = false,
                         session = effectiveSession,
                         surveillanceForm = currentSavedForm ?: surveillanceFormWorkflow.createNewSurveillanceForm(),
                         allSitesInProgram = currentAllSites,
-                        allCollectors = allCollectorsWithTemporary,
+                        allCollectors = currentAllCollectors,
                         selectedDistrict = validatedDistrict,
                         selectedVillageName = validatedVillageName,
                         selectedHouseNumber = validatedHouseNumber,
