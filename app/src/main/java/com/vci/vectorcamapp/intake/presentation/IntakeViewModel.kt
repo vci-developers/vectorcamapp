@@ -436,18 +436,18 @@ class IntakeViewModel @Inject constructor(
                 collectorRepository.observeAllCollectors()
             ) { currentAllSites, currentSavedForm, currentAllCollectors ->
 
-                val siteFromId = currentAllSites.find { it.id == currentSessionSiteId }
+                val validatedSite = currentAllSites.find { it.id == currentSessionSiteId }
 
                 val validatedDistrict =
                     when {
-                        siteFromId != null -> siteFromId.district
+                        validatedSite != null -> validatedSite.district
                         currentAllSites.any { it.district == cachedDefaultDistrict } -> cachedDefaultDistrict
                         else -> ""
                     }
 
                 val validatedVillageName =
                     when {
-                        siteFromId != null -> siteFromId.villageName
+                        validatedSite != null -> validatedSite.villageName
                         validatedDistrict.isNotBlank() &&
                             currentAllSites.any {
                                 it.district == validatedDistrict &&
@@ -458,7 +458,7 @@ class IntakeViewModel @Inject constructor(
 
                 val validatedHouseNumber =
                     when {
-                        siteFromId != null -> siteFromId.houseNumber
+                        validatedSite != null -> validatedSite.houseNumber
                         validatedDistrict.isNotBlank() &&
                             validatedVillageName.isNotBlank() &&
                             currentAllSites.any {
