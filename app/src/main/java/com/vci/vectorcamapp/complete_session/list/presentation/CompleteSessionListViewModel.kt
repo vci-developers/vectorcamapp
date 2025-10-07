@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.complete_session.list.presentation
 
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
@@ -9,7 +10,9 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
+import com.vci.vectorcamapp.ui.extensions.displayText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +30,7 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CompleteSessionListViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
     private val specimenImageRepository: SpecimenImageRepository,
@@ -69,7 +73,7 @@ class CompleteSessionListViewModel @Inject constructor(
         val filteredProgressMap = if (currentState.searchQuery.isBlank()) {
             sessionAndSiteToUploadProgress
         } else {
-            sessionAndSiteToUploadProgress.filter { (sessionAndSite, _) ->
+            sessionAndSiteToUploadProgress.filter { (sessionAndSite, progress) ->
                 val session = sessionAndSite.session
                 val site = sessionAndSite.site
                 val fieldsForSearch = buildList {
@@ -81,6 +85,8 @@ class CompleteSessionListViewModel @Inject constructor(
                     add(site.parish)
                     add(site.villageName)
                     add(site.houseNumber)
+                    val uploadStatus = getSessionUploadStatus(progress)
+                    add(uploadStatus.displayText(context))
                 }
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
             }
@@ -131,6 +137,16 @@ class CompleteSessionListViewModel @Inject constructor(
                     _state.update { it.copy(searchQuery = action.searchQuery) }
                 }
             }
+        }
+    }
+
+    private fun getSessionUploadStatus(sessionUploadProgress: SessionUploadProgress): UploadStatus {
+        val isComplete = sessionUploadProgress.totalImageCount == 0 || (sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()) == 1f
+
+        return when {
+            isComplete -> UploadStatus.COMPLETED
+            sessionUploadProgress.isUploading -> UploadStatus.IN_PROGRESS
+            else -> UploadStatus.NOT_STARTED
         }
     }
 }
