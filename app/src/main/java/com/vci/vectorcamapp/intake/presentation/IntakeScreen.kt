@@ -526,6 +526,7 @@ fun IntakeScreen(
                     value = state.session.notes,
                     onValueChange = { onAction(IntakeAction.EnterNotes(it)) },
                     placeholder = "1000 character limit...",
+                    maxCharacters = 1000,
                 )
             }
         }
