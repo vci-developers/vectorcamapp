@@ -101,7 +101,7 @@ fun CompleteSessionSpecimensTile(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
                 modifier = Modifier.height(MaterialTheme.dimensions.componentHeightSmall)
             ) {
                 VerticalDivider(
@@ -114,7 +114,7 @@ fun CompleteSessionSpecimensTile(
                     painter = painterResource(R.drawable.ic_specimen),
                     contentDescription = "Mosquito",
                     tint = MaterialTheme.colors.icon,
-                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                 )
 
                 Text(

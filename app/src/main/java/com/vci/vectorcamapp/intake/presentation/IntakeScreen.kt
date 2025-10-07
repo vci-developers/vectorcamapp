@@ -5,14 +5,20 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,6 +27,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
@@ -36,6 +44,7 @@ import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import java.util.UUID
 
 @Composable
 fun IntakeScreen(
@@ -44,7 +53,10 @@ fun IntakeScreen(
     val context = LocalContext.current
 
     BackHandler {
-        onAction(IntakeAction.ReturnToLandingScreen)
+        when (state.session.type) {
+            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
+            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
+        }
     }
 
     ScreenHeader(
@@ -56,9 +68,12 @@ fun IntakeScreen(
                 contentDescription = "Back Button",
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
-                    .size(MaterialTheme.dimensions.iconSizeMedium)
+                    .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
-                        onAction(IntakeAction.ReturnToLandingScreen)
+                        when (state.session.type) {
+                            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
+                            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
+                        }
                     }
             )
         },
@@ -70,21 +85,137 @@ fun IntakeScreen(
                 iconPainter = painterResource(R.drawable.ic_info),
                 iconDescription = "General Information Icon"
             ) {
-                TextEntryField(
-                    label = "Collector Name",
-                    value = state.session.collectorName,
-                    onValueChange = { onAction(IntakeAction.EnterCollectorName(it)) },
-                    singleLine = true,
-                    error = state.intakeErrors.collectorName
-                )
+                val selectedCollector = if (state.isCurrentCollectorMissing) {
+                    Collector(
+                        id = UUID.randomUUID(),
+                        name = state.session.collectorName,
+                        title = state.session.collectorTitle
+                    )
+                } else {
+                    state.allCollectors.firstOrNull { collector ->
+                        collector.name == state.session.collectorName && collector.title == state.session.collectorTitle
+                    }
+                }
 
-                TextEntryField(
-                    label = "Collector Title",
-                    value = state.session.collectorTitle,
-                    onValueChange = { onAction(IntakeAction.EnterCollectorTitle(it)) },
-                    singleLine = true,
-                    error = state.intakeErrors.collectorTitle
-                )
+                DropdownField(
+                    label = "Collector",
+                    options = state.allCollectors,
+                    selectedOption = selectedCollector,
+                    onOptionSelected = { selected: Collector ->
+                        onAction(IntakeAction.SelectCollector(selected))
+                    },
+                    error = state.intakeErrors.collector,
+                    modifier = Modifier.fillMaxWidth()
+                ) { collector ->
+                    Text(
+                        text = collector.name + ", " + collector.title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
+
+                if (state.isCurrentCollectorMissing) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = MaterialTheme.dimensions.paddingSmall),
+                        shape = MaterialTheme.shapes.medium,
+                        color = MaterialTheme.colors.appBackground
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    top = MaterialTheme.dimensions.paddingLarge,
+                                    bottom = MaterialTheme.dimensions.paddingMedium
+                                )
+                                .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                        ) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                            ) {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_warning),
+                                            contentDescription = "Missing collector",
+                                            tint = MaterialTheme.colors.error,
+                                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                        )
+                                        Text(
+                                            text = "Collector not found",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = MaterialTheme.colors.error
+                                        )
+                                    }
+
+                                    Text(
+                                        text = "The collector associated with this session isn’t in your current list. You can select an existing collector or register this one.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colors.textPrimary.copy(alpha = 0.8f)
+                                    )
+                                }
+
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                                    ) {
+                                        Text(
+                                            text = "Name",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colors.textSecondary
+                                        )
+                                        Text(
+                                            text = state.session.collectorName,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colors.textPrimary
+                                        )
+                                    }
+
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                                    ) {
+                                        Text(
+                                            text = "Title",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colors.textSecondary
+                                        )
+                                        Text(
+                                            text = state.session.collectorTitle,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colors.textPrimary
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier.height(MaterialTheme.dimensions.spacingSmall))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = MaterialTheme.dimensions.paddingSmall),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                Button(
+                                    onClick = { onAction(IntakeAction.RegisterMissingCollector) },
+                                    shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colors.primary,
+                                        contentColor = MaterialTheme.colors.buttonText
+                                    )
+                                ) {
+                                    Text(text = "Register Missing Collector")
+                                }
+                            }
+                        }
+                    }
+                }
 
                 DatePickerField(
                     label = "Collection Date",
@@ -252,7 +383,7 @@ fun IntakeScreen(
                     }
 
                     state.locationError != null -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)) {
                             Text(
                                 text = "Could not get location: ${
                                     state.locationError.toString(
@@ -281,7 +412,7 @@ fun IntakeScreen(
                         ) {
                             CircularProgressIndicator(
                                 color = MaterialTheme.colors.secondary,
-                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                             )
                             Text(
                                 "Getting location…",

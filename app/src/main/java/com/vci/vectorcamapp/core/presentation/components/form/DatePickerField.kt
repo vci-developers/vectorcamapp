@@ -57,7 +57,7 @@ fun DatePickerField(
     }
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall),
         modifier = Modifier.fillMaxWidth()
     ) {
         label?.let {
@@ -122,7 +122,7 @@ fun DatePickerField(
                     painter = painterResource(R.drawable.ic_calendar),
                     contentDescription = "Calendar",
                     tint = MaterialTheme.colors.icon,
-                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
                 )
             }
         }

@@ -91,12 +91,12 @@ fun CapturedSpecimenTile(
             }
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
                 modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingLarge)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
                     modifier = Modifier.height(MaterialTheme.dimensions.componentHeightSmall)
                 ) {
                     VerticalDivider(
@@ -109,7 +109,7 @@ fun CapturedSpecimenTile(
                         painter = painterResource(R.drawable.ic_specimen),
                         contentDescription = "Mosquito",
                         tint = MaterialTheme.colors.icon,
-                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                     )
 
                     Text(

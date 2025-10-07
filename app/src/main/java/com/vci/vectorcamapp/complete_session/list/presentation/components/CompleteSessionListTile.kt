@@ -95,7 +95,7 @@ fun CompleteSessionListTile(
                                 painter = painterResource(R.drawable.ic_arrow_right),
                                 contentDescription = "Arrow Right",
                                 tint = MaterialTheme.colors.icon,
-                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                             )
                         }
                     }
@@ -152,7 +152,7 @@ fun CompleteSessionListTile(
                 )
 
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
                 ) {
                     Text(
                         text = "Created At: ${dateTimeFormatter.format(session.createdAt)}",
@@ -166,7 +166,7 @@ fun CompleteSessionListTile(
                         color = MaterialTheme.colors.textSecondary
                     )
 
-                    Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
+                    Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingExtraSmall))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -174,7 +174,7 @@ fun CompleteSessionListTile(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
                         ) {
                             Text(
                                 text = "Upload Progress",

@@ -7,8 +7,10 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.vci.vectorcamapp.core.data.cache.serializers.DeviceCacheDtoSerializer
 import com.vci.vectorcamapp.core.data.cache.serializers.CurrentSessionCacheDtoSerializer
+import com.vci.vectorcamapp.core.data.cache.serializers.DefaultIntakeFieldsCacheDtoSerializer
 import com.vci.vectorcamapp.core.data.dto.cache.DeviceCacheDto
 import com.vci.vectorcamapp.core.data.dto.cache.CurrentSessionCacheDto
+import com.vci.vectorcamapp.core.data.dto.cache.DefaultIntakeFieldsCacheDto
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,6 +23,7 @@ import javax.inject.Singleton
 
 private const val CURRENT_SESSION_DATA_STORE_FILE_NAME = "current_session.pb"
 private const val DEVICE_DATA_STORE_FILE_NAME = "device.pb"
+private const val DEFAULT_INTAKE_FIELDS_DATA_STORE_FILE_NAME = "intake_form_default_values.pb"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -44,6 +47,17 @@ object DataStoreModule {
             serializer = DeviceCacheDtoSerializer,
             produceFile = { context.dataStoreFile(DEVICE_DATA_STORE_FILE_NAME)},
             corruptionHandler = ReplaceFileCorruptionHandler { DeviceCacheDto() },
+            scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideDefaultIntakeFieldsDataStore(@ApplicationContext context: Context): DataStore<DefaultIntakeFieldsCacheDto> {
+        return DataStoreFactory.create(
+            serializer = DefaultIntakeFieldsCacheDtoSerializer,
+            produceFile = { context.dataStoreFile(DEFAULT_INTAKE_FIELDS_DATA_STORE_FILE_NAME) },
+            corruptionHandler = ReplaceFileCorruptionHandler { DefaultIntakeFieldsCacheDto() },
             scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
         )
     }
