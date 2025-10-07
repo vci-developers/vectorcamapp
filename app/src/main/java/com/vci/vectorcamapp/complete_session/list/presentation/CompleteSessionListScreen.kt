@@ -13,14 +13,17 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.complete_session.list.presentation.components.CompleteSessionListTile
+import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -68,6 +71,37 @@ fun CompleteSessionListScreen(
             },
             modifier = modifier
         ) {
+            item {
+                SearchTextField(
+                    searchQuery = state.searchQuery,
+                    onSearchQueryChange = { newSearchQueryText ->
+                        onAction(CompleteSessionListAction.UpdateSearchQuery(newSearchQueryText))
+                    },
+                    placeholder = "Search by collector, district, session type, etc.",
+                    modifier = Modifier.padding(
+                        start = MaterialTheme.dimensions.paddingMedium,
+                        end = MaterialTheme.dimensions.paddingMedium
+                    )
+                )
+            }
+
+            if (state.sessionAndSiteToUploadProgress.isEmpty()) {
+                item {
+                    Text(
+                        text = if (state.searchQuery.isBlank())
+                            "No completed sessions found."
+                        else
+                            "No matching sessions found.",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colors.textSecondary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(MaterialTheme.dimensions.paddingMedium)
+                            .fillMaxSize()
+                    )
+                }
+            }
+
             items(
                 items = state.sessionAndSiteToUploadProgress.toList().asReversed(),
                 key = { it.first.session.localId }) { (sessionAndSite, sessionUploadProgress) ->

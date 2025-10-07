@@ -19,7 +19,7 @@ interface SessionRepository {
     suspend fun getSessionAndSurveillanceFormById(sessionId: UUID): SessionAndSurveillanceForm?
     suspend fun getSessionAndSiteById(sessionId: UUID): SessionAndSite?
     suspend fun getImageUrisBySessionId(sessionId: UUID): List<Uri>
-    fun observeIncompleteSessions(): Flow<List<Session>>
+    fun observeIncompleteSessionsAndSites(): Flow<List<SessionAndSite>>
     fun observeCompleteSessionsAndSites(): Flow<List<SessionAndSite>>
     fun observeSessionWithSpecimens(sessionId: UUID): Flow<SessionWithSpecimens?>
 }
