@@ -26,6 +26,7 @@ fun getRegionBasedVersionName(): String {
     return when (region) {
         "colombia" -> "1.0.6"
         "uganda" -> "1.0.2"
+        "nigeria" -> "1.0.0"
         else -> {
             println("⚠️ Unknown region '$region', using default version name")
             "1.0.0"
