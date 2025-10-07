@@ -37,7 +37,7 @@ fun CompleteSessionDetailsScreen(
                 contentDescription = "Back Button",
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
-                    .size(MaterialTheme.dimensions.iconSizeMedium)
+                    .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
                         onAction(CompleteSessionDetailsAction.ReturnToCompleteSessionListScreen)
                     })

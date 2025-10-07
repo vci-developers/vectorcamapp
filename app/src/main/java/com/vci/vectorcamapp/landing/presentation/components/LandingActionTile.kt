@@ -59,7 +59,7 @@ fun LandingActionTile(
                     painter = icon,
                     contentDescription = "Action Icon",
                     tint = MaterialTheme.colors.icon,
-                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
                 )
 
                 if (badgeCount > 0) {
@@ -114,7 +114,7 @@ fun LandingActionTile(
                     painter = painterResource(R.drawable.ic_arrow_right),
                     contentDescription = "Arrow Right",
                     tint = MaterialTheme.colors.icon,
-                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                 )
             }
         }

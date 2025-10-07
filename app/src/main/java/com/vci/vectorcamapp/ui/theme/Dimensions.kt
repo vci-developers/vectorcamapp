@@ -36,8 +36,9 @@ data class Dimensions(
     // Icon Sizes
     val iconSizeExtraSmall: Dp = 14.dp,
     val iconSizeSmall: Dp = 16.dp,
-    val iconSizeMedium: Dp = 24.dp,
-    val iconSizeLarge: Dp = 32.dp,
+    val iconSizeMedium: Dp = 18.dp,
+    val iconSizeLarge: Dp = 24.dp,
+    val iconSizeExtraLarge: Dp = 32.dp,
 
     // Corner Radii
     val cornerRadiusSmall: Dp = 8.dp,

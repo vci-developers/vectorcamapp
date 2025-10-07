@@ -109,7 +109,7 @@ fun CapturedSpecimenTile(
                         painter = painterResource(R.drawable.ic_specimen),
                         contentDescription = "Mosquito",
                         tint = MaterialTheme.colors.icon,
-                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                     )
 
                     Text(

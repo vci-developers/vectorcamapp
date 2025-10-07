@@ -59,7 +59,7 @@ fun ActionButton(
                     painter = iconPainter,
                     contentDescription = null,
                     tint = MaterialTheme.colors.buttonText,
-                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                 )
             }
 
