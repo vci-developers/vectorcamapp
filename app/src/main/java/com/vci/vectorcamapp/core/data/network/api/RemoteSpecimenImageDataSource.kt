@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.core.data.network.api
 
-import android.util.Log
 import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageRequestDto
@@ -50,6 +49,7 @@ class RemoteSpecimenImageDataSource @Inject constructor(
                                 speciesLogits = it.speciesLogits,
                                 sexLogits = it.sexLogits,
                                 abdomenStatusLogits = it.abdomenStatusLogits,
+                                bboxDetectionDuration = it.bboxDetectionDuration,
                                 speciesInferenceDuration = it.speciesInferenceDuration,
                                 sexInferenceDuration = it.sexInferenceDuration,
                                 abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration

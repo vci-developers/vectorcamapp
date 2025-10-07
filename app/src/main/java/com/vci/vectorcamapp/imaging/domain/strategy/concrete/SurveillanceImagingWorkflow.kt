@@ -17,8 +17,24 @@ class SurveillanceImagingWorkflow @Inject constructor(
     private val inferenceRepository: InferenceRepository
 ) : ImagingWorkflow {
     override suspend fun processLiveFrame(bitmap: Bitmap): LiveFrameProcessingResult {
-        val previewInferenceResults = inferenceRepository.detectSpecimen(bitmap)
-        val highestConfidenceDetection: InferenceResult? =
+        val previewInferenceResults = inferenceRepository.detectSpecimen(bitmap).map { detectorResult ->
+            InferenceResult(
+                bboxTopLeftX = detectorResult.bboxTopLeftX,
+                bboxTopLeftY = detectorResult.bboxTopLeftY,
+                bboxWidth = detectorResult.bboxWidth,
+                bboxHeight = detectorResult.bboxHeight,
+                bboxConfidence = detectorResult.bboxConfidence,
+                bboxClassId = detectorResult.bboxClassId,
+                speciesLogits = null,
+                sexLogits = null,
+                abdomenStatusLogits = null,
+                bboxDetectionDuration = detectorResult.bboxDetectionDuration,
+                speciesInferenceDuration = null,
+                sexInferenceDuration = null,
+                abdomenStatusInferenceDuration = null
+            )
+        }
+        val highestConfidenceDetection =
             previewInferenceResults.maxByOrNull { it.bboxConfidence }
         val autofocusPoint = highestConfidenceDetection?.let { detection ->
             inferenceRepository.computeAutofocusCentroid(bitmap, detection)
@@ -31,18 +47,18 @@ class SurveillanceImagingWorkflow @Inject constructor(
     }
 
     override suspend fun processCapturedFrame(bitmap: Bitmap): Result<CapturedFrameProcessingResult, ImagingError> {
-        val captureInferenceResults = inferenceRepository.detectSpecimen(bitmap)
+        val captureDetectorResults = inferenceRepository.detectSpecimen(bitmap)
 
-        when (captureInferenceResults.size) {
+        when (captureDetectorResults.size) {
             0 -> return Result.Error(ImagingError.NO_SPECIMEN_FOUND)
             1 -> {
-                val captureInferenceResult = captureInferenceResults.first()
+                val captureDetectorResult = captureDetectorResults.first()
                 val topLeftXFloat =
-                    captureInferenceResult.bboxTopLeftX * bitmap.width
+                    captureDetectorResult.bboxTopLeftX * bitmap.width
                 val topLeftYFloat =
-                    captureInferenceResult.bboxTopLeftY * bitmap.height
-                val widthFloat = captureInferenceResult.bboxWidth * bitmap.width
-                val heightFloat = captureInferenceResult.bboxHeight * bitmap.height
+                    captureDetectorResult.bboxTopLeftY * bitmap.height
+                val widthFloat = captureDetectorResult.bboxWidth * bitmap.width
+                val heightFloat = captureDetectorResult.bboxHeight * bitmap.height
 
                 val topLeftXAbsolute = topLeftXFloat.toInt()
                 val topLeftYAbsolute = topLeftYFloat.toInt()
@@ -90,15 +106,16 @@ class SurveillanceImagingWorkflow @Inject constructor(
                             sex = sexIndex?.let { index -> SexLabel.entries[index].label },
                             abdomenStatus = abdomenStatusIndex?.let { index -> AbdomenStatusLabel.entries[index].label },
                             capturedInferenceResult = InferenceResult(
-                                bboxTopLeftX = captureInferenceResult.bboxTopLeftX,
-                                bboxTopLeftY = captureInferenceResult.bboxTopLeftY,
-                                bboxWidth = captureInferenceResult.bboxWidth,
-                                bboxHeight = captureInferenceResult.bboxHeight,
-                                bboxConfidence = captureInferenceResult.bboxConfidence,
-                                bboxClassId = captureInferenceResult.bboxClassId,
+                                bboxTopLeftX = captureDetectorResult.bboxTopLeftX,
+                                bboxTopLeftY = captureDetectorResult.bboxTopLeftY,
+                                bboxWidth = captureDetectorResult.bboxWidth,
+                                bboxHeight = captureDetectorResult.bboxHeight,
+                                bboxConfidence = captureDetectorResult.bboxConfidence,
+                                bboxClassId = captureDetectorResult.bboxClassId,
                                 speciesLogits = speciesResult?.logits,
                                 sexLogits = sexResult?.logits,
                                 abdomenStatusLogits = abdomenStatusResult?.logits,
+                                bboxDetectionDuration = captureDetectorResult.bboxDetectionDuration,
                                 speciesInferenceDuration = speciesResult?.inferenceDuration,
                                 sexInferenceDuration = sexResult?.inferenceDuration,
                                 abdomenStatusInferenceDuration = abdomenStatusResult?.inferenceDuration,

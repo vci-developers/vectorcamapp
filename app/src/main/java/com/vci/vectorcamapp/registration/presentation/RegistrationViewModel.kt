@@ -5,9 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
+import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.registration.domain.use_cases.RegistrationValidationUseCases
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
+import com.vci.vectorcamapp.registration.logging.RegistrationSentryLogger
+import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +30,8 @@ import javax.inject.Inject
 class RegistrationViewModel @Inject constructor(
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
+    private val collectorRepository: CollectorRepository,
+    private val registrationValidationUseCases: RegistrationValidationUseCases,
     programRepository: ProgramRepository
 ) : CoreViewModel() {
 
@@ -50,10 +58,49 @@ class RegistrationViewModel @Inject constructor(
                     _state.update { it.copy(selectedProgram = action.program) }
                 }
 
+                is RegistrationAction.EnterCollectorName -> {
+                    _state.update {
+                        it.copy(
+                            collector = it.collector.copy(
+                                name = action.text
+                            )
+                        )
+                    }
+                }
+
+
+                is RegistrationAction.EnterCollectorTitle -> {
+                    _state.update {
+                        it.copy(
+                            collector = it.collector.copy(
+                                title = action.text
+                            )
+                        )
+                    }
+                }
+
                 RegistrationAction.ConfirmRegistration -> {
                     val selectedProgram = state.value.selectedProgram
+
+                    val collector = state.value.collector
+                    val nameValidationResult = registrationValidationUseCases.validateCollectorName(collector.name)
+                    val titleValidationResult = registrationValidationUseCases.validateCollectorTitle(collector.title)
+
+                    _state.update { currentState ->
+                        currentState.copy(
+                            registrationErrors = RegistrationErrors(
+                                collectorName = nameValidationResult.errorOrNull(),
+                                collectorTitle = titleValidationResult.errorOrNull(),
+                            )
+                        )
+                    }
+
+                    val hasError = listOf(nameValidationResult, titleValidationResult).any { it is Result.Error }
+                    if (hasError) return@launch
+
                     if (selectedProgram == null) {
                         emitError(RegistrationError.PROGRAM_NOT_FOUND)
+                        RegistrationSentryLogger.logProgramNotFound(IllegalStateException("Program not found during registration"))
                         return@launch
                     }
 
@@ -66,9 +113,11 @@ class RegistrationViewModel @Inject constructor(
                         )
                         deviceCache.saveDevice(device, selectedProgram.id)
                         currentSessionCache.clearSession()
+                        collectorRepository.upsertCollector(_state.value.collector)
                         _events.send(RegistrationEvent.NavigateToLandingScreen)
                     } catch (e: Exception) {
                         emitError(RegistrationError.UNKNOWN_ERROR)
+                        RegistrationSentryLogger.logDeviceRegistrationFailure(e, selectedProgram.id)
                     }
                 }
             }

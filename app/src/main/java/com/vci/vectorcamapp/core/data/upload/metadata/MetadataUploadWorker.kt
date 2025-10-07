@@ -262,7 +262,6 @@ class MetadataUploadWorker @AssistedInject constructor(
             val localSessionDto = SessionDto(
                 sessionId = localSession.remoteId,
                 frontendId = localSession.localId,
-                houseNumber = localSession.houseNumber,
                 collectorTitle = localSession.collectorTitle,
                 collectorName = localSession.collectorName,
                 collectionDate = localSession.collectionDate,
@@ -302,7 +301,6 @@ class MetadataUploadWorker @AssistedInject constructor(
             val remoteSession = Session(
                 localId = remoteSessionDto.frontendId,
                 remoteId = remoteSessionDto.sessionId,
-                houseNumber = remoteSessionDto.houseNumber,
                 collectorTitle = remoteSessionDto.collectorTitle,
                 collectorName = remoteSessionDto.collectorName,
                 collectionDate = remoteSessionDto.collectionDate,
@@ -489,6 +487,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                         speciesLogits = it.speciesLogits,
                         sexLogits = it.sexLogits,
                         abdomenStatusLogits = it.abdomenStatusLogits,
+                        bboxDetectionDuration = it.bboxDetectionDuration,
                         speciesInferenceDuration = it.speciesInferenceDuration,
                         sexInferenceDuration = it.sexInferenceDuration,
                         abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration
@@ -567,6 +566,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                     speciesLogits = it.speciesLogits,
                     sexLogits = it.sexLogits,
                     abdomenStatusLogits = it.abdomenStatusLogits,
+                    bboxDetectionDuration = it.bboxDetectionDuration,
                     speciesInferenceDuration = it.speciesInferenceDuration,
                     sexInferenceDuration = it.sexInferenceDuration,
                     abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration,

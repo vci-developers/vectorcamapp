@@ -17,8 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -31,7 +29,6 @@ fun TextEntryField(
     modifier: Modifier = Modifier,
     label: String? = null,
     singleLine: Boolean = false,
-    keyboardType: KeyboardType = KeyboardType.Text,
     error: Error? = null,
     placeholder: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -40,7 +37,7 @@ fun TextEntryField(
     val context = LocalContext.current
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall),
         modifier = Modifier.fillMaxWidth()
     ) {
         label?.let {
@@ -67,6 +64,7 @@ fun TextEntryField(
                     )
                 }
             },
+            maxLines = 8,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colors.transparent,
                 unfocusedBorderColor = MaterialTheme.colors.transparent,

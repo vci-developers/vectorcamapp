@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
 import com.vci.vectorcamapp.core.data.dto.site.SiteDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.room.VectorCamDatabase
+import com.vci.vectorcamapp.core.data.room.dao.CollectorDao
 import com.vci.vectorcamapp.core.data.room.dao.InferenceResultDao
 import com.vci.vectorcamapp.core.data.room.dao.ProgramDao
 import com.vci.vectorcamapp.core.data.room.dao.SessionDao
@@ -57,7 +58,6 @@ object RoomDatabaseModule {
 
                     db.beginTransaction()
                     try {
-                        // Use direct SQL to avoid circular dependency
                         programs.forEach { program ->
                             db.execSQL(
                                 """
@@ -82,42 +82,65 @@ object RoomDatabaseModule {
                         }
 
                         sites.forEach { site ->
+                            val isActive = if (site.isActive) 1 else 0
                             db.execSQL(
                                 """
-                                    INSERT OR IGNORE INTO `site` 
-                                        (`id`, `programId`, `district`, `subCounty`, `parish`, `sentinelSite`, `healthCenter`) 
-                                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                                    INSERT OR IGNORE INTO `site`
+                                        (`id`, `programId`, `district`, `subCounty`, `parish`, `villageName`, `houseNumber`, `healthCenter`, `isActive`)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                                 """.trimIndent(), arrayOf(
                                     site.id,
                                     site.programId,
                                     site.district,
                                     site.subCounty,
                                     site.parish,
-                                    site.sentinelSite,
-                                    site.healthCenter
+                                    site.villageName,
+                                    site.houseNumber,
+                                    site.healthCenter,
+                                    isActive
                                 )
                             )
 
                             db.execSQL(
                                 """
                                     UPDATE `site`
-                                        SET `programId` = ?, `district` = ?, `subCounty` = ?, `parish` = ?, `sentinelSite` = ?, `healthCenter` = ?
+                                        SET `programId` = ?,
+                                            `district` = ?,
+                                            `subCounty` = ?,
+                                            `parish` = ?,
+                                            `villageName` = ?,
+                                            `houseNumber` = ?,
+                                            `healthCenter` = ?,
+                                            `isActive` = ?
                                     WHERE `id` = ?
-                                        AND (`programId` != ? OR `district` != ? OR `subCounty` != ? OR `parish` != ? OR `sentinelSite` != ? OR `healthCenter` != ?)
+                                        AND (
+                                            `programId` != ? OR 
+                                            `district` != ? OR 
+                                            `subCounty` != ? OR 
+                                            `parish` != ? OR 
+                                            `villageName` != ? OR
+                                            `houseNumber` != ? OR
+                                            `healthCenter` != ? OR
+                                            `isActive` != ?
+                                        )
                                 """.trimIndent(), arrayOf(
                                     site.programId,
                                     site.district,
                                     site.subCounty,
                                     site.parish,
-                                    site.sentinelSite,
+                                    site.villageName,
+                                    site.houseNumber,
                                     site.healthCenter,
+                                    isActive,
                                     site.id,
                                     site.programId,
                                     site.district,
                                     site.subCounty,
                                     site.parish,
-                                    site.sentinelSite,
-                                    site.healthCenter
+                                    site.villageName,
+                                    site.houseNumber,
+                                    site.healthCenter,
+                                    isActive
                                 )
                             )
                         }
@@ -160,4 +183,7 @@ object RoomDatabaseModule {
 
     @Provides
     fun provideSiteDao(db: VectorCamDatabase): SiteDao = db.siteDao
+
+    @Provides
+    fun provideCollectorDao(db: VectorCamDatabase): CollectorDao = db.collectorDao
 }

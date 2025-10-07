@@ -56,7 +56,7 @@ fun <T> DropdownField(
     var expanded by remember { mutableStateOf(false) }
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall),
         modifier = Modifier.fillMaxWidth()
     ) {
         label?.let {
@@ -95,7 +95,7 @@ fun <T> DropdownField(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(start = MaterialTheme.dimensions.paddingSmall)
+                            .padding(start = MaterialTheme.dimensions.paddingExtraSmall)
                     ) {
                         if (selectedOption != null) {
                             itemContent(selectedOption)
@@ -108,7 +108,7 @@ fun <T> DropdownField(
                         }
                     }
 
-                    Box(modifier = Modifier.padding(start = MaterialTheme.dimensions.paddingLarge)) {
+                    Box(modifier = Modifier.padding(start = MaterialTheme.dimensions.paddingSmall)) {
                         Icon(
                             painter = painterResource(if (expanded) R.drawable.ic_arrow_up else R.drawable.ic_arrow_down),
                             contentDescription = if (expanded) "Collapse dropdown" else "Expand dropdown",
@@ -141,6 +141,7 @@ fun <T> DropdownField(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(start = MaterialTheme.dimensions.paddingSmall)
                             .height(parentHeight)
                             .testTag(if (menuItemTestTagPrefix != null) "${menuItemTestTagPrefix}-$index" else "dropdown-menu-item-$index"),
                     )

@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 import javax.inject.Inject
 
@@ -29,8 +30,9 @@ class SpecimenImageRepositoryImplementation @Inject constructor(
             val updatedRows = specimenImageDao.updateSpecimenImage(specimenImage.toEntity(specimenId, sessionId))
             if (updatedRows == 0) {
                 Result.Error(RoomDbError.NO_ROWS_AFFECTED)
+            } else {
+                Result.Success(Unit)
             }
-            Result.Success(Unit)
         } catch (e: SQLiteConstraintException) {
             Result.Error(RoomDbError.CONSTRAINT_VIOLATION)
         } catch (e: Exception) {
@@ -40,5 +42,13 @@ class SpecimenImageRepositoryImplementation @Inject constructor(
 
     override suspend fun deleteSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID): Boolean {
         return specimenImageDao.deleteSpecimenImage(specimenImage.toEntity(specimenId, sessionId)) > 0
+    }
+
+    override fun observeUploadedImageCountForSession(sessionId: UUID): Flow<Int> {
+        return specimenImageDao.observeUploadedImageCountForSession(sessionId)
+    }
+
+    override suspend fun getTotalImageCountForSession(sessionId: UUID): Int {
+        return specimenImageDao.getTotalImageCountForSession(sessionId)
     }
 }

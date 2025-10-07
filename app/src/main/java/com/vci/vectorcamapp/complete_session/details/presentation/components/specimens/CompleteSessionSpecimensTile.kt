@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.complete_session.details.presentation.components.specimens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -49,7 +47,6 @@ import com.vci.vectorcamapp.ui.extensions.zoomPanGesture
 
 @Composable
 fun CompleteSessionSpecimensTile(
-    session: Session,
     specimen: Specimen,
     specimenImage: SpecimenImage,
     modifier: Modifier = Modifier,
@@ -57,7 +54,7 @@ fun CompleteSessionSpecimensTile(
 ) {
 
     val context = LocalContext.current
-    var density = LocalDensity.current
+    val density = LocalDensity.current
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
@@ -104,7 +101,7 @@ fun CompleteSessionSpecimensTile(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
                 modifier = Modifier.height(MaterialTheme.dimensions.componentHeightSmall)
             ) {
                 VerticalDivider(
@@ -166,7 +163,7 @@ fun CompleteSessionSpecimensTile(
             )
 
             Text(
-                text = "Captured At: ${dateTimeFormatter.format(session.createdAt)}",
+                text = "Captured On: ${dateTimeFormatter.format(specimenImage.capturedAt)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.textPrimary
             )

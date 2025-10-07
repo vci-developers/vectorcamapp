@@ -10,8 +10,10 @@ fun SiteEntity.toDomain() : Site {
         district = this.district,
         subCounty = this.subCounty,
         parish = this.parish,
-        sentinelSite = this.sentinelSite,
-        healthCenter = this.healthCenter
+        villageName = this.villageName,
+        houseNumber = this.houseNumber,
+        healthCenter = this.healthCenter,
+        isActive = this.isActive
     )
 }
 
@@ -22,8 +24,10 @@ fun Site.toEntity(programId: Int) : SiteEntity {
         district = this.district,
         subCounty = this.subCounty,
         parish = this.parish,
-        sentinelSite = this.sentinelSite,
-        healthCenter = this.healthCenter
+        villageName = this.villageName,
+        houseNumber = this.houseNumber,
+        healthCenter = this.healthCenter,
+        isActive = this.isActive
     )
 }
 
@@ -34,7 +38,9 @@ fun SiteDto.toEntity(): SiteEntity {
         district = this.district,
         subCounty = this.subCounty,
         parish = this.parish,
-        sentinelSite = this.sentinelSite,
-        healthCenter = this.healthCenter
+        villageName = this.villageName,
+        houseNumber = this.houseNumber,
+        healthCenter = this.healthCenter,
+        isActive = this.isActive
     )
 }

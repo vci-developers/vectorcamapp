@@ -6,6 +6,8 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.Site
+import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
@@ -42,7 +44,7 @@ class LandingViewModelTest {
     private lateinit var viewModel: LandingViewModel
 
     // Observed by VM to derive incompleteSessionsCount
-    private lateinit var incompleteFlow: MutableStateFlow<List<Session>>
+    private lateinit var incompleteFlow: MutableStateFlow<List<SessionAndSite>>
 
     @Before
     fun setUp() {
@@ -58,7 +60,7 @@ class LandingViewModelTest {
 
         // Default flow
         incompleteFlow = MutableStateFlow(emptyList())
-        every { sessionRepository.observeIncompleteSessions() } returns incompleteFlow
+        every { sessionRepository.observeIncompleteSessionsAndSites() } returns incompleteFlow
     }
 
     @After
@@ -73,7 +75,6 @@ class LandingViewModelTest {
     private fun makeSession(type: SessionType) = Session(
         localId = UUID.randomUUID(),
         remoteId = null,
-        houseNumber = "1",
         collectorTitle = "Dr.",
         collectorName = "Alice",
         collectionDate = 1_632_000_000L,
@@ -86,6 +87,17 @@ class LandingViewModelTest {
         latitude = null,
         longitude = null,
         type = type
+    )
+
+    private fun makeDummySite() = Site(
+        id = 1,
+        district = "Test District",
+        subCounty = "Test SubCounty",
+        parish = "Test Parish",
+        villageName = "Test Village",
+        houseNumber = "123",
+        healthCenter = "Test Center",
+        isActive = true
     )
 
     private fun initViewModel(
@@ -248,10 +260,11 @@ class LandingViewModelTest {
 
     @Test
     fun landVm_c01_actionTiles_emitCorrectEvents() = runTest {
+        val dummySite = makeDummySite()
         initViewModel(programId = 1, program = Program(1, "P", "C"), currentSession = null)
         incompleteFlow.value = listOf(
-            makeSession(SessionType.SURVEILLANCE),
-            makeSession(SessionType.DATA_COLLECTION)
+            SessionAndSite(makeSession(SessionType.SURVEILLANCE), dummySite),
+            SessionAndSite(makeSession(SessionType.DATA_COLLECTION), dummySite)
         )
         advanceUntilIdle()
 
@@ -260,12 +273,6 @@ class LandingViewModelTest {
             advanceUntilIdle()
             assertThat(awaitItem()).isEqualTo(
                 LandingEvent.NavigateToIntakeScreen(SessionType.SURVEILLANCE)
-            )
-
-            viewModel.onAction(LandingAction.StartNewDataCollectionSession)
-            advanceUntilIdle()
-            assertThat(awaitItem()).isEqualTo(
-                LandingEvent.NavigateToIntakeScreen(SessionType.DATA_COLLECTION)
             )
 
             viewModel.onAction(LandingAction.ViewIncompleteSessions)
@@ -286,6 +293,7 @@ class LandingViewModelTest {
 
     @Test
     fun landVm_d01_incompleteSessionsCount_updatesWithFlow() = runTest {
+        val dummySite = makeDummySite()
         initViewModel(programId = 5, program = Program(5, "Prog", "XX"), currentSession = null)
 
         viewModel.state.test {
@@ -293,12 +301,12 @@ class LandingViewModelTest {
             val s1 = awaitItem()
             assertThat(s1.incompleteSessionsCount).isEqualTo(0)
 
-            incompleteFlow.value = listOf(makeSession(SessionType.SURVEILLANCE))
+            incompleteFlow.value = listOf(SessionAndSite(makeSession(SessionType.SURVEILLANCE), dummySite))
             advanceUntilIdle()
             val s2 = awaitItem()
             assertThat(s2.incompleteSessionsCount).isEqualTo(1)
 
-            incompleteFlow.value = List(4) { makeSession(SessionType.DATA_COLLECTION) }
+            incompleteFlow.value = List(4) { SessionAndSite(makeSession(SessionType.DATA_COLLECTION), dummySite)}
             advanceUntilIdle()
             val s3 = awaitItem()
             assertThat(s3.incompleteSessionsCount).isEqualTo(4)
@@ -320,12 +328,7 @@ class LandingViewModelTest {
         viewModel.events.test {
             viewModel.onAction(LandingAction.DismissResumePrompt)
             advanceUntilIdle()
-
-            viewModel.onAction(LandingAction.StartNewDataCollectionSession)
-            advanceUntilIdle()
-            assertThat(awaitItem()).isEqualTo(
-                LandingEvent.NavigateToIntakeScreen(SessionType.DATA_COLLECTION)
-            )
+            
             expectNoEvents()
         }
 
