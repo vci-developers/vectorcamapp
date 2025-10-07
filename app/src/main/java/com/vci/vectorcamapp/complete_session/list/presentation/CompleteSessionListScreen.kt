@@ -64,7 +64,7 @@ fun CompleteSessionListScreen(
                     contentDescription = "Back Button",
                     tint = MaterialTheme.colors.icon,
                     modifier = Modifier
-                        .size(MaterialTheme.dimensions.iconSizeMedium)
+                        .size(MaterialTheme.dimensions.iconSizeLarge)
                         .clickable {
                             onAction(CompleteSessionListAction.ReturnToLandingScreen)
                         })
@@ -135,7 +135,7 @@ fun CompleteSessionListScreen(
                 contentDescription = if (hasActiveUploads) "Refresh" else "Upload",
                 tint = MaterialTheme.colors.buttonText,
                 modifier = Modifier
-                    .size(MaterialTheme.dimensions.iconSizeMedium)
+                    .size(MaterialTheme.dimensions.iconSizeLarge)
                     .rotate(if (hasActiveUploads) rotation else 0f)
             )
         }

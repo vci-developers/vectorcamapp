@@ -54,7 +54,7 @@ fun SettingsScreen(
                 contentDescription = "Back Button",
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
-                    .size(MaterialTheme.dimensions.iconSizeMedium)
+                    .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable { onAction(SettingsAction.ReturnToLandingScreen) }
             )
         },
@@ -96,7 +96,7 @@ fun SettingsScreen(
                                     tint = MaterialTheme.colors.icon,
                                     modifier = Modifier
                                         .padding(horizontal = MaterialTheme.dimensions.paddingSmall)
-                                        .size(MaterialTheme.dimensions.iconSizeMedium)
+                                        .size(MaterialTheme.dimensions.iconSizeLarge)
                                 )
                                 Column(
                                     modifier = Modifier

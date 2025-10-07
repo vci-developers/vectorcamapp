@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.intake.presentation
 
 import com.vci.vectorcamapp.core.domain.model.Collector
-import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
@@ -14,6 +13,7 @@ import java.util.UUID
 data class IntakeState(
     val isLoading: Boolean = false,
     val allCollectors: List<Collector> = emptyList(),
+    val isCurrentCollectorMissing: Boolean = false,
     val locationError: IntakeError? = null,
     val allSitesInProgram: List<Site> = emptyList(),
     val selectedDistrict: String = "",
