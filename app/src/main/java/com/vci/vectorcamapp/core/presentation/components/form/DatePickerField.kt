@@ -122,7 +122,7 @@ fun DatePickerField(
                     painter = painterResource(R.drawable.ic_calendar),
                     contentDescription = "Calendar",
                     tint = MaterialTheme.colors.icon,
-                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
                 )
             }
         }

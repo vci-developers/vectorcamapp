@@ -80,7 +80,7 @@ fun ErrorSnackbarHost(
                         contentDescription = "Error",
                         tint = MaterialTheme.colors.error,
                         modifier = Modifier
-                            .size(MaterialTheme.dimensions.iconSizeMedium)
+                            .size(MaterialTheme.dimensions.iconSizeLarge)
                     )
                     Spacer(modifier = Modifier.widthIn(min = MaterialTheme.dimensions.spacingSmall))
                     Text(

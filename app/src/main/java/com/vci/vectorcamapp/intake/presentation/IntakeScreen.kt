@@ -5,14 +5,20 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -62,7 +68,7 @@ fun IntakeScreen(
                 contentDescription = "Back Button",
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
-                    .size(MaterialTheme.dimensions.iconSizeMedium)
+                    .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
                         when (state.session.type) {
                             SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
@@ -109,47 +115,104 @@ fun IntakeScreen(
                 }
 
                 if (state.isCurrentCollectorMissing) {
-                    Column(
-                        modifier = Modifier.padding(MaterialTheme.dimensions.paddingExtraSmall),
-                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = MaterialTheme.dimensions.paddingSmall),
+                        shape = MaterialTheme.shapes.medium,
+                        color = MaterialTheme.colors.appBackground
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    top = MaterialTheme.dimensions.paddingLarge,
+                                    bottom = MaterialTheme.dimensions.paddingMedium
+                                )
+                                .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_info),
-                                contentDescription = "Warning icon",
-                                tint = MaterialTheme.colors.error,
-                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
-                            )
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                            ) {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_warning),
+                                            contentDescription = "Missing collector",
+                                            tint = MaterialTheme.colors.error,
+                                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                        )
+                                        Text(
+                                            text = "Collector not found",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = MaterialTheme.colors.error
+                                        )
+                                    }
 
-                            Text(
-                                text = "Collector not found.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colors.error
-                            )
-                        }
-                        Text(
-                            text = "Name: ${state.session.collectorName}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colors.textPrimary
-                        )
+                                    Text(
+                                        text = "The collector associated with this session isn’t in your current list. You can select an existing collector or register this one.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colors.textPrimary.copy(alpha = 0.8f)
+                                    )
+                                }
 
-                        Text(
-                            text = "Title: ${state.session.collectorTitle}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colors.textPrimary
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            ActionButton(
-                                label = "Register New Collector",
-                                onClick = { onAction(IntakeAction.RegisterMissingCollector) }
-                            )
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                                    ) {
+                                        Text(
+                                            text = "Name",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colors.textSecondary
+                                        )
+                                        Text(
+                                            text = state.session.collectorName,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colors.textPrimary
+                                        )
+                                    }
+
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                                    ) {
+                                        Text(
+                                            text = "Title",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colors.textSecondary
+                                        )
+                                        Text(
+                                            text = state.session.collectorTitle,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colors.textPrimary
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier.height(MaterialTheme.dimensions.spacingSmall))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = MaterialTheme.dimensions.paddingSmall),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                Button(
+                                    onClick = { onAction(IntakeAction.RegisterMissingCollector) },
+                                    shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colors.primary,
+                                        contentColor = MaterialTheme.colors.buttonText
+                                    )
+                                ) {
+                                    Text(text = "Register Missing Collector")
+                                }
+                            }
                         }
                     }
                 }
@@ -349,7 +412,7 @@ fun IntakeScreen(
                         ) {
                             CircularProgressIndicator(
                                 color = MaterialTheme.colors.secondary,
-                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                             )
                             Text(
                                 "Getting location…",

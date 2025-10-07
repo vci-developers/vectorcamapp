@@ -29,7 +29,6 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -67,8 +66,13 @@ class IntakeViewModel @Inject constructor(
     lateinit var surveillanceFormWorkflowFactory: SurveillanceFormWorkflowFactory
     private lateinit var surveillanceFormWorkflow: SurveillanceFormWorkflow
 
+    private val _allCollectors = collectorRepository.observeAllCollectors()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+
     private val _state = MutableStateFlow(IntakeState())
-    val state: StateFlow<IntakeState> = _state.onStart {
+    val state = combine(_allCollectors, _state) { allCollectors, state ->
+        state.copy(allCollectors = allCollectors)
+    }.onStart {
         loadFormDetails()
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000L), IntakeState()
@@ -402,25 +406,20 @@ class IntakeViewModel @Inject constructor(
                         return@launch
                     }
 
-                    when (collectorRepository.upsertCollector(
+                    collectorRepository.upsertCollector(
                         Collector(
                             id = UUID.randomUUID(),
                             name = name,
                             title = title
                         )
-                    )) {
-                        is Result.Success -> {
-                            val updatedCollectors = collectorRepository.observeAllCollectors().first()
-                            _state.update {
-                                it.copy(
-                                    isCurrentCollectorMissing = false,
-                                    allCollectors = updatedCollectors
-                                )
-                            }
+                    ).onSuccess {
+                        _state.update {
+                            it.copy(
+                                isCurrentCollectorMissing = false
+                            )
                         }
-                        is Result.Error -> {
-                            emitError(IntakeError.UNKNOWN_ERROR)
-                        }
+                    }.onError {
+                        emitError(IntakeError.UNKNOWN_ERROR)
                     }
                 }
 

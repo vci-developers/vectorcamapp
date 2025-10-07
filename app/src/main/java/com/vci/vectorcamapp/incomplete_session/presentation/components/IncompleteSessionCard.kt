@@ -87,7 +87,7 @@ fun IncompleteSessionCard(
                     painter = painterResource(id = R.drawable.ic_arrow_right),
                     contentDescription = "Resume",
                     modifier = Modifier
-                        .size(MaterialTheme.dimensions.iconSizeLarge + MaterialTheme.dimensions.paddingExtraSmall)
+                        .size(MaterialTheme.dimensions.iconSizeExtraLarge + MaterialTheme.dimensions.paddingExtraSmall)
                         .background(MaterialTheme.colors.iconBackground, CircleShape)
                         .padding(MaterialTheme.dimensions.paddingExtraSmall),
                     tint = MaterialTheme.colors.icon
