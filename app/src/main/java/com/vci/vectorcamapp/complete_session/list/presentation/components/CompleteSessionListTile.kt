@@ -60,9 +60,15 @@ fun CompleteSessionListTile(
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
+    val progressColor =
+        if (sessionUploadProgress.totalImageCount == 0 || (sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()) == 1f) MaterialTheme.colors.primary
+        else if (sessionUploadProgress.isUploading) MaterialTheme.colors.warning
+        else MaterialTheme.colors.error
+
     session.completedAt?.let { completedAt ->
         ActionTile(
             onClick = onClick,
+            cardGlow = progressColor,
             modifier = modifier,
         ) {
             Column(
@@ -232,12 +238,7 @@ fun CompleteSessionListTile(
                                     else sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()
                                 )
                                 .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall)
-                                .background(
-                                    if (sessionUploadProgress.totalImageCount == 0 || (sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()) == 1f) MaterialTheme.colors.primary
-                                    else if (sessionUploadProgress.isUploading) MaterialTheme.colors.warning
-                                    else MaterialTheme.colors.error,
-                                    RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
-                                )
+                                .background(progressColor, RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
                         )
                     }
                 }
