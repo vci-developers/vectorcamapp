@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.complete_session.details.presentation.components.specimens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -103,7 +101,7 @@ fun CompleteSessionSpecimensTile(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
                 modifier = Modifier.height(MaterialTheme.dimensions.componentHeightSmall)
             ) {
                 VerticalDivider(
@@ -116,7 +114,7 @@ fun CompleteSessionSpecimensTile(
                     painter = painterResource(R.drawable.ic_specimen),
                     contentDescription = "Mosquito",
                     tint = MaterialTheme.colors.icon,
-                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                 )
 
                 Text(

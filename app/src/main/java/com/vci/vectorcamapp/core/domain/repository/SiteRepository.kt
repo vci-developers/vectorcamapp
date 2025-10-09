@@ -1,8 +1,9 @@
 package com.vci.vectorcamapp.core.domain.repository
 
 import com.vci.vectorcamapp.core.domain.model.Site
+import kotlinx.coroutines.flow.Flow
 
 interface SiteRepository {
-    suspend fun getAllSitesByProgramId(programId: Int): List<Site>
+    fun observeAllSitesByProgramId(programId: Int): Flow<List<Site>>
     suspend fun getSiteById(id: Int): Site?
 }
