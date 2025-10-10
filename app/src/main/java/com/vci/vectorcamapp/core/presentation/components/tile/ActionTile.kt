@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -17,7 +18,12 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 fun ActionTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    cardGlow: Color = MaterialTheme.colors.cardGlow,
+    shadowColor: Color = MaterialTheme.colors.cardGlow.copy(alpha = 0.2f),
+    shadowOffsetX: Dp = MaterialTheme.dimensions.shadowOffsetSmall,
+    shadowOffsetY: Dp  = MaterialTheme.dimensions.shadowOffsetSmall,
+    shadowCornerRadius: Dp  = MaterialTheme.dimensions.cornerRadiusMedium,
+    shadowSpread: Dp  = MaterialTheme.dimensions.shadowSpreadSmall,
+    shadowBlurRadius: Dp  = MaterialTheme.dimensions.shadowBlurSmall,
     content: @Composable () -> Unit
 ) {
     Card(
@@ -31,12 +37,12 @@ fun ActionTile(
                 vertical = MaterialTheme.dimensions.paddingSmall
             )
             .customShadow(
-                color = cardGlow.copy(alpha = 0.2f),
-                offsetX = MaterialTheme.dimensions.shadowOffsetSmall,
-                offsetY = MaterialTheme.dimensions.shadowOffsetSmall,
-                cornerRadius = MaterialTheme.dimensions.cornerRadiusMedium,
-                spread = MaterialTheme.dimensions.shadowSpreadSmall,
-                blurRadius = MaterialTheme.dimensions.shadowBlurSmall,
+                color = shadowColor,
+                offsetX = shadowOffsetX,
+                offsetY = shadowOffsetY,
+                cornerRadius = shadowCornerRadius,
+                spread = shadowSpread,
+                blurRadius = shadowBlurRadius,
             )
             .fillMaxWidth()
     ) {

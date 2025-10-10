@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
@@ -54,6 +55,9 @@ fun CompleteSessionListTile(
     val UPLOAD_ICON_MIN_ALPHA = 0.3f
     val UPLOAD_ICON_MAX_ALPHA = 1f
 
+    val STRONG_SHADOW_ALPHA = 0.4f
+    val WEAK_SHADOW_ALPHA = 0.25f
+
     val session = sessionAndSite.session
     val site = sessionAndSite.site
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
@@ -68,7 +72,11 @@ fun CompleteSessionListTile(
     session.completedAt?.let { completedAt ->
         ActionTile(
             onClick = onClick,
-            cardGlow = progressColor,
+            shadowColor = if (progressColor == MaterialTheme.colors.primary) progressColor.copy(alpha=STRONG_SHADOW_ALPHA) else progressColor.copy(alpha=WEAK_SHADOW_ALPHA),
+            shadowOffsetX = 0.dp,
+            shadowOffsetY = 0.dp,
+            shadowSpread = MaterialTheme.dimensions.shadowOffsetSmall,
+            shadowBlurRadius = MaterialTheme.dimensions.shadowBlurMedium,
             modifier = modifier,
         ) {
             Column(
