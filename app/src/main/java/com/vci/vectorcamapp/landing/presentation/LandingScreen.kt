@@ -44,7 +44,7 @@ fun LandingScreen(
                     painter = painterResource(R.drawable.ic_settings),
                     contentDescription = "Settings Icon",
                     modifier = Modifier
-                        .size(MaterialTheme.dimensions.iconSizeMedium)
+                        .size(MaterialTheme.dimensions.iconSizeLarge)
                 )
             }
         }

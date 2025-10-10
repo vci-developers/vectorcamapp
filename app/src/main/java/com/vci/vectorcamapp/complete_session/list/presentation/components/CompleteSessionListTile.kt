@@ -101,7 +101,7 @@ fun CompleteSessionListTile(
                                 painter = painterResource(R.drawable.ic_arrow_right),
                                 contentDescription = "Arrow Right",
                                 tint = MaterialTheme.colors.icon,
-                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                             )
                         }
                     }

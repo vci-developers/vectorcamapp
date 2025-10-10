@@ -2,8 +2,10 @@ package com.vci.vectorcamapp.core.di
 
 import com.vci.vectorcamapp.core.data.cache.CurrentSessionCacheImplementation
 import com.vci.vectorcamapp.core.data.cache.DeviceCacheImplementation
+import com.vci.vectorcamapp.core.data.cache.DefaultIntakeFieldsCacheImplementation
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,4 +27,10 @@ abstract class CacheModule {
     abstract fun bindDeviceCache(
         deviceCacheImplementation: DeviceCacheImplementation
     ): DeviceCache
+
+    @Binds
+    @Singleton
+    abstract fun bindDefaultIntakeFieldsCache(
+        defaultIntakeFieldsCacheImplementation: DefaultIntakeFieldsCacheImplementation
+    ): DefaultIntakeFieldsCache
 }

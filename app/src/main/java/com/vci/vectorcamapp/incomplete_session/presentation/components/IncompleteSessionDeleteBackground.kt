@@ -49,7 +49,7 @@ fun IncompleteSessionDeleteBackground(
                 painter = painterResource(id = R.drawable.ic_delete),
                 contentDescription = "Delete",
                 tint = MaterialTheme.colors.buttonText,
-                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
             )
         }
     }

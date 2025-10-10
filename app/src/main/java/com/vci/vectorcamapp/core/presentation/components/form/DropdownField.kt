@@ -113,7 +113,7 @@ fun <T> DropdownField(
                             painter = painterResource(if (expanded) R.drawable.ic_arrow_up else R.drawable.ic_arrow_down),
                             contentDescription = if (expanded) "Collapse dropdown" else "Expand dropdown",
                             tint = if (selectedOption == null) MaterialTheme.colors.textSecondary else MaterialTheme.colors.textPrimary,
-                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
                         )
                     }
                 }

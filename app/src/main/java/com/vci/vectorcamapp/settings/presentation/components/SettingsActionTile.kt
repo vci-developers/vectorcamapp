@@ -58,7 +58,7 @@ fun SettingsActionTile(
                         painter = painterResource(R.drawable.ic_arrow_right),
                         contentDescription = "Navigate",
                         tint = MaterialTheme.colors.icon,
-                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                     )
                 }
             }
