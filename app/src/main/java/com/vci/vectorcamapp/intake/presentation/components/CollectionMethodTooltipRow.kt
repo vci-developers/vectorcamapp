@@ -36,8 +36,8 @@ fun CollectionMethodTooltipRow(
             contentDescription = iconDescription,
             tint = MaterialTheme.colors.icon,
             modifier = Modifier
-                .size(MaterialTheme.dimensions.iconSizeLarge)
-                .padding(end = MaterialTheme.dimensions.spacingSmall)
+                .size(MaterialTheme.dimensions.iconSizeExtraLarge)
+                .padding(end = MaterialTheme.dimensions.spacingExtraSmall)
         )
         Text(
             buildAnnotatedString {
