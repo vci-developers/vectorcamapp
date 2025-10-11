@@ -41,16 +41,13 @@
     <string name="network_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
     <!-- Form validation error: Blank collector title -->
-    <string name="form_validation_error_blank_collector_title">Collector title is required.</string>
-
-    <!-- Form validation error: Blank collector name -->
-    <string name="form_validation_error_blank_collector_name">Collector name is required.</string>
+    <string name="form_validation_error_blank_collector">Collector is required.</string>
 
     <!-- Form validation error: Blank district -->
     <string name="form_validation_error_blank_district">District is required.</string>
 
-    <!-- Form validation error: Blank sentinel site -->
-    <string name="form_validation_error_blank_sentinel_site">Sentinel site is required.</string>
+    <!-- Form validation error: Blank village name -->
+    <string name="form_validation_error_blank_village_name">Village name is required.</string>
 
     <!-- Form validation error: Blank household number -->
     <string name="form_validation_error_blank_house_number">House number is required.</string>
@@ -157,6 +154,12 @@
     <!-- Registration error: Unknown error -->
     <string name="registration_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
+    <!-- Registration validation error: Blank collector title -->
+    <string name="registration_validation_error_blank_collector_title">Collector title is required.</string>
+
+    <!-- Registration validation error: Blank collector name -->
+    <string name="registration_validation_error_blank_collector_name">Collector name is required.</string>
+
     <!-- Incomplete session error: Session not found -->
     <string name="incomplete_session_error_session_not_found">Session not found. Please try again.</string>
 
@@ -181,6 +184,18 @@
     <!-- Complete session error: Unknown error -->
     <string name="complete_session_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
+    <!-- Settings error: Collector save failed -->
+    <string name="settings_error_collector_save_failed">Could not save collector. Please try again.</string>
+
+    <!-- Settings error: Collector deletion failed -->
+    <string name="settings_error_collector_deletion_failed">Could not delete collector. Please try again.</string>
+
+    <!-- Settings validation error: Blank collector title -->
+    <string name="settings_validation_error_blank_collector_title">Collector title is required.</string>
+
+    <!-- Settings validation error: Blank collector name -->
+    <string name="settings_validation_error_blank_collector_name">Collector name is required.</string>
+
     <!-- Image Upload Status: Upload completed -->
     <string name="upload_status_completed">Completed</string>
 
@@ -192,4 +207,10 @@
 
     <!-- Image Upload Status: Upload failed -->
     <string name="upload_status_retry">Retry</string>
+
+    <!-- Session Type: Surveillance -->
+    <string name="session_type_surveillance">Surveillance</string>
+
+    <!-- Session Type: Data Collection -->
+    <string name="session_type_data_collection">Data Collection</string>
 </resources>

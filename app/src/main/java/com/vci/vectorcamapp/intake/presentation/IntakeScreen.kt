@@ -5,23 +5,30 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
@@ -35,7 +42,9 @@ import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
+import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import java.util.UUID
 
 @Composable
 fun IntakeScreen(
@@ -44,11 +53,14 @@ fun IntakeScreen(
     val context = LocalContext.current
 
     BackHandler {
-        onAction(IntakeAction.ReturnToLandingScreen)
+        when (state.session.type) {
+            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
+            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
+        }
     }
 
     ScreenHeader(
-        title = "Session Intake",
+        title = "${state.session.type.displayText(context)} Intake",
         subtitle = "Please fill out the information below",
         leadingIcon = {
             Icon(
@@ -56,9 +68,12 @@ fun IntakeScreen(
                 contentDescription = "Back Button",
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
-                    .size(MaterialTheme.dimensions.iconSizeMedium)
+                    .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
-                        onAction(IntakeAction.ReturnToLandingScreen)
+                        when (state.session.type) {
+                            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
+                            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
+                        }
                     }
             )
         },
@@ -70,26 +85,137 @@ fun IntakeScreen(
                 iconPainter = painterResource(R.drawable.ic_info),
                 iconDescription = "General Information Icon"
             ) {
-                InfoPill(
-                    text = "Session Type: ${state.session.type.name}",
-                    color = MaterialTheme.colors.info
-                )
+                val selectedCollector = if (state.isCurrentCollectorMissing) {
+                    Collector(
+                        id = UUID.randomUUID(),
+                        name = state.session.collectorName,
+                        title = state.session.collectorTitle
+                    )
+                } else {
+                    state.allCollectors.firstOrNull { collector ->
+                        collector.name == state.session.collectorName && collector.title == state.session.collectorTitle
+                    }
+                }
 
-                TextEntryField(
-                    label = "Collector Name",
-                    value = state.session.collectorName,
-                    onValueChange = { onAction(IntakeAction.EnterCollectorName(it)) },
-                    singleLine = true,
-                    error = state.intakeErrors.collectorName
-                )
+                DropdownField(
+                    label = "Collector",
+                    options = state.allCollectors,
+                    selectedOption = selectedCollector,
+                    onOptionSelected = { selected: Collector ->
+                        onAction(IntakeAction.SelectCollector(selected))
+                    },
+                    error = state.intakeErrors.collector,
+                    modifier = Modifier.fillMaxWidth()
+                ) { collector ->
+                    Text(
+                        text = collector.name + ", " + collector.title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
 
-                TextEntryField(
-                    label = "Collector Title",
-                    value = state.session.collectorTitle,
-                    onValueChange = { onAction(IntakeAction.EnterCollectorTitle(it)) },
-                    singleLine = true,
-                    error = state.intakeErrors.collectorTitle
-                )
+                if (state.isCurrentCollectorMissing) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = MaterialTheme.dimensions.paddingSmall),
+                        shape = MaterialTheme.shapes.medium,
+                        color = MaterialTheme.colors.appBackground
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    top = MaterialTheme.dimensions.paddingLarge,
+                                    bottom = MaterialTheme.dimensions.paddingMedium
+                                )
+                                .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                        ) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                            ) {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_warning),
+                                            contentDescription = "Missing collector",
+                                            tint = MaterialTheme.colors.error,
+                                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                        )
+                                        Text(
+                                            text = "Collector not found",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = MaterialTheme.colors.error
+                                        )
+                                    }
+
+                                    Text(
+                                        text = "The collector associated with this session isn’t in your current list. You can select an existing collector or register this one.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colors.textPrimary.copy(alpha = 0.8f)
+                                    )
+                                }
+
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                                    ) {
+                                        Text(
+                                            text = "Name",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colors.textSecondary
+                                        )
+                                        Text(
+                                            text = state.session.collectorName,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colors.textPrimary
+                                        )
+                                    }
+
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                                    ) {
+                                        Text(
+                                            text = "Title",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colors.textSecondary
+                                        )
+                                        Text(
+                                            text = state.session.collectorTitle,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colors.textPrimary
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier.height(MaterialTheme.dimensions.spacingSmall))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = MaterialTheme.dimensions.paddingSmall),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                Button(
+                                    onClick = { onAction(IntakeAction.RegisterMissingCollector) },
+                                    shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colors.primary,
+                                        contentColor = MaterialTheme.colors.buttonText
+                                    )
+                                ) {
+                                    Text(text = "Register Missing Collector")
+                                }
+                            }
+                        }
+                    }
+                }
 
                 DatePickerField(
                     label = "Collection Date",
@@ -100,7 +226,10 @@ fun IntakeScreen(
                 )
 
                 val isOtherCollectionMethod =
-                    state.session.collectionMethod.startsWith(IntakeDropdownOptions.CollectionMethodOption.OTHER.label, ignoreCase = true)
+                    state.session.collectionMethod.startsWith(
+                        IntakeDropdownOptions.CollectionMethodOption.OTHER.label,
+                        ignoreCase = true
+                    )
 
                 DropdownField(
                     label = "Collection Method",
@@ -123,7 +252,8 @@ fun IntakeScreen(
                 if (isOtherCollectionMethod) {
                     TextEntryField(
                         label = "Other Collection Method",
-                        value = state.session.collectionMethod.removePrefix(IntakeDropdownOptions.CollectionMethodOption.OTHER.label).trimStart(),
+                        value = state.session.collectionMethod.removePrefix(IntakeDropdownOptions.CollectionMethodOption.OTHER.label)
+                            .trimStart(),
                         onValueChange = { onAction(IntakeAction.UpdateCollectionMethod("${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it")) },
                         singleLine = true,
                         error = state.intakeErrors.collectionMethod
@@ -131,7 +261,10 @@ fun IntakeScreen(
                 }
 
                 val isOtherSpecimenCondition =
-                    state.session.specimenCondition.startsWith(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label, ignoreCase = true)
+                    state.session.specimenCondition.startsWith(
+                        IntakeDropdownOptions.SpecimenConditionOption.OTHER.label,
+                        ignoreCase = true
+                    )
 
                 DropdownField(
                     label = "Specimen Condition",
@@ -154,7 +287,8 @@ fun IntakeScreen(
                 if (isOtherSpecimenCondition) {
                     TextEntryField(
                         label = "Other Specimen Condition",
-                        value = state.session.specimenCondition.removePrefix(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label).trimStart(),
+                        value = state.session.specimenCondition.removePrefix(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label)
+                            .trimStart(),
                         onValueChange = { onAction(IntakeAction.UpdateSpecimenCondition("${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it")) },
                         singleLine = true,
                         error = state.intakeErrors.specimenCondition
@@ -185,31 +319,39 @@ fun IntakeScreen(
 
                 if (state.selectedDistrict.isNotBlank()) {
                     DropdownField(
-                        label = "Sentinel Site",
+                        label = "Village Name",
                         options = state.allSitesInProgram.filter { it.district == state.selectedDistrict }
-                            .map { it.sentinelSite }.distinct(),
-                        selectedOption = state.selectedSentinelSite,
+                            .map { it.villageName }.distinct(),
+                        selectedOption = state.selectedVillageName,
                         onOptionSelected = {
-                            onAction(IntakeAction.SelectSentinelSite(it))
+                            onAction(IntakeAction.SelectVillageName(it))
                         },
-                        error = state.intakeErrors.sentinelSite,
-
-                        ) { sentinelSite ->
+                        error = state.intakeErrors.villageName,
+                    ) { villageName ->
                         Text(
-                            text = sentinelSite,
+                            text = villageName,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textPrimary
                         )
                     }
                 }
 
-                TextEntryField(
-                    label = "House Number",
-                    value = state.session.houseNumber,
-                    onValueChange = { onAction(IntakeAction.EnterHouseNumber(it)) },
-                    singleLine = true,
-                    error = state.intakeErrors.houseNumber
-                )
+                if (state.selectedVillageName.isNotBlank()) {
+                    DropdownField(
+                        label = "House Number",
+                        options = state.allSitesInProgram.filter { it.district == state.selectedDistrict && it.villageName == state.selectedVillageName }
+                            .map { it.houseNumber }.distinct(),
+                        selectedOption = state.selectedHouseNumber,
+                        onOptionSelected = { onAction(IntakeAction.SelectHouseNumber(it)) },
+                        error = state.intakeErrors.houseNumber,
+                    ) { houseNumber ->
+                        Text(
+                            text = houseNumber,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.textPrimary
+                        )
+                    }
+                }
 
                 state.surveillanceForm?.let { surveillanceForm ->
                     TextEntryField(
@@ -218,7 +360,6 @@ fun IntakeScreen(
                         onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it.filter { character -> character.isDigit() })) },
                         placeholder = "0",
                         singleLine = true,
-                        keyboardType = KeyboardType.Number,
                     )
                 }
 
@@ -242,7 +383,7 @@ fun IntakeScreen(
                     }
 
                     state.locationError != null -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)) {
                             Text(
                                 text = "Could not get location: ${
                                     state.locationError.toString(
@@ -271,7 +412,7 @@ fun IntakeScreen(
                         ) {
                             CircularProgressIndicator(
                                 color = MaterialTheme.colors.secondary,
-                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                             )
                             Text(
                                 "Getting location…",
@@ -312,7 +453,6 @@ fun IntakeScreen(
                             },
                             placeholder = "0",
                             singleLine = true,
-                            keyboardType = KeyboardType.Number,
                         )
                     }
 
@@ -322,7 +462,6 @@ fun IntakeScreen(
                         onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it.filter { character -> character.isDigit() })) },
                         placeholder = "0",
                         singleLine = true,
-                        keyboardType = KeyboardType.Number
                     )
 
                     surveillanceForm.llinType?.let { current ->
@@ -370,7 +509,6 @@ fun IntakeScreen(
                             },
                             placeholder = "0",
                             singleLine = true,
-                            keyboardType = KeyboardType.Number
                         )
                     }
                 }
@@ -386,13 +524,16 @@ fun IntakeScreen(
                 TextEntryField(
                     label = "Notes",
                     value = state.session.notes,
-                    onValueChange = { onAction(IntakeAction.EnterNotes(it)) })
+                    onValueChange = { onAction(IntakeAction.EnterNotes(it)) },
+                    placeholder = "1000 character limit...",
+                    maxCharacters = 1000,
+                )
             }
         }
 
         item {
             ActionButton(
-                label = "Continue",
+                label = "Begin ${state.session.type.displayText(context)} Imaging",
                 onClick = { onAction(IntakeAction.SubmitIntakeForm) },
                 modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
             )

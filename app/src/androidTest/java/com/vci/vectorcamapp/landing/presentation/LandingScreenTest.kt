@@ -83,8 +83,6 @@ class LandingScreenTest {
                                     when (action) {
                                         LandingAction.StartNewSurveillanceSession ->
                                             navController.navigate(Destination.Intake(SessionType.SURVEILLANCE))
-                                        LandingAction.StartNewDataCollectionSession ->
-                                            navController.navigate(Destination.Intake(SessionType.DATA_COLLECTION))
                                         LandingAction.ViewIncompleteSessions ->
                                             navController.navigate(Destination.IncompleteSession)
                                         LandingAction.ViewCompleteSessions ->
@@ -92,6 +90,7 @@ class LandingScreenTest {
                                         LandingAction.ResumeSession ->
                                             navController.navigate(Destination.Intake(SessionType.SURVEILLANCE))
                                         LandingAction.DismissResumePrompt -> Unit
+                                        LandingAction.OpenSettings -> Unit
                                     }
                                 }
                             }
@@ -157,7 +156,6 @@ class LandingScreenTest {
             initialState = LandingState(enrolledProgram = Program(0, "", ""))
         )
         composeRule.onNodeWithText("Begin a new household visit and capture mosquito images.").assertIsDisplayed()
-        composeRule.onNodeWithText("Capture and upload mosquito images without filling forms.").assertIsDisplayed()
         composeRule.onNodeWithText("Resume and complete any unfinished sessions.").assertIsDisplayed()
         composeRule.onNodeWithText("Review fully completed sessions and uploaded data.").assertIsDisplayed()
     }
@@ -194,9 +192,6 @@ class LandingScreenTest {
         clickTile(LandingTestTags.TILE_NEW_SURVEILLANCE)
         assert(lastAction == LandingAction.StartNewSurveillanceSession)
 
-        clickTile(LandingTestTags.TILE_DATA_COLLECTION)
-        assert(lastAction == LandingAction.StartNewDataCollectionSession)
-
         clickTile(LandingTestTags.TILE_INCOMPLETE)
         assert(lastAction == LandingAction.ViewIncompleteSessions)
 
@@ -208,7 +203,6 @@ class LandingScreenTest {
     fun landUi_b02_tilesHaveClickActions() {
         launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", "")))
         composeRule.onNodeWithTag(LandingTestTags.TILE_NEW_SURVEILLANCE).assertExists().assertHasClickAction()
-        composeRule.onNodeWithTag(LandingTestTags.TILE_DATA_COLLECTION).assertExists().assertHasClickAction()
         composeRule.onNodeWithTag(LandingTestTags.TILE_INCOMPLETE).assertExists().assertHasClickAction()
         composeRule.onNodeWithTag(LandingTestTags.TILE_COMPLETE).assertExists().assertHasClickAction()
     }
@@ -341,7 +335,6 @@ class LandingScreenTest {
             navigateOnAction = false
         )
         clickTile(LandingTestTags.TILE_NEW_SURVEILLANCE)
-        clickTile(LandingTestTags.TILE_DATA_COLLECTION)
         clickTile(LandingTestTags.TILE_INCOMPLETE)
         clickTile(LandingTestTags.TILE_COMPLETE)
     }
@@ -358,16 +351,6 @@ class LandingScreenTest {
         val intakeRoute = navController.currentBackStackEntry!!.toRoute<Destination.Intake>()
         assertThat(intakeRoute.sessionType).isEqualTo(SessionType.SURVEILLANCE)
     }
-
-    @Test
-    fun landUi_f02_clickDataCollection_navigatesToIntake() {
-        launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", "")))
-        clickTile(LandingTestTags.TILE_DATA_COLLECTION)
-        assertOnWithArgPattern(Destination.Intake::class)
-        val intakeRoute = navController.currentBackStackEntry!!.toRoute<Destination.Intake>()
-        assertThat(intakeRoute.sessionType).isEqualTo(SessionType.DATA_COLLECTION)
-    }
-
 
     @Test
     fun landUi_f03_clickIncomplete_navigatesToIncomplete() {

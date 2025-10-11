@@ -31,11 +31,11 @@ fun InfoPill(
                 color = color.copy(alpha = 0.25f),
                 shape = CircleShape
             )
-            .padding(MaterialTheme.dimensions.paddingSmall),
+            .padding(horizontal = MaterialTheme.dimensions.paddingMedium, vertical = MaterialTheme.dimensions.paddingSmall),
         contentAlignment = Alignment.Center,
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             iconPainter?.let { painter ->

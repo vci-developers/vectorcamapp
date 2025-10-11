@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 import javax.inject.Inject
-import androidx.core.net.toUri
 
 class SessionRepositoryImplementation @Inject constructor(
     private val sessionDao: SessionDao
@@ -87,9 +86,14 @@ class SessionRepositoryImplementation @Inject constructor(
         }
     }
 
-    override fun observeIncompleteSessions(): Flow<List<Session>> {
-        return sessionDao.observeIncompleteSessions().map {
-            it.map { sessionEntity -> sessionEntity.toDomain() }
+    override fun observeIncompleteSessionsAndSites(): Flow<List<SessionAndSite>> {
+        return sessionDao.observeIncompleteSessionsAndSites().map { sessionAndSiteRelations ->
+            sessionAndSiteRelations.map { sessionAndSiteRelation ->
+                SessionAndSite(
+                    session = sessionAndSiteRelation.session.toDomain(),
+                    site = sessionAndSiteRelation.site.toDomain()
+                )
+            }
         }
     }
 

@@ -5,8 +5,10 @@
     "district": "Antioquia",
     "subCounty": "",
     "parish": "",
-    "sentinelSite": "Medellin",
-    "healthCenter": ""
+    "villageName": "Medellin",
+    "houseNumber": "N/A",
+    "healthCenter": "",
+    "isActive": true
   },
   {
     "id": 2,
@@ -14,8 +16,10 @@
     "district": "Antioquia",
     "subCounty": "",
     "parish": "",
-    "sentinelSite": "Apartadó",
-    "healthCenter": ""
+    "villageName": "Apartadó",
+    "houseNumber": "N/A",
+    "healthCenter": "",
+    "isActive": true
   },
   {
     "id": 3,
@@ -23,8 +27,10 @@
     "district": "Antioquia",
     "subCounty": "",
     "parish": "",
-    "sentinelSite": "Turbo",
-    "healthCenter": ""
+    "villageName": "Turbo",
+    "houseNumber": "N/A",
+    "healthCenter": "",
+    "isActive": true
   },
   {
     "id": 4,
@@ -32,8 +38,10 @@
     "district": "Antioquia",
     "subCounty": "",
     "parish": "",
-    "sentinelSite": "Necoclí",
-    "healthCenter": ""
+    "villageName": "Necoclí",
+    "houseNumber": "N/A",
+    "healthCenter": "",
+    "isActive": true
   },
   {
     "id": 5,
@@ -41,8 +49,10 @@
     "district": "Putumayo",
     "subCounty": "",
     "parish": "",
-    "sentinelSite": "Mocoa",
-    "healthCenter": ""
+    "villageName": "Mocoa",
+    "houseNumber": "N/A",
+    "healthCenter": "",
+    "isActive": true
   },
   {
     "id": 6,
@@ -50,8 +60,10 @@
     "district": "Putumayo",
     "subCounty": "",
     "parish": "",
-    "sentinelSite": "Orito",
-    "healthCenter": ""
+    "villageName": "Orito",
+    "houseNumber": "N/A",
+    "healthCenter": "",
+    "isActive": true
   },
   {
     "id": 7,
@@ -59,8 +71,10 @@
     "district": "Valle del Cauca",
     "subCounty": "",
     "parish": "",
-    "sentinelSite": "Cali",
-    "healthCenter": ""
+    "villageName": "Cali",
+    "houseNumber": "N/A",
+    "healthCenter": "",
+    "isActive": true
   },
   {
     "id": 8,
@@ -68,8 +82,10 @@
     "district": "Chocó",
     "subCounty": "",
     "parish": "",
-    "sentinelSite": "Quibdó",
-    "healthCenter": ""
+    "villageName": "Quibdó",
+    "houseNumber": "N/A",
+    "healthCenter": "",
+    "isActive": true
   },
   {
     "id": 9,
@@ -77,8 +93,10 @@
     "district": "Chocó",
     "subCounty": "",
     "parish": "",
-    "sentinelSite": "Angostura",
-    "healthCenter": ""
+    "villageName": "Angostura",
+    "houseNumber": "N/A",
+    "healthCenter": "",
+    "isActive": true
   },
   {
     "id": 10,
@@ -86,8 +104,10 @@
     "district": "Bogotá D.C",
     "subCounty": "",
     "parish": "",
-    "sentinelSite": "Bogotá D.C",
-    "healthCenter": ""
+    "villageName": "Bogotá D.C",
+    "houseNumber": "N/A",
+    "healthCenter": "",
+    "isActive": true
   },
   {
     "id": 11,
@@ -95,7 +115,9 @@
     "district": "Other",
     "subCounty": "N/A",
     "parish": "N/A",
-    "sentinelSite": "Other",
-    "healthCenter": "N/A"
+    "villageName": "Other",
+    "houseNumber": "N/A",
+    "healthCenter": "N/A",
+    "isActive": true
   }
 ]

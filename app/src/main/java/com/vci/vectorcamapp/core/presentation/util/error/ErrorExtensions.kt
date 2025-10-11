@@ -13,6 +13,9 @@ import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.landing.domain.util.LandingError
+import com.vci.vectorcamapp.registration.domain.util.RegistrationValidationError
+import com.vci.vectorcamapp.settings.domain.util.SettingsError
+import com.vci.vectorcamapp.settings.domain.util.SettingsValidationError
 
 fun Error.toString(context: Context): String {
     val resId = when (this) {
@@ -93,16 +96,30 @@ fun Error.toString(context: Context): String {
         }
 
         is FormValidationError -> when (this) {
-            FormValidationError.BLANK_COLLECTOR_TITLE -> R.string.form_validation_error_blank_collector_title
-            FormValidationError.BLANK_COLLECTOR_NAME -> R.string.form_validation_error_blank_collector_name
+            FormValidationError.BLANK_COLLECTOR -> R.string.form_validation_error_blank_collector
             FormValidationError.BLANK_DISTRICT -> R.string.form_validation_error_blank_district
-            FormValidationError.BLANK_SENTINEL_SITE -> R.string.form_validation_error_blank_sentinel_site
+            FormValidationError.BLANK_VILLAGE_NAME -> R.string.form_validation_error_blank_village_name
             FormValidationError.BLANK_HOUSE_NUMBER -> R.string.form_validation_error_blank_house_number
             FormValidationError.BLANK_LLIN_TYPE -> R.string.form_validation_error_blank_llin_type
             FormValidationError.BLANK_LLIN_BRAND -> R.string.form_validation_error_blank_llin_brand
             FormValidationError.FUTURE_COLLECTION_DATE -> R.string.form_validation_error_future_collection_date
             FormValidationError.BLANK_COLLECTION_METHOD -> R.string.form_validation_error_blank_collection_method
             FormValidationError.BLANK_SPECIMEN_CONDITION -> R.string.form_validation_error_blank_specimen_condition
+        }
+
+        is RegistrationValidationError -> when (this) {
+            RegistrationValidationError.BLANK_COLLECTOR_TITLE -> R.string.registration_validation_error_blank_collector_title
+            RegistrationValidationError.BLANK_COLLECTOR_NAME -> R.string.registration_validation_error_blank_collector_name
+        }
+
+        is SettingsError -> when (this) {
+            SettingsError.COLLECTOR_SAVE_FAILED -> R.string.settings_error_collector_save_failed
+            SettingsError.COLLECTOR_DELETION_FAILED -> R.string.settings_error_collector_deletion_failed
+        }
+
+        is SettingsValidationError -> when (this) {
+            SettingsValidationError.BLANK_COLLECTOR_TITLE -> R.string.settings_validation_error_blank_collector_title
+            SettingsValidationError.BLANK_COLLECTOR_NAME -> R.string.settings_validation_error_blank_collector_name
         }
 
         else -> R.string.error_fallback
