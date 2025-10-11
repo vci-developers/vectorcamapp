@@ -103,6 +103,16 @@ fun ImagingScreen(
     ) { page ->
         when {
             page < state.specimensWithImagesAndInferenceResults.size -> {
+                val infiniteTransition = rememberInfiniteTransition(label = "arrow_animation")
+                val arrowOffsetX by infiniteTransition.animateFloat(
+                    initialValue = with(density) { MaterialTheme.dimensions.spacingExtraSmall.toPx() },
+                    targetValue = with(density) { -(MaterialTheme.dimensions.spacingExtraSmall.toPx()) },
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(durationMillis = 800), repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "arrow_offset"
+                )
+
                 Column(
                     verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxSize()
                 ) {
@@ -158,108 +168,134 @@ fun ImagingScreen(
 
             else -> {
                 if (state.showExitDialog) {
-                    AlertDialog(onDismissRequest = {
-                        onAction(ImagingAction.DismissExitDialog)
-                    }, title = {
-                        Text(
-                            text = if (state.pendingAction == null) "Exit session?" else "Confirm Action",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colors.textPrimary
-                        )
-                    }, text = {
-                        val dialogText = when (state.pendingAction) {
-                            null -> "Would you like to save this session for later or submit it now?"
-                            is ImagingAction.SaveSessionProgress -> "Are you sure you want to save the session and exit?"
-                            is ImagingAction.SubmitSession -> "Are you sure you want to submit the session?"
-                            else -> ""
-                        }
-                        Column {
-                            if (dialogText.isNotEmpty()) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            onAction(ImagingAction.DismissExitDialog)
+                        },
+                        title = {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(
-                                    text = dialogText,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colors.textSecondary
+                                    text = if (state.pendingAction == null) "Exit session?" else "Confirm Action",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = MaterialTheme.colors.textPrimary,
+                                    modifier = Modifier.weight(1f)
                                 )
-                            }
 
-                            if (state.specimensWithImagesAndInferenceResults.isEmpty() && state.pendingAction is ImagingAction.SubmitSession) {
-                                Text(
-                                    text = "Warning: You are about to submit a session with zero specimens.",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colors.error,
-                                    modifier = Modifier.padding(top = MaterialTheme.dimensions.paddingMedium)
-                                )
-                            }
-                        }
-                    }, confirmButton = {
-                        if (state.pendingAction == null) {
-                            OutlinedButton(
-                                onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SubmitSession)) },
-                                border = BorderStroke(
-                                    MaterialTheme.dimensions.borderThicknessThick,
-                                    MaterialTheme.colors.successConfirm
-                                )
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_cloud_upload),
-                                    contentDescription = "Submit Icon",
-                                    tint = MaterialTheme.colors.successConfirm,
+                                IconButton(
+                                    onClick = { onAction(ImagingAction.DismissExitDialog) },
                                     modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
-                                )
-                                Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
-                                Text(
-                                    text = "Submit",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colors.successConfirm
-                                )
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_close),
+                                        contentDescription = "Close dialog",
+                                        tint = MaterialTheme.colors.icon,
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
+                                    )
+                                }
                             }
-                        } else {
-                            Button(
-                                onClick = {
-                                    onAction(ImagingAction.ConfirmPendingAction)
-                                }, colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colors.error
-                                )
-                            ) {
-                                Text(
-                                    text = "Yes, Confirm",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colors.buttonText
-                                )
+                        },
+                        text = {
+                            val dialogText = when (state.pendingAction) {
+                                null -> "Would you like to save this session for later or submit it now?"
+                                is ImagingAction.SaveSessionProgress -> "Are you sure you want to save the session and exit?"
+                                is ImagingAction.SubmitSession -> "Are you sure you want to submit the session?"
+                                else -> ""
+                            }
+                            Column {
+                                if (dialogText.isNotEmpty()) {
+                                    Text(
+                                        text = dialogText,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.textSecondary
+                                    )
+                                }
+
+                                if (state.specimensWithImagesAndInferenceResults.isEmpty() && state.pendingAction is ImagingAction.SubmitSession) {
+                                    Text(
+                                        text = "Warning: You are about to submit a session with zero specimens.",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = MaterialTheme.colors.error,
+                                        modifier = Modifier.padding(top = MaterialTheme.dimensions.paddingMedium)
+                                    )
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            if (state.pendingAction == null) {
+                                OutlinedButton(
+                                    onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SubmitSession)) },
+                                    border = BorderStroke(
+                                        MaterialTheme.dimensions.borderThicknessThick,
+                                        MaterialTheme.colors.successConfirm
+                                    )
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_cloud_upload),
+                                        contentDescription = "Submit Icon",
+                                        tint = MaterialTheme.colors.successConfirm,
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                                    )
+                                    Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
+                                    Text(
+                                        text = "Submit",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.successConfirm
+                                    )
+                                }
+                            } else {
+                                Button(
+                                    onClick = {
+                                        onAction(ImagingAction.ConfirmPendingAction)
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colors.error
+                                    )
+                                ) {
+                                    Text(
+                                        text = "Yes, Confirm",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.buttonText
+                                    )
+                                }
+                            }
+                        },
+                        dismissButton = {
+                            if (state.pendingAction == null) {
+                                OutlinedButton(
+                                    onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SaveSessionProgress)) },
+                                    border = BorderStroke(
+                                        MaterialTheme.dimensions.borderThicknessThick,
+                                        MaterialTheme.colors.info
+                                    )
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_save),
+                                        contentDescription = "Save Icon",
+                                        tint = MaterialTheme.colors.info,
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                                    )
+                                    Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
+                                    Text(
+                                        "Save",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.info
+                                    )
+                                }
+                            } else {
+                                TextButton(onClick = { onAction(ImagingAction.ClearPendingAction) }) {
+                                    Text(
+                                        "Back",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.textPrimary
+                                    )
+                                }
                             }
                         }
-                    }, dismissButton = {
-                        if (state.pendingAction == null) {
-                            OutlinedButton(
-                                onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SaveSessionProgress)) },
-                                border = BorderStroke(
-                                    MaterialTheme.dimensions.borderThicknessThick,
-                                    MaterialTheme.colors.info
-                                )
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_save),
-                                    contentDescription = "Save Icon",
-                                    tint = MaterialTheme.colors.info,
-                                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
-                                )
-                                Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
-                                Text(
-                                    "Save",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colors.info
-                                )
-                            }
-                        } else {
-                            TextButton(onClick = { onAction(ImagingAction.ClearPendingAction) }) {
-                                Text(
-                                    "Back",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colors.textPrimary
-                                )
-                            }
-                        }
-                    })
+                    )
                 }
 
                 Column(
@@ -290,7 +326,7 @@ fun ImagingScreen(
                                         painter = painterResource(id = R.drawable.ic_cancel),
                                         contentDescription = "Delete",
                                         tint = MaterialTheme.colors.buttonText,
-                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                                     )
                                 }
                             }
@@ -319,8 +355,8 @@ fun ImagingScreen(
 
                         if (state.currentImageBytes != null) {
                             EmptySpace(
-                                width = MaterialTheme.dimensions.iconSizeLarge,
-                                height = MaterialTheme.dimensions.iconSizeLarge
+                                width = MaterialTheme.dimensions.iconSizeExtraLarge,
+                                height = MaterialTheme.dimensions.iconSizeExtraLarge
                             )
                         } else {
                             Box(
@@ -339,7 +375,7 @@ fun ImagingScreen(
                                         painter = painterResource(id = R.drawable.ic_exit),
                                         contentDescription = "Exit",
                                         tint = MaterialTheme.colors.buttonText,
-                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                                     )
                                 }
                             }

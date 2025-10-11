@@ -35,7 +35,7 @@ fun IntakeTile(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
                 modifier = Modifier.height(MaterialTheme.dimensions.componentHeightSmall)
             ) {
                 VerticalDivider(
@@ -48,7 +48,7 @@ fun IntakeTile(
                     painter = iconPainter,
                     contentDescription = iconDescription,
                     tint = MaterialTheme.colors.icon,
-                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                 )
 
                 Text(

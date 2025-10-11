@@ -8,4 +8,5 @@ sealed interface IncompleteSessionAction {
     data class ConfirmDeleteSession(val sessionId: UUID) : IncompleteSessionAction
     data object DismissDeleteDialog : IncompleteSessionAction
     data object ReturnToLandingScreen : IncompleteSessionAction
+    data class UpdateSearchQuery(val searchQuery: String) : IncompleteSessionAction
 }
