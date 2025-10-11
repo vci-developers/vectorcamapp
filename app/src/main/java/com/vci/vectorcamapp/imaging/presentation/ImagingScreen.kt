@@ -103,16 +103,6 @@ fun ImagingScreen(
     ) { page ->
         when {
             page < state.specimensWithImagesAndInferenceResults.size -> {
-                val infiniteTransition = rememberInfiniteTransition(label = "arrow_animation")
-                val arrowOffsetX by infiniteTransition.animateFloat(
-                    initialValue = with(density) { MaterialTheme.dimensions.spacingExtraSmall.toPx() },
-                    targetValue = with(density) { -(MaterialTheme.dimensions.spacingExtraSmall.toPx()) },
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(durationMillis = 800), repeatMode = RepeatMode.Reverse
-                    ),
-                    label = "arrow_offset"
-                )
-
                 Column(
                     verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxSize()
                 ) {
