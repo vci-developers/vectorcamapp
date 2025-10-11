@@ -49,14 +49,16 @@ class CompleteSessionListViewModel @Inject constructor(
                         val sessionId = sessionAndSite.session.localId
                         combine(
                             specimenImageRepository.observeUploadedImageCountForSession(sessionId),
+                            specimenImageRepository.observeFailedImageCountForSession(sessionId),
                             workManagerRepository.observeIsSessionActivelyUploading(sessionId),
-                        ) { uploadedCount, isUploading ->
+                        ) { uploadedCount, failedCount, isUploading ->
                             sessionAndSite to SessionUploadProgress(
                                 uploadedImageCount = uploadedCount,
                                 totalImageCount = specimenImageRepository.getTotalImageCountForSession(
                                     sessionId
                                 ),
-                                isUploading = isUploading
+                                isUploading = isUploading,
+                                failedImageCount = failedCount
                             )
                         }
                     }
@@ -85,8 +87,7 @@ class CompleteSessionListViewModel @Inject constructor(
                     add(site.parish)
                     add(site.villageName)
                     add(site.houseNumber)
-                    val uploadStatus = getSessionUploadStatus(progress)
-                    add(uploadStatus.displayText(context))
+                    add(getSessionUploadStatus(progress))
                 }
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
             }
@@ -140,13 +141,14 @@ class CompleteSessionListViewModel @Inject constructor(
         }
     }
 
-    private fun getSessionUploadStatus(sessionUploadProgress: SessionUploadProgress): UploadStatus {
-        val isComplete = sessionUploadProgress.totalImageCount == 0 || (sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()) == 1f
+    private fun getSessionUploadStatus(sessionUploadProgress: SessionUploadProgress): String {
+        val isComplete = sessionUploadProgress.totalImageCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalImageCount
 
         return when {
-            isComplete -> UploadStatus.COMPLETED
-            sessionUploadProgress.isUploading -> UploadStatus.IN_PROGRESS
-            else -> UploadStatus.NOT_STARTED
+            sessionUploadProgress.failedImageCount > 0 -> UploadStatus.FAILED.displayText(context)
+            isComplete -> UploadStatus.COMPLETED.displayText(context)
+            sessionUploadProgress.isUploading -> UploadStatus.IN_PROGRESS.displayText(context)
+            else -> UploadStatus.NOT_STARTED.displayText(context)
         }
     }
 }

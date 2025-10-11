@@ -31,6 +31,15 @@ interface SpecimenImageDao {
     )
     fun observeUploadedImageCountForSession(sessionId: UUID): Flow<Int>
 
+    @Query(
+        """
+        SELECT SUM(CASE WHEN (metadataUploadStatus = 'FAILED' OR imageUploadStatus = 'FAILED') THEN 1 ELSE 0 END)
+        FROM specimen_image 
+        WHERE sessionId = :sessionId
+    """
+    )
+    fun observeFailedImageCountForSession(sessionId: UUID): Flow<Int>
+
     @Query("SELECT COUNT(*) FROM specimen_image WHERE sessionId = :sessionId")
     suspend fun getTotalImageCountForSession(sessionId: UUID): Int
 }
