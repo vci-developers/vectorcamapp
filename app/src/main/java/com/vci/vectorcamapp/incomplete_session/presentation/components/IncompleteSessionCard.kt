@@ -81,7 +81,7 @@ fun IncompleteSessionCard(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrow_right),
-                                contentDescription = "Arrow Right",
+                                contentDescription = "Resume",
                                 tint = MaterialTheme.colors.icon,
                                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
                                 .testTag(IncompleteSessionTestTags.CARD_RESUME_ICON)

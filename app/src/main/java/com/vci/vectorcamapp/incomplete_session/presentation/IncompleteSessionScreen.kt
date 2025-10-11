@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,8 +32,6 @@ fun IncompleteSessionScreen(
     onAction: (IncompleteSessionAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val reversed = state.sessions.asReversed()
-
     ScreenHeader(
         title = "Incomplete Sessions",
         subtitle = "Click on a session to resume",
@@ -79,10 +78,10 @@ fun IncompleteSessionScreen(
             }
         }
 
-        items(
+        itemsIndexed(
             items = state.sessionAndSites.asReversed(),
-            key = { it.session.localId }
-        ) { sessionAndSite ->
+            key = { _, sessionAndSite -> sessionAndSite.session.localId }
+        ) { index, sessionAndSite ->
             IncompleteSessionCard(
                 sessionAndSite = sessionAndSite,
                 onClick = { onAction(IncompleteSessionAction.ResumeSession(sessionAndSite.session.localId)) },

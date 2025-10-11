@@ -42,7 +42,7 @@ class IncompleteSessionViewModelTest {
     private lateinit var cameraRepository: CameraRepository
     private lateinit var viewModel: IncompleteSessionViewModel
 
-    private lateinit var incompleteSessionsFlow: MutableStateFlow<List<Session>>
+    private lateinit var incompleteSessionsFlow: MutableStateFlow<List<SessionAndSite>>
 
     @Before
     fun setUp() {
@@ -60,7 +60,7 @@ class IncompleteSessionViewModelTest {
         cameraRepository = mockk(relaxed = true)
 
         incompleteSessionsFlow = MutableStateFlow(emptyList())
-        every { sessionRepository.observeIncompleteSessions() } returns incompleteSessionsFlow
+        every { sessionRepository.observeIncompleteSessionsAndSites() } returns incompleteSessionsFlow
 
         viewModel = IncompleteSessionViewModel(
             sessionRepository = sessionRepository,
@@ -83,7 +83,6 @@ class IncompleteSessionViewModelTest {
     private fun makeSession(sessionType: SessionType) = Session(
         localId = UUID.randomUUID(),
         remoteId = null,
-        houseNumber = "1",
         collectorTitle = "Dr.",
         collectorName = "Alice",
         collectionDate = 1_632_000_000L,
@@ -115,7 +114,7 @@ class IncompleteSessionViewModelTest {
 
         viewModel.state.test {
             val initialState = awaitItem()
-            assertThat(initialState.sessions).isEmpty()
+            assertThat(initialState.sessionAndSites).isEmpty()
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -127,15 +126,15 @@ class IncompleteSessionViewModelTest {
         viewModel.state.test {
             awaitItem()
 
-            val newSessions = listOf(
-                makeSession(SessionType.SURVEILLANCE),
-                makeSession(SessionType.DATA_COLLECTION)
+            val newSessionsAndSites = listOf(
+                makeSessionAndSite(makeSession(SessionType.SURVEILLANCE), 0),
+                makeSessionAndSite(makeSession(SessionType.DATA_COLLECTION), 1)
             )
-            incompleteSessionsFlow.value = newSessions
+            incompleteSessionsFlow.value = newSessionsAndSites
             advanceUntilIdle()
 
             val updatedState = awaitItem()
-            assertThat(updatedState.sessions).isEqualTo(newSessions)
+            assertThat(updatedState.sessionAndSites).isEqualTo(newSessionsAndSites)
             cancelAndIgnoreRemainingEvents()
         }
     }
