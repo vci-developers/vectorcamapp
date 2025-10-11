@@ -396,6 +396,13 @@ class IntakeViewModel @Inject constructor(
                     getLocation()
                 }
 
+                is IntakeAction.ShowCollectionMethodTooltipDialog -> {
+                    _state.update { it.copy(isCollectionMethodTooltipVisible = true) }
+                }
+
+                is IntakeAction.HideCollectionMethodTooltipDialog -> {
+                    _state.update { it.copy(isCollectionMethodTooltipVisible = false) }
+                }
                 IntakeAction.RegisterMissingCollector -> {
                     val name = _state.value.session.collectorName
                     val title = _state.value.session.collectorTitle
