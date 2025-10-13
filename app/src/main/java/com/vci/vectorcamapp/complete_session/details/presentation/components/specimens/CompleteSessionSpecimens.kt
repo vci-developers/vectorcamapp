@@ -13,7 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsAction
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent
 import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -24,6 +26,8 @@ fun CompleteSessionSpecimens(
     specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults>,
     searchQuery: String,
     onUpdateSearchQuery: (String) -> Unit,
+    isSearchTooltipVisible: Boolean,
+    onAction: (CompleteSessionDetailsAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (specimensWithImagesAndInferenceResults.isEmpty() && searchQuery.isBlank()) {
@@ -45,8 +49,17 @@ fun CompleteSessionSpecimens(
                     onUpdateSearchQuery(newSearchQueryText)
                 },
                 placeholder = "Search by specimen ID, species, etc.",
-                modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.spacingMedium)
-            )
+                modifier = Modifier.padding(
+                    start = MaterialTheme.dimensions.spacingMedium,
+                    end = MaterialTheme.dimensions.spacingMedium,
+                    bottom = MaterialTheme.dimensions.spacingSmall
+                ),
+                onTooltipPrimaryAction = { onAction(CompleteSessionDetailsAction.ShowSearchTooltipDialog) },
+                onTooltipDismiss = { onAction(CompleteSessionDetailsAction.HideSearchTooltipDialog) },
+                tooltipButtonText = "Tap to learn more about search and filter logic"
+            ) {
+                SearchHelpTooltipContent()
+            }
 
             if (specimensWithImagesAndInferenceResults.isEmpty()) {
                 Text(

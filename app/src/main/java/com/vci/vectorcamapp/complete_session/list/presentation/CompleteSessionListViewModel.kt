@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.complete_session.list.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsAction
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
@@ -129,6 +130,13 @@ class CompleteSessionListViewModel @Inject constructor(
 
                 is CompleteSessionListAction.UpdateSearchQuery -> {
                     _state.update { it.copy(searchQuery = action.searchQuery) }
+                }
+
+                CompleteSessionListAction.ShowSearchTooltipDialog -> {
+                    _state.update { it.copy(isSearchTooltipVisible = true) }
+                }
+                CompleteSessionListAction.HideSearchTooltipDialog -> {
+                    _state.update { it.copy(isSearchTooltipVisible = false) }
                 }
             }
         }

@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
+import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip
 
 @Composable
 fun SearchTextField(
@@ -15,7 +16,11 @@ fun SearchTextField(
     placeholder: String,
     modifier: Modifier = Modifier,
     isSingleLine: Boolean = true,
-    onSearchSubmitted: (() -> Unit)? = null
+    onSearchSubmitted: (() -> Unit)? = null,
+    onTooltipPrimaryAction: (() -> Unit)? = null,
+    onTooltipDismiss: (() -> Unit)? = null,
+    tooltipButtonText: String = "Tap to learn more about searching",
+    tooltipContent: (@Composable () -> Unit)? = null,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -33,4 +38,16 @@ fun SearchTextField(
             }
         )
     )
+
+    if (tooltipContent != null && onTooltipPrimaryAction != null && onTooltipDismiss != null) {
+        Tooltip(
+            isVisible = true,
+            onClick = { onTooltipPrimaryAction() },
+            onDismiss = { onTooltipDismiss() },
+            buttonText = tooltipButtonText,
+            modifier = modifier
+        ) {
+            tooltipContent()
+        }
+    }
 }

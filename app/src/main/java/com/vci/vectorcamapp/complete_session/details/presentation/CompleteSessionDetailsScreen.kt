@@ -67,7 +67,9 @@ fun CompleteSessionDetailsScreen(
                     onUpdateSearchQuery = { searchQuery ->
                         onAction(CompleteSessionDetailsAction.UpdateSearchQuery(searchQuery))
                     },
-                    modifier = modifier
+                    modifier = modifier,
+                    isSearchTooltipVisible = state.isSearchTooltipVisible,
+                    onAction = onAction
                 )
             }
         }
