@@ -71,7 +71,13 @@ fun PermissionScreen(
                 text = "To work properly, this app needs access to your camera, location, and notifications. One or more of these permissions are currently disabled. Please enable them in settings to continue.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colors.textSecondary,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Left,
+                lineHeight = MaterialTheme.typography.headlineLarge.lineHeight,
+                modifier = Modifier
+                    .padding(
+                        start = MaterialTheme.dimensions.paddingMedium,
+                        end = MaterialTheme.dimensions.paddingExtraSmall
+                    )
             )
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
