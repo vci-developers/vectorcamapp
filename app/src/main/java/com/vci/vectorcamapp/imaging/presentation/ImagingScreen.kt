@@ -139,7 +139,7 @@ fun ImagingScreen(
                                 tint = MaterialTheme.colors.icon,
                                 modifier = Modifier
                                     .offset { IntOffset((-arrowOffsetX).toInt(), 0) }
-                                    .size(MaterialTheme.dimensions.iconSizeLarge)
+                                    .size(MaterialTheme.dimensions.iconSizeExtraLarge)
                                     .clickable {
                                         scope.launch {
                                             pagerState.animateScrollToPage(page - 1)
@@ -147,8 +147,8 @@ fun ImagingScreen(
                                     })
                         } else {
                             EmptySpace(
-                                width = MaterialTheme.dimensions.iconSizeLarge,
-                                height = MaterialTheme.dimensions.iconSizeLarge
+                                width = MaterialTheme.dimensions.iconSizeExtraLarge,
+                                height = MaterialTheme.dimensions.iconSizeExtraLarge
                             )
                         }
 
@@ -172,7 +172,7 @@ fun ImagingScreen(
                             tint = MaterialTheme.colors.icon,
                             modifier = Modifier
                                 .offset { IntOffset(arrowOffsetX.toInt(), 0) }
-                                .size(MaterialTheme.dimensions.iconSizeLarge)
+                                .size(MaterialTheme.dimensions.iconSizeExtraLarge)
                                 .clickable {
                                     scope.launch {
                                         pagerState.animateScrollToPage(page + 1)
@@ -223,7 +223,7 @@ fun ImagingScreen(
                                         painter = painterResource(id = R.drawable.ic_close),
                                         contentDescription = "Close dialog",
                                         tint = MaterialTheme.colors.icon,
-                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
                                     )
                                 }
                             }
@@ -356,14 +356,14 @@ fun ImagingScreen(
                                         painter = painterResource(id = R.drawable.ic_cancel),
                                         contentDescription = "Delete",
                                         tint = MaterialTheme.colors.buttonText,
-                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                                     )
                                 }
                             }
                         } else {
                             EmptySpace(
-                                width = MaterialTheme.dimensions.iconSizeLarge,
-                                height = MaterialTheme.dimensions.iconSizeLarge
+                                width = MaterialTheme.dimensions.iconSizeExtraLarge,
+                                height = MaterialTheme.dimensions.iconSizeExtraLarge
                             )
                         }
 
@@ -384,8 +384,8 @@ fun ImagingScreen(
 
                         if (state.currentImageBytes != null) {
                             EmptySpace(
-                                width = MaterialTheme.dimensions.iconSizeLarge,
-                                height = MaterialTheme.dimensions.iconSizeLarge
+                                width = MaterialTheme.dimensions.iconSizeExtraLarge,
+                                height = MaterialTheme.dimensions.iconSizeExtraLarge
                             )
                         } else {
                             Box(
@@ -404,7 +404,7 @@ fun ImagingScreen(
                                         painter = painterResource(id = R.drawable.ic_exit),
                                         contentDescription = "Exit",
                                         tint = MaterialTheme.colors.buttonText,
-                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                                     )
                                 }
                             }

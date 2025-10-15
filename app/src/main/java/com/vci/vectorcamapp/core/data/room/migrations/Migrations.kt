@@ -4,6 +4,7 @@ import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_10_11_A
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_11_12_ADD_DETECTION_DURATION_COLUMN
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_12_13_REMOVE_SENTINEL_SITE_AND_MOVE_HOUSE_NUMBER_UNDER_SITE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_13_14_ADD_COLLECTOR_TABLE
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_14_15_BACKFILL_COLLECTORS
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_2_3_CREATE_SURVEILLANCE_FORM_TABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_3_4_SCHEMA_V2
@@ -27,5 +28,6 @@ val ALL_MIGRATIONS = arrayOf(
     MIGRATION_10_11_ADD_CLASSIFICATION_DURATION_COLUMNS,
     MIGRATION_11_12_ADD_DETECTION_DURATION_COLUMN,
     MIGRATION_12_13_REMOVE_SENTINEL_SITE_AND_MOVE_HOUSE_NUMBER_UNDER_SITE,
-    MIGRATION_13_14_ADD_COLLECTOR_TABLE
+    MIGRATION_13_14_ADD_COLLECTOR_TABLE,
+    MIGRATION_14_15_BACKFILL_COLLECTORS
 )
