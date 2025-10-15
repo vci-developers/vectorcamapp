@@ -72,7 +72,7 @@ fun LandingScreen(
                     testTag = LandingTestTags.SECTION_LIBRARY
                 ) {
                     LandingActionTile(
-                        title = "View In Progress Sessions",
+                        title = "View Sessions in Progress",
                         description = "Resume and complete any unfinished sessions.",
                         icon = painterResource(R.drawable.ic_minus_circle),
                         onClick = { onAction(LandingAction.ViewIncompleteSessions) },
@@ -104,7 +104,7 @@ fun LandingScreen(
             },
             text = {
                 Text(
-                    text = "You have an in progress surveillance session. Resume where you left off?",
+                    text = "You have an surveillance session in progress. Resume where you left off?",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colors.textSecondary
                 )
