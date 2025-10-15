@@ -37,6 +37,7 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
+import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -133,6 +134,8 @@ class MetadataUploadWorker @AssistedInject constructor(
             val localSpecimensWithImagesAndInferenceResults =
                 specimenRepository.getSpecimenImagesAndInferenceResultsBySession(syncedSession.localId)
             val totalSpecimens = localSpecimensWithImagesAndInferenceResults.size
+            var failedImagesCount = 0
+
             localSpecimensWithImagesAndInferenceResults.forEachIndexed { specimenIndex, specimenWithImagesAndInferenceResults ->
                 val totalImages =
                     specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
@@ -142,30 +145,36 @@ class MetadataUploadWorker @AssistedInject constructor(
                     syncedSession.remoteId
                 )) {
                     is DomainResult.Success -> syncSpecimenResult.data
-                    is DomainResult.Error -> return retryOrFailure(
-                        syncSpecimenResult.error.toString(context)
-                    )
+                    is DomainResult.Error -> {
+                        failedImagesCount += specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
+                        return@forEachIndexed
+                    }
                 }
 
                 specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEachIndexed { imageIndex, (specimenImage, inferenceResult) ->
                     if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
                         syncSpecimenImageAndInferenceResultIfNeeded(
                             specimenImage, inferenceResult, syncedSpecimen, syncedSession.localId
-                        ).onError { error ->
-                            return retryOrFailure(error.toString(context))
+                        ).onSuccess {
+                            showSpecimenProgressNotification(
+                                specimenId = syncedSpecimen.id,
+                                currentSpecimenIndex = specimenIndex,
+                                totalSpecimens = totalSpecimens,
+                                currentImageIndex = imageIndex,
+                                totalImagesForSpecimen = totalImages
+                            )
+                        }.onError {
+                            failedImagesCount++
                         }
                     }
-                    showSpecimenProgressNotification(
-                        specimenId = syncedSpecimen.id,
-                        currentSpecimenIndex = specimenIndex,
-                        totalSpecimens = totalSpecimens,
-                        currentImageIndex = imageIndex,
-                        totalImagesForSpecimen = totalImages
-                    )
                 }
             }
 
-            return WorkerResult.success()
+            return if (failedImagesCount > 0) {
+                retryOrFailure("Upload failed for one or more images.")
+            } else {
+                WorkerResult.success()
+            }
         } catch (e: IOException) {
             return retryOrFailure("Lost internet connection while uploading.")
         } catch (e: Exception) {
@@ -492,7 +501,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                         sexInferenceDuration = it.sexInferenceDuration,
                         abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration
                     )
-                })
+                }
+            )
 
             if (syncedSpecimen.remoteId == null) {
                 return DomainResult.Error(NetworkError.CLIENT_ERROR)
