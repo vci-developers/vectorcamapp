@@ -75,9 +75,6 @@ data class Dimensions(
 
     // Capture Animation Parameters
     val scannerLineHeight: Dp = 3.dp,
-
-    // Geometry Parameters
-    val dotRadius: Dp = 3.dp,
 )
 
 val LocalDimensions = staticCompositionLocalOf { Dimensions() }

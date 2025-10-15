@@ -52,7 +52,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
 import androidx.core.content.ContextCompat
@@ -441,7 +440,6 @@ fun ImagingScreen(
                                 controller = controller,
                                 inferenceResults = state.previewInferenceResults,
                                 focusPoint = state.focusPoint,
-                                specimenCentroid = state.specimenCentroid,
                                 onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
                                 onCancelFocus = { onAction(ImagingAction.CancelFocus) },
                                 modifier = Modifier.fillMaxWidth(),

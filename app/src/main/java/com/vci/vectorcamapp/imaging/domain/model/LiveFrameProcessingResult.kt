@@ -5,6 +5,6 @@ import com.vci.vectorcamapp.core.domain.model.InferenceResult
 
 data class LiveFrameProcessingResult(
     val specimenId: String = "",
-    val specimenCentroid: Offset? = null,
+    val autofocusPoint: Offset? = null,
     val previewInferenceResults: List<InferenceResult> = emptyList()
 )

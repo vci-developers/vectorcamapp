@@ -19,6 +19,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.vci.vectorcamapp.animation.presentation.CaptureAnimation
@@ -32,7 +33,6 @@ fun LiveCameraPreview(
     controller: LifecycleCameraController,
     inferenceResults: List<InferenceResult>,
     focusPoint: Offset?,
-    specimenCentroid: Offset?,
     onFocusAt: (Offset) -> Unit,
     onCancelFocus: () -> Unit,
     modifier: Modifier = Modifier,
@@ -42,6 +42,8 @@ fun LiveCameraPreview(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val density = LocalDensity.current
+
+    val DOT_RADIUS_DP = 3.dp
 
     val previewView = remember {
         PreviewView(context).apply {
@@ -98,19 +100,19 @@ fun LiveCameraPreview(
                     }
                 }
         ) {
-            specimenCentroid?.let { normalized ->
+            focusPoint?.let { normalized ->
                 if (containerSize != IntSize.Zero) {
                     val centerPx = Offset(
                         x = normalized.x * containerSize.width,
                         y = normalized.y * containerSize.height
                     )
-                    val radiusPx = with(density) { MaterialTheme.dimensions.dotRadius.toPx() }
+
                     val dotColor = MaterialTheme.colors.primary
 
                     Canvas(modifier = Modifier.fillMaxSize()) {
                         drawCircle(
                             color = dotColor,
-                            radius = radiusPx,
+                            radius = DOT_RADIUS_DP.toPx(),
                             center = centerPx
                         )
                     }
