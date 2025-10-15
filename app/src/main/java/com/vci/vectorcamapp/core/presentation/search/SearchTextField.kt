@@ -16,6 +16,7 @@ fun SearchTextField(
     placeholder: String,
     modifier: Modifier = Modifier,
     isSingleLine: Boolean = true,
+    isTooltipVisible: Boolean = false,
     onSearchSubmitted: (() -> Unit)? = null,
     onTooltipShow: (() -> Unit)? = null,
     onTooltipDismiss: (() -> Unit)? = null,
@@ -41,9 +42,9 @@ fun SearchTextField(
 
     if (tooltipContent != null && onTooltipShow != null && onTooltipDismiss != null) {
         Tooltip(
-            isVisible = true,
-            onClick = { onTooltipShow },
-            onDismiss = { onTooltipDismiss },
+            isVisible = isTooltipVisible,
+            onClick = onTooltipShow,
+            onDismiss = onTooltipDismiss,
             buttonText = tooltipButtonText,
             modifier = modifier
         ) {

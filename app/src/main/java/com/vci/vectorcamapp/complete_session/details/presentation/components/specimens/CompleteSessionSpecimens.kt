@@ -54,6 +54,7 @@ fun CompleteSessionSpecimens(
                     end = MaterialTheme.dimensions.spacingMedium,
                     bottom = MaterialTheme.dimensions.spacingSmall
                 ),
+                isTooltipVisible = isSearchTooltipVisible,
                 onTooltipShow = { onAction(CompleteSessionDetailsAction.ShowSearchTooltipDialog) },
                 onTooltipDismiss = { onAction(CompleteSessionDetailsAction.HideSearchTooltipDialog) },
                 tooltipButtonText = "Tap to learn more about search and filter logic"

@@ -84,6 +84,7 @@ fun CompleteSessionListScreen(
                         end = MaterialTheme.dimensions.spacingMedium,
                         bottom = MaterialTheme.dimensions.spacingSmall
                     ),
+                    isTooltipVisible = state.isSearchTooltipVisible,
                     onTooltipShow = { onAction(CompleteSessionListAction.ShowSearchTooltipDialog) },
                     onTooltipDismiss = { onAction(CompleteSessionListAction.HideSearchTooltipDialog) },
                     tooltipButtonText = "Tap to learn more about search and filter logic"

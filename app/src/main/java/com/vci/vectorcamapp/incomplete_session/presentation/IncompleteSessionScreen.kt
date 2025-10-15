@@ -58,6 +58,7 @@ fun IncompleteSessionScreen(
                     end = MaterialTheme.dimensions.paddingMedium,
                     bottom = MaterialTheme.dimensions.spacingSmall
                 ),
+                isTooltipVisible = state.isSearchTooltipVisible,
                 onTooltipShow = { onAction(IncompleteSessionAction.ShowSearchTooltipDialog) },
                 onTooltipDismiss = { onAction(IncompleteSessionAction.HideSearchTooltipDialog) },
                 tooltipButtonText = "Tap to learn more about search and filter logic"
