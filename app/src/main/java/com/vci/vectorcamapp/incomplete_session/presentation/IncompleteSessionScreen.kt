@@ -56,6 +56,7 @@ fun IncompleteSessionScreen(
                 modifier = Modifier.padding(
                     start = MaterialTheme.dimensions.paddingMedium,
                     end = MaterialTheme.dimensions.paddingMedium,
+                    top = MaterialTheme.dimensions.spacingSmall,
                     bottom = MaterialTheme.dimensions.spacingSmall
                 ),
                 isTooltipVisible = state.isSearchTooltipVisible,

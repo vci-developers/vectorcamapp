@@ -82,6 +82,7 @@ fun CompleteSessionListScreen(
                     modifier = Modifier.padding(
                         start = MaterialTheme.dimensions.spacingMedium,
                         end = MaterialTheme.dimensions.spacingMedium,
+                        top = MaterialTheme.dimensions.spacingSmall,
                         bottom = MaterialTheme.dimensions.spacingSmall
                     ),
                     isTooltipVisible = state.isSearchTooltipVisible,
