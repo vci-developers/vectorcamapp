@@ -18,12 +18,7 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 fun ActionTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    shadowColor: Color = MaterialTheme.colors.cardGlow.copy(alpha = 0.2f),
-    shadowOffsetX: Dp = MaterialTheme.dimensions.shadowOffsetSmall,
-    shadowOffsetY: Dp  = MaterialTheme.dimensions.shadowOffsetSmall,
-    shadowCornerRadius: Dp  = MaterialTheme.dimensions.cornerRadiusMedium,
-    shadowSpread: Dp  = MaterialTheme.dimensions.shadowSpreadSmall,
-    shadowBlurRadius: Dp  = MaterialTheme.dimensions.shadowBlurSmall,
+    hue: Color = MaterialTheme.colors.cardGlow.copy(alpha = 0.2f),
     content: @Composable () -> Unit
 ) {
     Card(
@@ -37,12 +32,12 @@ fun ActionTile(
                 vertical = MaterialTheme.dimensions.paddingSmall
             )
             .customShadow(
-                color = shadowColor,
-                offsetX = shadowOffsetX,
-                offsetY = shadowOffsetY,
-                cornerRadius = shadowCornerRadius,
-                spread = shadowSpread,
-                blurRadius = shadowBlurRadius,
+                color = hue,
+                offsetX = MaterialTheme.dimensions.shadowOffsetSmall,
+                offsetY = MaterialTheme.dimensions.shadowOffsetSmall,
+                cornerRadius = MaterialTheme.dimensions.cornerRadiusMedium,
+                spread = MaterialTheme.dimensions.shadowSpreadSmall,
+                blurRadius = MaterialTheme.dimensions.shadowBlurSmall,
             )
             .fillMaxWidth()
     ) {

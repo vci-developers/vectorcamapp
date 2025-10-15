@@ -38,6 +38,7 @@ import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.extensions.colors
+import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -55,9 +56,6 @@ fun CompleteSessionListTile(
     val UPLOAD_ICON_MIN_ALPHA = 0.3f
     val UPLOAD_ICON_MAX_ALPHA = 1f
 
-    val STRONG_SHADOW_ALPHA = 0.4f
-    val WEAK_SHADOW_ALPHA = 0.25f
-
     val session = sessionAndSite.session
     val site = sessionAndSite.site
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
@@ -65,19 +63,14 @@ fun CompleteSessionListTile(
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
     val progressColor =
-        if (sessionUploadProgress.totalImageCount == 0 || (sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()) == 1f) MaterialTheme.colors.primary
+        if (sessionUploadProgress.totalImageCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalImageCount) MaterialTheme.colors.primary
         else if (sessionUploadProgress.isUploading) MaterialTheme.colors.warning
         else MaterialTheme.colors.error
 
     session.completedAt?.let { completedAt ->
         ActionTile(
             onClick = onClick,
-            shadowColor = if (progressColor == MaterialTheme.colors.primary) progressColor.copy(alpha=STRONG_SHADOW_ALPHA) else progressColor.copy(alpha=WEAK_SHADOW_ALPHA),
-            shadowOffsetX = 0.dp,
-            shadowOffsetY = 0.dp,
-            shadowSpread = MaterialTheme.dimensions.shadowOffsetSmall,
-            shadowBlurRadius = MaterialTheme.dimensions.shadowBlurMedium,
-            modifier = modifier,
+            hue = progressColor.copy(0.3f),
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
