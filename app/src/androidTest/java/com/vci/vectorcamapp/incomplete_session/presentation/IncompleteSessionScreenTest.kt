@@ -33,6 +33,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.MainActivity
 import com.vci.vectorcamapp.core.domain.model.Session
@@ -40,6 +41,7 @@ import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.scaffold.BaseScaffold
+import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.incomplete_session.presentation.util.IncompleteSessionTestTags
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -308,7 +310,9 @@ class IncompleteSessionScreenTest {
         val cardMatcher = hasTestTag("${IncompleteSessionTestTags.CARD_PREFIX}-1")
         val titleFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
         val expectedTitle = "Incomplete Session on\n${titleFormatter.format(middleSessionAndSite.session.createdAt)}"
-        val expectedPillText = "Session Type: ${middleSessionAndSite.session.type.name}"
+        val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+        val expectedPillText =
+            "Session Type: ${middleSessionAndSite.session.type.displayText(ctx)}"
 
         composeRule.onNode(cardMatcher, useUnmergedTree = true)
             .performScrollTo()
