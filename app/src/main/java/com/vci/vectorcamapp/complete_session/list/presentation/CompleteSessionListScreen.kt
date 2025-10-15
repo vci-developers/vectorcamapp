@@ -31,10 +31,7 @@ import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.draw.rotate
-import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsAction
 import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent
 
 @Composable
@@ -87,7 +84,7 @@ fun CompleteSessionListScreen(
                         end = MaterialTheme.dimensions.spacingMedium,
                         bottom = MaterialTheme.dimensions.spacingSmall
                     ),
-                    onTooltipPrimaryAction = { onAction(CompleteSessionListAction.ShowSearchTooltipDialog) },
+                    onTooltipShow = { onAction(CompleteSessionListAction.ShowSearchTooltipDialog) },
                     onTooltipDismiss = { onAction(CompleteSessionListAction.HideSearchTooltipDialog) },
                     tooltipButtonText = "Tap to learn more about search and filter logic"
                 ) {

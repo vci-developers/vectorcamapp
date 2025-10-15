@@ -1,8 +1,6 @@
 package com.vci.vectorcamapp.incomplete_session.presentation
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListAction
 import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent
@@ -61,7 +58,7 @@ fun IncompleteSessionScreen(
                     end = MaterialTheme.dimensions.paddingMedium,
                     bottom = MaterialTheme.dimensions.spacingSmall
                 ),
-                onTooltipPrimaryAction = { onAction(IncompleteSessionAction.ShowSearchTooltipDialog) },
+                onTooltipShow = { onAction(IncompleteSessionAction.ShowSearchTooltipDialog) },
                 onTooltipDismiss = { onAction(IncompleteSessionAction.HideSearchTooltipDialog) },
                 tooltipButtonText = "Tap to learn more about search and filter logic"
             ) {
