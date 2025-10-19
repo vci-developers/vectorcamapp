@@ -104,7 +104,7 @@ fun LandingScreen(
             },
             text = {
                 Text(
-                    text = "You have an surveillance session in progress. Resume where you left off?",
+                    text = "You have a surveillance session in progress. Resume where you left off?",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colors.textSecondary
                 )
