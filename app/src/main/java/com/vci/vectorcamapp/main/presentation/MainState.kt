@@ -7,5 +7,6 @@ data class MainState(
     val allGranted: Boolean = false,
     val isGpsEnabled: Boolean = false,
     val permissionChecked: Boolean = false,
-    val gpsChecked: Boolean = false
+    val gpsChecked: Boolean = false,
+    val isPermissionTooltipVisible: Boolean = false
 )
