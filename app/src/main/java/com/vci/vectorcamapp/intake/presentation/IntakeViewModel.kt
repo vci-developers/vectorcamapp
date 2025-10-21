@@ -238,16 +238,13 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.EnterNumPeopleSleptInHouse -> {
-                    val numPeopleSleptInHouse =
-                        if (action.count.isBlank()) 0 else action.count.toIntOrNull()
-                    numPeopleSleptInHouse?.let { count ->
-                        _state.update {
-                            it.copy(
-                                surveillanceForm = it.surveillanceForm?.copy(
-                                    numPeopleSleptInHouse = count
-                                )
+                    val numPeopleSleptInHouse = action.count.toIntOrNull() ?: 0
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                numPeopleSleptInHouse = numPeopleSleptInHouse
                             )
-                        }
+                        )
                     }
                 }
 
@@ -264,23 +261,19 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.EnterMonthsSinceIrs -> {
-                    val monthsSinceIrs =
-                        if (action.count.isBlank()) 0 else action.count.toIntOrNull()
-                    monthsSinceIrs?.let { count ->
-                        _state.update {
-                            it.copy(
-                                surveillanceForm = it.surveillanceForm?.copy(
-                                    monthsSinceIrs = count
-                                )
+                    val monthsSinceIrs = action.count.toIntOrNull() ?: 0
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                monthsSinceIrs = monthsSinceIrs
                             )
-                        }
+                        )
                     }
                 }
 
                 is IntakeAction.EnterNumLlinsAvailable -> {
-                    val numLlinsAvailable =
-                        if (action.count.isBlank()) 0 else action.count.toIntOrNull()
-                    numLlinsAvailable?.let { count ->
+                    val numLlinsAvailable = action.count.toIntOrNull() ?: 0
+                    numLlinsAvailable.let { count ->
                         _state.update {
                             it.copy(
                                 surveillanceForm = it.surveillanceForm?.copy(
@@ -331,16 +324,13 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.EnterNumPeopleSleptUnderLlin -> {
-                    val numPeopleSleptUnderLlin =
-                        if (action.count.isBlank()) 0 else action.count.toIntOrNull()
-                    numPeopleSleptUnderLlin?.let { count ->
-                        _state.update {
-                            it.copy(
-                                surveillanceForm = it.surveillanceForm?.copy(
-                                    numPeopleSleptUnderLlin = count
-                                )
+                    val numPeopleSleptUnderLlin = action.count.toIntOrNull() ?: 0
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                numPeopleSleptUnderLlin = numPeopleSleptUnderLlin
                             )
-                        }
+                        )
                     }
                 }
 

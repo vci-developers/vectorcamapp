@@ -396,8 +396,20 @@ fun IntakeScreen(
                 state.surveillanceForm?.let { surveillanceForm ->
                     TextEntryField(
                         label = "Number of People Living in the House",
-                        value = if (surveillanceForm.numPeopleSleptInHouse == 0) "" else surveillanceForm.numPeopleSleptInHouse.toString(),
-                        onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it.filter { character -> character.isDigit() })) },
+                        value = surveillanceForm.numPeopleSleptInHouse.toString(),
+                        onValueChange = { newValue ->
+                            val oldValue = surveillanceForm.numPeopleSleptInHouse.toString()
+                            val filteredNewValue = newValue.filter { it.isDigit() }
+
+                            val finalValueString = if (oldValue == "0" && filteredNewValue.length > 1) {
+                                filteredNewValue.filter { it != '0' }
+                            } else {
+                                filteredNewValue
+                            }
+
+                            val normalized = finalValueString.toIntOrNull()?.toString() ?: "0"
+                            onAction(IntakeAction.EnterNumPeopleSleptInHouse(normalized))
+                        },
                         placeholder = "0",
                         singleLine = true,
                     )
@@ -486,10 +498,19 @@ fun IntakeScreen(
                     if (surveillanceForm.wasIrsConducted) {
                         TextEntryField(
                             label = "Months Since IRS",
-                            value = surveillanceForm.monthsSinceIrs?.let { if (it == 0) "" else it.toString() }
-                                .orEmpty(),
-                            onValueChange = {
-                                onAction(IntakeAction.EnterMonthsSinceIrs(it.filter { character -> character.isDigit() }))
+                            value = (surveillanceForm.monthsSinceIrs ?: 0).toString(),
+                            onValueChange = { newValue ->
+                                val oldValue = (surveillanceForm.monthsSinceIrs ?: 0).toString()
+                                val filteredNewValue = newValue.filter { it.isDigit() }
+
+                                val finalValueString = if (oldValue == "0" && filteredNewValue.length > 1) {
+                                    filteredNewValue.filter { it != '0' }
+                                } else {
+                                    filteredNewValue
+                                }
+
+                                val normalized = finalValueString.toIntOrNull()?.toString() ?: "0"
+                                onAction(IntakeAction.EnterMonthsSinceIrs(normalized))
                             },
                             placeholder = "0",
                             singleLine = true,
@@ -498,8 +519,20 @@ fun IntakeScreen(
 
                     TextEntryField(
                         label = "Number of LLINs Available",
-                        value = if (surveillanceForm.numLlinsAvailable == 0) "" else surveillanceForm.numLlinsAvailable.toString(),
-                        onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it.filter { character -> character.isDigit() })) },
+                        value = (surveillanceForm.numLlinsAvailable ?: 0).toString(),
+                        onValueChange = { newValue ->
+                            val oldValue = (surveillanceForm.numLlinsAvailable ?: 0).toString()
+                            val filteredNewValue = newValue.filter { it.isDigit() }
+
+                            val finalValueString = if (oldValue == "0" && filteredNewValue.length > 1) {
+                                filteredNewValue.filter { it != '0' }
+                            } else {
+                                filteredNewValue
+                            }
+
+                            val normalized = finalValueString.toIntOrNull()?.toString() ?: "0"
+                            onAction(IntakeAction.EnterNumLlinsAvailable(normalized))
+                        },
                         placeholder = "0",
                         singleLine = true,
                     )
@@ -543,9 +576,19 @@ fun IntakeScreen(
                     surveillanceForm.numPeopleSleptUnderLlin?.let { current ->
                         TextEntryField(
                             label = "Number of People who Slept Under LLIN",
-                            value = if (current == 0) "" else current.toString(),
-                            onValueChange = {
-                                onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(it.filter { character -> character.isDigit() }))
+                            value = current.toString(),
+                            onValueChange = { newValue ->
+                                val oldValue = current.toString()
+                                val filteredNewValue = newValue.filter { it.isDigit() }
+
+                                val finalValueString = if (oldValue == "0" && filteredNewValue.length > 1) {
+                                    filteredNewValue.filter { it != '0' }
+                                } else {
+                                    filteredNewValue
+                                }
+
+                                val normalized = finalValueString.toIntOrNull()?.toString() ?: "0"
+                                onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(normalized))
                             },
                             placeholder = "0",
                             singleLine = true,
