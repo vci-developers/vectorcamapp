@@ -4,6 +4,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -327,6 +329,19 @@ class ImageUploadWorker @AssistedInject constructor(
 
 
         val finalStatus = if (uploadResult is DomainResult.Success) {
+            try {
+                Log.d(
+                    "ImageUploadWorker",
+                    "Upload successful. Compressing original file: ${task.image.imageUri}"
+                )
+                compressImageFile(task.image.imageUri, 40)
+            } catch (e: Exception) {
+                Log.e(
+                    "ImageUploadWorker",
+                    "Failed to compress original file (${task.image.imageUri}) after upload.",
+                    e
+                )
+            }
             UploadStatus.COMPLETED
         } else {
             UploadStatus.FAILED
@@ -557,5 +572,27 @@ class ImageUploadWorker @AssistedInject constructor(
             .setSmallIcon(icon)
             .build()
         notificationManager.notify(notificationId, notification)
+    }
+
+    private suspend fun compressImageFile(uri: Uri, quality: Int) = withContext(Dispatchers.IO) {
+        val resolver = context.contentResolver
+        var bitmap: Bitmap? = null
+
+        try {
+            bitmap = resolver.openInputStream(uri)?.use { inputStream ->
+                BitmapFactory.decodeStream(inputStream)
+            } ?: throw IOException("Failed to open input stream for $uri")
+
+            resolver.openOutputStream(uri, "wt")?.use { out ->
+                if (!bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)) {
+                    throw IOException("Failed to compress bitmap to $uri")
+                }
+                out.flush()
+            } ?: throw IOException("Failed to open output stream for $uri")
+
+            Log.d("ImageUploadWorker", "Successfully compressed $uri to $quality% quality.")
+        } finally {
+            bitmap?.recycle()
+        }
     }
 }
