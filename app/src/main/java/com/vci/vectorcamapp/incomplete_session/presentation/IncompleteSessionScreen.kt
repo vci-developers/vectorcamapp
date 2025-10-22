@@ -30,7 +30,7 @@ fun IncompleteSessionScreen(
     modifier: Modifier = Modifier
 ) {
     ScreenHeader(
-        title = "Incomplete Sessions",
+        title = "Sessions in Progress",
         subtitle = "Click on a session to resume",
         leadingIcon = {
             Icon(
@@ -63,7 +63,7 @@ fun IncompleteSessionScreen(
             item {
                 Text(
                     text = if (state.searchQuery.isBlank())
-                        "No incomplete sessions found."
+                        "No sessions currently in progress."
                     else
                         "No matching sessions found.",
                     style = MaterialTheme.typography.headlineSmall,

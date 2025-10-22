@@ -66,7 +66,7 @@ fun IncompleteSessionCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Incomplete Session on\n${titleFormatter.format(sessionAndSite.session.createdAt)}",
+                            text = "Session in Progress from\n${titleFormatter.format(sessionAndSite.session.createdAt)}",
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colors.textPrimary
                         )
