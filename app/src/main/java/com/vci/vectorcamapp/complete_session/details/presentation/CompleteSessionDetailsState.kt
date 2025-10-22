@@ -13,7 +13,6 @@ data class CompleteSessionDetailsState(
     val session: Session = Session(
         localId = UUID(0, 0),
         remoteId = null,
-        houseNumber = "",
         collectorTitle = "",
         collectorName = "",
         collectionDate = 0L,
@@ -32,8 +31,10 @@ data class CompleteSessionDetailsState(
         district = "",
         subCounty = "",
         parish = "",
-        sentinelSite = "",
-        healthCenter = ""
+        villageName = "",
+        houseNumber = "",
+        healthCenter = "",
+        isActive = true
     ),
     val surveillanceForm: SurveillanceForm? = null,
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),

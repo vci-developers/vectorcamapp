@@ -13,8 +13,11 @@ import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
-fun ActionTile(onClick: () -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-
+fun ActionTile(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
     Card(
         onClick = onClick,
         border = CardDefaults.outlinedCardBorder(),

@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.incomplete_session.logging
 
+import android.net.Uri
 import com.vci.vectorcamapp.core.logging.Crashy
 import com.vci.vectorcamapp.core.logging.CrashyContext
 import java.util.UUID
@@ -41,6 +42,42 @@ object IncompleteSessionSentryLogger {
                 "recovery_action" to "User may need to start a new session",
                 "data_loss_risk" to "Previous session work may be lost",
                 "possible_causes" to "Room database query failure, coroutine cancellation, database migration issue, session ID mismatch, I/O error"
+            )
+        )
+    }
+
+    fun logSessionDeletionFailure(e: Throwable, failedSessionId: UUID) {
+        Crashy.exception(
+            throwable = e, context = CrashyContext(
+                screen = "IncompleteSession",
+                feature = "IncompleteSessionDeletion",
+                action = "incomplete_session_deletion",
+                sessionId = failedSessionId.toString()
+            ), tags = mapOf(
+                "error_type" to "incomplete_session_deletion_failed",
+            ), extras = mapOf(
+                "error_context" to "User cannot delete the incomplete session",
+                "requested_session_id" to failedSessionId,
+                "recovery_action" to "User may need to try the delete action again",
+                "possible_causes" to "Corrupted incomplete session data"
+            )
+        )
+    }
+
+    fun logImageDeletionFailure(e: Throwable, failedSessionId: UUID, failedImageUri: Uri) {
+        Crashy.exception(
+            throwable = e, context = CrashyContext(
+                screen = "IncompleteSession",
+                feature = "IncompleteSessionImageDeletion",
+                action = "incomplete_session_image_deletion",
+                sessionId = failedSessionId.toString()
+            ), tags = mapOf(
+                "error_type" to "incomplete_session_image_deletion_failed",
+            ), extras = mapOf(
+                "error_context" to "User cannot delete the image from an incomplete session",
+                "requested_session_id" to failedSessionId,
+                "requested_image_uri" to failedImageUri,
+                "possible_causes" to "Corrupted incomplete session data or image file"
             )
         )
     }

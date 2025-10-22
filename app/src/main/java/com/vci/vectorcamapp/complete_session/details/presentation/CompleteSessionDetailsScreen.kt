@@ -37,7 +37,7 @@ fun CompleteSessionDetailsScreen(
                 contentDescription = "Back Button",
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
-                    .size(MaterialTheme.dimensions.iconSizeMedium)
+                    .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
                         onAction(CompleteSessionDetailsAction.ReturnToCompleteSessionListScreen)
                     })
@@ -62,7 +62,6 @@ fun CompleteSessionDetailsScreen(
                 )
 
                 CompleteSessionDetailsTab.SESSION_SPECIMENS -> CompleteSessionSpecimens(
-                    session = state.session,
                     specimensWithImagesAndInferenceResults = state.specimensWithImagesAndInferenceResults,
                     searchQuery = state.searchQuery,
                     onUpdateSearchQuery = { searchQuery ->

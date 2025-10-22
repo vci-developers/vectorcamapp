@@ -19,7 +19,7 @@ fun CompleteSessionListDetailRow(
     iconPainter: Painter, iconDescription: String, text: String, modifier: Modifier = Modifier
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.fillMaxWidth()
     ) {

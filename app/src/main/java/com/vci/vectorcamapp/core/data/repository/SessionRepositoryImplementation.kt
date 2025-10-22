@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.data.repository
 
+import android.net.Uri
 import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.dao.SessionDao
@@ -60,6 +61,10 @@ class SessionRepositoryImplementation @Inject constructor(
         }
     }
 
+    override suspend fun getImageUrisBySessionId(sessionId: UUID): List<Uri> {
+        return sessionDao.getImageUrisBySessionId(sessionId)
+    }
+
     override suspend fun getSessionAndSiteById(sessionId: UUID): SessionAndSite? {
         val relation = sessionDao.getSessionAndSiteById(sessionId)
         return relation?.let {
@@ -81,9 +86,14 @@ class SessionRepositoryImplementation @Inject constructor(
         }
     }
 
-    override fun observeIncompleteSessions(): Flow<List<Session>> {
-        return sessionDao.observeIncompleteSessions().map {
-            it.map { sessionEntity -> sessionEntity.toDomain() }
+    override fun observeIncompleteSessionsAndSites(): Flow<List<SessionAndSite>> {
+        return sessionDao.observeIncompleteSessionsAndSites().map { sessionAndSiteRelations ->
+            sessionAndSiteRelations.map { sessionAndSiteRelation ->
+                SessionAndSite(
+                    session = sessionAndSiteRelation.session.toDomain(),
+                    site = sessionAndSiteRelation.site.toDomain()
+                )
+            }
         }
     }
 

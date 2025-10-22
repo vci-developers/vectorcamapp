@@ -7,12 +7,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
+import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.extensions.colors
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -21,6 +23,8 @@ import java.util.Locale
 fun CompleteSessionForm(
     session: Session, site: Site, surveillanceForm: SurveillanceForm?, modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
@@ -44,7 +48,7 @@ fun CompleteSessionForm(
                     color = MaterialTheme.colors.textPrimary
                 )
 
-                InfoPill(text = "Session Type: ${session.type}", color = MaterialTheme.colors.info)
+                InfoPill(text = "Session Type: ${session.type.displayText(context)}", color = MaterialTheme.colors.info)
             }
 
             CompleteSessionFormTile(
@@ -107,13 +111,13 @@ fun CompleteSessionForm(
                 )
 
                 Text(
-                    text = "Sentinel Site: ${site.sentinelSite}",
+                    text = "Village Name: ${site.villageName}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
                 Text(
-                    text = "House Number: ${session.houseNumber}",
+                    text = "House Number: ${site.houseNumber}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
