@@ -18,9 +18,8 @@ fun SearchTextField(
     isSingleLine: Boolean = true,
     isTooltipVisible: Boolean = false,
     onSearchSubmitted: (() -> Unit)? = null,
-    onTooltipShow: (() -> Unit)? = null,
-    onTooltipDismiss: (() -> Unit)? = null,
-    tooltipButtonText: String = "Tap to learn more about searching",
+    onShowSearchTooltip: (() -> Unit)? = null,
+    onDismissSearchTooltip: (() -> Unit)? = null,
     tooltipContent: (@Composable () -> Unit)? = null,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -40,12 +39,12 @@ fun SearchTextField(
         )
     )
 
-    if (tooltipContent != null && onTooltipShow != null && onTooltipDismiss != null) {
+    if (tooltipContent != null && onShowSearchTooltip != null && onDismissSearchTooltip != null) {
         Tooltip(
             isVisible = isTooltipVisible,
-            onClick = onTooltipShow,
-            onDismiss = onTooltipDismiss,
-            buttonText = tooltipButtonText,
+            onClick = onShowSearchTooltip,
+            onDismiss = onDismissSearchTooltip,
+            buttonText = "Tap to learn more about searching",
             modifier = modifier
         ) {
             tooltipContent()

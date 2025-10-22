@@ -54,15 +54,12 @@ fun IncompleteSessionScreen(
                 },
                 placeholder = "Search by collector, district, session type, etc.",
                 modifier = Modifier.padding(
-                    start = MaterialTheme.dimensions.paddingMedium,
-                    end = MaterialTheme.dimensions.paddingMedium,
-                    top = MaterialTheme.dimensions.spacingSmall,
-                    bottom = MaterialTheme.dimensions.spacingSmall
+                    horizontal = MaterialTheme.dimensions.paddingMedium,
+                    vertical = MaterialTheme.dimensions.spacingSmall
                 ),
                 isTooltipVisible = state.isSearchTooltipVisible,
-                onTooltipShow = { onAction(IncompleteSessionAction.ShowSearchTooltipDialog) },
-                onTooltipDismiss = { onAction(IncompleteSessionAction.HideSearchTooltipDialog) },
-                tooltipButtonText = "Tap to learn more about search and filter logic"
+                onShowSearchTooltip = { onAction(IncompleteSessionAction.ShowSearchTooltipDialog) },
+                onDismissSearchTooltip = { onAction(IncompleteSessionAction.HideSearchTooltipDialog) }
             ) {
                 SearchHelpTooltipContent()
             }

@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsAction
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent
 import com.vci.vectorcamapp.core.presentation.search.SearchTextField
@@ -27,7 +26,8 @@ fun CompleteSessionSpecimens(
     searchQuery: String,
     onUpdateSearchQuery: (String) -> Unit,
     isSearchTooltipVisible: Boolean,
-    onAction: (CompleteSessionDetailsAction) -> Unit,
+    onShowSearchTooltip: () -> Unit,
+    onDismissSearchTooltip: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (specimensWithImagesAndInferenceResults.isEmpty() && searchQuery.isBlank()) {
@@ -50,15 +50,12 @@ fun CompleteSessionSpecimens(
                 },
                 placeholder = "Search by specimen ID, species, etc.",
                 modifier = Modifier.padding(
-                    start = MaterialTheme.dimensions.spacingMedium,
-                    end = MaterialTheme.dimensions.spacingMedium,
-                    top = MaterialTheme.dimensions.spacingSmall,
-                    bottom = MaterialTheme.dimensions.spacingSmall
+                    horizontal = MaterialTheme.dimensions.spacingMedium,
+                    vertical = MaterialTheme.dimensions.spacingSmall
                 ),
                 isTooltipVisible = isSearchTooltipVisible,
-                onTooltipShow = { onAction(CompleteSessionDetailsAction.ShowSearchTooltipDialog) },
-                onTooltipDismiss = { onAction(CompleteSessionDetailsAction.HideSearchTooltipDialog) },
-                tooltipButtonText = "Tap to learn more about search and filter logic"
+                onShowSearchTooltip = { onShowSearchTooltip },
+                onDismissSearchTooltip = { onDismissSearchTooltip }
             ) {
                 SearchHelpTooltipContent()
             }

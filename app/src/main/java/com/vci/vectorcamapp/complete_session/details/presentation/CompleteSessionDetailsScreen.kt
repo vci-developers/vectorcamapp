@@ -69,7 +69,8 @@ fun CompleteSessionDetailsScreen(
                     },
                     modifier = modifier,
                     isSearchTooltipVisible = state.isSearchTooltipVisible,
-                    onAction = onAction
+                    onShowSearchTooltip = { onAction(CompleteSessionDetailsAction.ShowSearchTooltipDialog) },
+                    onDismissSearchTooltip = { onAction(CompleteSessionDetailsAction.HideSearchTooltipDialog) }
                 )
             }
         }
