@@ -100,13 +100,12 @@ fun LiveCameraPreview(
                     }
                 }
         ) {
-            focusPoint?.let { normalized ->
+            focusPoint?.takeIf { isManualFocusing || inferenceResults.isNotEmpty() }?.let { normalized ->
                 if (containerSize != IntSize.Zero) {
                     val centerPx = Offset(
                         x = normalized.x * containerSize.width,
                         y = normalized.y * containerSize.height
                     )
-
                     val dotColor = MaterialTheme.colors.primary
 
                     Canvas(modifier = Modifier.fillMaxSize()) {
@@ -116,18 +115,10 @@ fun LiveCameraPreview(
                             center = centerPx
                         )
                     }
-                }
-            }
 
-            if (isManualFocusing) {
-                focusPoint?.let { normalized ->
-                    if (containerSize != IntSize.Zero) {
-                        val ringOffsetInPixels = Offset(
-                            x = normalized.x * containerSize.width,
-                            y = normalized.y * containerSize.height
-                        )
+                    if (isManualFocusing) {
                         ManualFocusRingOverlay(
-                            focusPoint = ringOffsetInPixels,
+                            focusPoint = centerPx,
                             overlaySize = containerSize,
                             onCancel = {
                                 cameraFocusController.cancelFocus()
