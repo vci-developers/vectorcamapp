@@ -9,7 +9,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -18,7 +17,7 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 fun ActionTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    hue: Color = MaterialTheme.colors.cardGlow.copy(alpha = 0.2f),
+    hue: Color = MaterialTheme.colors.cardGlow,
     content: @Composable () -> Unit
 ) {
     Card(
@@ -32,7 +31,7 @@ fun ActionTile(
                 vertical = MaterialTheme.dimensions.paddingSmall
             )
             .customShadow(
-                color = hue,
+                color = hue.copy(alpha = 0.25f),
                 offsetX = MaterialTheme.dimensions.shadowOffsetSmall,
                 offsetY = MaterialTheme.dimensions.shadowOffsetSmall,
                 cornerRadius = MaterialTheme.dimensions.cornerRadiusMedium,

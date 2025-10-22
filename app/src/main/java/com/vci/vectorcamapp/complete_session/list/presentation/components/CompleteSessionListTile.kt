@@ -70,7 +70,7 @@ fun CompleteSessionListTile(
     session.completedAt?.let { completedAt ->
         ActionTile(
             onClick = onClick,
-            hue = progressColor.copy(0.3f),
+            hue = progressColor,
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
