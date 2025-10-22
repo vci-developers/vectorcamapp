@@ -74,6 +74,8 @@ class ImageUploadWorker @AssistedInject constructor(
 
         private const val CHANNEL_ID = "image_upload_channel"
         private const val CHANNEL_NAME = "Image Upload Channel"
+
+        private const val COMPRESSION_QUALITY = 40
     }
 
     private val notificationManager =
@@ -334,7 +336,7 @@ class ImageUploadWorker @AssistedInject constructor(
                     "ImageUploadWorker",
                     "Upload successful. Compressing original file: ${task.image.imageUri}"
                 )
-                compressImageFile(task.image.imageUri, 40)
+                compressImageFile(task.image.imageUri, COMPRESSION_QUALITY)
             } catch (e: Exception) {
                 Log.e(
                     "ImageUploadWorker",
