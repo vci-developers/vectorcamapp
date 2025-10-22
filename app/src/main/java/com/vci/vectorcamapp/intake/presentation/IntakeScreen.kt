@@ -407,8 +407,8 @@ fun IntakeScreen(
                                 filteredNewValue
                             }
 
-                            val normalized = finalValueString.toIntOrNull()?.toString() ?: "0"
-                            onAction(IntakeAction.EnterNumPeopleSleptInHouse(normalized))
+                            val normalizedFinalValue = finalValueString.toIntOrNull()?.toString() ?: "0"
+                            onAction(IntakeAction.EnterNumPeopleSleptInHouse(normalizedFinalValue))
                         },
                         placeholder = "0",
                         singleLine = true,
@@ -509,8 +509,8 @@ fun IntakeScreen(
                                     filteredNewValue
                                 }
 
-                                val normalized = finalValueString.toIntOrNull()?.toString() ?: "0"
-                                onAction(IntakeAction.EnterMonthsSinceIrs(normalized))
+                                val normalizedFinalValue = finalValueString.toIntOrNull()?.toString() ?: "0"
+                                onAction(IntakeAction.EnterMonthsSinceIrs(normalizedFinalValue))
                             },
                             placeholder = "0",
                             singleLine = true,
@@ -530,8 +530,8 @@ fun IntakeScreen(
                                 filteredNewValue
                             }
 
-                            val normalized = finalValueString.toIntOrNull()?.toString() ?: "0"
-                            onAction(IntakeAction.EnterNumLlinsAvailable(normalized))
+                            val normalizedFinalValue = finalValueString.toIntOrNull()?.toString() ?: "0"
+                            onAction(IntakeAction.EnterNumLlinsAvailable(normalizedFinalValue))
                         },
                         placeholder = "0",
                         singleLine = true,
@@ -587,8 +587,8 @@ fun IntakeScreen(
                                     filteredNewValue
                                 }
 
-                                val normalized = finalValueString.toIntOrNull()?.toString() ?: "0"
-                                onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(normalized))
+                                val normalizedFinalValue = finalValueString.toIntOrNull()?.toString() ?: "0"
+                                onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(normalizedFinalValue))
                             },
                             placeholder = "0",
                             singleLine = true,
