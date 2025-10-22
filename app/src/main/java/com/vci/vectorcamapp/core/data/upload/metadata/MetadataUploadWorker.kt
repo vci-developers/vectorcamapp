@@ -134,7 +134,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             val localSpecimensWithImagesAndInferenceResults =
                 specimenRepository.getSpecimenImagesAndInferenceResultsBySession(syncedSession.localId)
             val totalSpecimens = localSpecimensWithImagesAndInferenceResults.size
-            var failedImagesCount = 0
+            var hasFailure = false
 
             localSpecimensWithImagesAndInferenceResults.forEachIndexed { specimenIndex, specimenWithImagesAndInferenceResults ->
                 val totalImages =
@@ -146,7 +146,16 @@ class MetadataUploadWorker @AssistedInject constructor(
                 )) {
                     is DomainResult.Success -> syncSpecimenResult.data
                     is DomainResult.Error -> {
-                        failedImagesCount += specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
+                        hasFailure = true
+                        specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
+                            if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
+                                specimenImageRepository.updateSpecimenImage(
+                                    specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
+                                    specimenWithImagesAndInferenceResults.specimen.id,
+                                    syncedSession.localId
+                                )
+                            }
+                        }
                         return@forEachIndexed
                     }
                 }
@@ -164,13 +173,18 @@ class MetadataUploadWorker @AssistedInject constructor(
                                 totalImagesForSpecimen = totalImages
                             )
                         }.onError {
-                            failedImagesCount++
+                            hasFailure = true
+                            specimenImageRepository.updateSpecimenImage(
+                                specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
+                                syncedSpecimen.id,
+                                syncedSession.localId
+                            )
                         }
                     }
                 }
             }
 
-            return if (failedImagesCount > 0) {
+            return if (hasFailure) {
                 retryOrFailure("Upload failed for one or more images.")
             } else {
                 WorkerResult.success()
@@ -527,27 +541,13 @@ class MetadataUploadWorker @AssistedInject constructor(
                                     postSpecimenImageResult.data.image
                                 }
 
-                                is DomainResult.Error -> {
-                                    specimenImageRepository.updateSpecimenImage(
-                                        localSpecimenImage.copy(
-                                            metadataUploadStatus = UploadStatus.FAILED
-                                        ), syncedSpecimen.id, syncedLocalSessionId
-                                    )
-                                    return DomainResult.Error(
-                                        postSpecimenImageResult.error
-                                    )
-                                }
+                                is DomainResult.Error -> return DomainResult.Error(
+                                    postSpecimenImageResult.error
+                                )
                             }
                         }
 
-                        else -> {
-                            specimenImageRepository.updateSpecimenImage(
-                                localSpecimenImage.copy(
-                                    metadataUploadStatus = UploadStatus.FAILED
-                                ), syncedSpecimen.id, syncedLocalSessionId
-                            )
-                            return DomainResult.Error(remoteSpecimenImageResult.error)
-                        }
+                        else -> return DomainResult.Error(remoteSpecimenImageResult.error)
                     }
                 }
             }
@@ -614,18 +614,8 @@ class MetadataUploadWorker @AssistedInject constructor(
             )
             DomainResult.Success(Unit)
         } catch (e: IOException) {
-            specimenImageRepository.updateSpecimenImage(
-                localSpecimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
-                syncedSpecimen.id,
-                syncedLocalSessionId
-            )
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
-            specimenImageRepository.updateSpecimenImage(
-                localSpecimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
-                syncedSpecimen.id,
-                syncedLocalSessionId
-            )
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
