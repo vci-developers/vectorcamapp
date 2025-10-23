@@ -14,7 +14,7 @@ fun getRegionBasedVersionCode(): Int {
     return when (region) {
         "colombia" -> 1006
         "uganda" -> 2002
-        "nigeria" -> 3000
+        "nigeria" -> 3001
         else -> {
             println("⚠️ Unknown region '$region', using default version code")
             4000
@@ -26,7 +26,7 @@ fun getRegionBasedVersionName(): String {
     return when (region) {
         "colombia" -> "1.0.6"
         "uganda" -> "1.0.2"
-        "nigeria" -> "1.0.0"
+        "nigeria" -> "1.0.1"
         else -> {
             println("⚠️ Unknown region '$region', using default version name")
             "1.0.0"
