@@ -1,3 +1,4 @@
+// app/src/main/java/com/vci/vectorcamapp/main/presentation/PermissionScreen.kt
 package com.vci.vectorcamapp.main.presentation
 
 import androidx.compose.foundation.Image
@@ -16,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -23,12 +25,15 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip
 import com.vci.vectorcamapp.main.presentation.components.PermissionTooltipRow
+import com.vci.vectorcamapp.main.presentation.util.PermissionTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
 fun PermissionScreen(
-    state: MainState, onAction: (MainAction) -> Unit, modifier: Modifier = Modifier
+    state: MainState,
+    onAction: (MainAction) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     LaunchedEffect(Unit) {
         if (!state.allGranted) {
@@ -36,7 +41,13 @@ fun PermissionScreen(
         }
     }
 
-    Column(modifier=Modifier.fillMaxHeight().background(MaterialTheme.colors.cardBackground), verticalArrangement = Arrangement.Center) {
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .background(MaterialTheme.colors.cardBackground)
+            .testTag(PermissionTestTags.ROOT),
+        verticalArrangement = Arrangement.Center
+    ) {
         Column(
             modifier = modifier
                 .padding(
@@ -53,6 +64,7 @@ fun PermissionScreen(
                 modifier = modifier
                     .padding(horizontal = MaterialTheme.dimensions.paddingLarge)
                     .fillMaxWidth()
+                    .testTag(PermissionTestTags.IMAGE)
             )
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingLarge))
@@ -62,7 +74,8 @@ fun PermissionScreen(
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colors.textPrimary,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag(PermissionTestTags.TITLE)
             )
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
@@ -78,6 +91,7 @@ fun PermissionScreen(
                         start = MaterialTheme.dimensions.paddingMedium,
                         end = MaterialTheme.dimensions.paddingExtraSmall
                     )
+                    .testTag(PermissionTestTags.DESCRIPTION)
             )
 
             Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
@@ -89,7 +103,8 @@ fun PermissionScreen(
                 buttonText = "Tap to learn more about app permissions"
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+                    modifier = Modifier.testTag(PermissionTestTags.PERMISSION_TOOLTIP_CONTENT)
                 ) {
                     Text(
                         text = "App Permissions",
@@ -128,13 +143,15 @@ fun PermissionScreen(
                 if (!state.allGranted) {
                     ActionButton(
                         onClick = { onAction(MainAction.OpenAppSettings) },
-                        label = "Grant Permissions"
+                        label = "Grant Permissions",
+                        modifier = Modifier.testTag(PermissionTestTags.GRANT_PERMISSIONS_BUTTON)
                     )
                 }
                 if (!state.isGpsEnabled) {
                     ActionButton(
                         onClick = { onAction(MainAction.OpenLocationSettings) },
-                        label = "Enable GPS"
+                        label = "Enable GPS",
+                        modifier = Modifier.testTag(PermissionTestTags.ENABLE_GPS_BUTTON)
                     )
                 }
             }
