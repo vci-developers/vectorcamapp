@@ -106,7 +106,7 @@ fun LiveCameraPreview(
                         x = normalized.x * containerSize.width,
                         y = normalized.y * containerSize.height
                     )
-                    val dotColor = MaterialTheme.colors.primary
+                    val dotColor = MaterialTheme.colors.warning
 
                     Canvas(modifier = Modifier.fillMaxSize()) {
                         drawCircle(
