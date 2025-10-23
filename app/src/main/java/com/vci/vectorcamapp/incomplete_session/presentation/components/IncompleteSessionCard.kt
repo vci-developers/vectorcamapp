@@ -17,12 +17,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.presentation.components.gestures.SwipeToReveal
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
+import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
@@ -35,6 +37,8 @@ fun IncompleteSessionCard(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     val titleFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
     val detailFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
@@ -62,7 +66,7 @@ fun IncompleteSessionCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Incomplete Session on\n${titleFormatter.format(sessionAndSite.session.createdAt)}",
+                            text = "Session in Progress from\n${titleFormatter.format(sessionAndSite.session.createdAt)}",
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colors.textPrimary
                         )
@@ -85,7 +89,7 @@ fun IncompleteSessionCard(
                         }
                     }
 
-                    InfoPill(text = "Session Type: ${sessionAndSite.session.type}", color = MaterialTheme.colors.info)
+                    InfoPill(text = "Session Type: ${sessionAndSite.session.type.displayText(context)}", color = MaterialTheme.colors.info)
                 }
 
                 Column(
