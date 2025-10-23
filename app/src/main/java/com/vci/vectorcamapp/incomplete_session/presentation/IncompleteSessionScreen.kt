@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -14,12 +15,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.incomplete_session.presentation.components.IncompleteSessionCard
+import com.vci.vectorcamapp.incomplete_session.presentation.util.IncompleteSessionTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
@@ -30,7 +33,7 @@ fun IncompleteSessionScreen(
     modifier: Modifier = Modifier
 ) {
     ScreenHeader(
-        title = "Incomplete Sessions",
+        title = "Sessions in Progress",
         subtitle = "Click on a session to resume",
         leadingIcon = {
             Icon(
@@ -41,7 +44,8 @@ fun IncompleteSessionScreen(
                     .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
                         onAction(IncompleteSessionAction.ReturnToLandingScreen)
-                    })
+                    }
+                    .testTag(IncompleteSessionTestTags.BACK_BUTTON) )
         },
         modifier = modifier
     ) {
@@ -63,7 +67,7 @@ fun IncompleteSessionScreen(
             item {
                 Text(
                     text = if (state.searchQuery.isBlank())
-                        "No incomplete sessions found."
+                        "No sessions currently in progress."
                     else
                         "No matching sessions found.",
                     style = MaterialTheme.typography.headlineSmall,
@@ -74,14 +78,15 @@ fun IncompleteSessionScreen(
             }
         }
 
-        items(
+        itemsIndexed(
             items = state.sessionAndSites.asReversed(),
-            key = { it.session.localId }
-        ) { sessionAndSite ->
+            key = { _, sessionAndSite -> sessionAndSite.session.localId }
+        ) { index, sessionAndSite ->
             IncompleteSessionCard(
                 sessionAndSite = sessionAndSite,
                 onClick = { onAction(IncompleteSessionAction.ResumeSession(sessionAndSite.session.localId)) },
-                onDelete = { onAction(IncompleteSessionAction.DeleteSession(sessionAndSite.session.localId)) }
+                onDelete = { onAction(IncompleteSessionAction.DeleteSession(sessionAndSite.session.localId)) },
+                modifier = Modifier.testTag("${IncompleteSessionTestTags.CARD_PREFIX}-$index")
             )
         }
     }

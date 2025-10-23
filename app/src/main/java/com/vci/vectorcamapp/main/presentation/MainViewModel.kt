@@ -38,6 +38,7 @@ class MainViewModel @Inject constructor(
                 MainAction.RequestPermissions -> _events.send(MainEvent.LaunchPermissionRequest)
                 MainAction.OpenAppSettings -> _events.send(MainEvent.NavigateToAppSettings)
                 MainAction.OpenLocationSettings -> _events.send(MainEvent.NavigateToLocationSettings)
+
                 is MainAction.UpdatePermissionStatus -> {
                     _state.update {
                         it.copy(
@@ -54,6 +55,14 @@ class MainViewModel @Inject constructor(
                             gpsChecked = true
                         )
                     }
+                }
+
+                is MainAction.ShowPermissionTooltipDialog -> {
+                    _state.update { it.copy(isPermissionTooltipVisible = true) }
+                }
+
+                is MainAction.HidePermissionTooltipDialog -> {
+                    _state.update { it.copy(isPermissionTooltipVisible = false) }
                 }
             }
         }
