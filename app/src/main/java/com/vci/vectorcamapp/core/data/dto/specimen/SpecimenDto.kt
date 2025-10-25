@@ -7,5 +7,5 @@ data class SpecimenDto(
     val id: Int? = null,
     val specimenId: String = "",
     val sessionId: Int = -1,
-    val wasSelectedForFurtherProcessing: Boolean? = null
+    val wasSelectedForFurtherProcessing: Boolean = false
 )

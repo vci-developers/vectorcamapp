@@ -299,7 +299,7 @@ class ImagingViewModel @Inject constructor(
                     val saveResult = cameraRepository.saveImage(jpegBytes, filename, currentSession)
 
                     saveResult.onSuccess { imageUri ->
-                        val specimen = Specimen(id = specimenId, remoteId = null)
+                        val specimen = Specimen(id = specimenId, remoteId = null, wasSelectedForFurtherProcessing = false)
                         val specimenImage = SpecimenImage(
                             localId = calculateMd5(jpegBytes),
                             remoteId = null,

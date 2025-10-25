@@ -11,7 +11,7 @@ import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenIma
 data class ImagingState(
     val isLoading: Boolean = false,
     val isProcessing: Boolean = false,
-    val currentSpecimen: Specimen = Specimen(id = "", remoteId = null),
+    val currentSpecimen: Specimen = Specimen(id = "", remoteId = null, wasSelectedForFurtherProcessing = false),
     val currentSpecimenImage: SpecimenImage = SpecimenImage(
         localId = "",
         remoteId = null,
