@@ -7,7 +7,8 @@ import java.util.UUID
 fun SpecimenEntity.toDomain(): Specimen {
     return Specimen(
         id = this.id,
-        remoteId = this.remoteId
+        remoteId = this.remoteId,
+        wasSelectedForFurtherProcessing = this.wasSelectedForFurtherProcessing
     )
 }
 
@@ -15,6 +16,7 @@ fun Specimen.toEntity(sessionId: UUID): SpecimenEntity {
     return SpecimenEntity(
         id = this.id,
         sessionId = sessionId,
-        remoteId = this.remoteId
+        remoteId = this.remoteId,
+        wasSelectedForFurtherProcessing = this.wasSelectedForFurtherProcessing
     )
 }
