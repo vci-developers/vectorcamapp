@@ -436,7 +436,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
 
             val remoteSpecimen = Specimen(
-                id = remoteSpecimenDto.specimenId, remoteId = remoteSpecimenDto.id, wasSelectedForFurtherProcessing = false
+                id = remoteSpecimenDto.specimenId, remoteId = remoteSpecimenDto.id, wasSelectedForFurtherProcessing = remoteSpecimenDto.wasSelectedForFurtherProcessing
             )
 
             if (remoteSpecimenDto != localSpecimenDto) {
