@@ -1,4 +1,3 @@
-// app/src/main/java/com/vci/vectorcamapp/main/presentation/PermissionScreen.kt
 package com.vci.vectorcamapp.main.presentation
 
 import androidx.compose.foundation.Image
