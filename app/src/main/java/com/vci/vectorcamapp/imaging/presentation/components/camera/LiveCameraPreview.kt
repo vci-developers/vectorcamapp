@@ -100,7 +100,7 @@ fun LiveCameraPreview(
                     }
                 }
         ) {
-            focusPoint?.takeIf { isManualFocusing || inferenceResults.isNotEmpty() }?.let { normalized ->
+            focusPoint?.let { normalized ->
                 if (containerSize != IntSize.Zero) {
                     val centerPx = Offset(
                         x = normalized.x * containerSize.width,
