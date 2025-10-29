@@ -130,7 +130,8 @@ class ImagingViewModel @Inject constructor(
                 is ImagingAction.CorrectSpecimenId -> {
                     _state.update {
                         it.copy(
-                            currentSpecimen = it.currentSpecimen.copy(id = action.specimenId)
+                            currentSpecimen = it.currentSpecimen.copy(id = action.specimenId),
+                            specimenIdError = null
                         )
                     }
                 }
@@ -280,8 +281,12 @@ class ImagingViewModel @Inject constructor(
                     val specimenId = when (val validationResult = validateSpecimenIdUseCase(
                         _state.value.currentSpecimen.id, shouldAutoCorrect = false
                     )) {
-                        is Result.Success -> validationResult.data
+                        is Result.Success -> {
+                            _state.update { it.copy(specimenIdError = null) }
+                            validationResult.data
+                        }
                         is Result.Error -> {
+                            _state.update { it.copy(specimenIdError = validationResult.error) }
                             emitError(validationResult.error)
                             return@launch
                         }
@@ -388,7 +393,8 @@ class ImagingViewModel @Inject constructor(
                 isCameraReady = false,
                 previewInferenceResults = emptyList(),
                 focusPoint = null,
-                isManualFocusing = false
+                isManualFocusing = false,
+                specimenIdError = null
             )
         }
     }
