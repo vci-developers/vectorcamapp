@@ -370,6 +370,7 @@ class ImagingViewModel @Inject constructor(
                 currentSpecimen = it.currentSpecimen.copy(
                     id = "",
                     remoteId = null,
+                    shouldProcessFurther = false
                 ),
                 currentSpecimenImage = it.currentSpecimenImage.copy(
                     localId = "",
