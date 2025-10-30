@@ -4,13 +4,13 @@ import android.os.Build
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.collector.use_cases.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.registration.domain.use_cases.RegistrationValidationUseCases
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.registration.logging.RegistrationSentryLogger
 import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
@@ -31,7 +31,7 @@ class RegistrationViewModel @Inject constructor(
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
     private val collectorRepository: CollectorRepository,
-    private val registrationValidationUseCases: RegistrationValidationUseCases,
+    private val collectorValidationUseCases: CollectorValidationUseCases,
     programRepository: ProgramRepository
 ) : CoreViewModel() {
 
@@ -83,8 +83,8 @@ class RegistrationViewModel @Inject constructor(
                     val selectedProgram = state.value.selectedProgram
 
                     val collector = state.value.collector
-                    val nameValidationResult = registrationValidationUseCases.validateCollectorName(collector.name)
-                    val titleValidationResult = registrationValidationUseCases.validateCollectorTitle(collector.title)
+                    val nameValidationResult = collectorValidationUseCases.validateCollectorName(collector.name)
+                    val titleValidationResult = collectorValidationUseCases.validateCollectorTitle(collector.title)
 
                     _state.update { currentState ->
                         currentState.copy(
