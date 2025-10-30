@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class SpecimenDto(
     val id: Int? = null,
     val specimenId: String = "",
-    val sessionId: Int = -1
+    val sessionId: Int = -1,
+    val shouldProcessFurther: Boolean = false
 )
