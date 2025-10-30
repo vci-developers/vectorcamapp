@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
@@ -24,6 +25,7 @@ import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.presentation.components.gestures.SwipeToReveal
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
+import com.vci.vectorcamapp.incomplete_session.presentation.util.IncompleteSessionTestTags
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -68,7 +70,8 @@ fun IncompleteSessionCard(
                         Text(
                             text = "Session in Progress from\n${titleFormatter.format(sessionAndSite.session.createdAt)}",
                             style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colors.textPrimary
+                            color = MaterialTheme.colors.textPrimary,
+                            modifier = Modifier.testTag(IncompleteSessionTestTags.CARD_TITLE)
                         )
 
                         Box(
@@ -82,14 +85,15 @@ fun IncompleteSessionCard(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrow_right),
-                                contentDescription = "Arrow Right",
+                                contentDescription = "Resume",
                                 tint = MaterialTheme.colors.icon,
                                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                .testTag(IncompleteSessionTestTags.CARD_RESUME_ICON)
                             )
                         }
                     }
 
-                    InfoPill(text = "Session Type: ${sessionAndSite.session.type.displayText(context)}", color = MaterialTheme.colors.info)
+                    InfoPill(text = "Session Type: ${sessionAndSite.session.type.displayText(context)}", color = MaterialTheme.colors.info, modifier = Modifier.testTag(IncompleteSessionTestTags.CARD_TYPE_PILL))
                 }
 
                 Column(
@@ -144,7 +148,8 @@ fun IncompleteSessionCard(
                     Text(
                         text = "Created At: ${detailFormatter.format(sessionAndSite.session.createdAt)}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colors.textSecondary
+                        color = MaterialTheme.colors.textSecondary,
+                        modifier = Modifier.testTag(IncompleteSessionTestTags.CARD_CREATED_TEXT)
                     )
                 }
             }
