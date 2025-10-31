@@ -6,10 +6,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 
 @Composable
 fun VectorcamappTheme(content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalColors provides Colors(), LocalDimensions provides Dimensions()) {
-        MaterialTheme(
-            typography = AppTypography,
-            content = content
-        )
+    CompositionLocalProvider(LocalColors provides Colors()) {
+        ProvideDimensions {
+            MaterialTheme(
+                typography = AppTypography,
+                content = content
+            )
+        }
     }
 }

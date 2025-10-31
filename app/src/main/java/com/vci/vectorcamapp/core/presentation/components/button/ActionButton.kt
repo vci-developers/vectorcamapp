@@ -45,13 +45,24 @@ fun ActionButton(
             .height(MaterialTheme.dimensions.componentHeightMedium)
             .fillMaxWidth()
             .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        MaterialTheme.colors.buttonGradientLeft,
-                        MaterialTheme.colors.buttonGradientRight
+                brush = if (enabled) {
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            MaterialTheme.colors.buttonGradientLeft,
+                            MaterialTheme.colors.buttonGradientRight
+                        )
                     )
-                ), shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
-            ).testTag(testTag ?: "action-button")
+                } else {
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            MaterialTheme.colors.disabled,
+                            MaterialTheme.colors.disabled
+                        )
+                    )
+                },
+                shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
+            )
+            .testTag(testTag ?: "action-button")
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium), verticalAlignment = Alignment.CenterVertically) {
             iconPainter?.let {
