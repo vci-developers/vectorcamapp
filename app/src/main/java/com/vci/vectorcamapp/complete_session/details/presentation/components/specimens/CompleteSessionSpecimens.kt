@@ -50,8 +50,9 @@ fun CompleteSessionSpecimens(
                 },
                 placeholder = "Search by specimen ID, species, etc.",
                 modifier = Modifier.padding(
-                    horizontal = MaterialTheme.dimensions.spacingMedium,
-                    vertical = MaterialTheme.dimensions.spacingSmall
+                    start = MaterialTheme.dimensions.spacingMedium,
+                    end = MaterialTheme.dimensions.spacingMedium,
+                    top = MaterialTheme.dimensions.spacingSmall
                 ),
                 isTooltipVisible = isSearchTooltipVisible,
                 onShowSearchTooltip = { onShowSearchTooltip },
