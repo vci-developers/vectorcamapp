@@ -35,7 +35,6 @@ fun TextEntryField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     maxCharacters: Int = 200,
     showErrorMessage: Boolean = true,
-    changeTextColorOnError: Boolean = false,
 ) {
     val context = LocalContext.current
 
@@ -76,7 +75,7 @@ fun TextEntryField(
             },
             maxLines = 8,
             textStyle = MaterialTheme.typography.bodyMedium.copy(
-                color = if (error != null && changeTextColorOnError)
+                color = if (error != null)
                     MaterialTheme.colors.error
                 else
                     MaterialTheme.colors.textPrimary

@@ -427,7 +427,6 @@ fun ImagingScreen(
                                     singleLine = true,
                                     error = state.specimenIdError,
                                     showErrorMessage = false,
-                                    changeTextColorOnError = true
                                 )
 
                                 Row(
