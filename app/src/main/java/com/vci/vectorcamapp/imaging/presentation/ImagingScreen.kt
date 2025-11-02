@@ -399,6 +399,7 @@ fun ImagingScreen(
                         ) {
                             LiveCameraPreview(
                                 controller = controller,
+                                specimenId = state.currentSpecimen.id,
                                 inferenceResults = state.previewInferenceResults,
                                 focusPoint = state.focusPoint,
                                 onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },

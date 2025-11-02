@@ -28,6 +28,7 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 @Composable
 fun LiveCameraPreview(
     controller: LifecycleCameraController,
+    specimenId: String,
     inferenceResults: List<InferenceResult>,
     focusPoint: Offset?,
     onFocusAt: (Offset) -> Unit,
@@ -75,6 +76,8 @@ fun LiveCameraPreview(
 
         TrayAlignmentGuideOverlay(
             overlaySize = containerSize,
+            hasSpecimenId = specimenId.isNotEmpty(),
+            hasSpecimenImage = inferenceResults.isNotEmpty(),
             modifier = Modifier.fillMaxSize()
         )
 
