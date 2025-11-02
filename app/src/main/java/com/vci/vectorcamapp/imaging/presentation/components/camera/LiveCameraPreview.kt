@@ -73,6 +73,11 @@ fun LiveCameraPreview(
 
         AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
 
+        TrayAlignmentGuideOverlay(
+            overlaySize = containerSize,
+            modifier = Modifier.fillMaxSize()
+        )
+
         inferenceResults.map {
             BoundingBoxOverlay(
                 inferenceResult = it,

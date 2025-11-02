@@ -8,7 +8,7 @@ import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.sp
 import com.vci.vectorcamapp.R
 
-val displayLargeSize = 28.sp
+val displayLargeSize = 44.sp
 val displayMediumSize = 24.sp
 val displaySmallSize = 22.sp
 val headlineLargeSize = 20.sp

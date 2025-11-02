@@ -152,6 +152,10 @@ class ImagingViewModel @Inject constructor(
                             _state.update {
                                 it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
                             }
+                        }.onError {
+                            _state.update {
+                                it.copy(currentSpecimen = it.currentSpecimen.copy(id = ""))
+                            }
                         }
 
                         val suggestedAutofocusPoint = liveFrameProcessingResult.autofocusPoint
