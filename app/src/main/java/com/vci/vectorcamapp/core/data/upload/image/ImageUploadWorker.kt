@@ -75,7 +75,7 @@ class ImageUploadWorker @AssistedInject constructor(
         private const val CHANNEL_ID = "image_upload_channel"
         private const val CHANNEL_NAME = "Image Upload Channel"
 
-        private const val COMPRESSION_QUALITY = 40
+        private const val COMPRESSION_QUALITY = 30
     }
 
     private val notificationManager =
