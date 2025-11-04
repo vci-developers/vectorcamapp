@@ -26,6 +26,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +44,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.core.content.ContextCompat
@@ -69,7 +70,6 @@ fun ImagingScreen(
     state: ImagingState, onAction: (ImagingAction) -> Unit, modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val density = LocalDensity.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val scope = rememberCoroutineScope()
@@ -283,6 +283,77 @@ fun ImagingScreen(
                                         color = MaterialTheme.colors.textPrimary
                                     )
                                 }
+                            }
+                        }
+                    )
+                }
+
+                if (state.showProcessFurtherDialog) {
+                    AlertDialog(
+                        onDismissRequest = { },
+                        title = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ){
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_info),
+                                    contentDescription = "Info Icon",
+                                    tint = MaterialTheme.colors.icon,
+                                    modifier = Modifier
+                                        .size(MaterialTheme.dimensions.iconSizeLarge)
+                                )
+                                Spacer(modifier.size(MaterialTheme.dimensions.spacingMedium))
+                                Text(
+                                    text = "Specimen Selected for Further Processing",
+                                    color = MaterialTheme.colors.icon
+                                )
+                            }
+                        },
+                        text = {
+                            Column {
+                                Text(
+                                    text = "This specimen has been randomly selected and must be packed separately for additional laboratory processing. Please package this specimen for further processing now before continuing.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textSecondary
+                                )
+
+                                Spacer(modifier = Modifier.size(MaterialTheme.dimensions.paddingMedium))
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    Checkbox(
+                                        checked = state.hasConfirmedPackaging,
+                                        onCheckedChange = { onAction(ImagingAction.TogglePackagingConfirmation) },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = MaterialTheme.colors.successConfirm
+                                        )
+                                    )
+                                    Text(
+                                        text = "I have packaged this specimen for further processing",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.textPrimary,
+                                        modifier = Modifier.padding(start = MaterialTheme.dimensions.paddingSmall)
+                                    )
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = { onAction(ImagingAction.DismissProcessFurtherDialog) },
+                                enabled = state.hasConfirmedPackaging,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colors.successConfirm,
+                                    disabledContainerColor = MaterialTheme.colors.textSecondary
+                                )
+                            ) {
+                                Text(
+                                    text = "Continue",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.buttonText
+                                )
                             }
                         }
                     )

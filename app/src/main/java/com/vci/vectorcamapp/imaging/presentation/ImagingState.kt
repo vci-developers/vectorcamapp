@@ -32,5 +32,7 @@ data class ImagingState(
     val isManualFocusing: Boolean = false,
     val isCameraReady: Boolean = false,
     val showExitDialog: Boolean = false,
+    val showProcessFurtherDialog: Boolean = false,
+    val hasConfirmedPackaging: Boolean = false,
     val pendingAction: ImagingAction? = null
 )

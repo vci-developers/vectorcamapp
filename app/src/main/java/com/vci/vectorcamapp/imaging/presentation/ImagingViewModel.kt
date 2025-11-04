@@ -270,6 +270,15 @@ class ImagingViewModel @Inject constructor(
                     clearStateFields()
                 }
 
+                ImagingAction.TogglePackagingConfirmation -> {
+                    _state.update { it.copy(hasConfirmedPackaging = !it.hasConfirmedPackaging) }
+                }
+
+                ImagingAction.DismissProcessFurtherDialog -> {
+                    _state.update { it.copy(showProcessFurtherDialog = false) }
+                    onAction(ImagingAction.SaveImageToSession)
+                }
+
                 ImagingAction.SaveImageToSession -> {
                     val currentSession = currentSessionCache.getSession()
                     if (currentSession == null) {
@@ -296,10 +305,28 @@ class ImagingViewModel @Inject constructor(
                         append(".jpg")
                     }
 
+                    // TODO: Delete after business logic is implemented
+                    _state.update {
+                        it.copy(
+                            currentSpecimen = it.currentSpecimen.copy(shouldProcessFurther = true)
+                        )
+                    }
+
+                    _state.update {
+                        it.copy(currentSpecimen = it.currentSpecimen.copy(shouldProcessFurther = true))
+                    }
+
+                    val shouldProcessFurther = _state.value.currentSpecimen.shouldProcessFurther
+
+                    if (shouldProcessFurther && !_state.value.hasConfirmedPackaging) {
+                        _state.update { it.copy(showProcessFurtherDialog = true) }
+                        return@launch
+                    }
+
                     val saveResult = cameraRepository.saveImage(jpegBytes, filename, currentSession)
 
                     saveResult.onSuccess { imageUri ->
-                        val specimen = Specimen(id = specimenId, remoteId = null, shouldProcessFurther = false)
+                        val specimen = Specimen(id = specimenId, remoteId = null, shouldProcessFurther = shouldProcessFurther)
                         val specimenImage = SpecimenImage(
                             localId = calculateMd5(jpegBytes),
                             remoteId = null,
@@ -389,7 +416,8 @@ class ImagingViewModel @Inject constructor(
                 isCameraReady = false,
                 previewInferenceResults = emptyList(),
                 focusPoint = null,
-                isManualFocusing = false
+                isManualFocusing = false,
+                hasConfirmedPackaging = false
             )
         }
     }
