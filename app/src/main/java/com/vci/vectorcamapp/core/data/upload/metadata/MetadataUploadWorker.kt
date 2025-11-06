@@ -35,6 +35,7 @@ import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
+import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.presentation.util.error.toString
@@ -60,7 +61,8 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val sessionDataSource: SessionDataSource,
     private val surveillanceFormDataSource: SurveillanceFormDataSource,
     private val specimenDataSource: SpecimenDataSource,
-    private val specimenImageDataSource: SpecimenImageDataSource
+    private val specimenImageDataSource: SpecimenImageDataSource,
+    private val workRepository: WorkManagerRepository
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -130,29 +132,51 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
             }
 
+            var newlyCompletedCount = 0
+            var hadImageErrors = false
+
             val localSpecimensWithImagesAndInferenceResults =
                 specimenRepository.getSpecimenImagesAndInferenceResultsBySession(syncedSession.localId)
             val totalSpecimens = localSpecimensWithImagesAndInferenceResults.size
-            localSpecimensWithImagesAndInferenceResults.forEachIndexed { specimenIndex, specimenWithImagesAndInferenceResults ->
-                val totalImages =
-                    specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
+
+            for ((specimenIndex, specimenWithImagesAndInferenceResults) in localSpecimensWithImagesAndInferenceResults.withIndex()
+            ) {
+                val totalImages = specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
+
                 val syncedSpecimen = when (val syncSpecimenResult = syncSpecimenIfNeeded(
                     specimenWithImagesAndInferenceResults.specimen,
                     syncedSession.localId,
                     syncedSession.remoteId
                 )) {
                     is DomainResult.Success -> syncSpecimenResult.data
-                    is DomainResult.Error -> return retryOrFailure(
-                        syncSpecimenResult.error.toString(context)
-                    )
+                    is DomainResult.Error -> {
+                        hadImageErrors = true
+                        showSpecimenProgressNotification(
+                            specimenId = specimenWithImagesAndInferenceResults.specimen.id,
+                            currentSpecimenIndex = specimenIndex,
+                            totalSpecimens = totalSpecimens,
+                            currentImageIndex = 0,
+                            totalImagesForSpecimen = totalImages
+                        )
+                        continue
+                    }
                 }
 
-                specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEachIndexed { imageIndex, (specimenImage, inferenceResult) ->
+                for ((imageIndex, pair) in specimenWithImagesAndInferenceResults
+                    .specimenImagesAndInferenceResults.withIndex()
+                ) {
+                    val specimenImage = pair.specimenImage
+                    val inferenceResult = pair.inferenceResult
+
                     if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
-                        syncSpecimenImageAndInferenceResultIfNeeded(
-                            specimenImage, inferenceResult, syncedSpecimen, syncedSession.localId
-                        ).onError { error ->
-                            return retryOrFailure(error.toString(context))
+                        when (val r = syncSpecimenImageAndInferenceResultIfNeeded(
+                            specimenImage,
+                            inferenceResult,
+                            syncedSpecimen,
+                            syncedSession.localId
+                        )) {
+                            is DomainResult.Success -> newlyCompletedCount++
+                            is DomainResult.Error -> hadImageErrors = true
                         }
                     }
                     showSpecimenProgressNotification(
@@ -165,6 +189,21 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
             }
 
+            val allSpecimenImagesAndInferenceResultsBySession = specimenRepository.getSpecimenImagesAndInferenceResultsBySession(syncedSession.localId)
+            val anyReadyForImage = allSpecimenImagesAndInferenceResultsBySession.any { it.specimenImagesAndInferenceResults.any { (img, _) ->
+                img.metadataUploadStatus == UploadStatus.COMPLETED && img.imageUploadStatus != UploadStatus.COMPLETED
+            } }
+            val anyMetadataLeft = allSpecimenImagesAndInferenceResultsBySession.any { it.specimenImagesAndInferenceResults.any { (img, _) ->
+                img.metadataUploadStatus != UploadStatus.COMPLETED
+            } }
+
+            if (anyReadyForImage) {
+                workRepository.appendImageWorkToChain(syncedSession.localId, localSiteId)
+                return WorkerResult.success()
+            }
+            if (anyMetadataLeft) {
+                return retryOrFailure(if (hadImageErrors) "Some metadata failed; will retry." else "Some metadata still pending.")
+            }
             return WorkerResult.success()
         } catch (e: IOException) {
             return retryOrFailure("Lost internet connection while uploading.")

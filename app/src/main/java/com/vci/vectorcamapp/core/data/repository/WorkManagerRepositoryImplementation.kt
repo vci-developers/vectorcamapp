@@ -37,7 +37,7 @@ class WorkManagerRepositoryImplementation @Inject constructor(
             chainName,
             ExistingWorkPolicy.REPLACE,
             buildSessionMetadataWork(sessionId, siteId)
-        ).then(buildSessionImageWork(sessionId)).enqueue()
+        ).enqueue()
     }
     
     override fun observeIsSessionActivelyUploading(sessionId: UUID): Flow<Boolean> {
@@ -53,6 +53,24 @@ class WorkManagerRepositoryImplementation @Inject constructor(
             }
     }
 
+    override fun appendImageWorkToChain(sessionId: UUID, siteId: Int) {
+        val chainName = UPLOAD_WORK_CHAIN_PREFIX + sessionId
+        workManager.enqueueUniqueWork(
+            chainName,
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            buildSessionImageWork(sessionId, siteId)
+        )
+    }
+
+    override fun appendMetadataWorkToChain(sessionId: UUID, siteId: Int) {
+        val chainName = UPLOAD_WORK_CHAIN_PREFIX + sessionId
+        workManager.enqueueUniqueWork(
+            chainName,
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            buildSessionMetadataWork(sessionId, siteId)
+        )
+    }
+
     private fun buildSessionMetadataWork(sessionId: UUID, siteId: Int): OneTimeWorkRequest {
         return OneTimeWorkRequestBuilder<MetadataUploadWorker>()
             .setInputData(workDataOf(
@@ -64,10 +82,11 @@ class WorkManagerRepositoryImplementation @Inject constructor(
             .build()
     }
 
-    private fun buildSessionImageWork(sessionId: UUID): OneTimeWorkRequest {
+    private fun buildSessionImageWork(sessionId: UUID, siteId: Int): OneTimeWorkRequest {
         return OneTimeWorkRequestBuilder<ImageUploadWorker>()
             .setInputData(workDataOf(
-                ImageUploadWorker.KEY_SESSION_ID to sessionId.toString()
+                ImageUploadWorker.KEY_SESSION_ID to sessionId.toString(),
+                "site_id" to siteId
             ))
             .setConstraints(uploadConstraints)
             .setBackoffCriteria(BackoffPolicy.LINEAR, WorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
