@@ -132,7 +132,6 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
             }
 
-            var newlyCompletedCount = 0
             var hadImageErrors = false
 
             val localSpecimensWithImagesAndInferenceResults =
@@ -169,15 +168,9 @@ class MetadataUploadWorker @AssistedInject constructor(
                     val inferenceResult = pair.inferenceResult
 
                     if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
-                        when (val r = syncSpecimenImageAndInferenceResultIfNeeded(
-                            specimenImage,
-                            inferenceResult,
-                            syncedSpecimen,
-                            syncedSession.localId
-                        )) {
-                            is DomainResult.Success -> newlyCompletedCount++
-                            is DomainResult.Error -> hadImageErrors = true
-                        }
+                        syncSpecimenImageAndInferenceResultIfNeeded(
+                            specimenImage, inferenceResult, syncedSpecimen, syncedSession.localId
+                        ).onError { hadImageErrors = true }
                     }
                     showSpecimenProgressNotification(
                         specimenId = syncedSpecimen.id,
