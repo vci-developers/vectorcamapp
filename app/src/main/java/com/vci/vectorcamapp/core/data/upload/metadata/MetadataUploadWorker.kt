@@ -161,12 +161,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                     }
                 }
 
-                for ((imageIndex, pair) in specimenWithImagesAndInferenceResults
-                    .specimenImagesAndInferenceResults.withIndex()
-                ) {
-                    val specimenImage = pair.specimenImage
-                    val inferenceResult = pair.inferenceResult
-
+                specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEachIndexed { imageIndex, (specimenImage, inferenceResult) ->
                     if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
                         syncSpecimenImageAndInferenceResultIfNeeded(
                             specimenImage, inferenceResult, syncedSpecimen, syncedSession.localId
