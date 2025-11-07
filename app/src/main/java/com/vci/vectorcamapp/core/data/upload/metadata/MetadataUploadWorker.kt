@@ -132,8 +132,6 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
             }
 
-            var hadImageErrors = false
-
             val localSpecimensWithImagesAndInferenceResults =
                 specimenRepository.getSpecimenImagesAndInferenceResultsBySession(syncedSession.localId)
             val totalSpecimens = localSpecimensWithImagesAndInferenceResults.size
@@ -149,7 +147,6 @@ class MetadataUploadWorker @AssistedInject constructor(
                 )) {
                     is DomainResult.Success -> syncSpecimenResult.data
                     is DomainResult.Error -> {
-                        hadImageErrors = true
                         showSpecimenProgressNotification(
                             specimenId = specimenWithImagesAndInferenceResults.specimen.id,
                             currentSpecimenIndex = specimenIndex,
@@ -165,7 +162,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                     if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
                         syncSpecimenImageAndInferenceResultIfNeeded(
                             specimenImage, inferenceResult, syncedSpecimen, syncedSession.localId
-                        ).onError { hadImageErrors = true }
+                        )
                     }
                     showSpecimenProgressNotification(
                         specimenId = syncedSpecimen.id,
@@ -190,7 +187,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 return WorkerResult.success()
             }
             if (anyMetadataLeft) {
-                return retryOrFailure(if (hadImageErrors) "Some metadata failed; will retry." else "Some metadata still pending.")
+                return retryOrFailure("Some metadata failed; will attempt to retry.")
             }
             return WorkerResult.success()
         } catch (e: IOException) {
