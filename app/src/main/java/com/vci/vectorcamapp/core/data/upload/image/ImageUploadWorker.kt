@@ -162,14 +162,14 @@ class ImageUploadWorker @AssistedInject constructor(
                 pair.specimenImage.metadataUploadStatus != UploadStatus.COMPLETED
             } }
 
-        if (anyMetadataPending && siteId != -1) {
+        if (encounteredPermanentFailure) return WorkerResult.failure()
+
+        if (anyMetadataPending && siteId != -1 && successfulUploads > 0) {
             workRepository.appendMetadataWorkToChain(sessionId, siteId)
             return WorkerResult.success()
         }
         return if (successfulUploads == imagesToUpload.size) {
             WorkerResult.success()
-        } else if (encounteredPermanentFailure) {
-            WorkerResult.failure()
         } else {
             WorkerResult.retry()
         }
