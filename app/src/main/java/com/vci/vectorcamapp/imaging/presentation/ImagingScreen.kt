@@ -499,7 +499,10 @@ fun ImagingScreen(
                                     label = "Specimen ID",
                                     value = state.currentSpecimen.id, onValueChange = {
                                         onAction(ImagingAction.CorrectSpecimenId(it))
-                                    }, singleLine = true
+                                    },
+                                    singleLine = true,
+                                    error = state.specimenIdError,
+                                    showErrorMessage = false,
                                 )
 
                                 Row(

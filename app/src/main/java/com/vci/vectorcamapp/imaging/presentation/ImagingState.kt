@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 
 data class ImagingState(
     val isLoading: Boolean = false,
@@ -34,5 +35,6 @@ data class ImagingState(
     val showExitDialog: Boolean = false,
     val showProcessFurtherDialog: Boolean = false,
     val hasConfirmedPackaging: Boolean = false,
-    val pendingAction: ImagingAction? = null
+    val pendingAction: ImagingAction? = null,
+    val specimenIdError: ImagingError? = null
 )
