@@ -108,12 +108,14 @@ fun LiveCameraPreview(
                     )
                     val dotColor = MaterialTheme.colors.warning
 
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        drawCircle(
-                            color = dotColor,
-                            radius = DOT_RADIUS_DP.toPx(),
-                            center = centerPx
-                        )
+                    if (isManualFocusing || inferenceResults.isNotEmpty()) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            drawCircle(
+                                color = dotColor,
+                                radius = DOT_RADIUS_DP.toPx(),
+                                center = centerPx
+                            )
+                        }
                     }
 
                     if (isManualFocusing) {
