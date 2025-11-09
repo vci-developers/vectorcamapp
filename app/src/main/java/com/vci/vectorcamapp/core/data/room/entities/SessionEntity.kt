@@ -32,4 +32,5 @@ data class SessionEntity(
     val latitude: Float? = null,
     val longitude: Float? = null,
     val type: SessionType,
+    val collectorLastTrainedOn: Long? = null,
 )

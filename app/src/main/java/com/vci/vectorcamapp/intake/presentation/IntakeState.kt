@@ -33,7 +33,8 @@ data class IntakeState(
         notes = "",
         latitude = null,
         longitude = null,
-        type = SessionType.SURVEILLANCE
+        type = SessionType.SURVEILLANCE,
+        collectorLastTrainedOn = null
     ),
     val surveillanceForm: SurveillanceForm? = null,
     val intakeErrors: IntakeErrors = IntakeErrors(

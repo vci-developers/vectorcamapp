@@ -24,6 +24,7 @@ data class SessionDto(
     val longitude: Float? = null,
     @Serializable(with = SessionTypeSerializer::class)
     val type: SessionType = SessionType.SURVEILLANCE,
+    val collectorLastTrainedOn: Long? = null,
     val siteId: Int = -1,
     val deviceId: Int = -1,
 )

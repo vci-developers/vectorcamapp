@@ -24,7 +24,8 @@ data class CurrentSessionCacheDto(
     val latitude: Float? = null,
     val longitude: Float? = null,
     @Serializable(with = SessionTypeSerializer::class)
-    val type: SessionType = SessionType.SURVEILLANCE
+    val type: SessionType = SessionType.SURVEILLANCE,
+    val collectorLastTrainedOn: Long? = null,
 ) {
     fun isEmpty() = localId == UUID(0, 0) && createdAt == 0L
 }

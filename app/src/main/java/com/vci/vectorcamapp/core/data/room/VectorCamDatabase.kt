@@ -27,7 +27,7 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
 
 @Database(
     entities = [CollectorEntity::class, ProgramEntity::class, SiteEntity::class, SessionEntity::class, SpecimenEntity::class, SpecimenImageEntity::class, InferenceResultEntity::class, SurveillanceFormEntity::class],
-    version = 16,
+    version = 17,
 )
 @TypeConverters(
     UuidConverter::class,

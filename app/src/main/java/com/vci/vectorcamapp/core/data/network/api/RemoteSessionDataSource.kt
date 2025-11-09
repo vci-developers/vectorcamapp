@@ -51,6 +51,7 @@ class RemoteSessionDataSource @Inject constructor(
                         type = session.type,
                         siteId = siteId,
                         deviceId = deviceId,
+                        collectorLastTrainedOn = session.collectorLastTrainedOn
                     )
                 )
             }

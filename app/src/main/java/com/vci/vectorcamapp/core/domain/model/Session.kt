@@ -17,5 +17,6 @@ data class Session(
     val notes: String,
     val latitude: Float?,
     val longitude: Float?,
-    val type: SessionType
+    val type: SessionType,
+    val collectorLastTrainedOn: Long?
 )
