@@ -223,8 +223,8 @@ fun SettingsScreen(
     state.selectedCollector?.let { collector ->
         CollectorDialog(
             collector = collector,
-            nameError = state.settingsErrors.collectorName,
-            titleError = state.settingsErrors.collectorTitle,
+            collectorNameError = state.settingsErrors.collectorName,
+            collectorTitleError = state.settingsErrors.collectorTitle,
             onNameChange = { onAction(SettingsAction.EnterCollectorName(it)) },
             onTitleChange = { onAction(SettingsAction.EnterCollectorTitle(it)) },
             onDismiss = { onAction(SettingsAction.DismissCollectorDialog) },

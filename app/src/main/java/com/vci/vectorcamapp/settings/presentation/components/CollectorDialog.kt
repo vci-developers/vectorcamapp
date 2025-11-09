@@ -24,8 +24,8 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 @Composable
 fun CollectorDialog(
     collector: Collector,
-    nameError: CollectorValidationError?,
-    titleError: CollectorValidationError?,
+    collectorNameError: CollectorValidationError?,
+    collectorTitleError: CollectorValidationError?,
     onNameChange: (String) -> Unit,
     onTitleChange: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -62,7 +62,7 @@ fun CollectorDialog(
                         value = collector.name,
                         onValueChange = onNameChange,
                         singleLine = true,
-                        error = nameError,
+                        error = collectorNameError,
                     )
 
                     Spacer(modifier = Modifier.size(MaterialTheme.dimensions.spacingSmall))
@@ -74,7 +74,7 @@ fun CollectorDialog(
                         onOptionSelected = { option ->
                             onTitleChange(option.label)
                         },
-                        error = titleError,
+                        error = collectorTitleError,
                         modifier = modifier
                             .fillMaxWidth()
                             .height(MaterialTheme.dimensions.componentHeightLarge)

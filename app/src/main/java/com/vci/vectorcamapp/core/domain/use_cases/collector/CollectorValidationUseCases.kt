@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.core.domain.collector.use_cases
+package com.vci.vectorcamapp.core.domain.use_cases.collector
 
 import javax.inject.Inject
 

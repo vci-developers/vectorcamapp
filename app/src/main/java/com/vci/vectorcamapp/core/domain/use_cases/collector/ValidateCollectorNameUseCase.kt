@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.core.domain.collector.use_cases
+package com.vci.vectorcamapp.core.domain.use_cases.collector
 
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError

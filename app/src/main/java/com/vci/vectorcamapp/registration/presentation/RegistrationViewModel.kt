@@ -4,7 +4,7 @@ import android.os.Build
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.domain.collector.use_cases.CollectorValidationUseCases
+import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
@@ -83,19 +83,19 @@ class RegistrationViewModel @Inject constructor(
                     val selectedProgram = state.value.selectedProgram
 
                     val collector = state.value.collector
-                    val nameValidationResult = collectorValidationUseCases.validateCollectorName(collector.name)
-                    val titleValidationResult = collectorValidationUseCases.validateCollectorTitle(collector.title)
+                    val collectorNameValidationResult = collectorValidationUseCases.validateCollectorName(collector.name)
+                    val collectorTitleValidationResult = collectorValidationUseCases.validateCollectorTitle(collector.title)
 
                     _state.update { currentState ->
                         currentState.copy(
                             registrationErrors = RegistrationErrors(
-                                collectorName = nameValidationResult.errorOrNull(),
-                                collectorTitle = titleValidationResult.errorOrNull(),
+                                collectorName = collectorNameValidationResult.errorOrNull(),
+                                collectorTitle = collectorTitleValidationResult.errorOrNull(),
                             )
                         )
                     }
 
-                    val hasError = listOf(nameValidationResult, titleValidationResult).any { it is Result.Error }
+                    val hasError = listOf(collectorNameValidationResult, collectorTitleValidationResult).any { it is Result.Error }
                     if (hasError) return@launch
 
                     if (selectedProgram == null) {

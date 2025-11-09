@@ -154,10 +154,10 @@
     <!-- Registration error: Unknown error -->
     <string name="registration_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
-    <!-- Registration validation error: Blank collector title -->
+    <!-- Collector validation error: Blank collector title -->
     <string name="collector_validation_error_blank_collector_title">Collector title is required.</string>
 
-    <!-- Registration validation error: Blank collector name -->
+    <!-- Collector validation error: Blank collector name -->
     <string name="collector_validation_error_blank_collector_name">Collector name is required.</string>
 
     <!-- Incomplete session error: Session not found -->
