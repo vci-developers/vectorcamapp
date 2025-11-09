@@ -305,20 +305,7 @@ class ImagingViewModel @Inject constructor(
                         append(".jpg")
                     }
 
-                    // TODO: Delete after business logic is implemented
-                    _state.update {
-                        it.copy(
-                            currentSpecimen = it.currentSpecimen.copy(shouldProcessFurther = true)
-                        )
-                    }
-
-                    _state.update {
-                        it.copy(currentSpecimen = it.currentSpecimen.copy(shouldProcessFurther = true))
-                    }
-
-                    val shouldProcessFurther = _state.value.currentSpecimen.shouldProcessFurther
-
-                    if (shouldProcessFurther && !_state.value.hasConfirmedPackaging) {
+                    if (_state.value.currentSpecimen.shouldProcessFurther && !_state.value.hasConfirmedPackaging) {
                         _state.update { it.copy(showProcessFurtherDialog = true) }
                         return@launch
                     }
@@ -326,7 +313,11 @@ class ImagingViewModel @Inject constructor(
                     val saveResult = cameraRepository.saveImage(jpegBytes, filename, currentSession)
 
                     saveResult.onSuccess { imageUri ->
-                        val specimen = Specimen(id = specimenId, remoteId = null, shouldProcessFurther = shouldProcessFurther)
+                        val specimen = Specimen(
+                            id = specimenId,
+                            remoteId = null,
+                            shouldProcessFurther = _state.value.currentSpecimen.shouldProcessFurther
+                        )
                         val specimenImage = SpecimenImage(
                             localId = calculateMd5(jpegBytes),
                             remoteId = null,

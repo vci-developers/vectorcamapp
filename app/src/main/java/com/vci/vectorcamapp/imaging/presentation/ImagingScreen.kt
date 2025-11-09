@@ -46,6 +46,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.compose.AsyncImage
@@ -312,7 +313,7 @@ fun ImagingScreen(
                         text = {
                             Column {
                                 Text(
-                                    text = "This specimen has been randomly selected and must be packed separately for additional laboratory processing. Please package this specimen for further processing now before continuing.",
+                                    text = "Please package the specimen separately for further laboratory processing before continuing.",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colors.textSecondary
                                 )
@@ -355,7 +356,11 @@ fun ImagingScreen(
                                     color = MaterialTheme.colors.buttonText
                                 )
                             }
-                        }
+                        },
+                        properties = DialogProperties(
+                            dismissOnBackPress = false,
+                            dismissOnClickOutside = false
+                        )
                     )
                 }
 
