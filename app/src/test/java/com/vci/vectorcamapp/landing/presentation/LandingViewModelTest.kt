@@ -86,7 +86,8 @@ class LandingViewModelTest {
         notes = "",
         latitude = null,
         longitude = null,
-        type = type
+        type = type,
+        collectorLastTrainedOn = null
     )
 
     private fun makeDummySite() = Site(

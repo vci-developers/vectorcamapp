@@ -94,7 +94,8 @@ class IncompleteSessionViewModelTest {
         notes = "",
         latitude = null,
         longitude = null,
-        type = sessionType
+        type = sessionType,
+        collectorLastTrainedOn = null
     )
 
     private fun makeSessionAndSite(session: Session, siteId: Int): SessionAndSite {
