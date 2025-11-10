@@ -13,6 +13,7 @@ data class SessionDto(
     val frontendId: UUID = UUID(0, 0),
     val collectorTitle: String = "",
     val collectorName: String = "",
+    val collectorLastTrainedOn: Long = 0L,
     val collectionDate: Long = 0L,
     val collectionMethod: String = "",
     val specimenCondition: String = "",
@@ -24,7 +25,6 @@ data class SessionDto(
     val longitude: Float? = null,
     @Serializable(with = SessionTypeSerializer::class)
     val type: SessionType = SessionType.SURVEILLANCE,
-    val collectorLastTrainedOn: Long? = null,
     val siteId: Int = -1,
     val deviceId: Int = -1,
 )

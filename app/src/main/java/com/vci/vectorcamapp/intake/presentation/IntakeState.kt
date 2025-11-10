@@ -24,6 +24,7 @@ data class IntakeState(
         remoteId = null,
         collectorTitle = "",
         collectorName = "",
+        collectorLastTrainedOn = 0L,
         collectionDate = System.currentTimeMillis(),
         collectionMethod = "",
         specimenCondition = "",
@@ -34,7 +35,6 @@ data class IntakeState(
         latitude = null,
         longitude = null,
         type = SessionType.SURVEILLANCE,
-        collectorLastTrainedOn = null
     ),
     val surveillanceForm: SurveillanceForm? = null,
     val intakeErrors: IntakeErrors = IntakeErrors(

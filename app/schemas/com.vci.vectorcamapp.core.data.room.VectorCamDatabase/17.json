@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 17,
-    "identityHash": "a7b7eb200ed87d5405e4189c3329bb46",
+    "identityHash": "afdecf5551e97f132c1c801f6007826f",
     "entities": [
       {
         "tableName": "collector",
@@ -167,7 +167,7 @@
       },
       {
         "tableName": "session",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`localId` TEXT NOT NULL, `siteId` INTEGER NOT NULL, `remoteId` INTEGER, `collectorTitle` TEXT NOT NULL, `collectorName` TEXT NOT NULL, `collectionDate` INTEGER NOT NULL, `collectionMethod` TEXT NOT NULL, `specimenCondition` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `completedAt` INTEGER, `submittedAt` INTEGER, `notes` TEXT NOT NULL, `latitude` REAL, `longitude` REAL, `type` TEXT NOT NULL, `collectorLastTrainedOn` INTEGER, PRIMARY KEY(`localId`), FOREIGN KEY(`siteId`) REFERENCES `site`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`localId` TEXT NOT NULL, `siteId` INTEGER NOT NULL, `remoteId` INTEGER, `collectorTitle` TEXT NOT NULL, `collectorName` TEXT NOT NULL, `collectorLastTrainedOn` INTEGER NOT NULL, `collectionDate` INTEGER NOT NULL, `collectionMethod` TEXT NOT NULL, `specimenCondition` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `completedAt` INTEGER, `submittedAt` INTEGER, `notes` TEXT NOT NULL, `latitude` REAL, `longitude` REAL, `type` TEXT NOT NULL, PRIMARY KEY(`localId`), FOREIGN KEY(`siteId`) REFERENCES `site`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "localId",
@@ -196,6 +196,12 @@
             "fieldPath": "collectorName",
             "columnName": "collectorName",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "collectorLastTrainedOn",
+            "columnName": "collectorLastTrainedOn",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -253,11 +259,6 @@
             "columnName": "type",
             "affinity": "TEXT",
             "notNull": true
-          },
-          {
-            "fieldPath": "collectorLastTrainedOn",
-            "columnName": "collectorLastTrainedOn",
-            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -655,7 +656,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a7b7eb200ed87d5405e4189c3329bb46')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'afdecf5551e97f132c1c801f6007826f')"
     ]
   }
 }

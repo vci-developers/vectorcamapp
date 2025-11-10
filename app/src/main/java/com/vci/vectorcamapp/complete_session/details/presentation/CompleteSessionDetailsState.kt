@@ -15,6 +15,7 @@ data class CompleteSessionDetailsState(
         remoteId = null,
         collectorTitle = "",
         collectorName = "",
+        collectorLastTrainedOn = 0L,
         collectionDate = 0L,
         collectionMethod = "",
         specimenCondition = "",
@@ -25,7 +26,6 @@ data class CompleteSessionDetailsState(
         latitude = null,
         longitude = null,
         type = SessionType.SURVEILLANCE,
-        collectorLastTrainedOn = null
     ),
     val site: Site = Site(
         id = -1,
