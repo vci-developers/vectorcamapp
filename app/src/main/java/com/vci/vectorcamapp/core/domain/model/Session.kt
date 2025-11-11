@@ -8,6 +8,7 @@ data class Session(
     val remoteId: Int?,
     val collectorTitle: String,
     val collectorName: String,
+    val collectorLastTrainedOn: Long,
     val collectionDate: Long,
     val collectionMethod: String,
     val specimenCondition: String,
@@ -17,5 +18,5 @@ data class Session(
     val notes: String,
     val latitude: Float?,
     val longitude: Float?,
-    val type: SessionType
+    val type: SessionType,
 )
