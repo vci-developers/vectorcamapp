@@ -4,14 +4,14 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
-import com.vci.vectorcamapp.core.domain.repository.CollectorRepository // NEW
+import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
-import com.vci.vectorcamapp.core.domain.util.Result // NEW
+import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
-import com.vci.vectorcamapp.registration.domain.use_cases.RegistrationValidationUseCases // NEW
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -40,7 +40,7 @@ class RegistrationViewModelTest {
     private lateinit var programRepository: ProgramRepository
 
     private lateinit var collectorRepository: CollectorRepository
-    private lateinit var registrationValidationUseCases: RegistrationValidationUseCases
+    private lateinit var collectorValidationUseCases: CollectorValidationUseCases
 
     private lateinit var viewModel: RegistrationViewModel
     private lateinit var programsFlow: MutableStateFlow<List<Program>>
@@ -63,9 +63,9 @@ class RegistrationViewModelTest {
         collectorRepository = mockk(relaxed = true)
         coEvery { collectorRepository.upsertCollector(any()) } returns Result.Success(Unit)
 
-        registrationValidationUseCases = mockk()
-        every { registrationValidationUseCases.validateCollectorName(any()) } returns Result.Success(Unit)
-        every { registrationValidationUseCases.validateCollectorTitle(any()) } returns Result.Success(Unit)
+        collectorValidationUseCases = mockk()
+        every { collectorValidationUseCases.validateCollectorName(any()) } returns Result.Success(Unit)
+        every { collectorValidationUseCases.validateCollectorTitle(any()) } returns Result.Success(Unit)
 
         programsFlow = MutableStateFlow(testPrograms)
         every { programRepository.observeAllPrograms() } returns programsFlow
@@ -74,7 +74,7 @@ class RegistrationViewModelTest {
             deviceCache = deviceCache,
             currentSessionCache = sessionCache,
             collectorRepository = collectorRepository,
-            registrationValidationUseCases = registrationValidationUseCases,
+            collectorValidationUseCases = collectorValidationUseCases,
             programRepository = programRepository
         )
     }
@@ -364,7 +364,7 @@ class RegistrationViewModelTest {
             deviceCache = deviceCache,
             currentSessionCache = sessionCache,
             collectorRepository = collectorRepository,
-            registrationValidationUseCases = registrationValidationUseCases,
+            collectorValidationUseCases = collectorValidationUseCases,
             programRepository = programRepository
         )
 

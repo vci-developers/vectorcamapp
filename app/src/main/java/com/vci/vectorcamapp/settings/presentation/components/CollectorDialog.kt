@@ -14,18 +14,18 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.settings.domain.model.SettingsDropdownOptions
-import com.vci.vectorcamapp.settings.domain.util.SettingsValidationError
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
 fun CollectorDialog(
     collector: Collector,
-    nameError: SettingsValidationError?,
-    titleError: SettingsValidationError?,
+    collectorNameError: CollectorValidationError?,
+    collectorTitleError: CollectorValidationError?,
     onNameChange: (String) -> Unit,
     onTitleChange: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -62,7 +62,7 @@ fun CollectorDialog(
                         value = collector.name,
                         onValueChange = onNameChange,
                         singleLine = true,
-                        error = nameError,
+                        error = collectorNameError,
                     )
 
                     Spacer(modifier = Modifier.size(MaterialTheme.dimensions.spacingSmall))
@@ -74,7 +74,7 @@ fun CollectorDialog(
                         onOptionSelected = { option ->
                             onTitleChange(option.label)
                         },
-                        error = titleError,
+                        error = collectorTitleError,
                         modifier = modifier
                             .fillMaxWidth()
                             .height(MaterialTheme.dimensions.componentHeightLarge)

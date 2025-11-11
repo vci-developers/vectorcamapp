@@ -1,8 +1,8 @@
-package com.vci.vectorcamapp.settings.domain.use_cases
+package com.vci.vectorcamapp.core.domain.use_cases.collector
 
 import javax.inject.Inject
 
-data class SettingsValidationUseCases @Inject constructor(
+data class CollectorValidationUseCases @Inject constructor(
     val validateCollectorTitle: ValidateCollectorTitleUseCase,
     val validateCollectorName: ValidateCollectorNameUseCase,
 )
