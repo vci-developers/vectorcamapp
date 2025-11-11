@@ -160,6 +160,9 @@
     <!-- Collector validation error: Blank collector name -->
     <string name="collector_validation_error_blank_collector_name">Collector name is required.</string>
 
+    <!-- Collector validation error: Invalid collector last trained on date -->
+    <string name="collector_validation_error_invalid_collector_last_trained_on">Collector last collected on date is invalid.</string>
+
     <!-- Incomplete session error: Session not found -->
     <string name="incomplete_session_error_session_not_found">Session not found. Please try again.</string>
 

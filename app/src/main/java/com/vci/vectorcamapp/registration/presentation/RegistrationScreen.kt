@@ -23,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
+import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.registration.domain.model.RegistrationDropdownOptions
@@ -56,7 +57,7 @@ fun RegistrationScreen(
                 topEnd = MaterialTheme.dimensions.cornerRadiusMedium
             ),
             modifier = modifier
-                .height(screenHeightFraction(0.68f))
+                .height(screenHeightFraction(0.74f))
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
         ) {
@@ -146,6 +147,14 @@ fun RegistrationScreen(
                             color = MaterialTheme.colors.textPrimary
                         )
                     }
+
+                    DatePickerField(
+                        label = "Last Trained On",
+                        selectedDateInMillis = state.collector.lastTrainedOn,
+                        onDateSelected = { onAction(RegistrationAction.EnterCollectorLastTrainedOn(it)) },
+                        error = state.registrationErrors.collectorLastTrainedOn,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
 
                 ActionButton(
@@ -153,7 +162,8 @@ fun RegistrationScreen(
                     onClick = { onAction(RegistrationAction.ConfirmRegistration) },
                     enabled = state.selectedProgram != null &&
                             state.collector.name.isNotBlank() &&
-                            state.collector.title.isNotBlank(),
+                            state.collector.title.isNotBlank() &&
+                            state.collector.lastTrainedOn != 0L,
                     testTag = RegistrationTestTags.CONFIRM_PROGRAM_BUTTON,
                     modifier = modifier
                 )

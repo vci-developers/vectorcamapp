@@ -5,4 +5,5 @@ import com.vci.vectorcamapp.core.domain.util.Error
 enum class CollectorValidationError : Error {
     BLANK_COLLECTOR_TITLE,
     BLANK_COLLECTOR_NAME,
+    INVALID_LAST_TRAINED_ON_DATE
 }

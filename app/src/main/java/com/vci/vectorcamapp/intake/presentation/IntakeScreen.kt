@@ -92,7 +92,8 @@ fun IntakeScreen(
                     Collector(
                         id = UUID.randomUUID(),
                         name = state.session.collectorName,
-                        title = state.session.collectorTitle
+                        title = state.session.collectorTitle,
+                        lastTrainedOn = state.session.collectorLastTrainedOn
                     )
                 } else {
                     state.allCollectors.firstOrNull { collector ->
