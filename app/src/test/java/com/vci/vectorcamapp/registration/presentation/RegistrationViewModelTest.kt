@@ -66,6 +66,7 @@ class RegistrationViewModelTest {
         collectorValidationUseCases = mockk()
         every { collectorValidationUseCases.validateCollectorName(any()) } returns Result.Success(Unit)
         every { collectorValidationUseCases.validateCollectorTitle(any()) } returns Result.Success(Unit)
+        every { collectorValidationUseCases.validateCollectorLastTrainedOn(any()) } returns Result.Success(Unit)
 
         programsFlow = MutableStateFlow(testPrograms)
         every { programRepository.observeAllPrograms() } returns programsFlow
