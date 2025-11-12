@@ -57,7 +57,7 @@ fun RegistrationScreen(
                 topEnd = MaterialTheme.dimensions.cornerRadiusMedium
             ),
             modifier = modifier
-                .height(screenHeightFraction(0.74f))
+                .height(screenHeightFraction(0.8f))
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
         ) {
