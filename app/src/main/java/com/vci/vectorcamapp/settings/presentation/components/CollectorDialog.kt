@@ -92,7 +92,7 @@ fun CollectorDialog(
                     Spacer(modifier = Modifier.size(MaterialTheme.dimensions.spacingSmall))
 
                     DatePickerField(
-                        label = "Last Trained On",
+                        label = "When were you last trained?",
                         selectedDateInMillis = collector.lastTrainedOn,
                         onDateSelected = onLastTrainedOnChange,
                         error = collectorLastTrainedOnError,

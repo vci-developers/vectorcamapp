@@ -149,7 +149,7 @@ fun RegistrationScreen(
                     }
 
                     DatePickerField(
-                        label = "Last Trained On",
+                        label = "When were you last trained?",
                         selectedDateInMillis = state.collector.lastTrainedOn,
                         onDateSelected = { onAction(RegistrationAction.EnterCollectorLastTrainedOn(it)) },
                         error = state.registrationErrors.collectorLastTrainedOn,
