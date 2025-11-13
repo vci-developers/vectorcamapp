@@ -79,23 +79,35 @@ class RegistrationViewModel @Inject constructor(
                     }
                 }
 
+                is RegistrationAction.EnterCollectorLastTrainedOn -> {
+                    _state.update {
+                        it.copy(
+                            collector = it.collector.copy(
+                                lastTrainedOn = action.lastTrainedOn
+                            )
+                        )
+                    }
+                }
+
                 RegistrationAction.ConfirmRegistration -> {
                     val selectedProgram = state.value.selectedProgram
 
                     val collector = state.value.collector
                     val collectorNameValidationResult = collectorValidationUseCases.validateCollectorName(collector.name)
                     val collectorTitleValidationResult = collectorValidationUseCases.validateCollectorTitle(collector.title)
+                    val collectorLastTrainedOnValidationResult = collectorValidationUseCases.validateCollectorLastTrainedOn(collector.lastTrainedOn)
 
                     _state.update { currentState ->
                         currentState.copy(
                             registrationErrors = RegistrationErrors(
                                 collectorName = collectorNameValidationResult.errorOrNull(),
                                 collectorTitle = collectorTitleValidationResult.errorOrNull(),
+                                collectorLastTrainedOn = collectorLastTrainedOnValidationResult.errorOrNull()
                             )
                         )
                     }
 
-                    val hasError = listOf(collectorNameValidationResult, collectorTitleValidationResult).any { it is Result.Error }
+                    val hasError = listOf(collectorNameValidationResult, collectorTitleValidationResult, collectorLastTrainedOnValidationResult).any { it is Result.Error }
                     if (hasError) return@launch
 
                     if (selectedProgram == null) {

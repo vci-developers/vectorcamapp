@@ -109,6 +109,7 @@ fun Error.toString(context: Context): String {
         is CollectorValidationError -> when (this) {
             CollectorValidationError.BLANK_COLLECTOR_TITLE -> R.string.collector_validation_error_blank_collector_title
             CollectorValidationError.BLANK_COLLECTOR_NAME -> R.string.collector_validation_error_blank_collector_name
+            CollectorValidationError.INVALID_LAST_TRAINED_ON_DATE -> R.string.collector_validation_error_invalid_collector_last_trained_on
         }
 
         is SettingsError -> when (this) {

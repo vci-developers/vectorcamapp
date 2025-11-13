@@ -63,7 +63,8 @@ class SettingsViewModel @Inject constructor (
                             selectedCollector = Collector(
                                 id = UUID.randomUUID(),
                                 name = "",
-                                title = ""
+                                title = "",
+                                lastTrainedOn = System.currentTimeMillis()
                             ),
                             isEditCollectorDialogVisible = false
                         )
@@ -85,7 +86,8 @@ class SettingsViewModel @Inject constructor (
                             isDeleteCollectorDialogVisible = false,
                             settingsErrors = it.settingsErrors.copy(
                                 collectorName = null,
-                                collectorTitle = null
+                                collectorTitle = null,
+                                collectorLastTrainedOn = null
                             )
                         )
                     }
@@ -108,22 +110,33 @@ class SettingsViewModel @Inject constructor (
                         )
                     }
                 }
+                is SettingsAction.EnterCollectorLastTrainedOn -> {
+                    _state.update {
+                        it.copy(
+                            selectedCollector = it.selectedCollector?.copy(
+                                lastTrainedOn = action.lastTrainedOn
+                            )
+                        )
+                    }
+                }
                 SettingsAction.SaveCollector -> {
                     val collector = state.value.selectedCollector ?: return@launch
 
                     val nameValidationResult = collectorValidationUseCases.validateCollectorName(collector.name)
                     val titleValidationResult = collectorValidationUseCases.validateCollectorTitle(collector.title)
+                    val lastTrainedOnValidationResult = collectorValidationUseCases.validateCollectorLastTrainedOn(collector.lastTrainedOn)
 
                     _state.update { currentState ->
                         currentState.copy(
                             settingsErrors = SettingsErrors(
                                 collectorName = nameValidationResult.errorOrNull(),
-                                collectorTitle = titleValidationResult.errorOrNull()
+                                collectorTitle = titleValidationResult.errorOrNull(),
+                                collectorLastTrainedOn = lastTrainedOnValidationResult.errorOrNull()
                             )
                         )
                     }
 
-                    val hasError = listOf(nameValidationResult, titleValidationResult).any { it is Result.Error }
+                    val hasError = listOf(nameValidationResult, titleValidationResult, lastTrainedOnValidationResult).any { it is Result.Error }
                     if (hasError) return@launch
 
                     try {

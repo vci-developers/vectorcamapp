@@ -185,6 +185,7 @@ class IntakeViewModel @Inject constructor(
                             defaultIntakeFieldsCache.saveDefaultIntakeFields(
                                 collectorName = session.collectorName,
                                 collectorTitle = session.collectorTitle,
+                                collectorLastTrainedOn = session.collectorLastTrainedOn,
                                 district = _state.value.selectedDistrict,
                                 villageName = _state.value.selectedVillageName,
                                 houseNumber = _state.value.selectedHouseNumber
@@ -197,12 +198,14 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.SelectCollector -> {
                     val updatedName = action.collector.name
                     val updatedTitle = action.collector.title
+                    val updatedLastTrainedOn = action.collector.lastTrainedOn
 
                     _state.update {
                         it.copy(
                             session = it.session.copy(
                                 collectorName = updatedName,
-                                collectorTitle = updatedTitle
+                                collectorTitle = updatedTitle,
+                                collectorLastTrainedOn = updatedLastTrainedOn
                             ),
                             isCurrentCollectorMissing = false
                         )
@@ -406,6 +409,7 @@ class IntakeViewModel @Inject constructor(
                 IntakeAction.RegisterMissingCollector -> {
                     val name = _state.value.session.collectorName
                     val title = _state.value.session.collectorTitle
+                    val lastTrainedOn = _state.value.session.collectorLastTrainedOn
 
                     if (name.isBlank() || title.isBlank()) {
                         return@launch
@@ -415,7 +419,8 @@ class IntakeViewModel @Inject constructor(
                         Collector(
                             id = UUID.randomUUID(),
                             name = name,
-                            title = title
+                            title = title,
+                            lastTrainedOn = lastTrainedOn
                         )
                     ).onSuccess {
                         _state.update {
@@ -456,6 +461,7 @@ class IntakeViewModel @Inject constructor(
             val defaultFields = defaultIntakeFieldsCache.getDefaultIntakeFields()
             val cachedCollectorName = defaultFields?.collectorName.orEmpty()
             val cachedCollectorTitle = defaultFields?.collectorTitle.orEmpty()
+            val cachedCollectorLastTrainedOn = defaultFields?.collectorLastTrainedOn ?: 0L
             val cachedDefaultDistrict = defaultFields?.district.orEmpty()
             val cachedDefaultVillageName = defaultFields?.villageName.orEmpty()
             val cachedDefaultHouseNumber = defaultFields?.houseNumber.orEmpty()
@@ -464,7 +470,8 @@ class IntakeViewModel @Inject constructor(
                 currentSession ?: _state.value.session.copy(
                     type = resolvedSessionType,
                     collectorName = cachedCollectorName,
-                    collectorTitle = cachedCollectorTitle
+                    collectorTitle = cachedCollectorTitle,
+                    collectorLastTrainedOn = cachedCollectorLastTrainedOn
                 )
 
             val currentSessionSiteId = currentSessionCache.getSiteId()

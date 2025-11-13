@@ -19,7 +19,8 @@ data class SettingsState (
     ),
     val settingsErrors: SettingsErrors = SettingsErrors(
         collectorName = null,
-        collectorTitle = null
+        collectorTitle = null,
+        collectorLastTrainedOn = null
     ),
     val collectors: List<Collector> = emptyList(),
     val selectedCollector: Collector? = null,

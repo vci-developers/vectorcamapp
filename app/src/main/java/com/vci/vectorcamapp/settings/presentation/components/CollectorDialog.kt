@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
+import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.settings.domain.model.SettingsDropdownOptions
@@ -26,8 +27,10 @@ fun CollectorDialog(
     collector: Collector,
     collectorNameError: CollectorValidationError?,
     collectorTitleError: CollectorValidationError?,
+    collectorLastTrainedOnError: CollectorValidationError?,
     onNameChange: (String) -> Unit,
     onTitleChange: (String) -> Unit,
+    onLastTrainedOnChange: (Long) -> Unit,
     onDismiss: () -> Unit,
     onSave: () -> Unit,
     onDelete: () -> Unit,
@@ -85,6 +88,16 @@ fun CollectorDialog(
                             color = MaterialTheme.colors.textPrimary
                         )
                     }
+
+                    Spacer(modifier = Modifier.size(MaterialTheme.dimensions.spacingSmall))
+
+                    DatePickerField(
+                        label = "When were you last trained?",
+                        selectedDateInMillis = collector.lastTrainedOn,
+                        onDateSelected = onLastTrainedOnChange,
+                        error = collectorLastTrainedOnError,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         },
