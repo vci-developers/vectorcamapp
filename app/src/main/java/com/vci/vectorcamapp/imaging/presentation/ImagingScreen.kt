@@ -289,7 +289,7 @@ fun ImagingScreen(
                     )
                 }
 
-                if (state.showProcessFurtherDialog) {
+                if (state.currentSpecimen.shouldProcessFurther) {
                     AlertDialog(
                         onDismissRequest = { },
                         title = {
@@ -343,7 +343,7 @@ fun ImagingScreen(
                         },
                         confirmButton = {
                             Button(
-                                onClick = { onAction(ImagingAction.DismissProcessFurtherDialog) },
+                                onClick = { onAction(ImagingAction.SaveImageToSession) },
                                 enabled = state.hasConfirmedPackaging,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colors.successConfirm,
@@ -356,11 +356,7 @@ fun ImagingScreen(
                                     color = MaterialTheme.colors.buttonText
                                 )
                             }
-                        },
-                        properties = DialogProperties(
-                            dismissOnBackPress = false,
-                            dismissOnClickOutside = false
-                        )
+                        }
                     )
                 }
 

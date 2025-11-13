@@ -16,7 +16,6 @@ sealed interface ImagingAction {
     data object CancelFocus : ImagingAction
     data object ShowExitDialog : ImagingAction
     data object DismissExitDialog : ImagingAction
-    data object DismissProcessFurtherDialog : ImagingAction
     data object TogglePackagingConfirmation : ImagingAction
     data class SelectPendingAction(val pendingAction: ImagingAction) : ImagingAction
     data object ClearPendingAction : ImagingAction

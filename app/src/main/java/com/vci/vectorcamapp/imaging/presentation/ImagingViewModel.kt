@@ -44,6 +44,7 @@ import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import javax.inject.Inject
+import kotlin.random.Random
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
@@ -144,8 +145,7 @@ class ImagingViewModel @Inject constructor(
 
                         val bitmap = action.frame.toUprightBitmap()
 
-                        val liveFrameProcessingResult =
-                            imagingWorkflow.processLiveFrame(bitmap)
+                        val liveFrameProcessingResult = imagingWorkflow.processLiveFrame(bitmap)
 
                         validateSpecimenIdUseCase(
                             liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
@@ -161,19 +161,17 @@ class ImagingViewModel @Inject constructor(
                             val shouldUseAutofocusThisFrame =
                                 !current.isManualFocusing || (current.focusPoint == null && suggestedAutofocusPoint != null)
 
-                            val nextFocusPoint =
-                                if (shouldUseAutofocusThisFrame) {
-                                    suggestedAutofocusPoint ?: current.focusPoint
-                                } else {
-                                    current.focusPoint
-                                }
+                            val nextFocusPoint = if (shouldUseAutofocusThisFrame) {
+                                suggestedAutofocusPoint ?: current.focusPoint
+                            } else {
+                                current.focusPoint
+                            }
 
-                            val nextIsAutofocusing =
-                                when {
-                                    !current.isManualFocusing -> true
-                                    current.focusPoint == null && suggestedAutofocusPoint != null -> true
-                                    else -> false
-                                }
+                            val nextIsAutofocusing = when {
+                                !current.isManualFocusing -> true
+                                current.focusPoint == null && suggestedAutofocusPoint != null -> true
+                                else -> false
+                            }
 
                             current.copy(
                                 previewInferenceResults = liveFrameProcessingResult.previewInferenceResults,
@@ -227,12 +225,9 @@ class ImagingViewModel @Inject constructor(
                             val jpegStream = ByteArrayOutputStream()
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
                             val jpegByteArray = jpegStream.toByteArray()
-                            val jpegBitmap =
-                                BitmapFactory.decodeByteArray(
-                                    jpegByteArray,
-                                    0,
-                                    jpegByteArray.size
-                                )
+                            val jpegBitmap = BitmapFactory.decodeByteArray(
+                                jpegByteArray, 0, jpegByteArray.size
+                            )
 
                             val capturedFrameProcessingResult =
                                 imagingWorkflow.processCapturedFrame(jpegBitmap)
@@ -275,11 +270,6 @@ class ImagingViewModel @Inject constructor(
                     _state.update { it.copy(hasConfirmedPackaging = !it.hasConfirmedPackaging) }
                 }
 
-                ImagingAction.DismissProcessFurtherDialog -> {
-                    _state.update { it.copy(showProcessFurtherDialog = false) }
-                    onAction(ImagingAction.SaveImageToSession)
-                }
-
                 ImagingAction.SaveImageToSession -> {
                     val currentSession = currentSessionCache.getSession()
                     if (currentSession == null) {
@@ -294,6 +284,7 @@ class ImagingViewModel @Inject constructor(
                             _state.update { it.copy(specimenIdError = null) }
                             validationResult.data
                         }
+
                         is Result.Error -> {
                             _state.update { it.copy(specimenIdError = validationResult.error) }
                             emitError(validationResult.error)
@@ -310,8 +301,20 @@ class ImagingViewModel @Inject constructor(
                         append(".jpg")
                     }
 
-                    if (_state.value.currentSpecimen.shouldProcessFurther && !_state.value.hasConfirmedPackaging) {
-                        _state.update { it.copy(showProcessFurtherDialog = true) }
+                    val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(
+                        specimenId, currentSession.localId
+                    )
+                    val shouldProcessFurther =
+                        existingSpecimen?.shouldProcessFurther ?: (Random.nextFloat() < 0.5f)
+
+                    if (shouldProcessFurther && !_state.value.hasConfirmedPackaging) {
+                        _state.update {
+                            it.copy(
+                                currentSpecimen = it.currentSpecimen.copy(
+                                    shouldProcessFurther = true
+                                )
+                            )
+                        }
                         return@launch
                     }
 
@@ -339,9 +342,6 @@ class ImagingViewModel @Inject constructor(
                         val success = transactionHelper.runAsTransaction {
                             val inferenceResult = _state.value.currentInferenceResult
 
-                            val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(
-                                specimenId, currentSession.localId
-                            )
                             val specimenInsertionResult = if (existingSpecimen == null) {
                                 specimenRepository.insertSpecimen(specimen, currentSession.localId)
                             } else {
@@ -391,9 +391,7 @@ class ImagingViewModel @Inject constructor(
         _state.update {
             it.copy(
                 currentSpecimen = it.currentSpecimen.copy(
-                    id = "",
-                    remoteId = null,
-                    shouldProcessFurther = false
+                    id = "", remoteId = null, shouldProcessFurther = false
                 ),
                 currentSpecimenImage = it.currentSpecimenImage.copy(
                     localId = "",
