@@ -32,7 +32,8 @@ class RemoteSpecimenDataSource @Inject constructor(
                 contentType(ContentType.Application.Json)
                 setBody(
                     PostSpecimenRequestDto(
-                        specimenId = specimen.id
+                        specimenId = specimen.id,
+                        shouldProcessFurther = specimen.shouldProcessFurther
                     )
                 )
             }

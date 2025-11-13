@@ -2,14 +2,14 @@ package com.vci.vectorcamapp.settings.presentation
 
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
-import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.settings.domain.use_cases.SettingsValidationUseCases
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
 import com.vci.vectorcamapp.settings.presentation.model.SettingsErrors
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,7 +30,7 @@ class SettingsViewModel @Inject constructor (
     private val deviceCache: DeviceCache,
     private val programRepository: ProgramRepository,
     private val collectorRepository: CollectorRepository,
-    private val settingsValidationUseCases: SettingsValidationUseCases
+    private val collectorValidationUseCases: CollectorValidationUseCases
 ): CoreViewModel(){
 
     private val _collectors = collectorRepository.observeAllCollectors()
@@ -63,7 +63,8 @@ class SettingsViewModel @Inject constructor (
                             selectedCollector = Collector(
                                 id = UUID.randomUUID(),
                                 name = "",
-                                title = ""
+                                title = "",
+                                lastTrainedOn = System.currentTimeMillis()
                             ),
                             isEditCollectorDialogVisible = false
                         )
@@ -85,7 +86,8 @@ class SettingsViewModel @Inject constructor (
                             isDeleteCollectorDialogVisible = false,
                             settingsErrors = it.settingsErrors.copy(
                                 collectorName = null,
-                                collectorTitle = null
+                                collectorTitle = null,
+                                collectorLastTrainedOn = null
                             )
                         )
                     }
@@ -108,22 +110,33 @@ class SettingsViewModel @Inject constructor (
                         )
                     }
                 }
+                is SettingsAction.EnterCollectorLastTrainedOn -> {
+                    _state.update {
+                        it.copy(
+                            selectedCollector = it.selectedCollector?.copy(
+                                lastTrainedOn = action.lastTrainedOn
+                            )
+                        )
+                    }
+                }
                 SettingsAction.SaveCollector -> {
                     val collector = state.value.selectedCollector ?: return@launch
 
-                    val nameValidationResult = settingsValidationUseCases.validateCollectorName(collector.name)
-                    val titleValidationResult = settingsValidationUseCases.validateCollectorTitle(collector.title)
+                    val nameValidationResult = collectorValidationUseCases.validateCollectorName(collector.name)
+                    val titleValidationResult = collectorValidationUseCases.validateCollectorTitle(collector.title)
+                    val lastTrainedOnValidationResult = collectorValidationUseCases.validateCollectorLastTrainedOn(collector.lastTrainedOn)
 
                     _state.update { currentState ->
                         currentState.copy(
                             settingsErrors = SettingsErrors(
                                 collectorName = nameValidationResult.errorOrNull(),
-                                collectorTitle = titleValidationResult.errorOrNull()
+                                collectorTitle = titleValidationResult.errorOrNull(),
+                                collectorLastTrainedOn = lastTrainedOnValidationResult.errorOrNull()
                             )
                         )
                     }
 
-                    val hasError = listOf(nameValidationResult, titleValidationResult).any { it is Result.Error }
+                    val hasError = listOf(nameValidationResult, titleValidationResult, lastTrainedOnValidationResult).any { it is Result.Error }
                     if (hasError) return@launch
 
                     try {

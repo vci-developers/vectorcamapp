@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
@@ -37,6 +38,7 @@ import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.extensions.colors
+import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -60,10 +62,15 @@ fun CompleteSessionListTile(
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
+    val progressColor =
+        if (sessionUploadProgress.totalImageCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalImageCount) MaterialTheme.colors.primary
+        else if (sessionUploadProgress.isUploading) MaterialTheme.colors.warning
+        else MaterialTheme.colors.error
+
     session.completedAt?.let { completedAt ->
         ActionTile(
             onClick = onClick,
-            modifier = modifier,
+            hue = progressColor,
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
@@ -232,12 +239,7 @@ fun CompleteSessionListTile(
                                     else sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()
                                 )
                                 .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall)
-                                .background(
-                                    if (sessionUploadProgress.totalImageCount == 0 || (sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()) == 1f) MaterialTheme.colors.primary
-                                    else if (sessionUploadProgress.isUploading) MaterialTheme.colors.warning
-                                    else MaterialTheme.colors.error,
-                                    RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
-                                )
+                                .background(progressColor, RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
                         )
                     }
                 }

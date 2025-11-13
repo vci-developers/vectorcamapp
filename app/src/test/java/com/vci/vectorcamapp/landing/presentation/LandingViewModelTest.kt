@@ -77,6 +77,7 @@ class LandingViewModelTest {
         remoteId = null,
         collectorTitle = "Dr.",
         collectorName = "Alice",
+        collectorLastTrainedOn = 0L,
         collectionDate = 1_632_000_000L,
         collectionMethod = "Net",
         specimenCondition = "Good",
@@ -86,7 +87,7 @@ class LandingViewModelTest {
         notes = "",
         latitude = null,
         longitude = null,
-        type = type
+        type = type,
     )
 
     private fun makeDummySite() = Site(

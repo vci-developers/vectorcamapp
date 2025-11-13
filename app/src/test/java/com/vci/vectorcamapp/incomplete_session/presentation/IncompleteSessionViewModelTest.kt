@@ -85,6 +85,7 @@ class IncompleteSessionViewModelTest {
         remoteId = null,
         collectorTitle = "Dr.",
         collectorName = "Alice",
+        collectorLastTrainedOn = 0L,
         collectionDate = 1_632_000_000L,
         collectionMethod = "Net",
         specimenCondition = "Good",
@@ -94,7 +95,7 @@ class IncompleteSessionViewModelTest {
         notes = "",
         latitude = null,
         longitude = null,
-        type = sessionType
+        type = sessionType,
     )
 
     private fun makeSessionAndSite(session: Session, siteId: Int): SessionAndSite {
