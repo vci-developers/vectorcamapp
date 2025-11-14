@@ -14,4 +14,5 @@ interface SpecimenRepository {
     suspend fun deleteSpecimen(specimen: Specimen, sessionId: UUID): Boolean
     suspend fun getSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): List<SpecimenWithSpecimenImagesAndInferenceResults>
     fun observeSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>>
+    suspend fun countSelectedForFurtherProcessingBetweenSessionCollectionDates(startDate: Long, endDate: Long): Int
 }
