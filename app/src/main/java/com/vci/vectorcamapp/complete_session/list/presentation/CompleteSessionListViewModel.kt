@@ -44,12 +44,14 @@ class CompleteSessionListViewModel @Inject constructor(
                     sessions.map { sessionAndSite ->
                         val sessionId = sessionAndSite.session.localId
                         combine(
+                            specimenImageRepository.observeUploadedMetadataCountForSession(sessionId),
                             specimenImageRepository.observeUploadedImageCountForSession(sessionId),
                             workManagerRepository.observeIsSessionActivelyUploading(sessionId),
-                        ) { uploadedCount, isUploading ->
+                        ) { uploadedMetadataCount, uploadedImageCount, isUploading ->
                             sessionAndSite to SessionUploadProgress(
-                                uploadedImageCount = uploadedCount,
-                                totalImageCount = specimenImageRepository.getTotalImageCountForSession(
+                                uploadedMetadataCount = uploadedMetadataCount,
+                                uploadedImageCount = uploadedImageCount,
+                                totalCount = specimenImageRepository.getTotalCountForSession(
                                     sessionId
                                 ),
                                 isUploading = isUploading

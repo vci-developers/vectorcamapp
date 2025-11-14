@@ -10,6 +10,7 @@ interface SpecimenImageRepository {
     suspend fun insertSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID) : Result<Unit, RoomDbError>
     suspend fun updateSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID) : Result<Unit, RoomDbError>
     suspend fun deleteSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID) : Boolean
+    fun observeUploadedMetadataCountForSession(sessionId: UUID): Flow<Int>
     fun observeUploadedImageCountForSession(sessionId: UUID): Flow<Int>
-    suspend fun getTotalImageCountForSession(sessionId: UUID): Int
+    suspend fun getTotalCountForSession(sessionId: UUID): Int
 }

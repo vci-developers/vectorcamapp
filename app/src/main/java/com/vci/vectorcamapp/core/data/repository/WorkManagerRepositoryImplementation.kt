@@ -46,7 +46,6 @@ class WorkManagerRepositoryImplementation @Inject constructor(
             .map { workInfos ->
                 workInfos.any {
                     it.state in listOf(
-                        WorkInfo.State.ENQUEUED,
                         WorkInfo.State.RUNNING
                     )
                 }

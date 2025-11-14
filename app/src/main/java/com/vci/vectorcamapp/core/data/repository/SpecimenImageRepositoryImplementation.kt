@@ -44,11 +44,15 @@ class SpecimenImageRepositoryImplementation @Inject constructor(
         return specimenImageDao.deleteSpecimenImage(specimenImage.toEntity(specimenId, sessionId)) > 0
     }
 
+    override fun observeUploadedMetadataCountForSession(sessionId: UUID): Flow<Int> {
+        return specimenImageDao.observeUploadedMetadataCountForSession(sessionId)
+    }
+
     override fun observeUploadedImageCountForSession(sessionId: UUID): Flow<Int> {
         return specimenImageDao.observeUploadedImageCountForSession(sessionId)
     }
 
-    override suspend fun getTotalImageCountForSession(sessionId: UUID): Int {
-        return specimenImageDao.getTotalImageCountForSession(sessionId)
+    override suspend fun getTotalCountForSession(sessionId: UUID): Int {
+        return specimenImageDao.getTotalCountForSession(sessionId)
     }
 }

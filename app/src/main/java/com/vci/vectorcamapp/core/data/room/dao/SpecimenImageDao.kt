@@ -24,6 +24,15 @@ interface SpecimenImageDao {
 
     @Query(
         """
+        SELECT SUM(CASE WHEN metadataUploadStatus = 'COMPLETED' THEN 1 ELSE 0 END)
+        FROM specimen_image 
+        WHERE sessionId = :sessionId
+    """
+    )
+    fun observeUploadedMetadataCountForSession(sessionId: UUID): Flow<Int>
+
+    @Query(
+        """
         SELECT SUM(CASE WHEN imageUploadStatus = 'COMPLETED' THEN 1 ELSE 0 END)
         FROM specimen_image 
         WHERE sessionId = :sessionId
@@ -32,5 +41,5 @@ interface SpecimenImageDao {
     fun observeUploadedImageCountForSession(sessionId: UUID): Flow<Int>
 
     @Query("SELECT COUNT(*) FROM specimen_image WHERE sessionId = :sessionId")
-    suspend fun getTotalImageCountForSession(sessionId: UUID): Int
+    suspend fun getTotalCountForSession(sessionId: UUID): Int
 }

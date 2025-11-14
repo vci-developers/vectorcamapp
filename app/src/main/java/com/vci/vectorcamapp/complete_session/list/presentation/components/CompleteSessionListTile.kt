@@ -56,14 +56,18 @@ fun CompleteSessionListTile(
     val UPLOAD_ICON_MIN_ALPHA = 0.3f
     val UPLOAD_ICON_MAX_ALPHA = 1f
 
+    val PROGRESS_BAR_LOW_OPACITY = 0.3f
+
     val session = sessionAndSite.session
     val site = sessionAndSite.site
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
+    val sessionMetadataUploaded = session.submittedAt != null
+
     val progressColor =
-        if (sessionUploadProgress.totalImageCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalImageCount) MaterialTheme.colors.primary
+        if (sessionMetadataUploaded && (sessionUploadProgress.totalCount == 0 || sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount && sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount)) MaterialTheme.colors.primary
         else if (sessionUploadProgress.isUploading) MaterialTheme.colors.warning
         else MaterialTheme.colors.error
 
@@ -216,10 +220,12 @@ fun CompleteSessionListTile(
                             }
                         }
                         Text(
-                            text = if (sessionUploadProgress.totalImageCount == 0) "No images to upload"
-                            else "${sessionUploadProgress.uploadedImageCount} / ${sessionUploadProgress.totalImageCount} images",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colors.textSecondary
+                            text = if (sessionMetadataUploaded && (sessionUploadProgress.totalCount == 0 || (sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount && sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount))) "Completed"
+                            else if (!sessionMetadataUploaded) ""
+                            else if (sessionUploadProgress.uploadedMetadataCount != sessionUploadProgress.totalCount) "${sessionUploadProgress.uploadedMetadataCount} / ${sessionUploadProgress.totalCount} metadata"
+                            else "${sessionUploadProgress.uploadedImageCount} / ${sessionUploadProgress.totalCount} images",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textSecondary
                         )
                     }
 
@@ -232,14 +238,33 @@ fun CompleteSessionListTile(
                                 RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
                             )
                     ) {
+                        val metadataProgress = when {
+                            !sessionMetadataUploaded -> 0f
+                            sessionUploadProgress.totalCount == 0 -> 1f
+                            else -> sessionUploadProgress.uploadedMetadataCount.toFloat() / sessionUploadProgress.totalCount.toFloat()
+                        }
+                        val imageProgress = when {
+                            !sessionMetadataUploaded -> 0f
+                            sessionUploadProgress.totalCount == 0 -> 1f
+                            else -> sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalCount.toFloat()
+                        }
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(
-                                    if (sessionUploadProgress.totalImageCount == 0) 1f
-                                    else sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalImageCount.toFloat()
-                                )
+                                .fillMaxWidth(metadataProgress)
                                 .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall)
-                                .background(progressColor, RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
+                                .background(
+                                    progressColor.copy(PROGRESS_BAR_LOW_OPACITY),
+                                    RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
+                                )
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(imageProgress)
+                                .height(MaterialTheme.dimensions.componentHeightExtraExtraExtraSmall)
+                                .background(
+                                    progressColor,
+                                    RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
+                                )
                         )
                     }
                 }
