@@ -582,6 +582,6 @@ class IntakeViewModel @Inject constructor(
                 filteredNewValue
             }
 
-        return finalValueString.toIntOrNull()?.toString() ?: ""
+        return finalValueString.toIntOrNull()?.toString() ?: "0"
     }
 }

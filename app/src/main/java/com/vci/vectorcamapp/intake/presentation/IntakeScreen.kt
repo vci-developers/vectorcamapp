@@ -397,9 +397,7 @@ fun IntakeScreen(
                     TextEntryField(
                         label = "Number of People Living in the House",
                         value = surveillanceForm.numPeopleSleptInHouse.toString(),
-                        onValueChange = { newValue ->
-                            onAction(IntakeAction.EnterNumPeopleSleptInHouse(newValue))
-                        },
+                        onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it)) },
                         placeholder = "0",
                         singleLine = true,
                     )
@@ -489,9 +487,7 @@ fun IntakeScreen(
                         TextEntryField(
                             label = "Months Since IRS",
                             value = (surveillanceForm.monthsSinceIrs ?: 0).toString(),
-                            onValueChange = { newValue ->
-                                onAction(IntakeAction.EnterMonthsSinceIrs(newValue))
-                            },
+                            onValueChange = { onAction(IntakeAction.EnterMonthsSinceIrs(it)) },
                             placeholder = "0",
                             singleLine = true,
                         )
@@ -500,9 +496,7 @@ fun IntakeScreen(
                     TextEntryField(
                         label = "Number of LLINs Available",
                         value = surveillanceForm.numLlinsAvailable.toString(),
-                        onValueChange = { newValue ->
-                            onAction(IntakeAction.EnterNumLlinsAvailable(newValue))
-                        },
+                        onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it)) },
                         placeholder = "0",
                         singleLine = true,
                     )
@@ -547,9 +541,7 @@ fun IntakeScreen(
                         TextEntryField(
                             label = "Number of People who Slept Under LLIN",
                             value = current.toString(),
-                            onValueChange = { newValue ->
-                                onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(newValue))
-                            },
+                            onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(it)) },
                             placeholder = "0",
                             singleLine = true,
                         )
