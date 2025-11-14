@@ -396,10 +396,13 @@ fun IntakeScreen(
                 state.surveillanceForm?.let { surveillanceForm ->
                     TextEntryField(
                         label = "Number of People Living in the House",
-                        value = surveillanceForm.numPeopleSleptInHouse.toString(),
+                        value = if (surveillanceForm.numPeopleSleptInHouse < 0)
+                            ""
+                        else
+                            surveillanceForm.numPeopleSleptInHouse.toString(),
                         onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it)) },
-                        placeholder = "0",
                         singleLine = true,
+                        error = state.intakeErrors.numPeopleSleptInHouse,
                     )
                 }
 
@@ -484,21 +487,29 @@ fun IntakeScreen(
                         })
 
                     if (surveillanceForm.wasIrsConducted) {
-                        TextEntryField(
-                            label = "Months Since IRS",
-                            value = (surveillanceForm.monthsSinceIrs ?: 0).toString(),
-                            onValueChange = { onAction(IntakeAction.EnterMonthsSinceIrs(it)) },
-                            placeholder = "0",
-                            singleLine = true,
-                        )
+                        surveillanceForm.monthsSinceIrs?.let {
+                            TextEntryField(
+                                label = "Months Since IRS",
+                                value = if (it < 0)
+                                    ""
+                                else
+                                    surveillanceForm.monthsSinceIrs.toString(),
+                                onValueChange = { onAction(IntakeAction.EnterMonthsSinceIrs(it)) },
+                                singleLine = true,
+                                error = state.intakeErrors.monthsSinceIrs,
+                            )
+                        }
                     }
 
                     TextEntryField(
                         label = "Number of LLINs Available",
-                        value = surveillanceForm.numLlinsAvailable.toString(),
+                        value = if (surveillanceForm.numLlinsAvailable < 0)
+                            ""
+                        else
+                            surveillanceForm.numLlinsAvailable.toString(),
                         onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it)) },
-                        placeholder = "0",
                         singleLine = true,
+                        error = state.intakeErrors.numLlinsAvailable,
                     )
 
                     surveillanceForm.llinType?.let { current ->
@@ -540,10 +551,13 @@ fun IntakeScreen(
                     surveillanceForm.numPeopleSleptUnderLlin?.let { current ->
                         TextEntryField(
                             label = "Number of People who Slept Under LLIN",
-                            value = current.toString(),
+                            value = if (surveillanceForm.numPeopleSleptUnderLlin < 0)
+                                ""
+                            else
+                                surveillanceForm.numPeopleSleptUnderLlin.toString(),
                             onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(it)) },
-                            placeholder = "0",
                             singleLine = true,
+                            error = state.intakeErrors.numPeopleSleptUnderLlin,
                         )
                     }
                 }

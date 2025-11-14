@@ -116,6 +116,30 @@ class IntakeViewModel @Inject constructor(
                         intakeValidationUseCases.validateCollectionMethod(session.collectionMethod)
                     val specimenConditionResult =
                         intakeValidationUseCases.validateSpecimenCondition(session.specimenCondition)
+                    val numPeopleSleptInHouseResult =
+                        surveillanceForm?.let {
+                            intakeValidationUseCases.validateNumPeopleSleptInHouse(it.numPeopleSleptInHouse)
+                        }
+
+                    val monthsSinceIrsResult =
+                        if (surveillanceForm?.wasIrsConducted == true && surveillanceForm.monthsSinceIrs != null) {
+                            intakeValidationUseCases.validateMonthsSinceIrs(surveillanceForm.monthsSinceIrs)
+                        } else {
+                            null
+                        }
+
+                    val numLlinsAvailableResult =
+                        surveillanceForm?.let {
+                            intakeValidationUseCases.validateNumLlinsAvailable(it.numLlinsAvailable)
+                        }
+
+                    val numPeopleSleptUnderLlinResult =
+                        if (surveillanceForm?.numPeopleSleptUnderLlin != null) {
+                            intakeValidationUseCases.validateNumPeopleSleptUnderLlin(surveillanceForm.numPeopleSleptUnderLlin)
+                        } else {
+                            null
+                        }
+
 
                     _state.update {
                         it.copy(
@@ -128,7 +152,11 @@ class IntakeViewModel @Inject constructor(
                                 llinBrand = llinBrandResult?.errorOrNull(),
                                 collectionDate = collectionDateResult.errorOrNull(),
                                 collectionMethod = collectionMethodResult.errorOrNull(),
-                                specimenCondition = specimenConditionResult.errorOrNull()
+                                specimenCondition = specimenConditionResult.errorOrNull(),
+                                monthsSinceIrs = monthsSinceIrsResult?.errorOrNull(),
+                                numLlinsAvailable = numLlinsAvailableResult?.errorOrNull(),
+                                numPeopleSleptUnderLlin = numPeopleSleptUnderLlinResult?.errorOrNull(),
+                                numPeopleSleptInHouse = numPeopleSleptInHouseResult?.errorOrNull(),
                             )
                         )
                     }
@@ -142,7 +170,11 @@ class IntakeViewModel @Inject constructor(
                         llinBrandResult,
                         collectionDateResult,
                         collectionMethodResult,
-                        specimenConditionResult
+                        specimenConditionResult,
+                        monthsSinceIrsResult,
+                        numLlinsAvailableResult,
+                        numPeopleSleptInHouseResult,
+                        numPeopleSleptUnderLlinResult
                     ).any { it is Result.Error }
 
                     if (!hasError) {
@@ -256,7 +288,7 @@ class IntakeViewModel @Inject constructor(
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
                                 wasIrsConducted = wasIrsConducted,
-                                monthsSinceIrs = if (wasIrsConducted) 0 else null
+                                monthsSinceIrs = if (wasIrsConducted) -1 else null
                             )
                         )
                     }
@@ -301,7 +333,7 @@ class IntakeViewModel @Inject constructor(
                         _state.update {
                             it.copy(
                                 surveillanceForm = it.surveillanceForm?.copy(
-                                    llinType = "", llinBrand = "", numPeopleSleptUnderLlin = 0
+                                    llinType = "", llinBrand = "", numPeopleSleptUnderLlin = -1
                                 )
                             )
                         }
@@ -582,6 +614,6 @@ class IntakeViewModel @Inject constructor(
                 filteredNewValue
             }
 
-        return finalValueString.toIntOrNull()?.toString() ?: "0"
+        return finalValueString.toIntOrNull().toString()
     }
 }

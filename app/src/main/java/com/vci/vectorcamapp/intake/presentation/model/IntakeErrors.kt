@@ -11,5 +11,9 @@ data class IntakeErrors(
     val llinBrand: FormValidationError?,
     val collectionDate: FormValidationError?,
     val collectionMethod: FormValidationError?,
-    val specimenCondition: FormValidationError?
+    val specimenCondition: FormValidationError?,
+    val monthsSinceIrs: FormValidationError?,
+    val numLlinsAvailable: FormValidationError?,
+    val numPeopleSleptUnderLlin: FormValidationError?,
+    val numPeopleSleptInHouse: FormValidationError?
 )

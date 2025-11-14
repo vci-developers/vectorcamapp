@@ -46,6 +46,10 @@ data class IntakeState(
         collectionDate = null,
         collectionMethod = null,
         specimenCondition = null,
+        monthsSinceIrs = null,
+        numLlinsAvailable = null,
+        numPeopleSleptUnderLlin = null,
+        numPeopleSleptInHouse = null,
     ),
     val isCollectionMethodTooltipVisible: Boolean = false,
 )
