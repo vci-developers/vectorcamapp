@@ -83,6 +83,7 @@ class IncompleteSessionViewModelTest {
     private fun makeSession(sessionType: SessionType) = Session(
         localId = UUID.randomUUID(),
         remoteId = null,
+        hardwareId = "TEST123",
         collectorTitle = "Dr.",
         collectorName = "Alice",
         collectorLastTrainedOn = 0L,
