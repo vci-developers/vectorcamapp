@@ -9,4 +9,6 @@ sealed interface IncompleteSessionAction {
     data object DismissDeleteDialog : IncompleteSessionAction
     data object ReturnToLandingScreen : IncompleteSessionAction
     data class UpdateSearchQuery(val searchQuery: String) : IncompleteSessionAction
+    data object ShowSearchTooltipDialog : IncompleteSessionAction
+    data object HideSearchTooltipDialog : IncompleteSessionAction
 }

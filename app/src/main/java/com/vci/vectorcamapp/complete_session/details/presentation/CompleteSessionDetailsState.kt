@@ -39,5 +39,6 @@ data class CompleteSessionDetailsState(
     ),
     val surveillanceForm: SurveillanceForm? = null,
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val isSearchTooltipVisible: Boolean = false
 )
