@@ -43,6 +43,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
+import java.time.Instant
+import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -304,8 +306,11 @@ class ImagingViewModel @Inject constructor(
                     val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(
                         specimenId, currentSession.localId
                     )
-                    val shouldProcessFurther =
-                        existingSpecimen?.shouldProcessFurther ?: (Random.nextFloat() < 0.5f)
+                    val shouldProcessFurther = when {
+                        existingSpecimen != null -> existingSpecimen.shouldProcessFurther
+                        _state.value.currentSpecimen.shouldProcessFurther -> true
+                        else -> determineSelectionForFurtherProcessing(imagingWorkflow.specimenFurtherProcessingProbability)
+                    }
 
                     if (shouldProcessFurther && !_state.value.hasConfirmedPackaging) {
                         _state.update {
@@ -324,7 +329,7 @@ class ImagingViewModel @Inject constructor(
                         val specimen = Specimen(
                             id = specimenId,
                             remoteId = null,
-                            shouldProcessFurther = _state.value.currentSpecimen.shouldProcessFurther
+                            shouldProcessFurther = shouldProcessFurther
                         )
                         val specimenImage = SpecimenImage(
                             localId = calculateMd5(jpegBytes),
@@ -417,6 +422,23 @@ class ImagingViewModel @Inject constructor(
         }
     }
 
+    private suspend fun determineSelectionForFurtherProcessing(selectionProbability: Float): Boolean {
+        if (selectionProbability == 0f) return false
+
+        val now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault())
+
+        val startOfCurrentMonth = now.withDayOfMonth(1).toLocalDate().atStartOfDay(ZoneId.systemDefault())
+        val startOfNextMonth = startOfCurrentMonth.plusMonths(1)
+
+        val startDate = startOfCurrentMonth.toInstant().toEpochMilli()
+        val endDate = startOfNextMonth.toInstant().toEpochMilli()
+
+        val specimensSelectedForFurtherProcessingThisMonth =
+            specimenRepository.countSelectedForFurtherProcessingBetweenSessionCollectionDates(startDate, endDate)
+
+        if (specimensSelectedForFurtherProcessingThisMonth >= MONTHLY_FURTHER_PROCESSING_CAP) return false
+        return Random.nextFloat() < selectionProbability
+    }
 
     private fun calculateMd5(imageByteArray: ByteArray): String {
         val md5 = MessageDigest.getInstance("MD5")
@@ -439,5 +461,9 @@ class ImagingViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         imagingWorkflow.close()
+    }
+
+    private companion object {
+        private const val MONTHLY_FURTHER_PROCESSING_CAP = 10
     }
 }
