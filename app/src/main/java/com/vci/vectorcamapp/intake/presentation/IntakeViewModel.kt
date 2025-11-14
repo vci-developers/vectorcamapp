@@ -238,7 +238,9 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.EnterNumPeopleSleptInHouse -> {
-                    val numPeopleSleptInHouse = action.count.toIntOrNull() ?: 0
+                    val oldValue = _state.value.surveillanceForm?.numPeopleSleptInHouse
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val numPeopleSleptInHouse = normalized.toIntOrNull() ?: 0
                     _state.update {
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
@@ -261,7 +263,9 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.EnterMonthsSinceIrs -> {
-                    val monthsSinceIrs = action.count.toIntOrNull() ?: 0
+                    val oldValue = _state.value.surveillanceForm?.monthsSinceIrs
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val monthsSinceIrs = normalized.toIntOrNull() ?: 0
                     _state.update {
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
@@ -271,34 +275,35 @@ class IntakeViewModel @Inject constructor(
                     }
                 }
 
+
                 is IntakeAction.EnterNumLlinsAvailable -> {
-                    val numLlinsAvailable = action.count.toIntOrNull() ?: 0
-                    numLlinsAvailable.let { count ->
+                    val oldValue = _state.value.surveillanceForm?.numLlinsAvailable
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val numLlinsAvailable = normalized.toIntOrNull() ?: 0
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                numLlinsAvailable = numLlinsAvailable
+                            )
+                        )
+                    }
+                    if (numLlinsAvailable == 0) {
                         _state.update {
                             it.copy(
                                 surveillanceForm = it.surveillanceForm?.copy(
-                                    numLlinsAvailable = count
+                                    llinType = null,
+                                    llinBrand = null,
+                                    numPeopleSleptUnderLlin = null
                                 )
                             )
                         }
-                        if (numLlinsAvailable == 0) {
-                            _state.update {
-                                it.copy(
-                                    surveillanceForm = it.surveillanceForm?.copy(
-                                        llinType = null,
-                                        llinBrand = null,
-                                        numPeopleSleptUnderLlin = null
-                                    )
+                    } else {
+                        _state.update {
+                            it.copy(
+                                surveillanceForm = it.surveillanceForm?.copy(
+                                    llinType = "", llinBrand = "", numPeopleSleptUnderLlin = 0
                                 )
-                            }
-                        } else {
-                            _state.update {
-                                it.copy(
-                                    surveillanceForm = it.surveillanceForm?.copy(
-                                        llinType = "", llinBrand = "", numPeopleSleptUnderLlin = 0
-                                    )
-                                )
-                            }
+                            )
                         }
                     }
                 }
@@ -324,7 +329,9 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.EnterNumPeopleSleptUnderLlin -> {
-                    val numPeopleSleptUnderLlin = action.count.toIntOrNull() ?: 0
+                    val oldValue = _state.value.surveillanceForm?.numPeopleSleptUnderLlin
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val numPeopleSleptUnderLlin = normalized.toIntOrNull() ?: 0
                     _state.update {
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
@@ -393,6 +400,7 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.HideCollectionMethodTooltipDialog -> {
                     _state.update { it.copy(isCollectionMethodTooltipVisible = false) }
                 }
+
                 IntakeAction.RegisterMissingCollector -> {
                     val name = _state.value.session.collectorName
                     val title = _state.value.session.collectorTitle
@@ -562,5 +570,18 @@ class IntakeViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun normalizeNumericInput(oldValue: Int?, newValue: String): String {
+        val oldValueString = (oldValue ?: 0).toString()
+        val filteredNewValue = newValue.filter { it.isDigit() }
+
+        val finalValueString = if (oldValueString == "0" && filteredNewValue.length > 1) {
+                filteredNewValue.filter { it != '0' }
+            } else {
+                filteredNewValue
+            }
+
+        return finalValueString.toIntOrNull()?.toString() ?: ""
     }
 }

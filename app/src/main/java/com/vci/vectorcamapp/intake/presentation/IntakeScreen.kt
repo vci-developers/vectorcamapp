@@ -398,17 +398,7 @@ fun IntakeScreen(
                         label = "Number of People Living in the House",
                         value = surveillanceForm.numPeopleSleptInHouse.toString(),
                         onValueChange = { newValue ->
-                            val oldValue = surveillanceForm.numPeopleSleptInHouse.toString()
-                            val filteredNewValue = newValue.filter { it.isDigit() }
-
-                            val finalValueString = if (oldValue == "0" && filteredNewValue.length > 1) {
-                                filteredNewValue.filter { it != '0' }
-                            } else {
-                                filteredNewValue
-                            }
-
-                            val normalizedFinalValue = finalValueString.toIntOrNull()?.toString() ?: "0"
-                            onAction(IntakeAction.EnterNumPeopleSleptInHouse(normalizedFinalValue))
+                            onAction(IntakeAction.EnterNumPeopleSleptInHouse(newValue))
                         },
                         placeholder = "0",
                         singleLine = true,
@@ -500,17 +490,7 @@ fun IntakeScreen(
                             label = "Months Since IRS",
                             value = (surveillanceForm.monthsSinceIrs ?: 0).toString(),
                             onValueChange = { newValue ->
-                                val oldValue = (surveillanceForm.monthsSinceIrs ?: 0).toString()
-                                val filteredNewValue = newValue.filter { it.isDigit() }
-
-                                val finalValueString = if (oldValue == "0" && filteredNewValue.length > 1) {
-                                    filteredNewValue.filter { it != '0' }
-                                } else {
-                                    filteredNewValue
-                                }
-
-                                val normalizedFinalValue = finalValueString.toIntOrNull()?.toString() ?: "0"
-                                onAction(IntakeAction.EnterMonthsSinceIrs(normalizedFinalValue))
+                                onAction(IntakeAction.EnterMonthsSinceIrs(newValue))
                             },
                             placeholder = "0",
                             singleLine = true,
@@ -519,19 +499,9 @@ fun IntakeScreen(
 
                     TextEntryField(
                         label = "Number of LLINs Available",
-                        value = (surveillanceForm.numLlinsAvailable ?: 0).toString(),
+                        value = surveillanceForm.numLlinsAvailable.toString(),
                         onValueChange = { newValue ->
-                            val oldValue = (surveillanceForm.numLlinsAvailable ?: 0).toString()
-                            val filteredNewValue = newValue.filter { it.isDigit() }
-
-                            val finalValueString = if (oldValue == "0" && filteredNewValue.length > 1) {
-                                filteredNewValue.filter { it != '0' }
-                            } else {
-                                filteredNewValue
-                            }
-
-                            val normalizedFinalValue = finalValueString.toIntOrNull()?.toString() ?: "0"
-                            onAction(IntakeAction.EnterNumLlinsAvailable(normalizedFinalValue))
+                            onAction(IntakeAction.EnterNumLlinsAvailable(newValue))
                         },
                         placeholder = "0",
                         singleLine = true,
@@ -578,17 +548,7 @@ fun IntakeScreen(
                             label = "Number of People who Slept Under LLIN",
                             value = current.toString(),
                             onValueChange = { newValue ->
-                                val oldValue = current.toString()
-                                val filteredNewValue = newValue.filter { it.isDigit() }
-
-                                val finalValueString = if (oldValue == "0" && filteredNewValue.length > 1) {
-                                    filteredNewValue.filter { it != '0' }
-                                } else {
-                                    filteredNewValue
-                                }
-
-                                val normalizedFinalValue = finalValueString.toIntOrNull()?.toString() ?: "0"
-                                onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(normalizedFinalValue))
+                                onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(newValue))
                             },
                             placeholder = "0",
                             singleLine = true,
