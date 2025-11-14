@@ -22,6 +22,7 @@ data class SessionEntity(
     val remoteId: Int? = null,
     val collectorTitle: String = "",
     val collectorName: String = "",
+    val collectorLastTrainedOn: Long = 0L,
     val collectionDate: Long = 0L,
     val collectionMethod: String = "",
     val specimenCondition: String = "",

@@ -287,6 +287,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 frontendId = localSession.localId,
                 collectorTitle = localSession.collectorTitle,
                 collectorName = localSession.collectorName,
+                collectorLastTrainedOn = localSession.collectorLastTrainedOn,
                 collectionDate = localSession.collectionDate,
                 collectionMethod = localSession.collectionMethod,
                 specimenCondition = localSession.specimenCondition,
@@ -298,7 +299,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 longitude = localSession.longitude,
                 type = localSession.type,
                 siteId = localSiteId,
-                deviceId = syncedDeviceId
+                deviceId = syncedDeviceId,
             )
 
             val remoteSessionDto = when (val remoteSessionResult =
@@ -326,6 +327,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 remoteId = remoteSessionDto.sessionId,
                 collectorTitle = remoteSessionDto.collectorTitle,
                 collectorName = remoteSessionDto.collectorName,
+                collectorLastTrainedOn = remoteSessionDto.collectorLastTrainedOn,
                 collectionDate = remoteSessionDto.collectionDate,
                 collectionMethod = remoteSessionDto.collectionMethod,
                 specimenCondition = remoteSessionDto.specimenCondition,
@@ -335,7 +337,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 notes = remoteSessionDto.notes,
                 latitude = remoteSessionDto.latitude,
                 longitude = remoteSessionDto.longitude,
-                type = remoteSessionDto.type
+                type = remoteSessionDto.type,
             )
 
             if (localSessionDto != remoteSessionDto) {

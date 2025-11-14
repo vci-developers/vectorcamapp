@@ -1,8 +1,9 @@
 package com.vci.vectorcamapp.settings.presentation.model
 
-import com.vci.vectorcamapp.settings.domain.util.SettingsValidationError
+import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 
 data class SettingsErrors(
-    val collectorName: SettingsValidationError? = null,
-    val collectorTitle: SettingsValidationError? = null
+    val collectorName: CollectorValidationError? = null,
+    val collectorTitle: CollectorValidationError? = null,
+    val collectorLastTrainedOn: CollectorValidationError? = null
 )

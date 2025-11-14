@@ -40,6 +40,7 @@ class RemoteSessionDataSource @Inject constructor(
                         frontendId = session.localId,
                         collectorTitle = session.collectorTitle,
                         collectorName = session.collectorName,
+                        collectorLastTrainedOn = session.collectorLastTrainedOn,
                         collectionDate = session.collectionDate,
                         collectionMethod = session.collectionMethod,
                         specimenCondition = session.specimenCondition,
