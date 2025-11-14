@@ -464,6 +464,6 @@ class ImagingViewModel @Inject constructor(
     }
 
     private companion object {
-        private const val MONTHLY_FURTHER_PROCESSING_CAP = 10
+        private const val MONTHLY_FURTHER_PROCESSING_CAP = 20
     }
 }
