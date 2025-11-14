@@ -4,6 +4,7 @@ import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 
 data class IntakeErrors(
     val collector: FormValidationError?,
+    val hardwareId: FormValidationError?,
     val district: FormValidationError?,
     val villageName: FormValidationError?,
     val houseNumber: FormValidationError?,

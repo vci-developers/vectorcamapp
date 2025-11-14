@@ -4,6 +4,7 @@ import javax.inject.Inject
 
 data class IntakeValidationUseCases @Inject constructor(
     val validateCollector: ValidateCollectorUseCase,
+    val validateHardwareId: ValidateHardwareIdUseCase,
     val validateDistrict: ValidateDistrictUseCase,
     val validateVillageName: ValidateVillageNameUseCase,
     val validateHouseNumber: ValidateHouseNumberUseCase,

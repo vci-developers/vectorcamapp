@@ -16,6 +16,7 @@ class CurrentSessionCacheImplementation @Inject constructor(
                 localId = session.localId,
                 siteId = siteId,
                 remoteId = session.remoteId,
+                hardwareId = session.hardwareId,
                 collectorTitle = session.collectorTitle,
                 collectorName = session.collectorName,
                 collectorLastTrainedOn = session.collectorLastTrainedOn,
@@ -41,6 +42,7 @@ class CurrentSessionCacheImplementation @Inject constructor(
             Session(
                 localId = currentSessionCacheDto.localId,
                 remoteId = currentSessionCacheDto.remoteId,
+                hardwareId = currentSessionCacheDto.hardwareId,
                 collectorTitle = currentSessionCacheDto.collectorTitle,
                 collectorName = currentSessionCacheDto.collectorName,
                 collectorLastTrainedOn = currentSessionCacheDto.collectorLastTrainedOn,

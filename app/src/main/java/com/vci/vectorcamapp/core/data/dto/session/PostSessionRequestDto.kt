@@ -10,6 +10,7 @@ import java.util.UUID
 data class PostSessionRequestDto(
     @Serializable(with = UuidSerializer::class)
     val frontendId: UUID = UUID(0, 0),
+    val hardwareId: String = "",
     val collectorTitle: String = "",
     val collectorName: String = "",
     val collectorLastTrainedOn: Long = 0L,

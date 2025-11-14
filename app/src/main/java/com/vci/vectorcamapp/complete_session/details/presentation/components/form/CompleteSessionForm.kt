@@ -57,13 +57,13 @@ fun CompleteSessionForm(
                 iconDescription = "Information"
             ) {
                 Text(
-                    text = "Collector Name: ${session.collectorName}",
+                    text = "Collector: ${session.collectorName}, ${session.collectorTitle}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
                 Text(
-                    text = "Collector Title: ${session.collectorTitle}",
+                    text = "Hardware ID: ${session.hardwareId}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )

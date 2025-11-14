@@ -325,6 +325,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             val remoteSession = Session(
                 localId = remoteSessionDto.frontendId,
                 remoteId = remoteSessionDto.sessionId,
+                hardwareId = remoteSessionDto.hardwareId,
                 collectorTitle = remoteSessionDto.collectorTitle,
                 collectorName = remoteSessionDto.collectorName,
                 collectorLastTrainedOn = remoteSessionDto.collectorLastTrainedOn,

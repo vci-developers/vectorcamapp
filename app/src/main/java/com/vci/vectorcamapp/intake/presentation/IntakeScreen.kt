@@ -221,6 +221,14 @@ fun IntakeScreen(
                     }
                 }
 
+                TextEntryField(
+                    label = "Hardware ID",
+                    value = state.session.hardwareId,
+                    onValueChange = { onAction(IntakeAction.EnterHardwareId(it)) },
+                    error = state.intakeErrors.hardwareId,
+                    singleLine = true,
+                )
+
                 DatePickerField(
                     label = "Collection Date",
                     selectedDateInMillis = state.session.collectionDate,

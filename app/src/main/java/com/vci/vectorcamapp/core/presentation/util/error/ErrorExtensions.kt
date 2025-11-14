@@ -96,6 +96,7 @@ fun Error.toString(context: Context): String {
 
         is FormValidationError -> when (this) {
             FormValidationError.BLANK_COLLECTOR -> R.string.form_validation_error_blank_collector
+            FormValidationError.BLANK_HARDWARE_ID -> R.string.form_validation_error_blank_hardware_id
             FormValidationError.BLANK_DISTRICT -> R.string.form_validation_error_blank_district
             FormValidationError.BLANK_VILLAGE_NAME -> R.string.form_validation_error_blank_village_name
             FormValidationError.BLANK_HOUSE_NUMBER -> R.string.form_validation_error_blank_house_number
