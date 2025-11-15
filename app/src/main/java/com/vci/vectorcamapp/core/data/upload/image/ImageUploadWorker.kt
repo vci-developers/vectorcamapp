@@ -331,6 +331,12 @@ class ImageUploadWorker @AssistedInject constructor(
 
 
         val finalStatus = if (uploadResult is DomainResult.Success) {
+            UploadStatus.COMPLETED
+        } else {
+            UploadStatus.FAILED
+        }
+
+        if (uploadResult is DomainResult.Success) {
             try {
                 Log.d(
                     "ImageUploadWorker",
@@ -344,10 +350,8 @@ class ImageUploadWorker @AssistedInject constructor(
                     e
                 )
             }
-            UploadStatus.COMPLETED
-        } else {
-            UploadStatus.FAILED
         }
+
         specimenImageRepository.updateSpecimenImage(
             specimenImage = task.image.copy(imageUploadStatus = finalStatus),
             specimenId = task.specimen.id,
