@@ -327,7 +327,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 remoteId = remoteSessionDto.sessionId,
                 collectorTitle = remoteSessionDto.collectorTitle,
                 collectorName = remoteSessionDto.collectorName,
-                collectorLastTrainedOn = remoteSessionDto.collectorLastTrainedOn,
+                collectorLastTrainedOn = remoteSessionDto.collectorLastTrainedOn ?: 0L,
                 collectionDate = remoteSessionDto.collectionDate,
                 collectionMethod = remoteSessionDto.collectionMethod,
                 specimenCondition = remoteSessionDto.specimenCondition,

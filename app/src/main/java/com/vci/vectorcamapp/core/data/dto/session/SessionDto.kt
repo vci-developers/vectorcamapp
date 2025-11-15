@@ -13,7 +13,7 @@ data class SessionDto(
     val frontendId: UUID = UUID(0, 0),
     val collectorTitle: String = "",
     val collectorName: String = "",
-    val collectorLastTrainedOn: Long = 0L,
+    val collectorLastTrainedOn: Long? = 0L,
     val collectionDate: Long = 0L,
     val collectionMethod: String = "",
     val specimenCondition: String = "",
