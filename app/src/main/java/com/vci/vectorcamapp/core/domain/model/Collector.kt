@@ -5,5 +5,6 @@ import java.util.UUID
 data class Collector(
     val id: UUID,
     val name: String,
-    val title: String
+    val title: String,
+    val lastTrainedOn: Long,
 )

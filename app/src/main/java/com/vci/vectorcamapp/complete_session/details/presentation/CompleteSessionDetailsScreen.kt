@@ -37,7 +37,7 @@ fun CompleteSessionDetailsScreen(
                 contentDescription = "Back Button",
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
-                    .size(MaterialTheme.dimensions.iconSizeMedium)
+                    .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
                         onAction(CompleteSessionDetailsAction.ReturnToCompleteSessionListScreen)
                     })
@@ -67,7 +67,10 @@ fun CompleteSessionDetailsScreen(
                     onUpdateSearchQuery = { searchQuery ->
                         onAction(CompleteSessionDetailsAction.UpdateSearchQuery(searchQuery))
                     },
-                    modifier = modifier
+                    modifier = modifier,
+                    isSearchTooltipVisible = state.isSearchTooltipVisible,
+                    onShowSearchTooltip = { onAction(CompleteSessionDetailsAction.ShowSearchTooltipDialog) },
+                    onDismissSearchTooltip = { onAction(CompleteSessionDetailsAction.HideSearchTooltipDialog) }
                 )
             }
         }

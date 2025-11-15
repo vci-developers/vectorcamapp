@@ -5,14 +5,8 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -33,6 +26,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +37,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -50,11 +44,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.compose.AsyncImage
@@ -64,10 +56,11 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
+import com.vci.vectorcamapp.imaging.presentation.components.icon.AnimatedArrowIcon
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
-import com.vci.vectorcamapp.imaging.presentation.components.specimen.SpecimenImageOverlay
 import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreview
 import com.vci.vectorcamapp.imaging.presentation.components.specimen.CapturedSpecimenTile
+import com.vci.vectorcamapp.imaging.presentation.components.specimen.SpecimenImageOverlay
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
@@ -78,7 +71,6 @@ fun ImagingScreen(
     state: ImagingState, onAction: (ImagingAction) -> Unit, modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val density = LocalDensity.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val scope = rememberCoroutineScope()
@@ -112,16 +104,6 @@ fun ImagingScreen(
     ) { page ->
         when {
             page < state.specimensWithImagesAndInferenceResults.size -> {
-                val infiniteTransition = rememberInfiniteTransition(label = "arrow_animation")
-                val arrowOffsetX by infiniteTransition.animateFloat(
-                    initialValue = with(density) { MaterialTheme.dimensions.spacingExtraSmall.toPx() },
-                    targetValue = with(density) { -(MaterialTheme.dimensions.spacingExtraSmall.toPx()) },
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(durationMillis = 800), repeatMode = RepeatMode.Reverse
-                    ),
-                    label = "arrow_offset"
-                )
-
                 Column(
                     verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxSize()
                 ) {
@@ -132,25 +114,11 @@ fun ImagingScreen(
                             .padding(vertical = MaterialTheme.dimensions.paddingMedium)
                             .fillMaxWidth()
                     ) {
-                        if (page > 0) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_arrow_left),
-                                contentDescription = "Previous Icon",
-                                tint = MaterialTheme.colors.icon,
-                                modifier = Modifier
-                                    .offset { IntOffset((-arrowOffsetX).toInt(), 0) }
-                                    .size(MaterialTheme.dimensions.iconSizeLarge)
-                                    .clickable {
-                                        scope.launch {
-                                            pagerState.animateScrollToPage(page - 1)
-                                        }
-                                    })
-                        } else {
-                            EmptySpace(
-                                width = MaterialTheme.dimensions.iconSizeLarge,
-                                height = MaterialTheme.dimensions.iconSizeLarge
-                            )
-                        }
+                        AnimatedArrowIcon(
+                            isLeft = true,
+                            enabled = page > 0,
+                            onClick = { scope.launch { pagerState.animateScrollToPage(page - 1) } }
+                        )
 
                         Box(
                             modifier = Modifier.background(
@@ -166,18 +134,11 @@ fun ImagingScreen(
                             )
                         }
 
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_right),
-                            contentDescription = "Next Icon",
-                            tint = MaterialTheme.colors.icon,
-                            modifier = Modifier
-                                .offset { IntOffset(arrowOffsetX.toInt(), 0) }
-                                .size(MaterialTheme.dimensions.iconSizeLarge)
-                                .clickable {
-                                    scope.launch {
-                                        pagerState.animateScrollToPage(page + 1)
-                                    }
-                                })
+                        AnimatedArrowIcon(
+                            isLeft = false,
+                            enabled = true,
+                            onClick = { scope.launch { pagerState.animateScrollToPage(page + 1) } }
+                        )
                     }
 
                     LazyColumn(modifier = Modifier.fillMaxHeight()) {
@@ -223,7 +184,7 @@ fun ImagingScreen(
                                         painter = painterResource(id = R.drawable.ic_close),
                                         contentDescription = "Close dialog",
                                         tint = MaterialTheme.colors.icon,
-                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
                                     )
                                 }
                             }
@@ -328,6 +289,77 @@ fun ImagingScreen(
                     )
                 }
 
+                if (state.currentSpecimen.shouldProcessFurther) {
+                    AlertDialog(
+                        onDismissRequest = { },
+                        title = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ){
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_info),
+                                    contentDescription = "Info Icon",
+                                    tint = MaterialTheme.colors.icon,
+                                    modifier = Modifier
+                                        .size(MaterialTheme.dimensions.iconSizeLarge)
+                                )
+                                Spacer(modifier.size(MaterialTheme.dimensions.spacingMedium))
+                                Text(
+                                    text = "Specimen Selected for Further Processing",
+                                    color = MaterialTheme.colors.icon
+                                )
+                            }
+                        },
+                        text = {
+                            Column {
+                                Text(
+                                    text = "Please package the specimen separately for further laboratory processing before continuing.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textSecondary
+                                )
+
+                                Spacer(modifier = Modifier.size(MaterialTheme.dimensions.paddingMedium))
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    Checkbox(
+                                        checked = state.hasConfirmedPackaging,
+                                        onCheckedChange = { onAction(ImagingAction.TogglePackagingConfirmation) },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = MaterialTheme.colors.successConfirm
+                                        )
+                                    )
+                                    Text(
+                                        text = "I have packaged this specimen for further processing",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.textPrimary,
+                                        modifier = Modifier.padding(start = MaterialTheme.dimensions.paddingSmall)
+                                    )
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = { onAction(ImagingAction.SaveImageToSession) },
+                                enabled = state.hasConfirmedPackaging,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colors.successConfirm,
+                                    disabledContainerColor = MaterialTheme.colors.textSecondary
+                                )
+                            ) {
+                                Text(
+                                    text = "Continue",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.buttonText
+                                )
+                            }
+                        }
+                    )
+                }
+
                 Column(
                     modifier = modifier.fillMaxSize()
                 ) {
@@ -356,14 +388,15 @@ fun ImagingScreen(
                                         painter = painterResource(id = R.drawable.ic_cancel),
                                         contentDescription = "Delete",
                                         tint = MaterialTheme.colors.buttonText,
-                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                                     )
                                 }
                             }
                         } else {
-                            EmptySpace(
-                                width = MaterialTheme.dimensions.iconSizeLarge,
-                                height = MaterialTheme.dimensions.iconSizeLarge
+                            AnimatedArrowIcon(
+                                isLeft = true,
+                                enabled = page > 0,
+                                onClick = { scope.launch { pagerState.animateScrollToPage(page - 1) } }
                             )
                         }
 
@@ -384,8 +417,8 @@ fun ImagingScreen(
 
                         if (state.currentImageBytes != null) {
                             EmptySpace(
-                                width = MaterialTheme.dimensions.iconSizeLarge,
-                                height = MaterialTheme.dimensions.iconSizeLarge
+                                width = MaterialTheme.dimensions.iconSizeExtraLarge,
+                                height = MaterialTheme.dimensions.iconSizeExtraLarge
                             )
                         } else {
                             Box(
@@ -404,7 +437,7 @@ fun ImagingScreen(
                                         painter = painterResource(id = R.drawable.ic_exit),
                                         contentDescription = "Exit",
                                         tint = MaterialTheme.colors.buttonText,
-                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                                     )
                                 }
                             }
@@ -462,7 +495,10 @@ fun ImagingScreen(
                                     label = "Specimen ID",
                                     value = state.currentSpecimen.id, onValueChange = {
                                         onAction(ImagingAction.CorrectSpecimenId(it))
-                                    }, singleLine = true
+                                    },
+                                    singleLine = true,
+                                    error = state.specimenIdError,
+                                    showErrorMessage = false,
                                 )
 
                                 Row(

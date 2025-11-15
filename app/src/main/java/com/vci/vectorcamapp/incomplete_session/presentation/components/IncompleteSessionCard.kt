@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -19,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
@@ -26,6 +25,8 @@ import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.presentation.components.gestures.SwipeToReveal
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
+import com.vci.vectorcamapp.incomplete_session.presentation.util.IncompleteSessionTestTags
+import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
@@ -38,6 +39,8 @@ fun IncompleteSessionCard(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     val titleFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
     val detailFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
@@ -65,9 +68,10 @@ fun IncompleteSessionCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Incomplete Session on\n${titleFormatter.format(sessionAndSite.session.createdAt)}",
+                            text = "Session in Progress from\n${titleFormatter.format(sessionAndSite.session.createdAt)}",
                             style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colors.textPrimary
+                            color = MaterialTheme.colors.textPrimary,
+                            modifier = Modifier.testTag(IncompleteSessionTestTags.CARD_TITLE)
                         )
 
                         Box(
@@ -81,14 +85,15 @@ fun IncompleteSessionCard(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrow_right),
-                                contentDescription = "Arrow Right",
+                                contentDescription = "Resume",
                                 tint = MaterialTheme.colors.icon,
                                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                .testTag(IncompleteSessionTestTags.CARD_RESUME_ICON)
                             )
                         }
                     }
 
-                    InfoPill(text = "Session Type: ${sessionAndSite.session.type}", color = MaterialTheme.colors.info)
+                    InfoPill(text = "Session Type: ${sessionAndSite.session.type.displayText(context)}", color = MaterialTheme.colors.info, modifier = Modifier.testTag(IncompleteSessionTestTags.CARD_TYPE_PILL))
                 }
 
                 Column(
@@ -143,7 +148,8 @@ fun IncompleteSessionCard(
                     Text(
                         text = "Created At: ${detailFormatter.format(sessionAndSite.session.createdAt)}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colors.textSecondary
+                        color = MaterialTheme.colors.textSecondary,
+                        modifier = Modifier.testTag(IncompleteSessionTestTags.CARD_CREATED_TEXT)
                     )
                 }
             }

@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.intake.presentation
 
 import com.vci.vectorcamapp.core.domain.model.Collector
-import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
@@ -14,6 +13,7 @@ import java.util.UUID
 data class IntakeState(
     val isLoading: Boolean = false,
     val allCollectors: List<Collector> = emptyList(),
+    val isCurrentCollectorMissing: Boolean = false,
     val locationError: IntakeError? = null,
     val allSitesInProgram: List<Site> = emptyList(),
     val selectedDistrict: String = "",
@@ -24,6 +24,7 @@ data class IntakeState(
         remoteId = null,
         collectorTitle = "",
         collectorName = "",
+        collectorLastTrainedOn = 0L,
         collectionDate = System.currentTimeMillis(),
         collectionMethod = "",
         specimenCondition = "",
@@ -33,7 +34,7 @@ data class IntakeState(
         notes = "",
         latitude = null,
         longitude = null,
-        type = SessionType.SURVEILLANCE
+        type = SessionType.SURVEILLANCE,
     ),
     val surveillanceForm: SurveillanceForm? = null,
     val intakeErrors: IntakeErrors = IntakeErrors(
@@ -46,5 +47,6 @@ data class IntakeState(
         collectionDate = null,
         collectionMethod = null,
         specimenCondition = null,
-    )
+    ),
+    val isCollectionMethodTooltipVisible: Boolean = false,
 )

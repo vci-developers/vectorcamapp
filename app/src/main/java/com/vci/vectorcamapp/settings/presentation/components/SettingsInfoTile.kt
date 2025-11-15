@@ -76,7 +76,7 @@ fun SettingsInfoTile(
                         contentDescription = if (isExpanded) "Collapse" else "Expand",
                         tint = MaterialTheme.colors.icon,
                         modifier = Modifier
-                            .size(MaterialTheme.dimensions.iconSizeMedium)
+                            .size(MaterialTheme.dimensions.iconSizeLarge)
                             .rotate(chevronRotation)
                     )
                 }

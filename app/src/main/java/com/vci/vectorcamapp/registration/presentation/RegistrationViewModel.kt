@@ -4,13 +4,13 @@ import android.os.Build
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.registration.domain.use_cases.RegistrationValidationUseCases
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.registration.logging.RegistrationSentryLogger
 import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
@@ -31,7 +31,7 @@ class RegistrationViewModel @Inject constructor(
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
     private val collectorRepository: CollectorRepository,
-    private val registrationValidationUseCases: RegistrationValidationUseCases,
+    private val collectorValidationUseCases: CollectorValidationUseCases,
     programRepository: ProgramRepository
 ) : CoreViewModel() {
 
@@ -79,23 +79,35 @@ class RegistrationViewModel @Inject constructor(
                     }
                 }
 
+                is RegistrationAction.EnterCollectorLastTrainedOn -> {
+                    _state.update {
+                        it.copy(
+                            collector = it.collector.copy(
+                                lastTrainedOn = action.lastTrainedOn
+                            )
+                        )
+                    }
+                }
+
                 RegistrationAction.ConfirmRegistration -> {
                     val selectedProgram = state.value.selectedProgram
 
                     val collector = state.value.collector
-                    val nameValidationResult = registrationValidationUseCases.validateCollectorName(collector.name)
-                    val titleValidationResult = registrationValidationUseCases.validateCollectorTitle(collector.title)
+                    val collectorNameValidationResult = collectorValidationUseCases.validateCollectorName(collector.name)
+                    val collectorTitleValidationResult = collectorValidationUseCases.validateCollectorTitle(collector.title)
+                    val collectorLastTrainedOnValidationResult = collectorValidationUseCases.validateCollectorLastTrainedOn(collector.lastTrainedOn)
 
                     _state.update { currentState ->
                         currentState.copy(
                             registrationErrors = RegistrationErrors(
-                                collectorName = nameValidationResult.errorOrNull(),
-                                collectorTitle = titleValidationResult.errorOrNull(),
+                                collectorName = collectorNameValidationResult.errorOrNull(),
+                                collectorTitle = collectorTitleValidationResult.errorOrNull(),
+                                collectorLastTrainedOn = collectorLastTrainedOnValidationResult.errorOrNull()
                             )
                         )
                     }
 
-                    val hasError = listOf(nameValidationResult, titleValidationResult).any { it is Result.Error }
+                    val hasError = listOf(collectorNameValidationResult, collectorTitleValidationResult, collectorLastTrainedOnValidationResult).any { it is Result.Error }
                     if (hasError) return@launch
 
                     if (selectedProgram == null) {

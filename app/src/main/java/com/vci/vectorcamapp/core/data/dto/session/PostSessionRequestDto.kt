@@ -12,6 +12,7 @@ data class PostSessionRequestDto(
     val frontendId: UUID = UUID(0, 0),
     val collectorTitle: String = "",
     val collectorName: String = "",
+    val collectorLastTrainedOn: Long = 0L,
     val collectionDate: Long = 0L,
     val collectionMethod: String = "",
     val specimenCondition: String = "",

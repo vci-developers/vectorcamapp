@@ -77,7 +77,7 @@
     <string name="imaging_error_processing_error">Could not process the photo. Please try again.</string>
 
     <!-- Imaging error: Invalid specimen ID -->
-    <string name="imaging_error_invalid_specimen_id">This specimen ID does not match the expected pattern.</string>
+    <string name="imaging_error_invalid_specimen_id">Specimen ID must be 3 letters followed by 3 numbers (e.g., ABC123).</string>
 
     <!-- Imaging error: No specimen found -->
     <string name="imaging_error_no_specimen_found">No specimen found in the photo. Please try again with a clearer image.</string>
@@ -154,11 +154,14 @@
     <!-- Registration error: Unknown error -->
     <string name="registration_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
-    <!-- Registration validation error: Blank collector title -->
-    <string name="registration_validation_error_blank_collector_title">Collector title is required.</string>
+    <!-- Collector validation error: Blank collector title -->
+    <string name="collector_validation_error_blank_collector_title">Collector title is required.</string>
 
-    <!-- Registration validation error: Blank collector name -->
-    <string name="registration_validation_error_blank_collector_name">Collector name is required.</string>
+    <!-- Collector validation error: Blank collector name -->
+    <string name="collector_validation_error_blank_collector_name">Collector name is required.</string>
+
+    <!-- Collector validation error: Invalid collector last trained on date -->
+    <string name="collector_validation_error_invalid_collector_last_trained_on">Collector last trained on date is invalid.</string>
 
     <!-- Incomplete session error: Session not found -->
     <string name="incomplete_session_error_session_not_found">Session not found. Please try again.</string>
@@ -189,12 +192,6 @@
 
     <!-- Settings error: Collector deletion failed -->
     <string name="settings_error_collector_deletion_failed">Could not delete collector. Please try again.</string>
-
-    <!-- Settings validation error: Blank collector title -->
-    <string name="settings_validation_error_blank_collector_title">Collector title is required.</string>
-
-    <!-- Settings validation error: Blank collector name -->
-    <string name="settings_validation_error_blank_collector_name">Collector name is required.</string>
 
     <!-- Image Upload Status: Upload completed -->
     <string name="upload_status_completed">Completed</string>

@@ -29,6 +29,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
+import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -88,6 +89,16 @@ fun CapturedSpecimenTile(
                         )
                     }
                 }
+
+                if (specimen.shouldProcessFurther) {
+                    InfoPill(
+                        text = "Pack this specimen for further processing",
+                        color = MaterialTheme.colors.warning,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(MaterialTheme.dimensions.paddingSmall)
+                    )
+                }
             }
 
             Column(
@@ -109,7 +120,7 @@ fun CapturedSpecimenTile(
                         painter = painterResource(R.drawable.ic_specimen),
                         contentDescription = "Mosquito",
                         tint = MaterialTheme.colors.icon,
-                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                     )
 
                     Text(

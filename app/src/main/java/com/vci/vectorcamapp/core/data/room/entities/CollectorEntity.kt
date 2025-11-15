@@ -8,5 +8,6 @@ import java.util.UUID
 data class CollectorEntity(
     @PrimaryKey val id: UUID = UUID.randomUUID(),
     val name: String = "",
-    val title: String = ""
+    val title: String = "",
+    val lastTrainedOn: Long = 0L,
 )

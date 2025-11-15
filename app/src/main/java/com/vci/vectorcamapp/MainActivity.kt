@@ -23,7 +23,7 @@ import com.vci.vectorcamapp.main.presentation.MainAction
 import com.vci.vectorcamapp.main.presentation.MainEvent
 import com.vci.vectorcamapp.main.presentation.MainViewModel
 import com.vci.vectorcamapp.main.presentation.SplashScreen
-import com.vci.vectorcamapp.main.presentation.components.PermissionAndGpsPrompt
+import com.vci.vectorcamapp.main.presentation.PermissionScreen
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
                     }
                     else -> {
                         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                            PermissionAndGpsPrompt(
+                            PermissionScreen(
                                 state = state,
                                 onAction = viewModel::onAction,
                                 modifier = Modifier

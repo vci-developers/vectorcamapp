@@ -14,6 +14,7 @@ data class Dimensions(
     val paddingMedium: Dp = 16.dp,
     val paddingLarge: Dp = 24.dp,
     val paddingExtraLarge: Dp = 32.dp,
+    val paddingExtraExtraLarge: Dp = 48.dp,
     val spacingExtraExtraSmall: Dp = 2.dp,
     val spacingExtraSmall: Dp = 8.dp,
     val spacingSmall: Dp = 12.dp,
@@ -32,12 +33,15 @@ data class Dimensions(
     val componentHeightLarge: Dp = 60.dp,
     val componentHeightExtraLarge: Dp = 72.dp,
     val componentHeightExtraExtraLarge: Dp = 84.dp,
+    val componentHeightExtraExtraExtraLarge: Dp = 120.dp,
 
     // Icon Sizes
     val iconSizeExtraSmall: Dp = 14.dp,
     val iconSizeSmall: Dp = 16.dp,
-    val iconSizeMedium: Dp = 24.dp,
-    val iconSizeLarge: Dp = 32.dp,
+    val iconSizeMedium: Dp = 18.dp,
+    val iconSizeLarge: Dp = 24.dp,
+    val iconSizeExtraLarge: Dp = 32.dp,
+    val iconSizeExtraExtraLarge: Dp = 64.dp,
 
     // Corner Radii
     val cornerRadiusSmall: Dp = 8.dp,

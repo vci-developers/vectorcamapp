@@ -33,6 +33,8 @@ fun TextEntryField(
     placeholder: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    maxCharacters: Int = 200,
+    showErrorMessage: Boolean = true,
 ) {
     val context = LocalContext.current
 
@@ -50,7 +52,14 @@ fun TextEntryField(
 
         OutlinedTextField(
             value = value,
-            onValueChange = onValueChange,
+            onValueChange = { newValue ->
+                val hasValidCharacters = newValue.all { character ->
+                    character.code <= 255 || character.isWhitespace()
+                }
+                if (hasValidCharacters && newValue.length <= maxCharacters) {
+                    onValueChange(newValue)
+                }
+            },
             isError = error != null,
             singleLine = singleLine,
             keyboardOptions = keyboardOptions,
@@ -65,6 +74,12 @@ fun TextEntryField(
                 }
             },
             maxLines = 8,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                color = if (error != null)
+                    MaterialTheme.colors.error
+                else
+                    MaterialTheme.colors.textPrimary
+            ),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colors.transparent,
                 unfocusedBorderColor = MaterialTheme.colors.transparent,
@@ -89,7 +104,7 @@ fun TextEntryField(
                 .heightIn(min = MaterialTheme.dimensions.componentHeightMedium)
         )
 
-        if (error != null) {
+        if (error != null && showErrorMessage) {
             Text(
                 text = error.toString(context),
                 style = MaterialTheme.typography.bodySmall,
