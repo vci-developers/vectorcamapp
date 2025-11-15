@@ -6,5 +6,6 @@ sealed interface RegistrationAction {
     data class SelectProgram(val program: Program) : RegistrationAction
     data class EnterCollectorName(val text: String) : RegistrationAction
     data class EnterCollectorTitle(val text: String) : RegistrationAction
+    data class EnterCollectorLastTrainedOn(val lastTrainedOn: Long) : RegistrationAction
     data object ConfirmRegistration : RegistrationAction
 }

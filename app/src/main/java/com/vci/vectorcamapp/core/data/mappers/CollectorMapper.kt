@@ -8,6 +8,7 @@ fun CollectorEntity.toDomain(): Collector {
         id = this.id,
         name = this.name,
         title = this.title,
+        lastTrainedOn = this.lastTrainedOn
     )
 }
 
@@ -16,5 +17,6 @@ fun Collector.toEntity(): CollectorEntity {
         id = this.id,
         name = this.name,
         title = this.title,
+        lastTrainedOn = this.lastTrainedOn
     )
 }

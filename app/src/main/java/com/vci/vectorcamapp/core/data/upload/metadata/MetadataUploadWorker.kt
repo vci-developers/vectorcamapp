@@ -37,6 +37,7 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
+import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -133,6 +134,8 @@ class MetadataUploadWorker @AssistedInject constructor(
             val localSpecimensWithImagesAndInferenceResults =
                 specimenRepository.getSpecimenImagesAndInferenceResultsBySession(syncedSession.localId)
             val totalSpecimens = localSpecimensWithImagesAndInferenceResults.size
+            var hasFailure = false
+
             localSpecimensWithImagesAndInferenceResults.forEachIndexed { specimenIndex, specimenWithImagesAndInferenceResults ->
                 val totalImages =
                     specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
@@ -142,30 +145,50 @@ class MetadataUploadWorker @AssistedInject constructor(
                     syncedSession.remoteId
                 )) {
                     is DomainResult.Success -> syncSpecimenResult.data
-                    is DomainResult.Error -> return retryOrFailure(
-                        syncSpecimenResult.error.toString(context)
-                    )
+                    is DomainResult.Error -> {
+                        hasFailure = true
+                        specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
+                            if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
+                                specimenImageRepository.updateSpecimenImage(
+                                    specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
+                                    specimenWithImagesAndInferenceResults.specimen.id,
+                                    syncedSession.localId
+                                )
+                            }
+                        }
+                        return@forEachIndexed
+                    }
                 }
 
                 specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEachIndexed { imageIndex, (specimenImage, inferenceResult) ->
                     if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
                         syncSpecimenImageAndInferenceResultIfNeeded(
                             specimenImage, inferenceResult, syncedSpecimen, syncedSession.localId
-                        ).onError { error ->
-                            return retryOrFailure(error.toString(context))
+                        ).onSuccess {
+                            showSpecimenProgressNotification(
+                                specimenId = syncedSpecimen.id,
+                                currentSpecimenIndex = specimenIndex,
+                                totalSpecimens = totalSpecimens,
+                                currentImageIndex = imageIndex,
+                                totalImagesForSpecimen = totalImages
+                            )
+                        }.onError {
+                            hasFailure = true
+                            specimenImageRepository.updateSpecimenImage(
+                                specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
+                                syncedSpecimen.id,
+                                syncedSession.localId
+                            )
                         }
                     }
-                    showSpecimenProgressNotification(
-                        specimenId = syncedSpecimen.id,
-                        currentSpecimenIndex = specimenIndex,
-                        totalSpecimens = totalSpecimens,
-                        currentImageIndex = imageIndex,
-                        totalImagesForSpecimen = totalImages
-                    )
                 }
             }
 
-            return WorkerResult.success()
+            return if (hasFailure) {
+                retryOrFailure("Upload failed for one or more images.")
+            } else {
+                WorkerResult.success()
+            }
         } catch (e: IOException) {
             return retryOrFailure("Lost internet connection while uploading.")
         } catch (e: Exception) {
@@ -264,6 +287,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 frontendId = localSession.localId,
                 collectorTitle = localSession.collectorTitle,
                 collectorName = localSession.collectorName,
+                collectorLastTrainedOn = localSession.collectorLastTrainedOn,
                 collectionDate = localSession.collectionDate,
                 collectionMethod = localSession.collectionMethod,
                 specimenCondition = localSession.specimenCondition,
@@ -275,7 +299,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 longitude = localSession.longitude,
                 type = localSession.type,
                 siteId = localSiteId,
-                deviceId = syncedDeviceId
+                deviceId = syncedDeviceId,
             )
 
             val remoteSessionDto = when (val remoteSessionResult =
@@ -303,6 +327,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 remoteId = remoteSessionDto.sessionId,
                 collectorTitle = remoteSessionDto.collectorTitle,
                 collectorName = remoteSessionDto.collectorName,
+                collectorLastTrainedOn = remoteSessionDto.collectorLastTrainedOn,
                 collectionDate = remoteSessionDto.collectionDate,
                 collectionMethod = remoteSessionDto.collectionMethod,
                 specimenCondition = remoteSessionDto.specimenCondition,
@@ -312,7 +337,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 notes = remoteSessionDto.notes,
                 latitude = remoteSessionDto.latitude,
                 longitude = remoteSessionDto.longitude,
-                type = remoteSessionDto.type
+                type = remoteSessionDto.type,
             )
 
             if (localSessionDto != remoteSessionDto) {
@@ -436,7 +461,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
 
             val remoteSpecimen = Specimen(
-                id = remoteSpecimenDto.specimenId, remoteId = remoteSpecimenDto.id
+                id = remoteSpecimenDto.specimenId, remoteId = remoteSpecimenDto.id, shouldProcessFurther = remoteSpecimenDto.shouldProcessFurther
             )
 
             if (remoteSpecimenDto != localSpecimenDto) {
@@ -492,7 +517,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                         sexInferenceDuration = it.sexInferenceDuration,
                         abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration
                     )
-                })
+                }
+            )
 
             if (syncedSpecimen.remoteId == null) {
                 return DomainResult.Error(NetworkError.CLIENT_ERROR)
@@ -517,27 +543,13 @@ class MetadataUploadWorker @AssistedInject constructor(
                                     postSpecimenImageResult.data.image
                                 }
 
-                                is DomainResult.Error -> {
-                                    specimenImageRepository.updateSpecimenImage(
-                                        localSpecimenImage.copy(
-                                            metadataUploadStatus = UploadStatus.FAILED
-                                        ), syncedSpecimen.id, syncedLocalSessionId
-                                    )
-                                    return DomainResult.Error(
-                                        postSpecimenImageResult.error
-                                    )
-                                }
+                                is DomainResult.Error -> return DomainResult.Error(
+                                    postSpecimenImageResult.error
+                                )
                             }
                         }
 
-                        else -> {
-                            specimenImageRepository.updateSpecimenImage(
-                                localSpecimenImage.copy(
-                                    metadataUploadStatus = UploadStatus.FAILED
-                                ), syncedSpecimen.id, syncedLocalSessionId
-                            )
-                            return DomainResult.Error(remoteSpecimenImageResult.error)
-                        }
+                        else -> return DomainResult.Error(remoteSpecimenImageResult.error)
                     }
                 }
             }
@@ -604,18 +616,8 @@ class MetadataUploadWorker @AssistedInject constructor(
             )
             DomainResult.Success(Unit)
         } catch (e: IOException) {
-            specimenImageRepository.updateSpecimenImage(
-                localSpecimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
-                syncedSpecimen.id,
-                syncedLocalSessionId
-            )
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
-            specimenImageRepository.updateSpecimenImage(
-                localSpecimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
-                syncedSpecimen.id,
-                syncedLocalSessionId
-            )
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }

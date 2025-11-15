@@ -11,7 +11,8 @@ data class RegistrationState(
     val collector: Collector = Collector(
         id = UUID.randomUUID(),
         name = "",
-        title = ""
+        title = "",
+        lastTrainedOn = System.currentTimeMillis()
     ),
     val registrationErrors: RegistrationErrors = RegistrationErrors(
         collectorName = null,

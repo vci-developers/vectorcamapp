@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.imaging.domain.model.LiveFrameProcessingResult
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 
 interface ImagingWorkflow {
+    val specimenFurtherProcessingProbability: Float
     suspend fun processLiveFrame(bitmap: Bitmap): LiveFrameProcessingResult
     suspend fun processCapturedFrame(bitmap: Bitmap): Result<CapturedFrameProcessingResult, ImagingError>
     fun close()

@@ -85,6 +85,12 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                 is CompleteSessionDetailsAction.UpdateSearchQuery -> {
                     _state.update { it.copy(searchQuery = action.searchQuery) }
                 }
+                CompleteSessionDetailsAction.ShowSearchTooltipDialog -> {
+                    _state.update { it.copy(isSearchTooltipVisible = true) }
+                }
+                CompleteSessionDetailsAction.HideSearchTooltipDialog -> {
+                    _state.update { it.copy(isSearchTooltipVisible = false) }
+                }
             }
         }
     }

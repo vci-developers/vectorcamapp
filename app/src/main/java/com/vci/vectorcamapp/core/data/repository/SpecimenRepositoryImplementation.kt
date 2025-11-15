@@ -106,4 +106,11 @@ class SpecimenRepositoryImplementation @Inject constructor(
             }
         }
     }
+
+    override suspend fun countSelectedForFurtherProcessingBetweenSessionCollectionDates(
+        startDate: Long,
+        endDate: Long
+    ): Int {
+        return specimenDao.countSelectedSpecimensForFurtherProcessingBetweenSessionCollectionDates(startDate, endDate)
+    }
 }

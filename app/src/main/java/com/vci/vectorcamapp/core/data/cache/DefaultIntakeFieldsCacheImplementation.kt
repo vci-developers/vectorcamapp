@@ -12,6 +12,7 @@
         override suspend fun saveDefaultIntakeFields(
             collectorName: String,
             collectorTitle: String,
+            collectorLastTrainedOn: Long,
             district: String,
             villageName: String,
             houseNumber: String
@@ -20,6 +21,7 @@
                 DefaultIntakeFieldsCacheDto(
                     collectorName = collectorName,
                     collectorTitle = collectorTitle,
+                    collectorLastTrainedOn = collectorLastTrainedOn,
                     district = district,
                     villageName = villageName,
                     houseNumber = houseNumber

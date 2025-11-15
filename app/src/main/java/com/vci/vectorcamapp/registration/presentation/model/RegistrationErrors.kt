@@ -1,8 +1,9 @@
 package com.vci.vectorcamapp.registration.presentation.model
 
-import com.vci.vectorcamapp.registration.domain.util.RegistrationValidationError
+import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 
 data class RegistrationErrors(
-    val collectorName: RegistrationValidationError? = null,
-    val collectorTitle: RegistrationValidationError? = null
+    val collectorName: CollectorValidationError? = null,
+    val collectorTitle: CollectorValidationError? = null,
+    val collectorLastTrainedOn: CollectorValidationError? = null
 )

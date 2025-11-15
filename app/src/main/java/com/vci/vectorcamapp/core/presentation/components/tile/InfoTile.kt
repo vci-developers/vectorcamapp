@@ -8,13 +8,17 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
-fun InfoTile(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-
+fun InfoTile(
+    modifier: Modifier = Modifier,
+    hue: Color = MaterialTheme.colors.cardGlow,
+    content: @Composable () -> Unit
+) {
     Card(
         border = CardDefaults.outlinedCardBorder(),
         shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium),
@@ -25,7 +29,7 @@ fun InfoTile(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
                 vertical = MaterialTheme.dimensions.paddingSmall
             )
             .customShadow(
-                color = MaterialTheme.colors.cardGlow.copy(alpha = 0.2f),
+                color = hue.copy(alpha = 0.25f),
                 offsetX = MaterialTheme.dimensions.shadowOffsetSmall,
                 offsetY = MaterialTheme.dimensions.shadowOffsetSmall,
                 cornerRadius = MaterialTheme.dimensions.cornerRadiusMedium,
