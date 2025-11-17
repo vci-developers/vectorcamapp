@@ -147,10 +147,9 @@ class IntakeViewModel @Inject constructor(
 
                     if (hasError) {
                         emitError(IntakeError.FORM_INVALID)
-                        return@launch
                     }
                     else if (state.value.isCurrentCollectorMissing) {
-                        emitError(IntakeError.COLLECTOR_SAVE_FAILED)
+                        emitError(IntakeError.MISSING_COLLECTOR)
                     }
                     else {
                         val selectedSite = _state.value.allSitesInProgram.find {
