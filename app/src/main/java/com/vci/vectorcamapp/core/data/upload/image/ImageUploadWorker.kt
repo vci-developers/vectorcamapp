@@ -20,6 +20,7 @@ import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
+import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -50,7 +51,8 @@ class ImageUploadWorker @AssistedInject constructor(
     private val specimenRepository: SpecimenRepository,
     private val specimenImageRepository: SpecimenImageRepository,
     private val sessionRepository: SessionRepository,
-    private val tusClient: TusClient
+    private val tusClient: TusClient,
+    private val workRepository: WorkManagerRepository
 ) : CoroutineWorker(context, workerParams) {
 
     private data class ImageUploadTask(val specimen: Specimen, val image: SpecimenImage)
@@ -86,6 +88,7 @@ class ImageUploadWorker @AssistedInject constructor(
 
     override suspend fun doWork(): WorkerResult {
         val sessionIdStr = inputData.getString(KEY_SESSION_ID)
+        val siteId = inputData.getInt("site_id", -1)
         if (sessionIdStr == null) {
             Log.e("ImageUploadWorker", "Session ID missing from worker input data.")
             return WorkerResult.failure()
@@ -134,16 +137,7 @@ class ImageUploadWorker @AssistedInject constructor(
             notificationCurrentImageIndex = index + 1
 
             if (task.image.remoteId == null) {
-                Log.e(
-                    "ImageUploadWorker",
-                    "Image ${task.image.localId} has a null remoteId. Skipping."
-                )
-                specimenImageRepository.updateSpecimenImage(
-                    specimenImage = task.image.copy(imageUploadStatus = UploadStatus.FAILED),
-                    specimenId = task.specimen.id,
-                    sessionId = sessionId
-                )
-                encounteredPermanentFailure = true
+                Log.i("ImageUploadWorker", "Image ${task.image.localId} metadata not ready; skipping for now.")
                 return@forEachIndexed
             }
 
@@ -162,10 +156,20 @@ class ImageUploadWorker @AssistedInject constructor(
         }
 
         showFinalStatusNotification(successfulUploads, imagesToUpload.size)
+        val anyMetadataPending = specimenRepository
+            .getSpecimenImagesAndInferenceResultsBySession(sessionId)
+            .any { it.specimenImagesAndInferenceResults.any { pair ->
+                pair.specimenImage.metadataUploadStatus != UploadStatus.COMPLETED
+            } }
+
+        if (encounteredPermanentFailure) return WorkerResult.failure()
+
+        if (anyMetadataPending && siteId != -1 && successfulUploads > 0) {
+            workRepository.appendMetadataWorkToChain(sessionId, siteId)
+            return WorkerResult.success()
+        }
         return if (successfulUploads == imagesToUpload.size) {
             WorkerResult.success()
-        } else if (encounteredPermanentFailure) {
-            WorkerResult.failure()
         } else {
             WorkerResult.retry()
         }
