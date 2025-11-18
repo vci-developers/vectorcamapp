@@ -13,7 +13,7 @@ data class CompleteSessionDetailsState(
     val session: Session = Session(
         localId = UUID(0, 0),
         remoteId = null,
-        hardwareId = "",
+        hardwareId = null,
         collectorTitle = "",
         collectorName = "",
         collectorLastTrainedOn = 0L,

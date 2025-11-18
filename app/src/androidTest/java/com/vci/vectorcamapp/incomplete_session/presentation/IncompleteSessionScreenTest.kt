@@ -108,6 +108,7 @@ class IncompleteSessionScreenTest {
         ) = Session(
             localId = UUID.randomUUID(),
             remoteId = null,
+            hardwareId = "TEST123",
             collectorTitle = "",
             collectorName = "",
             collectionDate = createdAt,

@@ -43,9 +43,6 @@
     <!-- Form validation error: Blank collector title -->
     <string name="form_validation_error_blank_collector">Collector is required.</string>
 
-    <!-- Form validation error: Blank hardware id -->
-    <string name="form_validation_error_blank_hardware_id">Hardware ID is required.</string>
-
     <!-- Form validation error: Blank district -->
     <string name="form_validation_error_blank_district">District is required.</string>
 

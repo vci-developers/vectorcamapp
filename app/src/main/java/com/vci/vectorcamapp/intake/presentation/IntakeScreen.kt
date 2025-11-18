@@ -223,9 +223,8 @@ fun IntakeScreen(
 
                 TextEntryField(
                     label = "Hardware ID",
-                    value = state.session.hardwareId,
+                    value = state.session.hardwareId.orEmpty(),
                     onValueChange = { onAction(IntakeAction.EnterHardwareId(it)) },
-                    error = state.intakeErrors.hardwareId,
                     singleLine = true,
                 )
 

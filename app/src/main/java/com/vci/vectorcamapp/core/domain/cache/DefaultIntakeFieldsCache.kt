@@ -7,7 +7,7 @@ interface DefaultIntakeFieldsCache {
         collectorName: String,
         collectorTitle: String,
         collectorLastTrainedOn: Long,
-        hardwareId: String,
+        hardwareId: String?,
         district: String,
         villageName: String
     )

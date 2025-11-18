@@ -285,6 +285,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             val localSessionDto = SessionDto(
                 sessionId = localSession.remoteId,
                 frontendId = localSession.localId,
+                hardwareId = localSession.hardwareId,
                 collectorTitle = localSession.collectorTitle,
                 collectorName = localSession.collectorName,
                 collectorLastTrainedOn = localSession.collectorLastTrainedOn,
@@ -328,7 +329,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 hardwareId = remoteSessionDto.hardwareId,
                 collectorTitle = remoteSessionDto.collectorTitle,
                 collectorName = remoteSessionDto.collectorName,
-                collectorLastTrainedOn = remoteSessionDto.collectorLastTrainedOn,
+                collectorLastTrainedOn = remoteSessionDto.collectorLastTrainedOn ?: 0L,
                 collectionDate = remoteSessionDto.collectionDate,
                 collectionMethod = remoteSessionDto.collectionMethod,
                 specimenCondition = remoteSessionDto.specimenCondition,

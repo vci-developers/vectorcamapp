@@ -11,10 +11,10 @@ data class SessionDto(
     val sessionId: Int? = null,
     @Serializable(with = UuidSerializer::class)
     val frontendId: UUID = UUID(0, 0),
-    val hardwareId: String = "",
+    val hardwareId: String? = null,
     val collectorTitle: String = "",
     val collectorName: String = "",
-    val collectorLastTrainedOn: Long = 0L,
+    val collectorLastTrainedOn: Long? = null,
     val collectionDate: Long = 0L,
     val collectionMethod: String = "",
     val specimenCondition: String = "",

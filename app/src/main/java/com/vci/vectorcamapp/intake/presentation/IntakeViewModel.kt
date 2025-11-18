@@ -100,8 +100,6 @@ class IntakeViewModel @Inject constructor(
 
                     val collectorValidationResult =
                         intakeValidationUseCases.validateCollector(_state.value.session.collectorName, _state.value.session.collectorTitle)
-                    val hardwareIdValidationResult =
-                        intakeValidationUseCases.validateHardwareId(_state.value.session.hardwareId)
                     val districtResult =
                         intakeValidationUseCases.validateDistrict(_state.value.selectedDistrict)
                     val villageNameResult =
@@ -123,7 +121,6 @@ class IntakeViewModel @Inject constructor(
                         it.copy(
                             intakeErrors = it.intakeErrors.copy(
                                 collector = collectorValidationResult.errorOrNull(),
-                                hardwareId = hardwareIdValidationResult.errorOrNull(),
                                 district = districtResult.errorOrNull(),
                                 villageName = villageNameResult.errorOrNull(),
                                 houseNumber = houseNumberResult.errorOrNull(),
@@ -138,7 +135,6 @@ class IntakeViewModel @Inject constructor(
 
                     val hasError = listOf(
                         collectorValidationResult,
-                        hardwareIdValidationResult,
                         districtResult,
                         villageNameResult,
                         houseNumberResult,
@@ -516,7 +512,7 @@ class IntakeViewModel @Inject constructor(
                         else -> ""
                     }
 
-                val validatedHouseNumber = validatedSite?.houseNumber ?: ""
+                val validatedHouseNumber = validatedSite?.houseNumber.orEmpty()
 
                 val sessionCollectorName = effectiveSession.collectorName
                 val sessionCollectorTitle = effectiveSession.collectorTitle

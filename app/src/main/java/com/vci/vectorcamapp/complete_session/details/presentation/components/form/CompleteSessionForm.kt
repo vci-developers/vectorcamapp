@@ -63,7 +63,7 @@ fun CompleteSessionForm(
                 )
 
                 Text(
-                    text = "Hardware ID: ${session.hardwareId}",
+                    text = "Hardware ID: ${session.hardwareId ?: "Not Provided"}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )

@@ -4,7 +4,6 @@ import com.vci.vectorcamapp.core.domain.util.Error
 
 enum class FormValidationError : Error {
     BLANK_COLLECTOR,
-    BLANK_HARDWARE_ID,
     BLANK_DISTRICT,
     BLANK_VILLAGE_NAME,
     BLANK_HOUSE_NUMBER,

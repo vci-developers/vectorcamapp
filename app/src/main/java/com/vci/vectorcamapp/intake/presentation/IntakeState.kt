@@ -22,7 +22,7 @@ data class IntakeState(
     val session: Session = Session(
         localId = UUID.randomUUID(),
         remoteId = null,
-        hardwareId = "",
+        hardwareId = null,
         collectorTitle = "",
         collectorName = "",
         collectorLastTrainedOn = 0L,
@@ -40,7 +40,6 @@ data class IntakeState(
     val surveillanceForm: SurveillanceForm? = null,
     val intakeErrors: IntakeErrors = IntakeErrors(
         collector = null,
-        hardwareId = null,
         district = null,
         villageName = null,
         houseNumber = null,
