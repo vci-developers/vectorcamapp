@@ -67,7 +67,7 @@ fun CompleteSessionListTile(
     val sessionMetadataUploaded = session.submittedAt != null
 
     val progressColor =
-        if (sessionMetadataUploaded && (sessionUploadProgress.totalCount == 0 || sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount && sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount)) MaterialTheme.colors.primary
+        if (sessionMetadataUploaded && sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount && sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount) MaterialTheme.colors.primary
         else if (sessionUploadProgress.isUploading) MaterialTheme.colors.warning
         else MaterialTheme.colors.error
 
@@ -220,12 +220,14 @@ fun CompleteSessionListTile(
                             }
                         }
                         Text(
-                            text = if (sessionMetadataUploaded && (sessionUploadProgress.totalCount == 0 || (sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount && sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount))) "Completed"
-                            else if (!sessionMetadataUploaded) ""
-                            else if (sessionUploadProgress.uploadedMetadataCount != sessionUploadProgress.totalCount) "${sessionUploadProgress.uploadedMetadataCount} / ${sessionUploadProgress.totalCount} metadata"
-                            else "${sessionUploadProgress.uploadedImageCount} / ${sessionUploadProgress.totalCount} images",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colors.textSecondary
+                            text = when {
+                                sessionMetadataUploaded && sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount && sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount -> "Completed"
+                                !sessionMetadataUploaded -> "Not started"
+                                sessionUploadProgress.uploadedMetadataCount != sessionUploadProgress.totalCount -> "${sessionUploadProgress.uploadedMetadataCount} / ${sessionUploadProgress.totalCount} metadata"
+                                else -> "${sessionUploadProgress.uploadedImageCount} / ${sessionUploadProgress.totalCount} images"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colors.textSecondary
                         )
                     }
 

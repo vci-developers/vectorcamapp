@@ -45,9 +45,7 @@ class WorkManagerRepositoryImplementation @Inject constructor(
         return workManager.getWorkInfosForUniqueWorkFlow(chainName)
             .map { workInfos ->
                 workInfos.any {
-                    it.state in listOf(
-                        WorkInfo.State.RUNNING
-                    )
+                    it.state == WorkInfo.State.RUNNING
                 }
             }
     }
