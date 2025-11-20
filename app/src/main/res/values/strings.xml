@@ -40,7 +40,7 @@
     <!-- Network error: Unknown error -->
     <string name="network_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
-    <!-- Form validation error: Blank collector title -->
+    <!-- Form validation error: Blank collector -->
     <string name="form_validation_error_blank_collector">Collector is required.</string>
 
     <!-- Form validation error: Blank district -->
@@ -144,6 +144,15 @@
 
     <!-- Intake error: GPS timeout -->
     <string name="intake_error_location_gps_timeout">GPS Timeout. Please move to a different location and try again.</string>
+
+    <!-- Intake error: Missing collector -->
+    <string name="intake_error_missing_collector">Please select a registered collector.</string>
+
+    <!-- Intake error: Collector save failed -->
+    <string name="intake_error_collector_save_failed">Could not save collector. Please try again.</string>
+
+    <!-- Intake error: Form invalid -->
+    <string name="intake_error_form_invalid">One or more fields in this form are invalid.</string>
 
     <!-- Intake error: Unknown error -->
     <string name="intake_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>

@@ -145,7 +145,13 @@ class IntakeViewModel @Inject constructor(
                         specimenConditionResult
                     ).any { it is Result.Error }
 
-                    if (!hasError) {
+                    if (hasError) {
+                        emitError(IntakeError.FORM_INVALID)
+                    }
+                    else if (state.value.isCurrentCollectorMissing) {
+                        emitError(IntakeError.MISSING_COLLECTOR)
+                    }
+                    else {
                         val selectedSite = _state.value.allSitesInProgram.find {
                             it.district == _state.value.selectedDistrict &&
                                     it.villageName == _state.value.selectedVillageName &&
@@ -406,7 +412,8 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.HideCollectionMethodTooltipDialog -> {
                     _state.update { it.copy(isCollectionMethodTooltipVisible = false) }
                 }
-                IntakeAction.RegisterMissingCollector -> {
+
+                is IntakeAction.RegisterMissingCollector -> {
                     val name = _state.value.session.collectorName
                     val title = _state.value.session.collectorTitle
                     val lastTrainedOn = _state.value.session.collectorLastTrainedOn
@@ -429,7 +436,7 @@ class IntakeViewModel @Inject constructor(
                             )
                         }
                     }.onError {
-                        emitError(IntakeError.UNKNOWN_ERROR)
+                        emitError(IntakeError.COLLECTOR_SAVE_FAILED)
                     }
                 }
 
