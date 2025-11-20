@@ -22,6 +22,7 @@ data class IntakeState(
     val session: Session = Session(
         localId = UUID.randomUUID(),
         remoteId = null,
+        hardwareId = null,
         collectorTitle = "",
         collectorName = "",
         collectorLastTrainedOn = 0L,

@@ -6,6 +6,7 @@ import java.util.UUID
 data class Session(
     val localId: UUID,
     val remoteId: Int?,
+    val hardwareId: String?,
     val collectorTitle: String,
     val collectorName: String,
     val collectorLastTrainedOn: Long,

@@ -12,6 +12,7 @@ data class CurrentSessionCacheDto(
     val localId: UUID = UUID(0, 0),
     val siteId: Int = -1,
     val remoteId: Int? = null,
+    val hardwareId: String? = null,
     val collectorTitle: String = "",
     val collectorName: String = "",
     val collectorLastTrainedOn: Long = 0L,
