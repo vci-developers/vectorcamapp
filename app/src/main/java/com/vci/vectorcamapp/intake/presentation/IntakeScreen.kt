@@ -486,19 +486,17 @@ fun IntakeScreen(
                             )
                         })
 
-                    if (surveillanceForm.wasIrsConducted) {
-                        surveillanceForm.monthsSinceIrs?.let {
-                            TextEntryField(
-                                label = "Months Since IRS",
-                                value = if (it < 0)
-                                    ""
-                                else
-                                    surveillanceForm.monthsSinceIrs.toString(),
-                                onValueChange = { onAction(IntakeAction.EnterMonthsSinceIrs(it)) },
-                                singleLine = true,
-                                error = state.intakeErrors.monthsSinceIrs,
-                            )
-                        }
+                    surveillanceForm.monthsSinceIrs?.let { monthsSinceIrs ->
+                        TextEntryField(
+                            label = "Months Since IRS",
+                            value = if (monthsSinceIrs < 0)
+                                ""
+                            else
+                                monthsSinceIrs.toString(),
+                            onValueChange = { onAction(IntakeAction.EnterMonthsSinceIrs(it)) },
+                            singleLine = true,
+                            error = state.intakeErrors.monthsSinceIrs,
+                        )
                     }
 
                     TextEntryField(
@@ -548,13 +546,13 @@ fun IntakeScreen(
                         }
                     }
 
-                    surveillanceForm.numPeopleSleptUnderLlin?.let { current ->
+                    surveillanceForm.numPeopleSleptUnderLlin?.let { numPeopleSleptUnderLlin ->
                         TextEntryField(
                             label = "Number of People who Slept Under LLIN",
-                            value = if (surveillanceForm.numPeopleSleptUnderLlin < 0)
+                            value = if (numPeopleSleptUnderLlin < 0)
                                 ""
                             else
-                                surveillanceForm.numPeopleSleptUnderLlin.toString(),
+                                numPeopleSleptUnderLlin.toString(),
                             onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(it)) },
                             singleLine = true,
                             error = state.intakeErrors.numPeopleSleptUnderLlin,

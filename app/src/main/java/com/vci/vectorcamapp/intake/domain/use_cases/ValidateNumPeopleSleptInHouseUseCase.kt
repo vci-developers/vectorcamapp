@@ -6,7 +6,7 @@ import javax.inject.Inject
 
 class ValidateNumPeopleSleptInHouseUseCase @Inject constructor() {
     operator fun invoke(count: Int): Result<Unit, FormValidationError> {
-        return if (count == -1) {
+        return if (count <= -1) {
             Result.Error(FormValidationError.INVALID_NUM_PEOPLE_SLEPT_IN_HOUSE)
         } else {
             Result.Success(Unit)

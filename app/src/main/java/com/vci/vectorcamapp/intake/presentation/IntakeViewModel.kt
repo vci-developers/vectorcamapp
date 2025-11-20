@@ -99,7 +99,7 @@ class IntakeViewModel @Inject constructor(
                     val surveillanceForm = _state.value.surveillanceForm
 
                     val collectorValidationResult =
-                        intakeValidationUseCases.validateCollector(_state.value.session.collectorName, _state.value.session.collectorTitle)
+                        intakeValidationUseCases.validateCollector(session.collectorName, session.collectorTitle)
                     val districtResult =
                         intakeValidationUseCases.validateDistrict(_state.value.selectedDistrict)
                     val villageNameResult =
@@ -122,10 +122,8 @@ class IntakeViewModel @Inject constructor(
                         }
 
                     val monthsSinceIrsResult =
-                        if (surveillanceForm?.wasIrsConducted == true && surveillanceForm.monthsSinceIrs != null) {
-                            intakeValidationUseCases.validateMonthsSinceIrs(surveillanceForm.monthsSinceIrs)
-                        } else {
-                            null
+                        surveillanceForm?.takeIf { it.wasIrsConducted && it.monthsSinceIrs != null }?.let {
+                            intakeValidationUseCases.validateMonthsSinceIrs(it.monthsSinceIrs!!)
                         }
 
                     val numLlinsAvailableResult =
@@ -134,10 +132,8 @@ class IntakeViewModel @Inject constructor(
                         }
 
                     val numPeopleSleptUnderLlinResult =
-                        if (surveillanceForm?.numPeopleSleptUnderLlin != null) {
-                            intakeValidationUseCases.validateNumPeopleSleptUnderLlin(surveillanceForm.numPeopleSleptUnderLlin)
-                        } else {
-                            null
+                        surveillanceForm?.numPeopleSleptUnderLlin?.let {
+                            intakeValidationUseCases.validateNumPeopleSleptUnderLlin(it)
                         }
 
 
@@ -319,7 +315,7 @@ class IntakeViewModel @Inject constructor(
                             )
                         )
                     }
-                    if (numLlinsAvailable == 0) {
+                    if (numLlinsAvailable <= 0) {
                         _state.update {
                             it.copy(
                                 surveillanceForm = it.surveillanceForm?.copy(
