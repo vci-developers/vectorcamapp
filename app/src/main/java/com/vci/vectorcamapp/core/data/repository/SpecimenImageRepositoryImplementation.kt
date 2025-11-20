@@ -48,6 +48,10 @@ class SpecimenImageRepositoryImplementation @Inject constructor(
         return specimenImageDao.observeUploadedImageCountForSession(sessionId)
     }
 
+    override fun observeFailedImageCountForSession(sessionId: UUID): Flow<Int> {
+        return specimenImageDao.observeFailedImageCountForSession(sessionId)
+    }
+
     override suspend fun getTotalImageCountForSession(sessionId: UUID): Int {
         return specimenImageDao.getTotalImageCountForSession(sessionId)
     }

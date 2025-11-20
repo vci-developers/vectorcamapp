@@ -55,8 +55,8 @@ fun CompleteSessionSpecimens(
                     top = MaterialTheme.dimensions.spacingSmall
                 ),
                 isTooltipVisible = isSearchTooltipVisible,
-                onShowSearchTooltip = { onShowSearchTooltip },
-                onDismissSearchTooltip = { onDismissSearchTooltip }
+                onShowSearchTooltip = onShowSearchTooltip,
+                onDismissSearchTooltip = onDismissSearchTooltip,
             ) {
                 SearchHelpTooltipContent()
             }

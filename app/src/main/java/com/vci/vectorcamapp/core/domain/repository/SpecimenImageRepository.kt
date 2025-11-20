@@ -11,5 +11,6 @@ interface SpecimenImageRepository {
     suspend fun updateSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID) : Result<Unit, RoomDbError>
     suspend fun deleteSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID) : Boolean
     fun observeUploadedImageCountForSession(sessionId: UUID): Flow<Int>
+    fun observeFailedImageCountForSession(sessionId: UUID): Flow<Int>
     suspend fun getTotalImageCountForSession(sessionId: UUID): Int
 }
