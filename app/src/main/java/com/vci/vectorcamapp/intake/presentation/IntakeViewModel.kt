@@ -123,7 +123,7 @@ class IntakeViewModel @Inject constructor(
 
                     val monthsSinceIrsResult =
                         surveillanceForm?.takeIf { it.wasIrsConducted && it.monthsSinceIrs != null }?.let {
-                            intakeValidationUseCases.validateMonthsSinceIrs(it.monthsSinceIrs!!)
+                            it.monthsSinceIrs?.let { months -> intakeValidationUseCases.validateMonthsSinceIrs(months) }
                         }
 
                     val numLlinsAvailableResult =
@@ -268,7 +268,7 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.EnterNumPeopleSleptInHouse -> {
                     val oldValue = _state.value.surveillanceForm?.numPeopleSleptInHouse
                     val normalized = normalizeNumericInput(oldValue, action.count)
-                    val numPeopleSleptInHouse = normalized.toIntOrNull() ?: 0
+                    val numPeopleSleptInHouse = normalized.toIntOrNull() ?: -1
                     _state.update {
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
@@ -293,7 +293,7 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.EnterMonthsSinceIrs -> {
                     val oldValue = _state.value.surveillanceForm?.monthsSinceIrs
                     val normalized = normalizeNumericInput(oldValue, action.count)
-                    val monthsSinceIrs = normalized.toIntOrNull() ?: 0
+                    val monthsSinceIrs = normalized.toIntOrNull() ?: -1
                     _state.update {
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
@@ -307,7 +307,7 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.EnterNumLlinsAvailable -> {
                     val oldValue = _state.value.surveillanceForm?.numLlinsAvailable
                     val normalized = normalizeNumericInput(oldValue, action.count)
-                    val numLlinsAvailable = normalized.toIntOrNull() ?: 0
+                    val numLlinsAvailable = normalized.toIntOrNull() ?: -1
                     _state.update {
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
@@ -359,7 +359,7 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.EnterNumPeopleSleptUnderLlin -> {
                     val oldValue = _state.value.surveillanceForm?.numPeopleSleptUnderLlin
                     val normalized = normalizeNumericInput(oldValue, action.count)
-                    val numPeopleSleptUnderLlin = normalized.toIntOrNull() ?: 0
+                    val numPeopleSleptUnderLlin = normalized.toIntOrNull() ?: -1
                     _state.update {
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
