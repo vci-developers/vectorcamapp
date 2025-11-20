@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.complete_session.details.presentation
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError
@@ -8,7 +9,9 @@ import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
+import com.vci.vectorcamapp.ui.extensions.displayText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +29,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CompleteSessionDetailsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val savedStateHandle: SavedStateHandle,
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
@@ -56,6 +60,8 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                             add(imageAndInferenceResult.specimenImage.species)
                             add(imageAndInferenceResult.specimenImage.sex)
                             add(imageAndInferenceResult.specimenImage.abdomenStatus)
+                            add(imageAndInferenceResult.specimenImage.metadataUploadStatus.displayText(context))
+                            add(imageAndInferenceResult.specimenImage.imageUploadStatus.displayText(context))
                         }
                     }
                     SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
