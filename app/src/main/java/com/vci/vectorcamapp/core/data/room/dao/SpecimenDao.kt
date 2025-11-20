@@ -36,14 +36,17 @@ interface SpecimenDao {
     @Transaction
     @Query("SELECT * FROM specimen_image WHERE specimenId = :specimenId AND sessionId = :sessionId")
     suspend fun getSpecimenImagesAndInferenceResultsBySpecimen(
-        specimenId: String,
-        sessionId: UUID
+        specimenId: String, sessionId: UUID
     ): List<SpecimenImageAndInferenceResultRelation>
 
     @Transaction
     @Query("SELECT * FROM specimen_image WHERE specimenId = :specimenId AND sessionId = :sessionId")
     fun observeSpecimenImagesAndInferenceResultsBySpecimen(
-        specimenId: String,
-        sessionId: UUID
+        specimenId: String, sessionId: UUID
     ): Flow<List<SpecimenImageAndInferenceResultRelation>>
+
+    @Query("SELECT COUNT(*) FROM specimen JOIN session ON specimen.sessionId = session.localId WHERE specimen.shouldProcessFurther = 1 AND session.collectionDate BETWEEN :startDate AND :endDate")
+    suspend fun countSelectedSpecimensForFurtherProcessingBetweenSessionCollectionDates(
+        startDate: Long, endDate: Long
+    ): Int
 }

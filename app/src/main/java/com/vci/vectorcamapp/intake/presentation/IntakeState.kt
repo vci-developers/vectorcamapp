@@ -22,8 +22,10 @@ data class IntakeState(
     val session: Session = Session(
         localId = UUID.randomUUID(),
         remoteId = null,
+        hardwareId = null,
         collectorTitle = "",
         collectorName = "",
+        collectorLastTrainedOn = 0L,
         collectionDate = System.currentTimeMillis(),
         collectionMethod = "",
         specimenCondition = "",
@@ -33,7 +35,7 @@ data class IntakeState(
         notes = "",
         latitude = null,
         longitude = null,
-        type = SessionType.SURVEILLANCE
+        type = SessionType.SURVEILLANCE,
     ),
     val surveillanceForm: SurveillanceForm? = null,
     val intakeErrors: IntakeErrors = IntakeErrors(

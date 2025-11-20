@@ -173,7 +173,13 @@ class IntakeViewModel @Inject constructor(
                         numPeopleSleptUnderLlinResult
                     ).any { it is Result.Error }
 
-                    if (!hasError) {
+                    if (hasError) {
+                        emitError(IntakeError.FORM_INVALID)
+                    }
+                    else if (state.value.isCurrentCollectorMissing) {
+                        emitError(IntakeError.MISSING_COLLECTOR)
+                    }
+                    else {
                         val selectedSite = _state.value.allSitesInProgram.find {
                             it.district == _state.value.selectedDistrict &&
                                     it.villageName == _state.value.selectedVillageName &&
@@ -213,9 +219,10 @@ class IntakeViewModel @Inject constructor(
                             defaultIntakeFieldsCache.saveDefaultIntakeFields(
                                 collectorName = session.collectorName,
                                 collectorTitle = session.collectorTitle,
+                                collectorLastTrainedOn = session.collectorLastTrainedOn,
+                                hardwareId = session.hardwareId,
                                 district = _state.value.selectedDistrict,
                                 villageName = _state.value.selectedVillageName,
-                                houseNumber = _state.value.selectedHouseNumber
                             )
                             _events.send(IntakeEvent.NavigateToImagingScreen)
                         }
@@ -223,16 +230,26 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.SelectCollector -> {
-                    val updatedName = action.collector.name
-                    val updatedTitle = action.collector.title
+                    val updatedCollector = action.collector
 
                     _state.update {
                         it.copy(
                             session = it.session.copy(
-                                collectorName = updatedName,
-                                collectorTitle = updatedTitle
+                                collectorName = updatedCollector.name,
+                                collectorTitle = updatedCollector.title,
+                                collectorLastTrainedOn = updatedCollector.lastTrainedOn
                             ),
                             isCurrentCollectorMissing = false
+                        )
+                    }
+                }
+
+                is IntakeAction.EnterHardwareId -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                hardwareId = action.text
+                            )
                         )
                     }
                 }
@@ -429,9 +446,10 @@ class IntakeViewModel @Inject constructor(
                     _state.update { it.copy(isCollectionMethodTooltipVisible = false) }
                 }
 
-                IntakeAction.RegisterMissingCollector -> {
+                is IntakeAction.RegisterMissingCollector -> {
                     val name = _state.value.session.collectorName
                     val title = _state.value.session.collectorTitle
+                    val lastTrainedOn = _state.value.session.collectorLastTrainedOn
 
                     if (name.isBlank() || title.isBlank()) {
                         return@launch
@@ -441,7 +459,8 @@ class IntakeViewModel @Inject constructor(
                         Collector(
                             id = UUID.randomUUID(),
                             name = name,
-                            title = title
+                            title = title,
+                            lastTrainedOn = lastTrainedOn
                         )
                     ).onSuccess {
                         _state.update {
@@ -450,10 +469,9 @@ class IntakeViewModel @Inject constructor(
                             )
                         }
                     }.onError {
-                        emitError(IntakeError.UNKNOWN_ERROR)
+                        emitError(IntakeError.COLLECTOR_SAVE_FAILED)
                     }
                 }
-
             }
         }
     }
@@ -482,15 +500,18 @@ class IntakeViewModel @Inject constructor(
             val defaultFields = defaultIntakeFieldsCache.getDefaultIntakeFields()
             val cachedCollectorName = defaultFields?.collectorName.orEmpty()
             val cachedCollectorTitle = defaultFields?.collectorTitle.orEmpty()
+            val cachedCollectorLastTrainedOn = defaultFields?.collectorLastTrainedOn ?: 0L
+            val cachedDefaultHardwareId = defaultFields?.hardwareId.orEmpty()
             val cachedDefaultDistrict = defaultFields?.district.orEmpty()
             val cachedDefaultVillageName = defaultFields?.villageName.orEmpty()
-            val cachedDefaultHouseNumber = defaultFields?.houseNumber.orEmpty()
 
             val effectiveSession =
                 currentSession ?: _state.value.session.copy(
                     type = resolvedSessionType,
+                    hardwareId = cachedDefaultHardwareId,
                     collectorName = cachedCollectorName,
-                    collectorTitle = cachedCollectorTitle
+                    collectorTitle = cachedCollectorTitle,
+                    collectorLastTrainedOn = cachedCollectorLastTrainedOn
                 )
 
             val currentSessionSiteId = currentSessionCache.getSiteId()
@@ -523,18 +544,7 @@ class IntakeViewModel @Inject constructor(
                         else -> ""
                     }
 
-                val validatedHouseNumber =
-                    when {
-                        validatedSite != null -> validatedSite.houseNumber
-                        validatedDistrict.isNotBlank() &&
-                            validatedVillageName.isNotBlank() &&
-                            currentAllSites.any {
-                                it.district == validatedDistrict &&
-                                    it.villageName == validatedVillageName &&
-                                    it.houseNumber == cachedDefaultHouseNumber
-                            } -> cachedDefaultHouseNumber
-                        else -> ""
-                    }
+                val validatedHouseNumber = validatedSite?.houseNumber.orEmpty()
 
                 val sessionCollectorName = effectiveSession.collectorName
                 val sessionCollectorTitle = effectiveSession.collectorTitle

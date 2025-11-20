@@ -7,11 +7,12 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 
 data class ImagingState(
     val isLoading: Boolean = false,
     val isProcessing: Boolean = false,
-    val currentSpecimen: Specimen = Specimen(id = "", remoteId = null),
+    val currentSpecimen: Specimen = Specimen(id = "", remoteId = null, shouldProcessFurther = false),
     val currentSpecimenImage: SpecimenImage = SpecimenImage(
         localId = "",
         remoteId = null,
@@ -32,5 +33,8 @@ data class ImagingState(
     val isManualFocusing: Boolean = false,
     val isCameraReady: Boolean = false,
     val showExitDialog: Boolean = false,
-    val pendingAction: ImagingAction? = null
+    val showProcessFurtherDialog: Boolean = false,
+    val hasConfirmedPackaging: Boolean = false,
+    val pendingAction: ImagingAction? = null,
+    val specimenIdError: ImagingError? = null
 )

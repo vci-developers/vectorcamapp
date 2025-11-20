@@ -101,6 +101,13 @@ class RegistrationScreenTest {
                                         is RegistrationAction.ConfirmRegistration -> {
                                             navController.navigate(Destination.Landing)
                                         }
+
+                                        is RegistrationAction.EnterCollectorName -> {
+                                            state = state.copy(collector = state.collector.copy(name = action.text))
+                                        }
+                                        is RegistrationAction.EnterCollectorTitle -> {
+                                            state = state.copy(collector = state.collector.copy(title = action.text))
+                                        }
                                     }
                                 },
                                 modifier = Modifier.padding(innerPadding)

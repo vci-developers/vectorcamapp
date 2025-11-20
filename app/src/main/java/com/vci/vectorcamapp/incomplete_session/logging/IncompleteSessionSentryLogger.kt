@@ -10,7 +10,7 @@ object IncompleteSessionSentryLogger {
     fun logSessionNotFound(e: Throwable, failedSessionId: UUID) {
         Crashy.exception(
             throwable = e, context = CrashyContext(
-                screen = "IncompleteSession",
+                screen = "InProgressSession",
                 feature = "SessionResume",
                 action = "session_not_found",
                 sessionId = failedSessionId.toString()
@@ -28,7 +28,7 @@ object IncompleteSessionSentryLogger {
     fun logSessionRetrievalFailure(e: Throwable, failedSessionId: UUID) {
         Crashy.exception(
             throwable = e, context = CrashyContext(
-                screen = "IncompleteSession",
+                screen = "InProgressSession",
                 feature = "SessionResume",
                 action = "session_retrieval",
                 sessionId = failedSessionId.toString()
@@ -37,7 +37,7 @@ object IncompleteSessionSentryLogger {
                 "critical" to "true",
                 "user_blocking" to "true"
             ), extras = mapOf(
-                "error_context" to "User cannot resume their incomplete session",
+                "error_context" to "User cannot resume their in progress session",
                 "requested_session_id" to failedSessionId,
                 "recovery_action" to "User may need to start a new session",
                 "data_loss_risk" to "Previous session work may be lost",
@@ -49,17 +49,17 @@ object IncompleteSessionSentryLogger {
     fun logSessionDeletionFailure(e: Throwable, failedSessionId: UUID) {
         Crashy.exception(
             throwable = e, context = CrashyContext(
-                screen = "IncompleteSession",
-                feature = "IncompleteSessionDeletion",
-                action = "incomplete_session_deletion",
+                screen = "InProgressSession",
+                feature = "InProgressSessionDeletion",
+                action = "in_progress_session_deletion",
                 sessionId = failedSessionId.toString()
             ), tags = mapOf(
-                "error_type" to "incomplete_session_deletion_failed",
+                "error_type" to "in_progress_session_deletion_failed",
             ), extras = mapOf(
-                "error_context" to "User cannot delete the incomplete session",
+                "error_context" to "User cannot delete the in progress session",
                 "requested_session_id" to failedSessionId,
                 "recovery_action" to "User may need to try the delete action again",
-                "possible_causes" to "Corrupted incomplete session data"
+                "possible_causes" to "Corrupted in progress session data"
             )
         )
     }
@@ -67,17 +67,17 @@ object IncompleteSessionSentryLogger {
     fun logImageDeletionFailure(e: Throwable, failedSessionId: UUID, failedImageUri: Uri) {
         Crashy.exception(
             throwable = e, context = CrashyContext(
-                screen = "IncompleteSession",
-                feature = "IncompleteSessionImageDeletion",
-                action = "incomplete_session_image_deletion",
+                screen = "InProgressSession",
+                feature = "InProgressSessionImageDeletion",
+                action = "in_progress_session_image_deletion",
                 sessionId = failedSessionId.toString()
             ), tags = mapOf(
-                "error_type" to "incomplete_session_image_deletion_failed",
+                "error_type" to "in_progress_session_image_deletion_failed",
             ), extras = mapOf(
-                "error_context" to "User cannot delete the image from an incomplete session",
+                "error_context" to "User cannot delete the image from an in progress session",
                 "requested_session_id" to failedSessionId,
                 "requested_image_uri" to failedImageUri,
-                "possible_causes" to "Corrupted incomplete session data or image file"
+                "possible_causes" to "Corrupted in progress session data or image file"
             )
         )
     }

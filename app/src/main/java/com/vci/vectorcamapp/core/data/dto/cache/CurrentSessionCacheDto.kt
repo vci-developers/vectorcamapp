@@ -12,8 +12,10 @@ data class CurrentSessionCacheDto(
     val localId: UUID = UUID(0, 0),
     val siteId: Int = -1,
     val remoteId: Int? = null,
+    val hardwareId: String? = null,
     val collectorTitle: String = "",
     val collectorName: String = "",
+    val collectorLastTrainedOn: Long = 0L,
     val collectionDate: Long = 0L,
     val collectionMethod: String = "",
     val specimenCondition: String = "",
@@ -24,7 +26,7 @@ data class CurrentSessionCacheDto(
     val latitude: Float? = null,
     val longitude: Float? = null,
     @Serializable(with = SessionTypeSerializer::class)
-    val type: SessionType = SessionType.SURVEILLANCE
+    val type: SessionType = SessionType.SURVEILLANCE,
 ) {
     fun isEmpty() = localId == UUID(0, 0) && createdAt == 0L
 }

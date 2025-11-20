@@ -10,6 +10,7 @@ interface SettingsAction {
     data object DismissCollectorDialog : SettingsAction
     data class EnterCollectorName(val name: String) : SettingsAction
     data class EnterCollectorTitle(val title: String) : SettingsAction
+    data class EnterCollectorLastTrainedOn(val lastTrainedOn: Long) : SettingsAction
     data object SaveCollector : SettingsAction
     data object ShowDeleteCollectorDialog : SettingsAction
     data object DismissDeleteCollectorDialog : SettingsAction

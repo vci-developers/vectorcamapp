@@ -10,7 +10,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.vci.vectorcamapp.animation.presentation.LoadingAnimation
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsEvent
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsScreen
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsViewModel
@@ -136,9 +135,7 @@ fun NavGraph(startDestination: Destination) {
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 when (state.isLoading) {
-                    true -> LoadingAnimation(
-                        text = "Loading...", modifier = Modifier.padding(innerPadding)
-                    )
+                    true -> SplashScreen(modifier = Modifier.padding(innerPadding))
 
                     false -> IntakeScreen(
                         state = state,
@@ -163,9 +160,7 @@ fun NavGraph(startDestination: Destination) {
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 when (state.isLoading) {
-                    true -> LoadingAnimation(
-                        text = "Loading specimens...", modifier = Modifier.padding(innerPadding)
-                    )
+                    true -> SplashScreen(modifier = Modifier.padding(innerPadding))
                     
                     false -> ImagingScreen(
                         state = state,

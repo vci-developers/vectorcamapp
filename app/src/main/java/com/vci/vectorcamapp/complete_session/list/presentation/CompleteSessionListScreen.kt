@@ -32,6 +32,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.draw.rotate
+import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent
 
 @Composable
 fun CompleteSessionListScreen(
@@ -79,10 +80,16 @@ fun CompleteSessionListScreen(
                     },
                     placeholder = "Search by collector, district, session type, etc.",
                     modifier = Modifier.padding(
-                        start = MaterialTheme.dimensions.paddingMedium,
-                        end = MaterialTheme.dimensions.paddingMedium
-                    )
-                )
+                        start = MaterialTheme.dimensions.spacingMedium,
+                        end = MaterialTheme.dimensions.spacingMedium,
+                        top = MaterialTheme.dimensions.spacingSmall
+                    ),
+                    isTooltipVisible = state.isSearchTooltipVisible,
+                    onShowSearchTooltip = { onAction(CompleteSessionListAction.ShowSearchTooltipDialog) },
+                    onDismissSearchTooltip = { onAction(CompleteSessionListAction.HideSearchTooltipDialog) }
+                ) {
+                    SearchHelpTooltipContent()
+                }
             }
 
             if (state.sessionAndSiteToUploadProgress.isEmpty()) {
