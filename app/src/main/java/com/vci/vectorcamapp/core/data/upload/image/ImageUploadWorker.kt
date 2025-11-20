@@ -22,6 +22,7 @@ import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
+import com.vci.vectorcamapp.core.domain.util.DomainError
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -583,11 +584,20 @@ class ImageUploadWorker @AssistedInject constructor(
     private suspend fun compressImageFile(uri: Uri, quality: Int) = withContext(Dispatchers.IO) {
         val resolver = context.contentResolver
         var bitmap: Bitmap? = null
+        var backupFile: File? = null
 
         try {
-            bitmap = resolver.openInputStream(uri)?.use { inputStream ->
-                BitmapFactory.decodeStream(inputStream)
-            } ?: throw IOException("Failed to open input stream for $uri")
+            backupFile = File.createTempFile("img_backup_", ".tmp", context.cacheDir)
+
+            resolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(backupFile).use { out ->
+                    input.copyTo(out)
+                }
+            } ?: throw IOException("Failed to open input stream for $uri to create backup")
+
+            bitmap = backupFile.inputStream().use { backupIn ->
+                BitmapFactory.decodeStream(backupIn)
+            } ?: throw IOException("Failed to decode bitmap from backup for $uri")
 
             resolver.openOutputStream(uri, "wt")?.use { out ->
                 if (!bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)) {
@@ -597,8 +607,25 @@ class ImageUploadWorker @AssistedInject constructor(
             } ?: throw IOException("Failed to open output stream for $uri")
 
             Log.d("ImageUploadWorker", "Successfully compressed $uri to $quality% quality.")
+        } catch (e: Exception) {
+            Log.e("ImageUploadWorker", "Error compressing $uri, attempting to restore original", e)
+            if (backupFile != null && backupFile.exists()) {
+                try {
+                    resolver.openOutputStream(uri, "wt")?.use { out ->
+                        backupFile.inputStream().use { backupIn ->
+                            backupIn.copyTo(out)
+                        }
+                        out.flush()
+                    }
+                    Log.d("ImageUploadWorker", "Successfully restored original image from backup for $uri")
+                } catch (restore: Exception) {
+                    Log.e("ImageUploadWorker", "Failed to restore original from backup for $uri", restore)
+                }
+            }
+            throw e
         } finally {
             bitmap?.recycle()
+            backupFile?.delete()
         }
     }
 }
