@@ -185,7 +185,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             }
 
             return if (hasFailure) {
-                retryOrFailure("Upload failed for one or more images.")
+                retryOrComplete()
             } else {
                 WorkerResult.success()
             }
@@ -213,6 +213,15 @@ class MetadataUploadWorker @AssistedInject constructor(
                     )
                 }
             }
+        }
+    }
+
+    private fun retryOrComplete(): WorkerResult {
+        showUploadRetryNotification("Upload failed for one or more images.")
+        return if (runAttemptCount < MAX_RETRIES) {
+            WorkerResult.retry()
+        } else {
+            WorkerResult.success()
         }
     }
 
