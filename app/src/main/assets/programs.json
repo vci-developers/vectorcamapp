@@ -1,12 +1,7 @@
 [
   {
-    "id": 1,
+    "id": 7,
     "name": "National Malaria Elimination Division",
     "country": "Uganda"
-  },
-  {
-    "id": 2,
-    "name": "Data Collection",
-    "country": "Colombia"
   }
 ]
