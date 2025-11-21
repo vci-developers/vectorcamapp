@@ -66,11 +66,10 @@ fun CompleteSessionListTile(
 
     val sessionMetadataUploaded = session.submittedAt != null
 
-    val progressColor = when {
-        sessionMetadataUploaded && sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount && sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount -> MaterialTheme.colors.primary
-        sessionUploadProgress.isUploading -> MaterialTheme.colors.warning
-        else -> MaterialTheme.colors.error
-    }
+    val progressColor =
+        if (sessionMetadataUploaded && sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount && sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount) MaterialTheme.colors.primary
+        else if (sessionUploadProgress.isUploading) MaterialTheme.colors.warning
+        else MaterialTheme.colors.error
 
     session.completedAt?.let { completedAt ->
         ActionTile(
