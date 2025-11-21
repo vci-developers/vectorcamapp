@@ -404,10 +404,13 @@ fun IntakeScreen(
                 state.surveillanceForm?.let { surveillanceForm ->
                     TextEntryField(
                         label = "Number of People Living in the House",
-                        value = if (surveillanceForm.numPeopleSleptInHouse == 0) "" else surveillanceForm.numPeopleSleptInHouse.toString(),
-                        onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it.filter { character -> character.isDigit() })) },
-                        placeholder = "0",
+                        value = if (surveillanceForm.numPeopleSleptInHouse < 0)
+                            ""
+                        else
+                            surveillanceForm.numPeopleSleptInHouse.toString(),
+                        onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it)) },
                         singleLine = true,
+                        error = state.intakeErrors.numPeopleSleptInHouse,
                     )
                 }
 
@@ -491,25 +494,28 @@ fun IntakeScreen(
                             )
                         })
 
-                    if (surveillanceForm.wasIrsConducted) {
+                    surveillanceForm.monthsSinceIrs?.let { monthsSinceIrs ->
                         TextEntryField(
                             label = "Months Since IRS",
-                            value = surveillanceForm.monthsSinceIrs?.let { if (it == 0) "" else it.toString() }
-                                .orEmpty(),
-                            onValueChange = {
-                                onAction(IntakeAction.EnterMonthsSinceIrs(it.filter { character -> character.isDigit() }))
-                            },
-                            placeholder = "0",
+                            value = if (monthsSinceIrs < 0)
+                                ""
+                            else
+                                monthsSinceIrs.toString(),
+                            onValueChange = { onAction(IntakeAction.EnterMonthsSinceIrs(it)) },
                             singleLine = true,
+                            error = state.intakeErrors.monthsSinceIrs,
                         )
                     }
 
                     TextEntryField(
                         label = "Number of LLINs Available",
-                        value = if (surveillanceForm.numLlinsAvailable == 0) "" else surveillanceForm.numLlinsAvailable.toString(),
-                        onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it.filter { character -> character.isDigit() })) },
-                        placeholder = "0",
+                        value = if (surveillanceForm.numLlinsAvailable < 0)
+                            ""
+                        else
+                            surveillanceForm.numLlinsAvailable.toString(),
+                        onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it)) },
                         singleLine = true,
+                        error = state.intakeErrors.numLlinsAvailable,
                     )
 
                     surveillanceForm.llinType?.let { current ->
@@ -548,15 +554,16 @@ fun IntakeScreen(
                         }
                     }
 
-                    surveillanceForm.numPeopleSleptUnderLlin?.let { current ->
+                    surveillanceForm.numPeopleSleptUnderLlin?.let { numPeopleSleptUnderLlin ->
                         TextEntryField(
                             label = "Number of People who Slept Under LLIN",
-                            value = if (current == 0) "" else current.toString(),
-                            onValueChange = {
-                                onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(it.filter { character -> character.isDigit() }))
-                            },
-                            placeholder = "0",
+                            value = if (numPeopleSleptUnderLlin < 0)
+                                ""
+                            else
+                                numPeopleSleptUnderLlin.toString(),
+                            onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(it)) },
                             singleLine = true,
+                            error = state.intakeErrors.numPeopleSleptUnderLlin,
                         )
                     }
                 }

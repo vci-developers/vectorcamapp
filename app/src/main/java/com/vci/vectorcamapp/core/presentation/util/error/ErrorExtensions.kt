@@ -107,6 +107,10 @@ fun Error.toString(context: Context): String {
             FormValidationError.FUTURE_COLLECTION_DATE -> R.string.form_validation_error_future_collection_date
             FormValidationError.BLANK_COLLECTION_METHOD -> R.string.form_validation_error_blank_collection_method
             FormValidationError.BLANK_SPECIMEN_CONDITION -> R.string.form_validation_error_blank_specimen_condition
+            FormValidationError.INVALID_NUM_PEOPLE_SLEPT_UNDER_LLIN -> R.string.form_validation_error_invalid_num_people_slept_under_llin_condition
+            FormValidationError.INVALID_NUM_PEOPLE_SLEPT_IN_HOUSE -> R.string.form_validation_error_invalid_num_people_slept_in_house_condition
+            FormValidationError.INVALID_NUM_LLINS_AVAILABLE -> R.string.form_validation_error_invalid_num_llins_available
+            FormValidationError.INVALID_MONTHS_SINCE_IRS -> R.string.form_validation_error_invalid_months_since_irs
         }
 
         is CollectorValidationError -> when (this) {
