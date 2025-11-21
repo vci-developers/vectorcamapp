@@ -53,7 +53,7 @@ class CompleteSessionListViewModel @Inject constructor(
                             specimenImageRepository.observeUploadedImageCountForSession(sessionId),
                             specimenImageRepository.observeFailedImageCountForSession(sessionId),
                             workManagerRepository.observeIsSessionActivelyUploading(sessionId),
-                        ) { uploadedMetadataCount, uploadedImageCount, uploadedImageFailedCount, isUploading ->
+                        ) { uploadedMetadataCount, uploadedImageCount, failedImageCount, isUploading ->
                             sessionAndSite to SessionUploadProgress(
                                 uploadedMetadataCount = uploadedMetadataCount,
                                 uploadedImageCount = uploadedImageCount,
@@ -61,7 +61,7 @@ class CompleteSessionListViewModel @Inject constructor(
                                     sessionId
                                 ),
                                 isUploading = isUploading,
-                                failedImageCount = uploadedImageFailedCount
+                                failedImageCount = failedImageCount
                             )
                         }
                     }
