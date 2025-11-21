@@ -1,12 +1,16 @@
 package com.vci.vectorcamapp.core.presentation.search
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
+import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip
+import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
 fun SearchTextField(
@@ -15,7 +19,11 @@ fun SearchTextField(
     placeholder: String,
     modifier: Modifier = Modifier,
     isSingleLine: Boolean = true,
-    onSearchSubmitted: (() -> Unit)? = null
+    isTooltipVisible: Boolean = false,
+    onSearchSubmitted: (() -> Unit)? = null,
+    onShowSearchTooltip: (() -> Unit)? = null,
+    onDismissSearchTooltip: (() -> Unit)? = null,
+    tooltipContent: (@Composable () -> Unit)? = null,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -33,4 +41,16 @@ fun SearchTextField(
             }
         )
     )
+
+    if (tooltipContent != null && onShowSearchTooltip != null && onDismissSearchTooltip != null) {
+        Tooltip(
+            isVisible = isTooltipVisible,
+            onClick = onShowSearchTooltip,
+            onDismiss = onDismissSearchTooltip,
+            buttonText = "Tap to learn more about searching",
+            modifier = modifier.padding(bottom = MaterialTheme.dimensions.spacingExtraSmall)
+        ) {
+            tooltipContent()
+        }
+    }
 }

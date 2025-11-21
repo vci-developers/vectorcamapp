@@ -185,7 +185,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             }
 
             return if (hasFailure) {
-                retryOrFailure("Upload failed for one or more images.")
+                retryOrComplete()
             } else {
                 WorkerResult.success()
             }
@@ -213,6 +213,15 @@ class MetadataUploadWorker @AssistedInject constructor(
                     )
                 }
             }
+        }
+    }
+
+    private fun retryOrComplete(): WorkerResult {
+        showUploadRetryNotification("Upload failed for one or more images.")
+        return if (runAttemptCount < MAX_RETRIES) {
+            WorkerResult.retry()
+        } else {
+            WorkerResult.success()
         }
     }
 
@@ -285,6 +294,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             val localSessionDto = SessionDto(
                 sessionId = localSession.remoteId,
                 frontendId = localSession.localId,
+                hardwareId = localSession.hardwareId,
                 collectorTitle = localSession.collectorTitle,
                 collectorName = localSession.collectorName,
                 collectorLastTrainedOn = localSession.collectorLastTrainedOn,
@@ -325,9 +335,10 @@ class MetadataUploadWorker @AssistedInject constructor(
             val remoteSession = Session(
                 localId = remoteSessionDto.frontendId,
                 remoteId = remoteSessionDto.sessionId,
+                hardwareId = remoteSessionDto.hardwareId,
                 collectorTitle = remoteSessionDto.collectorTitle,
                 collectorName = remoteSessionDto.collectorName,
-                collectorLastTrainedOn = remoteSessionDto.collectorLastTrainedOn,
+                collectorLastTrainedOn = remoteSessionDto.collectorLastTrainedOn ?: 0L,
                 collectionDate = remoteSessionDto.collectionDate,
                 collectionMethod = remoteSessionDto.collectionMethod,
                 specimenCondition = remoteSessionDto.specimenCondition,

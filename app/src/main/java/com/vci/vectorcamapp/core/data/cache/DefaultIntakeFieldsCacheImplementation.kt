@@ -13,18 +13,18 @@
             collectorName: String,
             collectorTitle: String,
             collectorLastTrainedOn: Long,
+            hardwareId: String?,
             district: String,
             villageName: String,
-            houseNumber: String
         ) {
             dataStore.updateData {
                 DefaultIntakeFieldsCacheDto(
                     collectorName = collectorName,
                     collectorTitle = collectorTitle,
                     collectorLastTrainedOn = collectorLastTrainedOn,
+                    hardwareId = hardwareId,
                     district = district,
-                    villageName = villageName,
-                    houseNumber = houseNumber
+                    villageName = villageName
                 )
             }
         }

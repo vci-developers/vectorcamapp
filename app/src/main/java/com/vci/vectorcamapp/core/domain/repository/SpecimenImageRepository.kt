@@ -12,5 +12,6 @@ interface SpecimenImageRepository {
     suspend fun deleteSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID) : Boolean
     fun observeUploadedMetadataCountForSession(sessionId: UUID): Flow<Int>
     fun observeUploadedImageCountForSession(sessionId: UUID): Flow<Int>
+    fun observeFailedImageCountForSession(sessionId: UUID): Flow<Int>
     suspend fun getTotalCountForSession(sessionId: UUID): Int
 }

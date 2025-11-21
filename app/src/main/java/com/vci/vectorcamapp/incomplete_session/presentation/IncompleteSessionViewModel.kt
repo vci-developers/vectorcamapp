@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -121,6 +122,12 @@ class IncompleteSessionViewModel @Inject constructor(
 
                 is IncompleteSessionAction.UpdateSearchQuery -> {
                     _state.value = _state.value.copy(searchQuery = action.searchQuery)
+                }
+                IncompleteSessionAction.ShowSearchTooltipDialog -> {
+                    _state.update { it.copy(isSearchTooltipVisible = true) }
+                }
+                IncompleteSessionAction.HideSearchTooltipDialog -> {
+                    _state.update { it.copy(isSearchTooltipVisible = false) }
                 }
             }
         }

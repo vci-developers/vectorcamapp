@@ -1,6 +1,8 @@
 package com.vci.vectorcamapp.complete_session.list.presentation
 
+import android.content.Context
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsAction
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
@@ -9,7 +11,9 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
+import com.vci.vectorcamapp.ui.extensions.displayText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +31,7 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CompleteSessionListViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
     private val specimenImageRepository: SpecimenImageRepository,
@@ -46,15 +51,17 @@ class CompleteSessionListViewModel @Inject constructor(
                         combine(
                             specimenImageRepository.observeUploadedMetadataCountForSession(sessionId),
                             specimenImageRepository.observeUploadedImageCountForSession(sessionId),
+                            specimenImageRepository.observeFailedImageCountForSession(sessionId),
                             workManagerRepository.observeIsSessionActivelyUploading(sessionId),
-                        ) { uploadedMetadataCount, uploadedImageCount, isUploading ->
+                        ) { uploadedMetadataCount, uploadedImageCount, uploadedImageFailedCount, isUploading ->
                             sessionAndSite to SessionUploadProgress(
                                 uploadedMetadataCount = uploadedMetadataCount,
                                 uploadedImageCount = uploadedImageCount,
                                 totalCount = specimenImageRepository.getTotalCountForSession(
                                     sessionId
                                 ),
-                                isUploading = isUploading
+                                isUploading = isUploading,
+                                failedImageCount = uploadedImageFailedCount
                             )
                         }
                     }
@@ -71,7 +78,7 @@ class CompleteSessionListViewModel @Inject constructor(
         val filteredProgressMap = if (currentState.searchQuery.isBlank()) {
             sessionAndSiteToUploadProgress
         } else {
-            sessionAndSiteToUploadProgress.filter { (sessionAndSite, _) ->
+            sessionAndSiteToUploadProgress.filter { (sessionAndSite, progress) ->
                 val session = sessionAndSite.session
                 val site = sessionAndSite.site
                 val fieldsForSearch = buildList {
@@ -83,6 +90,7 @@ class CompleteSessionListViewModel @Inject constructor(
                     add(site.parish)
                     add(site.villageName)
                     add(site.houseNumber)
+                    add(getSessionUploadStatus(progress))
                 }
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
             }
@@ -132,7 +140,25 @@ class CompleteSessionListViewModel @Inject constructor(
                 is CompleteSessionListAction.UpdateSearchQuery -> {
                     _state.update { it.copy(searchQuery = action.searchQuery) }
                 }
+
+                CompleteSessionListAction.ShowSearchTooltipDialog -> {
+                    _state.update { it.copy(isSearchTooltipVisible = true) }
+                }
+                CompleteSessionListAction.HideSearchTooltipDialog -> {
+                    _state.update { it.copy(isSearchTooltipVisible = false) }
+                }
             }
+        }
+    }
+
+    private fun getSessionUploadStatus(sessionUploadProgress: SessionUploadProgress): String {
+        val isComplete = sessionUploadProgress.totalCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount
+
+        return when {
+            sessionUploadProgress.failedImageCount > 0 -> UploadStatus.FAILED.displayText(context)
+            isComplete -> UploadStatus.COMPLETED.displayText(context)
+            sessionUploadProgress.isUploading -> UploadStatus.IN_PROGRESS.displayText(context)
+            else -> UploadStatus.NOT_STARTED.displayText(context)
         }
     }
 }
