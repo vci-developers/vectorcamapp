@@ -343,7 +343,7 @@ class ImageUploadWorker @AssistedInject constructor(
                     "ImageUploadWorker",
                     "Upload successful. Compressing original file: ${task.image.imageUri}"
                 )
-                compressImageFile(task.image.imageUri, COMPRESSION_QUALITY)
+                compressImageFile(task.image.imageUri, COMPRESSION_QUALITY, specimenId = task.specimen.id, imageId = task.image.localId)
             } catch (e: Exception) {
                 Log.e(
                     "ImageUploadWorker",
@@ -581,13 +581,18 @@ class ImageUploadWorker @AssistedInject constructor(
         notificationManager.notify(notificationId, notification)
     }
 
-    private suspend fun compressImageFile(uri: Uri, quality: Int) = withContext(Dispatchers.IO) {
+    private suspend fun compressImageFile(
+        uri: Uri,
+        quality: Int,
+        specimenId: String,
+        imageId: String
+    ) = withContext(Dispatchers.IO) {
         val resolver = context.contentResolver
         var bitmap: Bitmap? = null
         var backupFile: File? = null
 
         try {
-            backupFile = File.createTempFile("img_backup_", ".tmp", context.cacheDir)
+            backupFile = File.createTempFile("img_backup_${specimenId}_${imageId}", ".tmp", context.cacheDir)
 
             resolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(backupFile).use { out ->
