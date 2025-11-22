@@ -49,17 +49,19 @@ class CompleteSessionListViewModel @Inject constructor(
                     sessions.map { sessionAndSite ->
                         val sessionId = sessionAndSite.session.localId
                         combine(
+                            specimenImageRepository.observeUploadedMetadataCountForSession(sessionId),
                             specimenImageRepository.observeUploadedImageCountForSession(sessionId),
                             specimenImageRepository.observeFailedImageCountForSession(sessionId),
                             workManagerRepository.observeIsSessionActivelyUploading(sessionId),
-                        ) { uploadedCount, failedCount, isUploading ->
+                        ) { uploadedMetadataCount, uploadedImageCount, failedImageCount, isUploading ->
                             sessionAndSite to SessionUploadProgress(
-                                uploadedImageCount = uploadedCount,
-                                totalImageCount = specimenImageRepository.getTotalImageCountForSession(
+                                uploadedMetadataCount = uploadedMetadataCount,
+                                uploadedImageCount = uploadedImageCount,
+                                totalCount = specimenImageRepository.getTotalCountForSession(
                                     sessionId
                                 ),
                                 isUploading = isUploading,
-                                failedImageCount = failedCount
+                                failedImageCount = failedImageCount
                             )
                         }
                     }
@@ -150,7 +152,7 @@ class CompleteSessionListViewModel @Inject constructor(
     }
 
     private fun getSessionUploadStatus(sessionUploadProgress: SessionUploadProgress): String {
-        val isComplete = sessionUploadProgress.totalImageCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalImageCount
+        val isComplete = sessionUploadProgress.totalCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount
 
         return when {
             sessionUploadProgress.failedImageCount > 0 -> UploadStatus.FAILED.displayText(context)
