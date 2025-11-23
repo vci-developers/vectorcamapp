@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
@@ -38,7 +37,6 @@ import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.extensions.colors
-import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -76,6 +74,7 @@ fun CompleteSessionListTile(
         ActionTile(
             onClick = onClick,
             hue = progressColor,
+            modifier = modifier
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
@@ -155,6 +154,12 @@ fun CompleteSessionListTile(
                         iconPainter = painterResource(R.drawable.ic_house),
                         iconDescription = "House",
                         text = "House Number: ${site.houseNumber}",
+                    )
+
+                    CompleteSessionListDetailRow(
+                        iconPainter = painterResource(R.drawable.ic_hospital),
+                        iconDescription = "Hospital",
+                        text = "Nearest Health Center: ${site.healthCenter}",
                     )
                 }
 

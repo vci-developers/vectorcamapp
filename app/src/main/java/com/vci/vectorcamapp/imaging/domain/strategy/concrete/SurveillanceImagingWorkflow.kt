@@ -17,7 +17,7 @@ class SurveillanceImagingWorkflow @Inject constructor(
     private val inferenceRepository: InferenceRepository
 ) : ImagingWorkflow {
     override val specimenFurtherProcessingProbability: Float
-        get() = 0.05f
+        get() = 0f
 
     override suspend fun processLiveFrame(bitmap: Bitmap): LiveFrameProcessingResult {
         val previewInferenceResults = inferenceRepository.detectSpecimen(bitmap).map { detectorResult ->
