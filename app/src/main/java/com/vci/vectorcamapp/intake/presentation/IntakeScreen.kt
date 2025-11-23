@@ -539,7 +539,7 @@ fun IntakeScreen(
                     surveillanceForm.llinBrand?.let { current ->
                         DropdownField(
                             label = "LLIN Brand",
-                            options = IntakeDropdownOptions.LlinBrandOption.entries,
+                            options = IntakeDropdownOptions.LlinBrandOption.entries.filter { it.type?.label == surveillanceForm.llinType || it.type == null},
                             selectedOption = IntakeDropdownOptions.LlinBrandOption.entries.firstOrNull { it.label == current },
                             onOptionSelected = {
                                 onAction(IntakeAction.SelectLlinBrand(it))

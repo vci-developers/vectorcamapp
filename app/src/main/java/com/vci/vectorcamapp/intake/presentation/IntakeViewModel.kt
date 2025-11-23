@@ -357,7 +357,8 @@ class IntakeViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
-                                llinType = action.option.label
+                                llinType = action.option.label,
+                                llinBrand = ""
                             )
                         )
                     }
