@@ -145,41 +145,43 @@ class ImagingViewModel @Inject constructor(
                             _state.update { it.copy(isCameraReady = true) }
                         }
 
-                        val bitmap = action.frame.toUprightBitmap()
+                        if (!_state.value.isProcessing) {
+                            val bitmap = action.frame.toUprightBitmap()
 
-                        val liveFrameProcessingResult = imagingWorkflow.processLiveFrame(bitmap)
+                            val liveFrameProcessingResult = imagingWorkflow.processLiveFrame(bitmap)
 
-                        validateSpecimenIdUseCase(
-                            liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
-                        ).onSuccess { correctedSpecimenId ->
-                            _state.update {
-                                it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
-                            }
-                        }
-
-                        val suggestedAutofocusPoint = liveFrameProcessingResult.autofocusPoint
-
-                        _state.update { current ->
-                            val shouldUseAutofocusThisFrame =
-                                !current.isManualFocusing || (current.focusPoint == null && suggestedAutofocusPoint != null)
-
-                            val nextFocusPoint = if (shouldUseAutofocusThisFrame) {
-                                suggestedAutofocusPoint ?: current.focusPoint
-                            } else {
-                                current.focusPoint
+                            validateSpecimenIdUseCase(
+                                liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
+                            ).onSuccess { correctedSpecimenId ->
+                                _state.update {
+                                    it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
+                                }
                             }
 
-                            val nextIsAutofocusing = when {
-                                !current.isManualFocusing -> true
-                                current.focusPoint == null && suggestedAutofocusPoint != null -> true
-                                else -> false
-                            }
+                            val suggestedAutofocusPoint = liveFrameProcessingResult.autofocusPoint
 
-                            current.copy(
-                                previewInferenceResults = liveFrameProcessingResult.previewInferenceResults,
-                                focusPoint = nextFocusPoint,
-                                isManualFocusing = !nextIsAutofocusing
-                            )
+                            _state.update { current ->
+                                val shouldUseAutofocusThisFrame =
+                                    !current.isManualFocusing || (current.focusPoint == null && suggestedAutofocusPoint != null)
+
+                                val nextFocusPoint = if (shouldUseAutofocusThisFrame) {
+                                    suggestedAutofocusPoint ?: current.focusPoint
+                                } else {
+                                    current.focusPoint
+                                }
+
+                                val nextIsAutofocusing = when {
+                                    !current.isManualFocusing -> true
+                                    current.focusPoint == null && suggestedAutofocusPoint != null -> true
+                                    else -> false
+                                }
+
+                                current.copy(
+                                    previewInferenceResults = liveFrameProcessingResult.previewInferenceResults,
+                                    focusPoint = nextFocusPoint,
+                                    isManualFocusing = !nextIsAutofocusing
+                                )
+                            }
                         }
                     } catch (e: Exception) {
                         emitError(ImagingError.PROCESSING_ERROR)

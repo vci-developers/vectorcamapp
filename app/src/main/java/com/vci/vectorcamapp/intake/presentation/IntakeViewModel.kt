@@ -346,7 +346,7 @@ class IntakeViewModel @Inject constructor(
                         _state.update {
                             it.copy(
                                 surveillanceForm = it.surveillanceForm?.copy(
-                                    llinType = "", llinBrand = "", numPeopleSleptUnderLlin = -1
+                                    llinType = "", numPeopleSleptUnderLlin = -1
                                 )
                             )
                         }

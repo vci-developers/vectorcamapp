@@ -61,15 +61,15 @@ class TfLiteSpecimenDetector(
                 val model = FileUtil.loadMappedFile(context, "detect.tflite")
                 val options = Interpreter.Options()
 
-                if (CompatibilityList().isDelegateSupportedOnThisDevice) {
-                    try {
-                        options.addDelegate(GpuDelegateManager.getDelegate())
-                        isGpuDelegateInitialized = true
-                        Log.d(TAG, "GPU delegate initialized for Detector")
-                    } catch (e: Exception) {
-                        Log.w(TAG, "GPU delegate for Detector failed: ${e.message}. Falling back to CPU.")
-                    }
-                }
+//                if (CompatibilityList().isDelegateSupportedOnThisDevice) {
+//                    try {
+//                        options.addDelegate(GpuDelegateManager.getDelegate())
+//                        isGpuDelegateInitialized = true
+//                        Log.d(TAG, "GPU delegate initialized for Detector")
+//                    } catch (e: Exception) {
+//                        Log.w(TAG, "GPU delegate for Detector failed: ${e.message}. Falling back to CPU.")
+//                    }
+//                }
 
                 options.setNumThreads(Runtime.getRuntime().availableProcessors())
                 detector = Interpreter(model, options)
