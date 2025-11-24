@@ -29,7 +29,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Collector
-import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
@@ -56,10 +55,7 @@ fun IntakeScreen(
     val context = LocalContext.current
 
     BackHandler {
-        when (state.session.type) {
-            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
-            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
-        }
+        onAction(IntakeAction.ReturnToPreviousScreen)
     }
 
     ScreenHeader(
@@ -73,10 +69,7 @@ fun IntakeScreen(
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
-                        when (state.session.type) {
-                            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
-                            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
-                        }
+                        onAction(IntakeAction.ReturnToPreviousScreen)
                     }
             )
         },
@@ -203,7 +196,9 @@ fun IntakeScreen(
                             Spacer(modifier.height(MaterialTheme.dimensions.spacingSmall))
 
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(top = MaterialTheme.dimensions.paddingSmall),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = MaterialTheme.dimensions.paddingSmall),
                                 horizontalArrangement = Arrangement.End
                             ) {
                                 Button(

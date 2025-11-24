@@ -84,14 +84,9 @@ class IntakeViewModel @Inject constructor(
     fun onAction(action: IntakeAction) {
         viewModelScope.launch {
             when (action) {
-                IntakeAction.ReturnToLandingScreen -> {
+                IntakeAction.ReturnToPreviousScreen -> {
                     currentSessionCache.clearSession()
-                    _events.send(IntakeEvent.NavigateBackToLandingScreen)
-                }
-
-                IntakeAction.ReturnToSettingsScreen -> {
-                    currentSessionCache.clearSession()
-                    _events.send(IntakeEvent.NavigateBackToSettingsScreen)
+                    _events.send(IntakeEvent.NavigateBackToPreviousScreen)
                 }
 
                 IntakeAction.SubmitIntakeForm -> {
