@@ -121,6 +121,12 @@ fun CompleteSessionForm(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
+
+                Text(
+                    text = "Nearest Health Center: ${site.healthCenter}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colors.textPrimary
+                )
             }
 
             surveillanceForm?.let {

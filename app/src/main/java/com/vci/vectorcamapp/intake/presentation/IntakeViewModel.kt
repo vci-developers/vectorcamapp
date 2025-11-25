@@ -84,14 +84,9 @@ class IntakeViewModel @Inject constructor(
     fun onAction(action: IntakeAction) {
         viewModelScope.launch {
             when (action) {
-                IntakeAction.ReturnToLandingScreen -> {
+                IntakeAction.ReturnToPreviousScreen -> {
                     currentSessionCache.clearSession()
-                    _events.send(IntakeEvent.NavigateBackToLandingScreen)
-                }
-
-                IntakeAction.ReturnToSettingsScreen -> {
-                    currentSessionCache.clearSession()
-                    _events.send(IntakeEvent.NavigateBackToSettingsScreen)
+                    _events.send(IntakeEvent.NavigateBackToPreviousScreen)
                 }
 
                 IntakeAction.SubmitIntakeForm -> {
@@ -346,7 +341,7 @@ class IntakeViewModel @Inject constructor(
                         _state.update {
                             it.copy(
                                 surveillanceForm = it.surveillanceForm?.copy(
-                                    llinType = "", llinBrand = "", numPeopleSleptUnderLlin = -1
+                                    llinType = "", numPeopleSleptUnderLlin = -1
                                 )
                             )
                         }
@@ -357,7 +352,8 @@ class IntakeViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
-                                llinType = action.option.label
+                                llinType = action.option.label,
+                                llinBrand = ""
                             )
                         )
                     }

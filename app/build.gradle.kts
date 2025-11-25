@@ -59,7 +59,6 @@ android {
 
         buildConfigField("String", "POSTHOG_API_KEY", "\"${secretsProperties["POSTHOG_API_KEY"]}\"")
         buildConfigField("String", "POSTHOG_HOST", "\"${secretsProperties["POSTHOG_HOST"]}\"")
-        buildConfigField("String", "VECTORCAM_API_KEY", "\"${secretsProperties["VECTORCAM_API_KEY"]}\"")
 
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a")
@@ -71,6 +70,7 @@ android {
             enableUnitTestCoverage = true
             enableAndroidTestCoverage = true
             buildConfigField("String", "BASE_URL", "\"https://test.api.vectorcam.org/\"")
+            buildConfigField("String", "VECTORCAM_API_KEY", "\"${secretsProperties["DEBUG_VECTORCAM_API_KEY"]}\"")
         }
 
         release {
@@ -81,6 +81,7 @@ android {
             )
 
             buildConfigField("String", "BASE_URL", "\"https://api.vectorcam.org/\"")
+            buildConfigField("String", "VECTORCAM_API_KEY", "\"${secretsProperties["RELEASE_VECTORCAM_API_KEY"]}\"")
         }
     }
 

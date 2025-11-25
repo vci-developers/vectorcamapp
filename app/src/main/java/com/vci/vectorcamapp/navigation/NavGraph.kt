@@ -119,13 +119,7 @@ fun NavGraph(startDestination: Destination) {
                         Destination.Imaging
                     )
 
-                    IntakeEvent.NavigateBackToLandingScreen -> navController.popBackStack(
-                        Destination.Landing, false
-                    )
-
-                    IntakeEvent.NavigateBackToSettingsScreen -> navController.popBackStack(
-                        Destination.Settings, false
-                    )
+                    IntakeEvent.NavigateBackToPreviousScreen -> navController.popBackStack()
 
                     IntakeEvent.NavigateBackToRegistrationScreen -> navController.popBackStack(
                         Destination.Registration, false
