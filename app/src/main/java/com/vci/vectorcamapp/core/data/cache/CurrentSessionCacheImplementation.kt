@@ -16,8 +16,10 @@ class CurrentSessionCacheImplementation @Inject constructor(
                 localId = session.localId,
                 siteId = siteId,
                 remoteId = session.remoteId,
+                hardwareId = session.hardwareId,
                 collectorTitle = session.collectorTitle,
                 collectorName = session.collectorName,
+                collectorLastTrainedOn = session.collectorLastTrainedOn,
                 collectionDate = session.collectionDate,
                 collectionMethod = session.collectionMethod,
                 specimenCondition = session.specimenCondition,
@@ -27,7 +29,7 @@ class CurrentSessionCacheImplementation @Inject constructor(
                 notes = session.notes,
                 latitude = session.latitude,
                 longitude = session.longitude,
-                type = session.type
+                type = session.type,
             )
         }
     }
@@ -40,8 +42,10 @@ class CurrentSessionCacheImplementation @Inject constructor(
             Session(
                 localId = currentSessionCacheDto.localId,
                 remoteId = currentSessionCacheDto.remoteId,
+                hardwareId = currentSessionCacheDto.hardwareId,
                 collectorTitle = currentSessionCacheDto.collectorTitle,
                 collectorName = currentSessionCacheDto.collectorName,
+                collectorLastTrainedOn = currentSessionCacheDto.collectorLastTrainedOn,
                 collectionDate = currentSessionCacheDto.collectionDate,
                 collectionMethod = currentSessionCacheDto.collectionMethod,
                 specimenCondition = currentSessionCacheDto.specimenCondition,
@@ -51,7 +55,7 @@ class CurrentSessionCacheImplementation @Inject constructor(
                 notes = currentSessionCacheDto.notes,
                 latitude = currentSessionCacheDto.latitude,
                 longitude = currentSessionCacheDto.longitude,
-                type = currentSessionCacheDto.type
+                type = currentSessionCacheDto.type,
             )
         }
     }

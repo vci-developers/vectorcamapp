@@ -5,11 +5,11 @@ import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions.LlinBrandO
 import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions.LlinTypeOption
 
 sealed interface IntakeAction {
-    data object ReturnToLandingScreen: IntakeAction
-    data object ReturnToSettingsScreen: IntakeAction
+    data object ReturnToPreviousScreen : IntakeAction
     data object SubmitIntakeForm: IntakeAction
     data object RegisterMissingCollector : IntakeAction
     data class SelectCollector(val collector: Collector) : IntakeAction
+    data class EnterHardwareId(val text: String): IntakeAction
     data class SelectDistrict(val district: String) : IntakeAction
     data class SelectVillageName(val villageName: String) : IntakeAction
     data class SelectHouseNumber(val houseNumber: String) : IntakeAction

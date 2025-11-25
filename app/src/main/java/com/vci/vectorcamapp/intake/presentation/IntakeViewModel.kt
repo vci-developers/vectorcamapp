@@ -84,14 +84,9 @@ class IntakeViewModel @Inject constructor(
     fun onAction(action: IntakeAction) {
         viewModelScope.launch {
             when (action) {
-                IntakeAction.ReturnToLandingScreen -> {
+                IntakeAction.ReturnToPreviousScreen -> {
                     currentSessionCache.clearSession()
-                    _events.send(IntakeEvent.NavigateBackToLandingScreen)
-                }
-
-                IntakeAction.ReturnToSettingsScreen -> {
-                    currentSessionCache.clearSession()
-                    _events.send(IntakeEvent.NavigateBackToSettingsScreen)
+                    _events.send(IntakeEvent.NavigateBackToPreviousScreen)
                 }
 
                 IntakeAction.SubmitIntakeForm -> {
@@ -99,7 +94,7 @@ class IntakeViewModel @Inject constructor(
                     val surveillanceForm = _state.value.surveillanceForm
 
                     val collectorValidationResult =
-                        intakeValidationUseCases.validateCollector(_state.value.session.collectorName, _state.value.session.collectorTitle)
+                        intakeValidationUseCases.validateCollector(session.collectorName, session.collectorTitle)
                     val districtResult =
                         intakeValidationUseCases.validateDistrict(_state.value.selectedDistrict)
                     val villageNameResult =
@@ -116,6 +111,26 @@ class IntakeViewModel @Inject constructor(
                         intakeValidationUseCases.validateCollectionMethod(session.collectionMethod)
                     val specimenConditionResult =
                         intakeValidationUseCases.validateSpecimenCondition(session.specimenCondition)
+                    val numPeopleSleptInHouseResult =
+                        surveillanceForm?.let {
+                            intakeValidationUseCases.validateNumPeopleSleptInHouse(it.numPeopleSleptInHouse)
+                        }
+
+                    val monthsSinceIrsResult =
+                        surveillanceForm?.takeIf { it.wasIrsConducted && it.monthsSinceIrs != null }?.let {
+                            it.monthsSinceIrs?.let { months -> intakeValidationUseCases.validateMonthsSinceIrs(months) }
+                        }
+
+                    val numLlinsAvailableResult =
+                        surveillanceForm?.let {
+                            intakeValidationUseCases.validateNumLlinsAvailable(it.numLlinsAvailable)
+                        }
+
+                    val numPeopleSleptUnderLlinResult =
+                        surveillanceForm?.numPeopleSleptUnderLlin?.let {
+                            intakeValidationUseCases.validateNumPeopleSleptUnderLlin(it)
+                        }
+
 
                     _state.update {
                         it.copy(
@@ -128,7 +143,11 @@ class IntakeViewModel @Inject constructor(
                                 llinBrand = llinBrandResult?.errorOrNull(),
                                 collectionDate = collectionDateResult.errorOrNull(),
                                 collectionMethod = collectionMethodResult.errorOrNull(),
-                                specimenCondition = specimenConditionResult.errorOrNull()
+                                specimenCondition = specimenConditionResult.errorOrNull(),
+                                monthsSinceIrs = monthsSinceIrsResult?.errorOrNull(),
+                                numLlinsAvailable = numLlinsAvailableResult?.errorOrNull(),
+                                numPeopleSleptUnderLlin = numPeopleSleptUnderLlinResult?.errorOrNull(),
+                                numPeopleSleptInHouse = numPeopleSleptInHouseResult?.errorOrNull(),
                             )
                         )
                     }
@@ -142,10 +161,20 @@ class IntakeViewModel @Inject constructor(
                         llinBrandResult,
                         collectionDateResult,
                         collectionMethodResult,
-                        specimenConditionResult
+                        specimenConditionResult,
+                        monthsSinceIrsResult,
+                        numLlinsAvailableResult,
+                        numPeopleSleptInHouseResult,
+                        numPeopleSleptUnderLlinResult
                     ).any { it is Result.Error }
 
-                    if (!hasError) {
+                    if (hasError) {
+                        emitError(IntakeError.FORM_INVALID)
+                    }
+                    else if (state.value.isCurrentCollectorMissing) {
+                        emitError(IntakeError.MISSING_COLLECTOR)
+                    }
+                    else {
                         val selectedSite = _state.value.allSitesInProgram.find {
                             it.district == _state.value.selectedDistrict &&
                                     it.villageName == _state.value.selectedVillageName &&
@@ -185,9 +214,10 @@ class IntakeViewModel @Inject constructor(
                             defaultIntakeFieldsCache.saveDefaultIntakeFields(
                                 collectorName = session.collectorName,
                                 collectorTitle = session.collectorTitle,
+                                collectorLastTrainedOn = session.collectorLastTrainedOn,
+                                hardwareId = session.hardwareId,
                                 district = _state.value.selectedDistrict,
                                 villageName = _state.value.selectedVillageName,
-                                houseNumber = _state.value.selectedHouseNumber
                             )
                             _events.send(IntakeEvent.NavigateToImagingScreen)
                         }
@@ -195,16 +225,26 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.SelectCollector -> {
-                    val updatedName = action.collector.name
-                    val updatedTitle = action.collector.title
+                    val updatedCollector = action.collector
 
                     _state.update {
                         it.copy(
                             session = it.session.copy(
-                                collectorName = updatedName,
-                                collectorTitle = updatedTitle
+                                collectorName = updatedCollector.name,
+                                collectorTitle = updatedCollector.title,
+                                collectorLastTrainedOn = updatedCollector.lastTrainedOn
                             ),
                             isCurrentCollectorMissing = false
+                        )
+                    }
+                }
+
+                is IntakeAction.EnterHardwareId -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                hardwareId = action.text
+                            )
                         )
                     }
                 }
@@ -238,16 +278,15 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.EnterNumPeopleSleptInHouse -> {
-                    val numPeopleSleptInHouse =
-                        if (action.count.isBlank()) 0 else action.count.toIntOrNull()
-                    numPeopleSleptInHouse?.let { count ->
-                        _state.update {
-                            it.copy(
-                                surveillanceForm = it.surveillanceForm?.copy(
-                                    numPeopleSleptInHouse = count
-                                )
+                    val oldValue = _state.value.surveillanceForm?.numPeopleSleptInHouse
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val numPeopleSleptInHouse = normalized.toIntOrNull() ?: -1
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                numPeopleSleptInHouse = numPeopleSleptInHouse
                             )
-                        }
+                        )
                     }
                 }
 
@@ -257,55 +296,54 @@ class IntakeViewModel @Inject constructor(
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
                                 wasIrsConducted = wasIrsConducted,
-                                monthsSinceIrs = if (wasIrsConducted) 0 else null
+                                monthsSinceIrs = if (wasIrsConducted) -1 else null
                             )
                         )
                     }
                 }
 
                 is IntakeAction.EnterMonthsSinceIrs -> {
-                    val monthsSinceIrs =
-                        if (action.count.isBlank()) 0 else action.count.toIntOrNull()
-                    monthsSinceIrs?.let { count ->
-                        _state.update {
-                            it.copy(
-                                surveillanceForm = it.surveillanceForm?.copy(
-                                    monthsSinceIrs = count
-                                )
+                    val oldValue = _state.value.surveillanceForm?.monthsSinceIrs
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val monthsSinceIrs = normalized.toIntOrNull() ?: -1
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                monthsSinceIrs = monthsSinceIrs
                             )
-                        }
+                        )
                     }
                 }
 
+
                 is IntakeAction.EnterNumLlinsAvailable -> {
-                    val numLlinsAvailable =
-                        if (action.count.isBlank()) 0 else action.count.toIntOrNull()
-                    numLlinsAvailable?.let { count ->
+                    val oldValue = _state.value.surveillanceForm?.numLlinsAvailable
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val numLlinsAvailable = normalized.toIntOrNull() ?: -1
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                numLlinsAvailable = numLlinsAvailable
+                            )
+                        )
+                    }
+                    if (numLlinsAvailable <= 0) {
                         _state.update {
                             it.copy(
                                 surveillanceForm = it.surveillanceForm?.copy(
-                                    numLlinsAvailable = count
+                                    llinType = null,
+                                    llinBrand = null,
+                                    numPeopleSleptUnderLlin = null
                                 )
                             )
                         }
-                        if (numLlinsAvailable == 0) {
-                            _state.update {
-                                it.copy(
-                                    surveillanceForm = it.surveillanceForm?.copy(
-                                        llinType = null,
-                                        llinBrand = null,
-                                        numPeopleSleptUnderLlin = null
-                                    )
+                    } else {
+                        _state.update {
+                            it.copy(
+                                surveillanceForm = it.surveillanceForm?.copy(
+                                    llinType = "", numPeopleSleptUnderLlin = -1
                                 )
-                            }
-                        } else {
-                            _state.update {
-                                it.copy(
-                                    surveillanceForm = it.surveillanceForm?.copy(
-                                        llinType = "", llinBrand = "", numPeopleSleptUnderLlin = 0
-                                    )
-                                )
-                            }
+                            )
                         }
                     }
                 }
@@ -314,7 +352,8 @@ class IntakeViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
-                                llinType = action.option.label
+                                llinType = action.option.label,
+                                llinBrand = ""
                             )
                         )
                     }
@@ -331,16 +370,15 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.EnterNumPeopleSleptUnderLlin -> {
-                    val numPeopleSleptUnderLlin =
-                        if (action.count.isBlank()) 0 else action.count.toIntOrNull()
-                    numPeopleSleptUnderLlin?.let { count ->
-                        _state.update {
-                            it.copy(
-                                surveillanceForm = it.surveillanceForm?.copy(
-                                    numPeopleSleptUnderLlin = count
-                                )
+                    val oldValue = _state.value.surveillanceForm?.numPeopleSleptUnderLlin
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val numPeopleSleptUnderLlin = normalized.toIntOrNull() ?: -1
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                numPeopleSleptUnderLlin = numPeopleSleptUnderLlin
                             )
-                        }
+                        )
                     }
                 }
 
@@ -403,9 +441,11 @@ class IntakeViewModel @Inject constructor(
                 is IntakeAction.HideCollectionMethodTooltipDialog -> {
                     _state.update { it.copy(isCollectionMethodTooltipVisible = false) }
                 }
-                IntakeAction.RegisterMissingCollector -> {
+
+                is IntakeAction.RegisterMissingCollector -> {
                     val name = _state.value.session.collectorName
                     val title = _state.value.session.collectorTitle
+                    val lastTrainedOn = _state.value.session.collectorLastTrainedOn
 
                     if (name.isBlank() || title.isBlank()) {
                         return@launch
@@ -415,7 +455,8 @@ class IntakeViewModel @Inject constructor(
                         Collector(
                             id = UUID.randomUUID(),
                             name = name,
-                            title = title
+                            title = title,
+                            lastTrainedOn = lastTrainedOn
                         )
                     ).onSuccess {
                         _state.update {
@@ -424,10 +465,9 @@ class IntakeViewModel @Inject constructor(
                             )
                         }
                     }.onError {
-                        emitError(IntakeError.UNKNOWN_ERROR)
+                        emitError(IntakeError.COLLECTOR_SAVE_FAILED)
                     }
                 }
-
             }
         }
     }
@@ -456,15 +496,18 @@ class IntakeViewModel @Inject constructor(
             val defaultFields = defaultIntakeFieldsCache.getDefaultIntakeFields()
             val cachedCollectorName = defaultFields?.collectorName.orEmpty()
             val cachedCollectorTitle = defaultFields?.collectorTitle.orEmpty()
+            val cachedCollectorLastTrainedOn = defaultFields?.collectorLastTrainedOn ?: 0L
+            val cachedDefaultHardwareId = defaultFields?.hardwareId.orEmpty()
             val cachedDefaultDistrict = defaultFields?.district.orEmpty()
             val cachedDefaultVillageName = defaultFields?.villageName.orEmpty()
-            val cachedDefaultHouseNumber = defaultFields?.houseNumber.orEmpty()
 
             val effectiveSession =
                 currentSession ?: _state.value.session.copy(
                     type = resolvedSessionType,
+                    hardwareId = cachedDefaultHardwareId,
                     collectorName = cachedCollectorName,
-                    collectorTitle = cachedCollectorTitle
+                    collectorTitle = cachedCollectorTitle,
+                    collectorLastTrainedOn = cachedCollectorLastTrainedOn
                 )
 
             val currentSessionSiteId = currentSessionCache.getSiteId()
@@ -497,18 +540,7 @@ class IntakeViewModel @Inject constructor(
                         else -> ""
                     }
 
-                val validatedHouseNumber =
-                    when {
-                        validatedSite != null -> validatedSite.houseNumber
-                        validatedDistrict.isNotBlank() &&
-                            validatedVillageName.isNotBlank() &&
-                            currentAllSites.any {
-                                it.district == validatedDistrict &&
-                                    it.villageName == validatedVillageName &&
-                                    it.houseNumber == cachedDefaultHouseNumber
-                            } -> cachedDefaultHouseNumber
-                        else -> ""
-                    }
+                val validatedHouseNumber = validatedSite?.houseNumber.orEmpty()
 
                 val sessionCollectorName = effectiveSession.collectorName
                 val sessionCollectorTitle = effectiveSession.collectorTitle
@@ -572,5 +604,18 @@ class IntakeViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun normalizeNumericInput(oldValue: Int?, newValue: String): String {
+        val oldValueString = (oldValue ?: 0).toString()
+        val filteredNewValue = newValue.filter { it.isDigit() }
+
+        val finalValueString = if (oldValueString == "0" && filteredNewValue.length > 1) {
+                filteredNewValue.filter { it != '0' }
+            } else {
+                filteredNewValue
+            }
+
+        return finalValueString.toIntOrNull().toString()
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError
 import com.vci.vectorcamapp.core.domain.util.Error
+import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
@@ -13,9 +14,7 @@ import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.landing.domain.util.LandingError
-import com.vci.vectorcamapp.registration.domain.util.RegistrationValidationError
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
-import com.vci.vectorcamapp.settings.domain.util.SettingsValidationError
 
 fun Error.toString(context: Context): String {
     val resId = when (this) {
@@ -90,8 +89,11 @@ fun Error.toString(context: Context): String {
         is IntakeError -> when (this) {
             IntakeError.SITE_NOT_FOUND -> R.string.intake_error_site_not_found
             IntakeError.PROGRAM_NOT_FOUND -> R.string.intake_error_missing_program_id
+            IntakeError.MISSING_COLLECTOR -> R.string.intake_error_missing_collector
+            IntakeError.COLLECTOR_SAVE_FAILED -> R.string.intake_error_collector_save_failed
             IntakeError.LOCATION_PERMISSION_DENIED -> R.string.intake_error_location_permission_denied
             IntakeError.LOCATION_GPS_TIMEOUT -> R.string.intake_error_location_gps_timeout
+            IntakeError.FORM_INVALID -> R.string.intake_error_form_invalid
             IntakeError.UNKNOWN_ERROR -> R.string.intake_error_unknown_error
         }
 
@@ -105,21 +107,21 @@ fun Error.toString(context: Context): String {
             FormValidationError.FUTURE_COLLECTION_DATE -> R.string.form_validation_error_future_collection_date
             FormValidationError.BLANK_COLLECTION_METHOD -> R.string.form_validation_error_blank_collection_method
             FormValidationError.BLANK_SPECIMEN_CONDITION -> R.string.form_validation_error_blank_specimen_condition
+            FormValidationError.INVALID_NUM_PEOPLE_SLEPT_UNDER_LLIN -> R.string.form_validation_error_invalid_num_people_slept_under_llin_condition
+            FormValidationError.INVALID_NUM_PEOPLE_SLEPT_IN_HOUSE -> R.string.form_validation_error_invalid_num_people_slept_in_house_condition
+            FormValidationError.INVALID_NUM_LLINS_AVAILABLE -> R.string.form_validation_error_invalid_num_llins_available
+            FormValidationError.INVALID_MONTHS_SINCE_IRS -> R.string.form_validation_error_invalid_months_since_irs
         }
 
-        is RegistrationValidationError -> when (this) {
-            RegistrationValidationError.BLANK_COLLECTOR_TITLE -> R.string.registration_validation_error_blank_collector_title
-            RegistrationValidationError.BLANK_COLLECTOR_NAME -> R.string.registration_validation_error_blank_collector_name
+        is CollectorValidationError -> when (this) {
+            CollectorValidationError.BLANK_COLLECTOR_TITLE -> R.string.collector_validation_error_blank_collector_title
+            CollectorValidationError.BLANK_COLLECTOR_NAME -> R.string.collector_validation_error_blank_collector_name
+            CollectorValidationError.INVALID_LAST_TRAINED_ON_DATE -> R.string.collector_validation_error_invalid_collector_last_trained_on
         }
 
         is SettingsError -> when (this) {
             SettingsError.COLLECTOR_SAVE_FAILED -> R.string.settings_error_collector_save_failed
             SettingsError.COLLECTOR_DELETION_FAILED -> R.string.settings_error_collector_deletion_failed
-        }
-
-        is SettingsValidationError -> when (this) {
-            SettingsValidationError.BLANK_COLLECTOR_TITLE -> R.string.settings_validation_error_blank_collector_title
-            SettingsValidationError.BLANK_COLLECTOR_NAME -> R.string.settings_validation_error_blank_collector_name
         }
 
         else -> R.string.error_fallback

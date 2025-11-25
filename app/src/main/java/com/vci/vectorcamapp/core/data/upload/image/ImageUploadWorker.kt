@@ -4,6 +4,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -20,6 +22,7 @@ import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
+import com.vci.vectorcamapp.core.domain.util.DomainError
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -72,6 +75,8 @@ class ImageUploadWorker @AssistedInject constructor(
 
         private const val CHANNEL_ID = "image_upload_channel"
         private const val CHANNEL_NAME = "Image Upload Channel"
+
+        private const val COMPRESSION_QUALITY = 30
     }
 
     private val notificationManager =
@@ -331,6 +336,23 @@ class ImageUploadWorker @AssistedInject constructor(
         } else {
             UploadStatus.FAILED
         }
+
+        if (uploadResult is DomainResult.Success) {
+            try {
+                Log.d(
+                    "ImageUploadWorker",
+                    "Upload successful. Compressing original file: ${task.image.imageUri}"
+                )
+                compressImageFile(task.image.imageUri, COMPRESSION_QUALITY, specimenId = task.specimen.id, imageId = task.image.localId)
+            } catch (e: Exception) {
+                Log.e(
+                    "ImageUploadWorker",
+                    "Failed to compress original file (${task.image.imageUri}) after upload.",
+                    e
+                )
+            }
+        }
+
         specimenImageRepository.updateSpecimenImage(
             specimenImage = task.image.copy(imageUploadStatus = finalStatus),
             specimenId = task.specimen.id,
@@ -557,5 +579,58 @@ class ImageUploadWorker @AssistedInject constructor(
             .setSmallIcon(icon)
             .build()
         notificationManager.notify(notificationId, notification)
+    }
+
+    private suspend fun compressImageFile(
+        uri: Uri,
+        quality: Int,
+        specimenId: String,
+        imageId: String
+    ) = withContext(Dispatchers.IO) {
+        val resolver = context.contentResolver
+        var bitmap: Bitmap? = null
+        var backupFile: File? = null
+
+        try {
+            backupFile = File.createTempFile("img_backup_${specimenId}_${imageId}", ".tmp", context.cacheDir)
+
+            resolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(backupFile).use { out ->
+                    input.copyTo(out)
+                }
+            } ?: throw IOException("Failed to open input stream for $uri to create backup")
+
+            bitmap = backupFile.inputStream().use { backupIn ->
+                BitmapFactory.decodeStream(backupIn)
+            } ?: throw IOException("Failed to decode bitmap from backup for $uri")
+
+            resolver.openOutputStream(uri, "wt")?.use { out ->
+                if (!bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)) {
+                    throw IOException("Failed to compress bitmap to $uri")
+                }
+                out.flush()
+            } ?: throw IOException("Failed to open output stream for $uri")
+
+            Log.d("ImageUploadWorker", "Successfully compressed $uri to $quality% quality.")
+        } catch (e: Exception) {
+            Log.e("ImageUploadWorker", "Error compressing $uri, attempting to restore original", e)
+            if (backupFile != null && backupFile.exists()) {
+                try {
+                    resolver.openOutputStream(uri, "wt")?.use { out ->
+                        backupFile.inputStream().use { backupIn ->
+                            backupIn.copyTo(out)
+                        }
+                        out.flush()
+                    }
+                    Log.d("ImageUploadWorker", "Successfully restored original image from backup for $uri")
+                } catch (restore: Exception) {
+                    Log.e("ImageUploadWorker", "Failed to restore original from backup for $uri", restore)
+                }
+            }
+            throw e
+        } finally {
+            bitmap?.recycle()
+            backupFile?.delete()
+        }
     }
 }

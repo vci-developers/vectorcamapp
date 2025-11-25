@@ -12,6 +12,9 @@ import javax.inject.Inject
 class DataCollectionImagingWorkflow @Inject constructor(
     private val inferenceRepository: InferenceRepository,
 ) : ImagingWorkflow {
+    override val specimenFurtherProcessingProbability: Float
+        get() = 0f
+
     override suspend fun processLiveFrame(bitmap: Bitmap): LiveFrameProcessingResult {
         return LiveFrameProcessingResult(
             specimenId = inferenceRepository.readSpecimenId(bitmap),

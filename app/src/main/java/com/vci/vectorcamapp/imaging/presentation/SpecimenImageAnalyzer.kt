@@ -13,12 +13,13 @@ class SpecimenImageAnalyzer(
     private var frameCounter = 0
 
     override fun analyze(frame: ImageProxy) {
-        if (frameCounter % FRAME_SKIP_RATE == 0) {
-            onFrameReady(frame)
-            frameCounter = 1
-        } else {
-            frame.close()
-            frameCounter++
-        }
+//        if (frameCounter % FRAME_SKIP_RATE == 0) {
+//            onFrameReady(frame)
+//            frameCounter = 1
+//        } else {
+//            frame.close()
+//            frameCounter++
+//        }
+        onFrameReady(frame)
     }
 }

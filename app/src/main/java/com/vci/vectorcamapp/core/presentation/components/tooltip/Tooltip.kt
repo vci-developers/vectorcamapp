@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
@@ -30,11 +31,13 @@ fun Tooltip(
     confirmText: String = "Done",
     iconSize: Dp = MaterialTheme.dimensions.iconSizeSmall,
     textStyle: TextStyle = MaterialTheme.typography.bodySmall,
+    modifier: Modifier = Modifier,
     content: @Composable (() -> Unit)
 ){
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        modifier = modifier
+            .fillMaxWidth()
             .clickable { onClick() }
     ) {
         Icon(

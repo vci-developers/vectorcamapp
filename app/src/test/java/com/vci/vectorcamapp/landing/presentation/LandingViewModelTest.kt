@@ -75,8 +75,10 @@ class LandingViewModelTest {
     private fun makeSession(type: SessionType) = Session(
         localId = UUID.randomUUID(),
         remoteId = null,
+        hardwareId = "TEST123",
         collectorTitle = "Dr.",
         collectorName = "Alice",
+        collectorLastTrainedOn = 0L,
         collectionDate = 1_632_000_000L,
         collectionMethod = "Net",
         specimenCondition = "Good",
@@ -86,7 +88,7 @@ class LandingViewModelTest {
         notes = "",
         latitude = null,
         longitude = null,
-        type = type
+        type = type,
     )
 
     private fun makeDummySite() = Site(

@@ -13,8 +13,10 @@ data class CompleteSessionDetailsState(
     val session: Session = Session(
         localId = UUID(0, 0),
         remoteId = null,
+        hardwareId = null,
         collectorTitle = "",
         collectorName = "",
+        collectorLastTrainedOn = 0L,
         collectionDate = 0L,
         collectionMethod = "",
         specimenCondition = "",
@@ -24,7 +26,7 @@ data class CompleteSessionDetailsState(
         notes = "",
         latitude = null,
         longitude = null,
-        type = SessionType.SURVEILLANCE
+        type = SessionType.SURVEILLANCE,
     ),
     val site: Site = Site(
         id = -1,
@@ -38,5 +40,6 @@ data class CompleteSessionDetailsState(
     ),
     val surveillanceForm: SurveillanceForm? = null,
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val isSearchTooltipVisible: Boolean = false
 )

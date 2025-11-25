@@ -29,7 +29,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Collector
-import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
@@ -56,10 +55,7 @@ fun IntakeScreen(
     val context = LocalContext.current
 
     BackHandler {
-        when (state.session.type) {
-            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
-            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
-        }
+        onAction(IntakeAction.ReturnToPreviousScreen)
     }
 
     ScreenHeader(
@@ -73,10 +69,7 @@ fun IntakeScreen(
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
-                        when (state.session.type) {
-                            SessionType.SURVEILLANCE -> onAction(IntakeAction.ReturnToLandingScreen)
-                            SessionType.DATA_COLLECTION -> onAction(IntakeAction.ReturnToSettingsScreen)
-                        }
+                        onAction(IntakeAction.ReturnToPreviousScreen)
                     }
             )
         },
@@ -92,7 +85,8 @@ fun IntakeScreen(
                     Collector(
                         id = UUID.randomUUID(),
                         name = state.session.collectorName,
-                        title = state.session.collectorTitle
+                        title = state.session.collectorTitle,
+                        lastTrainedOn = state.session.collectorLastTrainedOn
                     )
                 } else {
                     state.allCollectors.firstOrNull { collector ->
@@ -202,7 +196,9 @@ fun IntakeScreen(
                             Spacer(modifier.height(MaterialTheme.dimensions.spacingSmall))
 
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(top = MaterialTheme.dimensions.paddingSmall),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = MaterialTheme.dimensions.paddingSmall),
                                 horizontalArrangement = Arrangement.End
                             ) {
                                 Button(
@@ -219,6 +215,13 @@ fun IntakeScreen(
                         }
                     }
                 }
+
+                TextEntryField(
+                    label = "Hardware ID",
+                    value = state.session.hardwareId.orEmpty(),
+                    onValueChange = { onAction(IntakeAction.EnterHardwareId(it)) },
+                    singleLine = true,
+                )
 
                 DatePickerField(
                     label = "Collection Date",
@@ -270,7 +273,7 @@ fun IntakeScreen(
                         )
                         CollectionMethodTooltipRow(
                             title = "CDC Light Trap",
-                            description = "A light trap that uses a battery to attract and collect mosquitoes during the night.",
+                            description = "A battery powered trap that uses a light to attract and collect mosquitoes at night.",
                             iconPainter = painterResource(id = R.drawable.ic_light_trap),
                             iconDescription = "CDC Light Trap Icon",
                         )
@@ -282,7 +285,7 @@ fun IntakeScreen(
                         )
                         CollectionMethodTooltipRow(
                             title = "Pyrethrum Spray Catch",
-                            description = "A battery powered trap that uses a light to attract and collect mosquitoes at night.",
+                            description = "An indoor collection method that uses insecticide spray to knock down resting mosquitoes onto a sheet.",
                             iconPainter = painterResource(id = R.drawable.ic_spray),
                             iconDescription = "Pyrethrum Spray Catch"
                         )
@@ -396,10 +399,13 @@ fun IntakeScreen(
                 state.surveillanceForm?.let { surveillanceForm ->
                     TextEntryField(
                         label = "Number of People Living in the House",
-                        value = if (surveillanceForm.numPeopleSleptInHouse == 0) "" else surveillanceForm.numPeopleSleptInHouse.toString(),
-                        onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it.filter { character -> character.isDigit() })) },
-                        placeholder = "0",
+                        value = if (surveillanceForm.numPeopleSleptInHouse < 0)
+                            ""
+                        else
+                            surveillanceForm.numPeopleSleptInHouse.toString(),
+                        onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it)) },
                         singleLine = true,
+                        error = state.intakeErrors.numPeopleSleptInHouse,
                     )
                 }
 
@@ -483,25 +489,28 @@ fun IntakeScreen(
                             )
                         })
 
-                    if (surveillanceForm.wasIrsConducted) {
+                    surveillanceForm.monthsSinceIrs?.let { monthsSinceIrs ->
                         TextEntryField(
                             label = "Months Since IRS",
-                            value = surveillanceForm.monthsSinceIrs?.let { if (it == 0) "" else it.toString() }
-                                .orEmpty(),
-                            onValueChange = {
-                                onAction(IntakeAction.EnterMonthsSinceIrs(it.filter { character -> character.isDigit() }))
-                            },
-                            placeholder = "0",
+                            value = if (monthsSinceIrs < 0)
+                                ""
+                            else
+                                monthsSinceIrs.toString(),
+                            onValueChange = { onAction(IntakeAction.EnterMonthsSinceIrs(it)) },
                             singleLine = true,
+                            error = state.intakeErrors.monthsSinceIrs,
                         )
                     }
 
                     TextEntryField(
                         label = "Number of LLINs Available",
-                        value = if (surveillanceForm.numLlinsAvailable == 0) "" else surveillanceForm.numLlinsAvailable.toString(),
-                        onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it.filter { character -> character.isDigit() })) },
-                        placeholder = "0",
+                        value = if (surveillanceForm.numLlinsAvailable < 0)
+                            ""
+                        else
+                            surveillanceForm.numLlinsAvailable.toString(),
+                        onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it)) },
                         singleLine = true,
+                        error = state.intakeErrors.numLlinsAvailable,
                     )
 
                     surveillanceForm.llinType?.let { current ->
@@ -525,7 +534,7 @@ fun IntakeScreen(
                     surveillanceForm.llinBrand?.let { current ->
                         DropdownField(
                             label = "LLIN Brand",
-                            options = IntakeDropdownOptions.LlinBrandOption.entries,
+                            options = IntakeDropdownOptions.LlinBrandOption.entries.filter { it.type?.label == surveillanceForm.llinType || it.type == null},
                             selectedOption = IntakeDropdownOptions.LlinBrandOption.entries.firstOrNull { it.label == current },
                             onOptionSelected = {
                                 onAction(IntakeAction.SelectLlinBrand(it))
@@ -540,15 +549,16 @@ fun IntakeScreen(
                         }
                     }
 
-                    surveillanceForm.numPeopleSleptUnderLlin?.let { current ->
+                    surveillanceForm.numPeopleSleptUnderLlin?.let { numPeopleSleptUnderLlin ->
                         TextEntryField(
                             label = "Number of People who Slept Under LLIN",
-                            value = if (current == 0) "" else current.toString(),
-                            onValueChange = {
-                                onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(it.filter { character -> character.isDigit() }))
-                            },
-                            placeholder = "0",
+                            value = if (numPeopleSleptUnderLlin < 0)
+                                ""
+                            else
+                                numPeopleSleptUnderLlin.toString(),
+                            onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(it)) },
                             singleLine = true,
+                            error = state.intakeErrors.numPeopleSleptUnderLlin,
                         )
                     }
                 }

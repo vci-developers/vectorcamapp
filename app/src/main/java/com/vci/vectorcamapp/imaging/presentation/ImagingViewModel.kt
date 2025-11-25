@@ -43,7 +43,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
+import java.time.Instant
+import java.time.ZoneId
 import javax.inject.Inject
+import kotlin.random.Random
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
@@ -130,7 +133,8 @@ class ImagingViewModel @Inject constructor(
                 is ImagingAction.CorrectSpecimenId -> {
                     _state.update {
                         it.copy(
-                            currentSpecimen = it.currentSpecimen.copy(id = action.specimenId)
+                            currentSpecimen = it.currentSpecimen.copy(id = action.specimenId),
+                            specimenIdError = null
                         )
                     }
                 }
@@ -141,44 +145,43 @@ class ImagingViewModel @Inject constructor(
                             _state.update { it.copy(isCameraReady = true) }
                         }
 
-                        val bitmap = action.frame.toUprightBitmap()
+                        if (!_state.value.isProcessing) {
+                            val bitmap = action.frame.toUprightBitmap()
 
-                        val liveFrameProcessingResult =
-                            imagingWorkflow.processLiveFrame(bitmap)
+                            val liveFrameProcessingResult = imagingWorkflow.processLiveFrame(bitmap)
 
-                        validateSpecimenIdUseCase(
-                            liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
-                        ).onSuccess { correctedSpecimenId ->
-                            _state.update {
-                                it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
+                            validateSpecimenIdUseCase(
+                                liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
+                            ).onSuccess { correctedSpecimenId ->
+                                _state.update {
+                                    it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
+                                }
                             }
-                        }
 
-                        val suggestedAutofocusPoint = liveFrameProcessingResult.autofocusPoint
+                            val suggestedAutofocusPoint = liveFrameProcessingResult.autofocusPoint
 
-                        _state.update { current ->
-                            val shouldUseAutofocusThisFrame =
-                                !current.isManualFocusing || (current.focusPoint == null && suggestedAutofocusPoint != null)
+                            _state.update { current ->
+                                val shouldUseAutofocusThisFrame =
+                                    !current.isManualFocusing || (current.focusPoint == null && suggestedAutofocusPoint != null)
 
-                            val nextFocusPoint =
-                                if (shouldUseAutofocusThisFrame) {
+                                val nextFocusPoint = if (shouldUseAutofocusThisFrame) {
                                     suggestedAutofocusPoint ?: current.focusPoint
                                 } else {
                                     current.focusPoint
                                 }
 
-                            val nextIsAutofocusing =
-                                when {
+                                val nextIsAutofocusing = when {
                                     !current.isManualFocusing -> true
                                     current.focusPoint == null && suggestedAutofocusPoint != null -> true
                                     else -> false
                                 }
 
-                            current.copy(
-                                previewInferenceResults = liveFrameProcessingResult.previewInferenceResults,
-                                focusPoint = nextFocusPoint,
-                                isManualFocusing = !nextIsAutofocusing
-                            )
+                                current.copy(
+                                    previewInferenceResults = liveFrameProcessingResult.previewInferenceResults,
+                                    focusPoint = nextFocusPoint,
+                                    isManualFocusing = !nextIsAutofocusing
+                                )
+                            }
                         }
                     } catch (e: Exception) {
                         emitError(ImagingError.PROCESSING_ERROR)
@@ -226,12 +229,9 @@ class ImagingViewModel @Inject constructor(
                             val jpegStream = ByteArrayOutputStream()
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
                             val jpegByteArray = jpegStream.toByteArray()
-                            val jpegBitmap =
-                                BitmapFactory.decodeByteArray(
-                                    jpegByteArray,
-                                    0,
-                                    jpegByteArray.size
-                                )
+                            val jpegBitmap = BitmapFactory.decodeByteArray(
+                                jpegByteArray, 0, jpegByteArray.size
+                            )
 
                             val capturedFrameProcessingResult =
                                 imagingWorkflow.processCapturedFrame(jpegBitmap)
@@ -270,6 +270,10 @@ class ImagingViewModel @Inject constructor(
                     clearStateFields()
                 }
 
+                ImagingAction.TogglePackagingConfirmation -> {
+                    _state.update { it.copy(hasConfirmedPackaging = !it.hasConfirmedPackaging) }
+                }
+
                 ImagingAction.SaveImageToSession -> {
                     val currentSession = currentSessionCache.getSession()
                     if (currentSession == null) {
@@ -280,8 +284,13 @@ class ImagingViewModel @Inject constructor(
                     val specimenId = when (val validationResult = validateSpecimenIdUseCase(
                         _state.value.currentSpecimen.id, shouldAutoCorrect = false
                     )) {
-                        is Result.Success -> validationResult.data
+                        is Result.Success -> {
+                            _state.update { it.copy(specimenIdError = null) }
+                            validationResult.data
+                        }
+
                         is Result.Error -> {
+                            _state.update { it.copy(specimenIdError = validationResult.error) }
                             emitError(validationResult.error)
                             return@launch
                         }
@@ -296,10 +305,34 @@ class ImagingViewModel @Inject constructor(
                         append(".jpg")
                     }
 
+                    val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(
+                        specimenId, currentSession.localId
+                    )
+                    val shouldProcessFurther = when {
+                        existingSpecimen != null -> existingSpecimen.shouldProcessFurther
+                        _state.value.currentSpecimen.shouldProcessFurther -> true
+                        else -> determineSelectionForFurtherProcessing(imagingWorkflow.specimenFurtherProcessingProbability)
+                    }
+
+                    if (shouldProcessFurther && !_state.value.hasConfirmedPackaging) {
+                        _state.update {
+                            it.copy(
+                                currentSpecimen = it.currentSpecimen.copy(
+                                    shouldProcessFurther = true
+                                )
+                            )
+                        }
+                        return@launch
+                    }
+
                     val saveResult = cameraRepository.saveImage(jpegBytes, filename, currentSession)
 
                     saveResult.onSuccess { imageUri ->
-                        val specimen = Specimen(id = specimenId, remoteId = null, shouldProcessFurther = false)
+                        val specimen = Specimen(
+                            id = specimenId,
+                            remoteId = null,
+                            shouldProcessFurther = shouldProcessFurther
+                        )
                         val specimenImage = SpecimenImage(
                             localId = calculateMd5(jpegBytes),
                             remoteId = null,
@@ -316,9 +349,6 @@ class ImagingViewModel @Inject constructor(
                         val success = transactionHelper.runAsTransaction {
                             val inferenceResult = _state.value.currentInferenceResult
 
-                            val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(
-                                specimenId, currentSession.localId
-                            )
                             val specimenInsertionResult = if (existingSpecimen == null) {
                                 specimenRepository.insertSpecimen(specimen, currentSession.localId)
                             } else {
@@ -368,9 +398,7 @@ class ImagingViewModel @Inject constructor(
         _state.update {
             it.copy(
                 currentSpecimen = it.currentSpecimen.copy(
-                    id = "",
-                    remoteId = null,
-                    shouldProcessFurther = false
+                    id = "", remoteId = null, shouldProcessFurther = false
                 ),
                 currentSpecimenImage = it.currentSpecimenImage.copy(
                     localId = "",
@@ -389,11 +417,30 @@ class ImagingViewModel @Inject constructor(
                 isCameraReady = false,
                 previewInferenceResults = emptyList(),
                 focusPoint = null,
-                isManualFocusing = false
+                isManualFocusing = false,
+                hasConfirmedPackaging = false,
+                specimenIdError = null
             )
         }
     }
 
+    private suspend fun determineSelectionForFurtherProcessing(selectionProbability: Float): Boolean {
+        if (selectionProbability == 0f) return false
+
+        val now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault())
+
+        val startOfCurrentMonth = now.withDayOfMonth(1).toLocalDate().atStartOfDay(ZoneId.systemDefault())
+        val startOfNextMonth = startOfCurrentMonth.plusMonths(1)
+
+        val startDate = startOfCurrentMonth.toInstant().toEpochMilli()
+        val endDate = startOfNextMonth.toInstant().toEpochMilli()
+
+        val specimensSelectedForFurtherProcessingThisMonth =
+            specimenRepository.countSelectedForFurtherProcessingBetweenSessionCollectionDates(startDate, endDate)
+
+        if (specimensSelectedForFurtherProcessingThisMonth >= MONTHLY_FURTHER_PROCESSING_CAP) return false
+        return Random.nextFloat() < selectionProbability
+    }
 
     private fun calculateMd5(imageByteArray: ByteArray): String {
         val md5 = MessageDigest.getInstance("MD5")
@@ -416,5 +463,9 @@ class ImagingViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         imagingWorkflow.close()
+    }
+
+    private companion object {
+        private const val MONTHLY_FURTHER_PROCESSING_CAP = 20
     }
 }

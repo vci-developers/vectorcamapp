@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
+import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent
 import com.vci.vectorcamapp.incomplete_session.presentation.components.IncompleteSessionCard
 import com.vci.vectorcamapp.incomplete_session.presentation.util.IncompleteSessionTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -57,10 +58,16 @@ fun IncompleteSessionScreen(
                 },
                 placeholder = "Search by collector, district, session type, etc.",
                 modifier = Modifier.padding(
-                    start = MaterialTheme.dimensions.paddingMedium,
-                    end = MaterialTheme.dimensions.paddingMedium
-                )
-            )
+                    start = MaterialTheme.dimensions.spacingMedium,
+                    end = MaterialTheme.dimensions.spacingMedium,
+                    top = MaterialTheme.dimensions.spacingSmall
+                ),
+                isTooltipVisible = state.isSearchTooltipVisible,
+                onShowSearchTooltip = { onAction(IncompleteSessionAction.ShowSearchTooltipDialog) },
+                onDismissSearchTooltip = { onAction(IncompleteSessionAction.HideSearchTooltipDialog) }
+            ) {
+                SearchHelpTooltipContent()
+            }
         }
 
         if (state.sessionAndSites.isEmpty()) {

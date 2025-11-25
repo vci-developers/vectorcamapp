@@ -135,6 +135,12 @@ fun IncompleteSessionCard(
                         iconDescription = "House",
                         text = "House Number: ${sessionAndSite.site.houseNumber}",
                     )
+
+                    IncompleteSessionListDetailRow(
+                        iconPainter = painterResource(R.drawable.ic_hospital),
+                        iconDescription = "Hospital",
+                        text = "Nearest Health Center: ${sessionAndSite.site.healthCenter}",
+                    )
                 }
 
                 HorizontalDivider(

@@ -15,6 +15,10 @@ import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_7_8_SPE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_8_9_ADD_SESSION_TYPE_COLUMN
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_9_10_REFACTOR_SPECIMEN_IMAGE_AND_INFERENCE_RESULT_KEYS
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_15_16_ADD_SPECIMEN_SHOULD_PROCESS_FURTHER_COLUMN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_16_17_ADD_SESSION_COLLECTOR_LAST_TRAINED_ON_COLUMN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_17_18_ADD_COLLECTOR_LAST_TRAINED_ON_COLUMN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_18_19_ADD_SESSION_HARDWARE_ID_COLUMN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_19_20_MAKE_HARDWARE_ID_COLUMN_NULLABLE
 
 val ALL_MIGRATIONS = arrayOf(
     MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE,
@@ -32,4 +36,8 @@ val ALL_MIGRATIONS = arrayOf(
     MIGRATION_13_14_ADD_COLLECTOR_TABLE,
     MIGRATION_14_15_BACKFILL_COLLECTORS,
     MIGRATION_15_16_ADD_SPECIMEN_SHOULD_PROCESS_FURTHER_COLUMN,
+    MIGRATION_16_17_ADD_SESSION_COLLECTOR_LAST_TRAINED_ON_COLUMN,
+    MIGRATION_17_18_ADD_COLLECTOR_LAST_TRAINED_ON_COLUMN,
+    MIGRATION_18_19_ADD_SESSION_HARDWARE_ID_COLUMN,
+    MIGRATION_19_20_MAKE_HARDWARE_ID_COLUMN_NULLABLE
 )

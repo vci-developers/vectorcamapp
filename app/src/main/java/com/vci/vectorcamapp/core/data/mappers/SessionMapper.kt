@@ -7,8 +7,10 @@ fun SessionEntity.toDomain(): Session {
     return Session(
         localId = this.localId,
         remoteId = this.remoteId,
+        hardwareId = this.hardwareId,
         collectorTitle = this.collectorTitle,
         collectorName = this.collectorName,
+        collectorLastTrainedOn = this.collectorLastTrainedOn,
         collectionDate = this.collectionDate,
         collectionMethod = this.collectionMethod,
         specimenCondition = this.specimenCondition,
@@ -18,7 +20,7 @@ fun SessionEntity.toDomain(): Session {
         notes = this.notes,
         latitude = this.latitude,
         longitude = this.longitude,
-        type = this.type
+        type = this.type,
     )
 }
 
@@ -27,8 +29,10 @@ fun Session.toEntity(siteId: Int): SessionEntity {
         localId = this.localId,
         siteId = siteId,
         remoteId = this.remoteId,
+        hardwareId = this.hardwareId,
         collectorTitle = this.collectorTitle,
         collectorName = this.collectorName,
+        collectorLastTrainedOn = this.collectorLastTrainedOn,
         collectionDate = this.collectionDate,
         collectionMethod = this.collectionMethod,
         specimenCondition = this.specimenCondition,
@@ -38,6 +42,6 @@ fun Session.toEntity(siteId: Int): SessionEntity {
         notes = this.notes,
         latitude = this.latitude,
         longitude = this.longitude,
-        type = this.type
+        type = this.type,
     )
 }

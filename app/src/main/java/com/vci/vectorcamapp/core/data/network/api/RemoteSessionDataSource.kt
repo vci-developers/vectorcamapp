@@ -38,8 +38,10 @@ class RemoteSessionDataSource @Inject constructor(
                 setBody(
                     PostSessionRequestDto(
                         frontendId = session.localId,
+                        hardwareId = session.hardwareId,
                         collectorTitle = session.collectorTitle,
                         collectorName = session.collectorName,
+                        collectorLastTrainedOn = session.collectorLastTrainedOn,
                         collectionDate = session.collectionDate,
                         collectionMethod = session.collectionMethod,
                         specimenCondition = session.specimenCondition,

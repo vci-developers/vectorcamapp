@@ -57,13 +57,13 @@ fun CompleteSessionForm(
                 iconDescription = "Information"
             ) {
                 Text(
-                    text = "Collector Name: ${session.collectorName}",
+                    text = "Collector: ${session.collectorName}, ${session.collectorTitle}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
                 Text(
-                    text = "Collector Title: ${session.collectorTitle}",
+                    text = "Hardware ID: ${session.hardwareId ?: "Not Provided"}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
@@ -118,6 +118,12 @@ fun CompleteSessionForm(
 
                 Text(
                     text = "House Number: ${site.houseNumber}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colors.textPrimary
+                )
+
+                Text(
+                    text = "Nearest Health Center: ${site.healthCenter}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
