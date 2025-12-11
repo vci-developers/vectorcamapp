@@ -2,7 +2,6 @@ package com.vci.vectorcamapp.complete_session.list.presentation
 
 import android.content.Context
 import androidx.lifecycle.viewModelScope
-import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsAction
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
