@@ -61,13 +61,13 @@ fun SettingsScreen(
         modifier = modifier
     ) {
         item {
-//            SettingsSection(title = "Actions") {
-//                SettingsActionTile(
-//                    title = "Start Data Collection",
-//                    onClick = { onAction(SettingsAction.StartNewDataCollectionSession) },
-//                    modifier = modifier
-//                )
-//            }
+            SettingsSection(title = "Actions") {
+                SettingsActionTile(
+                    title = "Start Data Collection",
+                    onClick = { onAction(SettingsAction.StartNewDataCollectionSession) },
+                    modifier = modifier
+                )
+            }
             SettingsSection("About") {
                 SettingsInfoTile(
                     title = "Registered Collectors",
