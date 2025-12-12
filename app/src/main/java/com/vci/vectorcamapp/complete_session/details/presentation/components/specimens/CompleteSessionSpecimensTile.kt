@@ -36,6 +36,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
+import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
 import com.vci.vectorcamapp.ui.extensions.color
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -58,6 +59,12 @@ fun CompleteSessionSpecimensTile(
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
+    val fallbackPainter = if (specimenImage.imageUploadStatus == UploadStatus.COMPLETED) {
+        painterResource(R.drawable.specimen_image_placeholder_uploaded)
+    } else {
+        painterResource(R.drawable.specimen_image_placeholder_not_uploaded)
+    }
+    
     InfoTile(modifier = modifier) {
         BoxWithConstraints(
             modifier = Modifier
@@ -73,6 +80,8 @@ fun CompleteSessionSpecimensTile(
             AsyncImage(
                 model = ImageRequest.Builder(context).data(specimenImage.imageUri).build(),
                 contentDescription = "Specimen Image: ${specimen.id}",
+                error = fallbackPainter,
+                fallback = fallbackPainter,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxSize()
