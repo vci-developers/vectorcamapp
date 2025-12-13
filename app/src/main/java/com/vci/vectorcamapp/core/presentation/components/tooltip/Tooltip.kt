@@ -27,11 +27,11 @@ fun Tooltip(
     isVisible: Boolean,
     onClick: () -> Unit,
     onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
     buttonText: String? = null,
     confirmText: String = "Done",
     iconSize: Dp = MaterialTheme.dimensions.iconSizeSmall,
     textStyle: TextStyle = MaterialTheme.typography.bodySmall,
-    modifier: Modifier = Modifier,
     content: @Composable (() -> Unit)
 ){
     Row(

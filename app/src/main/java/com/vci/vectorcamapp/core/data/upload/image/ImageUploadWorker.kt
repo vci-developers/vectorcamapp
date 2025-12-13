@@ -22,7 +22,6 @@ import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
-import com.vci.vectorcamapp.core.domain.util.DomainError
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
