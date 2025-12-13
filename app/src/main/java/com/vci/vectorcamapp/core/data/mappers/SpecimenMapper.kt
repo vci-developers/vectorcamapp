@@ -7,11 +7,8 @@ import java.util.UUID
 fun SpecimenEntity.toDomain(): Specimen {
     return Specimen(
         id = this.id,
-        species = this.species,
-        sex = this.sex,
-        abdomenStatus = this.abdomenStatus,
-        imageUri = this.imageUri,
-        capturedAt = this.capturedAt
+        remoteId = this.remoteId,
+        shouldProcessFurther = this.shouldProcessFurther
     )
 }
 
@@ -19,10 +16,7 @@ fun Specimen.toEntity(sessionId: UUID): SpecimenEntity {
     return SpecimenEntity(
         id = this.id,
         sessionId = sessionId,
-        species = this.species,
-        sex = this.sex,
-        abdomenStatus = this.abdomenStatus,
-        imageUri = this.imageUri,
-        capturedAt = this.capturedAt
+        remoteId = this.remoteId,
+        shouldProcessFurther = this.shouldProcessFurther
     )
 }

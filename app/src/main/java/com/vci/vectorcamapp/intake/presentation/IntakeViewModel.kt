@@ -1,0 +1,621 @@
+package com.vci.vectorcamapp.intake.presentation
+
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.room.TransactionHelper
+import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
+import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SiteRepository
+import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
+import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.errorOrNull
+import com.vci.vectorcamapp.core.domain.util.onError
+import com.vci.vectorcamapp.core.domain.util.onSuccess
+import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.intake.domain.repository.LocationRepository
+import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflow
+import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflowFactory
+import com.vci.vectorcamapp.intake.domain.use_cases.IntakeValidationUseCases
+import com.vci.vectorcamapp.intake.domain.util.IntakeError
+import com.vci.vectorcamapp.intake.logging.IntakeSentryLogger
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import java.util.UUID
+import javax.inject.Inject
+
+@HiltViewModel
+class IntakeViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    private val intakeValidationUseCases: IntakeValidationUseCases,
+    private val deviceCache: DeviceCache,
+    private val currentSessionCache: CurrentSessionCache,
+    private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache,
+    private val siteRepository: SiteRepository,
+    private val surveillanceFormRepository: SurveillanceFormRepository,
+    private val sessionRepository: SessionRepository,
+    private val locationRepository: LocationRepository,
+    private val collectorRepository: CollectorRepository,
+) : CoreViewModel() {
+
+    companion object {
+        private const val LOCATION_TIMEOUT_MS = 30000L
+    }
+
+    @Inject
+    lateinit var transactionHelper: TransactionHelper
+
+    @Inject
+    lateinit var surveillanceFormWorkflowFactory: SurveillanceFormWorkflowFactory
+    private lateinit var surveillanceFormWorkflow: SurveillanceFormWorkflow
+
+    private val _allCollectors = collectorRepository.observeAllCollectors()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+
+    private val _state = MutableStateFlow(IntakeState())
+    val state = combine(_allCollectors, _state) { allCollectors, state ->
+        state.copy(allCollectors = allCollectors)
+    }.onStart {
+        loadFormDetails()
+    }.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000L), IntakeState()
+    )
+
+    private val _events = Channel<IntakeEvent>()
+    val events = _events.receiveAsFlow()
+
+    fun onAction(action: IntakeAction) {
+        viewModelScope.launch {
+            when (action) {
+                IntakeAction.ReturnToPreviousScreen -> {
+                    currentSessionCache.clearSession()
+                    _events.send(IntakeEvent.NavigateBackToPreviousScreen)
+                }
+
+                IntakeAction.SubmitIntakeForm -> {
+                    val session = _state.value.session
+                    val surveillanceForm = _state.value.surveillanceForm
+
+                    val collectorValidationResult =
+                        intakeValidationUseCases.validateCollector(session.collectorName, session.collectorTitle)
+                    val districtResult =
+                        intakeValidationUseCases.validateDistrict(_state.value.selectedDistrict)
+                    val villageNameResult =
+                        intakeValidationUseCases.validateVillageName(_state.value.selectedVillageName)
+                    val houseNumberResult =
+                        intakeValidationUseCases.validateHouseNumber(_state.value.selectedHouseNumber)
+                    val llinTypeResult =
+                        surveillanceForm?.llinType?.let { intakeValidationUseCases.validateLlinType(it) }
+                    val llinBrandResult =
+                        surveillanceForm?.llinBrand?.let { intakeValidationUseCases.validateLlinBrand(it) }
+                    val collectionDateResult =
+                        intakeValidationUseCases.validateCollectionDate(session.collectionDate)
+                    val collectionMethodResult =
+                        intakeValidationUseCases.validateCollectionMethod(session.collectionMethod)
+                    val specimenConditionResult =
+                        intakeValidationUseCases.validateSpecimenCondition(session.specimenCondition)
+                    val numPeopleSleptInHouseResult =
+                        surveillanceForm?.let {
+                            intakeValidationUseCases.validateNumPeopleSleptInHouse(it.numPeopleSleptInHouse)
+                        }
+
+                    val monthsSinceIrsResult =
+                        surveillanceForm?.takeIf { it.wasIrsConducted && it.monthsSinceIrs != null }?.let {
+                            it.monthsSinceIrs?.let { months -> intakeValidationUseCases.validateMonthsSinceIrs(months) }
+                        }
+
+                    val numLlinsAvailableResult =
+                        surveillanceForm?.let {
+                            intakeValidationUseCases.validateNumLlinsAvailable(it.numLlinsAvailable)
+                        }
+
+                    val numPeopleSleptUnderLlinResult =
+                        surveillanceForm?.numPeopleSleptUnderLlin?.let {
+                            intakeValidationUseCases.validateNumPeopleSleptUnderLlin(it)
+                        }
+
+
+                    _state.update {
+                        it.copy(
+                            intakeErrors = it.intakeErrors.copy(
+                                collector = collectorValidationResult.errorOrNull(),
+                                district = districtResult.errorOrNull(),
+                                villageName = villageNameResult.errorOrNull(),
+                                houseNumber = houseNumberResult.errorOrNull(),
+                                llinType = llinTypeResult?.errorOrNull(),
+                                llinBrand = llinBrandResult?.errorOrNull(),
+                                collectionDate = collectionDateResult.errorOrNull(),
+                                collectionMethod = collectionMethodResult.errorOrNull(),
+                                specimenCondition = specimenConditionResult.errorOrNull(),
+                                monthsSinceIrs = monthsSinceIrsResult?.errorOrNull(),
+                                numLlinsAvailable = numLlinsAvailableResult?.errorOrNull(),
+                                numPeopleSleptUnderLlin = numPeopleSleptUnderLlinResult?.errorOrNull(),
+                                numPeopleSleptInHouse = numPeopleSleptInHouseResult?.errorOrNull(),
+                            )
+                        )
+                    }
+
+                    val hasError = listOf(
+                        collectorValidationResult,
+                        districtResult,
+                        villageNameResult,
+                        houseNumberResult,
+                        llinTypeResult,
+                        llinBrandResult,
+                        collectionDateResult,
+                        collectionMethodResult,
+                        specimenConditionResult,
+                        monthsSinceIrsResult,
+                        numLlinsAvailableResult,
+                        numPeopleSleptInHouseResult,
+                        numPeopleSleptUnderLlinResult
+                    ).any { it is Result.Error }
+
+                    if (hasError) {
+                        emitError(IntakeError.FORM_INVALID)
+                    }
+                    else if (state.value.isCurrentCollectorMissing) {
+                        emitError(IntakeError.MISSING_COLLECTOR)
+                    }
+                    else {
+                        val selectedSite = _state.value.allSitesInProgram.find {
+                            it.district == _state.value.selectedDistrict &&
+                                    it.villageName == _state.value.selectedVillageName &&
+                                    it.houseNumber == _state.value.selectedHouseNumber
+                        }
+                        if (selectedSite == null) {
+                            emitError(IntakeError.SITE_NOT_FOUND)
+                            IntakeSentryLogger.logSiteNotFound(Exception(IntakeError.SITE_NOT_FOUND.name))
+                            return@launch
+                        }
+
+                        val success = transactionHelper.runAsTransaction {
+                            val sessionResult =
+                                sessionRepository.upsertSession(session, selectedSite.id)
+                            sessionResult.onError { error ->
+                                emitError(error)
+                                IntakeSentryLogger.logSessionUpsertFailed(Exception(error.name), session.localId, selectedSite.id)
+                                return@runAsTransaction false
+                            }
+
+                            val surveillanceFormResult = surveillanceForm?.let {
+                                surveillanceFormRepository.upsertSurveillanceForm(
+                                    surveillanceForm, session.localId
+                                )
+                            } ?: Result.Success(Unit)
+
+                            surveillanceFormResult.onError { error ->
+                                emitError(error)
+                                IntakeSentryLogger.logSurveillanceFormUpsertFailed(Exception(error.name), session.localId)
+                                return@runAsTransaction false
+                            }
+                            true
+                        }
+
+                        if (success) {
+                            currentSessionCache.saveSession(session, selectedSite.id)
+                            defaultIntakeFieldsCache.saveDefaultIntakeFields(
+                                collectorName = session.collectorName,
+                                collectorTitle = session.collectorTitle,
+                                collectorLastTrainedOn = session.collectorLastTrainedOn,
+                                hardwareId = session.hardwareId,
+                                district = _state.value.selectedDistrict,
+                                villageName = _state.value.selectedVillageName,
+                            )
+                            _events.send(IntakeEvent.NavigateToImagingScreen)
+                        }
+                    }
+                }
+
+                is IntakeAction.SelectCollector -> {
+                    val updatedCollector = action.collector
+
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                collectorName = updatedCollector.name,
+                                collectorTitle = updatedCollector.title,
+                                collectorLastTrainedOn = updatedCollector.lastTrainedOn
+                            ),
+                            isCurrentCollectorMissing = false
+                        )
+                    }
+                }
+
+                is IntakeAction.EnterHardwareId -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                hardwareId = action.text
+                            )
+                        )
+                    }
+                }
+
+                is IntakeAction.SelectDistrict -> {
+                    _state.update {
+                        it.copy(
+                            selectedDistrict = action.district,
+                            selectedVillageName = "",
+                            selectedHouseNumber = ""
+                        )
+                    }
+                }
+
+                is IntakeAction.SelectVillageName -> {
+                    _state.update {
+                        it.copy(
+                            selectedVillageName = action.villageName,
+                            selectedHouseNumber = ""
+
+                        )
+                    }
+                }
+
+                is IntakeAction.SelectHouseNumber -> {
+                    _state.update {
+                        it.copy(
+                            selectedHouseNumber = action.houseNumber
+                        )
+                    }
+                }
+
+                is IntakeAction.EnterNumPeopleSleptInHouse -> {
+                    val oldValue = _state.value.surveillanceForm?.numPeopleSleptInHouse
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val numPeopleSleptInHouse = normalized.toIntOrNull() ?: -1
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                numPeopleSleptInHouse = numPeopleSleptInHouse
+                            )
+                        )
+                    }
+                }
+
+                is IntakeAction.ToggleIrsConducted -> {
+                    val wasIrsConducted = action.isChecked
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                wasIrsConducted = wasIrsConducted,
+                                monthsSinceIrs = if (wasIrsConducted) -1 else null
+                            )
+                        )
+                    }
+                }
+
+                is IntakeAction.EnterMonthsSinceIrs -> {
+                    val oldValue = _state.value.surveillanceForm?.monthsSinceIrs
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val monthsSinceIrs = normalized.toIntOrNull() ?: -1
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                monthsSinceIrs = monthsSinceIrs
+                            )
+                        )
+                    }
+                }
+
+
+                is IntakeAction.EnterNumLlinsAvailable -> {
+                    val oldValue = _state.value.surveillanceForm?.numLlinsAvailable
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val numLlinsAvailable = normalized.toIntOrNull() ?: -1
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                numLlinsAvailable = numLlinsAvailable
+                            )
+                        )
+                    }
+                    if (numLlinsAvailable <= 0) {
+                        _state.update {
+                            it.copy(
+                                surveillanceForm = it.surveillanceForm?.copy(
+                                    llinType = null,
+                                    llinBrand = null,
+                                    numPeopleSleptUnderLlin = null
+                                )
+                            )
+                        }
+                    } else {
+                        _state.update {
+                            it.copy(
+                                surveillanceForm = it.surveillanceForm?.copy(
+                                    llinType = "", numPeopleSleptUnderLlin = -1
+                                )
+                            )
+                        }
+                    }
+                }
+
+                is IntakeAction.SelectLlinType -> {
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                llinType = action.option.label,
+                                llinBrand = ""
+                            )
+                        )
+                    }
+                }
+
+                is IntakeAction.SelectLlinBrand -> {
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                llinBrand = action.option.label
+                            )
+                        )
+                    }
+                }
+
+                is IntakeAction.EnterNumPeopleSleptUnderLlin -> {
+                    val oldValue = _state.value.surveillanceForm?.numPeopleSleptUnderLlin
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val numPeopleSleptUnderLlin = normalized.toIntOrNull() ?: -1
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                numPeopleSleptUnderLlin = numPeopleSleptUnderLlin
+                            )
+                        )
+                    }
+                }
+
+                is IntakeAction.PickCollectionDate -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                collectionDate = action.date
+                            )
+                        )
+                    }
+                }
+
+                is IntakeAction.UpdateCollectionMethod -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                collectionMethod = action.collectionMethod
+                            )
+                        )
+                    }
+                }
+
+                is IntakeAction.UpdateSpecimenCondition -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                specimenCondition = action.specimenCondition
+                            )
+                        )
+                    }
+                }
+
+                is IntakeAction.EnterNotes -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                notes = action.text
+                            )
+                        )
+                    }
+                }
+
+                is IntakeAction.RetryLocation -> {
+                    _state.update { it.copy(locationError = null) }
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                latitude = null, longitude = null
+                            )
+                        )
+                    }
+                    getLocation()
+                }
+
+                is IntakeAction.ShowCollectionMethodTooltipDialog -> {
+                    _state.update { it.copy(isCollectionMethodTooltipVisible = true) }
+                }
+
+                is IntakeAction.HideCollectionMethodTooltipDialog -> {
+                    _state.update { it.copy(isCollectionMethodTooltipVisible = false) }
+                }
+
+                is IntakeAction.RegisterMissingCollector -> {
+                    val name = _state.value.session.collectorName
+                    val title = _state.value.session.collectorTitle
+                    val lastTrainedOn = _state.value.session.collectorLastTrainedOn
+
+                    if (name.isBlank() || title.isBlank()) {
+                        return@launch
+                    }
+
+                    collectorRepository.upsertCollector(
+                        Collector(
+                            id = UUID.randomUUID(),
+                            name = name,
+                            title = title,
+                            lastTrainedOn = lastTrainedOn
+                        )
+                    ).onSuccess {
+                        _state.update {
+                            it.copy(
+                                isCurrentCollectorMissing = false
+                            )
+                        }
+                    }.onError {
+                        emitError(IntakeError.COLLECTOR_SAVE_FAILED)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun loadFormDetails() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+
+            val programId = deviceCache.getProgramId()
+            if (programId == null) {
+                emitError(IntakeError.PROGRAM_NOT_FOUND)
+                IntakeSentryLogger.logProgramNotFound(Exception(IntakeError.PROGRAM_NOT_FOUND.name))
+                _events.send(IntakeEvent.NavigateBackToRegistrationScreen)
+                _state.update { it.copy(isLoading = false) }
+                return@launch
+            }
+
+            val currentSession = currentSessionCache.getSession()
+            val resolvedSessionType =
+                currentSession?.type
+                    ?: savedStateHandle.get<SessionType>("sessionType")
+                    ?: SessionType.SURVEILLANCE
+
+            surveillanceFormWorkflow = surveillanceFormWorkflowFactory.create(resolvedSessionType)
+
+            val defaultFields = defaultIntakeFieldsCache.getDefaultIntakeFields()
+            val cachedCollectorName = defaultFields?.collectorName.orEmpty()
+            val cachedCollectorTitle = defaultFields?.collectorTitle.orEmpty()
+            val cachedCollectorLastTrainedOn = defaultFields?.collectorLastTrainedOn ?: 0L
+            val cachedDefaultHardwareId = defaultFields?.hardwareId.orEmpty()
+            val cachedDefaultDistrict = defaultFields?.district.orEmpty()
+            val cachedDefaultVillageName = defaultFields?.villageName.orEmpty()
+
+            val effectiveSession =
+                currentSession ?: _state.value.session.copy(
+                    type = resolvedSessionType,
+                    hardwareId = cachedDefaultHardwareId,
+                    collectorName = cachedCollectorName,
+                    collectorTitle = cachedCollectorTitle,
+                    collectorLastTrainedOn = cachedCollectorLastTrainedOn
+                )
+
+            val currentSessionSiteId = currentSessionCache.getSiteId()
+
+            combine(
+                siteRepository.observeAllSitesByProgramId(programId),
+                currentSession?.let {
+                    surveillanceFormRepository.observeSurveillanceFormBySessionId(it.localId)
+                } ?: flowOf<SurveillanceForm?>(null),
+                collectorRepository.observeAllCollectors()
+            ) { currentAllSites, currentSavedForm, currentAllCollectors ->
+
+                val validatedSite = currentAllSites.find { it.id == currentSessionSiteId }
+
+                val validatedDistrict =
+                    when {
+                        validatedSite != null -> validatedSite.district
+                        currentAllSites.any { it.district == cachedDefaultDistrict } -> cachedDefaultDistrict
+                        else -> ""
+                    }
+
+                val validatedVillageName =
+                    when {
+                        validatedSite != null -> validatedSite.villageName
+                        validatedDistrict.isNotBlank() &&
+                            currentAllSites.any {
+                                it.district == validatedDistrict &&
+                                    it.villageName == cachedDefaultVillageName
+                            } -> cachedDefaultVillageName
+                        else -> ""
+                    }
+
+                val validatedHouseNumber = validatedSite?.houseNumber.orEmpty()
+
+                val sessionCollectorName = effectiveSession.collectorName
+                val sessionCollectorTitle = effectiveSession.collectorTitle
+
+                val hasMatchingCollector = currentAllCollectors.any { collector ->
+                    collector.name == sessionCollectorName && collector.title == sessionCollectorTitle
+                }
+
+                val isCollectorMissing = sessionCollectorName.isNotBlank() &&
+                        sessionCollectorTitle.isNotBlank() &&
+                        !hasMatchingCollector
+
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        session = effectiveSession,
+                        surveillanceForm = currentSavedForm ?: surveillanceFormWorkflow.createNewSurveillanceForm(),
+                        allSitesInProgram = currentAllSites,
+                        allCollectors = currentAllCollectors,
+                        selectedDistrict = validatedDistrict,
+                        selectedVillageName = validatedVillageName,
+                        selectedHouseNumber = validatedHouseNumber,
+                        isCurrentCollectorMissing = isCollectorMissing
+                    )
+                }
+            }.first()
+
+            getLocation()
+        }
+    }
+
+    private suspend fun getLocation() {
+        if (_state.value.session.latitude == null || _state.value.session.longitude == null) {
+            val locationResult = try {
+                withTimeout(LOCATION_TIMEOUT_MS) {
+                    locationRepository.getCurrentLocation()
+                }
+            } catch (e: SecurityException) {
+                Result.Error(IntakeError.LOCATION_PERMISSION_DENIED)
+            } catch (e: TimeoutCancellationException) {
+                Result.Error(IntakeError.LOCATION_GPS_TIMEOUT)
+            } catch (e: Exception) {
+                IntakeSentryLogger.logLocationFetchFailed(e)
+                Result.Error(IntakeError.UNKNOWN_ERROR)
+            }
+
+            locationResult.onSuccess { location ->
+                _state.update {
+                    it.copy(
+                        session = it.session.copy(
+                            latitude = location.latitude.toFloat(),
+                            longitude = location.longitude.toFloat(),
+                        ), locationError = null
+                    )
+                }
+            }.onError { error ->
+                if (error == IntakeError.LOCATION_GPS_TIMEOUT) {
+                    _state.update { it.copy(locationError = error) }
+                } else {
+                    emitError(error)
+                }
+            }
+        }
+    }
+
+    private fun normalizeNumericInput(oldValue: Int?, newValue: String): String {
+        val oldValueString = (oldValue ?: 0).toString()
+        val filteredNewValue = newValue.filter { it.isDigit() }
+
+        val finalValueString = if (oldValueString == "0" && filteredNewValue.length > 1) {
+                filteredNewValue.filter { it != '0' }
+            } else {
+                filteredNewValue
+            }
+
+        return finalValueString.toIntOrNull().toString()
+    }
+}

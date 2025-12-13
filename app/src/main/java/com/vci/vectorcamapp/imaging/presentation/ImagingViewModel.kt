@@ -1,128 +1,190 @@
 package com.vci.vectorcamapp.imaging.presentation
 
-import android.util.Log
-import androidx.lifecycle.ViewModel
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.Specimen
-import com.vci.vectorcamapp.core.domain.repository.BoundingBoxRepository
+import com.vci.vectorcamapp.core.domain.model.SpecimenImage
+import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
+import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
+import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.domain.util.Result
-import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
+import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
-import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
+import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow
+import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
+import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
+import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
-import com.vci.vectorcamapp.imaging.presentation.model.composites.SpecimenAndBoundingBoxUi
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.security.MessageDigest
+import java.time.Instant
+import java.time.ZoneId
 import javax.inject.Inject
+import kotlin.random.Random
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
     private val currentSessionCache: CurrentSessionCache,
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
-    private val boundingBoxRepository: BoundingBoxRepository,
+    private val specimenImageRepository: SpecimenImageRepository,
+    private val inferenceResultRepository: InferenceResultRepository,
     private val cameraRepository: CameraRepository,
-    private val inferenceRepository: InferenceRepository,
-) : ViewModel() {
+    private val workRepository: WorkManagerRepository,
+    private val validateSpecimenIdUseCase: ValidateSpecimenIdUseCase,
+) : CoreViewModel() {
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
 
-    private val _capturedSpecimensAndBoundingBoxesUi =
-        MutableStateFlow<List<SpecimenAndBoundingBoxUi>>(emptyList())
+    @Inject
+    lateinit var imagingWorkflowFactory: ImagingWorkflowFactory
+    private lateinit var imagingWorkflow: ImagingWorkflow
+
+    private val _specimensWithImagesAndInferenceResults: Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> =
+        flow {
+            val session = currentSessionCache.getSession()
+            if (session == null) {
+                emit(emptyList())
+            } else {
+                specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(session.localId)
+                    .collect { emit(it) }
+            }
+        }
+
     private val _state = MutableStateFlow(ImagingState())
-    val state = combine(
-        _capturedSpecimensAndBoundingBoxesUi, _state
-    ) { capturedSpecimensAndBoundingBoxesUi, state ->
+    val state: StateFlow<ImagingState> = combine(
+        _specimensWithImagesAndInferenceResults, _state
+    ) { specimensWithImagesAndInferenceResults, state ->
         state.copy(
-            capturedSpecimensAndBoundingBoxesUi = capturedSpecimensAndBoundingBoxesUi
+            specimensWithImagesAndInferenceResults = specimensWithImagesAndInferenceResults,
+            isLoading = false
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), ImagingState())
+    }.onStart {
+        loadImagingDetails()
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000L),
+        initialValue = ImagingState(isLoading = true)
+    )
 
     private val _events = Channel<ImagingEvent>()
     val events = _events.receiveAsFlow()
 
-    init {
-        viewModelScope.launch {
-            val currentSession = currentSessionCache.getSession()
-            if (currentSession == null) {
-                _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                _events.send(ImagingEvent.DisplayImagingError(ImagingError.NO_ACTIVE_SESSION))
-                return@launch
-            }
-
-            sessionRepository.observeSessionWithSpecimens(currentSession.id).filterNotNull()
-                .collectLatest { sessionWithSpecimens ->
-                    val specimensAndBoundingBoxUiFlows =
-                        sessionWithSpecimens.specimens.map { specimen ->
-                            specimenRepository.observeSpecimenAndBoundingBox(specimen.id)
-                                .filterNotNull().map { specimenAndBoundingBox ->
-                                    val boundingBoxUi = inferenceRepository.convertToBoundingBoxUi(
-                                        specimenAndBoundingBox.boundingBox
-                                    )
-                                    SpecimenAndBoundingBoxUi(
-                                        specimen = specimenAndBoundingBox.specimen,
-                                        boundingBoxUi = boundingBoxUi
-                                    )
-                                }
-                        }
-                    if (specimensAndBoundingBoxUiFlows.isEmpty()) {
-                        _capturedSpecimensAndBoundingBoxesUi.value = emptyList()
-                    } else {
-                        combine(specimensAndBoundingBoxUiFlows) { it.toList() }.collect { capturedSpecimensAndBoundingBoxesUi ->
-                            _capturedSpecimensAndBoundingBoxesUi.value =
-                                capturedSpecimensAndBoundingBoxesUi
-                        }
-                    }
-                }
-        }
-    }
-
     fun onAction(action: ImagingAction) {
         viewModelScope.launch {
             when (action) {
+                ImagingAction.ShowExitDialog -> {
+                    _state.update { it.copy(showExitDialog = true) }
+                }
+
+                ImagingAction.DismissExitDialog -> {
+                    _state.update { it.copy(showExitDialog = false, pendingAction = null) }
+                }
+
+                is ImagingAction.SelectPendingAction -> {
+                    _state.update { it.copy(pendingAction = action.pendingAction) }
+                }
+
+                ImagingAction.ClearPendingAction -> {
+                    _state.update { it.copy(pendingAction = null) }
+                }
+
+                ImagingAction.ConfirmPendingAction -> {
+                    val actionToConfirm = _state.value.pendingAction
+                    _state.update { it.copy(showExitDialog = false, pendingAction = null) }
+                    actionToConfirm?.let { onAction(it) }
+                }
+
+                is ImagingAction.FocusAt -> {
+                    _state.update { it.copy(focusPoint = action.offset, isManualFocusing = true) }
+                }
+
+                ImagingAction.CancelFocus -> {
+                    _state.update { it.copy(focusPoint = null, isManualFocusing = false) }
+                }
+
                 is ImagingAction.CorrectSpecimenId -> {
                     _state.update {
                         it.copy(
-                            currentSpecimen = it.currentSpecimen.copy(
-                                id = action.specimenId
-                            )
+                            currentSpecimen = it.currentSpecimen.copy(id = action.specimenId),
+                            specimenIdError = null
                         )
                     }
                 }
 
                 is ImagingAction.ProcessFrame -> {
                     try {
-                        val bitmap = action.frame.toUprightBitmap()
+                        if (!_state.value.isCameraReady) {
+                            _state.update { it.copy(isCameraReady = true) }
+                        }
 
-                        val specimenId = inferenceRepository.readSpecimenId(bitmap)
-                        val (_, boundingBox) = inferenceRepository.detectSpecimen(bitmap)
+                        if (!_state.value.isProcessing) {
+                            val bitmap = action.frame.toUprightBitmap()
 
-                        _state.update {
-                            it.copy(
-                                currentSpecimen = it.currentSpecimen.copy(id = specimenId),
-                                currentBoundingBoxUi = boundingBox?.let { boundingBox ->
-                                    inferenceRepository.convertToBoundingBoxUi(boundingBox)
-                                })
+                            val liveFrameProcessingResult = imagingWorkflow.processLiveFrame(bitmap)
+
+                            validateSpecimenIdUseCase(
+                                liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
+                            ).onSuccess { correctedSpecimenId ->
+                                _state.update {
+                                    it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
+                                }
+                            }
+
+                            val suggestedAutofocusPoint = liveFrameProcessingResult.autofocusPoint
+
+                            _state.update { current ->
+                                val shouldUseAutofocusThisFrame =
+                                    !current.isManualFocusing || (current.focusPoint == null && suggestedAutofocusPoint != null)
+
+                                val nextFocusPoint = if (shouldUseAutofocusThisFrame) {
+                                    suggestedAutofocusPoint ?: current.focusPoint
+                                } else {
+                                    current.focusPoint
+                                }
+
+                                val nextIsAutofocusing = when {
+                                    !current.isManualFocusing -> true
+                                    current.focusPoint == null && suggestedAutofocusPoint != null -> true
+                                    else -> false
+                                }
+
+                                current.copy(
+                                    previewInferenceResults = liveFrameProcessingResult.previewInferenceResults,
+                                    focusPoint = nextFocusPoint,
+                                    isManualFocusing = !nextIsAutofocusing
+                                )
+                            }
                         }
                     } catch (e: Exception) {
-                        Log.e("ViewModel", "Image processing setup failed: ${e.message}")
+                        emitError(ImagingError.PROCESSING_ERROR)
                     } finally {
                         action.frame.close()
                     }
@@ -135,61 +197,106 @@ class ImagingViewModel @Inject constructor(
 
                 ImagingAction.SubmitSession -> {
                     val currentSession = currentSessionCache.getSession()
-                    if (currentSession == null) {
+                    val currentSessionSiteId = currentSessionCache.getSiteId()
+
+                    if (currentSession == null || currentSessionSiteId == null) {
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
                         return@launch
                     }
-                    val success = sessionRepository.markSessionAsComplete(currentSession.id)
+
+                    val success = sessionRepository.markSessionAsComplete(currentSession.localId)
                     if (success) {
+                        workRepository.enqueueSessionUpload(
+                            currentSession.localId, currentSessionSiteId
+                        )
                         currentSessionCache.clearSession()
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                        // TODO: Trigger background task to upload images to cloud
                     }
                 }
 
                 is ImagingAction.CaptureImage -> {
-                    _state.update { it.copy(isCapturing = true) }
+                    if (!_state.value.isCameraReady) return@launch
+
+                    _state.update { it.copy(isProcessing = true) }
 
                     val captureResult = cameraRepository.captureImage(action.controller)
 
-                    _state.update { it.copy(isCapturing = false) }
+                    withContext(Dispatchers.Default) {
+                        captureResult.onSuccess { image ->
+                            val bitmap = image.toUprightBitmap()
+                            image.close()
 
-                    captureResult.onSuccess { image ->
-                        val bitmap = image.toUprightBitmap()
-                        image.close()
+                            val jpegStream = ByteArrayOutputStream()
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
+                            val jpegByteArray = jpegStream.toByteArray()
+                            val jpegBitmap = BitmapFactory.decodeByteArray(
+                                jpegByteArray, 0, jpegByteArray.size
+                            )
 
-                        val (species, sex, abdomenStatus) = inferenceRepository.classifySpecimen(
-                            bitmap
-                        )
+                            val capturedFrameProcessingResult =
+                                imagingWorkflow.processCapturedFrame(jpegBitmap)
 
-                        if (species != null) {
-                            _state.update {
-                                it.copy(
-                                    currentSpecimen = it.currentSpecimen.copy(
-                                        species = species.label,
-                                        sex = sex?.label,
-                                        abdomenStatus = abdomenStatus?.label,
-                                    ), currentImage = bitmap
-                                )
+                            withContext(Dispatchers.Main) {
+                                capturedFrameProcessingResult.onSuccess { result ->
+                                    _state.update {
+                                        it.copy(
+                                            currentSpecimenImage = it.currentSpecimenImage.copy(
+                                                species = result.species,
+                                                sex = result.sex,
+                                                abdomenStatus = result.abdomenStatus
+                                            ),
+                                            currentImageBytes = jpegByteArray,
+                                            currentInferenceResult = result.capturedInferenceResult,
+                                            previewInferenceResults = emptyList()
+                                        )
+                                    }
+                                }
+                            }.onError { error ->
+                                emitError(error, SnackbarDuration.Short)
                             }
-                        } else {
-                            _events.send(ImagingEvent.DisplayImagingError(ImagingError.NO_SPECIMEN_FOUND))
+                        }.onError { error ->
+                            withContext(Dispatchers.Main) {
+                                if (error == ImagingError.NO_ACTIVE_SESSION) {
+                                    _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                                }
+                                emitError(error)
+                            }
                         }
-                    }.onError { error ->
-                        if (error == ImagingError.NO_ACTIVE_SESSION) {
-                            _events.send(ImagingEvent.NavigateBackToLandingScreen)
-                        }
-                        _events.send(ImagingEvent.DisplayImagingError(error))
                     }
+                    _state.update { it.copy(isProcessing = false) }
                 }
 
                 ImagingAction.RetakeImage -> {
-                    clearCurrentSpecimenStateFields()
+                    clearStateFields()
+                }
+
+                ImagingAction.TogglePackagingConfirmation -> {
+                    _state.update { it.copy(hasConfirmedPackaging = !it.hasConfirmedPackaging) }
                 }
 
                 ImagingAction.SaveImageToSession -> {
-                    val bitmap = _state.value.currentImage ?: return@launch
-                    val specimenId = _state.value.currentSpecimen.id
+                    val currentSession = currentSessionCache.getSession()
+                    if (currentSession == null) {
+                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        return@launch
+                    }
+
+                    val specimenId = when (val validationResult = validateSpecimenIdUseCase(
+                        _state.value.currentSpecimen.id, shouldAutoCorrect = false
+                    )) {
+                        is Result.Success -> {
+                            _state.update { it.copy(specimenIdError = null) }
+                            validationResult.data
+                        }
+
+                        is Result.Error -> {
+                            _state.update { it.copy(specimenIdError = validationResult.error) }
+                            emitError(validationResult.error)
+                            return@launch
+                        }
+                    }
+
+                    val jpegBytes = _state.value.currentImageBytes ?: return@launch
                     val timestamp = System.currentTimeMillis()
                     val filename = buildString {
                         append(specimenId)
@@ -198,75 +305,167 @@ class ImagingViewModel @Inject constructor(
                         append(".jpg")
                     }
 
-                    val currentSession = currentSessionCache.getSession()
-                    if (currentSession == null) {
-                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                    val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(
+                        specimenId, currentSession.localId
+                    )
+                    val shouldProcessFurther = when {
+                        existingSpecimen != null -> existingSpecimen.shouldProcessFurther
+                        _state.value.currentSpecimen.shouldProcessFurther -> true
+                        else -> determineSelectionForFurtherProcessing(imagingWorkflow.specimenFurtherProcessingProbability)
+                    }
+
+                    if (shouldProcessFurther && !_state.value.hasConfirmedPackaging) {
+                        _state.update {
+                            it.copy(
+                                currentSpecimen = it.currentSpecimen.copy(
+                                    shouldProcessFurther = true
+                                )
+                            )
+                        }
                         return@launch
                     }
 
-                    val saveResult = cameraRepository.saveImage(bitmap, filename, currentSession)
+                    val saveResult = cameraRepository.saveImage(jpegBytes, filename, currentSession)
 
                     saveResult.onSuccess { imageUri ->
                         val specimen = Specimen(
                             id = specimenId,
-                            species = _state.value.currentSpecimen.species,
-                            sex = _state.value.currentSpecimen.sex,
-                            abdomenStatus = _state.value.currentSpecimen.abdomenStatus,
+                            remoteId = null,
+                            shouldProcessFurther = shouldProcessFurther
+                        )
+                        val specimenImage = SpecimenImage(
+                            localId = calculateMd5(jpegBytes),
+                            remoteId = null,
+                            species = _state.value.currentSpecimenImage.species,
+                            sex = _state.value.currentSpecimenImage.sex,
+                            abdomenStatus = _state.value.currentSpecimenImage.abdomenStatus,
                             imageUri = imageUri,
-                            capturedAt = timestamp
+                            imageUploadStatus = UploadStatus.NOT_STARTED,
+                            metadataUploadStatus = UploadStatus.NOT_STARTED,
+                            capturedAt = timestamp,
+                            submittedAt = null
                         )
 
                         val success = transactionHelper.runAsTransaction {
-                            val boundingBoxUi =
-                                _state.value.currentBoundingBoxUi ?: return@runAsTransaction false
-                            val boundingBox = inferenceRepository.convertToBoundingBox(
-                                boundingBoxUi
-                            )
+                            val inferenceResult = _state.value.currentInferenceResult
 
-                            val specimenResult =
-                                specimenRepository.insertSpecimen(specimen, currentSession.id)
-                            val boundingBoxResult =
-                                boundingBoxRepository.insertBoundingBox(boundingBox, specimen.id)
+                            val specimenInsertionResult = if (existingSpecimen == null) {
+                                specimenRepository.insertSpecimen(specimen, currentSession.localId)
+                            } else {
+                                Result.Success(Unit)
+                            }
+                            val specimenImageInsertionResult =
+                                specimenImageRepository.insertSpecimenImage(
+                                    specimenImage, specimen.id, currentSession.localId
+                                )
 
-                            specimenResult.onError { error ->
-                                Log.d("ROOM ERROR", "Specimen error: $error")
+                            val inferenceResultInsertionResult = inferenceResult?.let {
+                                inferenceResultRepository.insertInferenceResult(
+                                    inferenceResult, specimenImage.localId
+                                )
+                            } ?: Result.Success(Unit)
+
+                            specimenInsertionResult.onError { error ->
+                                emitError(error)
                             }
 
-                            boundingBoxResult.onError { error ->
-                                Log.d("ROOM ERROR", "Bounding box error: $error")
+                            specimenImageInsertionResult.onError { error ->
+                                emitError(error)
                             }
 
-                            (specimenResult !is Result.Error) && (boundingBoxResult !is Result.Error)
+                            inferenceResultInsertionResult.onError { error ->
+                                emitError(error)
+                            }
+
+                            (specimenInsertionResult !is Result.Error) && (specimenImageInsertionResult !is Result.Error) && (inferenceResultInsertionResult !is Result.Error)
                         }
 
                         if (success) {
-                            clearCurrentSpecimenStateFields()
+                            clearStateFields()
                         } else {
+                            emitError(ImagingError.SAVE_ERROR)
                             cameraRepository.deleteSavedImage(imageUri)
                         }
                     }.onError { error ->
-                        _events.send(ImagingEvent.DisplayImagingError(error))
+                        emitError(error)
                     }
                 }
             }
         }
     }
 
-    private fun clearCurrentSpecimenStateFields() {
+    private fun clearStateFields() {
         _state.update {
             it.copy(
                 currentSpecimen = it.currentSpecimen.copy(
-                    id = "", species = null, sex = null, abdomenStatus = null
+                    id = "", remoteId = null, shouldProcessFurther = false
                 ),
-                currentImage = null,
-                currentBoundingBoxUi = null,
+                currentSpecimenImage = it.currentSpecimenImage.copy(
+                    localId = "",
+                    remoteId = null,
+                    species = null,
+                    sex = null,
+                    abdomenStatus = null,
+                    imageUri = Uri.EMPTY,
+                    metadataUploadStatus = UploadStatus.NOT_STARTED,
+                    imageUploadStatus = UploadStatus.NOT_STARTED,
+                    capturedAt = 0L,
+                    submittedAt = null
+                ),
+                currentInferenceResult = null,
+                currentImageBytes = null,
+                isCameraReady = false,
+                previewInferenceResults = emptyList(),
+                focusPoint = null,
+                isManualFocusing = false,
+                hasConfirmedPackaging = false,
+                specimenIdError = null
             )
+        }
+    }
+
+    private suspend fun determineSelectionForFurtherProcessing(selectionProbability: Float): Boolean {
+        if (selectionProbability == 0f) return false
+
+        val now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault())
+
+        val startOfCurrentMonth = now.withDayOfMonth(1).toLocalDate().atStartOfDay(ZoneId.systemDefault())
+        val startOfNextMonth = startOfCurrentMonth.plusMonths(1)
+
+        val startDate = startOfCurrentMonth.toInstant().toEpochMilli()
+        val endDate = startOfNextMonth.toInstant().toEpochMilli()
+
+        val specimensSelectedForFurtherProcessingThisMonth =
+            specimenRepository.countSelectedForFurtherProcessingBetweenSessionCollectionDates(startDate, endDate)
+
+        if (specimensSelectedForFurtherProcessingThisMonth >= MONTHLY_FURTHER_PROCESSING_CAP) return false
+        return Random.nextFloat() < selectionProbability
+    }
+
+    private fun calculateMd5(imageByteArray: ByteArray): String {
+        val md5 = MessageDigest.getInstance("MD5")
+        val digest = md5.digest(imageByteArray)
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun loadImagingDetails() {
+        viewModelScope.launch {
+            val session = currentSessionCache.getSession()
+            if (session != null) {
+                imagingWorkflow = imagingWorkflowFactory.create(session.type)
+            } else {
+                _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                emitError(ImagingError.NO_ACTIVE_SESSION)
+            }
         }
     }
 
     override fun onCleared() {
         super.onCleared()
+        imagingWorkflow.close()
+    }
 
-        inferenceRepository.closeResources()
+    private companion object {
+        private const val MONTHLY_FURTHER_PROCESSING_CAP = 20
     }
 }

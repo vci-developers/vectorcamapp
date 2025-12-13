@@ -1,29 +1,29 @@
 package com.vci.vectorcamapp.imaging.data.repository
 
-import android.content.res.Resources
 import android.graphics.Bitmap
 import android.util.Log
+import androidx.compose.ui.geometry.Offset
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognizer
+import com.vci.vectorcamapp.core.domain.model.InferenceResult
+import com.vci.vectorcamapp.core.domain.model.results.ClassifierResult
+import com.vci.vectorcamapp.core.domain.model.results.DetectorResult
 import com.vci.vectorcamapp.imaging.data.GpuDelegateManager
 import com.vci.vectorcamapp.imaging.di.AbdomenStatusClassifier
 import com.vci.vectorcamapp.imaging.di.Detector
 import com.vci.vectorcamapp.imaging.di.SexClassifier
 import com.vci.vectorcamapp.imaging.di.SpeciesClassifier
 import com.vci.vectorcamapp.imaging.di.SpecimenIdRecognizer
-import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
-import com.vci.vectorcamapp.core.domain.model.BoundingBox
-import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
-import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
-import com.vci.vectorcamapp.imaging.presentation.extensions.cropToBoundingBoxAndPad
-import com.vci.vectorcamapp.imaging.presentation.extensions.resizeTo
-import com.vci.vectorcamapp.imaging.presentation.model.BoundingBoxUi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import org.opencv.android.Utils
+import org.opencv.core.Core
+import org.opencv.core.Mat
+import org.opencv.imgproc.Imgproc
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -55,101 +55,89 @@ class InferenceRepositoryImplementation @Inject constructor(
         }
     }
 
-    override suspend fun detectSpecimen(bitmap: Bitmap): Pair<Bitmap, BoundingBox?> =
+    override suspend fun detectSpecimen(bitmap: Bitmap): List<DetectorResult> =
         withContext(Dispatchers.Default) {
-            val (tensorHeight, tensorWidth) = specimenDetector.getInputTensorShape()
-
-            val resized = bitmap.resizeTo(tensorWidth, tensorHeight)
-            Pair(resized, specimenDetector.detect(resized))
+            specimenDetector.detect(bitmap)
         }
 
-    override suspend fun classifySpecimen(bitmap: Bitmap): Triple<SpeciesLabel?, SexLabel?, AbdomenStatusLabel?> =
+    override suspend fun classifySpecimen(croppedBitmap: Bitmap): Triple<ClassifierResult?, ClassifierResult?, ClassifierResult?> =
         withContext(Dispatchers.Default) {
-            val (resized, boundingBox) = detectSpecimen(bitmap)
+            val speciesResultPromise = async { getClassification(croppedBitmap, speciesClassifier) }
+            val sexResultPromise = async { getClassification(croppedBitmap, sexClassifier) }
+            val abdomenStatusResultPromise = async { getClassification(croppedBitmap, abdomenStatusClassifier) }
+            
+            val speciesResult = speciesResultPromise.await()
+            val sexResult = sexResultPromise.await()
+            val abdomenStatusResult = abdomenStatusResultPromise.await()
 
-            val croppedAndPadded = boundingBox?.let {
-                resized.cropToBoundingBoxAndPad(it)
-            }
-
-            croppedAndPadded?.let {
-                val speciesPromise = async { getClassification(it, speciesClassifier) }
-                val sexPromise = async { getClassification(it, sexClassifier) }
-                val abdomenStatusPromise = async { getClassification(it, abdomenStatusClassifier) }
-
-                val species =
-                    speciesPromise.await()?.let { index -> SpeciesLabel.entries.getOrNull(index) }
-                var sex = sexPromise.await()?.let { index -> SexLabel.entries.getOrNull(index) }
-                var abdomenStatus = abdomenStatusPromise.await()
-                    ?.let { index -> AbdomenStatusLabel.entries.getOrNull(index) }
-
-                if (species == SpeciesLabel.NON_MOSQUITO || species == null) {
-                    sex = null
-                }
-                if (sex == SexLabel.MALE || sex == null) {
-                    abdomenStatus = null
-                }
-
-                Triple(species, sex, abdomenStatus)
-            } ?: Triple(null, null, null)
+            Triple(speciesResult, sexResult, abdomenStatusResult)
         }
 
-    override fun convertToBoundingBox(boundingBoxUi: BoundingBoxUi): BoundingBox {
-        val (tensorHeight, tensorWidth) = specimenDetector.getInputTensorShape()
+    override suspend fun computeAutofocusCentroid(
+        bitmap: Bitmap,
+        detection: InferenceResult
+    ): Offset? = withContext(Dispatchers.Default) {
 
-        val screenWidth = Resources.getSystem().displayMetrics.widthPixels.toFloat()
-        val screenHeight = Resources.getSystem().displayMetrics.heightPixels.toFloat()
+        val topLeftX = (detection.bboxTopLeftX * bitmap.width).toInt()
+        val topLeftY = (detection.bboxTopLeftY * bitmap.height).toInt()
+        val cropWidth = (detection.bboxWidth * bitmap.width).toInt()
+        val cropHeight = (detection.bboxHeight * bitmap.height).toInt()
 
-        val previewWidth = screenWidth
-        val previewHeight = HEIGHT_TO_WIDTH_ASPECT_RATIO * previewWidth
+        val validCropWidth = (topLeftX + cropWidth).coerceAtMost(bitmap.width) - topLeftX
+        val validCropHeight = (topLeftY + cropHeight).coerceAtMost(bitmap.height) - topLeftY
 
-        val verticalPadding = (screenHeight - previewHeight) / 2
+        if (validCropWidth <= 0 || validCropHeight <= 0) {
+            return@withContext null
+        }
 
-        val scaleX = previewWidth / tensorWidth
-        val scaleY = previewHeight / tensorHeight
-
-        val scaledX = boundingBoxUi.topLeftX / (scaleX * tensorWidth)
-        val scaledY = (boundingBoxUi.topLeftY - verticalPadding) / (scaleY * tensorHeight)
-        val scaledWidth = boundingBoxUi.width / (scaleX * tensorWidth)
-        val scaledHeight = boundingBoxUi.height / (scaleY * tensorHeight)
-
-        return BoundingBox(
-            topLeftX = scaledX,
-            topLeftY = scaledY,
-            width = scaledWidth,
-            height = scaledHeight,
-            confidence = boundingBoxUi.confidence,
-            classId = boundingBoxUi.classId,
+        val croppedBitmap = Bitmap.createBitmap(
+            bitmap,
+            topLeftX,
+            topLeftY,
+            validCropWidth,
+            validCropHeight
         )
+
+        val sourceImageMatrix = Mat()
+        Utils.bitmapToMat(croppedBitmap, sourceImageMatrix)
+
+        val grayscaleImageMatrix = Mat()
+        Imgproc.cvtColor(sourceImageMatrix, grayscaleImageMatrix, Imgproc.COLOR_BGR2GRAY)
+
+        val thresholdForegroundMaskMatrix = Mat()
+        Imgproc.threshold(
+            grayscaleImageMatrix, thresholdForegroundMaskMatrix, 0.0, 255.0,
+            Imgproc.THRESH_BINARY_INV or Imgproc.THRESH_OTSU
+        )
+
+        val nonZeroLocationsMatrix = Mat()
+        Core.findNonZero(thresholdForegroundMaskMatrix, nonZeroLocationsMatrix)
+        if (nonZeroLocationsMatrix.empty()) return@withContext null
+
+        val foregroundPixelCount = nonZeroLocationsMatrix.rows()
+        val foregroundXCoordinates = IntArray(foregroundPixelCount)
+        val foregroundYCoordinates = IntArray(foregroundPixelCount)
+        for (i in 0 until foregroundPixelCount) {
+            val pixelLocation = nonZeroLocationsMatrix.get(i, 0)
+            foregroundXCoordinates[i] = pixelLocation[0].toInt()
+            foregroundYCoordinates[i] = pixelLocation[1].toInt()
+        }
+        foregroundXCoordinates.sort(); foregroundYCoordinates.sort()
+        val medianX = foregroundXCoordinates[foregroundXCoordinates.size / 2]
+        val medianY = foregroundYCoordinates[foregroundYCoordinates.size / 2]
+
+        val absolutePixelX = topLeftX + medianX
+        val absolutePixelY = topLeftY + medianY
+        val normalizedFocusX = absolutePixelX.toFloat() / bitmap.width
+        val normalizedFocusY = absolutePixelY.toFloat() / bitmap.height
+
+        Log.d("Repository", "AF centroid (norm)=($normalizedFocusX,$normalizedFocusY)")
+        Offset(normalizedFocusX, normalizedFocusY)
     }
 
-    override fun convertToBoundingBoxUi(boundingBox: BoundingBox): BoundingBoxUi {
-        val (tensorHeight, tensorWidth) = specimenDetector.getInputTensorShape()
-
-        val screenWidth = Resources.getSystem().displayMetrics.widthPixels.toFloat()
-        val screenHeight = Resources.getSystem().displayMetrics.heightPixels.toFloat()
-
-        val previewWidth = screenWidth
-        val previewHeight = HEIGHT_TO_WIDTH_ASPECT_RATIO * previewWidth
-
-        val verticalPadding = (screenHeight - previewHeight) / 2
-
-        val scaleX = previewWidth / tensorWidth
-        val scaleY = previewHeight / tensorHeight
-
-        val scaledX = boundingBox.topLeftX * tensorWidth * scaleX
-        val scaledY = boundingBox.topLeftY * tensorHeight * scaleY + verticalPadding
-        val scaledWidth = boundingBox.width * tensorWidth * scaleX
-        val scaledHeight = boundingBox.height * tensorHeight * scaleY
-
-        return BoundingBoxUi(
-            topLeftX = scaledX,
-            topLeftY = scaledY,
-            width = scaledWidth,
-            height = scaledHeight,
-            confidence = boundingBox.confidence,
-            classId = boundingBox.classId,
-        )
-    }
+    private suspend fun getClassification(
+        croppedBitmap: Bitmap, classifier: SpecimenClassifier
+    ): ClassifierResult? = classifier.classify(croppedBitmap)
 
     override fun closeResources() {
         specimenIdRecognizer.close()
@@ -158,15 +146,5 @@ class InferenceRepositoryImplementation @Inject constructor(
         sexClassifier.close()
         abdomenStatusClassifier.close()
         GpuDelegateManager.close()
-    }
-
-    private suspend fun getClassification(bitmap: Bitmap, classifier: SpecimenClassifier): Int? {
-        val (tensorHeight, tensorWidth) = classifier.getInputTensorShape()
-
-        return classifier.classify(bitmap.resizeTo(tensorWidth, tensorHeight))
-    }
-
-    companion object {
-        private const val HEIGHT_TO_WIDTH_ASPECT_RATIO = 4f / 3f
     }
 }

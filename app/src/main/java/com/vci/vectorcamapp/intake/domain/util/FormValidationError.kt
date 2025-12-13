@@ -1,0 +1,20 @@
+package com.vci.vectorcamapp.intake.domain.util
+
+import com.vci.vectorcamapp.core.domain.util.Error
+
+enum class FormValidationError : Error {
+    BLANK_COLLECTOR,
+    BLANK_DISTRICT,
+    BLANK_VILLAGE_NAME,
+    BLANK_HOUSE_NUMBER,
+    BLANK_LLIN_TYPE,
+    BLANK_LLIN_BRAND,
+    FUTURE_COLLECTION_DATE,
+    BLANK_COLLECTION_METHOD,
+    BLANK_SPECIMEN_CONDITION,
+    INVALID_NUM_PEOPLE_SLEPT_IN_HOUSE,
+    INVALID_MONTHS_SINCE_IRS,
+    INVALID_NUM_LLINS_AVAILABLE,
+    INVALID_NUM_PEOPLE_SLEPT_UNDER_LLIN;
+
+}

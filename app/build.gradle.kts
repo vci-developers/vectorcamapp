@@ -1,3 +1,39 @@
+import java.util.Properties
+
+val secretsProperties = Properties()
+val secretsFile = rootProject.file("secrets.properties")
+if (secretsFile.exists()) {
+    secretsFile.inputStream().use { secretsProperties.load(it) }
+}
+
+// Region configuration
+val region = project.findProperty("region")?.toString()?.lowercase() ?: "default"
+println("✅ Building VectorCam for region: $region")
+
+fun getRegionBasedVersionCode(): Int {
+    return when (region) {
+        "colombia" -> 1006
+        "uganda" -> 2004
+        "nigeria" -> 3001
+        else -> {
+            println("⚠️ Unknown region '$region', using default version code")
+            4000
+        }
+    }
+}
+
+fun getRegionBasedVersionName(): String {
+    return when (region) {
+        "colombia" -> "1.0.6"
+        "uganda" -> "1.0.4"
+        "nigeria" -> "1.0.1"
+        else -> {
+            println("⚠️ Unknown region '$region', using default version name")
+            "1.0.0"
+        }
+    }
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,29 +41,49 @@ plugins {
     alias(libs.plugins.google.dagger.hilt.android)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.androidx.room)
+    alias(libs.plugins.sentry.android.gradle)
     kotlin("plugin.serialization") version "2.0.21"
 }
 
 android {
     namespace = "com.vci.vectorcamapp"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.vci.vectorcamapp"
         minSdk = 29
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        targetSdk = 36
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        versionCode = getRegionBasedVersionCode()
+        versionName = getRegionBasedVersionName()
+
+        testInstrumentationRunner = "com.vci.vectorcamapp.HiltTestRunner"
+
+        buildConfigField("String", "POSTHOG_API_KEY", "\"${secretsProperties["POSTHOG_API_KEY"]}\"")
+        buildConfigField("String", "POSTHOG_HOST", "\"${secretsProperties["POSTHOG_HOST"]}\"")
+
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+        }
     }
 
     buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
+            buildConfigField("String", "BASE_URL", "\"https://test.api.vectorcam.org/\"")
+            buildConfigField("String", "VECTORCAM_API_KEY", "\"${secretsProperties["DEBUG_VECTORCAM_API_KEY"]}\"")
+        }
+
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
+
+            buildConfigField("String", "BASE_URL", "\"https://api.vectorcam.org/\"")
+            buildConfigField("String", "VECTORCAM_API_KEY", "\"${secretsProperties["RELEASE_VECTORCAM_API_KEY"]}\"")
         }
     }
 
@@ -104,13 +160,22 @@ dependencies {
     // Dagger Hilt Dependencies
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
     ksp(libs.hilt.android.compiler)
+    testImplementation(libs.hilt.android.testing)
+    kspTest(libs.hilt.android.compiler)
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.android.compiler)
 
-    // TensorFlow Lite Library
-    implementation(libs.tensorflow.lite)
-    implementation(libs.tensorflow.lite.support)
-    implementation(libs.tensorflow.lite.gpu)
-    implementation(libs.tensorflow.lite.gpu.api)
+    // Open CV Library
+    implementation(libs.opencv)
+
+    // LiteRT Library
+    implementation(libs.litert)
+    implementation(libs.litert.gpu)
+    implementation(libs.litert.gpu.api)
+    implementation(libs.litert.support)
 
     // Room Database Dependencies
     implementation(libs.androidx.room.runtime)
@@ -130,15 +195,40 @@ dependencies {
     // Proto Data Store Library
     implementation(libs.androidx.datastore)
 
+    // Work Manager Library
+    implementation(libs.androidx.work.runtime.ktx)
+
+    // PostHog AnalyticsLibrary
+    implementation(libs.posthog.android)
+
     // JSON Serialization Library
     implementation(libs.kotlinx.serialization.json) // Kotlinx JSON serialization library
 
+    // TUS Library
+    implementation(libs.tus.android.client)
+    implementation(libs.tus.java.client)
+
     // Testing Dependencies
     testImplementation(libs.junit) // JUnit for unit tests
+    testImplementation(libs.truth) // Google truth library for assertions
+    testImplementation(libs.kotlinx.coroutines.test) // Kotlin coroutines test library
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
     androidTestImplementation(libs.androidx.junit) // AndroidX JUnit test library
     androidTestImplementation(libs.androidx.espresso.core) // Espresso for UI testing
+    androidTestImplementation(libs.truth) // Google truth library for assertions
     androidTestImplementation(platform(libs.androidx.compose.bom)) // Compose testing BOM
     androidTestImplementation(libs.androidx.ui.test.junit4) // Compose JUnit testing
     debugImplementation(libs.androidx.ui.tooling) // Debugging tools for Compose
     debugImplementation(libs.androidx.ui.test.manifest) // Debugging Compose manifest tests
+}
+
+sentry {
+    org.set("vectorcam")
+    projectName.set("android")
+    includeSourceContext.set(true)
+    includeProguardMapping.set(true)
+    autoUploadProguardMapping.set(true)
+
+    ignoredBuildTypes.set(setOf("debug"))
 }

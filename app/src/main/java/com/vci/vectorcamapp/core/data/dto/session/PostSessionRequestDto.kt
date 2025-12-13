@@ -1,0 +1,29 @@
+package com.vci.vectorcamapp.core.data.dto.session
+
+import com.vci.vectorcamapp.core.data.dto.serializers.SessionTypeSerializer
+import com.vci.vectorcamapp.core.data.dto.serializers.UuidSerializer
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import kotlinx.serialization.Serializable
+import java.util.UUID
+
+@Serializable
+data class PostSessionRequestDto(
+    @Serializable(with = UuidSerializer::class)
+    val frontendId: UUID = UUID(0, 0),
+    val hardwareId: String? = null,
+    val collectorTitle: String = "",
+    val collectorName: String = "",
+    val collectorLastTrainedOn: Long = 0L,
+    val collectionDate: Long = 0L,
+    val collectionMethod: String = "",
+    val specimenCondition: String = "",
+    val createdAt: Long = 0L,
+    val completedAt: Long = 0L,
+    val notes: String = "",
+    val latitude: Float? = null,
+    val longitude: Float? = null,
+    @Serializable(with = SessionTypeSerializer::class)
+    val type: SessionType = SessionType.SURVEILLANCE,
+    val siteId: Int = -1,
+    val deviceId: Int = -1,
+)
