@@ -9,6 +9,7 @@ sealed interface ImagingAction {
     data class ProcessFrame(val frame: ImageProxy) : ImagingAction
     data object SaveSessionProgress : ImagingAction
     data object SubmitSession : ImagingAction
+    data class ToggleModelInference(val isChecked: Boolean) : ImagingAction
     data class CaptureImage(val controller: LifecycleCameraController) : ImagingAction
     data object SaveImageToSession : ImagingAction
     data object RetakeImage : ImagingAction
@@ -16,7 +17,7 @@ sealed interface ImagingAction {
     data object CancelFocus : ImagingAction
     data object ShowExitDialog : ImagingAction
     data object DismissExitDialog : ImagingAction
-    data object TogglePackagingConfirmation : ImagingAction
+    data class TogglePackagingConfirmation(val isChecked: Boolean) : ImagingAction
     data class SelectPendingAction(val pendingAction: ImagingAction) : ImagingAction
     data object ClearPendingAction : ImagingAction
     data object ConfirmPendingAction : ImagingAction

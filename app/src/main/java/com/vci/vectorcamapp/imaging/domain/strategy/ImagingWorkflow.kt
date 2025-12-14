@@ -8,6 +8,7 @@ import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 
 interface ImagingWorkflow {
     val specimenFurtherProcessingProbability: Float
+    val allowModelInferenceToggle: Boolean
     suspend fun processLiveFrame(bitmap: Bitmap): LiveFrameProcessingResult
     suspend fun processCapturedFrame(bitmap: Bitmap): Result<CapturedFrameProcessingResult, ImagingError>
     fun close()

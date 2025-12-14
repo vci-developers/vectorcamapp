@@ -214,6 +214,15 @@ class ImagingViewModel @Inject constructor(
                     }
                 }
 
+                is ImagingAction.ToggleModelInference -> {
+                    val shouldRunInference = action.isChecked
+                    _state.update {
+                        it.copy(
+                            shouldRunInference = shouldRunInference
+                        )
+                    }
+                }
+
                 is ImagingAction.CaptureImage -> {
                     if (!_state.value.isCameraReady) return@launch
 
@@ -270,8 +279,13 @@ class ImagingViewModel @Inject constructor(
                     clearStateFields()
                 }
 
-                ImagingAction.TogglePackagingConfirmation -> {
-                    _state.update { it.copy(hasConfirmedPackaging = !it.hasConfirmedPackaging) }
+                is ImagingAction.TogglePackagingConfirmation -> {
+                    val hasConfirmedPackaging = action.isChecked
+                    _state.update {
+                        it.copy(
+                            hasConfirmedPackaging = hasConfirmedPackaging
+                        )
+                    }
                 }
 
                 ImagingAction.SaveImageToSession -> {
@@ -429,14 +443,18 @@ class ImagingViewModel @Inject constructor(
 
         val now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault())
 
-        val startOfCurrentMonth = now.withDayOfMonth(1).toLocalDate().atStartOfDay(ZoneId.systemDefault())
+        val startOfCurrentMonth =
+            now.withDayOfMonth(1).toLocalDate().atStartOfDay(ZoneId.systemDefault())
         val startOfNextMonth = startOfCurrentMonth.plusMonths(1)
 
         val startDate = startOfCurrentMonth.toInstant().toEpochMilli()
         val endDate = startOfNextMonth.toInstant().toEpochMilli()
 
         val specimensSelectedForFurtherProcessingThisMonth =
-            specimenRepository.countSelectedForFurtherProcessingBetweenSessionCollectionDates(startDate, endDate)
+            specimenRepository.countSelectedForFurtherProcessingBetweenSessionCollectionDates(
+                startDate,
+                endDate
+            )
 
         if (specimensSelectedForFurtherProcessingThisMonth >= MONTHLY_FURTHER_PROCESSING_CAP) return false
         return Random.nextFloat() < selectionProbability
@@ -453,6 +471,13 @@ class ImagingViewModel @Inject constructor(
             val session = currentSessionCache.getSession()
             if (session != null) {
                 imagingWorkflow = imagingWorkflowFactory.create(session.type)
+                val allowModelInferenceToggle = imagingWorkflow.allowModelInferenceToggle
+                _state.update {
+                    it.copy(
+                        allowModelInferenceToggle = allowModelInferenceToggle,
+                        shouldRunInference = !allowModelInferenceToggle
+                    )
+                }
             } else {
                 _events.send(ImagingEvent.NavigateBackToLandingScreen)
                 emitError(ImagingError.NO_ACTIVE_SESSION)

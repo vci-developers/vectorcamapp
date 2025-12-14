@@ -15,6 +15,9 @@ class DataCollectionImagingWorkflow @Inject constructor(
     override val specimenFurtherProcessingProbability: Float
         get() = 0f
 
+    override val allowModelInferenceToggle: Boolean
+        get() = true
+
     override suspend fun processLiveFrame(bitmap: Bitmap): LiveFrameProcessingResult {
         return LiveFrameProcessingResult(
             specimenId = inferenceRepository.readSpecimenId(bitmap),
