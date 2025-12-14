@@ -537,16 +537,16 @@ fun ImagingScreen(
                                 .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
                                 .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
                         ) {
-                            LiveCameraPreview(
-                                controller = controller,
-                                inferenceResults = state.previewInferenceResults,
-                                focusPoint = state.focusPoint,
-                                onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
-                                onCancelFocus = { onAction(ImagingAction.CancelFocus) },
-                                modifier = Modifier.fillMaxWidth(),
-                                isManualFocusing = state.isManualFocusing,
-                                isProcessing = state.isProcessing
-                            )
+                                LiveCameraPreview(
+                                    controller = controller,
+                                    inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
+                                    focusPoint = state.focusPoint,
+                                    onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
+                                    onCancelFocus = { onAction(ImagingAction.CancelFocus) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    isManualFocusing = state.isManualFocusing,
+                                    isProcessing = state.isProcessing
+                                )
                         }
 
                         InfoTile {

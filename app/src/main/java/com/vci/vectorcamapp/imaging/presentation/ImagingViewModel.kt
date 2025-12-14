@@ -7,6 +7,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
@@ -20,7 +21,11 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
+import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
+import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
+import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
 import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
@@ -56,6 +61,7 @@ class ImagingViewModel @Inject constructor(
     private val specimenImageRepository: SpecimenImageRepository,
     private val inferenceResultRepository: InferenceResultRepository,
     private val cameraRepository: CameraRepository,
+    private val inferenceRepository: InferenceRepository,
     private val workRepository: WorkManagerRepository,
     private val validateSpecimenIdUseCase: ValidateSpecimenIdUseCase,
 ) : CoreViewModel() {
@@ -148,39 +154,70 @@ class ImagingViewModel @Inject constructor(
                         if (!_state.value.isProcessing) {
                             val bitmap = action.frame.toUprightBitmap()
 
-                            val liveFrameProcessingResult = imagingWorkflow.processLiveFrame(bitmap)
-
-                            validateSpecimenIdUseCase(
-                                liveFrameProcessingResult.specimenId, shouldAutoCorrect = true
-                            ).onSuccess { correctedSpecimenId ->
+                            val specimenId = inferenceRepository.readSpecimenId(bitmap)
+                            validateSpecimenIdUseCase(specimenId, shouldAutoCorrect = true).onSuccess { correctedSpecimenId ->
                                 _state.update {
                                     it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
                                 }
+                            }.onError {
+                                _state.update {
+                                    it.copy(currentSpecimen = it.currentSpecimen.copy(id = ""))
+                                }
                             }
 
-                            val suggestedAutofocusPoint = liveFrameProcessingResult.autofocusPoint
-
-                            _state.update { current ->
-                                val shouldUseAutofocusThisFrame =
-                                    !current.isManualFocusing || (current.focusPoint == null && suggestedAutofocusPoint != null)
-
-                                val nextFocusPoint = if (shouldUseAutofocusThisFrame) {
-                                    suggestedAutofocusPoint ?: current.focusPoint
-                                } else {
-                                    current.focusPoint
-                                }
-
-                                val nextIsAutofocusing = when {
-                                    !current.isManualFocusing -> true
-                                    current.focusPoint == null && suggestedAutofocusPoint != null -> true
-                                    else -> false
-                                }
-
-                                current.copy(
-                                    previewInferenceResults = liveFrameProcessingResult.previewInferenceResults,
-                                    focusPoint = nextFocusPoint,
-                                    isManualFocusing = !nextIsAutofocusing
+                            if (_state.value.shouldRunInference) {
+                                val jpegStream = ByteArrayOutputStream()
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
+                                val jpegByteArray = jpegStream.toByteArray()
+                                val jpegBitmap = BitmapFactory.decodeByteArray(
+                                    jpegByteArray, 0, jpegByteArray.size
                                 )
+
+                                val previewInferenceResults = inferenceRepository.detectSpecimen(jpegBitmap).map { detectorResult ->
+                                    InferenceResult(
+                                        bboxTopLeftX = detectorResult.bboxTopLeftX,
+                                        bboxTopLeftY = detectorResult.bboxTopLeftY,
+                                        bboxWidth = detectorResult.bboxWidth,
+                                        bboxHeight = detectorResult.bboxHeight,
+                                        bboxConfidence = detectorResult.bboxConfidence,
+                                        bboxClassId = detectorResult.bboxClassId,
+                                        speciesLogits = null,
+                                        sexLogits = null,
+                                        abdomenStatusLogits = null,
+                                        bboxDetectionDuration = detectorResult.bboxDetectionDuration,
+                                        speciesInferenceDuration = null,
+                                        sexInferenceDuration = null,
+                                        abdomenStatusInferenceDuration = null
+                                    )
+                                }
+                                val highestConfidenceDetection =
+                                    previewInferenceResults.maxByOrNull { it.bboxConfidence }
+                                val autofocusPoint = highestConfidenceDetection?.let { detection ->
+                                    inferenceRepository.computeAutofocusCentroid(jpegBitmap, detection)
+                                }
+
+                                _state.update {
+                                    val shouldUseAutofocusThisFrame =
+                                        !it.isManualFocusing || (it.focusPoint == null && autofocusPoint != null)
+
+                                    val nextFocusPoint = if (shouldUseAutofocusThisFrame) {
+                                        autofocusPoint ?: it.focusPoint
+                                    } else {
+                                        it.focusPoint
+                                    }
+
+                                    val nextIsAutofocusing = when {
+                                        !it.isManualFocusing -> true
+                                        it.focusPoint == null && autofocusPoint != null -> true
+                                        else -> false
+                                    }
+
+                                    it.copy(
+                                        previewInferenceResults = previewInferenceResults,
+                                        focusPoint = nextFocusPoint,
+                                        isManualFocusing = !nextIsAutofocusing
+                                    )
+                                }
                             }
                         }
                     } catch (e: Exception) {
@@ -242,26 +279,96 @@ class ImagingViewModel @Inject constructor(
                                 jpegByteArray, 0, jpegByteArray.size
                             )
 
-                            val capturedFrameProcessingResult =
-                                imagingWorkflow.processCapturedFrame(jpegBitmap)
+                            if (_state.value.shouldRunInference) {
+                                val captureDetectorResults = inferenceRepository.detectSpecimen(jpegBitmap)
 
-                            withContext(Dispatchers.Main) {
-                                capturedFrameProcessingResult.onSuccess { result ->
-                                    _state.update {
-                                        it.copy(
-                                            currentSpecimenImage = it.currentSpecimenImage.copy(
-                                                species = result.species,
-                                                sex = result.sex,
-                                                abdomenStatus = result.abdomenStatus
-                                            ),
-                                            currentImageBytes = jpegByteArray,
-                                            currentInferenceResult = result.capturedInferenceResult,
-                                            previewInferenceResults = emptyList()
-                                        )
+                                when (captureDetectorResults.size) {
+                                    0 -> emitError(ImagingError.NO_SPECIMEN_FOUND, SnackbarDuration.Short)
+                                    1 -> {
+                                        val captureDetectorResult = captureDetectorResults.first()
+                                        val topLeftXFloat =
+                                            captureDetectorResult.bboxTopLeftX * jpegBitmap.width
+                                        val topLeftYFloat =
+                                            captureDetectorResult.bboxTopLeftY * jpegBitmap.height
+                                        val widthFloat = captureDetectorResult.bboxWidth * jpegBitmap.width
+                                        val heightFloat = captureDetectorResult.bboxHeight * jpegBitmap.height
+
+                                        val topLeftXAbsolute = topLeftXFloat.toInt()
+                                        val topLeftYAbsolute = topLeftYFloat.toInt()
+                                        val widthAbsolute =
+                                            (widthFloat + (topLeftXFloat - topLeftXAbsolute)).toInt()
+                                        val heightAbsolute =
+                                            (heightFloat + (topLeftYFloat - topLeftYAbsolute)).toInt()
+
+                                        val clampedTopLeftX =
+                                            topLeftXAbsolute.coerceIn(0, jpegBitmap.width - 1)
+                                        val clampedTopLeftY =
+                                            topLeftYAbsolute.coerceIn(0, jpegBitmap.height - 1)
+                                        val clampedWidth =
+                                            widthAbsolute.coerceIn(1, jpegBitmap.width - clampedTopLeftX)
+                                        val clampedHeight =
+                                            heightAbsolute.coerceIn(1, jpegBitmap.height - clampedTopLeftY)
+
+                                        if (clampedWidth > 0 && clampedHeight > 0) {
+                                            val croppedBitmap = Bitmap.createBitmap(
+                                                jpegBitmap,
+                                                clampedTopLeftX,
+                                                clampedTopLeftY,
+                                                clampedWidth,
+                                                clampedHeight
+                                            )
+
+                                            var (speciesResult, sexResult, abdomenStatusResult) = inferenceRepository.classifySpecimen(croppedBitmap)
+
+                                            val speciesIndex = speciesResult?.logits?.let { logits -> logits.indexOf(logits.max()) }
+                                            var sexIndex = sexResult?.logits?.let { logits -> logits.indexOf(logits.max()) }
+                                            var abdomenStatusIndex = abdomenStatusResult?.logits?.let { logits -> logits.indexOf(logits.max()) }
+
+                                            if (speciesResult?.logits == null || speciesIndex == SpeciesLabel.NON_MOSQUITO.ordinal) {
+                                                sexResult = null
+                                                sexIndex = null
+                                            }
+                                            if (sexResult?.logits == null || sexIndex == SexLabel.MALE.ordinal) {
+                                                abdomenStatusResult = null
+                                                abdomenStatusIndex = null
+                                            }
+
+                                            _state.update {
+                                                it.copy(
+                                                    currentSpecimenImage = it.currentSpecimenImage.copy(
+                                                        species = speciesIndex?.let { index -> SpeciesLabel.entries[index].label },
+                                                        sex = sexIndex?.let { index -> SexLabel.entries[index].label },
+                                                        abdomenStatus = abdomenStatusIndex?.let { index -> AbdomenStatusLabel.entries[index].label },
+                                                    ),
+                                                    currentImageBytes = jpegByteArray,
+                                                    currentInferenceResult = InferenceResult(
+                                                        bboxTopLeftX = captureDetectorResult.bboxTopLeftX,
+                                                        bboxTopLeftY = captureDetectorResult.bboxTopLeftY,
+                                                        bboxWidth = captureDetectorResult.bboxWidth,
+                                                        bboxHeight = captureDetectorResult.bboxHeight,
+                                                        bboxConfidence = captureDetectorResult.bboxConfidence,
+                                                        bboxClassId = captureDetectorResult.bboxClassId,
+                                                        speciesLogits = speciesResult?.logits,
+                                                        sexLogits = sexResult?.logits,
+                                                        abdomenStatusLogits = abdomenStatusResult?.logits,
+                                                        bboxDetectionDuration = captureDetectorResult.bboxDetectionDuration,
+                                                        speciesInferenceDuration = speciesResult?.inferenceDuration,
+                                                        sexInferenceDuration = sexResult?.inferenceDuration,
+                                                        abdomenStatusInferenceDuration = abdomenStatusResult?.inferenceDuration,
+                                                    ),
+                                                    previewInferenceResults = emptyList()
+                                                )
+                                            }
+                                        }
                                     }
+                                    else -> emitError(ImagingError.MULTIPLE_SPECIMENS_FOUND, SnackbarDuration.Short)
                                 }
-                            }.onError { error ->
-                                emitError(error, SnackbarDuration.Short)
+                            } else {
+                                _state.update {
+                                    it.copy(
+                                        currentImageBytes = jpegByteArray,
+                                    )
+                                }
                             }
                         }.onError { error ->
                             withContext(Dispatchers.Main) {
@@ -487,7 +594,7 @@ class ImagingViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        imagingWorkflow.close()
+        inferenceRepository.closeResources()
     }
 
     private companion object {
