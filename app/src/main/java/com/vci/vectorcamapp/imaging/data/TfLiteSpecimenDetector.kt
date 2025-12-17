@@ -73,8 +73,7 @@ class TfLiteSpecimenDetector(
 //                        Log.w(TAG, "GPU delegate for Detector failed: ${e.message}. Falling back to CPU.")
 //                    }
 //                }
-
-                options.setNumThreads(Runtime.getRuntime().availableProcessors())
+                
                 detector = Interpreter(model, options)
 
                 detector?.let {
