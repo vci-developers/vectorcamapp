@@ -255,7 +255,10 @@ class ImagingViewModel @Inject constructor(
                     val shouldRunInference = action.isChecked
                     _state.update {
                         it.copy(
-                            shouldRunInference = shouldRunInference
+                            shouldRunInference = shouldRunInference,
+                            previewInferenceResults = emptyList(),
+                            currentInferenceResult = null,
+                            focusPoint = null
                         )
                     }
                 }
