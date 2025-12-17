@@ -59,8 +59,6 @@ fun CompleteSessionSpecimensTile(
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
-    val fallbackPainter = if (specimenImage.imageUploadStatus == UploadStatus.COMPLETED) painterResource(R.drawable.specimen_image_placeholder_uploaded) else painterResource(R.drawable.specimen_image_placeholder_not_uploaded)
-    
     InfoTile(modifier = modifier) {
         BoxWithConstraints(
             modifier = Modifier
@@ -77,7 +75,7 @@ fun CompleteSessionSpecimensTile(
                 model = ImageRequest.Builder(context).data(specimenImage.imageUri).build(),
                 contentDescription = "Specimen Image: ${specimen.id}",
                 error = painterResource(R.drawable.specimen_image_placeholder_error),
-                fallback = fallbackPainter,
+                fallback = if (specimenImage.imageUploadStatus == UploadStatus.COMPLETED) painterResource(R.drawable.specimen_image_placeholder_uploaded) else painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxSize()
