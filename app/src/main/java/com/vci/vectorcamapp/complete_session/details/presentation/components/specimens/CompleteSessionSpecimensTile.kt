@@ -80,7 +80,7 @@ fun CompleteSessionSpecimensTile(
             AsyncImage(
                 model = ImageRequest.Builder(context).data(specimenImage.imageUri).build(),
                 contentDescription = "Specimen Image: ${specimen.id}",
-                error = fallbackPainter,
+                error = painterResource(R.drawable.specimen_image_placeholder_error),
                 fallback = fallbackPainter,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
