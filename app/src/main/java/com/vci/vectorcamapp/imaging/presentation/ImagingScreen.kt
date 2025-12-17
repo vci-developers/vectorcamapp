@@ -55,6 +55,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
+import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.imaging.presentation.components.icon.AnimatedArrowIcon
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
 import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreview
@@ -326,7 +327,7 @@ fun ImagingScreen(
                                 ) {
                                     Checkbox(
                                         checked = state.hasConfirmedPackaging,
-                                        onCheckedChange = { onAction(ImagingAction.TogglePackagingConfirmation) },
+                                        onCheckedChange = { onAction(ImagingAction.TogglePackagingConfirmation(it)) },
                                         colors = CheckboxDefaults.colors(
                                             checkedColor = MaterialTheme.colors.successConfirm
                                         )
@@ -444,7 +445,6 @@ fun ImagingScreen(
                     }
 
                     if (state.currentImageBytes != null) {
-
                         Box(
                             modifier = Modifier
                                 .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
@@ -463,27 +463,8 @@ fun ImagingScreen(
                                 )
                             }
                         }
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
-                                .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
-                        ) {
-                            LiveCameraPreview(
-                                controller = controller,
-                                inferenceResults = state.previewInferenceResults,
-                                focusPoint = state.focusPoint,
-                                onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
-                                onCancelFocus = { onAction(ImagingAction.CancelFocus) },
-                                modifier = Modifier.fillMaxWidth(),
-                                isManualFocusing = state.isManualFocusing,
-                                isProcessing = state.isProcessing
-                            )
-                        }
-                    }
 
-                    InfoTile {
-                        if (state.currentImageBytes != null) {
+                        InfoTile {
                             Column(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -549,14 +530,41 @@ fun ImagingScreen(
                                     }
                                 }
                             }
-                        } else {
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                                .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
+                        ) {
+                                LiveCameraPreview(
+                                    controller = controller,
+                                    inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
+                                    focusPoint = state.focusPoint,
+                                    onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
+                                    onCancelFocus = { onAction(ImagingAction.CancelFocus) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    isManualFocusing = state.isManualFocusing,
+                                    isProcessing = state.isProcessing
+                                )
+                        }
+
+                        InfoTile {
                             Column(
                                 verticalArrangement = Arrangement.SpaceEvenly,
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(MaterialTheme.dimensions.paddingLarge)
+                                    .padding(MaterialTheme.dimensions.paddingMedium)
                             ) {
+                                if (state.allowModelInferenceToggle) {
+                                    ToggleField(
+                                        label = "Run Model Inference",
+                                        checked = state.shouldRunInference,
+                                        onCheckedChange = { onAction(ImagingAction.ToggleModelInference(it)) },
+                                    )
+                                }
+
                                 Text(
                                     text = if (state.currentSpecimen.id == "") "Specimen ID will appear here" else state.currentSpecimen.id,
                                     style = MaterialTheme.typography.headlineLarge,
