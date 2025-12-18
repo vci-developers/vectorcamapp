@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.complete_session.details.presentation.components.specimens
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -86,6 +87,10 @@ fun CompleteSessionSpecimensTile(
                 modifier = Modifier
                     .fillMaxSize()
                     .zoomPanGesture(containerSize)
+                    .border(
+                        width = MaterialTheme.dimensions.borderThicknessThin,
+                        color = MaterialTheme.colors.textPrimary
+                    )
             )
 
             badgeText?.let {
