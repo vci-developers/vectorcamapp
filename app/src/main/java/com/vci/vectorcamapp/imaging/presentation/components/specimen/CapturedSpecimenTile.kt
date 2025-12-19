@@ -70,7 +70,9 @@ fun CapturedSpecimenTile(
                             .crossfade(true)
                             .build(),
                         contentDescription = specimen.id,
-                        contentScale = ContentScale.Fit
+                        contentScale = ContentScale.Fit,
+                        error = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
+                        fallback = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                     )
                 }
 
