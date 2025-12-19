@@ -105,7 +105,7 @@ fun CapturedSpecimenTile(
 
             HorizontalDivider(
                 thickness = MaterialTheme.dimensions.dividerThicknessThin,
-                color = MaterialTheme.colors.textPrimary,
+                color = MaterialTheme.colors.disabled,
                 modifier = Modifier.fillMaxWidth()
             )
 

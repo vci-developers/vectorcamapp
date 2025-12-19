@@ -89,7 +89,7 @@ fun CompleteSessionSpecimensTile(
                     .zoomPanGesture(containerSize)
                     .border(
                         width = MaterialTheme.dimensions.borderThicknessThin,
-                        color = MaterialTheme.colors.textPrimary
+                        color = MaterialTheme.colors.disabled
                     )
             )
 
