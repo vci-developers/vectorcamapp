@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.IntSize
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
@@ -119,7 +118,7 @@ fun CompleteSessionSpecimensTile(
                 modifier = Modifier.height(MaterialTheme.dimensions.componentHeightSmall)
             ) {
                 VerticalDivider(
-                    thickness = MaterialTheme.dimensions.dividerThickness,
+                    thickness = MaterialTheme.dimensions.dividerThicknessThick,
                     color = MaterialTheme.colors.primary,
                     modifier = Modifier.fillMaxHeight()
                 )

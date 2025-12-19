@@ -37,8 +37,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -94,6 +97,8 @@ fun ImagingScreen(
     val pagerState = rememberPagerState(
         initialPage = state.specimensWithImagesAndInferenceResults.size,
         pageCount = { state.specimensWithImagesAndInferenceResults.size + 1 })
+
+    var isImageLoaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.specimensWithImagesAndInferenceResults.size) {
         pagerState.scrollToPage(state.specimensWithImagesAndInferenceResults.size)
@@ -452,7 +457,8 @@ fun ImagingScreen(
                                 .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
                         ) {
                             SpecimenImageOverlay(
-                                inferenceResult = state.currentInferenceResult
+                                inferenceResult = state.currentInferenceResult,
+                                showOverlay = isImageLoaded
                             ) {
                                 AsyncImage(
                                     model = ImageRequest.Builder(context)
@@ -461,6 +467,9 @@ fun ImagingScreen(
                                         .build(),
                                     contentDescription = state.currentSpecimen.id,
                                     contentScale = ContentScale.Fit,
+                                    onSuccess = { isImageLoaded = true },
+                                    onError = { isImageLoaded = false },
+                                    onLoading = { isImageLoaded = false },
                                     error = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                                     fallback = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                                 )

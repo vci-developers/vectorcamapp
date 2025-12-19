@@ -21,6 +21,7 @@ fun SpecimenImageOverlay(
     inferenceResult: InferenceResult?,
     modifier: Modifier = Modifier,
     enableZoomPan: Boolean = true,
+    showOverlay: Boolean = true,
     imageContent: @Composable (containerSize: IntSize) -> Unit
 ) {
     val density = LocalDensity.current
@@ -45,9 +46,9 @@ fun SpecimenImageOverlay(
         ) {
             imageContent(containerSize)
 
-            inferenceResult?.let {
+            if (inferenceResult != null && showOverlay) {
                 BoundingBoxOverlay(
-                    inferenceResult = it,
+                    inferenceResult = inferenceResult,
                     overlaySize = containerSize
                 )
             }

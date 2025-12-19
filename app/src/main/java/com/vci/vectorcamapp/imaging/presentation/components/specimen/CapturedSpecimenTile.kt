@@ -16,7 +16,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -48,6 +51,8 @@ fun CapturedSpecimenTile(
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
+    var isImageLoaded by remember { mutableStateOf(false) }
+
     InfoTile(modifier = modifier) {
         Column(
             modifier = Modifier
@@ -62,7 +67,8 @@ fun CapturedSpecimenTile(
                     .align(Alignment.CenterHorizontally)
             ) {
                 SpecimenImageOverlay(
-                    inferenceResult = inferenceResult
+                    inferenceResult = inferenceResult,
+                    showOverlay = isImageLoaded
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(context)
@@ -71,6 +77,9 @@ fun CapturedSpecimenTile(
                             .build(),
                         contentDescription = specimen.id,
                         contentScale = ContentScale.Fit,
+                        onSuccess = { isImageLoaded = true },
+                        onError = { isImageLoaded = false },
+                        onLoading = { isImageLoaded = false },
                         error = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                         fallback = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                     )
@@ -119,7 +128,7 @@ fun CapturedSpecimenTile(
                     modifier = Modifier.height(MaterialTheme.dimensions.componentHeightSmall)
                 ) {
                     VerticalDivider(
-                        thickness = MaterialTheme.dimensions.dividerThickness,
+                        thickness = MaterialTheme.dimensions.dividerThicknessThick,
                         color = MaterialTheme.colors.primary,
                         modifier = Modifier.fillMaxHeight()
                     )
@@ -159,7 +168,7 @@ fun CapturedSpecimenTile(
 
             HorizontalDivider(
                 color = MaterialTheme.colors.divider,
-                thickness = MaterialTheme.dimensions.dividerThickness
+                thickness = MaterialTheme.dimensions.dividerThicknessThick
             )
 
             Text(

@@ -145,7 +145,7 @@ fun IncompleteSessionCard(
 
                 HorizontalDivider(
                     color = MaterialTheme.colors.divider,
-                    thickness = MaterialTheme.dimensions.dividerThickness
+                    thickness = MaterialTheme.dimensions.dividerThicknessThick
                 )
 
                 Column(
