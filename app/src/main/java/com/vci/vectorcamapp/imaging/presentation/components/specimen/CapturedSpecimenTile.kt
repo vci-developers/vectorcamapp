@@ -103,6 +103,12 @@ fun CapturedSpecimenTile(
                 }
             }
 
+            HorizontalDivider(
+                thickness = MaterialTheme.dimensions.dividerThicknessThin,
+                color = MaterialTheme.colors.textPrimary,
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Column(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
                 modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingLarge)

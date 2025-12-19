@@ -460,7 +460,9 @@ fun ImagingScreen(
                                         .crossfade(true)
                                         .build(),
                                     contentDescription = state.currentSpecimen.id,
-                                    contentScale = ContentScale.Fit
+                                    contentScale = ContentScale.Fit,
+                                    error = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
+                                    fallback = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                                 )
                             }
                         }
