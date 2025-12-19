@@ -49,7 +49,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.compose.AsyncImage
@@ -458,7 +457,7 @@ fun ImagingScreen(
                         ) {
                             SpecimenImageOverlay(
                                 inferenceResult = state.currentInferenceResult,
-                                showOverlay = isImageLoaded
+                                showBoundingBoxOverlay = isImageLoaded
                             ) {
                                 AsyncImage(
                                     model = ImageRequest.Builder(context)
@@ -469,7 +468,6 @@ fun ImagingScreen(
                                     contentScale = ContentScale.Fit,
                                     onSuccess = { isImageLoaded = true },
                                     onError = { isImageLoaded = false },
-                                    onLoading = { isImageLoaded = false },
                                     error = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                                     fallback = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                                 )

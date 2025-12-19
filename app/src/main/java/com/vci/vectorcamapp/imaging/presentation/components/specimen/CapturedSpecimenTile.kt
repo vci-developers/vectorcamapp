@@ -68,7 +68,7 @@ fun CapturedSpecimenTile(
             ) {
                 SpecimenImageOverlay(
                     inferenceResult = inferenceResult,
-                    showOverlay = isImageLoaded
+                    showBoundingBoxOverlay = isImageLoaded
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(context)
@@ -79,7 +79,6 @@ fun CapturedSpecimenTile(
                         contentScale = ContentScale.Fit,
                         onSuccess = { isImageLoaded = true },
                         onError = { isImageLoaded = false },
-                        onLoading = { isImageLoaded = false },
                         error = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                         fallback = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                     )
