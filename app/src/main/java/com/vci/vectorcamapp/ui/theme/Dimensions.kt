@@ -64,7 +64,8 @@ data class Dimensions(
     val elevationLarge: Dp = 8.dp,
 
     // Divider / Border
-    val dividerThickness: Dp = 2.dp,
+    val dividerThicknessThin: Dp = 1.dp,
+    val dividerThicknessThick: Dp = 2.dp,
     val borderThicknessThin: Dp = 1.dp,
     val borderThicknessThick: Dp = 2.dp,
 
