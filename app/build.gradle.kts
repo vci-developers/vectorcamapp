@@ -147,6 +147,7 @@ dependencies {
     implementation(libs.androidx.camera.video)
     implementation(libs.androidx.camera.mlkit.vision) // CameraX ML Kit Vision Integration
     implementation(libs.androidx.camera.extensions) // CameraX Extensions library
+    implementation(libs.androidx.camera.compose) // CameraX Compose integration
 
     // Ktor (Networking) Dependencies
     implementation(libs.ktor.client.android) // Android client for Ktor

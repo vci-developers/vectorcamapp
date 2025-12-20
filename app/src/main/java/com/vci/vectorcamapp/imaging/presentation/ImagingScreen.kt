@@ -1,10 +1,15 @@
 package com.vci.vectorcamapp.imaging.presentation
 
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.Preview
+import androidx.camera.core.SurfaceRequest
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
-import androidx.camera.view.CameraController
-import androidx.camera.view.LifecycleCameraController
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,13 +42,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.core.content.ContextCompat
@@ -56,15 +66,17 @@ import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
-import com.vci.vectorcamapp.imaging.presentation.components.icon.AnimatedArrowIcon
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
 import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreview
+import com.vci.vectorcamapp.imaging.presentation.components.icon.AnimatedArrowIcon
 import com.vci.vectorcamapp.imaging.presentation.components.specimen.CapturedSpecimenTile
 import com.vci.vectorcamapp.imaging.presentation.components.specimen.SpecimenImageOverlay
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ImagingScreen(
@@ -75,19 +87,80 @@ fun ImagingScreen(
 
     val scope = rememberCoroutineScope()
 
+    var surfaceRequest by remember { mutableStateOf<SurfaceRequest?>(null) }
+    var imageCaptureUseCase by remember { mutableStateOf<ImageCapture?>(null) }
+    var camera by remember { mutableStateOf<Camera?>(null) }
+
+    val isReviewing by rememberUpdatedState(newValue = state.currentImageBytes != null)
     val analyzer = remember {
         SpecimenImageAnalyzer { frame ->
-            onAction(ImagingAction.ProcessFrame(frame))
+            if (!isReviewing) {
+                onAction(ImagingAction.ProcessFrame(frame))
+            } else {
+                frame.close()
+            }
         }
     }
 
-    val controller = remember(lifecycleOwner) {
-        LifecycleCameraController(context).apply {
-            setEnabledUseCases(CameraController.IMAGE_CAPTURE or CameraController.IMAGE_ANALYSIS)
-            setImageAnalysisAnalyzer(ContextCompat.getMainExecutor(context), analyzer)
-            imageCaptureFlashMode = ImageCapture.FLASH_MODE_OFF
-            imageCaptureResolutionSelector = ResolutionSelector.Builder()
-                .setResolutionStrategy(ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY).build()
+    val view = LocalView.current
+
+    LaunchedEffect(Unit) {
+        val rotation = view.display.rotation
+
+        val provider = withContext(Dispatchers.IO) {
+            ProcessCameraProvider.getInstance(context).get()
+        }
+
+        val previewUseCase = Preview.Builder()
+            .setResolutionSelector(
+                ResolutionSelector.Builder()
+                    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+                    .build()
+            )
+            .build().apply {
+                setSurfaceProvider { request ->
+                    surfaceRequest = request
+                }
+            }
+
+        val imageCapture = ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            .setTargetRotation(rotation)
+            .setResolutionSelector(
+                ResolutionSelector.Builder()
+                    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+                    .setAllowedResolutionMode(ResolutionSelector.PREFER_HIGHER_RESOLUTION_OVER_CAPTURE_RATE)
+                    .build()
+            )
+            .build()
+
+        val imageAnalysis = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setTargetRotation(rotation)
+            .setResolutionSelector(
+                ResolutionSelector.Builder()
+                    .setResolutionStrategy(ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY)
+                    .build()
+            )
+            .build()
+
+        imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context), analyzer)
+
+        try {
+            provider.unbindAll()
+            val boundCamera = provider.bindToLifecycle(
+                lifecycleOwner,
+                CameraSelector.DEFAULT_BACK_CAMERA,
+                previewUseCase,
+                imageCapture,
+                imageAnalysis
+            )
+
+            imageCaptureUseCase = imageCapture
+            camera = boundCamera
+
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -537,16 +610,17 @@ fun ImagingScreen(
                                 .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
                                 .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
                         ) {
-                                LiveCameraPreview(
-                                    controller = controller,
-                                    inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
-                                    focusPoint = state.focusPoint,
-                                    onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
-                                    onCancelFocus = { onAction(ImagingAction.CancelFocus) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    isManualFocusing = state.isManualFocusing,
-                                    isProcessing = state.isProcessing
-                                )
+                            LiveCameraPreview(
+                                surfaceRequest = surfaceRequest,
+                                camera = camera,
+                                inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
+                                focusPoint = state.focusPoint,
+                                onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
+                                onCancelFocus = { onAction(ImagingAction.CancelFocus) },
+                                modifier = Modifier.fillMaxWidth(),
+                                isManualFocusing = state.isManualFocusing,
+                                isProcessing = state.isProcessing
+                            )
                         }
 
                         InfoTile {
@@ -573,7 +647,11 @@ fun ImagingScreen(
 
                                 ActionButton(
                                     label = "Capture",
-                                    onClick = { onAction(ImagingAction.CaptureImage(controller)) },
+                                    onClick = {
+                                        imageCaptureUseCase?.let {
+                                            onAction(ImagingAction.CaptureImage(it))
+                                        }
+                                    },
                                     iconPainter = painterResource(id = R.drawable.ic_camera),
                                     enabled = (!state.isProcessing && state.isCameraReady),
                                     modifier = Modifier.fillMaxWidth()
