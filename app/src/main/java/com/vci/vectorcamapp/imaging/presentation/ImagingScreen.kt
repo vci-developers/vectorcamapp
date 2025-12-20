@@ -168,6 +168,8 @@ fun ImagingScreen(
         initialPage = state.specimensWithImagesAndInferenceResults.size,
         pageCount = { state.specimensWithImagesAndInferenceResults.size + 1 })
 
+    var isImageLoaded by remember { mutableStateOf(false) }
+
     LaunchedEffect(state.specimensWithImagesAndInferenceResults.size) {
         pagerState.scrollToPage(state.specimensWithImagesAndInferenceResults.size)
     }
@@ -524,7 +526,8 @@ fun ImagingScreen(
                                 .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
                         ) {
                             SpecimenImageOverlay(
-                                inferenceResult = state.currentInferenceResult
+                                inferenceResult = state.currentInferenceResult,
+                                showBoundingBoxOverlay = isImageLoaded
                             ) {
                                 AsyncImage(
                                     model = ImageRequest.Builder(context)
@@ -532,7 +535,11 @@ fun ImagingScreen(
                                         .crossfade(true)
                                         .build(),
                                     contentDescription = state.currentSpecimen.id,
-                                    contentScale = ContentScale.Fit
+                                    contentScale = ContentScale.Fit,
+                                    onSuccess = { isImageLoaded = true },
+                                    onError = { isImageLoaded = false },
+                                    error = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
+                                    fallback = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                                 )
                             }
                         }
