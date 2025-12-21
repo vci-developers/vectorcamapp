@@ -51,9 +51,12 @@ class TfLiteSpecimenClassifier(
 
             try {
                 val model = FileUtil.loadMappedFile(context, filePath)
-                val options = Interpreter.Options()
+                val options = Interpreter.Options().apply {
+                    useNNAPI = false
+                    useXNNPACK = false
+                    numThreads = Runtime.getRuntime().availableProcessors()
+                }
 
-                options.setNumThreads(Runtime.getRuntime().availableProcessors())
                 classifier = Interpreter(model, options)
 
                 classifier?.let {

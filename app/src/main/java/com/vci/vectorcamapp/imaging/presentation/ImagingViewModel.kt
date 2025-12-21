@@ -46,12 +46,18 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.opencv.core.MatOfByte
+import org.opencv.imgcodecs.Imgcodecs
+import org.opencv.imgproc.Imgproc
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.random.Random
+import androidx.core.graphics.createBitmap
+import org.opencv.android.Utils.matToBitmap
+import org.opencv.core.Mat
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
@@ -169,9 +175,14 @@ class ImagingViewModel @Inject constructor(
                                 val jpegStream = ByteArrayOutputStream()
                                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
                                 val jpegByteArray = jpegStream.toByteArray()
-                                val jpegBitmap = BitmapFactory.decodeByteArray(
-                                    jpegByteArray, 0, jpegByteArray.size
-                                )
+
+                                val bgrMatrix = Imgcodecs.imdecode(MatOfByte(*jpegByteArray), Imgcodecs.IMREAD_COLOR)
+                                val rgbaMatrix = Mat()
+                                Imgproc.cvtColor(bgrMatrix, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
+                                val jpegBitmap = createBitmap(rgbaMatrix.cols(), rgbaMatrix.rows())
+                                matToBitmap(rgbaMatrix, jpegBitmap)
+                                bgrMatrix.release()
+                                rgbaMatrix.release()
 
                                 val previewInferenceResults = inferenceRepository.detectSpecimen(jpegBitmap).map { detectorResult ->
                                     InferenceResult(
@@ -278,9 +289,14 @@ class ImagingViewModel @Inject constructor(
                             val jpegStream = ByteArrayOutputStream()
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
                             val jpegByteArray = jpegStream.toByteArray()
-                            val jpegBitmap = BitmapFactory.decodeByteArray(
-                                jpegByteArray, 0, jpegByteArray.size
-                            )
+
+                            val bgrMatrix = Imgcodecs.imdecode(MatOfByte(*jpegByteArray), Imgcodecs.IMREAD_COLOR)
+                            val rgbaMatrix = Mat()
+                            Imgproc.cvtColor(bgrMatrix, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
+                            val jpegBitmap = createBitmap(rgbaMatrix.cols(), rgbaMatrix.rows())
+                            matToBitmap(rgbaMatrix, jpegBitmap)
+                            bgrMatrix.release()
+                            rgbaMatrix.release()
 
                             if (_state.value.shouldRunInference) {
                                 val captureDetectorResults = inferenceRepository.detectSpecimen(jpegBitmap)
