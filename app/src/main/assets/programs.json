@@ -8,5 +8,15 @@
     "id": 2,
     "name": "Data Collection",
     "country": "Colombia"
+  },
+  {
+    "id": 3,
+    "name": "National Malaria Elimination Program",
+    "country": "Ghana"
+  },
+  {
+    "id": 4,
+    "name": "KEMRI - AnoSTEP",
+    "country": "Kenya"
   }
 ]
