@@ -147,7 +147,7 @@ fun <T> DropdownField(
                     )
                     if (index != options.lastIndex) {
                         HorizontalDivider(
-                            thickness = MaterialTheme.dimensions.dividerThickness,
+                            thickness = MaterialTheme.dimensions.dividerThicknessThick,
                             color = MaterialTheme.colors.divider
                         )
                     }

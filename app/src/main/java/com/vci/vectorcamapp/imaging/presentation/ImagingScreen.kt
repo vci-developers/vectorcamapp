@@ -37,8 +37,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +58,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
+import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.imaging.presentation.components.icon.AnimatedArrowIcon
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
 import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreview
@@ -93,6 +97,8 @@ fun ImagingScreen(
     val pagerState = rememberPagerState(
         initialPage = state.specimensWithImagesAndInferenceResults.size,
         pageCount = { state.specimensWithImagesAndInferenceResults.size + 1 })
+
+    var isImageLoaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.specimensWithImagesAndInferenceResults.size) {
         pagerState.scrollToPage(state.specimensWithImagesAndInferenceResults.size)
@@ -326,7 +332,7 @@ fun ImagingScreen(
                                 ) {
                                     Checkbox(
                                         checked = state.hasConfirmedPackaging,
-                                        onCheckedChange = { onAction(ImagingAction.TogglePackagingConfirmation) },
+                                        onCheckedChange = { onAction(ImagingAction.TogglePackagingConfirmation(it)) },
                                         colors = CheckboxDefaults.colors(
                                             checkedColor = MaterialTheme.colors.successConfirm
                                         )
@@ -444,14 +450,14 @@ fun ImagingScreen(
                     }
 
                     if (state.currentImageBytes != null) {
-
                         Box(
                             modifier = Modifier
                                 .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
                                 .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
                         ) {
                             SpecimenImageOverlay(
-                                inferenceResult = state.currentInferenceResult
+                                inferenceResult = state.currentInferenceResult,
+                                showBoundingBoxOverlay = isImageLoaded
                             ) {
                                 AsyncImage(
                                     model = ImageRequest.Builder(context)
@@ -459,31 +465,16 @@ fun ImagingScreen(
                                         .crossfade(true)
                                         .build(),
                                     contentDescription = state.currentSpecimen.id,
-                                    contentScale = ContentScale.Fit
+                                    contentScale = ContentScale.Fit,
+                                    onSuccess = { isImageLoaded = true },
+                                    onError = { isImageLoaded = false },
+                                    error = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
+                                    fallback = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
                                 )
                             }
                         }
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
-                                .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
-                        ) {
-                            LiveCameraPreview(
-                                controller = controller,
-                                inferenceResults = state.previewInferenceResults,
-                                focusPoint = state.focusPoint,
-                                onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
-                                onCancelFocus = { onAction(ImagingAction.CancelFocus) },
-                                modifier = Modifier.fillMaxWidth(),
-                                isManualFocusing = state.isManualFocusing,
-                                isProcessing = state.isProcessing
-                            )
-                        }
-                    }
 
-                    InfoTile {
-                        if (state.currentImageBytes != null) {
+                        InfoTile {
                             Column(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -549,14 +540,41 @@ fun ImagingScreen(
                                     }
                                 }
                             }
-                        } else {
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                                .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
+                        ) {
+                                LiveCameraPreview(
+                                    controller = controller,
+                                    inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
+                                    focusPoint = state.focusPoint,
+                                    onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
+                                    onCancelFocus = { onAction(ImagingAction.CancelFocus) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    isManualFocusing = state.isManualFocusing,
+                                    isProcessing = state.isProcessing
+                                )
+                        }
+
+                        InfoTile {
                             Column(
                                 verticalArrangement = Arrangement.SpaceEvenly,
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(MaterialTheme.dimensions.paddingLarge)
+                                    .padding(MaterialTheme.dimensions.paddingMedium)
                             ) {
+                                if (state.allowModelInferenceToggle) {
+                                    ToggleField(
+                                        label = "Run Model Inference",
+                                        checked = state.shouldRunInference,
+                                        onCheckedChange = { onAction(ImagingAction.ToggleModelInference(it)) },
+                                    )
+                                }
+
                                 Text(
                                     text = if (state.currentSpecimen.id == "") "Specimen ID will appear here" else state.currentSpecimen.id,
                                     style = MaterialTheme.typography.headlineLarge,
