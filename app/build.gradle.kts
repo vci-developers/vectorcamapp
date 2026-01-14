@@ -143,7 +143,6 @@ dependencies {
     implementation(libs.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle) // CameraX Lifecycle library
-    implementation(libs.androidx.camera.view) // CameraX View class
     implementation(libs.androidx.camera.video)
     implementation(libs.androidx.camera.mlkit.vision) // CameraX ML Kit Vision Integration
     implementation(libs.androidx.camera.extensions) // CameraX Extensions library

@@ -58,7 +58,7 @@ fun LiveCameraPreview(
             CameraFocusControllerImplementation(
                 cameraControl = camera?.cameraControl,
                 cameraInfo = camera?.cameraInfo,
-                display = view.display,
+                view = view,
                 width = containerWidth,
                 height = containerHeight
             )

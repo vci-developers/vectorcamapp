@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
+import android.view.Surface
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -105,7 +106,7 @@ fun ImagingScreen(
     val view = LocalView.current
 
     LaunchedEffect(Unit) {
-        val rotation = view.display.rotation
+        val rotation = view.display?.rotation ?: Surface.ROTATION_0
 
         val provider = withContext(Dispatchers.IO) {
             ProcessCameraProvider.getInstance(context).get()

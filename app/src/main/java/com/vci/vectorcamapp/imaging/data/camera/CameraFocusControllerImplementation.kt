@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.imaging.data.camera
 
 import android.view.Display
+import android.view.View
 import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.DisplayOrientedMeteringPointFactory
@@ -13,7 +14,7 @@ import kotlin.math.min
 class CameraFocusControllerImplementation(
     private val cameraControl: CameraControl?,
     private val cameraInfo: CameraInfo?,
-    private val display: Display,
+    private val view: View,
     private val width: Float,
     private val height: Float
 ) : CameraFocusController {
@@ -24,6 +25,8 @@ class CameraFocusControllerImplementation(
 
         val clampedNormalizedX = min(1f, max(0f, offset.x))
         val clampedNormalizedY = min(1f, max(0f, offset.y))
+
+        val display = view.display ?: return
 
         val factory = DisplayOrientedMeteringPointFactory(
             display,
