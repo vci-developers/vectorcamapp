@@ -140,7 +140,6 @@ fun ImagingScreen(
             .setTargetRotation(rotation)
             .setResolutionSelector(
                 ResolutionSelector.Builder()
-                    .setResolutionStrategy(ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY)
                     .build()
             )
             .build()
