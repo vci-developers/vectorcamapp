@@ -105,9 +105,9 @@ fun ImagingScreen(
 
     val view = LocalView.current
 
-    LaunchedEffect(Unit) {
-        val rotation = view.display?.rotation ?: Surface.ROTATION_0
+    val rotation = view.display?.rotation ?: Surface.ROTATION_0
 
+    LaunchedEffect(lifecycleOwner, rotation) {
         val provider = withContext(Dispatchers.IO) {
             ProcessCameraProvider.getInstance(context).get()
         }
