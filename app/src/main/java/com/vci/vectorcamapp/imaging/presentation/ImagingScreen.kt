@@ -113,6 +113,7 @@ fun ImagingScreen(
         }
 
         val previewUseCase = Preview.Builder()
+            .setTargetRotation(rotation)
             .setResolutionSelector(
                 ResolutionSelector.Builder()
                     .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
@@ -140,6 +141,7 @@ fun ImagingScreen(
             .setTargetRotation(rotation)
             .setResolutionSelector(
                 ResolutionSelector.Builder()
+                    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
                     .build()
             )
             .build()
