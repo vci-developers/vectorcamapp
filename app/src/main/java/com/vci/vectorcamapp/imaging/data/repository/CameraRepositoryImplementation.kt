@@ -5,10 +5,10 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
+import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
-import androidx.camera.view.LifecycleCameraController
 import androidx.core.content.ContextCompat
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Session
@@ -29,10 +29,10 @@ import kotlin.coroutines.suspendCoroutine
 class CameraRepositoryImplementation @Inject constructor(
     @ApplicationContext private val context: Context
 ) : CameraRepository {
-    override suspend fun captureImage(controller: LifecycleCameraController): Result<ImageProxy, ImagingError> {
+    override suspend fun captureImage(imageCapture: ImageCapture): Result<ImageProxy, ImagingError> {
         return withContext(Dispatchers.Main) {
             suspendCoroutine { continuation ->
-                controller.takePicture(
+                imageCapture.takePicture(
                     ContextCompat.getMainExecutor(context),
                     object : OnImageCapturedCallback() {
                         override fun onCaptureSuccess(image: ImageProxy) {

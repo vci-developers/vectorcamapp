@@ -279,7 +279,7 @@ class ImagingViewModel @Inject constructor(
 
                     _state.update { it.copy(isProcessing = true) }
 
-                    val captureResult = cameraRepository.captureImage(action.controller)
+                    val captureResult = cameraRepository.captureImage(action.imageCapture)
 
                     withContext(Dispatchers.Default) {
                         captureResult.onSuccess { image ->
