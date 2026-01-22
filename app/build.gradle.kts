@@ -15,9 +15,10 @@ fun getRegionBasedVersionCode(): Int {
         "colombia" -> 1007
         "uganda" -> 2005
         "nigeria" -> 3001
+        "kenya" -> 4000
         else -> {
             println("⚠️ Unknown region '$region', using default version code")
-            4000
+            5000
         }
     }
 }
@@ -27,6 +28,7 @@ fun getRegionBasedVersionName(): String {
         "colombia" -> "1.0.7"
         "uganda" -> "1.0.5"
         "nigeria" -> "1.0.1"
+        "kenya" -> "1.0.0"
         else -> {
             println("⚠️ Unknown region '$region', using default version name")
             "1.0.0"
@@ -143,10 +145,10 @@ dependencies {
     implementation(libs.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle) // CameraX Lifecycle library
-    implementation(libs.androidx.camera.view) // CameraX View class
     implementation(libs.androidx.camera.video)
     implementation(libs.androidx.camera.mlkit.vision) // CameraX ML Kit Vision Integration
     implementation(libs.androidx.camera.extensions) // CameraX Extensions library
+    implementation(libs.androidx.camera.compose) // CameraX Compose integration
 
     // Ktor (Networking) Dependencies
     implementation(libs.ktor.client.android) // Android client for Ktor

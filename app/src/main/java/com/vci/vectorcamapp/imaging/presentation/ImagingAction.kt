@@ -1,7 +1,7 @@
 package com.vci.vectorcamapp.imaging.presentation
 
+import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageProxy
-import androidx.camera.view.LifecycleCameraController
 import androidx.compose.ui.geometry.Offset
 
 sealed interface ImagingAction {
@@ -10,7 +10,7 @@ sealed interface ImagingAction {
     data object SaveSessionProgress : ImagingAction
     data object SubmitSession : ImagingAction
     data class ToggleModelInference(val isChecked: Boolean) : ImagingAction
-    data class CaptureImage(val controller: LifecycleCameraController) : ImagingAction
+    data class CaptureImage(val imageCapture: ImageCapture) : ImagingAction
     data object SaveImageToSession : ImagingAction
     data object RetakeImage : ImagingAction
     data class FocusAt(val offset: Offset) : ImagingAction
