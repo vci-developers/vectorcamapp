@@ -24,7 +24,6 @@ class SessionRepositoryImplementation @Inject constructor(
             sessionDao.upsertSession(session.toEntity(siteId))
             Result.Success(Unit)
         } catch (e: Exception) {
-            e.printStackTrace()
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }
