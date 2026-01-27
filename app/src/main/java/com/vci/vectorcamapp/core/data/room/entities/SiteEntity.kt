@@ -12,7 +12,12 @@ import androidx.room.PrimaryKey
         childColumns = ["programId"],
         onDelete = ForeignKey.CASCADE,
         onUpdate = ForeignKey.CASCADE
-    )], indices = [Index("programId")]
+    )],
+    indices = [
+        Index("programId"),
+        Index("locationTypeId"),
+        Index("parentId")
+    ]
 )
 data class SiteEntity(
     @PrimaryKey val id: Int = -1,
@@ -24,4 +29,8 @@ data class SiteEntity(
     val houseNumber: String = "",
     val healthCenter: String = "",
     val isActive: Boolean = true,
+    val locationTypeId: Int? = null,
+    val parentId: Int? = null,
+    val name: String? = null,
+    val locationHierarchy: String? = null
 )

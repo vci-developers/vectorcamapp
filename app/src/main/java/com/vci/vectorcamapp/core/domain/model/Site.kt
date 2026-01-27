@@ -8,5 +8,9 @@ data class Site(
     val villageName: String,
     val houseNumber: String,
     val healthCenter: String,
-    val isActive: Boolean
+    val isActive: Boolean,
+    val locationTypeId: Int? = null,
+    val parentId: Int? = null,
+    val name: String? = null,
+    val locationHierarchy: String? = null
 )

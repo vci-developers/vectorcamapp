@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 21,
-    "identityHash": "6a572c730f4b81756ca12a962de72057",
+    "identityHash": "ed8ff74f9ad33042d797b49b76c06b7c",
     "entities": [
       {
         "tableName": "collector",
@@ -137,7 +137,7 @@
       },
       {
         "tableName": "site",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `programId` INTEGER NOT NULL, `district` TEXT NOT NULL, `subCounty` TEXT NOT NULL, `parish` TEXT NOT NULL, `villageName` TEXT NOT NULL, `houseNumber` TEXT NOT NULL, `healthCenter` TEXT NOT NULL, `isActive` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`programId`) REFERENCES `program`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `programId` INTEGER NOT NULL, `district` TEXT NOT NULL, `subCounty` TEXT NOT NULL, `parish` TEXT NOT NULL, `villageName` TEXT NOT NULL, `houseNumber` TEXT NOT NULL, `healthCenter` TEXT NOT NULL, `isActive` INTEGER NOT NULL, `locationTypeId` INTEGER, `parentId` INTEGER, `name` TEXT, `locationHierarchy` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`programId`) REFERENCES `program`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -192,6 +192,26 @@
             "columnName": "isActive",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "locationTypeId",
+            "columnName": "locationTypeId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "parentId",
+            "columnName": "parentId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "locationHierarchy",
+            "columnName": "locationHierarchy",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -209,6 +229,24 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_site_programId` ON `${TABLE_NAME}` (`programId`)"
+          },
+          {
+            "name": "index_site_locationTypeId",
+            "unique": false,
+            "columnNames": [
+              "locationTypeId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_site_locationTypeId` ON `${TABLE_NAME}` (`locationTypeId`)"
+          },
+          {
+            "name": "index_site_parentId",
+            "unique": false,
+            "columnNames": [
+              "parentId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_site_parentId` ON `${TABLE_NAME}` (`parentId`)"
           }
         ],
         "foreignKeys": [
@@ -721,7 +759,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6a572c730f4b81756ca12a962de72057')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ed8ff74f9ad33042d797b49b76c06b7c')"
     ]
   }
 }

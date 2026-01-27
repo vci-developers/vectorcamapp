@@ -34,6 +34,7 @@ window = "1.5.1"
 workRuntimeKtx = "2.11.0"
 tusAndroidClient = "0.1.12"
 tusJavaClient = "0.5.1"
+gson = "2.13.2"
 
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCoreVersion" }
@@ -101,6 +102,7 @@ litert = { module = "com.google.ai.edge.litert:litert", version.ref = "litert" }
 litert-gpu = { module = "com.google.ai.edge.litert:litert-gpu", version.ref = "litert" }
 litert-gpu-api = { module = "com.google.ai.edge.litert:litert-gpu-api", version.ref = "litert" }
 litert-support = { group = "com.google.ai.edge.litert", name = "litert-support", version.ref = "litert" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
