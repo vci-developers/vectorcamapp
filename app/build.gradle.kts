@@ -13,7 +13,7 @@ println("✅ Building VectorCam for region: $region")
 fun getRegionBasedVersionCode(): Int {
     return when (region) {
         "colombia" -> 1007
-        "uganda" -> 2005
+        "uganda" -> 2006
         "nigeria" -> 3001
         "kenya" -> 4000
         "ghana" -> 5000
@@ -27,7 +27,7 @@ fun getRegionBasedVersionCode(): Int {
 fun getRegionBasedVersionName(): String {
     return when (region) {
         "colombia" -> "1.0.7"
-        "uganda" -> "1.0.5"
+        "uganda" -> "1.0.6"
         "nigeria" -> "1.0.1"
         "kenya" -> "1.0.0"
         "ghana" -> "1.0.0"
