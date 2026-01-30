@@ -7,7 +7,7 @@ val MIGRATION_22_23_MAKE_SITE_LOCATION_COLUMNS_NULLABLE = object : Migration(22,
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
-            CREATE TABLE SiteEntity_new (
+            CREATE TABLE site_new (
                 id INTEGER NOT NULL PRIMARY KEY,
                 programId INTEGER NOT NULL,
                 district TEXT,
@@ -20,13 +20,14 @@ val MIGRATION_22_23_MAKE_SITE_LOCATION_COLUMNS_NULLABLE = object : Migration(22,
                 locationTypeId INTEGER,
                 parentId INTEGER,
                 name TEXT,
-                locationHierarchy TEXT
+                locationHierarchy TEXT,
+                FOREIGN KEY (programId) REFERENCES program(id) ON DELETE CASCADE ON UPDATE CASCADE
             )
             """.trimIndent())
 
         db.execSQL(
             """
-            INSERT INTO SiteEntity_new (
+            INSERT INTO site_new (
                 id, programId, district, subCounty, parish, villageName,
                 houseNumber, healthCenter, isActive, locationTypeId,
                 parentId, name, locationHierarchy
@@ -40,10 +41,14 @@ val MIGRATION_22_23_MAKE_SITE_LOCATION_COLUMNS_NULLABLE = object : Migration(22,
                 NULLIF(houseNumber, ''),
                 NULLIF(healthCenter, ''),
                 isActive, locationTypeId, parentId, name, locationHierarchy
-            FROM SiteEntity
+            FROM site
             """.trimIndent())
 
-        db.execSQL("DROP TABLE SiteEntity")
-        db.execSQL("ALTER TABLE SiteEntity_new RENAME TO SiteEntity")
+        db.execSQL("DROP TABLE site")
+        db.execSQL("ALTER TABLE site_new RENAME TO site")
+
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_site_programId ON site(programId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_site_locationTypeId ON site(locationTypeId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_site_parentId ON site(parentId)")
     }
 }
