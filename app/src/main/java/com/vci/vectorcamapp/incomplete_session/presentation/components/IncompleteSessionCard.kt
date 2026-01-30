@@ -106,41 +106,61 @@ fun IncompleteSessionCard(
                         text = "Collector: ${sessionAndSite.session.collectorName}, ${sessionAndSite.session.collectorTitle}",
                     )
 
-                    IncompleteSessionListDetailRow(
-                        iconPainter = painterResource(R.drawable.ic_pin),
-                        iconDescription = "Pin",
-                        text = "District: ${sessionAndSite.site.district}",
-                    )
+                    sessionAndSite.site.district?.let { district ->
+                        IncompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_pin),
+                            iconDescription = "Pin",
+                            text = "District: $district",
+                        )
+                    }
 
-                    IncompleteSessionListDetailRow(
-                        iconPainter = painterResource(R.drawable.ic_map),
-                        iconDescription = "Map",
-                        text = "Sub-County: ${sessionAndSite.site.subCounty}",
-                    )
+                    sessionAndSite.site.subCounty?.let { subCounty ->
+                        IncompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_map),
+                            iconDescription = "Map",
+                            text = "Sub-County: $subCounty",
+                        )
+                    }
 
-                    IncompleteSessionListDetailRow(
-                        iconPainter = painterResource(R.drawable.ic_navigation),
-                        iconDescription = "Navigation",
-                        text = "Parish: ${sessionAndSite.site.parish}",
-                    )
+                    sessionAndSite.site.parish?.let { parish ->
+                        IncompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_navigation),
+                            iconDescription = "Navigation",
+                            text = "Parish: $parish",
+                        )
+                    }
 
-                    IncompleteSessionListDetailRow(
-                        iconPainter = painterResource(R.drawable.ic_clipboard),
-                        iconDescription = "Clipboard",
-                        text = "Village Name: ${sessionAndSite.site.villageName}",
-                    )
+                    sessionAndSite.site.villageName?.let { villageName ->
+                        IncompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_clipboard),
+                            iconDescription = "Clipboard",
+                            text = "Village Name: $villageName",
+                        )
+                    }
 
-                    IncompleteSessionListDetailRow(
-                        iconPainter = painterResource(R.drawable.ic_house),
-                        iconDescription = "House",
-                        text = "House Number: ${sessionAndSite.site.houseNumber}",
-                    )
+                    sessionAndSite.site.houseNumber?.let { houseNumber ->
+                        IncompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_house),
+                            iconDescription = "House",
+                            text = "House Number: $houseNumber",
+                        )
+                    }
 
-                    IncompleteSessionListDetailRow(
-                        iconPainter = painterResource(R.drawable.ic_hospital),
-                        iconDescription = "Hospital",
-                        text = "Nearest Health Center: ${sessionAndSite.site.healthCenter}",
-                    )
+                    sessionAndSite.site.healthCenter?.let { healthCenter ->
+                        IncompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_hospital),
+                            iconDescription = "Hospital",
+                            text = "Nearest Health Center: $healthCenter",
+                        )
+                    }
+
+                    sessionAndSite.site.locationHierarchy?.let { locationHierarchy ->
+                        IncompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_pin),
+                            iconDescription = "Location",
+                            text = "Location: $locationHierarchy",
+                        )
+                    }
                 }
 
                 HorizontalDivider(

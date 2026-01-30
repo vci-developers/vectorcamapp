@@ -92,41 +92,61 @@ fun CompleteSessionForm(
                 iconPainter = painterResource(R.drawable.ic_pin),
                 iconDescription = "Pin"
             ) {
-                Text(
-                    text = "District: ${site.district}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colors.textPrimary
-                )
+                site.district?.let { district ->
+                    Text(
+                        text = "District: $district",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
 
-                Text(
-                    text = "Sub-County: ${site.subCounty}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colors.textPrimary
-                )
+                site.subCounty?.let { subCounty ->
+                    Text(
+                        text = "Sub-County: $subCounty",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
 
-                Text(
-                    text = "Parish: ${site.parish}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colors.textPrimary
-                )
+                site.parish?.let { parish ->
+                    Text(
+                        text = "Parish: $parish",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
 
-                Text(
-                    text = "Village Name: ${site.villageName}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colors.textPrimary
-                )
+                site.villageName?.let { villageName ->
+                    Text(
+                        text = "Village Name: $villageName",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
 
-                Text(
-                    text = "House Number: ${site.houseNumber}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colors.textPrimary
-                )
+                site.houseNumber?.let { houseNumber ->
+                    Text(
+                        text = "House Number: $houseNumber",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
 
-                Text(
-                    text = "Nearest Health Center: ${site.healthCenter}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colors.textPrimary
-                )
+                site.healthCenter?.let { healthCenter ->
+                    Text(
+                        text = "Nearest Health Center: $healthCenter",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
+
+                site.locationHierarchy?.let { locationHierarchy ->
+                    Text(
+                        text = "Location: $locationHierarchy",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                }
             }
 
             surveillanceForm?.let {
