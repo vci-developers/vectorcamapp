@@ -13,11 +13,13 @@ fun SiteEntity.toDomain() : Site {
         villageName = this.villageName,
         houseNumber = this.houseNumber,
         healthCenter = this.healthCenter,
-        isActive = this.isActive
+        isActive = this.isActive,
+        name = this.name,
+        locationHierarchy = this.locationHierarchy
     )
 }
 
-fun Site.toEntity(programId: Int) : SiteEntity {
+fun Site.toEntity(programId: Int, locationTypeId: Int?, parentId: Int?) : SiteEntity {
     return SiteEntity(
         id = this.id,
         programId = programId,
@@ -27,7 +29,11 @@ fun Site.toEntity(programId: Int) : SiteEntity {
         villageName = this.villageName,
         houseNumber = this.houseNumber,
         healthCenter = this.healthCenter,
-        isActive = this.isActive
+        isActive = this.isActive,
+        locationTypeId = locationTypeId,
+        parentId = parentId,
+        name = this.name,
+        locationHierarchy = this.locationHierarchy
     )
 }
 
@@ -41,6 +47,10 @@ fun SiteDto.toEntity(): SiteEntity {
         villageName = this.villageName,
         houseNumber = this.houseNumber,
         healthCenter = this.healthCenter,
-        isActive = this.isActive
+        isActive = this.isActive,
+        locationTypeId = this.locationTypeId,
+        parentId = this.parentId,
+        name = this.name,
+        locationHierarchy = this.locationHierarchy
     )
 }
