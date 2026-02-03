@@ -16,5 +16,5 @@ data class SiteDto(
     val locationTypeId: Int? = null,
     val parentId: Int? = null,
     val name: String? = null,
-    val locationHierarchy: String? = null
+    val locationHierarchy: Map<String, String>? = null
 )

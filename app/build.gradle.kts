@@ -223,9 +223,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4) // Compose JUnit testing
     debugImplementation(libs.androidx.ui.tooling) // Debugging tools for Compose
     debugImplementation(libs.androidx.ui.test.manifest) // Debugging Compose manifest tests
-
-    // GSON Library
-    implementation(libs.gson) // For serialization and deserialization of JSON files
 }
 
 sentry {

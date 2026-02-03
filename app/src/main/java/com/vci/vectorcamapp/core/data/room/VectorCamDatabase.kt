@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.vci.vectorcamapp.core.data.room.converters.FloatListConverter
+import com.vci.vectorcamapp.core.data.room.converters.LocationHierarchyConverter
 import com.vci.vectorcamapp.core.data.room.converters.SessionTypeConverter
 import com.vci.vectorcamapp.core.data.room.converters.UploadStatusConverter
 import com.vci.vectorcamapp.core.data.room.converters.UriConverter
@@ -45,7 +46,8 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
     UriConverter::class,
     UploadStatusConverter::class,
     SessionTypeConverter::class,
-    FloatListConverter::class
+    FloatListConverter::class,
+    LocationHierarchyConverter::class
 )
 abstract class VectorCamDatabase : RoomDatabase() {
     abstract val collectorDao: CollectorDao
