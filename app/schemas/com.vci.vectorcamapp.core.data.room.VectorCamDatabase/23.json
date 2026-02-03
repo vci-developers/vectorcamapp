@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 23,
-    "identityHash": "e5bc61f2eecb27ade8fbf6f6d31692c5",
+    "identityHash": "13a04958ca68b5a2cb1465315dc06305",
     "entities": [
       {
         "tableName": "collector",
@@ -137,7 +137,7 @@
       },
       {
         "tableName": "site",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `programId` INTEGER NOT NULL, `district` TEXT, `subCounty` TEXT, `parish` TEXT, `villageName` TEXT, `houseNumber` TEXT, `healthCenter` TEXT, `isActive` INTEGER NOT NULL, `locationTypeId` INTEGER, `parentId` INTEGER, `name` TEXT, `locationHierarchy` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`programId`) REFERENCES `program`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `programId` INTEGER NOT NULL, `district` TEXT, `subCounty` TEXT, `parish` TEXT, `villageName` TEXT, `houseNumber` TEXT, `healthCenter` TEXT, `isActive` INTEGER NOT NULL, `locationTypeId` INTEGER, `parentId` INTEGER, `name` TEXT, `locationHierarchy` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`programId`) REFERENCES `program`(`id`) ON UPDATE CASCADE ON DELETE CASCADE , FOREIGN KEY(`locationTypeId`) REFERENCES `location_type`(`id`) ON UPDATE CASCADE ON DELETE CASCADE , FOREIGN KEY(`parentId`) REFERENCES `site`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -250,6 +250,28 @@
             "onUpdate": "CASCADE",
             "columns": [
               "programId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "location_type",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "locationTypeId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "site",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "parentId"
             ],
             "referencedColumns": [
               "id"
@@ -753,7 +775,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e5bc61f2eecb27ade8fbf6f6d31692c5')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '13a04958ca68b5a2cb1465315dc06305')"
     ]
   }
 }
