@@ -6,34 +6,6 @@ if (secretsFile.exists()) {
     secretsFile.inputStream().use { secretsProperties.load(it) }
 }
 
-// Region configuration
-val region = project.findProperty("region")?.toString()?.lowercase() ?: "default"
-println("✅ Building VectorCam for region: $region")
-
-fun getRegionBasedVersionCode(): Int {
-    return when (region) {
-        "colombia" -> 1006
-        "uganda" -> 2004
-        "nigeria" -> 3001
-        else -> {
-            println("⚠️ Unknown region '$region', using default version code")
-            4000
-        }
-    }
-}
-
-fun getRegionBasedVersionName(): String {
-    return when (region) {
-        "colombia" -> "1.0.6"
-        "uganda" -> "1.0.4"
-        "nigeria" -> "1.0.1"
-        else -> {
-            println("⚠️ Unknown region '$region', using default version name")
-            "1.0.0"
-        }
-    }
-}
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -54,8 +26,9 @@ android {
         minSdk = 29
         targetSdk = 36
 
-        versionCode = getRegionBasedVersionCode()
-        versionName = getRegionBasedVersionName()
+        // Base version - will be overridden by flavors
+        versionCode = 1
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "com.vci.vectorcamapp.HiltTestRunner"
 
@@ -64,6 +37,53 @@ android {
 
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+        }
+    }
+
+    // Define flavor dimension
+    flavorDimensions += "region"
+
+    // Product flavors for different regions
+    productFlavors {
+        create("colombia") {
+            dimension = "region"
+            applicationIdSuffix = ".colombia"
+            versionCode = 1006
+            versionName = "1.0.6"
+            
+            // Region-specific build config fields
+            buildConfigField("String", "REGION", "\"colombia\"")
+            buildConfigField("String", "REGION_CODE", "\"CO\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Colombia\"")
+            
+            // Custom app name for this region
+            resValue("string", "app_name_region", "VectorCam Colombia")
+        }
+
+        create("uganda") {
+            dimension = "region"
+            applicationIdSuffix = ".uganda"
+            versionCode = 2004
+            versionName = "1.0.4"
+            
+            buildConfigField("String", "REGION", "\"uganda\"")
+            buildConfigField("String", "REGION_CODE", "\"UG\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Uganda\"")
+            
+            resValue("string", "app_name_region", "VectorCam Uganda")
+        }
+
+        create("nigeria") {
+            dimension = "region"
+            applicationIdSuffix = ".nigeria"
+            versionCode = 3001
+            versionName = "1.0.1"
+            
+            buildConfigField("String", "REGION", "\"nigeria\"")
+            buildConfigField("String", "REGION_CODE", "\"NG\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Nigeria\"")
+            
+            resValue("string", "app_name_region", "VectorCam Nigeria")
         }
     }
 
