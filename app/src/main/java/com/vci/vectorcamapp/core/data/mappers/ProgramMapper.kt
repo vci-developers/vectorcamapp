@@ -13,7 +13,7 @@ fun ProgramEntity.toDomain(): Program =
 
 fun ProgramDto.toEntity(): ProgramEntity {
     return ProgramEntity(
-        id = this.id,
+        id = this.programId,
         name = this.name,
         country = this.country
     )

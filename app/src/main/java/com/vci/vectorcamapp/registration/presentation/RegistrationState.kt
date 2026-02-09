@@ -6,6 +6,8 @@ import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
 import java.util.UUID
 
 data class RegistrationState(
+    val isConnectedToInternet: Boolean = false,
+    val isLoadingPrograms: Boolean = false,
     val programs: List<Program> = emptyList(),
     val selectedProgram: Program? = null,
     val collector: Collector = Collector(

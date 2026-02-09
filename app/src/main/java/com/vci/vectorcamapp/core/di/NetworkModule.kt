@@ -2,7 +2,9 @@ package com.vci.vectorcamapp.core.di
 
 import android.content.Context
 import com.vci.vectorcamapp.BuildConfig
+import com.vci.vectorcamapp.core.data.network.connectivity.AndroidConnectivityObserver
 import com.vci.vectorcamapp.core.data.upload.image.util.TimeoutConfiguredTusClient
+import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,6 +43,10 @@ object NetworkModule {
     @Singleton
     fun provideHttpClient(): HttpClient {
         return HttpClient(Android) {
+            engine {
+                connectTimeout = CONNECT_TIMEOUT_MS
+                socketTimeout = READ_TIMEOUT_MS
+            }
             install(Logging) {
                 level = LogLevel.ALL
                 logger = Logger.ANDROID
@@ -70,5 +76,13 @@ object NetworkModule {
                 ctx.getSharedPreferences("tus_worker", Context.MODE_PRIVATE)
             )
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideConnectivityObserver(
+        @ApplicationContext context: Context
+    ): ConnectivityObserver {
+        return AndroidConnectivityObserver(context)
     }
 }

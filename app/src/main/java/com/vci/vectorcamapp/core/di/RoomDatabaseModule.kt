@@ -63,7 +63,7 @@ object RoomDatabaseModule {
                             db.execSQL(
                                 """
                                     INSERT OR IGNORE INTO `program` (`id`, `name`, `country`) VALUES (?, ?, ?)
-                                """.trimIndent(), arrayOf(program.id, program.name, program.country)
+                                """.trimIndent(), arrayOf(program.programId, program.name, program.country)
                             )
 
                             db.execSQL(
@@ -75,7 +75,7 @@ object RoomDatabaseModule {
                                 """.trimIndent(), arrayOf(
                                     program.name,
                                     program.country,
-                                    program.id,
+                                    program.programId,
                                     program.name,
                                     program.country
                                 )

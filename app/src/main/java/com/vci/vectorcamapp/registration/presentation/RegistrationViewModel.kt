@@ -1,13 +1,16 @@
 package com.vci.vectorcamapp.registration.presentation
 
 import android.os.Build
+import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.network.api.RemoteProgramDataSource
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.model.Device
+import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
@@ -20,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -32,20 +36,29 @@ class RegistrationViewModel @Inject constructor(
     private val currentSessionCache: CurrentSessionCache,
     private val collectorRepository: CollectorRepository,
     private val collectorValidationUseCases: CollectorValidationUseCases,
-    programRepository: ProgramRepository
+    private val remoteProgramDataSource: RemoteProgramDataSource,
+    programRepository: ProgramRepository,
+    connectivityObserver: ConnectivityObserver
 ) : CoreViewModel() {
+
+    private val _isConnectedToInternet = connectivityObserver.isConnected
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
 
     private val _allPrograms = programRepository.observeAllPrograms()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _state = MutableStateFlow(RegistrationState())
     val state: StateFlow<RegistrationState> = combine(
+        _isConnectedToInternet,
         _allPrograms,
         _state
-    ) { allPrograms, state ->
+    ) { isConnectedToInternet, allPrograms, state ->
         state.copy(
+            isConnectedToInternet = isConnectedToInternet,
             programs = allPrograms
         )
+    }.onStart {
+        loadRegistrationDetails()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), RegistrationState())
 
     private val _events = Channel<RegistrationEvent>()
@@ -89,13 +102,20 @@ class RegistrationViewModel @Inject constructor(
                     }
                 }
 
+                RegistrationAction.RefreshPrograms -> {
+                    fetchAllPrograms()
+                }
+
                 RegistrationAction.ConfirmRegistration -> {
                     val selectedProgram = state.value.selectedProgram
 
                     val collector = state.value.collector
-                    val collectorNameValidationResult = collectorValidationUseCases.validateCollectorName(collector.name)
-                    val collectorTitleValidationResult = collectorValidationUseCases.validateCollectorTitle(collector.title)
-                    val collectorLastTrainedOnValidationResult = collectorValidationUseCases.validateCollectorLastTrainedOn(collector.lastTrainedOn)
+                    val collectorNameValidationResult =
+                        collectorValidationUseCases.validateCollectorName(collector.name)
+                    val collectorTitleValidationResult =
+                        collectorValidationUseCases.validateCollectorTitle(collector.title)
+                    val collectorLastTrainedOnValidationResult =
+                        collectorValidationUseCases.validateCollectorLastTrainedOn(collector.lastTrainedOn)
 
                     _state.update { currentState ->
                         currentState.copy(
@@ -107,7 +127,11 @@ class RegistrationViewModel @Inject constructor(
                         )
                     }
 
-                    val hasError = listOf(collectorNameValidationResult, collectorTitleValidationResult, collectorLastTrainedOnValidationResult).any { it is Result.Error }
+                    val hasError = listOf(
+                        collectorNameValidationResult,
+                        collectorTitleValidationResult,
+                        collectorLastTrainedOnValidationResult
+                    ).any { it is Result.Error }
                     if (hasError) return@launch
 
                     if (selectedProgram == null) {
@@ -133,6 +157,31 @@ class RegistrationViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    private fun loadRegistrationDetails() {
+        viewModelScope.launch {
+            fetchAllPrograms()
+        }
+    }
+    
+    private suspend fun fetchAllPrograms() {
+        _state.update { it.copy(isLoadingPrograms = true) }
+        try {
+            when (val result = remoteProgramDataSource.getAllPrograms()) {
+                is Result.Success -> {
+                    result.data.programs.forEach {
+                        Log.d("RegistrationViewModel", "loadRegistrationDetails: $it")
+                    }
+                }
+                is Result.Error -> {
+                    Log.d("RegistrationViewModel", "loadRegistrationDetails: ${result.error}")
+                    emitError(result.error)
+                }
+            }
+        } finally {
+            _state.update { it.copy(isLoadingPrograms = false) }
         }
     }
 }

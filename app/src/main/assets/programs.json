@@ -1,21 +1,21 @@
 [
   {
-    "id": 1,
+    "programId": 1,
     "name": "National Malaria Elimination Division",
     "country": "Uganda"
   },
   {
-    "id": 2,
+    "programId": 2,
     "name": "Data Collection",
     "country": "Colombia"
   },
   {
-    "id": 3,
+    "programId": 3,
     "name": "Pilot Field Study",
     "country": "Ghana"
   },
   {
-    "id": 4,
+    "programId": 4,
     "name": "KEMRI - AnoSTEP",
     "country": "Kenya"
   }
