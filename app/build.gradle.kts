@@ -44,7 +44,25 @@ android {
     flavorDimensions += "region"
 
     // Product flavors for different regions
+    // NOTE: First flavor listed becomes the default in Android Studio
     productFlavors {
+        // Uganda is listed first to be the default flavor
+        create("uganda") {
+            dimension = "region"
+            applicationIdSuffix = ".uganda"
+            versionCode = 2004
+            versionName = "1.0.4"
+            
+            buildConfigField("String", "REGION", "\"uganda\"")
+            buildConfigField("String", "REGION_CODE", "\"UG\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Uganda\"")
+            
+            resValue("string", "app_name_region", "VectorCam Uganda")
+            
+            // Set as default flavor (helps with IDE)
+            isDefault = true
+        }
+
         create("colombia") {
             dimension = "region"
             applicationIdSuffix = ".colombia"
@@ -58,19 +76,6 @@ android {
             
             // Custom app name for this region
             resValue("string", "app_name_region", "VectorCam Colombia")
-        }
-
-        create("uganda") {
-            dimension = "region"
-            applicationIdSuffix = ".uganda"
-            versionCode = 2004
-            versionName = "1.0.4"
-            
-            buildConfigField("String", "REGION", "\"uganda\"")
-            buildConfigField("String", "REGION_CODE", "\"UG\"")
-            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Uganda\"")
-            
-            resValue("string", "app_name_region", "VectorCam Uganda")
         }
 
         create("nigeria") {
