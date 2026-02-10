@@ -1,9 +1,12 @@
 package com.vci.vectorcamapp.core.data.repository
 
 import com.vci.vectorcamapp.core.data.mappers.toDomain
+import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.dao.ProgramDao
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -12,6 +15,16 @@ class ProgramRepositoryImplementation @Inject constructor(
     private val programDao: ProgramDao
 ) : ProgramRepository {
 
+    override suspend fun upsertAllPrograms(programs: List<Program>): Result<Unit, RoomDbError> {
+        return try {
+            val programEntities = programs.map { it.toEntity() }
+            programDao.upsertAllPrograms(programEntities)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(RoomDbError.UNKNOWN_ERROR)
+        }
+    }
+    
     override fun observeAllPrograms(): Flow<List<Program>> {
         return programDao.observeAllPrograms().map { programEntities ->
             programEntities.map { it.toDomain() }

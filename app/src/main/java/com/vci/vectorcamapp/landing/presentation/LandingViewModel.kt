@@ -113,6 +113,11 @@ class LandingViewModel @Inject constructor(
                 return@launch
             }
 
+            // TODO: Refresh sites for this program (CHANGE THE STRUCTURE IF YOU ARE NOT HAPPY WITH THE WAY THIS IS SET UP)
+            // TODO: IT IS OKAY IF THERE IS NO INTERNET CONNECTION TO REFRESH SITES HERE!
+            // Call this to keep site data up-to-date with backend
+            refreshAllSitesForProgram(programId)
+
             val currentSession = currentSessionCache.getSession()
             if (currentSession != null) {
                 _state.update { it.copy(showResumeDialog = true) }
@@ -124,6 +129,43 @@ class LandingViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    /**
+     * Refreshes sites for the enrolled program from the backend.
+     * Called on every app open to keep site data synchronized.
+     * 
+     * TODO: Implementation Steps:
+     * 1. Create RemoteSiteDataSource with getSitesForProgram(programId: Int) API call
+     * 2. Add SiteRepository with upsertAllSites(sites: List<Site>) method
+     * 3. In SiteDao, add @Upsert suspend fun upsertAllSites(sites: List<SiteEntity>)
+     * 4. Create Site mapper: SiteDto.toDomain() and Site.toEntity()
+     * 5. Inject RemoteSiteDataSource and SiteRepository into this ViewModel
+     * 6. Add refresh state (isRefreshingSites) if needed for UI feedback
+     * 7. Handle errors gracefully (don't block app if refresh fails)
+     * 8. Consider caching strategy: only refresh if X time has passed
+     * 9. Add Sentry logging for refresh failures
+     * 10. Optionally: Add user-initiated refresh action (pull-to-refresh)
+     */
+    private suspend fun refreshAllSitesForProgram(programId: Int) {
+        // TODO: Implement site refresh
+        // Example implementation:
+        // try {
+        //     when (val result = remoteSiteDataSource.getSitesForProgram(programId)) {
+        //         is Result.Success -> {
+        //             val sites = result.data.sites.map { it.toDomain() }
+        //             siteRepository.upsertAllSites(sites)
+        //             // Silently update - don't show errors to user on background refresh
+        //         }
+        //         is Result.Error -> {
+        //             // Log but don't block app - use cached data
+        //             LandingSentryLogger.logSiteRefreshFailure(programId, result.error)
+        //         }
+        //     }
+        // } catch (e: Exception) {
+        //     // Fail silently - app still works with cached sites
+        //     LandingSentryLogger.logSiteRefreshException(programId, e)
+        // }
     }
 }
 

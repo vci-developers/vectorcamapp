@@ -1,8 +1,8 @@
 package com.vci.vectorcamapp.registration.presentation
 
 import android.os.Build
-import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.network.api.RemoteProgramDataSource
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
@@ -37,7 +37,7 @@ class RegistrationViewModel @Inject constructor(
     private val collectorRepository: CollectorRepository,
     private val collectorValidationUseCases: CollectorValidationUseCases,
     private val remoteProgramDataSource: RemoteProgramDataSource,
-    programRepository: ProgramRepository,
+    private val programRepository: ProgramRepository,
     connectivityObserver: ConnectivityObserver
 ) : CoreViewModel() {
 
@@ -103,7 +103,7 @@ class RegistrationViewModel @Inject constructor(
                 }
 
                 RegistrationAction.RefreshPrograms -> {
-                    fetchAllPrograms()
+                    fetchAndSeedAllPrograms()
                 }
 
                 RegistrationAction.ConfirmRegistration -> {
@@ -141,6 +141,11 @@ class RegistrationViewModel @Inject constructor(
                     }
 
                     try {
+                        // TODO: Fetch and seed sites for selected program (CHANGE THE STRUCTURE IF YOU ARE NOT HAPPY WITH THE WAY THIS IS SET UP)
+                        // TODO: IF THERE IS NO INTERNET CONNECTIVITY, THE USER SHOULD NOT BE ABLE TO CONFIRM AND MOVE TO THE LANDING SCREEN. EMIT A NO_INTERNET ERROR
+                        // Call this BEFORE completing registration to ensure sites are available
+                        fetchAndSeedAllSitesForProgram(selectedProgram.id)
+                        
                         val device = Device(
                             id = -1,
                             model = "${Build.MANUFACTURER} ${Build.MODEL}",
@@ -162,26 +167,59 @@ class RegistrationViewModel @Inject constructor(
 
     private fun loadRegistrationDetails() {
         viewModelScope.launch {
-            fetchAllPrograms()
+            fetchAndSeedAllPrograms()
         }
     }
-    
-    private suspend fun fetchAllPrograms() {
+
+    private suspend fun fetchAndSeedAllPrograms() {
         _state.update { it.copy(isLoadingPrograms = true) }
         try {
             when (val result = remoteProgramDataSource.getAllPrograms()) {
                 is Result.Success -> {
-                    result.data.programs.forEach {
-                        Log.d("RegistrationViewModel", "loadRegistrationDetails: $it")
-                    }
+                    val programs = result.data.programs.map { it.toDomain() }
+                    programRepository.upsertAllPrograms(programs)
                 }
+
                 is Result.Error -> {
-                    Log.d("RegistrationViewModel", "loadRegistrationDetails: ${result.error}")
                     emitError(result.error)
                 }
             }
         } finally {
             _state.update { it.copy(isLoadingPrograms = false) }
         }
+    }
+
+    /**
+     * Fetches sites for the selected program and saves them to the database.
+     * Called when user confirms registration to seed initial site data.
+     * 
+     * TODO: Implementation Steps:
+     * 1. Create RemoteSiteDataSource with getSitesForProgram(programId: Int) API call
+     * 2. Add SiteRepository with upsertAllSites(sites: List<Site>) method
+     * 3. In SiteDao, add @Upsert suspend fun upsertAllSites(sites: List<SiteEntity>)
+     * 4. Create Site mapper: SiteDto.toDomain() and Site.toEntity()
+     * 5. Inject RemoteSiteDataSource and SiteRepository into this ViewModel
+     * 6. Add loading state for sites (isLoadingSites) if needed
+     * 7. Handle errors appropriately (network failure, database error)
+     * 8. Consider adding Sentry logging for site fetch failures
+     */
+    private suspend fun fetchAndSeedAllSitesForProgram(programId: Int) {
+        // TODO: Implement site fetching
+        // Example implementation:
+        // _state.update { it.copy(isLoadingSites = true) }
+        // try {
+        //     when (val result = remoteSiteDataSource.getSitesForProgram(programId)) {
+        //         is Result.Success -> {
+        //             val sites = result.data.sites.map { it.toDomain() }
+        //             siteRepository.upsertAllSites(sites)
+        //         }
+        //         is Result.Error -> {
+        //             emitError(result.error)
+        //             RegistrationSentryLogger.logSiteFetchFailure(programId, result.error)
+        //         }
+        //     }
+        // } finally {
+        //     _state.update { it.copy(isLoadingSites = false) }
+        // }
     }
 }
