@@ -24,6 +24,7 @@ import org.opencv.android.Utils
 import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -45,12 +46,12 @@ class InferenceRepositoryImplementation @Inject constructor(
                     val id = visionText.text.lineSequence().firstOrNull()?.trim().orEmpty()
                     continuation.resume(id)
                 }.addOnFailureListener { exception ->
-                    Log.e("Repository", "Text recognition failed: ${exception.message}")
+                    Timber.tag("Repository").e("Text recognition failed: ${exception.message}")
                     continuation.resume("")
                 }
             }
         } catch (e: Exception) {
-            Log.e("Repository", "Specimen ID analysis exception: ${e.message}", e)
+            Timber.tag("Repository").e(e, "Specimen ID analysis exception: ${e.message}")
             ""
         }
     }
@@ -131,7 +132,7 @@ class InferenceRepositoryImplementation @Inject constructor(
         val normalizedFocusX = absolutePixelX.toFloat() / bitmap.width
         val normalizedFocusY = absolutePixelY.toFloat() / bitmap.height
 
-        Log.d("Repository", "AF centroid (norm)=($normalizedFocusX,$normalizedFocusY)")
+        Timber.tag("Repository").d("AF centroid (norm)=($normalizedFocusX,$normalizedFocusY)")
         Offset(normalizedFocusX, normalizedFocusY)
     }
 

@@ -223,6 +223,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4) // Compose JUnit testing
     debugImplementation(libs.androidx.ui.tooling) // Debugging tools for Compose
     debugImplementation(libs.androidx.ui.test.manifest) // Debugging Compose manifest tests
+
+    // Timber logging library
+    implementation(libs.timber)
 }
 
 sentry {

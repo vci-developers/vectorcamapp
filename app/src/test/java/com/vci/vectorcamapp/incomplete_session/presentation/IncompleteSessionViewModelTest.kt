@@ -29,6 +29,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import timber.log.Timber
 import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -52,8 +53,6 @@ class IncompleteSessionViewModelTest {
         mockkObject(ErrorMessageBus)
         coEvery { ErrorMessageBus.emit(any(), any()) } returns Unit
         every { Uri.parse(any()) } answers { mockk(relaxed = true) }
-        every { Log.e(any(), any()) } returns 0
-        every { Log.e(any(), any(), any()) } returns 0
 
         sessionRepository = mockk()
         currentSessionCache = mockk(relaxed = true)

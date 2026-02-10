@@ -25,6 +25,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 import javax.inject.Singleton
 
 private const val DB_NAME = "vectorcam.db"
@@ -147,14 +148,13 @@ object RoomDatabaseModule {
                         }
 
                         db.setTransactionSuccessful()
-                        Log.i(
-                            "RoomCallback", "Seeded ${programs.size} programs, ${sites.size} sites"
-                        )
+                        Timber.tag("RoomCallback")
+                            .i("Seeded ${programs.size} programs, ${sites.size} sites")
                     } finally {
                         db.endTransaction()
                     }
                 } catch (e: Exception) {
-                    Log.e("RoomCallback", "Error seeding database", e)
+                    Timber.tag("RoomCallback").e(e, "Error seeding database")
                 }
             }
         }).addMigrations(*ALL_MIGRATIONS).build()
