@@ -2,7 +2,6 @@ package com.vci.vectorcamapp.registration.presentation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +25,7 @@ import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
+import com.vci.vectorcamapp.core.presentation.components.gestures.PullToRefresh
 import com.vci.vectorcamapp.registration.domain.model.RegistrationDropdownOptions
 import com.vci.vectorcamapp.registration.presentation.util.RegistrationTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -38,7 +38,11 @@ import com.vci.vectorcamapp.ui.theme.screenHeightFraction
 fun RegistrationScreen(
     state: RegistrationState, onAction: (RegistrationAction) -> Unit, modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    PullToRefresh(
+        isRefreshing = state.isLoadingPrograms,
+        onRefresh = { onAction(RegistrationAction.RefreshPrograms) },
+        modifier = modifier.fillMaxSize()
+    ) {
         Image(
             painter = painterResource(R.drawable.registration_background),
             contentDescription = "Mosquito background",
