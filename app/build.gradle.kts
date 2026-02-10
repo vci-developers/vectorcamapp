@@ -12,23 +12,25 @@ println("✅ Building VectorCam for region: $region")
 
 fun getRegionBasedVersionCode(): Int {
     return when (region) {
-        "colombia" -> 1006
-        "uganda" -> 2004
+        "colombia" -> 1007
+        "uganda" -> 2007
         "nigeria" -> 3001
         "kenya" -> 4000
+        "ghana" -> 5000
         else -> {
             println("⚠️ Unknown region '$region', using default version code")
-            5000
+            6000
         }
     }
 }
 
 fun getRegionBasedVersionName(): String {
     return when (region) {
-        "colombia" -> "1.0.6"
-        "uganda" -> "1.0.4"
+        "colombia" -> "1.0.7"
+        "uganda" -> "1.0.7"
         "nigeria" -> "1.0.1"
         "kenya" -> "1.0.0"
+        "ghana" -> "1.0.0"
         else -> {
             println("⚠️ Unknown region '$region', using default version name")
             "1.0.0"
