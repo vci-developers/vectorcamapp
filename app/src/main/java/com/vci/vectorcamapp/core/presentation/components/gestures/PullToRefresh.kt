@@ -15,6 +15,7 @@ fun PullToRefresh(
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
+    scrollable: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
@@ -23,11 +24,13 @@ fun PullToRefresh(
     PullToRefreshBox(
         state = pullToRefreshState, isRefreshing = isRefreshing, onRefresh = onRefresh
     ) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-        ) {
+        val contentModifier = if (scrollable) {
+            modifier.fillMaxSize().verticalScroll(scrollState)
+        } else {
+            modifier.fillMaxSize()
+        }
+
+        Box(modifier = contentModifier) {
             content()
         }
     }

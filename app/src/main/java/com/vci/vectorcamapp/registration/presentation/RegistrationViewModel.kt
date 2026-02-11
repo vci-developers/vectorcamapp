@@ -3,16 +3,20 @@ package com.vci.vectorcamapp.registration.presentation
 import android.os.Build
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.mappers.toDomain
+import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.network.api.RemoteProgramDataSource
+import com.vci.vectorcamapp.core.data.network.api.RemoteSiteDataSource
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
+import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.registration.logging.RegistrationSentryLogger
@@ -38,6 +42,8 @@ class RegistrationViewModel @Inject constructor(
     private val collectorValidationUseCases: CollectorValidationUseCases,
     private val remoteProgramDataSource: RemoteProgramDataSource,
     private val programRepository: ProgramRepository,
+    private val remoteSiteDataSource: RemoteSiteDataSource,
+    private val siteRepository: SiteRepository,
     connectivityObserver: ConnectivityObserver
 ) : CoreViewModel() {
 
@@ -140,10 +146,12 @@ class RegistrationViewModel @Inject constructor(
                         return@launch
                     }
 
+                    if (!state.value.isConnectedToInternet) {
+                        emitError(NetworkError.NO_INTERNET)
+                        return@launch
+                    }
+
                     try {
-                        // TODO: Fetch and seed sites for selected program (CHANGE THE STRUCTURE IF YOU ARE NOT HAPPY WITH THE WAY THIS IS SET UP)
-                        // TODO: IF THERE IS NO INTERNET CONNECTIVITY, THE USER SHOULD NOT BE ABLE TO CONFIRM AND MOVE TO THE LANDING SCREEN. EMIT A NO_INTERNET ERROR
-                        // Call this BEFORE completing registration to ensure sites are available
                         fetchAndSeedAllSitesForProgram(selectedProgram.id)
                         
                         val device = Device(
@@ -189,37 +197,28 @@ class RegistrationViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Fetches sites for the selected program and saves them to the database.
-     * Called when user confirms registration to seed initial site data.
-     * 
-     * TODO: Implementation Steps:
-     * 1. Create RemoteSiteDataSource with getSitesForProgram(programId: Int) API call
-     * 2. Add SiteRepository with upsertAllSites(sites: List<Site>) method
-     * 3. In SiteDao, add @Upsert suspend fun upsertAllSites(sites: List<SiteEntity>)
-     * 4. Create Site mapper: SiteDto.toDomain() and Site.toEntity()
-     * 5. Inject RemoteSiteDataSource and SiteRepository into this ViewModel
-     * 6. Add loading state for sites (isLoadingSites) if needed
-     * 7. Handle errors appropriately (network failure, database error)
-     * 8. Consider adding Sentry logging for site fetch failures
-     */
     private suspend fun fetchAndSeedAllSitesForProgram(programId: Int) {
-        // TODO: Implement site fetching
-        // Example implementation:
-        // _state.update { it.copy(isLoadingSites = true) }
-        // try {
-        //     when (val result = remoteSiteDataSource.getSitesForProgram(programId)) {
-        //         is Result.Success -> {
-        //             val sites = result.data.sites.map { it.toDomain() }
-        //             siteRepository.upsertAllSites(sites)
-        //         }
-        //         is Result.Error -> {
-        //             emitError(result.error)
-        //             RegistrationSentryLogger.logSiteFetchFailure(programId, result.error)
-        //         }
-        //     }
-        // } finally {
-        //     _state.update { it.copy(isLoadingSites = false) }
-        // }
+        _state.update { it.copy(isLoadingSites = true) }
+        try {
+            when (val result = remoteSiteDataSource.getSitesForProgram(programId)) {
+                is Result.Success -> {
+                    val entities = result.data.sites
+                        .map { it.toEntity() }
+                        .filter { it.programId == programId }
+
+                    siteRepository.upsertAllSites(entities)
+                }
+
+                is Result.Error -> {
+                    emitError(result.error)
+                    RegistrationSentryLogger.logDeviceRegistrationFailure(
+                        Exception("Site fetch failed: ${result.error}"),
+                        programId
+                    )
+                }
+            }
+        } finally {
+            _state.update { it.copy(isLoadingSites = false) }
+        }
     }
 }

@@ -7,4 +7,5 @@ sealed interface LandingAction {
     data object OpenSettings : LandingAction
     data object ResumeSession : LandingAction
     data object DismissResumePrompt : LandingAction
+    object RefreshSites : LandingAction
 }

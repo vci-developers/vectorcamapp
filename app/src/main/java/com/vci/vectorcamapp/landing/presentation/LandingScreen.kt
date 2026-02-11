@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.presentation.components.gestures.PullToRefresh
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.landing.presentation.components.LandingActionTile
 import com.vci.vectorcamapp.landing.presentation.components.LandingSection
@@ -34,59 +35,66 @@ fun LandingScreen(
     onAction: (LandingAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ScreenHeader(
-        title = "Welcome to VectorCam!",
-        subtitle = "Program: ${state.enrolledProgram.name}",
-        modifier = modifier.testTag(LandingTestTags.SCREEN),
-        trailingIcon = {
-            IconButton(onClick = { onAction(LandingAction.OpenSettings) }) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_settings),
-                    contentDescription = "Settings Icon",
-                    modifier = Modifier
-                        .size(MaterialTheme.dimensions.iconSizeLarge)
-                )
-            }
-        }
+    PullToRefresh(
+        isRefreshing = state.isRefreshingSites,
+        onRefresh = { onAction(LandingAction.RefreshSites) },
+        modifier = modifier.fillMaxSize(),
+        scrollable = false
     ) {
-        item {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
-                modifier = Modifier.padding(top = MaterialTheme.dimensions.spacingMedium)
-            ) {
-                LandingSection(
-                    title = "Imaging",
-                    testTag = LandingTestTags.SECTION_IMAGING
-                ) {
-                    LandingActionTile(
-                        title = "New Surveillance Session",
-                        description = "Begin a new household visit and capture mosquito images.",
-                        icon = painterResource(R.drawable.ic_specimen),
-                        onClick = { onAction(LandingAction.StartNewSurveillanceSession) },
-                        testTag = LandingTestTags.TILE_NEW_SURVEILLANCE
+        ScreenHeader(
+            title = "Welcome to VectorCam!",
+            subtitle = "Program: ${state.enrolledProgram.name}",
+            modifier = modifier.testTag(LandingTestTags.SCREEN),
+            trailingIcon = {
+                IconButton(onClick = { onAction(LandingAction.OpenSettings) }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_settings),
+                        contentDescription = "Settings Icon",
+                        modifier = Modifier
+                            .size(MaterialTheme.dimensions.iconSizeLarge)
                     )
                 }
-
-                LandingSection(
-                    title = "Library",
-                    testTag = LandingTestTags.SECTION_LIBRARY
+            }
+        ) {
+            item {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+                    modifier = Modifier.padding(top = MaterialTheme.dimensions.spacingMedium)
                 ) {
-                    LandingActionTile(
-                        title = "View Sessions in Progress",
-                        description = "Resume and complete any unfinished sessions.",
-                        icon = painterResource(R.drawable.ic_minus_circle),
-                        onClick = { onAction(LandingAction.ViewIncompleteSessions) },
-                        badgeCount = state.incompleteSessionsCount,
-                        testTag = LandingTestTags.TILE_INCOMPLETE,
-                    )
+                    LandingSection(
+                        title = "Imaging",
+                        testTag = LandingTestTags.SECTION_IMAGING
+                    ) {
+                        LandingActionTile(
+                            title = "New Surveillance Session",
+                            description = "Begin a new household visit and capture mosquito images.",
+                            icon = painterResource(R.drawable.ic_specimen),
+                            onClick = { onAction(LandingAction.StartNewSurveillanceSession) },
+                            testTag = LandingTestTags.TILE_NEW_SURVEILLANCE
+                        )
+                    }
 
-                    LandingActionTile(
-                        title = "View Complete Sessions",
-                        description = "Review fully completed sessions and uploaded data.",
-                        icon = painterResource(R.drawable.ic_complete),
-                        onClick = { onAction(LandingAction.ViewCompleteSessions) },
-                        testTag = LandingTestTags.TILE_COMPLETE
-                    )
+                    LandingSection(
+                        title = "Library",
+                        testTag = LandingTestTags.SECTION_LIBRARY
+                    ) {
+                        LandingActionTile(
+                            title = "View Sessions in Progress",
+                            description = "Resume and complete any unfinished sessions.",
+                            icon = painterResource(R.drawable.ic_minus_circle),
+                            onClick = { onAction(LandingAction.ViewIncompleteSessions) },
+                            badgeCount = state.incompleteSessionsCount,
+                            testTag = LandingTestTags.TILE_INCOMPLETE,
+                        )
+
+                        LandingActionTile(
+                            title = "View Complete Sessions",
+                            description = "Review fully completed sessions and uploaded data.",
+                            icon = painterResource(R.drawable.ic_complete),
+                            onClick = { onAction(LandingAction.ViewCompleteSessions) },
+                            testTag = LandingTestTags.TILE_COMPLETE
+                        )
+                    }
                 }
             }
         }

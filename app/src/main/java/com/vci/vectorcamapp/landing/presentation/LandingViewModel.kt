@@ -1,11 +1,15 @@
 package com.vci.vectorcamapp.landing.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.mappers.toEntity
+import com.vci.vectorcamapp.core.data.network.api.RemoteSiteDataSource
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SiteRepository
+import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.landing.domain.util.LandingError
 import com.vci.vectorcamapp.landing.logging.LandingSentryLogger
@@ -28,6 +32,8 @@ class LandingViewModel @Inject constructor(
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
     private val programRepository: ProgramRepository,
+    private val remoteSiteDataSource: RemoteSiteDataSource,
+    private val siteRepository: SiteRepository,
     sessionRepository: SessionRepository,
 ) : CoreViewModel() {
 
@@ -87,6 +93,18 @@ class LandingViewModel @Inject constructor(
                     currentSessionCache.clearSession()
                     _state.update { it.copy(showResumeDialog = false) }
                 }
+
+                LandingAction.RefreshSites -> {
+                    val programId = deviceCache.getProgramId()
+                    if (programId == null) {
+                        emitError(LandingError.PROGRAM_NOT_FOUND)
+                        _events.send(LandingEvent.NavigateBackToRegistrationScreen)
+                        LandingSentryLogger.logProgramIdNotFound(Exception(LandingError.PROGRAM_NOT_FOUND.name))
+                        return@launch
+                    }
+
+                    refreshAllSitesForProgram(programId, updateRefreshingState = true)
+                }
             }
         }
     }
@@ -109,14 +127,14 @@ class LandingViewModel @Inject constructor(
                 emitError(LandingError.PROGRAM_NOT_FOUND)
                 _events.send(LandingEvent.NavigateBackToRegistrationScreen)
                 _state.update { it.copy(isLoading = false) }
-                LandingSentryLogger.logProgramNotFound(Exception(LandingError.PROGRAM_NOT_FOUND.name), programId)
+                LandingSentryLogger.logProgramNotFound(
+                    Exception(LandingError.PROGRAM_NOT_FOUND.name),
+                    programId
+                )
                 return@launch
             }
 
-            // TODO: Refresh sites for this program (CHANGE THE STRUCTURE IF YOU ARE NOT HAPPY WITH THE WAY THIS IS SET UP)
-            // TODO: IT IS OKAY IF THERE IS NO INTERNET CONNECTION TO REFRESH SITES HERE!
-            // Call this to keep site data up-to-date with backend
-            refreshAllSitesForProgram(programId)
+            refreshAllSitesForProgram(programId, updateRefreshingState = false)
 
             val currentSession = currentSessionCache.getSession()
             if (currentSession != null) {
@@ -131,41 +149,31 @@ class LandingViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Refreshes sites for the enrolled program from the backend.
-     * Called on every app open to keep site data synchronized.
-     * 
-     * TODO: Implementation Steps:
-     * 1. Create RemoteSiteDataSource with getSitesForProgram(programId: Int) API call
-     * 2. Add SiteRepository with upsertAllSites(sites: List<Site>) method
-     * 3. In SiteDao, add @Upsert suspend fun upsertAllSites(sites: List<SiteEntity>)
-     * 4. Create Site mapper: SiteDto.toDomain() and Site.toEntity()
-     * 5. Inject RemoteSiteDataSource and SiteRepository into this ViewModel
-     * 6. Add refresh state (isRefreshingSites) if needed for UI feedback
-     * 7. Handle errors gracefully (don't block app if refresh fails)
-     * 8. Consider caching strategy: only refresh if X time has passed
-     * 9. Add Sentry logging for refresh failures
-     * 10. Optionally: Add user-initiated refresh action (pull-to-refresh)
-     */
-    private suspend fun refreshAllSitesForProgram(programId: Int) {
-        // TODO: Implement site refresh
-        // Example implementation:
-        // try {
-        //     when (val result = remoteSiteDataSource.getSitesForProgram(programId)) {
-        //         is Result.Success -> {
-        //             val sites = result.data.sites.map { it.toDomain() }
-        //             siteRepository.upsertAllSites(sites)
-        //             // Silently update - don't show errors to user on background refresh
-        //         }
-        //         is Result.Error -> {
-        //             // Log but don't block app - use cached data
-        //             LandingSentryLogger.logSiteRefreshFailure(programId, result.error)
-        //         }
-        //     }
-        // } catch (e: Exception) {
-        //     // Fail silently - app still works with cached sites
-        //     LandingSentryLogger.logSiteRefreshException(programId, e)
-        // }
+    private suspend fun refreshAllSitesForProgram(
+        programId: Int,
+        updateRefreshingState: Boolean
+    ) {
+        if (updateRefreshingState) {
+            _state.update { it.copy(isRefreshingSites = true) }
+        }
+        try {
+            when (val result = remoteSiteDataSource.getSitesForProgram(programId)) {
+                is Result.Success -> {
+                    val entities = result.data.sites
+                        .map { it.toEntity() }
+                        .filter { it.programId == programId }
+
+                    siteRepository.upsertAllSites(entities)
+                }
+                is Result.Error -> {
+                    emitError(result.error)
+                }
+            }
+        } finally {
+            if (updateRefreshingState) {
+                _state.update { it.copy(isRefreshingSites = false) }
+            }
+        }
     }
 }
 
