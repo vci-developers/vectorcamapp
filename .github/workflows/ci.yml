@@ -7,8 +7,12 @@ on:
 
 jobs:
   lint:
-    name: Run Lint Check
+    name: Lint - ${{ matrix.flavor }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [Uganda, Colombia, Nigeria, Kenya, Ghana]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,18 +26,23 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Run lint
-        run: ./gradlew lintDebug
+      - name: Run lint for ${{ matrix.flavor }}
+        run: ./gradlew lint${{ matrix.flavor }}Debug
 
       - name: Upload lint report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lint-report
-          path: app/build/reports/lint-results-debug.html
+          name: lint-report-${{ matrix.flavor }}
+          path: app/build/reports/lint-results-*.html
 
   unit-tests:
-    name: Run Unit Tests
+    name: Unit Tests - ${{ matrix.flavor }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [Uganda, Colombia, Nigeria, Kenya, Ghana]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -47,14 +56,15 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest
+      - name: Run unit tests for ${{ matrix.flavor }}
+        run: ./gradlew test${{ matrix.flavor }}DebugUnitTest
 
       - name: Upload test report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: unit-test-report
-          path: app/build/reports/tests/testDebugUnitTest/
+          name: unit-test-report-${{ matrix.flavor }}
+          path: app/build/reports/tests/test${{ matrix.flavor }}DebugUnitTest/
 
 #  instrumentation-tests:
 #    name: Run Instrumentation Tests
