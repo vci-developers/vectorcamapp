@@ -50,8 +50,8 @@ android {
         create("uganda") {
             dimension = "region"
             applicationIdSuffix = ".uganda"
-            versionCode = 2004
-            versionName = "1.0.4"
+            versionCode = 2007
+            versionName = "1.0.7"
             
             buildConfigField("String", "REGION", "\"uganda\"")
             buildConfigField("String", "REGION_CODE", "\"UG\"")
@@ -66,8 +66,8 @@ android {
         create("colombia") {
             dimension = "region"
             applicationIdSuffix = ".colombia"
-            versionCode = 1006
-            versionName = "1.0.6"
+            versionCode = 1007
+            versionName = "1.0.7"
             
             // Region-specific build config fields
             buildConfigField("String", "REGION", "\"colombia\"")
@@ -89,6 +89,32 @@ android {
             buildConfigField("String", "REGION_DISPLAY_NAME", "\"Nigeria\"")
             
             resValue("string", "app_name_region", "VectorCam Nigeria")
+        }
+
+        create("kenya") {
+            dimension = "region"
+            applicationIdSuffix = ".kenya"
+            versionCode = 4001
+            versionName = "1.0.1"
+            
+            buildConfigField("String", "REGION", "\"kenya\"")
+            buildConfigField("String", "REGION_CODE", "\"KE\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Kenya\"")
+            
+            resValue("string", "app_name_region", "VectorCam Kenya")
+        }
+
+        create("ghana") {
+            dimension = "region"
+            applicationIdSuffix = ".ghana"
+            versionCode = 5001
+            versionName = "1.0.1"
+            
+            buildConfigField("String", "REGION", "\"ghana\"")
+            buildConfigField("String", "REGION_CODE", "\"GH\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Ghana\"")
+            
+            resValue("string", "app_name_region", "VectorCam Ghana")
         }
     }
 
@@ -168,10 +194,10 @@ dependencies {
     implementation(libs.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle) // CameraX Lifecycle library
-    implementation(libs.androidx.camera.view) // CameraX View class
     implementation(libs.androidx.camera.video)
     implementation(libs.androidx.camera.mlkit.vision) // CameraX ML Kit Vision Integration
     implementation(libs.androidx.camera.extensions) // CameraX Extensions library
+    implementation(libs.androidx.camera.compose) // CameraX Compose integration
 
     // Ktor (Networking) Dependencies
     implementation(libs.ktor.client.android) // Android client for Ktor

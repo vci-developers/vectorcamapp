@@ -6,13 +6,15 @@ This document explains how to build VectorCam for different regions using Androi
 
 ## 📋 Available Flavors
 
-VectorCam supports three regional flavors:
+VectorCam supports five regional flavors:
 
-| Flavor | Region | Version Code | Version Name | App ID Suffix |
-|--------|--------|--------------|--------------|---------------|
-| `colombia` | Colombia | 1006 | 1.0.6 | `.colombia` |
-| `uganda` | Uganda | 2004 | 1.0.4 | `.uganda` |
-| `nigeria` | Nigeria | 3001 | 1.0.1 | `.nigeria` |
+| Flavor | Region | Version Code | Version Name | App ID Suffix | Flag |
+|--------|--------|--------------|--------------|---------------|------|
+| `uganda` | Uganda | 2007 | 1.0.7 | `.uganda` | 🇺🇬 |
+| `colombia` | Colombia | 1007 | 1.0.7 | `.colombia` | 🇨🇴 |
+| `nigeria` | Nigeria | 3001 | 1.0.1 | `.nigeria` | 🇳🇬 |
+| `kenya` | Kenya | 4001 | 1.0.1 | `.kenya` | 🇰🇪 |
+| `ghana` | Ghana | 5001 | 1.0.1 | `.ghana` | 🇬🇭 |
 
 ---
 
@@ -21,27 +23,39 @@ VectorCam supports three regional flavors:
 ### Debug Builds
 
 ```bash
+# Uganda Debug (Default)
+./gradlew assembleUgandaDebug
+
 # Colombia Debug
 ./gradlew assembleColombiaDebug
 
-# Uganda Debug
-./gradlew assembleUgandaDebug
-
 # Nigeria Debug
 ./gradlew assembleNigeriaDebug
+
+# Kenya Debug
+./gradlew assembleKenyaDebug
+
+# Ghana Debug
+./gradlew assembleGhanaDebug
 ```
 
 ### Release Builds
 
 ```bash
-# Colombia Release
-./gradlew assembleColombiaRelease
-
 # Uganda Release
 ./gradlew assembleUgandaRelease
 
+# Colombia Release
+./gradlew assembleColombiaRelease
+
 # Nigeria Release
 ./gradlew assembleNigeriaRelease
+
+# Kenya Release
+./gradlew assembleKenyaRelease
+
+# Ghana Release
+./gradlew assembleGhanaRelease
 ```
 
 ### Build All Variants
@@ -63,12 +77,11 @@ VectorCam supports three regional flavors:
 
 1. Open **Build Variants** panel (View → Tool Windows → Build Variants)
 2. Select desired variant from dropdown:
-   - `colombiaDebug`
-   - `colombiaRelease`
-   - `ugandaDebug`
-   - `ugandaRelease`
-   - `nigeriaDebug`
-   - `nigeriaRelease`
+   - `ugandaDebug` / `ugandaRelease` (Default)
+   - `colombiaDebug` / `colombiaRelease`
+   - `nigeriaDebug` / `nigeriaRelease`
+   - `kenyaDebug` / `kenyaRelease`
+   - `ghanaDebug` / `ghanaRelease`
 3. Click Run ▶️
 
 ---
@@ -99,11 +112,13 @@ Example:
 Each flavor has its own:
 
 ### 1. Application ID
-- Colombia: `com.vci.vectorcamapp.colombia`
 - Uganda: `com.vci.vectorcamapp.uganda`
+- Colombia: `com.vci.vectorcamapp.colombia`
 - Nigeria: `com.vci.vectorcamapp.nigeria`
+- Kenya: `com.vci.vectorcamapp.kenya`
+- Ghana: `com.vci.vectorcamapp.ghana`
 
-**Benefit:** All three apps can be installed simultaneously on the same device.
+**Benefit:** All five apps can be installed simultaneously on the same device.
 
 ### 2. Version Code & Name
 Managed independently per region in `app/build.gradle.kts`:
@@ -122,9 +137,9 @@ productFlavors {
 Access region info in code:
 
 ```kotlin
-val region = BuildConfig.REGION              // "colombia", "uganda", or "nigeria"
-val regionCode = BuildConfig.REGION_CODE     // "CO", "UG", or "NG"
-val regionName = BuildConfig.REGION_DISPLAY_NAME  // "Colombia", "Uganda", or "Nigeria"
+val region = BuildConfig.REGION              // "uganda", "colombia", "nigeria", "kenya", or "ghana"
+val regionCode = BuildConfig.REGION_CODE     // "UG", "CO", "NG", "KE", or "GH"
+val regionName = BuildConfig.REGION_DISPLAY_NAME  // "Uganda", "Colombia", "Nigeria", "Kenya", or "Ghana"
 ```
 
 ### 4. String Resources
@@ -133,7 +148,8 @@ Each flavor has a region-specific app name:
 ```kotlin
 // Access in code
 val regionAppName = getString(R.string.app_name_region)
-// "VectorCam Colombia", "VectorCam Uganda", or "VectorCam Nigeria"
+// "VectorCam Uganda", "VectorCam Colombia", "VectorCam Nigeria", 
+// "VectorCam Kenya", or "VectorCam Ghana"
 ```
 
 ---
@@ -144,9 +160,11 @@ val regionAppName = getString(R.string.app_name_region)
 
 ```bash
 # Test specific flavor
-./gradlew testColombiaDebugUnitTest
 ./gradlew testUgandaDebugUnitTest
+./gradlew testColombiaDebugUnitTest
 ./gradlew testNigeriaDebugUnitTest
+./gradlew testKenyaDebugUnitTest
+./gradlew testGhanaDebugUnitTest
 
 # Test all debug flavors
 ./gradlew testDebugUnitTest
@@ -156,9 +174,11 @@ val regionAppName = getString(R.string.app_name_region)
 
 ```bash
 # Run instrumented tests for specific flavor
-./gradlew connectedColombiaDebugAndroidTest
 ./gradlew connectedUgandaDebugAndroidTest
+./gradlew connectedColombiaDebugAndroidTest
 ./gradlew connectedNigeriaDebugAndroidTest
+./gradlew connectedKenyaDebugAndroidTest
+./gradlew connectedGhanaDebugAndroidTest
 ```
 
 ---
@@ -169,24 +189,28 @@ val regionAppName = getString(R.string.app_name_region)
 
 ```bash
 # Install specific flavor
-./gradlew installColombiaDebug
-./gradlew installUgandaRelease
+./gradlew installUgandaDebug
+./gradlew installColombiaRelease
 ./gradlew installNigeriaDebug
+./gradlew installKenyaDebug
+./gradlew installGhanaRelease
 
 # Install and run
-./gradlew installColombiaDebug && adb shell am start -n com.vci.vectorcamapp.colombia/.MainActivity
+./gradlew installUgandaDebug && adb shell am start -n com.vci.vectorcamapp.uganda/.MainActivity
 ```
 
 ### Via ADB
 
 ```bash
 # Install APK directly
-adb install app/build/outputs/apk/colombia/debug/app-colombia-debug.apk
+adb install app/build/outputs/apk/uganda/debug/app-uganda-debug.apk
 
 # Uninstall
-adb uninstall com.vci.vectorcamapp.colombia
 adb uninstall com.vci.vectorcamapp.uganda
+adb uninstall com.vci.vectorcamapp.colombia
 adb uninstall com.vci.vectorcamapp.nigeria
+adb uninstall com.vci.vectorcamapp.kenya
+adb uninstall com.vci.vectorcamapp.ghana
 ```
 
 ---
@@ -211,7 +235,11 @@ app/src/
 │   └── AndroidManifest.xml
 ├── uganda/                # Uganda-specific
 │   └── res/
-└── nigeria/               # Nigeria-specific
+├── nigeria/               # Nigeria-specific
+│   └── res/
+├── kenya/                 # Kenya-specific
+│   └── res/
+└── ghana/                 # Ghana-specific
     └── res/
 ```
 
@@ -249,7 +277,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        flavor: [colombia, uganda, nigeria]
+        flavor: [uganda, colombia, nigeria, kenya, ghana]
     
     steps:
       - uses: actions/checkout@v3
@@ -283,9 +311,11 @@ FLAVOR=colombia
 
 ### Current Approach
 Each flavor has independent version codes:
-- **Colombia**: 1xxx series (e.g., 1006)
-- **Uganda**: 2xxx series (e.g., 2004)
+- **Uganda**: 2xxx series (e.g., 2007)
+- **Colombia**: 1xxx series (e.g., 1007)
 - **Nigeria**: 3xxx series (e.g., 3001)
+- **Kenya**: 4xxx series (e.g., 4001)
+- **Ghana**: 5xxx series (e.g., 5001)
 
 This ensures:
 - ✅ No version conflicts between regions
@@ -335,9 +365,11 @@ ls -la app/src/
 ### Issue: Version code conflict on Play Store
 
 **Solution:** Ensure each flavor uses different version code series
-- Colombia: 1xxx
 - Uganda: 2xxx
+- Colombia: 1xxx
 - Nigeria: 3xxx
+- Kenya: 4xxx
+- Ghana: 5xxx
 
 ---
 
@@ -353,14 +385,18 @@ ls -la app/src/
 
 | Task | Command |
 |------|---------|
-| Build Colombia Debug | `./gradlew assembleColombiaDebug` |
-| Build Uganda Release | `./gradlew assembleUgandaRelease` |
-| Install Nigeria Debug | `./gradlew installNigeriaDebug` |
+| Build Uganda Debug | `./gradlew assembleUgandaDebug` |
+| Build Colombia Release | `./gradlew assembleColombiaRelease` |
+| Build Nigeria Debug | `./gradlew assembleNigeriaDebug` |
+| Build Kenya Release | `./gradlew assembleKenyaRelease` |
+| Build Ghana Debug | `./gradlew assembleGhanaDebug` |
+| Install Uganda Debug | `./gradlew installUgandaDebug` |
 | Test Colombia | `./gradlew testColombiaDebugUnitTest` |
 | Build All Debug | `./gradlew assembleDebug` |
 | Clean Build | `./gradlew clean assemble` |
 
 ---
 
-**Last Updated:** February 6, 2026  
+**Last Updated:** February 11, 2026  
+**Flavors:** 5 (Uganda, Colombia, Nigeria, Kenya, Ghana)  
 **Maintained by:** VectorCam Team

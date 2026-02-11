@@ -39,7 +39,7 @@ fun IntakeTile(
                 modifier = Modifier.height(MaterialTheme.dimensions.componentHeightSmall)
             ) {
                 VerticalDivider(
-                    thickness = MaterialTheme.dimensions.dividerThickness,
+                    thickness = MaterialTheme.dimensions.dividerThicknessThick,
                     color = MaterialTheme.colors.primary,
                     modifier = Modifier.fillMaxHeight()
                 )

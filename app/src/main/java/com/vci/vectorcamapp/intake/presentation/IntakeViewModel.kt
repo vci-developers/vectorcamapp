@@ -524,14 +524,14 @@ class IntakeViewModel @Inject constructor(
 
                 val validatedDistrict =
                     when {
-                        validatedSite != null -> validatedSite.district
+                        validatedSite != null -> validatedSite.district.orEmpty()
                         currentAllSites.any { it.district == cachedDefaultDistrict } -> cachedDefaultDistrict
                         else -> ""
                     }
 
                 val validatedVillageName =
                     when {
-                        validatedSite != null -> validatedSite.villageName
+                        validatedSite != null -> validatedSite.villageName.orEmpty()
                         validatedDistrict.isNotBlank() &&
                             currentAllSites.any {
                                 it.district == validatedDistrict &&

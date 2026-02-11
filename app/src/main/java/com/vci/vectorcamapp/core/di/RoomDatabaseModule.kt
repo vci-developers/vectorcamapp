@@ -11,6 +11,7 @@ import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.room.VectorCamDatabase
 import com.vci.vectorcamapp.core.data.room.dao.CollectorDao
 import com.vci.vectorcamapp.core.data.room.dao.InferenceResultDao
+import com.vci.vectorcamapp.core.data.room.dao.LocationTypeDao
 import com.vci.vectorcamapp.core.data.room.dao.ProgramDao
 import com.vci.vectorcamapp.core.data.room.dao.SessionDao
 import com.vci.vectorcamapp.core.data.room.dao.SiteDao
@@ -183,6 +184,9 @@ object RoomDatabaseModule {
 
     @Provides
     fun provideSiteDao(db: VectorCamDatabase): SiteDao = db.siteDao
+
+    @Provides
+    fun provideLocationTypeDao(db: VectorCamDatabase): LocationTypeDao = db.locationTypeDao
 
     @Provides
     fun provideCollectorDao(db: VectorCamDatabase): CollectorDao = db.collectorDao

@@ -7,43 +7,53 @@ VectorCam App - Product Flavor Structure
     ┌──────────────┬───────────┬─────────────────────────────────────────────┐
     │   Flavor     │ Build Type│  Build Variant                              │
     ├──────────────┼───────────┼─────────────────────────────────────────────┤
+    │              │   debug   │  ugandaDebug (DEFAULT)                      │
+    │  Uganda      ├───────────┼─────────────────────────────────────────────┤
+    │              │  release  │  ugandaRelease                              │
+    ├──────────────┼───────────┼─────────────────────────────────────────────┤
     │              │   debug   │  colombiaDebug                              │
     │  Colombia    ├───────────┼─────────────────────────────────────────────┤
     │              │  release  │  colombiaRelease                            │
     ├──────────────┼───────────┼─────────────────────────────────────────────┤
-    │              │   debug   │  ugandaDebug                                │
-    │  Uganda      ├───────────┼─────────────────────────────────────────────┤
-    │              │  release  │  ugandaRelease                              │
-    ├──────────────┼───────────┼─────────────────────────────────────────────┤
     │              │   debug   │  nigeriaDebug                               │
     │  Nigeria     ├───────────┼─────────────────────────────────────────────┤
     │              │  release  │  nigeriaRelease                             │
+    ├──────────────┼───────────┼─────────────────────────────────────────────┤
+    │              │   debug   │  kenyaDebug                                 │
+    │  Kenya       ├───────────┼─────────────────────────────────────────────┤
+    │              │  release  │  kenyaRelease                               │
+    ├──────────────┼───────────┼─────────────────────────────────────────────┤
+    │              │   debug   │  ghanaDebug                                 │
+    │  Ghana       ├───────────┼─────────────────────────────────────────────┤
+    │              │  release  │  ghanaRelease                               │
     └──────────────┴───────────┴─────────────────────────────────────────────┘
 
 
 🎯 Flavor Configuration Matrix
 ────────────────────────────────
 
-    ┌──────────────┬──────────────┬──────────────┬─────────────────────────────────────┐
-    │   Property   │  Colombia    │   Uganda     │   Nigeria                           │
-    ├──────────────┼──────────────┼──────────────┼─────────────────────────────────────┤
-    │ Dimension    │   region     │   region     │   region                            │
-    ├──────────────┼──────────────┼──────────────┼─────────────────────────────────────┤
-    │ App ID       │ .....colombia│ .....uganda  │ .....nigeria                        │
-    ├──────────────┼──────────────┼──────────────┼─────────────────────────────────────┤
-    │ Version Code │    1006      │    2004      │    3001                             │
-    ├──────────────┼──────────────┼──────────────┼─────────────────────────────────────┤
-    │ Version Name │    1.0.6     │    1.0.4     │    1.0.1                            │
-    ├──────────────┼──────────────┼──────────────┼─────────────────────────────────────┤
-    │ REGION       │  "colombia"  │  "uganda"    │  "nigeria"                          │
-    ├──────────────┼──────────────┼──────────────┼─────────────────────────────────────┤
-    │ REGION_CODE  │    "CO"      │    "UG"      │    "NG"                             │
-    ├──────────────┼──────────────┼──────────────┼─────────────────────────────────────┤
-    │ Display Name │ "Colombia"   │  "Uganda"    │  "Nigeria"                          │
-    ├──────────────┼──────────────┼──────────────┼─────────────────────────────────────┤
-    │ App Name     │ VectorCam    │ VectorCam    │ VectorCam                           │
-    │ Resource     │ Colombia     │ Uganda       │ Nigeria                             │
-    └──────────────┴──────────────┴──────────────┴─────────────────────────────────────┘
+    ┌──────────────┬──────────────┬──────────────┬──────────────┬──────────────┬─────────────────┐
+    │   Property   │  Uganda      │  Colombia    │   Nigeria    │   Kenya      │   Ghana         │
+    ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┼─────────────────┤
+    │ Dimension    │   region     │   region     │   region     │   region     │   region        │
+    ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┼─────────────────┤
+    │ App ID       │ .....uganda  │ .....colombia│ .....nigeria │ .....kenya   │ .....ghana      │
+    ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┼─────────────────┤
+    │ Version Code │    2007      │    1007      │    3001      │    4001      │    5001         │
+    ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┼─────────────────┤
+    │ Version Name │    1.0.7     │    1.0.7     │    1.0.1     │    1.0.1     │    1.0.1        │
+    ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┼─────────────────┤
+    │ REGION       │  "uganda"    │  "colombia"  │  "nigeria"   │  "kenya"     │  "ghana"        │
+    ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┼─────────────────┤
+    │ REGION_CODE  │    "UG"      │    "CO"      │    "NG"      │    "KE"      │    "GH"         │
+    ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┼─────────────────┤
+    │ Display Name │ "Uganda"     │  "Colombia"  │  "Nigeria"   │  "Kenya"     │  "Ghana"        │
+    ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┼─────────────────┤
+    │ App Name     │ VectorCam    │ VectorCam    │ VectorCam    │ VectorCam    │ VectorCam       │
+    │ Resource     │ Uganda       │ Colombia     │ Nigeria      │ Kenya        │ Ghana           │
+    ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┼─────────────────┤
+    │ Flag Emoji   │   🇺🇬         │   🇨🇴         │   🇳🇬         │   🇰🇪         │   🇬🇭           │
+    └──────────────┴──────────────┴──────────────┴──────────────┴──────────────┴─────────────────┘
 
 
 📂 Source Set Structure
@@ -79,6 +89,16 @@ VectorCam App - Product Flavor Structure
     │   ├── res/
     │   └── AndroidManifest.xml
     │
+    ├── kenya/                          ← Kenya-specific (optional)
+    │   ├── java/
+    │   ├── res/
+    │   └── AndroidManifest.xml
+    │
+    ├── ghana/                          ← Ghana-specific (optional)
+    │   ├── java/
+    │   ├── res/
+    │   └── AndroidManifest.xml
+    │
     ├── debug/                          ← Debug build type (all flavors)
     │   └── res/
     │
@@ -92,9 +112,11 @@ VectorCam App - Product Flavor Structure
     1. SELECT FLAVOR        2. SELECT BUILD TYPE      3. VARIANT CREATED
     ┌──────────────┐       ┌──────────────┐         ┌──────────────────┐
     │              │       │              │         │                  │
-    │  Colombia    │   +   │    Debug     │    =    │  colombiaDebug   │
-    │  Uganda      │       │   Release    │         │  ugandaRelease   │
+    │  Uganda      │   +   │    Debug     │    =    │  ugandaDebug     │
+    │  Colombia    │       │   Release    │         │  colombiaRelease │
     │  Nigeria     │       │              │         │  nigeriaDebug    │
+    │  Kenya       │       │              │         │  kenyaRelease    │
+    │  Ghana       │       │              │         │  ghanaDebug      │
     │              │       │              │         │  ...etc          │
     └──────────────┘       └──────────────┘         └──────────────────┘
 
@@ -102,23 +124,23 @@ VectorCam App - Product Flavor Structure
 🎯 BuildConfig Generation
 ───────────────────────────
 
-    When building colombiaDebug:
+    When building ugandaDebug:
     ┌─────────────────────────────────────────────────────────────────┐
     │ // BuildConfig.java (auto-generated)                            │
     │                                                                  │
     │ public final class BuildConfig {                                │
     │     public static final String APPLICATION_ID =                 │
-    │         "com.vci.vectorcamapp.colombia";                        │
+    │         "com.vci.vectorcamapp.uganda";                          │
     │     public static final String BUILD_TYPE = "debug";            │
-    │     public static final String FLAVOR = "colombia";             │
-    │     public static final int VERSION_CODE = 1006;                │
-    │     public static final String VERSION_NAME = "1.0.6";          │
+    │     public static final String FLAVOR = "uganda";               │
+    │     public static final int VERSION_CODE = 2007;                │
+    │     public static final String VERSION_NAME = "1.0.7";          │
     │     public static final boolean DEBUG = true;                   │
     │                                                                  │
     │     // Flavor-specific fields                                   │
-    │     public static final String REGION = "colombia";             │
-    │     public static final String REGION_CODE = "CO";              │
-    │     public static final String REGION_DISPLAY_NAME = "Colombia";│
+    │     public static final String REGION = "uganda";               │
+    │     public static final String REGION_CODE = "UG";              │
+    │     public static final String REGION_DISPLAY_NAME = "Uganda";  │
     │                                                                  │
     │     // Build type fields                                        │
     │     public static final String BASE_URL =                       │
@@ -135,6 +157,14 @@ VectorCam App - Product Flavor Structure
 
     app/build/outputs/apk/
     │
+    ├── uganda/
+    │   ├── debug/
+    │   │   ├── app-uganda-debug.apk            ← com.vci.vectorcamapp.uganda
+    │   │   └── output-metadata.json
+    │   └── release/
+    │       ├── app-uganda-release.apk
+    │       └── output-metadata.json
+    │
     ├── colombia/
     │   ├── debug/
     │   │   ├── app-colombia-debug.apk          ← com.vci.vectorcamapp.colombia
@@ -143,17 +173,23 @@ VectorCam App - Product Flavor Structure
     │       ├── app-colombia-release.apk
     │       └── output-metadata.json
     │
-    ├── uganda/
+    ├── nigeria/
     │   ├── debug/
-    │   │   └── app-uganda-debug.apk            ← com.vci.vectorcamapp.uganda
+    │   │   └── app-nigeria-debug.apk           ← com.vci.vectorcamapp.nigeria
     │   └── release/
-    │       └── app-uganda-release.apk
+    │       └── app-nigeria-release.apk
     │
-    └── nigeria/
+    ├── kenya/
+    │   ├── debug/
+    │   │   └── app-kenya-debug.apk             ← com.vci.vectorcamapp.kenya
+    │   └── release/
+    │       └── app-kenya-release.apk
+    │
+    └── ghana/
         ├── debug/
-        │   └── app-nigeria-debug.apk           ← com.vci.vectorcamapp.nigeria
+        │   └── app-ghana-debug.apk             ← com.vci.vectorcamapp.ghana
         └── release/
-            └── app-nigeria-release.apk
+            └── app-ghana-release.apk
 
 
 📱 Device Installation
@@ -165,18 +201,24 @@ VectorCam App - Product Flavor Structure
     │   📱 Phone                                                   │
     │   ┌──────────────────────────────────────────────────────┐  │
     │   │                                                       │  │
-    │   │  🇨🇴 VectorCam Colombia  (com.vci.vectorcamapp.colombia) │  │
-    │   │     Version 1.0.6 (1006)                            │  │
-    │   │                                                       │  │
     │   │  🇺🇬 VectorCam Uganda    (com.vci.vectorcamapp.uganda)   │  │
-    │   │     Version 1.0.4 (2004)                            │  │
+    │   │     Version 1.0.7 (2007)                            │  │
+    │   │                                                       │  │
+    │   │  🇨🇴 VectorCam Colombia  (com.vci.vectorcamapp.colombia) │  │
+    │   │     Version 1.0.7 (1007)                            │  │
     │   │                                                       │  │
     │   │  🇳🇬 VectorCam Nigeria   (com.vci.vectorcamapp.nigeria)  │  │
     │   │     Version 1.0.1 (3001)                            │  │
     │   │                                                       │  │
+    │   │  🇰🇪 VectorCam Kenya     (com.vci.vectorcamapp.kenya)    │  │
+    │   │     Version 1.0.1 (4001)                            │  │
+    │   │                                                       │  │
+    │   │  🇬🇭 VectorCam Ghana     (com.vci.vectorcamapp.ghana)    │  │
+    │   │     Version 1.0.1 (5001)                            │  │
+    │   │                                                       │  │
     │   └──────────────────────────────────────────────────────┘  │
     │                                                              │
-    │   ✅ All three can coexist!                                  │
+    │   ✅ All five can coexist!                                   │
     │   ✅ Independent data directories                            │
     │   ✅ Independent preferences                                 │
     │   ✅ Easy testing and comparison                             │
@@ -189,19 +231,27 @@ VectorCam App - Product Flavor Structure
 
     Trigger: Push to main branch
            │
-           ├─► Build colombiaDebug   ──► Test ──► Deploy to Firebase
-           │
            ├─► Build ugandaDebug     ──► Test ──► Deploy to Firebase
            │
-           └─► Build nigeriaDebug    ──► Test ──► Deploy to Firebase
+           ├─► Build colombiaDebug   ──► Test ──► Deploy to Firebase
+           │
+           ├─► Build nigeriaDebug    ──► Test ──► Deploy to Firebase
+           │
+           ├─► Build kenyaDebug      ──► Test ──► Deploy to Firebase
+           │
+           └─► Build ghanaDebug      ──► Test ──► Deploy to Firebase
 
     Trigger: Release tag (v1.x.x)
            │
-           ├─► Build colombiaRelease ──► Sign ──► Upload to Play Store
-           │
            ├─► Build ugandaRelease   ──► Sign ──► Upload to Play Store
            │
-           └─► Build nigeriaRelease  ──► Sign ──► Upload to Play Store
+           ├─► Build colombiaRelease ──► Sign ──► Upload to Play Store
+           │
+           ├─► Build nigeriaRelease  ──► Sign ──► Upload to Play Store
+           │
+           ├─► Build kenyaRelease    ──► Sign ──► Upload to Play Store
+           │
+           └─► Build ghanaRelease    ──► Sign ──► Upload to Play Store
 
 
 📊 Version Code Strategy
@@ -209,17 +259,27 @@ VectorCam App - Product Flavor Structure
 
     1000-1999: Colombia Releases
     ┌────────────────────────────────────────────┐
-    │ 1001 → 1002 → 1003 → ... → 1006 → 1007... │
+    │ 1001 → 1002 → 1003 → ... → 1007 → 1008... │
     └────────────────────────────────────────────┘
 
     2000-2999: Uganda Releases
     ┌────────────────────────────────────────────┐
-    │ 2001 → 2002 → 2003 → ... → 2004 → 2005... │
+    │ 2001 → 2002 → 2003 → ... → 2007 → 2008... │
     └────────────────────────────────────────────┘
 
     3000-3999: Nigeria Releases
     ┌────────────────────────────────────────────┐
     │ 3001 → 3002 → 3003 → 3004 → 3005...        │
+    └────────────────────────────────────────────┘
+
+    4000-4999: Kenya Releases
+    ┌────────────────────────────────────────────┐
+    │ 4001 → 4002 → 4003 → 4004 → 4005...        │
+    └────────────────────────────────────────────┘
+
+    5000-5999: Ghana Releases
+    ┌────────────────────────────────────────────┐
+    │ 5001 → 5002 → 5003 → 5004 → 5005...        │
     └────────────────────────────────────────────┘
 
     Each region has 1000 possible version codes!
@@ -229,21 +289,28 @@ VectorCam App - Product Flavor Structure
 ────────────────────────────────────
 
     Build Commands:
-    ./gradlew assembleColombiaDebug     ← Build Colombia Debug APK
-    ./gradlew assembleUgandaRelease     ← Build Uganda Release APK
+    ./gradlew assembleUgandaDebug       ← Build Uganda Debug APK
+    ./gradlew assembleColombiaRelease   ← Build Colombia Release APK
+    ./gradlew assembleNigeriaDebug      ← Build Nigeria Debug APK
+    ./gradlew assembleKenyaRelease      ← Build Kenya Release APK
+    ./gradlew assembleGhanaDebug        ← Build Ghana Debug APK
     ./gradlew assembleDebug             ← Build ALL debug variants
     ./gradlew assemble                  ← Build EVERYTHING
 
     Install Commands:
-    ./gradlew installColombiaDebug      ← Install Colombia Debug to device
-    ./gradlew installUgandaRelease      ← Install Uganda Release to device
+    ./gradlew installUgandaDebug        ← Install Uganda Debug to device
+    ./gradlew installColombiaRelease    ← Install Colombia Release to device
+    ./gradlew installKenyaDebug         ← Install Kenya Debug to device
 
     Test Commands:
+    ./gradlew testUgandaDebugUnitTest   ← Test Uganda Debug
     ./gradlew testColombiaDebugUnitTest ← Test Colombia Debug
+    ./gradlew testKenyaDebugUnitTest    ← Test Kenya Debug
     ./gradlew testDebugUnitTest         ← Test ALL debug variants
 
     Bundle Commands (for Play Store):
-    ./gradlew bundleColombiaRelease     ← Create AAB for Play Store
+    ./gradlew bundleUgandaRelease       ← Create AAB for Play Store
+    ./gradlew bundleColombiaRelease     ← Create Colombia AAB
     ./gradlew bundleRelease             ← Create ALL release AABs
 
 
@@ -263,6 +330,7 @@ VectorCam App - Product Flavor Structure
 
 
 ────────────────────────────────────────────────────────────────────────
-Last Updated: February 6, 2026
+Last Updated: February 11, 2026
+Flavors: 5 (Uganda, Colombia, Nigeria, Kenya, Ghana)
 Documentation: See BUILD_FLAVORS.md and FLAVOR_MIGRATION_SUMMARY.md
 ────────────────────────────────────────────────────────────────────────

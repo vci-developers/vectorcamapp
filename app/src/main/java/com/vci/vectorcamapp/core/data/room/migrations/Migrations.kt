@@ -19,6 +19,9 @@ import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_16_17_A
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_17_18_ADD_COLLECTOR_LAST_TRAINED_ON_COLUMN
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_18_19_ADD_SESSION_HARDWARE_ID_COLUMN
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_19_20_MAKE_HARDWARE_ID_COLUMN_NULLABLE
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_20_21_CREATE_LOCATION_TYPE_TABLE
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_21_22_UPDATE_SITE_TABLE
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_22_23_MAKE_SITE_LOCATION_COLUMNS_NULLABLE
 
 val ALL_MIGRATIONS = arrayOf(
     MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE,
@@ -39,5 +42,8 @@ val ALL_MIGRATIONS = arrayOf(
     MIGRATION_16_17_ADD_SESSION_COLLECTOR_LAST_TRAINED_ON_COLUMN,
     MIGRATION_17_18_ADD_COLLECTOR_LAST_TRAINED_ON_COLUMN,
     MIGRATION_18_19_ADD_SESSION_HARDWARE_ID_COLUMN,
-    MIGRATION_19_20_MAKE_HARDWARE_ID_COLUMN_NULLABLE
+    MIGRATION_19_20_MAKE_HARDWARE_ID_COLUMN_NULLABLE,
+    MIGRATION_20_21_CREATE_LOCATION_TYPE_TABLE,
+    MIGRATION_21_22_UPDATE_SITE_TABLE,
+    MIGRATION_22_23_MAKE_SITE_LOCATION_COLUMNS_NULLABLE
 )

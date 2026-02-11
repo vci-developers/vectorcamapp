@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.core.di
 
 import com.vci.vectorcamapp.core.data.repository.CollectorRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.InferenceResultRepositoryImplementation
+import com.vci.vectorcamapp.core.data.repository.LocationTypeRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.ProgramRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SessionRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SiteRepositoryImplementation
@@ -11,6 +12,7 @@ import com.vci.vectorcamapp.core.data.repository.SurveillanceFormRepositoryImple
 import com.vci.vectorcamapp.core.data.repository.WorkManagerRepositoryImplementation
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
+import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
@@ -63,6 +65,12 @@ abstract class CoreRepositoryModule {
     abstract fun bindSiteRepository(
         siteRepositoryImplementation: SiteRepositoryImplementation
     ): SiteRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLocationTypeRepository(
+        locationTypeRepositoryImplementation: LocationTypeRepositoryImplementation
+    ): LocationTypeRepository
 
     @Binds
     @Singleton

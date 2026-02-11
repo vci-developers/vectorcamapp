@@ -38,6 +38,7 @@ tusJavaClient = "0.5.1"
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCoreVersion" }
 androidx-camera-extensions = { module = "androidx.camera:camera-extensions", version.ref = "cameraCoreVersion" }
+androidx-camera-compose = { module = "androidx.camera:camera-compose", version.ref = "cameraCoreVersion" }
 androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraCoreVersion" }
 androidx-camera-mlkit-vision = { module = "androidx.camera:camera-mlkit-vision", version.ref = "cameraCoreVersion" }
 androidx-camera-video = { module = "androidx.camera:camera-video", version.ref = "cameraCoreVersion" }

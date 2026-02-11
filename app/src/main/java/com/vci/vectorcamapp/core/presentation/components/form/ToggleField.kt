@@ -21,9 +21,7 @@ fun ToggleField(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = MaterialTheme.dimensions.paddingSmall)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             text = label,

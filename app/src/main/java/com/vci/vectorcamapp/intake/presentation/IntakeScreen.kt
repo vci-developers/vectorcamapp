@@ -348,7 +348,7 @@ fun IntakeScreen(
             ) {
                 DropdownField(
                     label = "District",
-                    options = state.allSitesInProgram.map { it.district }.distinct(),
+                    options = state.allSitesInProgram.mapNotNull { it.district }.distinct(),
                     selectedOption = state.selectedDistrict,
                     onOptionSelected = { onAction(IntakeAction.SelectDistrict(it)) },
                     error = state.intakeErrors.district,
@@ -363,8 +363,10 @@ fun IntakeScreen(
                 if (state.selectedDistrict.isNotBlank()) {
                     DropdownField(
                         label = "Village Name",
-                        options = state.allSitesInProgram.filter { it.district == state.selectedDistrict }
-                            .map { it.villageName }.distinct(),
+                        options = state.allSitesInProgram
+                            .filter { it.district == state.selectedDistrict }
+                            .mapNotNull { it.villageName }
+                            .distinct(),
                         selectedOption = state.selectedVillageName,
                         onOptionSelected = {
                             onAction(IntakeAction.SelectVillageName(it))
@@ -382,8 +384,10 @@ fun IntakeScreen(
                 if (state.selectedVillageName.isNotBlank()) {
                     DropdownField(
                         label = "House Number",
-                        options = state.allSitesInProgram.filter { it.district == state.selectedDistrict && it.villageName == state.selectedVillageName }
-                            .map { it.houseNumber }.distinct(),
+                        options = state.allSitesInProgram
+                            .filter { it.district == state.selectedDistrict && it.villageName == state.selectedVillageName }
+                            .mapNotNull { it.houseNumber }
+                            .distinct(),
                         selectedOption = state.selectedHouseNumber,
                         onOptionSelected = { onAction(IntakeAction.SelectHouseNumber(it)) },
                         error = state.intakeErrors.houseNumber,
