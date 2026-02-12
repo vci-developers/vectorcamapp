@@ -10,6 +10,5 @@ data class LandingState(
         country = ""
     ),
     val showResumeDialog: Boolean = false,
-    val incompleteSessionsCount: Int = 0,
-    val isRefreshingSites: Boolean = false
+    val incompleteSessionsCount: Int = 0
 )

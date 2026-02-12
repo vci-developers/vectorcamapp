@@ -5,5 +5,5 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 
 interface SiteDataSource {
-    suspend fun getSitesForProgram(programId: Int): Result<GetAllSitesResponseDto, NetworkError>
+    suspend fun getAllSitesForProgram(programId: Int): Result<GetAllSitesResponseDto, NetworkError>
 }

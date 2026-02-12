@@ -168,7 +168,7 @@ fun RegistrationScreen(
                             state.collector.name.isNotBlank() &&
                             state.collector.title.isNotBlank() &&
                             state.collector.lastTrainedOn != 0L &&
-                            !state.isLoadingSites,
+                            !state.isLoading,
                     testTag = RegistrationTestTags.CONFIRM_PROGRAM_BUTTON,
                     modifier = modifier
                 )

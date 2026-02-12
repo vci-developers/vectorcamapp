@@ -1,11 +1,10 @@
 package com.vci.vectorcamapp.core.data.dto.site
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class SiteDto(
-    @SerialName("siteId") val id: Int,
+    val siteId: Int = -1,
     val programId: Int = -1,
     val district: String? = null,
     val subCounty: String? = null,

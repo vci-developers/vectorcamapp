@@ -6,7 +6,7 @@ import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import kotlinx.coroutines.flow.Flow
 
 interface ProgramRepository {
-    suspend fun upsertAllPrograms(programs: List<Program>): Result<Unit, RoomDbError>
+    suspend fun upsertProgram(program: Program): Result<Unit, RoomDbError>
     fun observeAllPrograms(): Flow<List<Program>>
     suspend fun getProgramById(programId: Int): Program?
 }

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 interface ProgramDao {
 
     @Upsert
-    suspend fun upsertAllPrograms(programs: List<ProgramEntity>)
+    suspend fun upsertProgram(program: ProgramEntity)
 
     @Query("SELECT * FROM program")
     fun observeAllPrograms(): Flow<List<ProgramEntity>>

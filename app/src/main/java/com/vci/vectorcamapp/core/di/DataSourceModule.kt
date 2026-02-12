@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.core.di
 
 import com.vci.vectorcamapp.core.data.network.api.RemoteDeviceDataSource
+import com.vci.vectorcamapp.core.data.network.api.RemoteLocationTypeDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteProgramDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSessionDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSiteDataSource
@@ -8,6 +9,7 @@ import com.vci.vectorcamapp.core.data.network.api.RemoteSpecimenDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSpecimenImageDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSurveillanceFormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.DeviceDataSource
+import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SessionDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
@@ -65,4 +67,10 @@ abstract class DataSourceModule {
     abstract fun bindSiteDataSource(
         remoteSiteDataSource: RemoteSiteDataSource
     ): SiteDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindLocationTypeDataSource(
+        remoteLocationTypeDataSource: RemoteLocationTypeDataSource
+    ): LocationTypeDataSource
 }

@@ -15,10 +15,9 @@ class ProgramRepositoryImplementation @Inject constructor(
     private val programDao: ProgramDao
 ) : ProgramRepository {
 
-    override suspend fun upsertAllPrograms(programs: List<Program>): Result<Unit, RoomDbError> {
+    override suspend fun upsertProgram(program: Program): Result<Unit, RoomDbError> {
         return try {
-            val programEntities = programs.map { it.toEntity() }
-            programDao.upsertAllPrograms(programEntities)
+            programDao.upsertProgram(program.toEntity())
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(RoomDbError.UNKNOWN_ERROR)

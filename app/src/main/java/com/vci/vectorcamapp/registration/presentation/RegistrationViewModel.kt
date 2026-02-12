@@ -3,14 +3,17 @@ package com.vci.vectorcamapp.registration.presentation
 import android.os.Build
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.mappers.toDomain
-import com.vci.vectorcamapp.core.data.mappers.toEntity
-import com.vci.vectorcamapp.core.data.network.api.RemoteProgramDataSource
-import com.vci.vectorcamapp.core.data.network.api.RemoteSiteDataSource
+import com.vci.vectorcamapp.core.data.room.TransactionHelper
+import com.vci.vectorcamapp.core.data.util.sortByHierarchy
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
+import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
+import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
+import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
 import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
@@ -36,14 +39,17 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
+    private val transactionHelper: TransactionHelper,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
     private val collectorRepository: CollectorRepository,
     private val collectorValidationUseCases: CollectorValidationUseCases,
-    private val remoteProgramDataSource: RemoteProgramDataSource,
+    private val programDataSource: ProgramDataSource,
     private val programRepository: ProgramRepository,
-    private val remoteSiteDataSource: RemoteSiteDataSource,
+    private val siteDataSource: SiteDataSource,
     private val siteRepository: SiteRepository,
+    private val locationTypeDataSource: LocationTypeDataSource,
+    private val locationTypeRepository: LocationTypeRepository,
     connectivityObserver: ConnectivityObserver
 ) : CoreViewModel() {
 
@@ -152,8 +158,12 @@ class RegistrationViewModel @Inject constructor(
                     }
 
                     try {
-                        fetchAndSeedAllSitesForProgram(selectedProgram.id)
-                        
+                        _state.update { it.copy(isLoading = true) }
+                        transactionHelper.runAsTransaction {
+                            fetchAndSeedAllLocationTypesForProgram(selectedProgram.id)
+                            fetchAndSeedAllSitesForProgram(selectedProgram.id)
+                        }
+
                         val device = Device(
                             id = -1,
                             model = "${Build.MANUFACTURER} ${Build.MODEL}",
@@ -167,6 +177,8 @@ class RegistrationViewModel @Inject constructor(
                     } catch (e: Exception) {
                         emitError(RegistrationError.UNKNOWN_ERROR)
                         RegistrationSentryLogger.logDeviceRegistrationFailure(e, selectedProgram.id)
+                    } finally {
+                        _state.update { it.copy(isLoading = false) }
                     }
                 }
             }
@@ -182,10 +194,13 @@ class RegistrationViewModel @Inject constructor(
     private suspend fun fetchAndSeedAllPrograms() {
         _state.update { it.copy(isLoadingPrograms = true) }
         try {
-            when (val result = remoteProgramDataSource.getAllPrograms()) {
+            when (val result = programDataSource.getAllPrograms()) {
                 is Result.Success -> {
-                    val programs = result.data.programs.map { it.toDomain() }
-                    programRepository.upsertAllPrograms(programs)
+                    transactionHelper.runAsTransaction {
+                        result.data.programs.forEach { programDto ->
+                            programRepository.upsertProgram(programDto.toDomain())
+                        }
+                    }
                 }
 
                 is Result.Error -> {
@@ -197,28 +212,46 @@ class RegistrationViewModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchAndSeedAllSitesForProgram(programId: Int) {
-        _state.update { it.copy(isLoadingSites = true) }
-        try {
-            when (val result = remoteSiteDataSource.getSitesForProgram(programId)) {
-                is Result.Success -> {
-                    val entities = result.data.sites
-                        .map { it.toEntity() }
-                        .filter { it.programId == programId }
-
-                    siteRepository.upsertAllSites(entities)
-                }
-
-                is Result.Error -> {
-                    emitError(result.error)
-                    RegistrationSentryLogger.logDeviceRegistrationFailure(
-                        Exception("Site fetch failed: ${result.error}"),
-                        programId
-                    )
+    private suspend fun fetchAndSeedAllLocationTypesForProgram(programId: Int) {
+        when (val result = locationTypeDataSource.getAllLocationTypesForProgram(programId)) {
+            is Result.Success -> {
+                transactionHelper.runAsTransaction {
+                    result.data.locationTypes.forEach { locationTypeDto ->
+                        locationTypeRepository.upsertLocationType(
+                            locationTypeDto.toDomain(),
+                            programId
+                        )
+                    }
                 }
             }
-        } finally {
-            _state.update { it.copy(isLoadingSites = false) }
+
+            is Result.Error -> {
+                emitError(result.error)
+            }
+        }
+    }
+
+    private suspend fun fetchAndSeedAllSitesForProgram(programId: Int) {
+        when (val result = siteDataSource.getAllSitesForProgram(programId)) {
+            is Result.Success -> {
+                transactionHelper.runAsTransaction {
+                    result.data.sites.sortByHierarchy().forEach { siteDto ->
+                        val locationTypeId = siteDto.locationTypeId
+                        val parentId = siteDto.parentId
+
+                        siteRepository.upsertSite(
+                            siteDto.toDomain(),
+                            programId,
+                            locationTypeId,
+                            parentId
+                        )
+                    }
+                }
+            }
+
+            is Result.Error -> {
+                emitError(result.error)
+            }
         }
     }
 }

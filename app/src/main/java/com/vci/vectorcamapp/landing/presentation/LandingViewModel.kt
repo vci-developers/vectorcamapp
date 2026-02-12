@@ -1,15 +1,19 @@
 package com.vci.vectorcamapp.landing.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.vci.vectorcamapp.core.data.mappers.toEntity
-import com.vci.vectorcamapp.core.data.network.api.RemoteSiteDataSource
+import com.vci.vectorcamapp.core.data.mappers.toDomain
+import com.vci.vectorcamapp.core.data.room.TransactionHelper
+import com.vci.vectorcamapp.core.data.util.sortByHierarchy
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
+import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
+import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
-import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.landing.domain.util.LandingError
 import com.vci.vectorcamapp.landing.logging.LandingSentryLogger
@@ -29,11 +33,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LandingViewModel @Inject constructor(
+    private val transactionHelper: TransactionHelper,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
     private val programRepository: ProgramRepository,
-    private val remoteSiteDataSource: RemoteSiteDataSource,
+    private val siteDataSource: SiteDataSource,
     private val siteRepository: SiteRepository,
+    private val locationTypeDataSource: LocationTypeDataSource,
+    private val locationTypeRepository: LocationTypeRepository,
     sessionRepository: SessionRepository,
 ) : CoreViewModel() {
 
@@ -103,7 +110,7 @@ class LandingViewModel @Inject constructor(
                         return@launch
                     }
 
-                    refreshAllSitesForProgram(programId, updateRefreshingState = true)
+                    refreshAllSitesForProgram(programId)
                 }
             }
         }
@@ -134,7 +141,10 @@ class LandingViewModel @Inject constructor(
                 return@launch
             }
 
-            refreshAllSitesForProgram(programId, updateRefreshingState = false)
+            transactionHelper.runAsTransaction {
+                refreshAllLocationTypesForProgram(programId)
+                refreshAllSitesForProgram(programId)
+            }
 
             val currentSession = currentSessionCache.getSession()
             if (currentSession != null) {
@@ -149,29 +159,34 @@ class LandingViewModel @Inject constructor(
         }
     }
 
-    private suspend fun refreshAllSitesForProgram(
-        programId: Int,
-        updateRefreshingState: Boolean
+    private suspend fun refreshAllLocationTypesForProgram(
+        programId: Int
     ) {
-        if (updateRefreshingState) {
-            _state.update { it.copy(isRefreshingSites = true) }
-        }
-        try {
-            when (val result = remoteSiteDataSource.getSitesForProgram(programId)) {
-                is Result.Success -> {
-                    val entities = result.data.sites
-                        .map { it.toEntity() }
-                        .filter { it.programId == programId }
-
-                    siteRepository.upsertAllSites(entities)
-                }
-                is Result.Error -> {
-                    emitError(result.error)
+        locationTypeDataSource.getAllLocationTypesForProgram(programId).onSuccess { data ->
+            transactionHelper.runAsTransaction {
+                data.locationTypes.forEach { locationtypeDto ->
+                    locationTypeRepository.upsertLocationType(locationtypeDto.toDomain(), programId)
                 }
             }
-        } finally {
-            if (updateRefreshingState) {
-                _state.update { it.copy(isRefreshingSites = false) }
+        }
+    }
+
+    private suspend fun refreshAllSitesForProgram(
+        programId: Int
+    ) {
+        siteDataSource.getAllSitesForProgram(programId).onSuccess { data ->
+            transactionHelper.runAsTransaction {
+                data.sites.sortByHierarchy().forEach { siteDto ->
+                    val locationTypeId = siteDto.locationTypeId
+                    val parentId = siteDto.parentId
+
+                    siteRepository.upsertSite(
+                        siteDto.toDomain(),
+                        programId,
+                        locationTypeId,
+                        parentId
+                    )
+                }
             }
         }
     }
