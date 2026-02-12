@@ -1,19 +1,11 @@
 package com.vci.vectorcamapp.landing.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.vci.vectorcamapp.core.data.mappers.toDomain
-import com.vci.vectorcamapp.core.data.room.TransactionHelper
-import com.vci.vectorcamapp.core.data.util.sortByHierarchy
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
-import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
-import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
-import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
-import com.vci.vectorcamapp.core.domain.repository.SiteRepository
-import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.landing.domain.util.LandingError
 import com.vci.vectorcamapp.landing.logging.LandingSentryLogger
@@ -33,14 +25,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LandingViewModel @Inject constructor(
-    private val transactionHelper: TransactionHelper,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
     private val programRepository: ProgramRepository,
-    private val siteDataSource: SiteDataSource,
-    private val siteRepository: SiteRepository,
-    private val locationTypeDataSource: LocationTypeDataSource,
-    private val locationTypeRepository: LocationTypeRepository,
     sessionRepository: SessionRepository,
 ) : CoreViewModel() {
 
@@ -100,18 +87,6 @@ class LandingViewModel @Inject constructor(
                     currentSessionCache.clearSession()
                     _state.update { it.copy(showResumeDialog = false) }
                 }
-
-                LandingAction.RefreshSites -> {
-                    val programId = deviceCache.getProgramId()
-                    if (programId == null) {
-                        emitError(LandingError.PROGRAM_NOT_FOUND)
-                        _events.send(LandingEvent.NavigateBackToRegistrationScreen)
-                        LandingSentryLogger.logProgramIdNotFound(Exception(LandingError.PROGRAM_NOT_FOUND.name))
-                        return@launch
-                    }
-
-                    refreshAllSitesForProgram(programId)
-                }
             }
         }
     }
@@ -141,11 +116,6 @@ class LandingViewModel @Inject constructor(
                 return@launch
             }
 
-            transactionHelper.runAsTransaction {
-                refreshAllLocationTypesForProgram(programId)
-                refreshAllSitesForProgram(programId)
-            }
-
             val currentSession = currentSessionCache.getSession()
             if (currentSession != null) {
                 _state.update { it.copy(showResumeDialog = true) }
@@ -155,38 +125,6 @@ class LandingViewModel @Inject constructor(
                 it.copy(
                     enrolledProgram = program, isLoading = false
                 )
-            }
-        }
-    }
-
-    private suspend fun refreshAllLocationTypesForProgram(
-        programId: Int
-    ) {
-        locationTypeDataSource.getAllLocationTypesForProgram(programId).onSuccess { data ->
-            transactionHelper.runAsTransaction {
-                data.locationTypes.forEach { locationtypeDto ->
-                    locationTypeRepository.upsertLocationType(locationtypeDto.toDomain(), programId)
-                }
-            }
-        }
-    }
-
-    private suspend fun refreshAllSitesForProgram(
-        programId: Int
-    ) {
-        siteDataSource.getAllSitesForProgram(programId).onSuccess { data ->
-            transactionHelper.runAsTransaction {
-                data.sites.sortByHierarchy().forEach { siteDto ->
-                    val locationTypeId = siteDto.locationTypeId
-                    val parentId = siteDto.parentId
-
-                    siteRepository.upsertSite(
-                        siteDto.toDomain(),
-                        programId,
-                        locationTypeId,
-                        parentId
-                    )
-                }
             }
         }
     }

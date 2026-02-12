@@ -235,7 +235,7 @@ class RegistrationViewModel @Inject constructor(
         when (val result = siteDataSource.getAllSitesForProgram(programId)) {
             is Result.Success -> {
                 transactionHelper.runAsTransaction {
-                    result.data.sites.sortByHierarchy().forEach { siteDto ->
+                    result.data.sortByHierarchy().forEach { siteDto ->
                         val locationTypeId = siteDto.locationTypeId
                         val parentId = siteDto.parentId
 
