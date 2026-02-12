@@ -2,6 +2,8 @@ package com.vci.vectorcamapp.registration.presentation
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.vci.vectorcamapp.core.data.dto.program.GetAllProgramsResponseDto
+import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
@@ -75,6 +77,13 @@ class RegistrationViewModelTest {
         sessionCache = mockk(relaxed = true)
         programRepository = mockk()
         programDataSource = mockk()
+        coEvery { programDataSource.getAllPrograms() } returns Result.Success(
+            GetAllProgramsResponseDto(
+                programs = testPrograms.map {
+                    ProgramDto(programId = it.id, name = it.name, country = it.country)
+                }
+            )
+        )
         siteDataSource = mockk()
         siteRepository = mockk()
         locationTypeDataSource = mockk()
