@@ -37,10 +37,9 @@ fun Site.toEntity(programId: Int, locationTypeId: Int?, parentId: Int?) : SiteEn
     )
 }
 
-fun SiteDto.toEntity(): SiteEntity {
-    return SiteEntity(
-        id = this.id,
-        programId = this.programId,
+fun SiteDto.toDomain(): Site {
+    return Site(
+        id = this.siteId,
         district = this.district,
         subCounty = this.subCounty,
         parish = this.parish,
@@ -48,8 +47,6 @@ fun SiteDto.toEntity(): SiteEntity {
         houseNumber = this.houseNumber,
         healthCenter = this.healthCenter,
         isActive = this.isActive,
-        locationTypeId = this.locationTypeId,
-        parentId = this.parentId,
         name = this.name,
         locationHierarchy = this.locationHierarchy
     )

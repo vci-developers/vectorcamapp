@@ -8,4 +8,5 @@ sealed interface RegistrationAction {
     data class EnterCollectorTitle(val text: String) : RegistrationAction
     data class EnterCollectorLastTrainedOn(val lastTrainedOn: Long) : RegistrationAction
     data object ConfirmRegistration : RegistrationAction
+    data object RefreshPrograms : RegistrationAction
 }
