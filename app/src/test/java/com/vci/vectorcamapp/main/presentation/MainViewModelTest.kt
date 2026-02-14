@@ -3,7 +3,7 @@ package com.vci.vectorcamapp.main.presentation
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.main.domain.util.MainError
 import com.vci.vectorcamapp.main.logging.MainSentryLogger
@@ -30,6 +30,7 @@ class MainViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var deviceCache: DeviceCache
+    private lateinit var errorMessageEmitter: ErrorMessageEmitter
     private lateinit var viewModel: MainViewModel
 
     private lateinit var programIdFlow: MutableStateFlow<Int>
@@ -37,18 +38,17 @@ class MainViewModelTest {
     @Before
     fun setUp() {
         deviceCache = mockk(relaxed = true)
+        errorMessageEmitter = mockk(relaxed = true)
+        coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
         programIdFlow = MutableStateFlow(-1)
         every { deviceCache.observeProgramId() } returns programIdFlow
 
-        mockkObject(ErrorMessageBus)
-        coEvery { ErrorMessageBus.emit(any(), any()) } returns Unit
         mockkObject(MainSentryLogger)
         coEvery { MainSentryLogger.logDeviceFetchFailure(any()) } returns Unit
     }
 
     @After
     fun tearDown() {
-        unmockkObject(ErrorMessageBus)
         unmockkObject(MainSentryLogger)
     }
 
@@ -58,7 +58,8 @@ class MainViewModelTest {
 
     private fun initViewModel() {
         viewModel = MainViewModel(
-            deviceCache = deviceCache
+            deviceCache = deviceCache,
+            errorMessageEmitter = errorMessageEmitter
         )
     }
 
@@ -106,7 +107,7 @@ class MainViewModelTest {
             val errorState = awaitItem()
             assertThat(errorState.startDestination).isEqualTo(Destination.Registration)
 
-            coVerify(exactly = 1) { ErrorMessageBus.emit(MainError.DEVICE_FETCH_FAILED, any()) }
+            coVerify(exactly = 1) { errorMessageEmitter.emit(MainError.DEVICE_FETCH_FAILED, any()) }
             coVerify(exactly = 1) { MainSentryLogger.logDeviceFetchFailure(any()) }
 
             cancelAndIgnoreRemainingEvents()

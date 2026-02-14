@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
@@ -24,8 +25,9 @@ import javax.inject.Inject
 class IncompleteSessionViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val currentSessionCache: CurrentSessionCache,
-    private val cameraRepository: CameraRepository
-) : CoreViewModel() {
+    private val cameraRepository: CameraRepository,
+    errorMessageEmitter: ErrorMessageEmitter,
+) : CoreViewModel(errorMessageEmitter) {
 
     private val _incompleteSessionsAndSites = sessionRepository.observeIncompleteSessionsAndSites()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())

@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.main.presentation
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.main.domain.util.MainError
 import com.vci.vectorcamapp.main.logging.MainSentryLogger
 import com.vci.vectorcamapp.navigation.Destination
@@ -21,8 +22,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val deviceCache: DeviceCache
-) : CoreViewModel() {
+    private val deviceCache: DeviceCache,
+    errorMessageEmitter: ErrorMessageEmitter,
+) : CoreViewModel(errorMessageEmitter) {
 
     private val _state = MutableStateFlow(MainState())
     val state = _state.onStart {

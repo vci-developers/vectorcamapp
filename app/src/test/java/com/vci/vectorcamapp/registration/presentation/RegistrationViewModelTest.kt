@@ -19,7 +19,7 @@ import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import io.mockk.coEvery
@@ -27,8 +27,6 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -58,6 +56,7 @@ class RegistrationViewModelTest {
 
     private lateinit var collectorRepository: CollectorRepository
     private lateinit var collectorValidationUseCases: CollectorValidationUseCases
+    private lateinit var errorMessageEmitter: ErrorMessageEmitter
 
     private lateinit var viewModel: RegistrationViewModel
     private lateinit var programsFlow: MutableStateFlow<List<Program>>
@@ -69,9 +68,9 @@ class RegistrationViewModelTest {
 
     @Before
     fun setUp() {
-        ErrorMessageBus.clearLastMessage()
-        mockkObject(ErrorMessageBus)
-        coEvery { ErrorMessageBus.emit(any(), any()) } returns Unit
+        errorMessageEmitter = mockk(relaxed = true)
+        coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
+        every { errorMessageEmitter.clearLastMessage() } returns Unit
 
         deviceCache = mockk(relaxed = true)
         sessionCache = mockk(relaxed = true)
@@ -115,14 +114,13 @@ class RegistrationViewModelTest {
             siteRepository = siteRepository,
             locationTypeDataSource = locationTypeDataSource,
             locationTypeRepository = locationTypeRepository,
-            connectivityObserver = connectivityObserver
+            connectivityObserver = connectivityObserver,
+            errorMessageEmitter = errorMessageEmitter
         )
     }
 
     @After
-    fun tearDown() {
-        unmockkObject(ErrorMessageBus)
-    }
+    fun tearDown() {}
 
     // ========================================
     // Test Harness / Helpers
@@ -247,7 +245,7 @@ class RegistrationViewModelTest {
 
         coVerify(exactly = 0) { deviceCache.saveDevice(any(), any()) }
         coVerify(exactly = 0) { sessionCache.clearSession() }
-        coVerify(exactly = 1) { ErrorMessageBus.emit(RegistrationError.PROGRAM_NOT_FOUND, any()) }
+        coVerify(exactly = 1) { errorMessageEmitter.emit(RegistrationError.PROGRAM_NOT_FOUND, any()) }
     }
 
     @Test
@@ -257,7 +255,7 @@ class RegistrationViewModelTest {
             advanceUntilIdle()
         }
 
-        coVerify(exactly = 3) { ErrorMessageBus.emit(RegistrationError.PROGRAM_NOT_FOUND, any()) }
+        coVerify(exactly = 3) { errorMessageEmitter.emit(RegistrationError.PROGRAM_NOT_FOUND, any()) }
     }
 
     @Test
@@ -354,7 +352,7 @@ class RegistrationViewModelTest {
         coVerify(exactly = 1) { deviceCache.saveDevice(any(), selectedProgram.id) }
         coVerify(exactly = 0) { sessionCache.clearSession() }
         coVerify(exactly = 0) { collectorRepository.upsertCollector(any()) }
-        coVerify(exactly = 1) { ErrorMessageBus.emit(RegistrationError.UNKNOWN_ERROR, any()) }
+        coVerify(exactly = 1) { errorMessageEmitter.emit(RegistrationError.UNKNOWN_ERROR, any()) }
     }
 
     @Test
@@ -373,7 +371,7 @@ class RegistrationViewModelTest {
         coVerify(exactly = 1) { deviceCache.saveDevice(any(), selectedProgram.id) }
         coVerify(exactly = 1) { sessionCache.clearSession() }
         coVerify(exactly = 0) { collectorRepository.upsertCollector(any()) }
-        coVerify(exactly = 1) { ErrorMessageBus.emit(RegistrationError.UNKNOWN_ERROR, any()) }
+        coVerify(exactly = 1) { errorMessageEmitter.emit(RegistrationError.UNKNOWN_ERROR, any()) }
     }
 
     @Test
@@ -388,7 +386,7 @@ class RegistrationViewModelTest {
             expectNoEvents()
         }
 
-        coVerify { ErrorMessageBus.emit(RegistrationError.UNKNOWN_ERROR, any()) }
+        coVerify { errorMessageEmitter.emit(RegistrationError.UNKNOWN_ERROR, any()) }
     }
 
     // ========================================
@@ -412,13 +410,14 @@ class RegistrationViewModelTest {
             siteRepository = siteRepository,
             locationTypeDataSource = locationTypeDataSource,
             locationTypeRepository = locationTypeRepository,
-            connectivityObserver = connectivityObserver
+            connectivityObserver = connectivityObserver,
+            errorMessageEmitter = errorMessageEmitter,
         )
 
         emptyRepoViewModel.onAction(RegistrationAction.ConfirmRegistration)
         advanceUntilIdle()
 
-        coVerify { ErrorMessageBus.emit(RegistrationError.PROGRAM_NOT_FOUND, any()) }
+        coVerify { errorMessageEmitter.emit(RegistrationError.PROGRAM_NOT_FOUND, any()) }
 
         emptyRepoViewModel.events.test {
             expectNoEvents()

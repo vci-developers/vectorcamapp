@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp
 
 import android.Manifest
+import androidx.compose.runtime.CompositionLocalProvider
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
@@ -24,12 +25,18 @@ import com.vci.vectorcamapp.main.presentation.MainEvent
 import com.vci.vectorcamapp.main.presentation.MainViewModel
 import com.vci.vectorcamapp.main.presentation.SplashScreen
 import com.vci.vectorcamapp.main.presentation.PermissionScreen
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import dagger.hilt.android.AndroidEntryPoint
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var errorMessageEmitter: ErrorMessageEmitter
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -51,7 +58,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            VectorcamappTheme {
+            CompositionLocalProvider(LocalErrorMessageEmitter provides errorMessageEmitter) {
+                VectorcamappTheme {
                 val state by viewModel.state.collectAsState()
 
                 val isReady = state.permissionChecked && state.gpsChecked
@@ -84,6 +92,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
+                }
                 }
             }
         }
