@@ -6,6 +6,7 @@ import androidx.work.Configuration
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
 import com.vci.vectorcamapp.main.logging.MainSentryLogger
+import io.sentry.Sentry
 import dagger.hilt.android.HiltAndroidApp
 import org.opencv.android.OpenCVLoader
 import javax.inject.Inject
@@ -23,6 +24,11 @@ class VectorCamApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+
+        Sentry.configureScope { scope ->
+            scope.setTag("region", BuildConfig.REGION)
+            scope.setTag("region_code", BuildConfig.REGION_CODE)
+        }
 
         try {
             OpenCVLoader.initLocal()
