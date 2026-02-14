@@ -17,6 +17,9 @@ class VectorCamApp : Application(), Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    @Inject
+    lateinit var mainSentryLogger: MainSentryLogger
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
@@ -33,7 +36,7 @@ class VectorCamApp : Application(), Configuration.Provider {
         try {
             OpenCVLoader.initLocal()
         } catch (e: Exception) {
-            MainSentryLogger.logOpenCvInitFailure(e)
+            mainSentryLogger.logOpenCvInitFailure(e)
         }
 
         try {
@@ -54,7 +57,7 @@ class VectorCamApp : Application(), Configuration.Provider {
 
             PostHogAndroid.setup(this, postHogConfig)
         } catch (e: Exception) {
-            MainSentryLogger.logPostHogInitFailure(e)
+            mainSentryLogger.logPostHogInitFailure(e)
         }
     }
 }

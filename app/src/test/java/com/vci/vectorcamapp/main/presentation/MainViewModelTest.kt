@@ -11,14 +11,12 @@ import com.vci.vectorcamapp.navigation.Destination
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.verify
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -30,6 +28,7 @@ class MainViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var deviceCache: DeviceCache
+    private lateinit var mainSentryLogger: MainSentryLogger
     private lateinit var errorMessageEmitter: ErrorMessageEmitter
     private lateinit var viewModel: MainViewModel
 
@@ -38,18 +37,12 @@ class MainViewModelTest {
     @Before
     fun setUp() {
         deviceCache = mockk(relaxed = true)
+        mainSentryLogger = mockk(relaxed = true)
+        every { mainSentryLogger.logDeviceFetchFailure(any()) } returns Unit
         errorMessageEmitter = mockk(relaxed = true)
         coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
         programIdFlow = MutableStateFlow(-1)
         every { deviceCache.observeProgramId() } returns programIdFlow
-
-        mockkObject(MainSentryLogger)
-        coEvery { MainSentryLogger.logDeviceFetchFailure(any()) } returns Unit
-    }
-
-    @After
-    fun tearDown() {
-        unmockkObject(MainSentryLogger)
     }
 
     // ========================================
@@ -59,6 +52,7 @@ class MainViewModelTest {
     private fun initViewModel() {
         viewModel = MainViewModel(
             deviceCache = deviceCache,
+            mainSentryLogger = mainSentryLogger,
             errorMessageEmitter = errorMessageEmitter
         )
     }
@@ -108,7 +102,7 @@ class MainViewModelTest {
             assertThat(errorState.startDestination).isEqualTo(Destination.Registration)
 
             coVerify(exactly = 1) { errorMessageEmitter.emit(MainError.DEVICE_FETCH_FAILED, any()) }
-            coVerify(exactly = 1) { MainSentryLogger.logDeviceFetchFailure(any()) }
+            verify(exactly = 1) { mainSentryLogger.logDeviceFetchFailure(any()) }
 
             cancelAndIgnoreRemainingEvents()
         }
