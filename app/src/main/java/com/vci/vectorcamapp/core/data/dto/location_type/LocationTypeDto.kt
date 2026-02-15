@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class LocationTypeDto(
     val id: Int = -1,
     val programId: Int = -1,
-    val name: String = ""
+    val name: String = "",
+    val level: Int = -1,
 )
