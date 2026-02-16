@@ -52,6 +52,9 @@
     <!-- Form validation error: Blank household number -->
     <string name="form_validation_error_blank_house_number">House number is required.</string>
 
+    <!-- Form validation error: Blank location type selection -->
+    <string name="form_validation_error_blank_location_type_selection">A site selection for this location type is required.</string>
+
     <!-- Form validation error: Blank LLIN type -->
     <string name="form_validation_error_blank_llin_type">This field is required when LLINs are available.</string>
 
