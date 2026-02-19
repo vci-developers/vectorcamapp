@@ -1,12 +1,18 @@
 package com.vci.vectorcamapp.core.di
 
 import com.vci.vectorcamapp.core.data.network.api.RemoteDeviceDataSource
+import com.vci.vectorcamapp.core.data.network.api.RemoteLocationTypeDataSource
+import com.vci.vectorcamapp.core.data.network.api.RemoteProgramDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSessionDataSource
+import com.vci.vectorcamapp.core.data.network.api.RemoteSiteDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSpecimenDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSpecimenImageDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSurveillanceFormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.DeviceDataSource
+import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
+import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SessionDataSource
+import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenImageDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SurveillanceFormDataSource
@@ -25,6 +31,12 @@ abstract class DataSourceModule {
     abstract fun bindDeviceDataSource(
         remoteDeviceDataSource: RemoteDeviceDataSource
     ): DeviceDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindProgramDataSource(
+        remoteProgramDataSource: RemoteProgramDataSource
+    ): ProgramDataSource
 
     @Binds
     @Singleton
@@ -49,4 +61,16 @@ abstract class DataSourceModule {
     abstract fun bindSpecimenImageDataSource(
         remoteSpecimenImageDataSource: RemoteSpecimenImageDataSource
     ): SpecimenImageDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindSiteDataSource(
+        remoteSiteDataSource: RemoteSiteDataSource
+    ): SiteDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindLocationTypeDataSource(
+        remoteLocationTypeDataSource: RemoteLocationTypeDataSource
+    ): LocationTypeDataSource
 }

@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class SiteDto(
-    val id: Int = -1,
+    val siteId: Int = -1,
     val programId: Int = -1,
     val district: String? = null,
     val subCounty: String? = null,

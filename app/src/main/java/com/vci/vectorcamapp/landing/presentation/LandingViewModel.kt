@@ -109,7 +109,10 @@ class LandingViewModel @Inject constructor(
                 emitError(LandingError.PROGRAM_NOT_FOUND)
                 _events.send(LandingEvent.NavigateBackToRegistrationScreen)
                 _state.update { it.copy(isLoading = false) }
-                LandingSentryLogger.logProgramNotFound(Exception(LandingError.PROGRAM_NOT_FOUND.name), programId)
+                LandingSentryLogger.logProgramNotFound(
+                    Exception(LandingError.PROGRAM_NOT_FOUND.name),
+                    programId
+                )
                 return@launch
             }
 

@@ -2,13 +2,22 @@ package com.vci.vectorcamapp.registration.presentation
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.vci.vectorcamapp.core.data.dto.program.GetAllProgramsResponseDto
+import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
+import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
+import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
+import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
+import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
+import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.repository.SiteRepository
+import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
@@ -22,6 +31,7 @@ import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -38,6 +48,13 @@ class RegistrationViewModelTest {
     private lateinit var deviceCache: DeviceCache
     private lateinit var sessionCache: CurrentSessionCache
     private lateinit var programRepository: ProgramRepository
+    private lateinit var programDataSource: ProgramDataSource
+    private lateinit var siteDataSource: SiteDataSource
+    private lateinit var siteRepository: SiteRepository
+    private lateinit var locationTypeDataSource: LocationTypeDataSource
+    private lateinit var locationTypeRepository: LocationTypeRepository
+    private lateinit var transactionHelper: TransactionHelper
+    private lateinit var connectivityObserver: ConnectivityObserver
 
     private lateinit var collectorRepository: CollectorRepository
     private lateinit var collectorValidationUseCases: CollectorValidationUseCases
@@ -59,6 +76,21 @@ class RegistrationViewModelTest {
         deviceCache = mockk(relaxed = true)
         sessionCache = mockk(relaxed = true)
         programRepository = mockk()
+        programDataSource = mockk()
+        coEvery { programDataSource.getAllPrograms() } returns Result.Success(
+            GetAllProgramsResponseDto(
+                programs = testPrograms.map {
+                    ProgramDto(programId = it.id, name = it.name, country = it.country)
+                }
+            )
+        )
+        siteDataSource = mockk()
+        siteRepository = mockk()
+        locationTypeDataSource = mockk()
+        locationTypeRepository = mockk()
+        transactionHelper = mockk(relaxed = true)
+        connectivityObserver = mockk()
+        every { connectivityObserver.isConnected } returns flowOf(true)
 
         collectorRepository = mockk(relaxed = true)
         coEvery { collectorRepository.upsertCollector(any()) } returns Result.Success(Unit)
@@ -72,11 +104,18 @@ class RegistrationViewModelTest {
         every { programRepository.observeAllPrograms() } returns programsFlow
 
         viewModel = RegistrationViewModel(
+            transactionHelper = transactionHelper,
             deviceCache = deviceCache,
             currentSessionCache = sessionCache,
             collectorRepository = collectorRepository,
             collectorValidationUseCases = collectorValidationUseCases,
-            programRepository = programRepository
+            programDataSource = programDataSource,
+            programRepository = programRepository,
+            siteDataSource = siteDataSource,
+            siteRepository = siteRepository,
+            locationTypeDataSource = locationTypeDataSource,
+            locationTypeRepository = locationTypeRepository,
+            connectivityObserver = connectivityObserver
         )
     }
 
@@ -362,11 +401,18 @@ class RegistrationViewModelTest {
         every { programRepository.observeAllPrograms() } returns emptyFlow
 
         val emptyRepoViewModel = RegistrationViewModel(
+            transactionHelper = transactionHelper,
             deviceCache = deviceCache,
             currentSessionCache = sessionCache,
             collectorRepository = collectorRepository,
             collectorValidationUseCases = collectorValidationUseCases,
-            programRepository = programRepository
+            programDataSource = programDataSource,
+            programRepository = programRepository,
+            siteDataSource = siteDataSource,
+            siteRepository = siteRepository,
+            locationTypeDataSource = locationTypeDataSource,
+            locationTypeRepository = locationTypeRepository,
+            connectivityObserver = connectivityObserver
         )
 
         emptyRepoViewModel.onAction(RegistrationAction.ConfirmRegistration)

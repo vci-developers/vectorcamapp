@@ -1,12 +1,7 @@
 package com.vci.vectorcamapp.core.di
 
 import android.content.Context
-import android.util.Log
 import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteDatabase
-import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
-import com.vci.vectorcamapp.core.data.dto.site.SiteDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.room.VectorCamDatabase
 import com.vci.vectorcamapp.core.data.room.dao.CollectorDao
@@ -29,8 +24,6 @@ import timber.log.Timber
 import javax.inject.Singleton
 
 private const val DB_NAME = "vectorcam.db"
-private const val PROGRAM_DATA_FILENAME = "programs.json"
-private const val SITE_DATA_FILENAME = "sites.json"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -45,119 +38,7 @@ object RoomDatabaseModule {
             context,
             VectorCamDatabase::class.java,
             DB_NAME,
-        ).addCallback(object : RoomDatabase.Callback() {
-            override fun onOpen(db: SupportSQLiteDatabase) {
-                super.onOpen(db)
-
-                try {
-                    val programsJson = context.assets.open(PROGRAM_DATA_FILENAME).bufferedReader()
-                        .use { it.readText() }
-                    val sitesJson = context.assets.open(SITE_DATA_FILENAME).bufferedReader()
-                        .use { it.readText() }
-
-                    val programs = Json.decodeFromString<List<ProgramDto>>(programsJson)
-                    val sites = Json.decodeFromString<List<SiteDto>>(sitesJson)
-
-                    db.beginTransaction()
-                    try {
-                        programs.forEach { program ->
-                            db.execSQL(
-                                """
-                                    INSERT OR IGNORE INTO `program` (`id`, `name`, `country`) VALUES (?, ?, ?)
-                                """.trimIndent(), arrayOf(program.id, program.name, program.country)
-                            )
-
-                            db.execSQL(
-                                """
-                                    UPDATE `program`
-                                        SET `name` = ?, `country` = ?
-                                    WHERE `id` = ?
-                                        AND (`name` != ? OR `country` != ?)
-                                """.trimIndent(), arrayOf(
-                                    program.name,
-                                    program.country,
-                                    program.id,
-                                    program.name,
-                                    program.country
-                                )
-                            )
-                        }
-
-                        sites.forEach { site ->
-                            val isActive = if (site.isActive) 1 else 0
-                            db.execSQL(
-                                """
-                                    INSERT OR IGNORE INTO `site`
-                                        (`id`, `programId`, `district`, `subCounty`, `parish`, `villageName`, `houseNumber`, `healthCenter`, `isActive`)
-                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                """.trimIndent(), arrayOf(
-                                    site.id,
-                                    site.programId,
-                                    site.district,
-                                    site.subCounty,
-                                    site.parish,
-                                    site.villageName,
-                                    site.houseNumber,
-                                    site.healthCenter,
-                                    isActive
-                                )
-                            )
-
-                            db.execSQL(
-                                """
-                                    UPDATE `site`
-                                        SET `programId` = ?,
-                                            `district` = ?,
-                                            `subCounty` = ?,
-                                            `parish` = ?,
-                                            `villageName` = ?,
-                                            `houseNumber` = ?,
-                                            `healthCenter` = ?,
-                                            `isActive` = ?
-                                    WHERE `id` = ?
-                                        AND (
-                                            `programId` != ? OR 
-                                            `district` != ? OR 
-                                            `subCounty` != ? OR 
-                                            `parish` != ? OR 
-                                            `villageName` != ? OR
-                                            `houseNumber` != ? OR
-                                            `healthCenter` != ? OR
-                                            `isActive` != ?
-                                        )
-                                """.trimIndent(), arrayOf(
-                                    site.programId,
-                                    site.district,
-                                    site.subCounty,
-                                    site.parish,
-                                    site.villageName,
-                                    site.houseNumber,
-                                    site.healthCenter,
-                                    isActive,
-                                    site.id,
-                                    site.programId,
-                                    site.district,
-                                    site.subCounty,
-                                    site.parish,
-                                    site.villageName,
-                                    site.houseNumber,
-                                    site.healthCenter,
-                                    isActive
-                                )
-                            )
-                        }
-
-                        db.setTransactionSuccessful()
-                        Timber.tag("RoomCallback")
-                            .i("Seeded ${programs.size} programs, ${sites.size} sites")
-                    } finally {
-                        db.endTransaction()
-                    }
-                } catch (e: Exception) {
-                    Timber.tag("RoomCallback").e(e, "Error seeding database")
-                }
-            }
-        }).addMigrations(*ALL_MIGRATIONS).build()
+        ).addMigrations(*ALL_MIGRATIONS).build()
     }
 
     @Provides
