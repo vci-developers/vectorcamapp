@@ -1,6 +1,9 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.view.Surface
+import android.hardware.camera2.CaptureRequest
+import androidx.camera.camera2.interop.Camera2Interop
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -125,7 +128,7 @@ fun ImagingScreen(
                 }
             }
 
-        val imageCapture = ImageCapture.Builder()
+        val imageCaptureBuilder = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
             .setTargetRotation(rotation)
             .setResolutionSelector(
@@ -134,7 +137,11 @@ fun ImagingScreen(
                     .setAllowedResolutionMode(ResolutionSelector.PREFER_HIGHER_RESOLUTION_OVER_CAPTURE_RATE)
                     .build()
             )
-            .build()
+        @OptIn(ExperimentalCamera2Interop::class)
+        Camera2Interop.Extender(imageCaptureBuilder)
+            .setCaptureRequestOption(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_OFF)
+            .setCaptureRequestOption(CaptureRequest.EDGE_MODE, CaptureRequest.EDGE_MODE_OFF)
+        val imageCapture = imageCaptureBuilder.build()
 
         val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
