@@ -12,12 +12,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.logging.CrashyContext
+import com.vci.vectorcamapp.core.presentation.LocalCrashyContext
 import com.vci.vectorcamapp.core.presentation.components.button.ClickTracking
 import com.vci.vectorcamapp.core.presentation.components.button.TrackedIconButton
 import com.vci.vectorcamapp.core.presentation.components.button.TrackedTextButton
@@ -35,6 +37,24 @@ fun LandingScreen(
     onAction: (LandingAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val crashyContext = CrashyContext.fromIds(
+        screen = "LandingScreen",
+        programId = state.enrolledProgram.id.takeIf { it != -1 }?.toString(),
+        sessionId = state.currentSessionId,
+        siteId = state.currentSiteId
+    )
+    CompositionLocalProvider(LocalCrashyContext provides crashyContext) {
+        LandingScreenContent(state = state, onAction = onAction, modifier = modifier)
+    }
+}
+
+@Composable
+private fun LandingScreenContent(
+    state: LandingState,
+    onAction: (LandingAction) -> Unit,
+    modifier: Modifier
+) {
+    val screenContext = LocalCrashyContext.current
     ScreenHeader(
         title = "Welcome to VectorCam!",
         subtitle = "Program: ${state.enrolledProgram.name}",
@@ -42,11 +62,8 @@ fun LandingScreen(
         trailingIcon = {
             TrackedIconButton(
                 message = "Landing: Open settings clicked",
-                crashyContext = CrashyContext(
-                    screen = "LandingScreen",
-                    feature = "Header",
-                    action = "OpenSettings"
-                ),
+                feature = "Header",
+                action = "OpenSettings",
                 onClick = { onAction(LandingAction.OpenSettings) }
             ) {
                 Icon(
@@ -72,16 +89,14 @@ fun LandingScreen(
                         description = "Begin a new household visit and capture mosquito images.",
                         icon = painterResource(R.drawable.ic_specimen),
                         onClick = {
-                            ClickTracking.trackAndInvoke(
-                                context = CrashyContext(
-                                    screen = "LandingScreen",
-                                    feature = "Imaging",
-                                    action = "StartNewSurveillanceSession"
-                                ),
-                                message = "Landing: Start new surveillance session",
-                                category = "ui.click",
-                                onClick = { onAction(LandingAction.StartNewSurveillanceSession) }
-                            )
+                            screenContext?.let { ctx ->
+                                ClickTracking.trackAndInvoke(
+                                    context = ctx.copy(feature = "Imaging", action = "StartNewSurveillanceSession"),
+                                    message = "Landing: Start new surveillance session",
+                                    category = "ui.click",
+                                    onClick = { onAction(LandingAction.StartNewSurveillanceSession) }
+                                )
+                            } ?: onAction(LandingAction.StartNewSurveillanceSession)
                         },
                         testTag = LandingTestTags.TILE_NEW_SURVEILLANCE
                     )
@@ -96,16 +111,14 @@ fun LandingScreen(
                         description = "Resume and complete any unfinished sessions.",
                         icon = painterResource(R.drawable.ic_minus_circle),
                         onClick = {
-                            ClickTracking.trackAndInvoke(
-                                context = CrashyContext(
-                                    screen = "LandingScreen",
-                                    feature = "Library",
-                                    action = "ViewIncompleteSessions"
-                                ),
-                                message = "Landing: View incomplete sessions",
-                                category = "ui.click",
-                                onClick = { onAction(LandingAction.ViewIncompleteSessions) }
-                            )
+                            screenContext?.let { ctx ->
+                                ClickTracking.trackAndInvoke(
+                                    context = ctx.copy(feature = "Library", action = "ViewIncompleteSessions"),
+                                    message = "Landing: View incomplete sessions",
+                                    category = "ui.click",
+                                    onClick = { onAction(LandingAction.ViewIncompleteSessions) }
+                                )
+                            } ?: onAction(LandingAction.ViewIncompleteSessions)
                         },
                         badgeCount = state.incompleteSessionsCount,
                         testTag = LandingTestTags.TILE_INCOMPLETE,
@@ -116,16 +129,14 @@ fun LandingScreen(
                         description = "Review fully completed sessions and uploaded data.",
                         icon = painterResource(R.drawable.ic_complete),
                         onClick = {
-                            ClickTracking.trackAndInvoke(
-                                context = CrashyContext(
-                                    screen = "LandingScreen",
-                                    feature = "Library",
-                                    action = "ViewCompleteSessions"
-                                ),
-                                message = "Landing: View complete sessions",
-                                category = "ui.click",
-                                onClick = { onAction(LandingAction.ViewCompleteSessions) }
-                            )
+                            screenContext?.let { ctx ->
+                                ClickTracking.trackAndInvoke(
+                                    context = ctx.copy(feature = "Library", action = "ViewCompleteSessions"),
+                                    message = "Landing: View complete sessions",
+                                    category = "ui.click",
+                                    onClick = { onAction(LandingAction.ViewCompleteSessions) }
+                                )
+                            } ?: onAction(LandingAction.ViewCompleteSessions)
                         },
                         testTag = LandingTestTags.TILE_COMPLETE
                     )
@@ -154,11 +165,8 @@ fun LandingScreen(
             confirmButton = {
                 TrackedTextButton(
                     label = "Yes, resume",
-                    crashyContext = CrashyContext(
-                        screen = "LandingScreen",
-                        feature = "ResumeDialog",
-                        action = "ResumeSession"
-                    ),
+                    feature = "ResumeDialog",
+                    action = "ResumeSession",
                     onClick = { onAction(LandingAction.ResumeSession) },
                     modifier = Modifier.testTag(LandingTestTags.RESUME_CONFIRM)
                 ) {
@@ -172,11 +180,8 @@ fun LandingScreen(
             dismissButton = {
                 TrackedTextButton(
                     label = "No, start new",
-                    crashyContext = CrashyContext(
-                        screen = "LandingScreen",
-                        feature = "ResumeDialog",
-                        action = "DismissResumePrompt"
-                    ),
+                    feature = "ResumeDialog",
+                    action = "DismissResumePrompt",
                     onClick = { onAction(LandingAction.DismissResumePrompt) },
                     modifier = Modifier.testTag(LandingTestTags.RESUME_DISMISS)
                 ) {

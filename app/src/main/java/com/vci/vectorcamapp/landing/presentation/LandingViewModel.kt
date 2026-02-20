@@ -117,13 +117,14 @@ class LandingViewModel @Inject constructor(
             }
 
             val currentSession = currentSessionCache.getSession()
-            if (currentSession != null) {
-                _state.update { it.copy(showResumeDialog = true) }
-            }
-
+            val currentSiteId = currentSessionCache.getSiteId()
             _state.update {
                 it.copy(
-                    enrolledProgram = program, isLoading = false
+                    enrolledProgram = program,
+                    isLoading = false,
+                    showResumeDialog = currentSession != null,
+                    currentSessionId = currentSession?.localId?.toString(),
+                    currentSiteId = currentSiteId?.toString()
                 )
             }
         }
