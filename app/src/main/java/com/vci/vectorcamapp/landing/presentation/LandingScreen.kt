@@ -6,10 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -20,6 +17,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.logging.CrashyContext
+import com.vci.vectorcamapp.core.presentation.components.button.ClickTracking
+import com.vci.vectorcamapp.core.presentation.components.button.TrackedIconButton
+import com.vci.vectorcamapp.core.presentation.components.button.TrackedTextButton
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.landing.presentation.components.LandingActionTile
 import com.vci.vectorcamapp.landing.presentation.components.LandingSection
@@ -39,7 +40,15 @@ fun LandingScreen(
         subtitle = "Program: ${state.enrolledProgram.name}",
         modifier = modifier.testTag(LandingTestTags.SCREEN),
         trailingIcon = {
-            IconButton(onClick = { onAction(LandingAction.OpenSettings) }) {
+            TrackedIconButton(
+                message = "Landing: Open settings clicked",
+                crashyContext = CrashyContext(
+                    screen = "LandingScreen",
+                    feature = "Header",
+                    action = "OpenSettings"
+                ),
+                onClick = { onAction(LandingAction.OpenSettings) }
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_settings),
                     contentDescription = "Settings Icon",
@@ -62,7 +71,18 @@ fun LandingScreen(
                         title = "New Surveillance Session",
                         description = "Begin a new household visit and capture mosquito images.",
                         icon = painterResource(R.drawable.ic_specimen),
-                        onClick = { onAction(LandingAction.StartNewSurveillanceSession) },
+                        onClick = {
+                            ClickTracking.trackAndInvoke(
+                                context = CrashyContext(
+                                    screen = "LandingScreen",
+                                    feature = "Imaging",
+                                    action = "StartNewSurveillanceSession"
+                                ),
+                                message = "Landing: Start new surveillance session",
+                                category = "ui.click",
+                                onClick = { onAction(LandingAction.StartNewSurveillanceSession) }
+                            )
+                        },
                         testTag = LandingTestTags.TILE_NEW_SURVEILLANCE
                     )
                 }
@@ -75,7 +95,18 @@ fun LandingScreen(
                         title = "View Sessions in Progress",
                         description = "Resume and complete any unfinished sessions.",
                         icon = painterResource(R.drawable.ic_minus_circle),
-                        onClick = { onAction(LandingAction.ViewIncompleteSessions) },
+                        onClick = {
+                            ClickTracking.trackAndInvoke(
+                                context = CrashyContext(
+                                    screen = "LandingScreen",
+                                    feature = "Library",
+                                    action = "ViewIncompleteSessions"
+                                ),
+                                message = "Landing: View incomplete sessions",
+                                category = "ui.click",
+                                onClick = { onAction(LandingAction.ViewIncompleteSessions) }
+                            )
+                        },
                         badgeCount = state.incompleteSessionsCount,
                         testTag = LandingTestTags.TILE_INCOMPLETE,
                     )
@@ -84,7 +115,18 @@ fun LandingScreen(
                         title = "View Complete Sessions",
                         description = "Review fully completed sessions and uploaded data.",
                         icon = painterResource(R.drawable.ic_complete),
-                        onClick = { onAction(LandingAction.ViewCompleteSessions) },
+                        onClick = {
+                            ClickTracking.trackAndInvoke(
+                                context = CrashyContext(
+                                    screen = "LandingScreen",
+                                    feature = "Library",
+                                    action = "ViewCompleteSessions"
+                                ),
+                                message = "Landing: View complete sessions",
+                                category = "ui.click",
+                                onClick = { onAction(LandingAction.ViewCompleteSessions) }
+                            )
+                        },
                         testTag = LandingTestTags.TILE_COMPLETE
                     )
                 }
@@ -110,22 +152,31 @@ fun LandingScreen(
                 )
             },
             confirmButton = {
-                Button(
-                    onClick = { onAction(LandingAction.ResumeSession) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colors.successConfirm
+                TrackedTextButton(
+                    label = "Yes, resume",
+                    crashyContext = CrashyContext(
+                        screen = "LandingScreen",
+                        feature = "ResumeDialog",
+                        action = "ResumeSession"
                     ),
+                    onClick = { onAction(LandingAction.ResumeSession) },
                     modifier = Modifier.testTag(LandingTestTags.RESUME_CONFIRM)
                 ) {
                     Text(
                         text = "Yes, resume",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colors.buttonText
+                        color = MaterialTheme.colors.successConfirm
                     )
                 }
             },
             dismissButton = {
-                TextButton(
+                TrackedTextButton(
+                    label = "No, start new",
+                    crashyContext = CrashyContext(
+                        screen = "LandingScreen",
+                        feature = "ResumeDialog",
+                        action = "DismissResumePrompt"
+                    ),
                     onClick = { onAction(LandingAction.DismissResumePrompt) },
                     modifier = Modifier.testTag(LandingTestTags.RESUME_DISMISS)
                 ) {
