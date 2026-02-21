@@ -595,13 +595,16 @@ class ImagingViewModel @Inject constructor(
     private fun loadImagingDetails() {
         viewModelScope.launch {
             val session = currentSessionCache.getSession()
+            val siteId = currentSessionCache.getSiteId()
             if (session != null) {
                 imagingWorkflow = imagingWorkflowFactory.create(session.type)
                 val allowModelInferenceToggle = imagingWorkflow.allowModelInferenceToggle
                 _state.update {
                     it.copy(
                         allowModelInferenceToggle = allowModelInferenceToggle,
-                        shouldRunInference = !allowModelInferenceToggle
+                        shouldRunInference = !allowModelInferenceToggle,
+                        currentSessionId = session.localId.toString(),
+                        currentSiteId = siteId?.toString()
                     )
                 }
             } else {

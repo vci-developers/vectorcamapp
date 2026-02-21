@@ -30,18 +30,15 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,7 +60,12 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
+import com.vci.vectorcamapp.core.logging.CrashyContext
+import com.vci.vectorcamapp.core.presentation.LocalCrashyContext
+import com.vci.vectorcamapp.core.presentation.components.button.ClickTracking
+import com.vci.vectorcamapp.core.presentation.components.button.TrackedActionButton
+import com.vci.vectorcamapp.core.presentation.components.button.TrackedIconButton
+import com.vci.vectorcamapp.core.presentation.components.button.TrackedTextButton
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
@@ -83,8 +85,16 @@ import kotlinx.coroutines.withContext
 fun ImagingScreen(
     state: ImagingState, onAction: (ImagingAction) -> Unit, modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val crashyContext = CrashyContext.fromIds(
+        screen = "ImagingScreen",
+        sessionId = state.currentSessionId,
+        siteId = state.currentSiteId,
+        specimenId = state.currentSpecimen.id.takeIf { it.isNotEmpty() }
+    )
+    CompositionLocalProvider(LocalCrashyContext provides crashyContext) {
+        val context = LocalContext.current
+        val lifecycleOwner = LocalLifecycleOwner.current
+        val ctx = LocalCrashyContext.current
 
     val scope = rememberCoroutineScope()
 
@@ -253,9 +263,12 @@ fun ImagingScreen(
                                     modifier = Modifier.weight(1f)
                                 )
 
-                                IconButton(
-                                    onClick = { onAction(ImagingAction.DismissExitDialog) },
-                                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                                TrackedIconButton(
+                                    message = "Imaging: Dismiss exit dialog",
+                                    feature = "ExitDialog",
+                                    action = "DismissExitDialog",
+                                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall),
+                                    onClick = { onAction(ImagingAction.DismissExitDialog) }
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_close),
@@ -295,7 +308,18 @@ fun ImagingScreen(
                         confirmButton = {
                             if (state.pendingAction == null) {
                                 OutlinedButton(
-                                    onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SubmitSession)) },
+                                    onClick = {
+                                        if (ctx != null) {
+                                            ClickTracking.trackAndInvoke(
+                                                context = ctx.copy(feature = "ExitDialog", action = "SelectPendingAction_SubmitSession"),
+                                                message = "Imaging: Select submit session",
+                                                category = "ui.click",
+                                                onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SubmitSession)) }
+                                            )
+                                        } else {
+                                            onAction(ImagingAction.SelectPendingAction(ImagingAction.SubmitSession))
+                                        }
+                                    },
                                     border = BorderStroke(
                                         MaterialTheme.dimensions.borderThicknessThick,
                                         MaterialTheme.colors.successConfirm
@@ -315,13 +339,11 @@ fun ImagingScreen(
                                     )
                                 }
                             } else {
-                                Button(
-                                    onClick = {
-                                        onAction(ImagingAction.ConfirmPendingAction)
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colors.error
-                                    )
+                                TrackedTextButton(
+                                    label = "Yes, Confirm",
+                                    feature = "ExitDialog",
+                                    action = "ConfirmPendingAction",
+                                    onClick = { onAction(ImagingAction.ConfirmPendingAction) }
                                 ) {
                                     Text(
                                         text = "Yes, Confirm",
@@ -334,7 +356,18 @@ fun ImagingScreen(
                         dismissButton = {
                             if (state.pendingAction == null) {
                                 OutlinedButton(
-                                    onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SaveSessionProgress)) },
+                                    onClick = {
+                                        if (ctx != null) {
+                                            ClickTracking.trackAndInvoke(
+                                                context = ctx.copy(feature = "ExitDialog", action = "SelectPendingAction_SaveSessionProgress"),
+                                                message = "Imaging: Select save session progress",
+                                                category = "ui.click",
+                                                onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SaveSessionProgress)) }
+                                            )
+                                        } else {
+                                            onAction(ImagingAction.SelectPendingAction(ImagingAction.SaveSessionProgress))
+                                        }
+                                    },
                                     border = BorderStroke(
                                         MaterialTheme.dimensions.borderThicknessThick,
                                         MaterialTheme.colors.info
@@ -354,7 +387,12 @@ fun ImagingScreen(
                                     )
                                 }
                             } else {
-                                TextButton(onClick = { onAction(ImagingAction.ClearPendingAction) }) {
+                                TrackedTextButton(
+                                    label = "Back",
+                                    feature = "ExitDialog",
+                                    action = "ClearPendingAction",
+                                    onClick = { onAction(ImagingAction.ClearPendingAction) }
+                                ) {
                                     Text(
                                         "Back",
                                         style = MaterialTheme.typography.bodyMedium,
@@ -419,13 +457,12 @@ fun ImagingScreen(
                             }
                         },
                         confirmButton = {
-                            Button(
-                                onClick = { onAction(ImagingAction.SaveImageToSession) },
+                            TrackedTextButton(
+                                label = "Continue",
+                                feature = "ProcessFurtherDialog",
+                                action = "SaveImageToSession",
                                 enabled = state.hasConfirmedPackaging,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colors.successConfirm,
-                                    disabledContainerColor = MaterialTheme.colors.textSecondary
-                                )
+                                onClick = { onAction(ImagingAction.SaveImageToSession) }
                             ) {
                                 Text(
                                     text = "Continue",
@@ -457,9 +494,12 @@ fun ImagingScreen(
                                         shape = CircleShape
                                     )
                             ) {
-                                IconButton(
-                                    onClick = { onAction(ImagingAction.RetakeImage) },
-                                    modifier = Modifier.fillMaxSize()
+                                TrackedIconButton(
+                                    message = "Imaging: Retake image",
+                                    feature = "Capture",
+                                    action = "RetakeImage",
+                                    modifier = Modifier.fillMaxSize(),
+                                    onClick = { onAction(ImagingAction.RetakeImage) }
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_cancel),
@@ -506,9 +546,12 @@ fun ImagingScreen(
                                         shape = CircleShape
                                     )
                             ) {
-                                IconButton(
-                                    onClick = { onAction(ImagingAction.ShowExitDialog) },
-                                    modifier = Modifier.fillMaxSize()
+                                TrackedIconButton(
+                                    message = "Imaging: Show exit dialog",
+                                    feature = "Capture",
+                                    action = "ShowExitDialog",
+                                    modifier = Modifier.fillMaxSize(),
+                                    onClick = { onAction(ImagingAction.ShowExitDialog) }
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_exit),
@@ -597,12 +640,11 @@ fun ImagingScreen(
                                         }
                                     }
 
-                                    Button(
-                                        onClick = { onAction(ImagingAction.SaveImageToSession) },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colors.successConfirm
-                                        ),
-                                        shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
+                                    TrackedTextButton(
+                                        label = "Save",
+                                        feature = "Capture",
+                                        action = "SaveImageToSession",
+                                        onClick = { onAction(ImagingAction.SaveImageToSession) }
                                     ) {
                                         Text(
                                             text = "Save",
@@ -654,7 +696,7 @@ fun ImagingScreen(
                                     color = if (state.currentSpecimen.id == "") MaterialTheme.colors.textSecondary else MaterialTheme.colors.textPrimary,
                                 )
 
-                                ActionButton(
+                                TrackedActionButton(
                                     label = "Capture",
                                     onClick = {
                                         imageCaptureUseCase?.let {
@@ -663,7 +705,9 @@ fun ImagingScreen(
                                     },
                                     iconPainter = painterResource(id = R.drawable.ic_camera),
                                     enabled = (!state.isProcessing && state.isCameraReady),
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    feature = "Capture",
+                                    action = "CaptureImage"
                                 )
                             }
                         }
@@ -671,6 +715,7 @@ fun ImagingScreen(
                 }
             }
         }
+    }
     }
 }
 

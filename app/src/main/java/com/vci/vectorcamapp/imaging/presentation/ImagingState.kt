@@ -38,5 +38,9 @@ data class ImagingState(
     val showProcessFurtherDialog: Boolean = false,
     val hasConfirmedPackaging: Boolean = false,
     val pendingAction: ImagingAction? = null,
-    val specimenIdError: ImagingError? = null
+    val specimenIdError: ImagingError? = null,
+    /** Current session localId (UUID) for CrashyContext. */
+    val currentSessionId: String? = null,
+    /** Current site id for CrashyContext. */
+    val currentSiteId: String? = null
 )

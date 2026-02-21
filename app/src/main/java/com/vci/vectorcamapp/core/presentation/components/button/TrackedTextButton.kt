@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.presentation.components.button
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -20,7 +21,7 @@ fun TrackedTextButton(
     crashyContext: CrashyContext? = null,
     feature: String? = null,
     action: String? = null,
-    content: @Composable () -> Unit
+    content: @Composable RowScope.() -> Unit
 ) {
     val resolvedContext = (crashyContext ?: LocalCrashyContext.current)?.let { base ->
         if (feature != null || action != null) base.copy(feature = feature ?: base.feature, action = action ?: base.action)
