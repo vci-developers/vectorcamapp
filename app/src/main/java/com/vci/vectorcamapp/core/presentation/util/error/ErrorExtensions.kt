@@ -102,6 +102,7 @@ fun Error.toString(context: Context): String {
             FormValidationError.BLANK_DISTRICT -> R.string.form_validation_error_blank_district
             FormValidationError.BLANK_VILLAGE_NAME -> R.string.form_validation_error_blank_village_name
             FormValidationError.BLANK_HOUSE_NUMBER -> R.string.form_validation_error_blank_house_number
+            FormValidationError.BLANK_LOCATION_TYPE_SELECTION -> R.string.form_validation_error_blank_location_type_selection
             FormValidationError.BLANK_LLIN_TYPE -> R.string.form_validation_error_blank_llin_type
             FormValidationError.BLANK_LLIN_BRAND -> R.string.form_validation_error_blank_llin_brand
             FormValidationError.FUTURE_COLLECTION_DATE -> R.string.form_validation_error_future_collection_date
