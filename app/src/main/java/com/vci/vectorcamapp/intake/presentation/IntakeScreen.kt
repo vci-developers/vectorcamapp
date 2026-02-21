@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -29,7 +30,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Collector
-import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
+import com.vci.vectorcamapp.core.logging.CrashyContext
+import com.vci.vectorcamapp.core.presentation.LocalCrashyContext
+import com.vci.vectorcamapp.core.presentation.components.button.ClickTracking
+import com.vci.vectorcamapp.core.presentation.components.button.TrackedActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
@@ -53,6 +57,14 @@ fun IntakeScreen(
     state: IntakeState, onAction: (IntakeAction) -> Unit, modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val crashyContext = CrashyContext.fromIds(
+        screen = "IntakeScreen",
+        programId = state.programId?.toString(),
+        sessionId = state.session.localId.toString(),
+        siteId = state.selectedSiteId?.toString()
+    )
+    CompositionLocalProvider(LocalCrashyContext provides crashyContext) {
+    val screenContext = LocalCrashyContext.current
 
     BackHandler {
         onAction(IntakeAction.ReturnToPreviousScreen)
@@ -69,7 +81,14 @@ fun IntakeScreen(
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
-                        onAction(IntakeAction.ReturnToPreviousScreen)
+                        screenContext?.let { ctx ->
+                            ClickTracking.trackAndInvoke(
+                                context = ctx.copy(feature = "Header", action = "ReturnToPreviousScreen"),
+                                message = "Intake: Back pressed",
+                                category = "ui.click",
+                                onClick = { onAction(IntakeAction.ReturnToPreviousScreen) }
+                            )
+                        } ?: onAction(IntakeAction.ReturnToPreviousScreen)
                     }
             )
         },
@@ -202,7 +221,16 @@ fun IntakeScreen(
                                 horizontalArrangement = Arrangement.End
                             ) {
                                 Button(
-                                    onClick = { onAction(IntakeAction.RegisterMissingCollector) },
+                                    onClick = {
+                                        screenContext?.let { ctx ->
+                                            ClickTracking.trackAndInvoke(
+                                                context = ctx.copy(feature = "GeneralInformation", action = "RegisterMissingCollector"),
+                                                message = "Intake: Register missing collector",
+                                                category = "ui.click",
+                                                onClick = { onAction(IntakeAction.RegisterMissingCollector) }
+                                            )
+                                        } ?: onAction(IntakeAction.RegisterMissingCollector)
+                                    },
                                     shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium),
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colors.primary,
@@ -445,8 +473,10 @@ fun IntakeScreen(
                             )
 
                             if (state.locationError == IntakeError.LOCATION_GPS_TIMEOUT) {
-                                ActionButton(
+                                TrackedActionButton(
                                     label = "Retry Location",
+                                    feature = "Location",
+                                    action = "RetryLocation",
                                     onClick = { onAction(IntakeAction.RetryLocation) },
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -586,12 +616,15 @@ fun IntakeScreen(
         }
 
         item {
-            ActionButton(
+            TrackedActionButton(
                 label = "Begin ${state.session.type.displayText(context)} Imaging",
+                feature = "Submit",
+                action = "SubmitIntakeForm",
                 onClick = { onAction(IntakeAction.SubmitIntakeForm) },
                 modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
             )
         }
+    }
     }
 }
 

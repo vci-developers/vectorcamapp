@@ -14,6 +14,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -31,7 +32,17 @@ class IncompleteSessionViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
     private val _state = MutableStateFlow(IncompleteSessionState())
 
-    val state = combine(_incompleteSessionsAndSites, _state) { incompleteSessionsAndSites, currentState ->
+    private val _currentSessionFromCache = flow {
+        val session = currentSessionCache.getSession()
+        val siteId = currentSessionCache.getSiteId()
+        emit(Pair(session?.localId?.toString(), siteId?.toString()))
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), Pair(null as String?, null as String?))
+
+    val state = combine(
+        _incompleteSessionsAndSites,
+        _state,
+        _currentSessionFromCache
+    ) { incompleteSessionsAndSites, currentState, cache ->
         val filteredSessions = if (currentState.searchQuery.isBlank()) {
             incompleteSessionsAndSites
         } else {
@@ -51,7 +62,11 @@ class IncompleteSessionViewModel @Inject constructor(
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
             }
         }
-        currentState.copy(sessionAndSites = filteredSessions)
+        currentState.copy(
+            sessionAndSites = filteredSessions,
+            currentSessionId = cache.first,
+            currentSiteId = cache.second
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), IncompleteSessionState())
 
     private val _events = Channel<IncompleteSessionEvent>()

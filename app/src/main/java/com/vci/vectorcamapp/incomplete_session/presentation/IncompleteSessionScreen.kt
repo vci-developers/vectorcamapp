@@ -13,11 +13,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.logging.CrashyContext
+import com.vci.vectorcamapp.core.presentation.LocalCrashyContext
+import com.vci.vectorcamapp.core.presentation.components.button.ClickTracking
+import com.vci.vectorcamapp.core.presentation.components.button.TrackedTextButton
 import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent
@@ -32,6 +37,13 @@ fun IncompleteSessionScreen(
     onAction: (IncompleteSessionAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val crashyContext = CrashyContext.fromIds(
+        screen = "IncompleteSessionScreen",
+        sessionId = state.currentSessionId,
+        siteId = state.currentSiteId
+    )
+    CompositionLocalProvider(LocalCrashyContext provides crashyContext) {
+    val screenContext = LocalCrashyContext.current
     ScreenHeader(
         title = "Sessions in Progress",
         subtitle = "Click on a session to resume",
@@ -43,7 +55,14 @@ fun IncompleteSessionScreen(
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
-                        onAction(IncompleteSessionAction.ReturnToLandingScreen)
+                        screenContext?.let { ctx ->
+                            ClickTracking.trackAndInvoke(
+                                context = ctx.copy(feature = "Header", action = "ReturnToLandingScreen"),
+                                message = "IncompleteSession: Back pressed",
+                                category = "ui.click",
+                                onClick = { onAction(IncompleteSessionAction.ReturnToLandingScreen) }
+                            )
+                        } ?: onAction(IncompleteSessionAction.ReturnToLandingScreen)
                     }
                     .testTag(IncompleteSessionTestTags.BACK_BUTTON) )
         },
@@ -62,7 +81,16 @@ fun IncompleteSessionScreen(
                     top = MaterialTheme.dimensions.spacingSmall
                 ),
                 isTooltipVisible = state.isSearchTooltipVisible,
-                onShowSearchTooltip = { onAction(IncompleteSessionAction.ShowSearchTooltipDialog) },
+                onShowSearchTooltip = {
+                    screenContext?.let { ctx ->
+                        ClickTracking.trackAndInvoke(
+                            context = ctx.copy(feature = "Search", action = "ShowSearchTooltipDialog"),
+                            message = "IncompleteSession: Show search tooltip",
+                            category = "ui.click",
+                            onClick = { onAction(IncompleteSessionAction.ShowSearchTooltipDialog) }
+                        )
+                    } ?: onAction(IncompleteSessionAction.ShowSearchTooltipDialog)
+                },
                 onDismissSearchTooltip = { onAction(IncompleteSessionAction.HideSearchTooltipDialog) }
             ) {
                 SearchHelpTooltipContent()
@@ -88,16 +116,47 @@ fun IncompleteSessionScreen(
             items = state.sessionAndSites.asReversed(),
             key = { _, sessionAndSite -> sessionAndSite.session.localId }
         ) { index, sessionAndSite ->
+            val cardContext = screenContext?.copy(
+                sessionId = sessionAndSite.session.localId.toString(),
+                siteId = sessionAndSite.site.id.toString()
+            )
             IncompleteSessionCard(
                 sessionAndSite = sessionAndSite,
-                onClick = { onAction(IncompleteSessionAction.ResumeSession(sessionAndSite.session.localId)) },
-                onDelete = { onAction(IncompleteSessionAction.DeleteSession(sessionAndSite.session.localId)) },
+                onClick = {
+                    if (cardContext != null) {
+                        ClickTracking.trackAndInvoke(
+                            context = cardContext.copy(feature = "List", action = "ResumeSession"),
+                            message = "IncompleteSession: Resume session",
+                            category = "ui.click",
+                            onClick = { onAction(IncompleteSessionAction.ResumeSession(sessionAndSite.session.localId)) }
+                        )
+                    } else {
+                        onAction(IncompleteSessionAction.ResumeSession(sessionAndSite.session.localId))
+                    }
+                },
+                onDelete = {
+                    if (cardContext != null) {
+                        ClickTracking.trackAndInvoke(
+                            context = cardContext.copy(feature = "List", action = "DeleteSession"),
+                            message = "IncompleteSession: Delete session",
+                            category = "ui.click",
+                            onClick = { onAction(IncompleteSessionAction.DeleteSession(sessionAndSite.session.localId)) }
+                        )
+                    } else {
+                        onAction(IncompleteSessionAction.DeleteSession(sessionAndSite.session.localId))
+                    }
+                },
                 modifier = Modifier.testTag("${IncompleteSessionTestTags.CARD_PREFIX}-$index")
             )
         }
     }
 
     if (state.deleteDialogSessionId != null) {
+        val deleteDialogContext = screenContext?.copy(
+            sessionId = state.deleteDialogSessionId.toString(),
+            feature = "DeleteDialog",
+            action = "ConfirmDeleteSession"
+        )
         AlertDialog(
             onDismissRequest = {
                 onAction(IncompleteSessionAction.DismissDeleteDialog)
@@ -119,7 +178,16 @@ fun IncompleteSessionScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        onAction(IncompleteSessionAction.ConfirmDeleteSession(state.deleteDialogSessionId))
+                        if (deleteDialogContext != null) {
+                            ClickTracking.trackAndInvoke(
+                                context = deleteDialogContext,
+                                message = "IncompleteSession: Confirm delete session",
+                                category = "ui.click",
+                                onClick = { onAction(IncompleteSessionAction.ConfirmDeleteSession(state.deleteDialogSessionId!!)) }
+                            )
+                        } else {
+                            onAction(IncompleteSessionAction.ConfirmDeleteSession(state.deleteDialogSessionId!!))
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colors.error
@@ -133,7 +201,10 @@ fun IncompleteSessionScreen(
                 }
             },
             dismissButton = {
-                TextButton(
+                TrackedTextButton(
+                    label = "Cancel",
+                    feature = "DeleteDialog",
+                    action = "DismissDeleteDialog",
                     onClick = { onAction(IncompleteSessionAction.DismissDeleteDialog) }
                 ) {
                     Text(
@@ -144,5 +215,6 @@ fun IncompleteSessionScreen(
                 }
             }
         )
+    }
     }
 }

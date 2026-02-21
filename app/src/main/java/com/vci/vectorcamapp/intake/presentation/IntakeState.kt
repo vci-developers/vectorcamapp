@@ -54,4 +54,8 @@ data class IntakeState(
         numPeopleSleptInHouse = null,
     ),
     val isCollectionMethodTooltipVisible: Boolean = false,
+    /** Program id for CrashyContext. */
+    val programId: Int? = null,
+    /** Resolved site id when resuming or when location matches a site, for CrashyContext. */
+    val selectedSiteId: Int? = null,
 )
