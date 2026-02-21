@@ -6,11 +6,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.vci.vectorcamapp.core.presentation.components.button.TrackedActionButton
+import com.vci.vectorcamapp.core.presentation.components.button.TrackedTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.vci.vectorcamapp.core.domain.model.Collector
@@ -102,20 +101,23 @@ fun CollectorDialog(
             }
         },
         confirmButton = {
-            Button(
+            TrackedActionButton(
+                label = if (isDeleteDialogVisible) "Yes, Delete" else "Submit",
                 onClick = if (isDeleteDialogVisible) onConfirmDelete else onSave,
                 enabled = isDeleteDialogVisible || (collector.name.isNotBlank() && collector.title.isNotBlank()),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDeleteDialogVisible) MaterialTheme.colors.error else MaterialTheme.colors.secondary,
-                    contentColor = MaterialTheme.colors.buttonText
-                )
-            ) {
-                Text(text = if (isDeleteDialogVisible) "Yes, Delete" else "Submit", style = MaterialTheme.typography.bodyMedium)
-            }
+                textSize = MaterialTheme.typography.bodyMedium,
+                feature = "CollectorDialog",
+                action = if (isDeleteDialogVisible) "ConfirmDelete" else "Save"
+            )
         },
         dismissButton = {
             if (isEditDialogVisible && !isDeleteDialogVisible) {
-                TextButton(onClick = onDelete) {
+                TrackedTextButton(
+                    label = "Delete",
+                    onClick = onDelete,
+                    feature = "CollectorDialog",
+                    action = "Delete"
+                ) {
                     Text(
                         text = "Delete",
                         color = MaterialTheme.colors.error,
@@ -123,7 +125,12 @@ fun CollectorDialog(
                     )
                 }
             } else {
-                TextButton(onClick = if (isDeleteDialogVisible) onDismissDeleteDialog else onDismiss) {
+                TrackedTextButton(
+                    label = "Cancel",
+                    onClick = if (isDeleteDialogVisible) onDismissDeleteDialog else onDismiss,
+                    feature = "CollectorDialog",
+                    action = if (isDeleteDialogVisible) "DismissDeleteDialog" else "Dismiss"
+                ) {
                     Text(
                         text = "Cancel",
                         color = MaterialTheme.colors.textSecondary,
