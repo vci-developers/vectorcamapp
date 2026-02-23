@@ -12,3 +12,4 @@ fun getWindowType(widthDp: Float): WindowType {
         widthDp < 840 -> WindowType.Medium
         else -> WindowType.Expanded
     }
+}

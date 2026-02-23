@@ -140,3 +140,4 @@ fun createTypography(scale: Float = 1f): Typography {
             fontWeight = FontWeight.Light
         ),
     )
+}
