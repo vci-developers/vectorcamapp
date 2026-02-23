@@ -9,20 +9,24 @@ import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceRequest
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
-import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
@@ -181,54 +185,65 @@ fun ImagingScreen(
     ) { page ->
         when {
             page < state.specimensWithImagesAndInferenceResults.size -> {
-                Column(
-                    verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxSize()
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(vertical = MaterialTheme.dimensions.paddingMedium)
-                            .fillMaxWidth()
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = modifier.fillMaxHeight().wrapContentWidth()
                     ) {
-                        AnimatedArrowIcon(
-                            isLeft = true,
-                            enabled = page > 0,
-                            onClick = { scope.launch { pagerState.animateScrollToPage(page - 1) } }
-                        )
-
-                        Box(
-                            modifier = Modifier.background(
-                                color = MaterialTheme.colors.accent,
-                                shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
-                            )
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(vertical = MaterialTheme.dimensions.paddingMedium)
+                                .fillMaxWidth()
                         ) {
-                            Text(
-                                text = "Specimen ${page + 1} of ${state.specimensWithImagesAndInferenceResults.size} in this Session",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colors.textPrimary,
-                                modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
+                            AnimatedArrowIcon(
+                                isLeft = true,
+                                enabled = page > 0,
+                                onClick = { scope.launch { pagerState.animateScrollToPage(page - 1) } }
+                            )
+
+                            Box(
+                                modifier = Modifier.background(
+                                    color = MaterialTheme.colors.accent,
+                                    shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
+                                )
+                            ) {
+                                Text(
+                                    text = "Specimen ${page + 1} of ${state.specimensWithImagesAndInferenceResults.size} in this Session",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colors.textPrimary,
+                                    modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
+                                )
+                            }
+
+                            AnimatedArrowIcon(
+                                isLeft = false,
+                                enabled = true,
+                                onClick = { scope.launch { pagerState.animateScrollToPage(page + 1) } }
                             )
                         }
 
-                        AnimatedArrowIcon(
-                            isLeft = false,
-                            enabled = true,
-                            onClick = { scope.launch { pagerState.animateScrollToPage(page + 1) } }
-                        )
-                    }
-
-                    LazyColumn(modifier = Modifier.fillMaxHeight()) {
-                        val imageList =
-                            state.specimensWithImagesAndInferenceResults[page].specimenImagesAndInferenceResults
-                        itemsIndexed(imageList) { index, (specimenImage, inferenceResult) ->
-                            CapturedSpecimenTile(
-                                specimen = state.specimensWithImagesAndInferenceResults[page].specimen,
-                                specimenImage = specimenImage,
-                                inferenceResult = inferenceResult,
-                                badgeText = "${index + 1} of ${imageList.size}",
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                        LazyColumn(
+                            modifier = Modifier.fillMaxHeight().wrapContentWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            val imageList =
+                                state.specimensWithImagesAndInferenceResults[page].specimenImagesAndInferenceResults
+                            itemsIndexed(imageList) { index, (specimenImage, inferenceResult) ->
+                                CapturedSpecimenTile(
+                                    specimen = state.specimensWithImagesAndInferenceResults[page].specimen,
+                                    specimenImage = specimenImage,
+                                    inferenceResult = inferenceResult,
+                                    badgeText = "${index + 1} of ${imageList.size}",
+                                    modifier = Modifier
+                                        .fillParentMaxHeight()
+                                )
+                            }
                         }
                     }
                 }
@@ -242,9 +257,13 @@ fun ImagingScreen(
                         },
                         title = {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        vertical = MaterialTheme.dimensions.paddingSmall
+                                    )
                             ) {
                                 Text(
                                     text = if (state.pendingAction == null) "Exit session?" else "Confirm Action",
@@ -436,235 +455,282 @@ fun ImagingScreen(
                         }
                     )
                 }
-
-                Column(
-                    modifier = modifier.fillMaxSize()
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(vertical = MaterialTheme.dimensions.paddingMedium)
-                            .fillMaxWidth()
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = modifier
+                            .padding(
+                                vertical = MaterialTheme.dimensions.paddingMedium
+                            )
+                            .fillMaxHeight()
+                            .width(IntrinsicSize.Max)
                     ) {
-                        if (state.currentImageBytes != null) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    vertical = MaterialTheme.dimensions.paddingSmall,
+                                    horizontal = MaterialTheme.dimensions.paddingMedium
+                                )
+                        ) {
+                            if (state.currentImageBytes != null) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .size(MaterialTheme.dimensions.componentHeightMedium)
+                                        .background(
+                                            color = MaterialTheme.colors.error,
+                                            shape = CircleShape
+                                        )
+                                ) {
+                                    IconButton(
+                                        onClick = { onAction(ImagingAction.RetakeImage) },
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_cancel),
+                                            contentDescription = "Delete",
+                                            tint = MaterialTheme.colors.buttonText,
+                                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                                        )
+                                    }
+                                }
+                            } else {
+                                AnimatedArrowIcon(
+                                    isLeft = true,
+                                    enabled = page > 0,
+                                    onClick = { scope.launch { pagerState.animateScrollToPage(page - 1) } }
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(MaterialTheme.dimensions.spacingExtraSmall))
+
                             Box(
                                 contentAlignment = Alignment.Center,
-                                modifier = Modifier
-                                    .size(MaterialTheme.dimensions.componentHeightMedium)
-                                    .background(
-                                        color = MaterialTheme.colors.error,
-                                        shape = CircleShape
-                                    )
+                                modifier = Modifier.background(
+                                    color = MaterialTheme.colors.accent,
+                                    shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
+                                )
                             ) {
-                                IconButton(
-                                    onClick = { onAction(ImagingAction.RetakeImage) },
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_cancel),
-                                        contentDescription = "Delete",
-                                        tint = MaterialTheme.colors.buttonText,
-                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
-                                    )
-                                }
-                            }
-                        } else {
-                            AnimatedArrowIcon(
-                                isLeft = true,
-                                enabled = page > 0,
-                                onClick = { scope.launch { pagerState.animateScrollToPage(page - 1) } }
-                            )
-                        }
-
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.background(
-                                color = MaterialTheme.colors.accent,
-                                shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
-                            )
-                        ) {
-                            Text(
-                                text = "Specimen ${page + 1} in this Session",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colors.textPrimary,
-                                modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
-                            )
-                        }
-
-                        if (state.currentImageBytes != null) {
-                            EmptySpace(
-                                width = MaterialTheme.dimensions.iconSizeExtraLarge,
-                                height = MaterialTheme.dimensions.iconSizeExtraLarge
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .size(MaterialTheme.dimensions.componentHeightMedium)
-                                    .background(
-                                        color = MaterialTheme.colors.successConfirm,
-                                        shape = CircleShape
-                                    )
-                            ) {
-                                IconButton(
-                                    onClick = { onAction(ImagingAction.ShowExitDialog) },
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_exit),
-                                        contentDescription = "Exit",
-                                        tint = MaterialTheme.colors.buttonText,
-                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    if (state.currentImageBytes != null) {
-                        Box(
-                            modifier = Modifier
-                                .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
-                                .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
-                        ) {
-                            SpecimenImageOverlay(
-                                inferenceResult = state.currentInferenceResult,
-                                showBoundingBoxOverlay = isImageLoaded
-                            ) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(context)
-                                        .data(state.currentImageBytes)
-                                        .crossfade(true)
-                                        .build(),
-                                    contentDescription = state.currentSpecimen.id,
-                                    contentScale = ContentScale.Fit,
-                                    onSuccess = { isImageLoaded = true },
-                                    onError = { isImageLoaded = false },
-                                    error = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
-                                    fallback = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
+                                Text(
+                                    text = "Specimen ${page + 1} in this Session",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colors.textPrimary,
+                                    modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
                                 )
                             }
-                        }
 
-                        InfoTile {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(MaterialTheme.dimensions.paddingMedium),
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                TextEntryField(
-                                    label = "Specimen ID",
-                                    value = state.currentSpecimen.id, onValueChange = {
-                                        onAction(ImagingAction.CorrectSpecimenId(it))
-                                    },
-                                    singleLine = true,
-                                    error = state.specimenIdError,
-                                    showErrorMessage = false,
+                            Spacer(modifier = Modifier.width(MaterialTheme.dimensions.spacingExtraSmall))
+
+                            if (state.currentImageBytes != null) {
+                                EmptySpace(
+                                    width = MaterialTheme.dimensions.iconSizeExtraLarge,
+                                    height = MaterialTheme.dimensions.iconSizeExtraLarge
                                 )
-
-                                Row(
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.Bottom,
-                                    modifier = Modifier.fillMaxWidth()
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .size(MaterialTheme.dimensions.componentHeightMedium)
+                                        .background(
+                                            color = MaterialTheme.colors.successConfirm,
+                                            shape = CircleShape
+                                        )
                                 ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.SpaceEvenly,
-                                        modifier = Modifier.fillMaxHeight()
+                                    IconButton(
+                                        onClick = { onAction(ImagingAction.ShowExitDialog) },
+                                        modifier = Modifier.fillMaxSize()
                                     ) {
-                                        if (state.currentSpecimenImage.species != null) {
-                                            Text(
-                                                text = "Species: ${state.currentSpecimenImage.species}",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colors.textPrimary
-                                            )
-                                        }
-
-                                        if (state.currentSpecimenImage.sex != null) {
-                                            Text(
-                                                text = "Sex: ${state.currentSpecimenImage.sex}",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colors.textPrimary
-                                            )
-                                        }
-
-                                        if (state.currentSpecimenImage.abdomenStatus != null) {
-                                            Text(
-                                                text = "Abdomen Status: ${state.currentSpecimenImage.abdomenStatus}",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colors.textPrimary
-                                            )
-                                        }
-                                    }
-
-                                    Button(
-                                        onClick = { onAction(ImagingAction.SaveImageToSession) },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colors.successConfirm
-                                        ),
-                                        shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
-                                    ) {
-                                        Text(
-                                            text = "Save",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colors.buttonText
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_exit),
+                                            contentDescription = "Exit",
+                                            tint = MaterialTheme.colors.buttonText,
+                                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                                         )
                                     }
                                 }
                             }
                         }
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
-                                .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
-                        ) {
-                            LiveCameraPreview(
-                                surfaceRequest = surfaceRequest,
-                                camera = camera,
-                                inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
-                                focusPoint = state.focusPoint,
-                                onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
-                                onCancelFocus = { onAction(ImagingAction.CancelFocus) },
-                                modifier = Modifier.fillMaxWidth(),
-                                isManualFocusing = state.isManualFocusing,
-                                isProcessing = state.isProcessing
-                            )
-                        }
 
-                        InfoTile {
-                            Column(
-                                verticalArrangement = Arrangement.SpaceEvenly,
-                                horizontalAlignment = Alignment.CenterHorizontally,
+                        if (state.currentImageBytes != null) {
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxSize()
+                                    .weight(1f, fill = false)
+                                    .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
                                     .padding(MaterialTheme.dimensions.paddingMedium)
+                                    .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)),
+                                contentAlignment = Alignment.Center
                             ) {
-                                if (state.allowModelInferenceToggle) {
-                                    ToggleField(
-                                        label = "Run Model Inference",
-                                        checked = state.shouldRunInference,
-                                        onCheckedChange = { onAction(ImagingAction.ToggleModelInference(it)) },
+                                SpecimenImageOverlay(
+                                    inferenceResult = state.currentInferenceResult,
+                                    showBoundingBoxOverlay = isImageLoaded,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(context)
+                                            .data(state.currentImageBytes)
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = state.currentSpecimen.id,
+                                        contentScale = ContentScale.Crop,
+                                        onSuccess = { isImageLoaded = true },
+                                        onError = { isImageLoaded = false },
+                                        error = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
+                                        fallback = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
+                                        modifier = Modifier.fillMaxSize()
                                     )
                                 }
+                            }
 
-                                Text(
-                                    text = if (state.currentSpecimen.id == "") "Specimen ID will appear here" else state.currentSpecimen.id,
-                                    style = MaterialTheme.typography.headlineLarge,
-                                    color = if (state.currentSpecimen.id == "") MaterialTheme.colors.textSecondary else MaterialTheme.colors.textPrimary,
-                                )
+                            InfoTile {
+                                Column(
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier
+                                        .padding(
+                                            vertical = MaterialTheme.dimensions.paddingExtraLarge,
+                                            horizontal = MaterialTheme.dimensions.paddingExtraLarge
+                                        )
+                                ) {
+                                    TextEntryField(
+                                        label = "Specimen ID",
+                                        value = state.currentSpecimen.id,
+                                        onValueChange = {
+                                            onAction(ImagingAction.CorrectSpecimenId(it))
+                                        },
+                                        singleLine = true,
+                                        error = state.specimenIdError,
+                                        showErrorMessage = false,
+                                    )
 
-                                ActionButton(
-                                    label = "Capture",
-                                    onClick = {
-                                        imageCaptureUseCase?.let {
-                                            onAction(ImagingAction.CaptureImage(it))
+                                    Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
+
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.Bottom,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(
+                                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.paddingSmall)
+                                        ) {
+                                            if (state.currentSpecimenImage.species != null) {
+                                                Text(
+                                                    text = "Species: ${state.currentSpecimenImage.species}",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = MaterialTheme.colors.textPrimary
+                                                )
+                                            }
+
+                                            if (state.currentSpecimenImage.sex != null) {
+                                                Text(
+                                                    text = "Sex: ${state.currentSpecimenImage.sex}",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = MaterialTheme.colors.textPrimary
+                                                )
+                                            }
+
+                                            if (state.currentSpecimenImage.abdomenStatus != null) {
+                                                Text(
+                                                    text = "Abdomen Status: ${state.currentSpecimenImage.abdomenStatus}",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = MaterialTheme.colors.textPrimary
+                                                )
+                                            }
                                         }
+
+                                        Button(
+                                            onClick = { onAction(ImagingAction.SaveImageToSession) },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colors.successConfirm
+                                            ),
+                                            shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
+                                        ) {
+                                            Text(
+                                                text = "Save",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colors.buttonText
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f, fill = false)
+                                    .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
+                                    .padding(MaterialTheme.dimensions.paddingMedium)
+                                    .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                LiveCameraPreview(
+                                    surfaceRequest = surfaceRequest,
+                                    camera = camera,
+                                    inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
+                                    focusPoint = state.focusPoint,
+                                    onFocusAt = { normalizedOffset ->
+                                        onAction(
+                                            ImagingAction.FocusAt(
+                                                normalizedOffset
+                                            )
+                                        )
                                     },
-                                    iconPainter = painterResource(id = R.drawable.ic_camera),
-                                    enabled = (!state.isProcessing && state.isCameraReady),
-                                    modifier = Modifier.fillMaxWidth()
+                                    onCancelFocus = { onAction(ImagingAction.CancelFocus) },
+                                    modifier = Modifier.fillMaxSize(),
+                                    isManualFocusing = state.isManualFocusing,
+                                    isProcessing = state.isProcessing
                                 )
+                            }
+
+                            InfoTile {
+                                Column(
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier
+                                        .padding(
+                                            vertical = MaterialTheme.dimensions.paddingExtraExtraLarge,
+                                            horizontal = MaterialTheme.dimensions.paddingExtraLarge
+                                        )
+                                ) {
+                                    if (state.allowModelInferenceToggle) {
+                                        ToggleField(
+                                            label = "Run Model Inference",
+                                            checked = state.shouldRunInference,
+                                            onCheckedChange = {
+                                                onAction(
+                                                    ImagingAction.ToggleModelInference(
+                                                        it
+                                                    )
+                                                )
+                                            },
+                                        )
+                                        Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingLarge))
+                                    }
+
+                                    Text(
+                                        text = if (state.currentSpecimen.id == "") "Specimen ID will appear here" else state.currentSpecimen.id,
+                                        style = MaterialTheme.typography.headlineLarge,
+                                        color = if (state.currentSpecimen.id == "") MaterialTheme.colors.textSecondary else MaterialTheme.colors.textPrimary,
+                                    )
+
+                                    Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
+
+                                    ActionButton(
+                                        label = "Capture",
+                                        onClick = {
+                                            imageCaptureUseCase?.let {
+                                                onAction(ImagingAction.CaptureImage(it))
+                                            }
+                                        },
+                                        iconPainter = painterResource(id = R.drawable.ic_camera),
+                                        enabled = (!state.isProcessing && state.isCameraReady),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
                     }

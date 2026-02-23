@@ -31,7 +31,7 @@ fun ScreenHeader(
     trailingIcon: @Composable () -> Unit = {},
     content: LazyListScope.() -> Unit
 ) {
-    val headerHeightFraction = 0.25f
+    val headerHeightFraction = 0.1f
 
     LazyColumn(
         modifier = modifier.fillMaxSize()
@@ -40,7 +40,6 @@ fun ScreenHeader(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(screenHeightFraction(headerHeightFraction))
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(
@@ -69,6 +68,8 @@ fun ScreenHeader(
                         Spacer(modifier = Modifier.weight(1f))
                         trailingIcon()
                     }
+
+                    Spacer(modifier = Modifier.height(screenHeightFraction(headerHeightFraction)))
 
                     Column(
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.paddingSmall),
