@@ -586,11 +586,14 @@ fun ImagingScreen(
                                 }
                             }
 
-                            InfoTile {
+                            InfoTile(
+                                modifier = Modifier.height(MaterialTheme.dimensions.componentHeightExtraExtraExtraLarge)
+                            ) {
                                 Column(
                                     verticalArrangement = Arrangement.Center,
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier
+                                        .fillMaxHeight()
                                         .padding(
                                             vertical = MaterialTheme.dimensions.paddingExtraLarge,
                                             horizontal = MaterialTheme.dimensions.paddingExtraLarge
@@ -686,11 +689,14 @@ fun ImagingScreen(
                                 )
                             }
 
-                            InfoTile {
+                            InfoTile(
+                                modifier = Modifier.height(MaterialTheme.dimensions.componentHeightExtraExtraExtraLarge)
+                            ) {
                                 Column(
                                     verticalArrangement = Arrangement.Center,
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier
+                                        .fillMaxHeight()
                                         .padding(
                                             vertical = MaterialTheme.dimensions.paddingExtraExtraLarge,
                                             horizontal = MaterialTheme.dimensions.paddingExtraLarge

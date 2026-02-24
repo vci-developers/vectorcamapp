@@ -35,7 +35,7 @@ data class Dimensions(
     val componentHeightLarge: Dp = (60 * scale).dp,
     val componentHeightExtraLarge: Dp = (72 * scale).dp,
     val componentHeightExtraExtraLarge: Dp = (84 * scale).dp,
-    val componentHeightExtraExtraExtraLarge: Dp = (120 * scale).dp,
+    val componentHeightExtraExtraExtraLarge: Dp = (240 * scale).dp,
 
     // Icon Sizes
     val iconSizeExtraSmall: Dp = (14 * scale).dp,
