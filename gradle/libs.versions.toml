@@ -97,8 +97,8 @@ text-recognition = { module = "com.google.mlkit:text-recognition", version.ref =
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
-firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics", version.ref = "firebaseBom" }
-firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics", version.ref = "firebaseBom" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 tus-android-client = { module = "io.tus.android.client:tus-android-client", version.ref = "tusAndroidClient" }
 tus-java-client = { module = "io.tus.java.client:tus-java-client", version.ref = "tusJavaClient" }
 litert = { module = "com.google.ai.edge.litert:litert", version.ref = "litert" }
