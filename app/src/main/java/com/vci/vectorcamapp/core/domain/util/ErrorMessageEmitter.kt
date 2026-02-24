@@ -1,7 +1,6 @@
-package com.vci.vectorcamapp.core.presentation.util.error
+package com.vci.vectorcamapp.core.domain.util
 
 import androidx.compose.material3.SnackbarDuration
-import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.presentation.model.ErrorData
 import kotlinx.coroutines.flow.SharedFlow
 

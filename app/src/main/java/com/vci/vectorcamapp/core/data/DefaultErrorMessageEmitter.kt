@@ -1,15 +1,14 @@
-package com.vci.vectorcamapp.core.presentation.util.error
+package com.vci.vectorcamapp.core.data
 
 import androidx.compose.material3.SnackbarDuration
 import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.presentation.model.ErrorData
+import com.vci.vectorcamapp.core.domain.util.ErrorMessageEmitter
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
 class DefaultErrorMessageEmitter @Inject constructor() : ErrorMessageEmitter {
 
     private val _errors = MutableSharedFlow<ErrorData>(

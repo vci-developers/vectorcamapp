@@ -19,7 +19,7 @@ import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.domain.util.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import io.mockk.coEvery
@@ -118,9 +118,6 @@ class RegistrationViewModelTest {
             errorMessageEmitter = errorMessageEmitter
         )
     }
-
-    @After
-    fun tearDown() {}
 
     // ========================================
     // Test Harness / Helpers

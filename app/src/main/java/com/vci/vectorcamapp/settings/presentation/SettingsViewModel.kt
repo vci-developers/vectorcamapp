@@ -10,7 +10,7 @@ import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.domain.util.ErrorMessageEmitter
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
 import com.vci.vectorcamapp.settings.presentation.model.SettingsErrors
 import dagger.hilt.android.lifecycle.HiltViewModel

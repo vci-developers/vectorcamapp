@@ -29,7 +29,7 @@ import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitte
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import dagger.hilt.android.AndroidEntryPoint
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.domain.util.ErrorMessageEmitter
 import javax.inject.Inject
 
 @AndroidEntryPoint
