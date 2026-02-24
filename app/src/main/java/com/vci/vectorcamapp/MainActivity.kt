@@ -19,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.window.layout.WindowMetricsCalculator
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
 import com.vci.vectorcamapp.main.presentation.MainAction
 import com.vci.vectorcamapp.main.presentation.MainEvent
@@ -27,6 +28,7 @@ import com.vci.vectorcamapp.main.presentation.SplashScreen
 import com.vci.vectorcamapp.main.presentation.PermissionScreen
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import com.vci.vectorcamapp.ui.theme.getWindowType
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -52,8 +54,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val metrics = WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(this)
+        val widthDp = metrics.bounds.width() / resources.displayMetrics.density
+        val windowType = getWindowType(widthDp)
+
         setContent {
-            VectorcamappTheme {
+            VectorcamappTheme(windowType = windowType) {
                 val state by viewModel.state.collectAsState()
 
                 val isReady = state.permissionChecked && state.gpsChecked
