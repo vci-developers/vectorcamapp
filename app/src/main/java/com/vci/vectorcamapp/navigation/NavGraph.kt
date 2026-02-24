@@ -59,11 +59,11 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 RegistrationScreen(
                     state = state,
                     onAction = viewModel::onAction,
-                    modifier = Modifier.padding(innerPadding)
+                    modifier = Modifier
                 )
             }
         }
@@ -96,14 +96,13 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 when (state.isLoading) {
                     true -> SplashScreen(modifier = Modifier.fillMaxSize())
 
                     false -> LandingScreen(
                         state = state,
-                        onAction = viewModel::onAction,
-                        modifier = Modifier.padding(innerPadding)
+                        onAction = viewModel::onAction
                     )
                 }
             }
@@ -127,14 +126,13 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 when (state.isLoading) {
-                    true -> SplashScreen(modifier = Modifier.padding(innerPadding))
+                    true -> SplashScreen()
 
                     false -> IntakeScreen(
                         state = state,
-                        onAction = viewModel::onAction,
-                        modifier = Modifier.padding(innerPadding)
+                        onAction = viewModel::onAction
                     )
                 }
             }
@@ -152,14 +150,13 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 when (state.isLoading) {
-                    true -> SplashScreen(modifier = Modifier.padding(innerPadding))
+                    true -> SplashScreen()
                     
                     false -> ImagingScreen(
                         state = state,
-                        onAction = viewModel::onAction,
-                        modifier = Modifier.padding(innerPadding)
+                        onAction = viewModel::onAction
                     )
                 }
             }
@@ -178,11 +175,10 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 IncompleteSessionScreen(
                     state = state,
-                    onAction = viewModel::onAction,
-                    modifier = Modifier.padding(innerPadding)
+                    onAction = viewModel::onAction
                 )
             }
         }
@@ -201,11 +197,10 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 CompleteSessionListScreen(
                     state = state,
-                    onAction = viewModel::onAction,
-                    modifier = Modifier.padding(innerPadding)
+                    onAction = viewModel::onAction
                 )
             }
         }
@@ -220,11 +215,10 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 CompleteSessionDetailsScreen(
                     state = state,
-                    onAction = viewModel::onAction,
-                    modifier = Modifier.padding(innerPadding)
+                    onAction = viewModel::onAction
                 )
             }
         }
@@ -245,11 +239,10 @@ fun NavGraph(startDestination: Destination) {
                 }
             }
 
-            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 SettingsScreen(
                     state = state,
-                    onAction = viewModel::onAction,
-                    modifier = Modifier.padding(innerPadding)
+                    onAction = viewModel::onAction
                 )
             }
         }
