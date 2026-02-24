@@ -3,7 +3,7 @@ package com.vci.vectorcamapp.main.presentation
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.domain.util.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.main.domain.util.MainError
 import com.vci.vectorcamapp.main.logging.MainSentryLogger

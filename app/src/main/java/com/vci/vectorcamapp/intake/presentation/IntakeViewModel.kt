@@ -18,7 +18,7 @@ import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.domain.util.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.intake.domain.repository.LocationRepository
 import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflow
 import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflowFactory

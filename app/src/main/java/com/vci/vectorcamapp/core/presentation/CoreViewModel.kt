@@ -4,7 +4,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.util.Error
-import com.vci.vectorcamapp.core.domain.util.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import kotlinx.coroutines.launch
 
 abstract class CoreViewModel(

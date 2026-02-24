@@ -21,7 +21,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.domain.util.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel

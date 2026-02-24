@@ -3,7 +3,7 @@ package com.vci.vectorcamapp.main.presentation
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.domain.util.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.main.domain.util.MainError
 import com.vci.vectorcamapp.main.logging.MainSentryLogger
 import com.vci.vectorcamapp.navigation.Destination
