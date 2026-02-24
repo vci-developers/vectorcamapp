@@ -14,9 +14,14 @@ plugins {
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.sentry.android.gradle)
-    alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.google.firebase.crashlytics)
     kotlin("plugin.serialization") version "2.0.21"
+}
+
+// Apply Google Services plugin only when google-services.json exists (e.g. local dev).
+// CI can build without the file when it is not committed (e.g. in .gitignore).
+if (file("${project.projectDir}/google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 android {
