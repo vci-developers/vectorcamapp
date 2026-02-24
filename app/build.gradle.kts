@@ -261,10 +261,10 @@ dependencies {
     implementation(libs.tus.android.client)
     implementation(libs.tus.java.client)
 
-    // firebase
-    implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-crashlytics")
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
     // Testing Dependencies
     testImplementation(libs.junit) // JUnit for unit tests
