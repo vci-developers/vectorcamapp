@@ -14,6 +14,8 @@ plugins {
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.sentry.android.gradle)
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
     kotlin("plugin.serialization") version "2.0.21"
 }
 
@@ -68,7 +70,7 @@ android {
             applicationIdSuffix = ".colombia"
             versionCode = 1007
             versionName = "1.0.7"
-            
+
             // Region-specific build config fields
             buildConfigField("String", "REGION", "\"colombia\"")
             buildConfigField("String", "REGION_CODE", "\"CO\"")
@@ -258,6 +260,11 @@ dependencies {
     // TUS Library
     implementation(libs.tus.android.client)
     implementation(libs.tus.java.client)
+
+    // firebase
+    implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-crashlytics")
 
     // Testing Dependencies
     testImplementation(libs.junit) // JUnit for unit tests
