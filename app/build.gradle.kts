@@ -34,9 +34,6 @@ android {
 
         testInstrumentationRunner = "com.vci.vectorcamapp.HiltTestRunner"
 
-        buildConfigField("String", "POSTHOG_API_KEY", "\"${secretsProperties["POSTHOG_API_KEY"]}\"")
-        buildConfigField("String", "POSTHOG_HOST", "\"${secretsProperties["POSTHOG_HOST"]}\"")
-
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a")
         }
@@ -250,9 +247,6 @@ dependencies {
 
     // Work Manager Library
     implementation(libs.androidx.work.runtime.ktx)
-
-    // PostHog AnalyticsLibrary
-    implementation(libs.posthog.android)
 
     // JSON Serialization Library
     implementation(libs.kotlinx.serialization.json) // Kotlinx JSON serialization library

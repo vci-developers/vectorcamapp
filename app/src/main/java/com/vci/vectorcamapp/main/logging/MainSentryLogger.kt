@@ -19,20 +19,6 @@ object MainSentryLogger {
         )
     }
 
-    fun logPostHogInitFailure(e: Throwable) {
-        Crashy.exception(
-            throwable = e, context = CrashyContext(
-                screen = "AppStart", feature = "PostHog Initialization", action = "setup()"
-            ), tags = mapOf(
-                "module" to "PostHog", "phase" to "startup"
-            ), extras = mapOf(
-                "deviceModel" to android.os.Build.MODEL,
-                "sdkVersion" to android.os.Build.VERSION.SDK_INT,
-                "possible_causes" to "Incorrect API key, network error during setup, SDK not initialized in Application, app context issues"
-            )
-        )
-    }
-
     fun logDeviceFetchFailure(e: Throwable) {
         Crashy.exception(
             throwable = e, context = CrashyContext(
