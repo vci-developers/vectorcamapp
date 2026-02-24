@@ -14,8 +14,8 @@ plugins {
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.sentry.android.gradle)
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
+    alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.google.firebase.crashlytics)
     kotlin("plugin.serialization") version "2.0.21"
 }
 
