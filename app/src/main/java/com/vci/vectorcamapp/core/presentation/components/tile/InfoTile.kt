@@ -17,6 +17,7 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 fun InfoTile(
     modifier: Modifier = Modifier,
     hue: Color = MaterialTheme.colors.cardGlow,
+    fillWidth : Boolean = true,
     content: @Composable () -> Unit
 ) {
     Card(
@@ -36,7 +37,7 @@ fun InfoTile(
                 spread = MaterialTheme.dimensions.shadowSpreadSmall,
                 blurRadius = MaterialTheme.dimensions.shadowBlurSmall,
             )
-            .fillMaxWidth()
+            .then(if (fillWidth) Modifier.fillMaxWidth() else Modifier)
     ) {
         content()
     }

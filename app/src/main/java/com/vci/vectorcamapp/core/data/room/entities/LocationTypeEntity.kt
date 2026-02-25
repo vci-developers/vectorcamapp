@@ -15,5 +15,6 @@ import androidx.room.PrimaryKey
 data class LocationTypeEntity(
     @PrimaryKey val id: Int = -1,
     val programId: Int = -1,
-    val name: String = ""
+    val name: String = "",
+    val level: Int = -1,
 )

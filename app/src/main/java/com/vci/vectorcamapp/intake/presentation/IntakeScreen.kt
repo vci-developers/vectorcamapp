@@ -346,57 +346,91 @@ fun IntakeScreen(
                 iconPainter = painterResource(id = R.drawable.ic_pin),
                 iconDescription = "Geographical Information Icon"
             ) {
-                DropdownField(
-                    label = "District",
-                    options = state.allSitesInProgram.mapNotNull { it.district }.distinct(),
-                    selectedOption = state.selectedDistrict,
-                    onOptionSelected = { onAction(IntakeAction.SelectDistrict(it)) },
-                    error = state.intakeErrors.district,
-                ) { district ->
-                    Text(
-                        text = district,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colors.textPrimary
-                    )
-                }
-
-                if (state.selectedDistrict.isNotBlank()) {
+                if (state.allSitesInProgram.any { !it.district.isNullOrBlank() }) {
                     DropdownField(
-                        label = "Village Name",
-                        options = state.allSitesInProgram
-                            .filter { it.district == state.selectedDistrict }
-                            .mapNotNull { it.villageName }
-                            .distinct(),
-                        selectedOption = state.selectedVillageName,
-                        onOptionSelected = {
-                            onAction(IntakeAction.SelectVillageName(it))
-                        },
-                        error = state.intakeErrors.villageName,
-                    ) { villageName ->
+                        label = "District",
+                        options = state.allSitesInProgram.mapNotNull { it.district }.distinct(),
+                        selectedOption = state.selectedDistrict,
+                        onOptionSelected = { onAction(IntakeAction.SelectDistrict(it)) },
+                        error = state.intakeErrors.district,
+                    ) { district ->
                         Text(
-                            text = villageName,
+                            text = district,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textPrimary
                         )
                     }
-                }
 
-                if (state.selectedVillageName.isNotBlank()) {
-                    DropdownField(
-                        label = "House Number",
-                        options = state.allSitesInProgram
-                            .filter { it.district == state.selectedDistrict && it.villageName == state.selectedVillageName }
-                            .mapNotNull { it.houseNumber }
-                            .distinct(),
-                        selectedOption = state.selectedHouseNumber,
-                        onOptionSelected = { onAction(IntakeAction.SelectHouseNumber(it)) },
-                        error = state.intakeErrors.houseNumber,
-                    ) { houseNumber ->
-                        Text(
-                            text = houseNumber,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colors.textPrimary
-                        )
+
+                    if (state.selectedDistrict.isNotBlank()) {
+                        DropdownField(
+                            label = "Village Name",
+                            options = state.allSitesInProgram
+                                .filter { it.district == state.selectedDistrict }
+                                .mapNotNull { it.villageName }
+                                .distinct(),
+                            selectedOption = state.selectedVillageName,
+                            onOptionSelected = {
+                                onAction(IntakeAction.SelectVillageName(it))
+                            },
+                            error = state.intakeErrors.villageName,
+                        ) { villageName ->
+                            Text(
+                                text = villageName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colors.textPrimary
+                            )
+                        }
+                    }
+
+                    if (state.selectedVillageName.isNotBlank()) {
+                        DropdownField(
+                            label = "House Number",
+                            options = state.allSitesInProgram
+                                .filter { it.district == state.selectedDistrict && it.villageName == state.selectedVillageName }
+                                .mapNotNull { it.houseNumber }
+                                .distinct(),
+                            selectedOption = state.selectedHouseNumber,
+                            onOptionSelected = { onAction(IntakeAction.SelectHouseNumber(it)) },
+                            error = state.intakeErrors.houseNumber,
+                        ) { houseNumber ->
+                            Text(
+                                text = houseNumber,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colors.textPrimary
+                            )
+                        }
+                    }
+                } else {
+                    state.allLocationTypesInProgram.forEachIndexed { index, locationType ->
+                        val parentLocationTypes = state.allLocationTypesInProgram.take(index)
+                        val shouldShowDropdown = index == 0 || parentLocationTypes.all { !state.siteSelectionsByLocationTypeId[it.id].isNullOrBlank() }
+
+                        if (shouldShowDropdown) {
+                            val filteredSites = state.allSitesInProgram.filter { site ->
+                                val locationHierarchy = site.locationHierarchy ?: return@filter false
+                                parentLocationTypes.all { parentLocationType ->
+                                    val selectedParentOption = state.siteSelectionsByLocationTypeId[parentLocationType.id] ?: return@all false
+                                    locationHierarchy[parentLocationType.name] == selectedParentOption
+                                }
+                            }
+
+                            val availableOptions = filteredSites.mapNotNull { it.locationHierarchy?.get(locationType.name) }.distinct()
+
+                            DropdownField(
+                                label = locationType.name,
+                                options = availableOptions,
+                                selectedOption = state.siteSelectionsByLocationTypeId[locationType.id],
+                                onOptionSelected = { onAction(IntakeAction.SelectLocationTypeSiteOption(locationType.id, it))},
+                                error = state.intakeErrors.locationTypeSiteSelections[locationType.id]
+                            ) { locationTypeSiteOption ->
+                                Text(
+                                    text = locationTypeSiteOption,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textPrimary
+                                )
+                            }
+                        }
                     }
                 }
 

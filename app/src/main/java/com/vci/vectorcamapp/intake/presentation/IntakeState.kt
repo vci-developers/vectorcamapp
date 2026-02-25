@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.intake.presentation
 
 import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.model.LocationType
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
@@ -15,6 +16,8 @@ data class IntakeState(
     val allCollectors: List<Collector> = emptyList(),
     val isCurrentCollectorMissing: Boolean = false,
     val locationError: IntakeError? = null,
+    val siteSelectionsByLocationTypeId: Map<Int, String> = emptyMap(),
+    val allLocationTypesInProgram: List<LocationType> = emptyList(),
     val allSitesInProgram: List<Site> = emptyList(),
     val selectedDistrict: String = "",
     val selectedVillageName: String = "",
@@ -52,6 +55,7 @@ data class IntakeState(
         numLlinsAvailable = null,
         numPeopleSleptUnderLlin = null,
         numPeopleSleptInHouse = null,
+        locationTypeSiteSelections = emptyMap()
     ),
     val isCollectionMethodTooltipVisible: Boolean = false,
 )
