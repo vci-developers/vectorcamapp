@@ -89,6 +89,7 @@ class LandingViewModelTest {
         latitude = null,
         longitude = null,
         type = type,
+        expectedSpecimens = 0
     )
 
     private fun makeDummySite() = Site(
