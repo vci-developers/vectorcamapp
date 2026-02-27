@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
@@ -416,7 +415,8 @@ class ImagingViewModel @Inject constructor(
 
                 ImagingAction.SaveImageToSession -> {
                     val currentSession = currentSessionCache.getSession()
-                    if (currentSession == null) {
+                    val currentSiteId = currentSessionCache.getSiteId()
+                    if (currentSession == null || currentSiteId == null) {
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
                         return@launch
                     }
@@ -469,10 +469,12 @@ class ImagingViewModel @Inject constructor(
 
                     saveResult.onSuccess { imageUri ->
                         val specimen = Specimen(
-                            id = specimenId,
-                            remoteId = null,
-                            shouldProcessFurther = shouldProcessFurther
-                        )
+                                id = specimenId,
+                                remoteId = null,
+                                shouldProcessFurther = shouldProcessFurther,
+                                expectedImages = 1
+                            )
+
                         val specimenImage = SpecimenImage(
                             localId = calculateMd5(jpegBytes),
                             remoteId = null,
@@ -487,25 +489,35 @@ class ImagingViewModel @Inject constructor(
                         )
 
                         val success = transactionHelper.runAsTransaction {
-                            val inferenceResult = _state.value.currentInferenceResult
-
-                            val specimenInsertionResult = if (existingSpecimen == null) {
-                                specimenRepository.insertSpecimen(specimen, currentSession.localId)
+                            val expectedSpecimensIncrementResult = if (existingSpecimen == null) {
+                                sessionRepository.upsertSession(currentSession.copy(expectedSpecimens = currentSession.expectedSpecimens + 1), currentSiteId)
                             } else {
                                 Result.Success(Unit)
                             }
+
+                            val specimenUpsertResult = if (existingSpecimen == null) {
+                                specimenRepository.insertSpecimen(specimen, currentSession.localId)
+                            } else {
+                                specimenRepository.updateSpecimen(existingSpecimen.copy(expectedImages = existingSpecimen.expectedImages + 1), currentSession.localId)
+                            }
+
                             val specimenImageInsertionResult =
                                 specimenImageRepository.insertSpecimenImage(
                                     specimenImage, specimen.id, currentSession.localId
                                 )
 
+                            val inferenceResult = _state.value.currentInferenceResult
                             val inferenceResultInsertionResult = inferenceResult?.let {
                                 inferenceResultRepository.insertInferenceResult(
                                     inferenceResult, specimenImage.localId
                                 )
                             } ?: Result.Success(Unit)
 
-                            specimenInsertionResult.onError { error ->
+                            expectedSpecimensIncrementResult.onError { error ->
+                                emitError(error)
+                            }
+
+                            specimenUpsertResult.onError { error ->
                                 emitError(error)
                             }
 
@@ -517,7 +529,7 @@ class ImagingViewModel @Inject constructor(
                                 emitError(error)
                             }
 
-                            (specimenInsertionResult !is Result.Error) && (specimenImageInsertionResult !is Result.Error) && (inferenceResultInsertionResult !is Result.Error)
+                            (specimenUpsertResult !is Result.Error) && (specimenImageInsertionResult !is Result.Error) && (inferenceResultInsertionResult !is Result.Error)
                         }
 
                         if (success) {

@@ -20,4 +20,5 @@ data class Session(
     val latitude: Float?,
     val longitude: Float?,
     val type: SessionType,
+    val expectedSpecimens: Int
 )

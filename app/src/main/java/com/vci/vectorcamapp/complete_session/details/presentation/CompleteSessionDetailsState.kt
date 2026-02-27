@@ -27,6 +27,7 @@ data class CompleteSessionDetailsState(
         latitude = null,
         longitude = null,
         type = SessionType.SURVEILLANCE,
+        expectedSpecimens = 0
     ),
     val site: Site = Site(
         id = -1,

@@ -33,7 +33,8 @@ class RemoteSpecimenDataSource @Inject constructor(
                 setBody(
                     PostSpecimenRequestDto(
                         specimenId = specimen.id,
-                        shouldProcessFurther = specimen.shouldProcessFurther
+                        shouldProcessFurther = specimen.shouldProcessFurther,
+                        expectedImages = specimen.expectedImages
                     )
                 )
             }

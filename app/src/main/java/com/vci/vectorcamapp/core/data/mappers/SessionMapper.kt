@@ -21,6 +21,7 @@ fun SessionEntity.toDomain(): Session {
         latitude = this.latitude,
         longitude = this.longitude,
         type = this.type,
+        expectedSpecimens = this.expectedSpecimens
     )
 }
 
@@ -43,5 +44,6 @@ fun Session.toEntity(siteId: Int): SessionEntity {
         latitude = this.latitude,
         longitude = this.longitude,
         type = this.type,
+        expectedSpecimens = this.expectedSpecimens
     )
 }

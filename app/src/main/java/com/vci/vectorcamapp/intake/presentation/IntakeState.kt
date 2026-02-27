@@ -39,6 +39,7 @@ data class IntakeState(
         latitude = null,
         longitude = null,
         type = SessionType.SURVEILLANCE,
+        expectedSpecimens = 0
     ),
     val surveillanceForm: SurveillanceForm? = null,
     val intakeErrors: IntakeErrors = IntakeErrors(

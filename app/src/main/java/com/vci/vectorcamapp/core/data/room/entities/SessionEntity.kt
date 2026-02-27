@@ -33,5 +33,6 @@ data class SessionEntity(
     val notes: String = "",
     val latitude: Float? = null,
     val longitude: Float? = null,
-    val type: SessionType,
+    val type: SessionType = SessionType.SURVEILLANCE,
+    val expectedSpecimens: Int
 )

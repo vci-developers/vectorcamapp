@@ -308,6 +308,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 latitude = localSession.latitude,
                 longitude = localSession.longitude,
                 type = localSession.type,
+                expectedSpecimens = localSession.expectedSpecimens,
                 siteId = localSiteId,
                 deviceId = syncedDeviceId,
             )
@@ -349,6 +350,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 latitude = remoteSessionDto.latitude,
                 longitude = remoteSessionDto.longitude,
                 type = remoteSessionDto.type,
+                expectedSpecimens = remoteSessionDto.expectedSpecimens
             )
 
             if (localSessionDto != remoteSessionDto) {
@@ -444,7 +446,9 @@ class MetadataUploadWorker @AssistedInject constructor(
             val localSpecimenDto = SpecimenDto(
                 id = localSpecimen.remoteId,
                 specimenId = localSpecimen.id,
-                sessionId = syncedRemoteSessionId
+                sessionId = syncedRemoteSessionId,
+                shouldProcessFurther = localSpecimen.shouldProcessFurther,
+                expectedImages = localSpecimen.expectedImages
             )
 
             val remoteSpecimenDto =
@@ -472,7 +476,10 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
 
             val remoteSpecimen = Specimen(
-                id = remoteSpecimenDto.specimenId, remoteId = remoteSpecimenDto.id, shouldProcessFurther = remoteSpecimenDto.shouldProcessFurther
+                id = remoteSpecimenDto.specimenId,
+                remoteId = remoteSpecimenDto.id,
+                shouldProcessFurther = remoteSpecimenDto.shouldProcessFurther,
+                expectedImages = remoteSpecimenDto.expectedImages
             )
 
             if (remoteSpecimenDto != localSpecimenDto) {

@@ -30,6 +30,7 @@ class CurrentSessionCacheImplementation @Inject constructor(
                 latitude = session.latitude,
                 longitude = session.longitude,
                 type = session.type,
+                expectedSpecimens = session.expectedSpecimens
             )
         }
     }
@@ -56,6 +57,7 @@ class CurrentSessionCacheImplementation @Inject constructor(
                 latitude = currentSessionCacheDto.latitude,
                 longitude = currentSessionCacheDto.longitude,
                 type = currentSessionCacheDto.type,
+                expectedSpecimens = currentSessionCacheDto.expectedSpecimens
             )
         }
     }

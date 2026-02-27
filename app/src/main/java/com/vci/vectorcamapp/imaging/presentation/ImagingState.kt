@@ -12,7 +12,7 @@ import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 data class ImagingState(
     val isLoading: Boolean = false,
     val isProcessing: Boolean = false,
-    val currentSpecimen: Specimen = Specimen(id = "", remoteId = null, shouldProcessFurther = false),
+    val currentSpecimen: Specimen = Specimen(id = "", remoteId = null, shouldProcessFurther = false, expectedImages = 0),
     val currentSpecimenImage: SpecimenImage = SpecimenImage(
         localId = "",
         remoteId = null,
