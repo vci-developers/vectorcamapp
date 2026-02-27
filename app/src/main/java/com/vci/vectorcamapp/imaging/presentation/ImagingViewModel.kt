@@ -30,6 +30,8 @@ import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
 import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
+import com.vci.vectorcamapp.imaging.presentation.extensions.resolveRotationDegrees
+import com.vci.vectorcamapp.imaging.presentation.extensions.rotateBy
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -283,8 +285,28 @@ class ImagingViewModel @Inject constructor(
 
                     withContext(Dispatchers.Default) {
                         captureResult.onSuccess { image ->
-                            val bitmap = image.toUprightBitmap()
+                            // Single toBitmap() — expensive YUV→RGB; reuse for debug and rotation
+                            val rawBitmap = image.toBitmap()
+                            ByteArrayOutputStream().use { rawStream ->
+                                rawBitmap.compress(Bitmap.CompressFormat.JPEG, 100, rawStream)
+                                _state.update { it.copy(debugRawCaptureImageBytes = rawStream.toByteArray()) }
+                            }
+                            val rotation = image.resolveRotationDegrees(action.captureRotationDegrees)
+                            val rotationStartMs = System.currentTimeMillis()
+                            val bitmap = rawBitmap.rotateBy(rotation)
+                            val rotationDurationMs = System.currentTimeMillis() - rotationStartMs
                             image.close()
+
+                            android.util.Log.d("ImagingCapture", "rotateBy(rotation=$rotation°) took ${rotationDurationMs}ms")
+                            ByteArrayOutputStream().use { uprightStream ->
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, uprightStream)
+                                _state.update {
+                                    it.copy(
+                                        debugUprightCaptureImageBytes = uprightStream.toByteArray(),
+                                        debugRotationDurationMs = rotationDurationMs
+                                    )
+                                }
+                            }
 
                             val jpegStream = ByteArrayOutputStream()
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
@@ -554,6 +576,9 @@ class ImagingViewModel @Inject constructor(
                 ),
                 currentInferenceResult = null,
                 currentImageBytes = null,
+                debugRawCaptureImageBytes = null,
+                debugUprightCaptureImageBytes = null,
+                debugRotationDurationMs = null,
                 isCameraReady = false,
                 previewInferenceResults = emptyList(),
                 focusPoint = null,

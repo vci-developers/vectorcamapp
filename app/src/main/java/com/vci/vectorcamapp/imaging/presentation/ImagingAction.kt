@@ -10,7 +10,11 @@ sealed interface ImagingAction {
     data object SaveSessionProgress : ImagingAction
     data object SubmitSession : ImagingAction
     data class ToggleModelInference(val isChecked: Boolean) : ImagingAction
-    data class CaptureImage(val imageCapture: ImageCapture) : ImagingAction
+    /**
+     * @param captureRotationDegrees Display rotation at capture time (0, 90, 180, 270).
+     * Used as fallback when ImageProxy.imageInfo.rotationDegrees is 0 on some devices.
+     */
+    data class CaptureImage(val imageCapture: ImageCapture, val captureRotationDegrees: Int = 0) : ImagingAction
     data object SaveImageToSession : ImagingAction
     data object RetakeImage : ImagingAction
     data class FocusAt(val offset: Offset) : ImagingAction

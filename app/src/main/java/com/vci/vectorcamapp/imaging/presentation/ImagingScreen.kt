@@ -56,6 +56,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.compose.AsyncImage
@@ -103,7 +104,8 @@ fun ImagingScreen(
     }
 
     val view = LocalView.current
-
+    // Display rotation for camera output (portrait = ROTATION_0). Used by Preview, ImageCapture, ImageAnalysis.
+    // Note: takePicture(OnImageCapturedCallback) returns the buffer in sensor orientation; rotation is applied in post (toUprightBitmap).
     val rotation = view.display?.rotation ?: Surface.ROTATION_0
 
     LaunchedEffect(lifecycleOwner, rotation) {
@@ -175,8 +177,9 @@ fun ImagingScreen(
         pagerState.scrollToPage(state.specimensWithImagesAndInferenceResults.size)
     }
 
+    Box(modifier = modifier.fillMaxSize()) {
     HorizontalPager(
-        state = pagerState, modifier = modifier.fillMaxSize()
+        state = pagerState, modifier = Modifier.fillMaxSize()
     ) { page ->
         when {
             page < state.specimensWithImagesAndInferenceResults.size -> {
@@ -657,7 +660,8 @@ fun ImagingScreen(
                                     label = "Capture",
                                     onClick = {
                                         imageCaptureUseCase?.let {
-                                            onAction(ImagingAction.CaptureImage(it))
+                                            val rotationDegrees = (view.display?.rotation ?: Surface.ROTATION_0) * 90
+                                            onAction(ImagingAction.CaptureImage(it, rotationDegrees))
                                         }
                                     },
                                     iconPainter = painterResource(id = R.drawable.ic_camera),
@@ -669,6 +673,76 @@ fun ImagingScreen(
                     }
                 }
             }
+        }
+    }
+
+        // Debug: Raw and After rotation thumbnails + rotation duration
+        if (state.debugRawCaptureImageBytes != null || state.debugUprightCaptureImageBytes != null) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(MaterialTheme.dimensions.paddingMedium),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.paddingSmall)
+            ) {
+                state.debugRawCaptureImageBytes?.let { rawBytes ->
+                    DebugCaptureThumbnail(
+                        label = "Raw",
+                        imageBytes = rawBytes,
+                        contentDescription = "Raw capture (debug)"
+                    )
+                }
+                state.debugUprightCaptureImageBytes?.let { uprightBytes ->
+                    DebugCaptureThumbnail(
+                        label = "After rotation",
+                        imageBytes = uprightBytes,
+                        contentDescription = "After rotation (debug)"
+                    )
+                }
+                state.debugRotationDurationMs?.let { ms ->
+                    Text(
+                        text = "Rotation: ${ms}ms",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colors.textSecondary,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .padding(4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DebugCaptureThumbnail(
+    label: String,
+    imageBytes: ByteArray,
+    contentDescription: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(120.dp, 160.dp)
+            .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
+            .background(MaterialTheme.colors.fieldBorder)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colors.textSecondary,
+                modifier = Modifier.padding(4.dp)
+            )
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageBytes)
+                    .build(),
+                contentDescription = contentDescription,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
         }
     }
 }
