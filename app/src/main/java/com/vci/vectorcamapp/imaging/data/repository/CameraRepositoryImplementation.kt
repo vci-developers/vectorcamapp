@@ -5,14 +5,10 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCapture.OnImageCapturedCallback
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
-import androidx.core.content.ContextCompat
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.imaging.data.camera.Camera2Controller
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -23,30 +19,16 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class CameraRepositoryImplementation @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val camera2Controller: Camera2Controller
 ) : CameraRepository {
-    override suspend fun captureImage(imageCapture: ImageCapture): Result<ImageProxy, ImagingError> {
-        return withContext(Dispatchers.Main) {
-            suspendCoroutine { continuation ->
-                imageCapture.takePicture(
-                    ContextCompat.getMainExecutor(context),
-                    object : OnImageCapturedCallback() {
-                        override fun onCaptureSuccess(image: ImageProxy) {
-                            super.onCaptureSuccess(image)
-                            continuation.resume(Result.Success(image))
-                        }
 
-                        override fun onError(exception: ImageCaptureException) {
-                            super.onError(exception)
-                            continuation.resume(Result.Error(ImagingError.CAPTURE_ERROR))
-                        }
-                    })
-            }
-        }
+    override suspend fun captureImage(): Result<ByteArray, ImagingError> {
+        val jpegBytes = camera2Controller.captureStillImage()
+            ?: return Result.Error(ImagingError.CAPTURE_ERROR)
+        return Result.Success(jpegBytes)
     }
 
     override suspend fun saveImage(

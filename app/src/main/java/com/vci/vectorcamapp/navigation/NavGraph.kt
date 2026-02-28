@@ -159,6 +159,7 @@ fun NavGraph(startDestination: Destination) {
                     false -> ImagingScreen(
                         state = state,
                         onAction = viewModel::onAction,
+                        camera2Controller = viewModel.camera2Controller,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

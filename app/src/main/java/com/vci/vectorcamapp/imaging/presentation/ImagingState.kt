@@ -27,12 +27,8 @@ data class ImagingState(
     ),
     val currentInferenceResult: InferenceResult? = null,
     val currentImageBytes: ByteArray? = null,
-    /** Raw capture buffer (sensor orientation, no rotation). For debug only. */
+    /** Captured image bytes for debug. */
     val debugRawCaptureImageBytes: ByteArray? = null,
-    /** Upright capture after rotation. For debug only. */
-    val debugUprightCaptureImageBytes: ByteArray? = null,
-    /** Time taken for rotateBy() in ms. For debug only. */
-    val debugRotationDurationMs: Long? = null,
     val previewInferenceResults: List<InferenceResult> = emptyList(),
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),
     val focusPoint: Offset? = null,

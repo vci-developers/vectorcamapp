@@ -1,6 +1,5 @@
 [versions]
 agp = "8.9.3"
-cameraCoreVersion = "1.5.2"
 coilCompose = "3.1.0"
 datastore = "1.2.0"
 hiltAndroid = "2.56.2"
@@ -36,13 +35,6 @@ tusAndroidClient = "0.1.12"
 tusJavaClient = "0.5.1"
 
 [libraries]
-androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCoreVersion" }
-androidx-camera-extensions = { module = "androidx.camera:camera-extensions", version.ref = "cameraCoreVersion" }
-androidx-camera-compose = { module = "androidx.camera:camera-compose", version.ref = "cameraCoreVersion" }
-androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraCoreVersion" }
-androidx-camera-mlkit-vision = { module = "androidx.camera:camera-mlkit-vision", version.ref = "cameraCoreVersion" }
-androidx-camera-video = { module = "androidx.camera:camera-video", version.ref = "cameraCoreVersion" }
-androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraCoreVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWork" }
@@ -60,7 +52,6 @@ androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "
 androidx-window = { module = "androidx.window:window", version.ref = "window" }
 androidx-window-testing = { module = "androidx.window:window-testing", version.ref = "window" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
-camera-core = { module = "androidx.camera:camera-core", version.ref = "cameraCoreVersion" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }

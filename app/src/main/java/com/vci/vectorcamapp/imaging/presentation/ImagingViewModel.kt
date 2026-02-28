@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
@@ -21,6 +20,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.imaging.data.camera.Camera2Controller
 import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel
@@ -30,9 +30,7 @@ import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
 import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
-import com.vci.vectorcamapp.imaging.presentation.extensions.resolveRotationDegrees
 import com.vci.vectorcamapp.imaging.presentation.extensions.rotateBy
-import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -72,6 +70,7 @@ class ImagingViewModel @Inject constructor(
     private val inferenceRepository: InferenceRepository,
     private val workRepository: WorkManagerRepository,
     private val validateSpecimenIdUseCase: ValidateSpecimenIdUseCase,
+    val camera2Controller: Camera2Controller,
 ) : CoreViewModel() {
 
     @Inject
@@ -110,6 +109,15 @@ class ImagingViewModel @Inject constructor(
 
     private val _events = Channel<ImagingEvent>()
     val events = _events.receiveAsFlow()
+
+    init {
+        camera2Controller.onAnalysisFrame = { bitmap, sensorOrientation ->
+            val isReviewing = _state.value.currentImageBytes != null
+            if (!isReviewing) {
+                onAction(ImagingAction.ProcessFrame(bitmap, sensorOrientation))
+            }
+        }
+    }
 
     fun onAction(action: ImagingAction) {
         viewModelScope.launch {
@@ -160,7 +168,7 @@ class ImagingViewModel @Inject constructor(
                         }
 
                         if (!_state.value.isProcessing) {
-                            val bitmap = action.frame.toUprightBitmap()
+                            val bitmap = action.frame.rotateBy(action.sensorOrientation)
 
                             val specimenId = inferenceRepository.readSpecimenId(bitmap)
                             validateSpecimenIdUseCase(specimenId, shouldAutoCorrect = true).onSuccess { correctedSpecimenId ->
@@ -235,8 +243,6 @@ class ImagingViewModel @Inject constructor(
                         }
                     } catch (e: Exception) {
                         emitError(ImagingError.PROCESSING_ERROR)
-                    } finally {
-                        action.frame.close()
                     }
                 }
 
@@ -281,36 +287,11 @@ class ImagingViewModel @Inject constructor(
 
                     _state.update { it.copy(isProcessing = true) }
 
-                    val captureResult = cameraRepository.captureImage(action.imageCapture)
+                    val captureResult = cameraRepository.captureImage()
 
                     withContext(Dispatchers.Default) {
-                        captureResult.onSuccess { image ->
-                            // Single toBitmap() — expensive YUV→RGB; reuse for debug and rotation
-                            val rawBitmap = image.toBitmap()
-                            ByteArrayOutputStream().use { rawStream ->
-                                rawBitmap.compress(Bitmap.CompressFormat.JPEG, 100, rawStream)
-                                _state.update { it.copy(debugRawCaptureImageBytes = rawStream.toByteArray()) }
-                            }
-                            val rotation = image.resolveRotationDegrees(action.captureRotationDegrees)
-                            val rotationStartMs = System.currentTimeMillis()
-                            val bitmap = rawBitmap.rotateBy(rotation)
-                            val rotationDurationMs = System.currentTimeMillis() - rotationStartMs
-                            image.close()
-
-                            android.util.Log.d("ImagingCapture", "rotateBy(rotation=$rotation°) took ${rotationDurationMs}ms")
-                            ByteArrayOutputStream().use { uprightStream ->
-                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, uprightStream)
-                                _state.update {
-                                    it.copy(
-                                        debugUprightCaptureImageBytes = uprightStream.toByteArray(),
-                                        debugRotationDurationMs = rotationDurationMs
-                                    )
-                                }
-                            }
-
-                            val jpegStream = ByteArrayOutputStream()
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
-                            val jpegByteArray = jpegStream.toByteArray()
+                        captureResult.onSuccess { jpegByteArray ->
+                            _state.update { it.copy(debugRawCaptureImageBytes = jpegByteArray) }
 
                             val bgrMatrix = Imgcodecs.imdecode(MatOfByte(*jpegByteArray), Imgcodecs.IMREAD_COLOR)
                             val rgbaMatrix = Mat()
@@ -577,8 +558,6 @@ class ImagingViewModel @Inject constructor(
                 currentInferenceResult = null,
                 currentImageBytes = null,
                 debugRawCaptureImageBytes = null,
-                debugUprightCaptureImageBytes = null,
-                debugRotationDurationMs = null,
                 isCameraReady = false,
                 previewInferenceResults = emptyList(),
                 focusPoint = null,
@@ -638,6 +617,7 @@ class ImagingViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+        camera2Controller.release()
         inferenceRepository.closeResources()
     }
 
