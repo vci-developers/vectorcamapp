@@ -18,6 +18,7 @@ import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
@@ -66,9 +67,9 @@ class TfLiteSpecimenClassifier(
                     outputNumClasses = it.getOutputTensor(0).shape()[1]
                 }
 
-                Log.d(TAG, "TFLite interpreter initialized")
+                Timber.tag(TAG).d("TFLite interpreter initialized")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
+                Timber.tag(TAG).e("Failed to initialize TFLite interpreter: ${e.message}")
             }
         }
     }
@@ -127,13 +128,15 @@ class TfLiteSpecimenClassifier(
                         outputTensor.floatArray.toList()
                     }
 
-                    Log.d(TAG, "Inference result: $logits")
-                    continuation.resume(ClassifierResult(
-                        logits = logits,
-                        inferenceDuration = System.currentTimeMillis() - startTime
-                    ))
+                    Timber.tag(TAG).d("Inference result: $logits")
+                    continuation.resume(
+                        ClassifierResult(
+                            logits = logits,
+                            inferenceDuration = System.currentTimeMillis() - startTime
+                        )
+                    )
                 } catch (e: Exception) {
-                    Log.e(TAG, "Inference failed: ${e.message}")
+                    Timber.tag(TAG).e("Inference failed: ${e.message}")
                     continuation.resume(null)
                 }
             }
@@ -186,9 +189,9 @@ class TfLiteSpecimenClassifier(
                     classifier?.close()
                     classifier = null
                     handlerThread.quitSafely()
-                    Log.d(TAG, "Classifier closed")
+                    Timber.tag(TAG).d("Classifier closed")
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error during classifier close: ${e.message}")
+                    Timber.tag(TAG).e("Error during classifier close: ${e.message}")
                 }
             }
         }

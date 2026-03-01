@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -95,7 +96,8 @@ class IncompleteSessionViewModel @Inject constructor(
 
                             val deleteSuccess = sessionRepository.deleteSession(sessionAndSite.session, sessionAndSite.site.id)
                             if (deleteSuccess) {
-                                Log.d("IncompleteSessionViewModel", "Successfully deleted session and images for ID: ${action.sessionId}")
+                                Timber.tag("IncompleteSessionViewModel")
+                                    .d("Successfully deleted session and images for ID: ${action.sessionId}")
                             } else {
                                 emitError(IncompleteSessionError.SESSION_DELETION_FAILED)
                                 IncompleteSessionSentryLogger.logSessionDeletionFailure(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name), action.sessionId)

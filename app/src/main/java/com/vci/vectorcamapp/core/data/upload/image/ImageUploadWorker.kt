@@ -30,6 +30,7 @@ import io.tus.java.client.TusUpload
 import io.tus.java.client.TusUploader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -91,20 +92,21 @@ class ImageUploadWorker @AssistedInject constructor(
     override suspend fun doWork(): WorkerResult {
         val sessionIdStr = inputData.getString(KEY_SESSION_ID)
         if (sessionIdStr == null) {
-            Log.e("ImageUploadWorker", "Session ID missing from worker input data.")
+            Timber.tag("ImageUploadWorker").e("Session ID missing from worker input data.")
             return WorkerResult.failure()
         }
 
         val sessionId = try {
             UUID.fromString(sessionIdStr)
         } catch (e: IllegalArgumentException) {
-            Log.e("ImageUploadWorker", "Invalid session ID format provided: $sessionIdStr", e)
+            Timber.tag("ImageUploadWorker")
+                .e(e, "Invalid session ID format provided: $sessionIdStr")
             return WorkerResult.failure()
         }
 
         val session = sessionRepository.getSessionById(sessionId)
         if (session == null) {
-            Log.e("ImageUploadWorker", "Session $sessionId not found in the database.")
+            Timber.tag("ImageUploadWorker").e("Session $sessionId not found in the database.")
             return WorkerResult.failure()
         }
 
@@ -120,7 +122,7 @@ class ImageUploadWorker @AssistedInject constructor(
         }
 
         if (imagesToUpload.isEmpty()) {
-            Log.d("ImageUploadWorker", "No images to upload for session $sessionId.")
+            Timber.tag("ImageUploadWorker").d("No images to upload for session $sessionId.")
             return WorkerResult.success()
         }
 
@@ -138,10 +140,8 @@ class ImageUploadWorker @AssistedInject constructor(
             notificationCurrentImageIndex = index + 1
 
             if (task.image.remoteId == null) {
-                Log.e(
-                    "ImageUploadWorker",
-                    "Image ${task.image.localId} has a null remoteId. Skipping."
-                )
+                Timber.tag("ImageUploadWorker")
+                    .e("Image ${task.image.localId} has a null remoteId. Skipping.")
                 specimenImageRepository.updateSpecimenImage(
                     specimenImage = task.image.copy(imageUploadStatus = UploadStatus.FAILED),
                     specimenId = task.specimen.id,
@@ -188,11 +188,8 @@ class ImageUploadWorker @AssistedInject constructor(
             if (isStopped) {
                 throw CancellationException("Worker was stopped during file preparation.", e)
             }
-            Log.e(
-                "ImageUploadWorker",
-                "Failed to prepare file or calculate MD5 for specimen ${task.image.localId}.",
-                e
-            )
+            Timber.tag("ImageUploadWorker")
+                .e(e, "Failed to prepare file or calculate MD5 for specimen ${task.image.localId}.")
             specimenImageRepository.updateSpecimenImage(
                 specimenImage = task.image.copy(imageUploadStatus = UploadStatus.FAILED),
                 specimenId = task.specimen.id,
@@ -217,10 +214,8 @@ class ImageUploadWorker @AssistedInject constructor(
 
                     tusClient.uploadCreationURL = URL(constructUrl(tusPath))
                     val upload = createTusUpload(file, uniqueFingerprint, metadata)
-                    Log.d(
-                        "ImageUploadWorker",
-                        "Attempt $attempt: Start/resume ${file.name} (fp=$uniqueFingerprint,md5=$md5)"
-                    )
+                    Timber.tag("ImageUploadWorker")
+                        .d("Attempt $attempt: Start/resume ${file.name} (fp=$uniqueFingerprint,md5=$md5)")
 
                     val uploader: TusUploader = try {
                         val uploaderInstance = tusClient.resumeOrCreateUpload(upload)
@@ -229,19 +224,15 @@ class ImageUploadWorker @AssistedInject constructor(
                             specimenId = task.specimen.id,
                             sessionId = sessionId
                         )
-                        Log.d(
-                            "ImageUploadWorker",
-                            "Connection established for ${task.image.localId}."
-                        )
+                        Timber.tag("ImageUploadWorker")
+                            .d("Connection established for ${task.image.localId}.")
                         uploaderInstance
                     } catch (e: TusProtocolException) {
                         if (e.causingConnection?.responseCode == HttpURLConnection.HTTP_CONFLICT) {
                             val location = e.causingConnection.getHeaderField("Location")
                             if (location != null) {
-                                Log.i(
-                                    "ImageUploadWorker",
-                                    "Upload for ${task.image.localId} already exists on server (conflict). Treating as success."
-                                )
+                                Timber.tag("ImageUploadWorker")
+                                    .i("Upload for ${task.image.localId} already exists on server (conflict). Treating as success.")
                                 specimenImageRepository.updateSpecimenImage(
                                     specimenImage = task.image.copy(imageUploadStatus = UploadStatus.COMPLETED),
                                     specimenId = task.specimen.id,
@@ -259,10 +250,8 @@ class ImageUploadWorker @AssistedInject constructor(
                         is DomainResult.Success -> {
                             when (val finalUrlResult = safeFinish(uploader, file)) {
                                 is DomainResult.Success -> {
-                                    Log.d(
-                                        "ImageUploadWorker",
-                                        "Upload finished successfully: ${finalUrlResult.data}"
-                                    )
+                                    Timber.tag("ImageUploadWorker")
+                                        .d("Upload finished successfully: ${finalUrlResult.data}")
                                     DomainResult.Success(finalUrlResult.data.toString())
                                 }
 
@@ -271,57 +260,44 @@ class ImageUploadWorker @AssistedInject constructor(
                         }
                     }
                 } catch (e: TusProtocolException) {
-                    Log.w(
-                        "ImageUploadWorker",
-                        "Attempt $attempt failed with TusProtocolException.",
-                        e
-                    )
+                    Timber.tag("ImageUploadWorker")
+                        .w(e, "Attempt $attempt failed with TusProtocolException.")
                     if (e.shouldRetry()) {
                         DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                     } else {
                         DomainResult.Error(NetworkError.TUS_PERMANENT_ERROR)
                     }
                 } catch (e: IOException) {
-                    Log.w("ImageUploadWorker", "Attempt $attempt failed with IOException.", e)
+                    Timber.tag("ImageUploadWorker")
+                        .w(e, "Attempt $attempt failed with IOException.")
                     DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                 } catch (e: Exception) {
                     if (isStopped) {
                         file.delete()
                         throw CancellationException("Worker was stopped by the system.", e)
                     }
-                    Log.e(
-                        "ImageUploadWorker",
-                        "Exception on attempt $attempt for specimen ${task.image.localId}.",
-                        e
-                    )
+                    Timber.tag("ImageUploadWorker")
+                        .e(e, "Exception on attempt $attempt for specimen ${task.image.localId}.")
                     return@run DomainResult.Error(NetworkError.UNKNOWN_ERROR)
                 }
 
                 if (result is DomainResult.Success) {
-                    Log.d(
-                        "ImageUploadWorker",
-                        "Success for specimen ${task.image.localId} on attempt $attempt"
-                    )
+                    Timber.tag("ImageUploadWorker")
+                        .d("Success for specimen ${task.image.localId} on attempt $attempt")
                     return@run result
                 }
 
                 result as DomainResult.Error<NetworkError>
-                Log.w(
-                    "ImageUploadWorker",
-                    "Failed attempt $attempt for specimen ${task.image.localId} with error: ${result.error}"
-                )
+                Timber.tag("ImageUploadWorker")
+                    .w("Failed attempt $attempt for specimen ${task.image.localId} with error: ${result.error}")
 
                 if (result.error == NetworkError.TUS_PERMANENT_ERROR || attempt == MAX_RETRIES) {
                     if (result.error == NetworkError.TUS_PERMANENT_ERROR) {
-                        Log.e(
-                            "ImageUploadWorker",
-                            "Permanent error for specimen ${task.image.localId}."
-                        )
+                        Timber.tag("ImageUploadWorker")
+                            .e("Permanent error for specimen ${task.image.localId}.")
                     } else {
-                        Log.e(
-                            "ImageUploadWorker",
-                            "Max retries reached for specimen ${task.image.localId}."
-                        )
+                        Timber.tag("ImageUploadWorker")
+                            .e("Max retries reached for specimen ${task.image.localId}.")
                     }
                     return@run result
                 }
@@ -338,17 +314,17 @@ class ImageUploadWorker @AssistedInject constructor(
 
         if (uploadResult is DomainResult.Success) {
             try {
-                Log.d(
-                    "ImageUploadWorker",
-                    "Upload successful. Compressing original file: ${task.image.imageUri}"
+                Timber.tag("ImageUploadWorker")
+                    .d("Upload successful. Compressing original file: ${task.image.imageUri}")
+                compressImageFile(
+                    task.image.imageUri,
+                    COMPRESSION_QUALITY,
+                    specimenId = task.specimen.id,
+                    imageId = task.image.localId
                 )
-                compressImageFile(task.image.imageUri, COMPRESSION_QUALITY, specimenId = task.specimen.id, imageId = task.image.localId)
             } catch (e: Exception) {
-                Log.e(
-                    "ImageUploadWorker",
-                    "Failed to compress original file (${task.image.imageUri}) after upload.",
-                    e
-                )
+                Timber.tag("ImageUploadWorker")
+                    .e(e, "Failed to compress original file (${task.image.imageUri}) after upload.")
             }
         }
 
@@ -418,10 +394,8 @@ class ImageUploadWorker @AssistedInject constructor(
                             (currentChunkSize * SUCCESS_CHUNK_SIZE_MULTIPLIER).coerceAtMost(
                                 MAX_CHUNK_SIZE_BYTES
                             )
-                        Log.i(
-                            "ImageUploadWorker",
-                            "Increasing chunk size to $currentChunkSize bytes."
-                        )
+                        Timber.tag("ImageUploadWorker")
+                            .i("Increasing chunk size to $currentChunkSize bytes.")
                         successfulUploadsInARow = 0
                     }
                 }
@@ -440,10 +414,8 @@ class ImageUploadWorker @AssistedInject constructor(
 
                     recoveryAttempts++
                     if (recoveryAttempts >= MAX_RETRIES) {
-                        Log.e(
-                            "ImageUploadWorker",
-                            "Exceeded max recovery attempts for a single image upload. Failing."
-                        )
+                        Timber.tag("ImageUploadWorker")
+                            .e("Exceeded max recovery attempts for a single image upload. Failing.")
                         return DomainResult.Error(error)
                     }
 
@@ -457,13 +429,14 @@ class ImageUploadWorker @AssistedInject constructor(
                                 resumeException
                             )
                         }
-                        Log.e("ImageUploadWorker", "Failed to resume upload.", resumeException)
+                        Timber.tag("ImageUploadWorker")
+                            .e(resumeException, "Failed to resume upload.")
                         return DomainResult.Error(NetworkError.UNKNOWN_ERROR)
                     }
                 }
             }
         }
-        Log.d("ImageUploadWorker", "Upload loop finished. Final offset: ${uploader.offset}")
+        Timber.tag("ImageUploadWorker").d("Upload loop finished. Final offset: ${uploader.offset}")
         return DomainResult.Success(Unit)
     }
 
@@ -510,24 +483,24 @@ class ImageUploadWorker @AssistedInject constructor(
         withContext(Dispatchers.IO) {
             try {
                 uploader.finish()
-                Log.d("ImageUploadWorker", "Tus finish() successful.")
+                Timber.tag("ImageUploadWorker").d("Tus finish() successful.")
                 DomainResult.Success(uploader.uploadURL)
             } catch (e: TusProtocolException) {
-                Log.w("ImageUploadWorker", "finish() failed with TusProtocolException.", e)
+                Timber.tag("ImageUploadWorker").w(e, "finish() failed with TusProtocolException.")
                 if (e.shouldRetry()) {
                     DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                 } else {
                     DomainResult.Error(NetworkError.TUS_PERMANENT_ERROR)
                 }
             } catch (e: IOException) {
-                Log.e("ImageUploadWorker", "finish() failed due to IOException.", e)
+                Timber.tag("ImageUploadWorker").e(e, "finish() failed due to IOException.")
                 DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
             } catch (e: Exception) {
                 if (isStopped) {
                     file.delete()
                     throw CancellationException("Worker was stopped during Tus finish().", e)
                 }
-                Log.e("ImageUploadWorker", "finish() failed due to unexpected exception.", e)
+                Timber.tag("ImageUploadWorker").e(e, "finish() failed due to unexpected exception.")
                 DomainResult.Error(NetworkError.UNKNOWN_ERROR)
             }
         }
@@ -591,7 +564,8 @@ class ImageUploadWorker @AssistedInject constructor(
         var backupFile: File? = null
 
         try {
-            backupFile = File.createTempFile("img_backup_${specimenId}_${imageId}", ".tmp", context.cacheDir)
+            backupFile =
+                File.createTempFile("img_backup_${specimenId}_${imageId}", ".tmp", context.cacheDir)
 
             resolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(backupFile).use { out ->
@@ -610,9 +584,10 @@ class ImageUploadWorker @AssistedInject constructor(
                 out.flush()
             } ?: throw IOException("Failed to open output stream for $uri")
 
-            Log.d("ImageUploadWorker", "Successfully compressed $uri to $quality% quality.")
+            Timber.tag("ImageUploadWorker").d("Successfully compressed $uri to $quality% quality.")
         } catch (e: Exception) {
-            Log.e("ImageUploadWorker", "Error compressing $uri, attempting to restore original", e)
+            Timber.tag("ImageUploadWorker")
+                .e(e, "Error compressing $uri, attempting to restore original")
             if (backupFile != null && backupFile.exists()) {
                 try {
                     resolver.openOutputStream(uri, "wt")?.use { out ->
@@ -621,9 +596,11 @@ class ImageUploadWorker @AssistedInject constructor(
                         }
                         out.flush()
                     }
-                    Log.d("ImageUploadWorker", "Successfully restored original image from backup for $uri")
+                    Timber.tag("ImageUploadWorker")
+                        .d("Successfully restored original image from backup for $uri")
                 } catch (restore: Exception) {
-                    Log.e("ImageUploadWorker", "Failed to restore original from backup for $uri", restore)
+                    Timber.tag("ImageUploadWorker")
+                        .e(restore, "Failed to restore original from backup for $uri")
                 }
             }
             throw e

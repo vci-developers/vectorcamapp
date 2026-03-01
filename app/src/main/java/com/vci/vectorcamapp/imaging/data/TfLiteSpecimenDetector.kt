@@ -23,6 +23,7 @@ import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
@@ -86,13 +87,12 @@ class TfLiteSpecimenDetector(
 
                 if (isGpuDelegateInitialized) {
                     warmDetector()
+                } else {
+                    Timber.tag(TAG).d("Skipping detector warmup (CPU mode).")
                 }
-                else {
-                    Log.d(TAG, "Skipping detector warmup (CPU mode).")
-                }
-                Log.d(TAG, "TFLite interpreter initialized")
+                Timber.tag(TAG).d("TFLite interpreter initialized")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
+                Timber.tag(TAG).e("Failed to initialize TFLite interpreter: ${e.message}")
             }
         }
     }
@@ -150,7 +150,7 @@ class TfLiteSpecimenDetector(
 
                     continuation.resume(result)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Inference failed: ${e.message}")
+                    Timber.tag(TAG).e("Inference failed: ${e.message}")
                     continuation.resume(emptyList())
                 }
             }
@@ -263,9 +263,18 @@ class TfLiteSpecimenDetector(
 
             val topLeftX = (centerX - width / 2f).coerceAtLeast(0f)
             val topLeftY = (centerY - height / 2f).coerceAtLeast(0f)
-            Log.d("InferenceResult", "($topLeftX, $topLeftY) -> ($width, $height)")
+            Timber.tag("InferenceResult").d("($topLeftX, $topLeftY) -> ($width, $height)")
 
-            finalBboxPredictions.add(floatArrayOf(topLeftX, topLeftY, width, height, confidence, classId))
+            finalBboxPredictions.add(
+                floatArrayOf(
+                    topLeftX,
+                    topLeftY,
+                    width,
+                    height,
+                    confidence,
+                    classId
+                )
+            )
         }
 
         return finalBboxPredictions
@@ -280,7 +289,7 @@ class TfLiteSpecimenDetector(
                 TensorBuffer.createFixedSize(outputShape, DataType.FLOAT32).buffer
 
             interpreter.run(dummyInputBuffer, dummyOutputBuffer)
-            Log.d(TAG, "Detector warmed up with GPU delegate.")
+            Timber.tag(TAG).d("Detector warmed up with GPU delegate.")
         }
     }
 
@@ -294,9 +303,9 @@ class TfLiteSpecimenDetector(
                     detector?.close()
                     detector = null
                     handlerThread.quitSafely()
-                    Log.d(TAG, "Detector closed")
+                    Timber.tag(TAG).d("Detector closed")
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error during detector close: ${e.message}")
+                    Timber.tag(TAG).e("Error during detector close: ${e.message}")
                 }
             }
         }
