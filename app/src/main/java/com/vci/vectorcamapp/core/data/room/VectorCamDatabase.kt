@@ -6,6 +6,7 @@ import androidx.room.TypeConverters
 import com.vci.vectorcamapp.core.data.room.converters.FloatListConverter
 import com.vci.vectorcamapp.core.data.room.converters.LocationHierarchyConverter
 import com.vci.vectorcamapp.core.data.room.converters.SessionTypeConverter
+import com.vci.vectorcamapp.core.data.room.converters.StringListConverter
 import com.vci.vectorcamapp.core.data.room.converters.UploadStatusConverter
 import com.vci.vectorcamapp.core.data.room.converters.UriConverter
 import com.vci.vectorcamapp.core.data.room.converters.UuidConverter
@@ -39,7 +40,7 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
         SpecimenImageEntity::class,
         InferenceResultEntity::class,
         SurveillanceFormEntity::class],
-    version = 24,
+    version = 25,
 )
 @TypeConverters(
     UuidConverter::class,
@@ -47,7 +48,8 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
     UploadStatusConverter::class,
     SessionTypeConverter::class,
     FloatListConverter::class,
-    LocationHierarchyConverter::class
+    LocationHierarchyConverter::class,
+    StringListConverter::class
 )
 abstract class VectorCamDatabase : RoomDatabase() {
     abstract val collectorDao: CollectorDao
