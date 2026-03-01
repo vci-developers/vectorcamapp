@@ -7,3 +7,7 @@ import kotlinx.coroutines.flow.SharedFlow
 val LocalErrorDataFlow = staticCompositionLocalOf<SharedFlow<ErrorData>> {
     error("No ErrorDataFlow provided")
 }
+
+val LocalErrorMessageEmitter = staticCompositionLocalOf<ErrorMessageEmitter> {
+    error("No ErrorMessageEmitter provided")
+}

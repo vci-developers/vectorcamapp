@@ -120,6 +120,7 @@ android {
 
     buildTypes {
         debug {
+            applicationIdSuffix = ".debug"
             enableUnitTestCoverage = true
             enableAndroidTestCoverage = true
             buildConfigField("String", "BASE_URL", "\"https://test.api.vectorcam.org/\"")
