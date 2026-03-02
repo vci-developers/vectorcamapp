@@ -59,8 +59,8 @@ class TfLiteSpecimenDetector(
             try {
                 val model = FileUtil.loadMappedFile(context, "detect.tflite")
                 val options = Interpreter.Options().apply {
-                    useNNAPI = false
-                    useXNNPACK = false
+                    useNNAPI = true
+                    useXNNPACK = true
                     numThreads = Runtime.getRuntime().availableProcessors()
                 }
 

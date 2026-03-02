@@ -40,6 +40,7 @@ data class ImagingState(
     val pendingAction: ImagingAction? = null,
     val specimenIdError: ImagingError? = null,
     val debugRawCaptureImageBytes: ByteArray? = null,
+    val debugRawBitmapFromCameraBytes: ByteArray? = null,
     val previewProcessingTimeMs: Long? = null,
     val captureProcessingTimeMs: Long? = null
 )

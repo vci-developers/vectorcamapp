@@ -38,10 +38,20 @@ class YuvToRgbConverter(context: Context) {
         }
     }
 
+    /**
+     * Converts ImageProxy to upright Bitmap.
+     * When format is JPEG and no rotation is needed, also returns raw JPEG bytes to skip re-compress.
+     */
     @Synchronized
-    fun convertToUprightBitmap(image: ImageProxy): Bitmap {
+    fun convertToUprightBitmap(image: ImageProxy): ConversionResult {
+        val rawJpegBytes = if (image.format == ImageFormat.JPEG) {
+            val buffer = image.planes[0].buffer
+            ByteArray(buffer.remaining()).also { buffer.get(it); buffer.rewind() }
+        } else null
+
         val bitmap = when (image.format) {
-            ImageFormat.JPEG -> decodeJpegImageProxy(image)
+            ImageFormat.JPEG -> BitmapFactory.decodeByteArray(rawJpegBytes!!, 0, rawJpegBytes.size)
+                ?: throw IllegalArgumentException("Failed to decode JPEG")
             else -> try {
                 if (renderScript != null && yuvToRgbScript != null) {
                     convertWithRenderScript(image)
@@ -54,11 +64,22 @@ class YuvToRgbConverter(context: Context) {
         }
 
         val rotationDegrees = image.imageInfo.rotationDegrees
-        if (rotationDegrees == 0) return bitmap
-        val matrix = Matrix().apply {
-            postRotate(rotationDegrees.toFloat(), bitmap.width / 2f, bitmap.height / 2f)
+        val uprightBitmap = if (rotationDegrees == 0) bitmap else {
+            val matrix = Matrix().apply {
+                postRotate(rotationDegrees.toFloat(), bitmap.width / 2f, bitmap.height / 2f)
+            }
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
         }
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+
+        val jpegBytesForStorage = if (rawJpegBytes != null && rotationDegrees == 0) rawJpegBytes else null
+        return ConversionResult(uprightBitmap, jpegBytesForStorage)
+    }
+
+    data class ConversionResult(val bitmap: Bitmap, val jpegBytesForStorage: ByteArray?) {
+        override fun equals(other: Any?) = (other as? ConversionResult)?.let {
+            bitmap == it.bitmap && jpegBytesForStorage.contentEquals(it.jpegBytesForStorage)
+        } ?: false
+        override fun hashCode() = 31 * bitmap.hashCode() + (jpegBytesForStorage?.contentHashCode() ?: 0)
     }
 
     private fun convertWithRenderScript(image: ImageProxy): Bitmap {
@@ -98,13 +119,6 @@ class YuvToRgbConverter(context: Context) {
         val outputBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         outputAllocation!!.copyTo(outputBitmap)
         return outputBitmap
-    }
-
-    private fun decodeJpegImageProxy(image: ImageProxy): Bitmap {
-        val buffer = image.planes[0].buffer
-        val jpegBytes = ByteArray(buffer.remaining()).also { buffer.get(it); buffer.rewind() }
-        return BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.size)
-            ?: throw IllegalArgumentException("Failed to decode JPEG")
     }
 
     private fun copyImageToNv21(image: ImageProxy, nv21: ByteArray) {

@@ -156,7 +156,8 @@ class ImagingViewModel @Inject constructor(
 
                         if (!_state.value.isProcessing) {
                             val startMs = System.currentTimeMillis()
-                            val bitmap = yuvToRgbConverter.convertToUprightBitmap(action.frame)
+                            val result = yuvToRgbConverter.convertToUprightBitmap(action.frame)
+                            val bitmap = result.bitmap
 
                             val specimenId = inferenceRepository.readSpecimenId(bitmap)
                             validateSpecimenIdUseCase(specimenId, shouldAutoCorrect = true).onSuccess { correctedSpecimenId ->
@@ -275,12 +276,20 @@ class ImagingViewModel @Inject constructor(
                     withContext(Dispatchers.Default) {
                         captureResult.onSuccess { image ->
                             val startMs = System.currentTimeMillis()
-                            val bitmap = yuvToRgbConverter.convertToUprightBitmap(image)
+                            val result = yuvToRgbConverter.convertToUprightBitmap(image)
                             image.close()
+                            val bitmap = result.bitmap
 
-                            val jpegStream = ByteArrayOutputStream()
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, jpegStream)
-                            val jpegByteArray = jpegStream.toByteArray()
+                            val rawBitmapBytes = ByteArrayOutputStream().use { stream ->
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                                stream.toByteArray()
+                            }
+
+                            val jpegByteArray = result.jpegBytesForStorage ?: run {
+                                val jpegStream = ByteArrayOutputStream()
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
+                                jpegStream.toByteArray()
+                            }
 
                             if (_state.value.shouldRunInference) {
                                 val captureDetectorResults = inferenceRepository.detectSpecimen(bitmap)
@@ -346,6 +355,7 @@ class ImagingViewModel @Inject constructor(
                                                     ),
                                                     currentImageBytes = jpegByteArray,
                                                     debugRawCaptureImageBytes = jpegByteArray,
+                                                    debugRawBitmapFromCameraBytes = rawBitmapBytes,
                                                     captureProcessingTimeMs = captureProcessingTimeMs,
                                                     currentInferenceResult = InferenceResult(
                                                         bboxTopLeftX = captureDetectorResult.bboxTopLeftX,
@@ -375,6 +385,7 @@ class ImagingViewModel @Inject constructor(
                                     it.copy(
                                         currentImageBytes = jpegByteArray,
                                         debugRawCaptureImageBytes = jpegByteArray,
+                                        debugRawBitmapFromCameraBytes = rawBitmapBytes,
                                         captureProcessingTimeMs = captureProcessingTimeMs
                                     )
                                 }
@@ -551,6 +562,7 @@ class ImagingViewModel @Inject constructor(
                 hasConfirmedPackaging = false,
                 specimenIdError = null,
                 debugRawCaptureImageBytes = null,
+                debugRawBitmapFromCameraBytes = null,
                 previewProcessingTimeMs = null,
                 captureProcessingTimeMs = null
             )

@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
+import android.util.Log
 import android.view.Surface
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -129,6 +130,8 @@ fun ImagingScreen(
                     surfaceRequest = request
                 }
             }
+
+            Log.d("testcapture", "rotation: $rotation" )
 
         val imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
@@ -777,7 +780,7 @@ fun ImagingScreen(
         }
     }
 
-        state.debugRawCaptureImageBytes?.let { rawBytes ->
+        if (state.debugRawBitmapFromCameraBytes != null || state.debugRawCaptureImageBytes != null) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -786,24 +789,47 @@ fun ImagingScreen(
                     .background(MaterialTheme.colors.cardBackground.copy(alpha = 0.95f))
                     .padding(8.dp)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    state.captureProcessingTimeMs?.let { ms ->
-                        Text(
-                            text = "Capture: ${ms}ms",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colors.textPrimary
-                        )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    state.debugRawBitmapFromCameraBytes?.let { rawBitmapBytes ->
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = "Raw from camera",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colors.textPrimary
+                            )
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data(rawBitmapBytes)
+                                    .crossfade(false)
+                                    .build(),
+                                contentDescription = "Raw bitmap from camera (debug)",
+                                modifier = Modifier
+                                    .size(120.dp, 160.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                            )
+                        }
                     }
-                    AsyncImage(
-                        model = ImageRequest.Builder(context)
-                            .data(rawBytes)
-                            .crossfade(false)
-                            .build(),
-                        contentDescription = "Raw capture (debug)",
-                        modifier = Modifier
-                            .size(120.dp, 160.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                    )
+                    state.debugRawCaptureImageBytes?.let { rawBytes ->
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            state.captureProcessingTimeMs?.let { ms ->
+                                Text(
+                                    text = "Saved: ${ms}ms",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colors.textPrimary
+                                )
+                            }
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data(rawBytes)
+                                    .crossfade(false)
+                                    .build(),
+                                contentDescription = "Final capture (debug)",
+                                modifier = Modifier
+                                    .size(120.dp, 160.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                            )
+                        }
+                    }
                 }
             }
         }
