@@ -6,6 +6,7 @@ import com.google.mlkit.vision.text.TextRecognizer
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenClassifier
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
+import com.vci.vectorcamapp.imaging.data.camera.YuvToRgbConverter
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import dagger.Module
@@ -54,5 +55,11 @@ object ImagingModule {
         return TfLiteSpecimenClassifier(
             context, "abdomen_status.tflite", "TFLiteAbdomenStatusClassifierThread"
         )
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideYuvToRgbConverter(@ApplicationContext context: Context): YuvToRgbConverter {
+        return YuvToRgbConverter(context)
     }
 }

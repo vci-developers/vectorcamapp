@@ -31,7 +31,7 @@ import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
 import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
-import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
+import com.vci.vectorcamapp.imaging.data.camera.YuvToRgbConverter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -47,18 +47,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.opencv.core.MatOfByte
-import org.opencv.imgcodecs.Imgcodecs
-import org.opencv.imgproc.Imgproc
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.random.Random
-import androidx.core.graphics.createBitmap
-import org.opencv.android.Utils.matToBitmap
-import org.opencv.core.Mat
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
@@ -71,6 +65,7 @@ class ImagingViewModel @Inject constructor(
     private val inferenceRepository: InferenceRepository,
     private val workRepository: WorkManagerRepository,
     private val validateSpecimenIdUseCase: ValidateSpecimenIdUseCase,
+    private val yuvToRgbConverter: YuvToRgbConverter,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
 
@@ -160,7 +155,8 @@ class ImagingViewModel @Inject constructor(
                         }
 
                         if (!_state.value.isProcessing) {
-                            val bitmap = action.frame.toUprightBitmap()
+                            val startMs = System.currentTimeMillis()
+                            val bitmap = yuvToRgbConverter.convertToUprightBitmap(action.frame)
 
                             val specimenId = inferenceRepository.readSpecimenId(bitmap)
                             validateSpecimenIdUseCase(specimenId, shouldAutoCorrect = true).onSuccess { correctedSpecimenId ->
@@ -174,19 +170,7 @@ class ImagingViewModel @Inject constructor(
                             }
 
                             if (_state.value.shouldRunInference) {
-                                val jpegStream = ByteArrayOutputStream()
-                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
-                                val jpegByteArray = jpegStream.toByteArray()
-
-                                val bgrMatrix = Imgcodecs.imdecode(MatOfByte(*jpegByteArray), Imgcodecs.IMREAD_COLOR)
-                                val rgbaMatrix = Mat()
-                                Imgproc.cvtColor(bgrMatrix, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
-                                val jpegBitmap = createBitmap(rgbaMatrix.cols(), rgbaMatrix.rows())
-                                matToBitmap(rgbaMatrix, jpegBitmap)
-                                bgrMatrix.release()
-                                rgbaMatrix.release()
-
-                                val previewInferenceResults = inferenceRepository.detectSpecimen(jpegBitmap).map { detectorResult ->
+                                val previewInferenceResults = inferenceRepository.detectSpecimen(bitmap).map { detectorResult ->
                                     InferenceResult(
                                         bboxTopLeftX = detectorResult.bboxTopLeftX,
                                         bboxTopLeftY = detectorResult.bboxTopLeftY,
@@ -206,7 +190,7 @@ class ImagingViewModel @Inject constructor(
                                 val highestConfidenceDetection =
                                     previewInferenceResults.maxByOrNull { it.bboxConfidence }
                                 val autofocusPoint = highestConfidenceDetection?.let { detection ->
-                                    inferenceRepository.computeAutofocusCentroid(jpegBitmap, detection)
+                                    inferenceRepository.computeAutofocusCentroid(bitmap, detection)
                                 }
 
                                 _state.update {
@@ -228,8 +212,13 @@ class ImagingViewModel @Inject constructor(
                                     it.copy(
                                         previewInferenceResults = previewInferenceResults,
                                         focusPoint = nextFocusPoint,
-                                        isManualFocusing = !nextIsAutofocusing
+                                        isManualFocusing = !nextIsAutofocusing,
+                                        previewProcessingTimeMs = System.currentTimeMillis() - startMs
                                     )
+                                }
+                            } else {
+                                _state.update {
+                                    it.copy(previewProcessingTimeMs = System.currentTimeMillis() - startMs)
                                 }
                             }
                         }
@@ -285,34 +274,27 @@ class ImagingViewModel @Inject constructor(
 
                     withContext(Dispatchers.Default) {
                         captureResult.onSuccess { image ->
-                            val bitmap = image.toUprightBitmap()
+                            val startMs = System.currentTimeMillis()
+                            val bitmap = yuvToRgbConverter.convertToUprightBitmap(image)
                             image.close()
 
                             val jpegStream = ByteArrayOutputStream()
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, jpegStream)
                             val jpegByteArray = jpegStream.toByteArray()
 
-                            val bgrMatrix = Imgcodecs.imdecode(MatOfByte(*jpegByteArray), Imgcodecs.IMREAD_COLOR)
-                            val rgbaMatrix = Mat()
-                            Imgproc.cvtColor(bgrMatrix, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
-                            val jpegBitmap = createBitmap(rgbaMatrix.cols(), rgbaMatrix.rows())
-                            matToBitmap(rgbaMatrix, jpegBitmap)
-                            bgrMatrix.release()
-                            rgbaMatrix.release()
-
                             if (_state.value.shouldRunInference) {
-                                val captureDetectorResults = inferenceRepository.detectSpecimen(jpegBitmap)
+                                val captureDetectorResults = inferenceRepository.detectSpecimen(bitmap)
 
                                 when (captureDetectorResults.size) {
                                     0 -> emitError(ImagingError.NO_SPECIMEN_FOUND, SnackbarDuration.Short)
                                     1 -> {
                                         val captureDetectorResult = captureDetectorResults.first()
                                         val topLeftXFloat =
-                                            captureDetectorResult.bboxTopLeftX * jpegBitmap.width
+                                            captureDetectorResult.bboxTopLeftX * bitmap.width
                                         val topLeftYFloat =
-                                            captureDetectorResult.bboxTopLeftY * jpegBitmap.height
-                                        val widthFloat = captureDetectorResult.bboxWidth * jpegBitmap.width
-                                        val heightFloat = captureDetectorResult.bboxHeight * jpegBitmap.height
+                                            captureDetectorResult.bboxTopLeftY * bitmap.height
+                                        val widthFloat = captureDetectorResult.bboxWidth * bitmap.width
+                                        val heightFloat = captureDetectorResult.bboxHeight * bitmap.height
 
                                         val topLeftXAbsolute = topLeftXFloat.toInt()
                                         val topLeftYAbsolute = topLeftYFloat.toInt()
@@ -322,17 +304,17 @@ class ImagingViewModel @Inject constructor(
                                             (heightFloat + (topLeftYFloat - topLeftYAbsolute)).toInt()
 
                                         val clampedTopLeftX =
-                                            topLeftXAbsolute.coerceIn(0, jpegBitmap.width - 1)
+                                            topLeftXAbsolute.coerceIn(0, bitmap.width - 1)
                                         val clampedTopLeftY =
-                                            topLeftYAbsolute.coerceIn(0, jpegBitmap.height - 1)
+                                            topLeftYAbsolute.coerceIn(0, bitmap.height - 1)
                                         val clampedWidth =
-                                            widthAbsolute.coerceIn(1, jpegBitmap.width - clampedTopLeftX)
+                                            widthAbsolute.coerceIn(1, bitmap.width - clampedTopLeftX)
                                         val clampedHeight =
-                                            heightAbsolute.coerceIn(1, jpegBitmap.height - clampedTopLeftY)
+                                            heightAbsolute.coerceIn(1, bitmap.height - clampedTopLeftY)
 
                                         if (clampedWidth > 0 && clampedHeight > 0) {
                                             val croppedBitmap = Bitmap.createBitmap(
-                                                jpegBitmap,
+                                                bitmap,
                                                 clampedTopLeftX,
                                                 clampedTopLeftY,
                                                 clampedWidth,
@@ -341,6 +323,7 @@ class ImagingViewModel @Inject constructor(
 
                                             var (speciesResult, sexResult, abdomenStatusResult) = inferenceRepository.classifySpecimen(croppedBitmap)
 
+                                            val captureProcessingTimeMs = System.currentTimeMillis() - startMs
                                             val speciesIndex = speciesResult?.logits?.let { logits -> logits.indexOf(logits.max()) }
                                             var sexIndex = sexResult?.logits?.let { logits -> logits.indexOf(logits.max()) }
                                             var abdomenStatusIndex = abdomenStatusResult?.logits?.let { logits -> logits.indexOf(logits.max()) }
@@ -362,6 +345,8 @@ class ImagingViewModel @Inject constructor(
                                                         abdomenStatus = abdomenStatusIndex?.let { index -> AbdomenStatusLabel.entries[index].label },
                                                     ),
                                                     currentImageBytes = jpegByteArray,
+                                                    debugRawCaptureImageBytes = jpegByteArray,
+                                                    captureProcessingTimeMs = captureProcessingTimeMs,
                                                     currentInferenceResult = InferenceResult(
                                                         bboxTopLeftX = captureDetectorResult.bboxTopLeftX,
                                                         bboxTopLeftY = captureDetectorResult.bboxTopLeftY,
@@ -385,9 +370,12 @@ class ImagingViewModel @Inject constructor(
                                     else -> emitError(ImagingError.MULTIPLE_SPECIMENS_FOUND, SnackbarDuration.Short)
                                 }
                             } else {
+                                val captureProcessingTimeMs = System.currentTimeMillis() - startMs
                                 _state.update {
                                     it.copy(
                                         currentImageBytes = jpegByteArray,
+                                        debugRawCaptureImageBytes = jpegByteArray,
+                                        captureProcessingTimeMs = captureProcessingTimeMs
                                     )
                                 }
                             }
@@ -561,7 +549,10 @@ class ImagingViewModel @Inject constructor(
                 focusPoint = null,
                 isManualFocusing = false,
                 hasConfirmedPackaging = false,
-                specimenIdError = null
+                specimenIdError = null,
+                debugRawCaptureImageBytes = null,
+                previewProcessingTimeMs = null,
+                captureProcessingTimeMs = null
             )
         }
     }
@@ -615,6 +606,7 @@ class ImagingViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+        yuvToRgbConverter.release()
         inferenceRepository.closeResources()
     }
 

@@ -38,5 +38,8 @@ data class ImagingState(
     val showProcessFurtherDialog: Boolean = false,
     val hasConfirmedPackaging: Boolean = false,
     val pendingAction: ImagingAction? = null,
-    val specimenIdError: ImagingError? = null
+    val specimenIdError: ImagingError? = null,
+    val debugRawCaptureImageBytes: ByteArray? = null,
+    val previewProcessingTimeMs: Long? = null,
+    val captureProcessingTimeMs: Long? = null
 )

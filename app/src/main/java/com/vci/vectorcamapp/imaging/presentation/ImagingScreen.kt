@@ -61,6 +61,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.compose.AsyncImage
@@ -180,6 +181,7 @@ fun ImagingScreen(
         pagerState.scrollToPage(state.specimensWithImagesAndInferenceResults.size)
     }
 
+    Box(modifier = modifier.fillMaxSize()) {
     HorizontalPager(
         state = pagerState, modifier = modifier.fillMaxSize()
     ) { page ->
@@ -662,6 +664,7 @@ fun ImagingScreen(
                                 }
                             }
                         } else {
+                            val previewResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList()
                             Box(
                                 modifier = Modifier
                                     .weight(1f, fill = false)
@@ -673,7 +676,7 @@ fun ImagingScreen(
                                 LiveCameraPreview(
                                     surfaceRequest = surfaceRequest,
                                     camera = camera,
-                                    inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
+                                    inferenceResults = previewResults,
                                     focusPoint = state.focusPoint,
                                     onFocusAt = { normalizedOffset ->
                                         onAction(
@@ -687,6 +690,35 @@ fun ImagingScreen(
                                     isManualFocusing = state.isManualFocusing,
                                     isProcessing = state.isProcessing
                                 )
+                                if (previewResults.isNotEmpty() || state.previewProcessingTimeMs != null) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopStart)
+                                            .padding(8.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(MaterialTheme.colors.cardBackground.copy(alpha = 0.95f))
+                                            .padding(8.dp)
+                                    ) {
+                                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                            state.previewProcessingTimeMs?.let { ms ->
+                                                Text(
+                                                    text = "Preview: ${ms}ms",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colors.textPrimary
+                                                )
+                                            }
+                                            previewResults.take(2).forEachIndexed { index, r ->
+                                                Text(
+                                                    text = "[$index] x=%.3f y=%.3f w=%.3f h=%.3f conf=%.2f".format(
+                                                        r.bboxTopLeftX, r.bboxTopLeftY, r.bboxWidth, r.bboxHeight, r.bboxConfidence
+                                                    ),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colors.textPrimary
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             InfoTile(
@@ -740,6 +772,38 @@ fun ImagingScreen(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+        state.debugRawCaptureImageBytes?.let { rawBytes ->
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(12.dp)
+                    .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
+                    .background(MaterialTheme.colors.cardBackground.copy(alpha = 0.95f))
+                    .padding(8.dp)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    state.captureProcessingTimeMs?.let { ms ->
+                        Text(
+                            text = "Capture: ${ms}ms",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colors.textPrimary
+                        )
+                    }
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(rawBytes)
+                            .crossfade(false)
+                            .build(),
+                        contentDescription = "Raw capture (debug)",
+                        modifier = Modifier
+                            .size(120.dp, 160.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                    )
                 }
             }
         }

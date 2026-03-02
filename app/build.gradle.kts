@@ -38,6 +38,9 @@ android {
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a")
         }
+
+        renderscriptTargetApi = 29
+        renderscriptSupportModeEnabled = true
     }
 
     // Define flavor dimension
