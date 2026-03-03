@@ -123,9 +123,15 @@ class TfLiteSpecimenDetector(
                             preprocessedMatrixChannels
                         ), DataType.FLOAT32
                     )
+                    val continuousMatrix = if (preprocessedMatrix.isContinuous) preprocessedMatrix else {
+                        val temp = Mat()
+                        preprocessedMatrix.copyTo(temp)
+                        temp
+                    }
                     val inputFloatBuffer =
                         FloatArray(preprocessedMatrixHeight * preprocessedMatrixWidth * preprocessedMatrixChannels)
-                    preprocessedMatrix.get(0, 0, inputFloatBuffer)
+                    continuousMatrix.get(0, 0, inputFloatBuffer)
+                    if (!preprocessedMatrix.isContinuous) continuousMatrix.release()
                     inputTensor.loadArray(inputFloatBuffer)
 
                     val outputTensor = TensorBuffer.createFixedSize(
@@ -263,7 +269,6 @@ class TfLiteSpecimenDetector(
 
             val topLeftX = (centerX - width / 2f).coerceAtLeast(0f)
             val topLeftY = (centerY - height / 2f).coerceAtLeast(0f)
-            Log.d("InferenceResult", "($topLeftX, $topLeftY) -> ($width, $height)")
 
             finalBboxPredictions.add(floatArrayOf(topLeftX, topLeftY, width, height, confidence, classId))
         }

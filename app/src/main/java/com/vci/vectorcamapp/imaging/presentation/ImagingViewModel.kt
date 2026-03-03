@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.imaging.presentation
 
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.SystemClock
 import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
@@ -80,6 +81,8 @@ class ImagingViewModel @Inject constructor(
     lateinit var imagingWorkflowFactory: ImagingWorkflowFactory
     private lateinit var imagingWorkflow: ImagingWorkflow
 
+    private var lastProcessFrameAtMs: Long = 0L
+
     private val _specimensWithImagesAndInferenceResults: Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> =
         flow {
             val session = currentSessionCache.getSession()
@@ -114,7 +117,11 @@ class ImagingViewModel @Inject constructor(
         camera2Controller.onAnalysisFrame = { bitmap, sensorOrientation ->
             val isReviewing = _state.value.currentImageBytes != null
             if (!isReviewing) {
-                onAction(ImagingAction.ProcessFrame(bitmap, sensorOrientation))
+                val now = SystemClock.elapsedRealtime()
+                if (now - lastProcessFrameAtMs >= PROCESS_FRAME_INTERVAL_MS) {
+                    lastProcessFrameAtMs = now
+                    onAction(ImagingAction.ProcessFrame(bitmap, sensorOrientation))
+                }
             }
         }
     }
@@ -168,9 +175,23 @@ class ImagingViewModel @Inject constructor(
                         }
 
                         if (!_state.value.isProcessing) {
-                            val bitmap = action.frame.rotateBy(action.sensorOrientation)
+                            val rotatedBitmap = action.frame.rotateBy(action.sensorOrientation)
+                            val jpegStream = ByteArrayOutputStream()
+                            rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
+                            val jpegByteArray = jpegStream.toByteArray()
 
-                            val specimenId = inferenceRepository.readSpecimenId(bitmap)
+                            val jpegBitmap = run {
+                                val bgrMatrix = Imgcodecs.imdecode(MatOfByte(*jpegByteArray), Imgcodecs.IMREAD_COLOR)
+                                val rgbaMatrix = Mat()
+                                Imgproc.cvtColor(bgrMatrix, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
+                                val bitmap = createBitmap(rgbaMatrix.cols(), rgbaMatrix.rows())
+                                matToBitmap(rgbaMatrix, bitmap)
+                                bgrMatrix.release()
+                                rgbaMatrix.release()
+                                bitmap
+                            }
+
+                            val specimenId = inferenceRepository.readSpecimenId(jpegBitmap)
                             validateSpecimenIdUseCase(specimenId, shouldAutoCorrect = true).onSuccess { correctedSpecimenId ->
                                 _state.update {
                                     it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
@@ -182,18 +203,6 @@ class ImagingViewModel @Inject constructor(
                             }
 
                             if (_state.value.shouldRunInference) {
-                                val jpegStream = ByteArrayOutputStream()
-                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
-                                val jpegByteArray = jpegStream.toByteArray()
-
-                                val bgrMatrix = Imgcodecs.imdecode(MatOfByte(*jpegByteArray), Imgcodecs.IMREAD_COLOR)
-                                val rgbaMatrix = Mat()
-                                Imgproc.cvtColor(bgrMatrix, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
-                                val jpegBitmap = createBitmap(rgbaMatrix.cols(), rgbaMatrix.rows())
-                                matToBitmap(rgbaMatrix, jpegBitmap)
-                                bgrMatrix.release()
-                                rgbaMatrix.release()
-
                                 val previewInferenceResults = inferenceRepository.detectSpecimen(jpegBitmap).map { detectorResult ->
                                     InferenceResult(
                                         bboxTopLeftX = detectorResult.bboxTopLeftX,
@@ -236,7 +245,8 @@ class ImagingViewModel @Inject constructor(
                                     it.copy(
                                         previewInferenceResults = previewInferenceResults,
                                         focusPoint = nextFocusPoint,
-                                        isManualFocusing = !nextIsAutofocusing
+                                        isManualFocusing = !nextIsAutofocusing,
+                                        debugPreviewImageBytes = jpegByteArray
                                     )
                                 }
                             }
@@ -558,6 +568,7 @@ class ImagingViewModel @Inject constructor(
                 currentInferenceResult = null,
                 currentImageBytes = null,
                 debugRawCaptureImageBytes = null,
+                debugPreviewImageBytes = null,
                 isCameraReady = false,
                 previewInferenceResults = emptyList(),
                 focusPoint = null,
@@ -623,5 +634,6 @@ class ImagingViewModel @Inject constructor(
 
     private companion object {
         private const val MONTHLY_FURTHER_PROCESSING_CAP = 20
+        private const val PROCESS_FRAME_INTERVAL_MS = 2_000L
     }
 }

@@ -29,6 +29,8 @@ data class ImagingState(
     val currentImageBytes: ByteArray? = null,
     /** Captured image bytes for debug. */
     val debugRawCaptureImageBytes: ByteArray? = null,
+    /** Preview frame bytes used by ProcessFrame for debug. */
+    val debugPreviewImageBytes: ByteArray? = null,
     val previewInferenceResults: List<InferenceResult> = emptyList(),
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),
     val focusPoint: Offset? = null,

@@ -3,7 +3,6 @@ package com.vci.vectorcamapp.imaging.data.camera
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.CameraCaptureSession
@@ -319,27 +318,59 @@ class Camera2Controller(private val context: Context) {
             ?: sizes.minByOrNull { kotlin.math.abs(it.width * it.height - targetWidth * targetHeight) }
     }
 
+    /**
+     * Converts YUV_420_888 directly to Bitmap without JPEG compression.
+     * Preserves full pixel data for better ML detection quality.
+     * Based on: https://blog.minhazav.dev/how-to-convert-yuv-420-sp-android.media.Image-to-Bitmap-or-jpeg
+     */
     private fun yuvImageToBitmap(image: Image): Bitmap {
+        require(image.format == ImageFormat.YUV_420_888) {
+            "Invalid image format: ${image.format}"
+        }
+
+        val width = image.width
+        val height = image.height
+        val argbArray = IntArray(width * height)
+
         val yBuffer = image.planes[0].buffer
         val uBuffer = image.planes[1].buffer
         val vBuffer = image.planes[2].buffer
 
-        val ySize = yBuffer.remaining()
-        val uSize = uBuffer.remaining()
-        val vSize = vBuffer.remaining()
+        yBuffer.position(0)
+        uBuffer.position(0)
+        vBuffer.position(0)
 
-        val nv21 = ByteArray(ySize + uSize + vSize)
-        yBuffer.get(nv21, 0, ySize)
-        vBuffer.get(nv21, ySize, vSize)
-        uBuffer.get(nv21, ySize + vSize, uSize)
+        val yRowStride = image.planes[0].rowStride
+        val yPixelStride = image.planes[0].pixelStride
+        val uvRowStride = image.planes[1].rowStride
+        val uvPixelStride = image.planes[1].pixelStride
 
-        val yuvImage = android.graphics.YuvImage(
-            nv21, android.graphics.ImageFormat.NV21,
-            image.width, image.height, null
-        )
-        val out = java.io.ByteArrayOutputStream()
-        yuvImage.compressToJpeg(android.graphics.Rect(0, 0, image.width, image.height), 85, out)
-        val jpegBytes = out.toByteArray()
-        return BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.size)
+        for (y in 0 until height) {
+            for (x in 0 until width) {
+                val yIndex = y * yRowStride + x * yPixelStride
+                val yValue = yBuffer.get(yIndex).toInt() and 0xff
+
+                val uvX = x / 2
+                val uvY = y / 2
+                val uvIndex = uvY * uvRowStride + uvX * uvPixelStride
+                val uValue = (uBuffer.get(uvIndex).toInt() and 0xff) - 128
+                val vValue = (vBuffer.get(uvIndex).toInt() and 0xff) - 128
+
+                var r = (yValue + 1.370705f * vValue).toInt()
+                var g = (yValue - 0.698001f * vValue - 0.337633f * uValue).toInt()
+                var b = (yValue + 1.732446f * uValue).toInt()
+
+                r = r.coerceIn(0, 255)
+                g = g.coerceIn(0, 255)
+                b = b.coerceIn(0, 255)
+
+                val argbIndex = y * width + x
+                argbArray[argbIndex] = (255 shl 24) or (r shl 16) or (g shl 8) or b
+            }
+        }
+
+        return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply {
+            setPixels(argbArray, 0, width, 0, 0, width, height)
+        }
     }
 }

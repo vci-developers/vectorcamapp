@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -504,6 +505,26 @@ fun ImagingScreen(
                                                 color = MaterialTheme.colors.textPrimary
                                             )
                                         }
+
+                                        state.currentInferenceResult?.let { result ->
+                                            Log.d(
+                                                "ImagingScreen",
+                                                "Current bbox: x=${result.bboxTopLeftX}, " +
+                                                    "y=${result.bboxTopLeftY}, " +
+                                                    "w=${result.bboxWidth}, " +
+                                                    "h=${result.bboxHeight}, " +
+                                                    "conf=${result.bboxConfidence}"
+                                            )
+                                            Text(
+                                                text = "BBox: x=${"%.3f".format(result.bboxTopLeftX)}, " +
+                                                    "y=${"%.3f".format(result.bboxTopLeftY)}, " +
+                                                    "w=${"%.3f".format(result.bboxWidth)}, " +
+                                                    "h=${"%.3f".format(result.bboxHeight)}, " +
+                                                    "conf=${"%.2f".format(result.bboxConfidence)}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colors.textSecondary
+                                            )
+                                        }
                                     }
 
                                     Button(
@@ -528,9 +549,25 @@ fun ImagingScreen(
                                 .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
                                 .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
                         ) {
+                            val previewResults =
+                                if (state.shouldRunInference) state.previewInferenceResults else emptyList()
+
+                            if (previewResults.isNotEmpty()) {
+                                previewResults.forEachIndexed { index, result ->
+                                    Log.d(
+                                        "ImagingScreen",
+                                        "Preview bbox[$index]: x=${result.bboxTopLeftX}, " +
+                                            "y=${result.bboxTopLeftY}, " +
+                                            "w=${result.bboxWidth}, " +
+                                            "h=${result.bboxHeight}, " +
+                                            "conf=${result.bboxConfidence}"
+                                    )
+                                }
+                            }
+
                             LiveCameraPreview(
                                 camera2Controller = camera2Controller,
-                                inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
+                                inferenceResults = previewResults,
                                 focusPoint = state.focusPoint,
                                 onFocusAt = { normalizedOffset -> onAction(ImagingAction.FocusAt(normalizedOffset)) },
                                 onCancelFocus = { onAction(ImagingAction.CancelFocus) },
@@ -592,6 +629,20 @@ fun ImagingScreen(
                     label = "Capture",
                     imageBytes = rawBytes,
                     contentDescription = "Captured image (debug)"
+                )
+            }
+        }
+
+        state.debugPreviewImageBytes?.let { previewBytes ->
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(MaterialTheme.dimensions.paddingMedium)
+            ) {
+                DebugCaptureThumbnail(
+                    label = "Preview",
+                    imageBytes = previewBytes,
+                    contentDescription = "Preview frame used for ProcessFrame (debug)"
                 )
             }
         }

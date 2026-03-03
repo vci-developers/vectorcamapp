@@ -79,11 +79,14 @@ fun LiveCameraPreview(
             )
         }
 
-        inferenceResults.map {
-            BoundingBoxOverlay(
-                inferenceResult = it,
-                overlaySize = containerSize
-            )
+        Box(modifier = Modifier.fillMaxSize()) {
+            inferenceResults.forEach { result ->
+                BoundingBoxOverlay(
+                    inferenceResult = result,
+                    overlaySize = containerSize,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
 
         Box(
