@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.complete_session.list.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -16,19 +17,24 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
 fun CompleteSessionListDetailRow(
-    iconPainter: Painter, iconDescription: String, text: String, modifier: Modifier = Modifier
+    iconPainter: Painter?, iconDescription: String, text: String, modifier: Modifier = Modifier
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.fillMaxWidth()
     ) {
-        Icon(
-            painter = iconPainter,
-            contentDescription = iconDescription,
-            tint = MaterialTheme.colors.icon,
-            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
-        )
+        if (iconPainter != null) {
+            Icon(
+                painter = iconPainter,
+                contentDescription = iconDescription,
+                tint = MaterialTheme.colors.icon,
+                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+            )
+        } else {
+            Spacer(modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall))
+        }
+
+        Spacer(modifier = Modifier.size(MaterialTheme.dimensions.spacingSmall))
 
         Text(
             text = text,

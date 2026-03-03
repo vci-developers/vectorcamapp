@@ -175,11 +175,21 @@ fun CompleteSessionListTile(
                     }
 
                     site.locationHierarchy?.let { locationHierarchy ->
-                        CompleteSessionListDetailRow(
-                            iconPainter = painterResource(R.drawable.ic_pin),
-                            iconDescription = "Location",
-                            text = "Location: $locationHierarchy",
-                        )
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(
+                                MaterialTheme.dimensions.spacingExtraSmall
+                            )
+                        ) {
+                            locationHierarchy.toList().forEachIndexed { index, (key, value) ->
+                                CompleteSessionListDetailRow(
+                                    iconPainter = if (index == 0)
+                                        painterResource(R.drawable.ic_pin)
+                                    else null,
+                                    iconDescription = "Location",
+                                    text = "$key: $value"
+                                )
+                            }
+                        }
                     }
                 }
 
