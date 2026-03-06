@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
@@ -45,6 +46,7 @@ import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
+import com.vci.vectorcamapp.intake.presentation.components.PracticeWarningBanner
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import java.util.UUID
 
@@ -75,6 +77,17 @@ fun IntakeScreen(
         },
         modifier = modifier
     ) {
+        if (state.session.type == SessionType.PRACTICE) {
+            item {
+                PracticeWarningBanner(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                        .padding(vertical = MaterialTheme.dimensions.paddingSmall)
+                )
+            }
+        }
+
         item {
             IntakeTile(
                 title = "General Information",
@@ -615,6 +628,17 @@ fun IntakeScreen(
                     onValueChange = { onAction(IntakeAction.EnterNotes(it)) },
                     placeholder = "1000 character limit...",
                     maxCharacters = 1000,
+                )
+            }
+        }
+
+        if (state.session.type == SessionType.PRACTICE) {
+            item {
+                PracticeWarningBanner(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                        .padding(top = MaterialTheme.dimensions.paddingSmall)
                 )
             }
         }

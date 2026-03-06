@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
@@ -600,10 +599,12 @@ class ImagingViewModel @Inject constructor(
             if (session != null) {
                 imagingWorkflow = imagingWorkflowFactory.create(session.type)
                 val allowModelInferenceToggle = imagingWorkflow.allowModelInferenceToggle
+                val isPracticeSession = imagingWorkflow.isPracticeSession
                 _state.update {
                     it.copy(
                         allowModelInferenceToggle = allowModelInferenceToggle,
-                        shouldRunInference = !allowModelInferenceToggle
+                        shouldRunInference = !allowModelInferenceToggle,
+                        isPracticeSession = isPracticeSession
                     )
                 }
             } else {
