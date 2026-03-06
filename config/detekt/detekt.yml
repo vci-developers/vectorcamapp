@@ -651,7 +651,7 @@ style:
   NestedClassesVisibility:
     active: true
   NewLineAtEndOfFile:
-    active: true
+    active: false  # handled by formatting.FinalNewline (supports auto-correct)
   NoTabs:
     active: false
   NullableBooleanCheck:
@@ -695,7 +695,7 @@ style:
     max: 2
     excludeGuardClauses: false
   TrailingWhitespace:
-    active: false
+    active: false  # handled by formatting.NoTrailingSpaces (supports auto-correct)
   TrimMultilineRawString:
     active: false
     trimmingMethods:
@@ -729,7 +729,7 @@ style:
   UntilInsteadOfRangeTo:
     active: false
   UnusedImports:
-    active: true
+    active: false  # handled by formatting.NoUnusedImports (supports auto-correct)
   UnusedParameter:
     active: true
     allowedNames: 'ignored|expected'
@@ -782,3 +782,12 @@ style:
     active: true
     excludeImports:
       - 'java.util.*'
+
+formatting:
+  active: true
+  Indentation:
+    active: false  # crashes on Jetpack Compose code in detekt-formatting 1.23.x
+  ParameterListWrapping:
+    active: false  # can produce noisy diffs on Compose functions
+  FunctionSignature:
+    active: false

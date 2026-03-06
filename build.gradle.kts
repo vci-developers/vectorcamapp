@@ -13,14 +13,19 @@ dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${libs.versions.detekt.get()}")
 }
 
-detekt {
-    buildUponDefaultConfig = true
-    allRules = false
-    config.setFrom(files("${rootDir}/config/detekt/detekt.yml"))
-}
-
 subprojects {
     apply(plugin = "io.gitlab.arturbosch.detekt")
+
+    dependencies {
+        "detektPlugins"("io.gitlab.arturbosch.detekt:detekt-formatting:${rootProject.libs.versions.detekt.get()}")
+    }
+
+    configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
+        buildUponDefaultConfig = true
+        allRules = false
+        config.setFrom(rootProject.files("config/detekt/detekt.yml"))
+        autoCorrect = rootProject.findProperty("detekt.autoCorrect")?.toString()?.toBoolean() ?: false
+    }
 }
 
 tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
