@@ -720,7 +720,7 @@ fun ImagingScreen(
                                                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
                                             )
                                             Text(
-                                                text = "Practice session: Data will not be tracked.",
+                                                text = "Practice Session: Data will not be tracked.",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colors.textPrimary
                                             )
