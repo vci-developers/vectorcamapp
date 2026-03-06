@@ -34,6 +34,7 @@ window = "1.5.1"
 workRuntimeKtx = "2.11.0"
 tusAndroidClient = "0.1.12"
 tusJavaClient = "0.5.1"
+detekt = "1.23.4"
 
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCoreVersion" }
@@ -110,3 +111,4 @@ google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 sentry-android-gradle = { id = "io.sentry.android.gradle", version.ref = "sentry" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
