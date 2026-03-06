@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 class LocationTypeRepositoryImplementation @Inject constructor(
     private val locationTypeDao: LocationTypeDao
-): LocationTypeRepository {
+) : LocationTypeRepository {
     override suspend fun upsertLocationType(locationType: LocationType, programId: Int): Result<Unit, RoomDbError> {
         return try {
             locationTypeDao.upsertLocationType(locationType.toEntity(programId))

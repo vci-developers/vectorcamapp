@@ -44,7 +44,8 @@ class CameraRepositoryImplementation @Inject constructor(
                             super.onError(exception)
                             continuation.resume(Result.Error(ImagingError.CAPTURE_ERROR))
                         }
-                    })
+                    }
+                )
             }
         }
     }
@@ -109,11 +110,15 @@ class CameraRepositoryImplementation @Inject constructor(
         val relativePath = resolver.query(
             uri,
             arrayOf(MediaStore.MediaColumns.RELATIVE_PATH),
-            null, null, null
+            null,
+            null,
+            null
         )?.use { cursor ->
             if (cursor.moveToFirst()) {
                 cursor.getString(0)
-            } else null
+            } else {
+                null
+            }
         }
 
         val isDeleted = resolver.delete(uri, null, null) > 0
@@ -122,7 +127,13 @@ class CameraRepositoryImplementation @Inject constructor(
             val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
             val selection = "${MediaStore.MediaColumns.RELATIVE_PATH} = ?"
 
-            resolver.query(collection, arrayOf(MediaStore.MediaColumns._ID), selection, arrayOf(relativePath), null)?.use { cursor ->
+            resolver.query(
+                collection,
+                arrayOf(MediaStore.MediaColumns._ID),
+                selection,
+                arrayOf(relativePath),
+                null
+            )?.use { cursor ->
                 if (cursor.count == 0) {
                     val folder = File(Environment.getExternalStorageDirectory(), relativePath)
                     if (folder.exists() && folder.isDirectory && folder.listFiles()?.isEmpty() == true) {

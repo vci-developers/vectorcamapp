@@ -40,14 +40,17 @@ fun CollectorDialog(
     isDeleteDialogVisible: Boolean,
     modifier: Modifier = Modifier
 ) {
-
     AlertDialog(
         onDismissRequest = if (isDeleteDialogVisible) onDismissDeleteDialog else onDismiss,
         title = {
             Text(
-                text = if (isDeleteDialogVisible) "Delete Profile?"
-                else if (isEditDialogVisible) "Edit Profile"
-                else "Add Profile"
+                text = if (isDeleteDialogVisible) {
+                    "Delete Profile?"
+                } else if (isEditDialogVisible) {
+                    "Edit Profile"
+                } else {
+                    "Add Profile"
+                }
             )
         },
         text = {
@@ -57,8 +60,7 @@ fun CollectorDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colors.textSecondary
                 )
-            }
-            else {
+            } else {
                 Column {
                     TextEntryField(
                         label = "Collector Name",
@@ -110,7 +112,10 @@ fun CollectorDialog(
                     contentColor = MaterialTheme.colors.buttonText
                 )
             ) {
-                Text(text = if (isDeleteDialogVisible) "Yes, Delete" else "Submit", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = if (isDeleteDialogVisible) "Yes, Delete" else "Submit",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         },
         dismissButton = {

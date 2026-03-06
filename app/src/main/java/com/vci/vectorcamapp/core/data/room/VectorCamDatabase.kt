@@ -38,7 +38,8 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
         SpecimenEntity::class,
         SpecimenImageEntity::class,
         InferenceResultEntity::class,
-        SurveillanceFormEntity::class],
+        SurveillanceFormEntity::class
+    ],
     version = 24,
 )
 @TypeConverters(

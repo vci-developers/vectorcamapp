@@ -11,8 +11,8 @@ import com.vci.vectorcamapp.navigation.Destination
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.verify
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
@@ -146,7 +146,6 @@ class MainViewModelTest {
             expectNoEvents()
         }
     }
-
 
     // ========================================
     // C. Action Handling -> State Updates

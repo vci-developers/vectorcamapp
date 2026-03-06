@@ -51,7 +51,10 @@ class CompleteSessionDetailsViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(CompleteSessionDetailsState())
     val state: StateFlow<CompleteSessionDetailsState> =
-        combine(_specimensWithImagesAndInferenceResults, _state) { specimensWithImagesAndInferenceResults, currentState ->
+        combine(
+            _specimensWithImagesAndInferenceResults,
+            _state
+        ) { specimensWithImagesAndInferenceResults, currentState ->
             val filteredSpecimensWithImagesAndInferenceResults = if (currentState.searchQuery.isBlank()) {
                 specimensWithImagesAndInferenceResults
             } else {

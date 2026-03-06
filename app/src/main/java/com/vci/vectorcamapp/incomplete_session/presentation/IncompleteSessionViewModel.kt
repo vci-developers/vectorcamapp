@@ -70,11 +70,17 @@ class IncompleteSessionViewModel @Inject constructor(
                             _events.send(IncompleteSessionEvent.NavigateToIntakeScreen(sessionAndSite.session.type))
                         } else {
                             emitError(IncompleteSessionError.SESSION_NOT_FOUND)
-                            IncompleteSessionSentryLogger.logSessionNotFound(Exception(IncompleteSessionError.SESSION_NOT_FOUND.name), action.sessionId)
+                            IncompleteSessionSentryLogger.logSessionNotFound(
+                                Exception(IncompleteSessionError.SESSION_NOT_FOUND.name),
+                                action.sessionId
+                            )
                         }
                     } catch (e: Exception) {
                         emitError(IncompleteSessionError.SESSION_RETRIEVAL_FAILED)
-                        IncompleteSessionSentryLogger.logSessionRetrievalFailure(Exception(IncompleteSessionError.SESSION_RETRIEVAL_FAILED.name, e), action.sessionId)
+                        IncompleteSessionSentryLogger.logSessionRetrievalFailure(
+                            Exception(IncompleteSessionError.SESSION_RETRIEVAL_FAILED.name, e),
+                            action.sessionId
+                        )
                     }
                 }
 
@@ -95,20 +101,35 @@ class IncompleteSessionViewModel @Inject constructor(
                                 }
                             }
 
-                            val deleteSuccess = sessionRepository.deleteSession(sessionAndSite.session, sessionAndSite.site.id)
+                            val deleteSuccess = sessionRepository.deleteSession(
+                                sessionAndSite.session,
+                                sessionAndSite.site.id
+                            )
                             if (deleteSuccess) {
-                                Log.d("IncompleteSessionViewModel", "Successfully deleted session and images for ID: ${action.sessionId}")
+                                Log.d(
+                                    "IncompleteSessionViewModel",
+                                    "Successfully deleted session and images for ID: ${action.sessionId}"
+                                )
                             } else {
                                 emitError(IncompleteSessionError.SESSION_DELETION_FAILED)
-                                IncompleteSessionSentryLogger.logSessionDeletionFailure(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name), action.sessionId)
+                                IncompleteSessionSentryLogger.logSessionDeletionFailure(
+                                    Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name),
+                                    action.sessionId
+                                )
                             }
                         } else {
                             emitError(IncompleteSessionError.SESSION_NOT_FOUND)
-                            IncompleteSessionSentryLogger.logSessionNotFound(Exception(IncompleteSessionError.SESSION_NOT_FOUND.name), action.sessionId)
+                            IncompleteSessionSentryLogger.logSessionNotFound(
+                                Exception(IncompleteSessionError.SESSION_NOT_FOUND.name),
+                                action.sessionId
+                            )
                         }
                     } catch (e: Exception) {
                         emitError(IncompleteSessionError.SESSION_DELETION_FAILED)
-                        IncompleteSessionSentryLogger.logSessionDeletionFailure(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name, e), action.sessionId)
+                        IncompleteSessionSentryLogger.logSessionDeletionFailure(
+                            Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name, e),
+                            action.sessionId
+                        )
                     } finally {
                         _state.value = _state.value.copy(deleteDialogSessionId = null)
                     }

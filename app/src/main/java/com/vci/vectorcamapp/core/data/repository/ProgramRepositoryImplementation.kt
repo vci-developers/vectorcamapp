@@ -23,7 +23,7 @@ class ProgramRepositoryImplementation @Inject constructor(
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }
-    
+
     override fun observeAllPrograms(): Flow<List<Program>> {
         return programDao.observeAllPrograms().map { programEntities ->
             programEntities.map { it.toDomain() }

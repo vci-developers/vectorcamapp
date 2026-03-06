@@ -1,9 +1,9 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.material3.SnackbarDuration
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
@@ -47,6 +47,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.opencv.android.Utils.matToBitmap
+import org.opencv.core.Mat
 import org.opencv.core.MatOfByte
 import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
@@ -56,9 +58,6 @@ import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.random.Random
-import androidx.core.graphics.createBitmap
-import org.opencv.android.Utils.matToBitmap
-import org.opencv.core.Mat
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
@@ -94,7 +93,8 @@ class ImagingViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(ImagingState())
     val state: StateFlow<ImagingState> = combine(
-        _specimensWithImagesAndInferenceResults, _state
+        _specimensWithImagesAndInferenceResults,
+        _state
     ) { specimensWithImagesAndInferenceResults, state ->
         state.copy(
             specimensWithImagesAndInferenceResults = specimensWithImagesAndInferenceResults,
@@ -163,7 +163,10 @@ class ImagingViewModel @Inject constructor(
                             val bitmap = action.frame.toUprightBitmap()
 
                             val specimenId = inferenceRepository.readSpecimenId(bitmap)
-                            validateSpecimenIdUseCase(specimenId, shouldAutoCorrect = true).onSuccess { correctedSpecimenId ->
+                            validateSpecimenIdUseCase(
+                                specimenId,
+                                shouldAutoCorrect = true
+                            ).onSuccess { correctedSpecimenId ->
                                 _state.update {
                                     it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
                                 }
@@ -186,7 +189,9 @@ class ImagingViewModel @Inject constructor(
                                 bgrMatrix.release()
                                 rgbaMatrix.release()
 
-                                val previewInferenceResults = inferenceRepository.detectSpecimen(jpegBitmap).map { detectorResult ->
+                                val previewInferenceResults = inferenceRepository.detectSpecimen(
+                                    jpegBitmap
+                                ).map { detectorResult ->
                                     InferenceResult(
                                         bboxTopLeftX = detectorResult.bboxTopLeftX,
                                         bboxTopLeftY = detectorResult.bboxTopLeftY,
@@ -257,7 +262,8 @@ class ImagingViewModel @Inject constructor(
                     val success = sessionRepository.markSessionAsComplete(currentSession.localId)
                     if (success) {
                         workRepository.enqueueSessionUpload(
-                            currentSession.localId, currentSessionSiteId
+                            currentSession.localId,
+                            currentSessionSiteId
                         )
                         currentSessionCache.clearSession()
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
@@ -339,11 +345,25 @@ class ImagingViewModel @Inject constructor(
                                                 clampedHeight
                                             )
 
-                                            var (speciesResult, sexResult, abdomenStatusResult) = inferenceRepository.classifySpecimen(croppedBitmap)
+                                            var (speciesResult, sexResult, abdomenStatusResult) = inferenceRepository.classifySpecimen(
+                                                croppedBitmap
+                                            )
 
-                                            val speciesIndex = speciesResult?.logits?.let { logits -> logits.indexOf(logits.max()) }
-                                            var sexIndex = sexResult?.logits?.let { logits -> logits.indexOf(logits.max()) }
-                                            var abdomenStatusIndex = abdomenStatusResult?.logits?.let { logits -> logits.indexOf(logits.max()) }
+                                            val speciesIndex = speciesResult?.logits?.let { logits ->
+                                                logits.indexOf(
+                                                logits.max()
+                                            )
+                                            }
+                                            var sexIndex = sexResult?.logits?.let { logits ->
+                                                logits.indexOf(
+                                                logits.max()
+                                            )
+                                            }
+                                            var abdomenStatusIndex = abdomenStatusResult?.logits?.let { logits ->
+                                                logits.indexOf(
+                                                logits.max()
+                                            )
+                                            }
 
                                             if (speciesResult?.logits == null || speciesIndex == SpeciesLabel.NON_MOSQUITO.ordinal) {
                                                 sexResult = null
@@ -423,9 +443,12 @@ class ImagingViewModel @Inject constructor(
                         return@launch
                     }
 
-                    val specimenId = when (val validationResult = validateSpecimenIdUseCase(
-                        _state.value.currentSpecimen.id, shouldAutoCorrect = false
-                    )) {
+                    val specimenId = when (
+                        val validationResult = validateSpecimenIdUseCase(
+                        _state.value.currentSpecimen.id,
+                        shouldAutoCorrect = false
+                    )
+                    ) {
                         is Result.Success -> {
                             _state.update { it.copy(specimenIdError = null) }
                             validationResult.data
@@ -448,12 +471,15 @@ class ImagingViewModel @Inject constructor(
                     }
 
                     val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(
-                        specimenId, currentSession.localId
+                        specimenId,
+                        currentSession.localId
                     )
                     val shouldProcessFurther = when {
                         existingSpecimen != null -> existingSpecimen.shouldProcessFurther
                         _state.value.currentSpecimen.shouldProcessFurther -> true
-                        else -> determineSelectionForFurtherProcessing(imagingWorkflow.specimenFurtherProcessingProbability)
+                        else -> determineSelectionForFurtherProcessing(
+                            imagingWorkflow.specimenFurtherProcessingProbability
+                        )
                     }
 
                     if (shouldProcessFurther && !_state.value.hasConfirmedPackaging) {
@@ -498,7 +524,9 @@ class ImagingViewModel @Inject constructor(
                             }
                             val specimenImageInsertionResult =
                                 specimenImageRepository.insertSpecimenImage(
-                                    specimenImage, specimen.id, currentSession.localId
+                                    specimenImage,
+                                    specimen.id,
+                                    currentSession.localId
                                 )
 
                             val inferenceResultInsertionResult = inferenceResult?.let {
@@ -540,7 +568,9 @@ class ImagingViewModel @Inject constructor(
         _state.update {
             it.copy(
                 currentSpecimen = it.currentSpecimen.copy(
-                    id = "", remoteId = null, shouldProcessFurther = false
+                    id = "",
+                    remoteId = null,
+                    shouldProcessFurther = false
                 ),
                 currentSpecimenImage = it.currentSpecimenImage.copy(
                     localId = "",

@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.imaging.data.camera
 
-import android.view.Display
 import android.view.View
 import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraInfo

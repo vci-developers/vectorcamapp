@@ -59,7 +59,7 @@ fun CapturedSpecimenTile(
     var isImageLoaded by remember { mutableStateOf(false) }
 
     InfoTile(modifier = modifier.fillMaxHeight(), fillWidth = false) {
-        Box (modifier = Modifier.fillMaxHeight().width(IntrinsicSize.Min)){
+        Box(modifier = Modifier.fillMaxHeight().width(IntrinsicSize.Min)) {
             Column(
                 modifier = Modifier
                     .fillMaxHeight()

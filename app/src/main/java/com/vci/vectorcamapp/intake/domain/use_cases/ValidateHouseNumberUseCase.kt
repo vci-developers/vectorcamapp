@@ -5,7 +5,7 @@ import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import javax.inject.Inject
 
 class ValidateHouseNumberUseCase @Inject constructor() {
-    operator fun invoke(householdNumber: String) : Result<Unit, FormValidationError> {
+    operator fun invoke(householdNumber: String): Result<Unit, FormValidationError> {
         return if (householdNumber.isBlank()) {
             Result.Error(FormValidationError.BLANK_HOUSE_NUMBER)
         } else {

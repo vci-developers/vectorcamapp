@@ -18,9 +18,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent
+import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.incomplete_session.presentation.components.IncompleteSessionCard
 import com.vci.vectorcamapp.incomplete_session.presentation.util.IncompleteSessionTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -45,7 +45,8 @@ fun IncompleteSessionScreen(
                     .clickable {
                         onAction(IncompleteSessionAction.ReturnToLandingScreen)
                     }
-                    .testTag(IncompleteSessionTestTags.BACK_BUTTON) )
+                    .testTag(IncompleteSessionTestTags.BACK_BUTTON)
+            )
         },
         modifier = modifier
     ) {
@@ -72,10 +73,11 @@ fun IncompleteSessionScreen(
         if (state.sessionAndSites.isEmpty()) {
             item {
                 Text(
-                    text = if (state.searchQuery.isBlank())
+                    text = if (state.searchQuery.isBlank()) {
                         "No sessions currently in progress."
-                    else
-                        "No matching sessions found.",
+                    } else {
+                        "No matching sessions found."
+                    },
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colors.textSecondary,
                     textAlign = TextAlign.Center,

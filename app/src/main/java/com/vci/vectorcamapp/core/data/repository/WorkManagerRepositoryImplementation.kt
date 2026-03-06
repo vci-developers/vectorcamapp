@@ -10,9 +10,9 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import androidx.work.workDataOf
-import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.data.upload.image.ImageUploadWorker
 import com.vci.vectorcamapp.core.data.upload.metadata.MetadataUploadWorker
+import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.UUID
@@ -39,7 +39,7 @@ class WorkManagerRepositoryImplementation @Inject constructor(
             buildSessionMetadataWork(sessionId, siteId)
         ).then(buildSessionImageWork(sessionId)).enqueue()
     }
-    
+
     override fun observeIsSessionActivelyUploading(sessionId: UUID): Flow<Boolean> {
         val chainName = "session_upload_chain_$sessionId"
         return workManager.getWorkInfosForUniqueWorkFlow(chainName)
@@ -52,10 +52,12 @@ class WorkManagerRepositoryImplementation @Inject constructor(
 
     private fun buildSessionMetadataWork(sessionId: UUID, siteId: Int): OneTimeWorkRequest {
         return OneTimeWorkRequestBuilder<MetadataUploadWorker>()
-            .setInputData(workDataOf(
+            .setInputData(
+                workDataOf(
                 "session_id" to sessionId.toString(),
                 "site_id" to siteId,
-            ))
+            )
+            )
             .setConstraints(uploadConstraints)
             .setBackoffCriteria(BackoffPolicy.LINEAR, WorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
             .build()
@@ -63,9 +65,11 @@ class WorkManagerRepositoryImplementation @Inject constructor(
 
     private fun buildSessionImageWork(sessionId: UUID): OneTimeWorkRequest {
         return OneTimeWorkRequestBuilder<ImageUploadWorker>()
-            .setInputData(workDataOf(
+            .setInputData(
+                workDataOf(
                 ImageUploadWorker.KEY_SESSION_ID to sessionId.toString()
-            ))
+            )
+            )
             .setConstraints(uploadConstraints)
             .setBackoffCriteria(BackoffPolicy.LINEAR, WorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
             .build()

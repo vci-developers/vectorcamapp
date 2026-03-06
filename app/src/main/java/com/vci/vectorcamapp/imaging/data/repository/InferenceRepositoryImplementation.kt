@@ -65,7 +65,7 @@ class InferenceRepositoryImplementation @Inject constructor(
             val speciesResultPromise = async { getClassification(croppedBitmap, speciesClassifier) }
             val sexResultPromise = async { getClassification(croppedBitmap, sexClassifier) }
             val abdomenStatusResultPromise = async { getClassification(croppedBitmap, abdomenStatusClassifier) }
-            
+
             val speciesResult = speciesResultPromise.await()
             val sexResult = sexResultPromise.await()
             val abdomenStatusResult = abdomenStatusResultPromise.await()
@@ -77,7 +77,6 @@ class InferenceRepositoryImplementation @Inject constructor(
         bitmap: Bitmap,
         detection: InferenceResult
     ): Offset? = withContext(Dispatchers.Default) {
-
         val topLeftX = (detection.bboxTopLeftX * bitmap.width).toInt()
         val topLeftY = (detection.bboxTopLeftY * bitmap.height).toInt()
         val cropWidth = (detection.bboxWidth * bitmap.width).toInt()
@@ -106,7 +105,10 @@ class InferenceRepositoryImplementation @Inject constructor(
 
         val thresholdForegroundMaskMatrix = Mat()
         Imgproc.threshold(
-            grayscaleImageMatrix, thresholdForegroundMaskMatrix, 0.0, 255.0,
+            grayscaleImageMatrix,
+            thresholdForegroundMaskMatrix,
+            0.0,
+            255.0,
             Imgproc.THRESH_BINARY_INV or Imgproc.THRESH_OTSU
         )
 
@@ -122,7 +124,8 @@ class InferenceRepositoryImplementation @Inject constructor(
             foregroundXCoordinates[i] = pixelLocation[0].toInt()
             foregroundYCoordinates[i] = pixelLocation[1].toInt()
         }
-        foregroundXCoordinates.sort(); foregroundYCoordinates.sort()
+        foregroundXCoordinates.sort();
+        foregroundYCoordinates.sort()
         val medianX = foregroundXCoordinates[foregroundXCoordinates.size / 2]
         val medianY = foregroundYCoordinates[foregroundYCoordinates.size / 2]
 

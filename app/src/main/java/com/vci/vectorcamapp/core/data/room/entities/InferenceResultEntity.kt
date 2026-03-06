@@ -5,7 +5,8 @@ import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "inference_result", foreignKeys = [
+    tableName = "inference_result",
+        foreignKeys = [
         ForeignKey(
             entity = SpecimenImageEntity::class,
             parentColumns = ["localId"],

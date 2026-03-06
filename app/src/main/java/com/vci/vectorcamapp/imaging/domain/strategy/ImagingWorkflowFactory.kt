@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.imaging.domain.strategy
 
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
-import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
 import com.vci.vectorcamapp.imaging.domain.strategy.concrete.DataCollectionImagingWorkflow
 import com.vci.vectorcamapp.imaging.domain.strategy.concrete.SurveillanceImagingWorkflow
 import javax.inject.Inject

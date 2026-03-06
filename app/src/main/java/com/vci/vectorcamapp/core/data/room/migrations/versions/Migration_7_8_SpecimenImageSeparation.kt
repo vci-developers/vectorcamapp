@@ -40,7 +40,9 @@ val MIGRATION_7_8_SPECIMEN_IMAGE_SEPARATION = object : Migration(7, 8) {
             """.trimIndent()
         )
 
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_specimen_image_specimenId_sessionId` ON `specimen_image` (`specimenId`, `sessionId`);")
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_specimen_image_specimenId_sessionId` ON `specimen_image` (`specimenId`, `sessionId`);"
+        )
 
         db.execSQL(
             """

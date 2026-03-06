@@ -6,8 +6,8 @@ import androidx.work.Configuration
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
 import com.vci.vectorcamapp.main.logging.MainSentryLogger
-import io.sentry.Sentry
 import dagger.hilt.android.HiltAndroidApp
+import io.sentry.Sentry
 import org.opencv.android.OpenCVLoader
 import javax.inject.Inject
 

@@ -37,6 +37,7 @@ import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip
+import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
@@ -44,7 +45,6 @@ import com.vci.vectorcamapp.intake.presentation.components.CollectionMethodToolt
 import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
-import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import java.util.UUID
 
@@ -132,11 +132,15 @@ fun IntakeScreen(
                                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
                             ) {
                                 Column(
-                                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                                    verticalArrangement = Arrangement.spacedBy(
+                                        MaterialTheme.dimensions.spacingExtraSmall
+                                    )
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                                        horizontalArrangement = Arrangement.spacedBy(
+                                            MaterialTheme.dimensions.spacingExtraSmall
+                                        )
                                     ) {
                                         Icon(
                                             painter = painterResource(R.drawable.ic_warning),
@@ -162,7 +166,9 @@ fun IntakeScreen(
                                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                                 ) {
                                     Column(
-                                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                                        verticalArrangement = Arrangement.spacedBy(
+                                            MaterialTheme.dimensions.spacingExtraExtraSmall
+                                        )
                                     ) {
                                         Text(
                                             text = "Name",
@@ -177,7 +183,9 @@ fun IntakeScreen(
                                     }
 
                                     Column(
-                                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                                        verticalArrangement = Arrangement.spacedBy(
+                                            MaterialTheme.dimensions.spacingExtraExtraSmall
+                                        )
                                     ) {
                                         Text(
                                             text = "Title",
@@ -240,10 +248,11 @@ fun IntakeScreen(
                 DropdownField(
                     label = "Collection Method",
                     options = IntakeDropdownOptions.CollectionMethodOption.entries,
-                    selectedOption = if (isOtherCollectionMethod)
+                    selectedOption = if (isOtherCollectionMethod) {
                         IntakeDropdownOptions.CollectionMethodOption.OTHER
-                    else
-                        IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
+                    } else {
+                        IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod }
+                    },
                     onOptionSelected = { onAction(IntakeAction.UpdateCollectionMethod(it.label)) },
                     error = state.intakeErrors.collectionMethod,
                     modifier = Modifier.fillMaxWidth()
@@ -295,9 +304,17 @@ fun IntakeScreen(
                 if (isOtherCollectionMethod) {
                     TextEntryField(
                         label = "Other Collection Method",
-                        value = state.session.collectionMethod.removePrefix(IntakeDropdownOptions.CollectionMethodOption.OTHER.label)
+                        value = state.session.collectionMethod.removePrefix(
+                            IntakeDropdownOptions.CollectionMethodOption.OTHER.label
+                        )
                             .trimStart(),
-                        onValueChange = { onAction(IntakeAction.UpdateCollectionMethod("${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it")) },
+                        onValueChange = {
+                            onAction(
+                                IntakeAction.UpdateCollectionMethod(
+                                    "${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it"
+                                )
+                            )
+                        },
                         singleLine = true,
                         error = state.intakeErrors.collectionMethod
                     )
@@ -312,10 +329,11 @@ fun IntakeScreen(
                 DropdownField(
                     label = "Specimen Condition",
                     options = IntakeDropdownOptions.SpecimenConditionOption.entries,
-                    selectedOption = if (isOtherSpecimenCondition)
+                    selectedOption = if (isOtherSpecimenCondition) {
                         IntakeDropdownOptions.SpecimenConditionOption.OTHER
-                    else
-                        IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition },
+                    } else {
+                        IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition }
+                    },
                     onOptionSelected = { onAction(IntakeAction.UpdateSpecimenCondition(it.label)) },
                     error = state.intakeErrors.specimenCondition,
                     modifier = Modifier.fillMaxWidth()
@@ -330,9 +348,17 @@ fun IntakeScreen(
                 if (isOtherSpecimenCondition) {
                     TextEntryField(
                         label = "Other Specimen Condition",
-                        value = state.session.specimenCondition.removePrefix(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label)
+                        value = state.session.specimenCondition.removePrefix(
+                            IntakeDropdownOptions.SpecimenConditionOption.OTHER.label
+                        )
                             .trimStart(),
-                        onValueChange = { onAction(IntakeAction.UpdateSpecimenCondition("${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it")) },
+                        onValueChange = {
+                            onAction(
+                                IntakeAction.UpdateSpecimenCondition(
+                                    "${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it"
+                                )
+                            )
+                        },
                         singleLine = true,
                         error = state.intakeErrors.specimenCondition
                     )
@@ -360,7 +386,6 @@ fun IntakeScreen(
                             color = MaterialTheme.colors.textPrimary
                         )
                     }
-
 
                     if (state.selectedDistrict.isNotBlank()) {
                         DropdownField(
@@ -404,7 +429,9 @@ fun IntakeScreen(
                 } else {
                     state.allLocationTypesInProgram.forEachIndexed { index, locationType ->
                         val parentLocationTypes = state.allLocationTypesInProgram.take(index)
-                        val shouldShowDropdown = index == 0 || parentLocationTypes.all { !state.siteSelectionsByLocationTypeId[it.id].isNullOrBlank() }
+                        val shouldShowDropdown = index == 0 || parentLocationTypes.all {
+                            !state.siteSelectionsByLocationTypeId[it.id].isNullOrBlank()
+                        }
 
                         if (shouldShowDropdown) {
                             val filteredSites = state.allSitesInProgram.filter { site ->
@@ -415,13 +442,17 @@ fun IntakeScreen(
                                 }
                             }
 
-                            val availableOptions = filteredSites.mapNotNull { it.locationHierarchy?.get(locationType.name) }.distinct()
+                            val availableOptions = filteredSites.mapNotNull { it.locationHierarchy?.get(
+                                locationType.name
+                            ) }.distinct()
 
                             DropdownField(
                                 label = locationType.name,
                                 options = availableOptions,
                                 selectedOption = state.siteSelectionsByLocationTypeId[locationType.id],
-                                onOptionSelected = { onAction(IntakeAction.SelectLocationTypeSiteOption(locationType.id, it))},
+                                onOptionSelected = { onAction(
+                                    IntakeAction.SelectLocationTypeSiteOption(locationType.id, it)
+                                ) },
                                 error = state.intakeErrors.locationTypeSiteSelections[locationType.id]
                             ) { locationTypeSiteOption ->
                                 Text(
@@ -437,10 +468,11 @@ fun IntakeScreen(
                 state.surveillanceForm?.let { surveillanceForm ->
                     TextEntryField(
                         label = "Number of People Living in the House",
-                        value = if (surveillanceForm.numPeopleSleptInHouse < 0)
+                        value = if (surveillanceForm.numPeopleSleptInHouse < 0) {
                             ""
-                        else
-                            surveillanceForm.numPeopleSleptInHouse.toString(),
+                        } else {
+                            surveillanceForm.numPeopleSleptInHouse.toString()
+                        },
                         onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it)) },
                         singleLine = true,
                         error = state.intakeErrors.numPeopleSleptInHouse,
@@ -525,15 +557,17 @@ fun IntakeScreen(
                                     it
                                 )
                             )
-                        })
+                        }
+                    )
 
                     surveillanceForm.monthsSinceIrs?.let { monthsSinceIrs ->
                         TextEntryField(
                             label = "Months Since IRS",
-                            value = if (monthsSinceIrs < 0)
+                            value = if (monthsSinceIrs < 0) {
                                 ""
-                            else
-                                monthsSinceIrs.toString(),
+                            } else {
+                                monthsSinceIrs.toString()
+                            },
                             onValueChange = { onAction(IntakeAction.EnterMonthsSinceIrs(it)) },
                             singleLine = true,
                             error = state.intakeErrors.monthsSinceIrs,
@@ -542,10 +576,11 @@ fun IntakeScreen(
 
                     TextEntryField(
                         label = "Number of LLINs Available",
-                        value = if (surveillanceForm.numLlinsAvailable < 0)
+                        value = if (surveillanceForm.numLlinsAvailable < 0) {
                             ""
-                        else
-                            surveillanceForm.numLlinsAvailable.toString(),
+                        } else {
+                            surveillanceForm.numLlinsAvailable.toString()
+                        },
                         onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it)) },
                         singleLine = true,
                         error = state.intakeErrors.numLlinsAvailable,
@@ -572,7 +607,9 @@ fun IntakeScreen(
                     surveillanceForm.llinBrand?.let { current ->
                         DropdownField(
                             label = "LLIN Brand",
-                            options = IntakeDropdownOptions.LlinBrandOption.entries.filter { it.type?.label == surveillanceForm.llinType || it.type == null},
+                            options = IntakeDropdownOptions.LlinBrandOption.entries.filter {
+                                it.type?.label == surveillanceForm.llinType || it.type == null
+                            },
                             selectedOption = IntakeDropdownOptions.LlinBrandOption.entries.firstOrNull { it.label == current },
                             onOptionSelected = {
                                 onAction(IntakeAction.SelectLlinBrand(it))
@@ -590,10 +627,11 @@ fun IntakeScreen(
                     surveillanceForm.numPeopleSleptUnderLlin?.let { numPeopleSleptUnderLlin ->
                         TextEntryField(
                             label = "Number of People who Slept Under LLIN",
-                            value = if (numPeopleSleptUnderLlin < 0)
+                            value = if (numPeopleSleptUnderLlin < 0) {
                                 ""
-                            else
-                                numPeopleSleptUnderLlin.toString(),
+                            } else {
+                                numPeopleSleptUnderLlin.toString()
+                            },
                             onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(it)) },
                             singleLine = true,
                             error = state.intakeErrors.numPeopleSleptUnderLlin,
@@ -635,7 +673,9 @@ fun SurveillanceFormScreenPreview() {
     VectorcamappTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             IntakeScreen(
-                state = IntakeState(), onAction = { }, modifier = Modifier.padding(innerPadding)
+                state = IntakeState(),
+                onAction = { },
+                modifier = Modifier.padding(innerPadding)
             )
         }
     }

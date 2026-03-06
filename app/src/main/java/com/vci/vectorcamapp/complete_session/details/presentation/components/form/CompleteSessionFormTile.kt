@@ -28,7 +28,6 @@ fun CompleteSessionFormTile(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
-
     InfoTile(modifier = modifier) {
         Column(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),

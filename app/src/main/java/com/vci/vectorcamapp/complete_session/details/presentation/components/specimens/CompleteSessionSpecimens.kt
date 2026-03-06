@@ -74,7 +74,9 @@ fun CompleteSessionSpecimens(
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    items(items = specimensWithImagesAndInferenceResults.asReversed()) { specimenWithSpecimenImagesAndInferenceResults ->
+                    items(
+                        items = specimensWithImagesAndInferenceResults.asReversed()
+                    ) { specimenWithSpecimenImagesAndInferenceResults ->
                         val specimen = specimenWithSpecimenImagesAndInferenceResults.specimen
                         val imageList =
                             specimenWithSpecimenImagesAndInferenceResults.specimenImagesAndInferenceResults

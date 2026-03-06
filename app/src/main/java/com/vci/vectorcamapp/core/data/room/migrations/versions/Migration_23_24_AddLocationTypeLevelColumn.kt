@@ -16,6 +16,7 @@ val MIGRATION_23_24_ADD_LOCATION_TYPE_LEVEL_COLUMN = object : Migration(23, 24) 
                     WHERE lt2.programId = location_type.programId
                         AND lt2.id <= location_type.id
                 )
-            """.trimIndent())
+            """.trimIndent()
+        )
     }
 }

@@ -61,7 +61,6 @@ fun SettingsInfoTile(
                     color = MaterialTheme.colors.textPrimary
                 )
 
-
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier

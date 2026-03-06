@@ -28,7 +28,7 @@ class RemoteSpecimenImageDataSource @Inject constructor(
         specimenImage: SpecimenImage, inferenceResult: InferenceResult?, specimenId: Int
     ): Result<PostSpecimenImageResponseDto, NetworkError> {
         return safeCall<PostSpecimenImageResponseDto> {
-            httpClient.post(constructUrl("specimens/${specimenId}/images/data")) {
+            httpClient.post(constructUrl("specimens/$specimenId/images/data")) {
                 bearerAuth(BuildConfig.VECTORCAM_API_KEY)
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -65,7 +65,7 @@ class RemoteSpecimenImageDataSource @Inject constructor(
         specimenImageId: String, specimenId: Int
     ): Result<SpecimenImageDto, NetworkError> {
         return safeCall<SpecimenImageDto> {
-            httpClient.get(constructUrl("specimens/${specimenId}/images/data/${specimenImageId}")) {
+            httpClient.get(constructUrl("specimens/$specimenId/images/data/$specimenImageId")) {
                 bearerAuth(BuildConfig.VECTORCAM_API_KEY)
                 contentType(ContentType.Application.Json)
             }

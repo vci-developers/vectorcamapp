@@ -9,14 +9,18 @@ object IncompleteSessionSentryLogger {
 
     fun logSessionNotFound(e: Throwable, failedSessionId: UUID) {
         Crashy.exception(
-            throwable = e, context = CrashyContext(
+            throwable = e,
+                context = CrashyContext(
                 screen = "InProgressSession",
                 feature = "SessionResume",
                 action = "session_not_found",
                 sessionId = failedSessionId.toString()
-            ), tags = mapOf(
-                "error_type" to "session_not_found", "user_impact" to "cannot_resume_session"
-            ), extras = mapOf(
+            ),
+                tags = mapOf(
+                "error_type" to "session_not_found",
+                    "user_impact" to "cannot_resume_session"
+            ),
+                extras = mapOf(
                 "error_context" to "User cannot continue their work session",
                 "requested_session_id" to failedSessionId,
                 "recovery_action" to "User may need to start new session",
@@ -27,16 +31,19 @@ object IncompleteSessionSentryLogger {
 
     fun logSessionRetrievalFailure(e: Throwable, failedSessionId: UUID) {
         Crashy.exception(
-            throwable = e, context = CrashyContext(
+            throwable = e,
+                context = CrashyContext(
                 screen = "InProgressSession",
                 feature = "SessionResume",
                 action = "session_retrieval",
                 sessionId = failedSessionId.toString()
-            ), tags = mapOf(
+            ),
+                tags = mapOf(
                 "error_type" to "session_retrieval_failed",
                 "critical" to "true",
                 "user_blocking" to "true"
-            ), extras = mapOf(
+            ),
+                extras = mapOf(
                 "error_context" to "User cannot resume their in progress session",
                 "requested_session_id" to failedSessionId,
                 "recovery_action" to "User may need to start a new session",
@@ -48,14 +55,17 @@ object IncompleteSessionSentryLogger {
 
     fun logSessionDeletionFailure(e: Throwable, failedSessionId: UUID) {
         Crashy.exception(
-            throwable = e, context = CrashyContext(
+            throwable = e,
+                context = CrashyContext(
                 screen = "InProgressSession",
                 feature = "InProgressSessionDeletion",
                 action = "in_progress_session_deletion",
                 sessionId = failedSessionId.toString()
-            ), tags = mapOf(
+            ),
+                tags = mapOf(
                 "error_type" to "in_progress_session_deletion_failed",
-            ), extras = mapOf(
+            ),
+                extras = mapOf(
                 "error_context" to "User cannot delete the in progress session",
                 "requested_session_id" to failedSessionId,
                 "recovery_action" to "User may need to try the delete action again",
@@ -66,14 +76,17 @@ object IncompleteSessionSentryLogger {
 
     fun logImageDeletionFailure(e: Throwable, failedSessionId: UUID, failedImageUri: Uri) {
         Crashy.exception(
-            throwable = e, context = CrashyContext(
+            throwable = e,
+                context = CrashyContext(
                 screen = "InProgressSession",
                 feature = "InProgressSessionImageDeletion",
                 action = "in_progress_session_image_deletion",
                 sessionId = failedSessionId.toString()
-            ), tags = mapOf(
+            ),
+                tags = mapOf(
                 "error_type" to "in_progress_session_image_deletion_failed",
-            ), extras = mapOf(
+            ),
+                extras = mapOf(
                 "error_context" to "User cannot delete the image from an in progress session",
                 "requested_session_id" to failedSessionId,
                 "requested_image_uri" to failedImageUri,

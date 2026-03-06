@@ -125,10 +125,10 @@ class LandingViewModel @Inject constructor(
 
             _state.update {
                 it.copy(
-                    enrolledProgram = program, isLoading = false
+                    enrolledProgram = program,
+                    isLoading = false
                 )
             }
         }
     }
 }
-

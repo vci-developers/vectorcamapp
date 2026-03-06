@@ -17,9 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.platform.testTag
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
@@ -50,10 +50,14 @@ fun ActionButton(
                         MaterialTheme.colors.buttonGradientLeft,
                         MaterialTheme.colors.buttonGradientRight
                     )
-                ), shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
+                ),
+                shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
             ).testTag(testTag ?: "action-button")
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             iconPainter?.let {
                 Icon(
                     painter = iconPainter,

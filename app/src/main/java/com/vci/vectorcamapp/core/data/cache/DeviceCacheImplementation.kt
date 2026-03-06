@@ -50,4 +50,3 @@ class DeviceCacheImplementation @Inject constructor(
             .map { deviceCacheDto -> deviceCacheDto.programId }
     }
 }
-

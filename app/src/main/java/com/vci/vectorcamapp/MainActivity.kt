@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp
 
 import android.Manifest
-import androidx.compose.runtime.CompositionLocalProvider
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
@@ -17,22 +16,23 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.window.layout.WindowMetricsCalculator
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
 import com.vci.vectorcamapp.main.presentation.MainAction
 import com.vci.vectorcamapp.main.presentation.MainEvent
 import com.vci.vectorcamapp.main.presentation.MainViewModel
-import com.vci.vectorcamapp.main.presentation.SplashScreen
 import com.vci.vectorcamapp.main.presentation.PermissionScreen
-import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
+import com.vci.vectorcamapp.main.presentation.SplashScreen
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import com.vci.vectorcamapp.ui.theme.getWindowType
 import dagger.hilt.android.AndroidEntryPoint
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -69,7 +69,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             CompositionLocalProvider(LocalErrorMessageEmitter provides errorMessageEmitter) {
                 VectorcamappTheme(windowType = windowType) {
-            
                 val state by viewModel.state.collectAsState()
 
                 val isReady = state.permissionChecked && state.gpsChecked
@@ -83,7 +82,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 when {
-                    !isReady ->{
+                    !isReady -> {
                         SplashScreen(modifier = Modifier.fillMaxSize())
                     }
                     state.allGranted && state.isGpsEnabled -> {
@@ -107,7 +106,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
 
     override fun onResume() {
         super.onResume()

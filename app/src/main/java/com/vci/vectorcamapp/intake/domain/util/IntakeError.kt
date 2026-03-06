@@ -10,5 +10,5 @@ enum class IntakeError : Error {
     LOCATION_PERMISSION_DENIED,
     LOCATION_GPS_TIMEOUT,
     FORM_INVALID,
-    UNKNOWN_ERROR;
+    UNKNOWN_ERROR
 }

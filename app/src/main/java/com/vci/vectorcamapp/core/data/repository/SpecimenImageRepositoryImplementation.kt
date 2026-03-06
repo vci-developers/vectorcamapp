@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 class SpecimenImageRepositoryImplementation @Inject constructor(
     private val specimenImageDao: SpecimenImageDao
-): SpecimenImageRepository {
+) : SpecimenImageRepository {
     override suspend fun insertSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID): Result<Unit, RoomDbError> {
         return try {
             specimenImageDao.insertSpecimenImage(specimenImage.toEntity(specimenId, sessionId))
@@ -55,7 +55,7 @@ class SpecimenImageRepositoryImplementation @Inject constructor(
     override suspend fun getTotalCountForSession(sessionId: UUID): Int {
         return specimenImageDao.getTotalCountForSession(sessionId)
     }
-    
+
     override fun observeFailedImageCountForSession(sessionId: UUID): Flow<Int> {
         return specimenImageDao.observeFailedImageCountForSession(sessionId)
     }

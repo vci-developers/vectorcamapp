@@ -3,7 +3,7 @@ package com.vci.vectorcamapp.core.data.mappers
 import com.vci.vectorcamapp.core.data.room.entities.InferenceResultEntity
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 
-fun InferenceResultEntity.toDomain() : InferenceResult {
+fun InferenceResultEntity.toDomain(): InferenceResult {
     return InferenceResult(
         bboxTopLeftX = this.bboxTopLeftX,
         bboxTopLeftY = this.bboxTopLeftY,
@@ -21,7 +21,7 @@ fun InferenceResultEntity.toDomain() : InferenceResult {
     )
 }
 
-fun InferenceResult.toEntity(specimenImageId: String) : InferenceResultEntity {
+fun InferenceResult.toEntity(specimenImageId: String): InferenceResultEntity {
     return InferenceResultEntity(
         specimenImageId = specimenImageId,
         bboxTopLeftX = this.bboxTopLeftX,

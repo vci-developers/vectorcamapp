@@ -6,5 +6,5 @@ enum class IncompleteSessionError : Error {
     SESSION_NOT_FOUND,
     SESSION_RETRIEVAL_FAILED,
     SESSION_DELETION_FAILED,
-    UNKNOWN_ERROR;
+    UNKNOWN_ERROR
 }

@@ -33,7 +33,7 @@ fun BoundingBoxOverlay(
             width = inferenceResult.bboxWidth * overlaySize.width,
             height = inferenceResult.bboxHeight * overlaySize.height
         )
-        
+
         drawRect(
             color = boxColor,
             topLeft = topLeft,

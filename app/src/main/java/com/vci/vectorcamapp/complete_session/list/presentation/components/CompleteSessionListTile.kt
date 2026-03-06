@@ -211,7 +211,9 @@ fun CompleteSessionListTile(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                            horizontalArrangement = Arrangement.spacedBy(
+                                MaterialTheme.dimensions.spacingExtraExtraSmall
+                            )
                         ) {
                             Text(
                                 text = "Upload Progress",

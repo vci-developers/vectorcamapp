@@ -9,8 +9,13 @@ class ValidateSpecimenConditionUseCase @Inject constructor() {
     operator fun invoke(specimenCondition: String): Result<Unit, FormValidationError> {
         if (specimenCondition.isBlank()) return Result.Error(FormValidationError.BLANK_SPECIMEN_CONDITION)
 
-        if (specimenCondition.startsWith(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label, ignoreCase = true)) {
-            val suffix = specimenCondition.substringAfter(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label).trim()
+        if (specimenCondition.startsWith(
+                IntakeDropdownOptions.SpecimenConditionOption.OTHER.label,
+                ignoreCase = true
+            )) {
+            val suffix = specimenCondition.substringAfter(
+                IntakeDropdownOptions.SpecimenConditionOption.OTHER.label
+            ).trim()
             if (suffix.isBlank()) return Result.Error(FormValidationError.BLANK_SPECIMEN_CONDITION)
         }
 

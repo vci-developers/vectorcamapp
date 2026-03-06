@@ -4,7 +4,7 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import java.util.UUID
 
-fun SurveillanceFormEntity.toDomain() : SurveillanceForm {
+fun SurveillanceFormEntity.toDomain(): SurveillanceForm {
     return SurveillanceForm(
         numPeopleSleptInHouse = this.numPeopleSleptInHouse,
         wasIrsConducted = this.wasIrsConducted,
@@ -17,7 +17,7 @@ fun SurveillanceFormEntity.toDomain() : SurveillanceForm {
     )
 }
 
-fun SurveillanceForm.toEntity(sessionId: UUID) : SurveillanceFormEntity {
+fun SurveillanceForm.toEntity(sessionId: UUID): SurveillanceFormEntity {
     return SurveillanceFormEntity(
         sessionId = sessionId,
         numPeopleSleptInHouse = this.numPeopleSleptInHouse,

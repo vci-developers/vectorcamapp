@@ -4,7 +4,7 @@ import com.vci.vectorcamapp.core.data.dto.site.SiteDto
 import com.vci.vectorcamapp.core.data.room.entities.SiteEntity
 import com.vci.vectorcamapp.core.domain.model.Site
 
-fun SiteEntity.toDomain() : Site {
+fun SiteEntity.toDomain(): Site {
     return Site(
         id = this.id,
         district = this.district,
@@ -19,7 +19,7 @@ fun SiteEntity.toDomain() : Site {
     )
 }
 
-fun Site.toEntity(programId: Int, locationTypeId: Int?, parentId: Int?) : SiteEntity {
+fun Site.toEntity(programId: Int, locationTypeId: Int?, parentId: Int?): SiteEntity {
     return SiteEntity(
         id = this.id,
         programId = programId,

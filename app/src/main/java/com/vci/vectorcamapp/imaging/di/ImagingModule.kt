@@ -52,7 +52,9 @@ object ImagingModule {
     @AbdomenStatusClassifier
     fun provideAbdomenStatusClassifier(@ApplicationContext context: Context): SpecimenClassifier {
         return TfLiteSpecimenClassifier(
-            context, "abdomen_status.tflite", "TFLiteAbdomenStatusClassifierThread"
+            context,
+            "abdomen_status.tflite",
+            "TFLiteAbdomenStatusClassifierThread"
         )
     }
 }

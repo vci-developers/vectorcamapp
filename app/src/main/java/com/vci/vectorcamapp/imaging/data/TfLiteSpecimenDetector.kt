@@ -73,7 +73,7 @@ class TfLiteSpecimenDetector(
 //                        Log.w(TAG, "GPU delegate for Detector failed: ${e.message}. Falling back to CPU.")
 //                    }
 //                }
-                
+
                 detector = Interpreter(model, options)
 
                 detector?.let {
@@ -86,8 +86,7 @@ class TfLiteSpecimenDetector(
 
                 if (isGpuDelegateInitialized) {
                     warmDetector()
-                }
-                else {
+                } else {
                     Log.d(TAG, "Skipping detector warmup (CPU mode).")
                 }
                 Log.d(TAG, "TFLite interpreter initialized")
@@ -121,7 +120,8 @@ class TfLiteSpecimenDetector(
                             preprocessedMatrixHeight,
                             preprocessedMatrixWidth,
                             preprocessedMatrixChannels
-                        ), DataType.FLOAT32
+                        ),
+                        DataType.FLOAT32
                     )
                     val inputFloatBuffer =
                         FloatArray(preprocessedMatrixHeight * preprocessedMatrixWidth * preprocessedMatrixChannels)
@@ -129,7 +129,8 @@ class TfLiteSpecimenDetector(
                     inputTensor.loadArray(inputFloatBuffer)
 
                     val outputTensor = TensorBuffer.createFixedSize(
-                        intArrayOf(1, outputNumChannels, outputNumElements), DataType.FLOAT32
+                        intArrayOf(1, outputNumChannels, outputNumElements),
+                        DataType.FLOAT32
                     )
 
                     val result = synchronized(detectorLock) {
@@ -237,7 +238,11 @@ class TfLiteSpecimenDetector(
         val confidenceScoresMatrix = MatOfFloat(*confidenceScoresForNms.toFloatArray())
         val indicesMatrix = MatOfInt()
         Dnn.NMSBoxes(
-            boxesMatrix, confidenceScoresMatrix, CONFIDENCE_THRESHOLD, IOU_THRESHOLD, indicesMatrix
+            boxesMatrix,
+            confidenceScoresMatrix,
+            CONFIDENCE_THRESHOLD,
+            IOU_THRESHOLD,
+            indicesMatrix
         )
 
         if (indicesMatrix.empty()) return emptyList()

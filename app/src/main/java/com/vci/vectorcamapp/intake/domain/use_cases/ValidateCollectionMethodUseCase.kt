@@ -10,7 +10,9 @@ class ValidateCollectionMethodUseCase @Inject constructor() {
         if (collectionMethod.isBlank()) return Result.Error(FormValidationError.BLANK_COLLECTION_METHOD)
 
         if (collectionMethod.startsWith(IntakeDropdownOptions.CollectionMethodOption.OTHER.label, ignoreCase = true)) {
-            val suffix = collectionMethod.substringAfter(IntakeDropdownOptions.CollectionMethodOption.OTHER.label).trim()
+            val suffix = collectionMethod.substringAfter(
+                IntakeDropdownOptions.CollectionMethodOption.OTHER.label
+            ).trim()
             if (suffix.isBlank()) return Result.Error(FormValidationError.BLANK_COLLECTION_METHOD)
         }
 

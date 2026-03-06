@@ -6,13 +6,16 @@ import androidx.room.PrimaryKey
 import java.util.UUID
 
 @Entity(
-    tableName = "surveillance_form", foreignKeys = [ForeignKey(
+    tableName = "surveillance_form",
+    foreignKeys = [
+        ForeignKey(
         entity = SessionEntity::class,
         parentColumns = ["localId"],
         childColumns = ["sessionId"],
         onDelete = ForeignKey.CASCADE,
         onUpdate = ForeignKey.CASCADE
-    )]
+    )
+    ]
 )
 data class SurveillanceFormEntity(
     @PrimaryKey val sessionId: UUID = UUID(0, 0),

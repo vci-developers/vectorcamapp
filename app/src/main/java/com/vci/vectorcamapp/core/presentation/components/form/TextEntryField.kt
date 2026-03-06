@@ -75,10 +75,11 @@ fun TextEntryField(
             },
             maxLines = 8,
             textStyle = MaterialTheme.typography.bodyMedium.copy(
-                color = if (error != null)
+                color = if (error != null) {
                     MaterialTheme.colors.error
-                else
+                } else {
                     MaterialTheme.colors.textPrimary
+                }
             ),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colors.transparent,

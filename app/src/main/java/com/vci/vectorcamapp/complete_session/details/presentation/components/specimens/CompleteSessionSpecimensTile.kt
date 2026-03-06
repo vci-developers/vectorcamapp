@@ -42,9 +42,9 @@ import com.vci.vectorcamapp.ui.extensions.color
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.extensions.displayText
+import com.vci.vectorcamapp.ui.extensions.zoomPanGesture
 import java.text.SimpleDateFormat
 import java.util.Locale
-import com.vci.vectorcamapp.ui.extensions.zoomPanGesture
 
 @Composable
 fun CompleteSessionSpecimensTile(
@@ -53,7 +53,6 @@ fun CompleteSessionSpecimensTile(
     modifier: Modifier = Modifier,
     badgeText: String? = null,
 ) {
-
     val context = LocalContext.current
     val density = LocalDensity.current
     val dateTimeFormatter =
@@ -183,4 +182,3 @@ fun CompleteSessionSpecimensTile(
         }
     }
 }
-

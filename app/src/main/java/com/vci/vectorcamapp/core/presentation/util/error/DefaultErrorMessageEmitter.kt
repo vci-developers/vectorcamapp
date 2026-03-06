@@ -11,7 +11,9 @@ import javax.inject.Inject
 class DefaultErrorMessageEmitter @Inject constructor() : ErrorMessageEmitter {
 
     private val _errors = MutableSharedFlow<ErrorData>(
-        replay = 0, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     override val errors = _errors.asSharedFlow()
 

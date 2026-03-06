@@ -66,7 +66,8 @@ class SpecimenRepositoryImplementation @Inject constructor(
         return specimens.map { specimenEntity ->
             val specimenImagesAndResults =
                 specimenDao.getSpecimenImagesAndInferenceResultsBySpecimen(
-                    specimenEntity.id, sessionId
+                    specimenEntity.id,
+                    sessionId
                 )
 
             SpecimenWithSpecimenImagesAndInferenceResults(
@@ -76,7 +77,8 @@ class SpecimenRepositoryImplementation @Inject constructor(
                         specimenImage = relation.specimenImageEntity.toDomain(),
                         inferenceResult = relation.inferenceResultEntity?.toDomain()
                     )
-                })
+                }
+            )
         }
     }
 
@@ -91,7 +93,8 @@ class SpecimenRepositoryImplementation @Inject constructor(
                 combine(
                     specimenEntities.map { specimenEntity ->
                         specimenDao.observeSpecimenImagesAndInferenceResultsBySpecimen(
-                            specimenEntity.id, sessionId
+                            specimenEntity.id,
+                            sessionId
                         ).map { specimenImagesAndResults ->
                             SpecimenWithSpecimenImagesAndInferenceResults(
                                 specimen = specimenEntity.toDomain(),
@@ -100,9 +103,11 @@ class SpecimenRepositoryImplementation @Inject constructor(
                                         specimenImage = relation.specimenImageEntity.toDomain(),
                                         inferenceResult = relation.inferenceResultEntity?.toDomain()
                                     )
-                                })
+                                }
+                            )
                         }
-                    }) { it.toList() }
+                    }
+                ) { it.toList() }
             }
         }
     }

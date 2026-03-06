@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -307,8 +306,8 @@ class RegistrationViewModelTest {
     @Test
     fun regVm_d01_multipleSuccessfulConfirmationsEmitMultipleEvents() = runTest {
         viewModel.state.test {
-            awaitItem() 
-            awaitItem() 
+            awaitItem()
+            awaitItem()
             cancelAndIgnoreRemainingEvents()
         }
 

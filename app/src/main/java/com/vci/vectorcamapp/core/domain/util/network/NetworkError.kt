@@ -17,5 +17,5 @@ enum class NetworkError : Error {
     // Endpoint-Specific Errors
     SESSION_NOT_COMPLETED,
     TUS_TRANSIENT_ERROR,
-    TUS_PERMANENT_ERROR;
+    TUS_PERMANENT_ERROR
 }

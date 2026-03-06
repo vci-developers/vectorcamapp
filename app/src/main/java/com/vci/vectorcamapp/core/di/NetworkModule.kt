@@ -52,12 +52,14 @@ object NetworkModule {
                 logger = Logger.ANDROID
             }
             install(ContentNegotiation) {
-                json(json = Json {
+                json(
+                    json = Json {
                     ignoreUnknownKeys = true
                     encodeDefaults = true
                     prettyPrint = false
                     explicitNulls = false
-                })
+                }
+                )
             }
         }
     }

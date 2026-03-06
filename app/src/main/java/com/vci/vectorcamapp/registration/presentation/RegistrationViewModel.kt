@@ -95,7 +95,6 @@ class RegistrationViewModel @Inject constructor(
                     }
                 }
 
-
                 is RegistrationAction.EnterCollectorTitle -> {
                     _state.update {
                         it.copy(
@@ -150,7 +149,9 @@ class RegistrationViewModel @Inject constructor(
 
                     if (selectedProgram == null) {
                         emitError(RegistrationError.PROGRAM_NOT_FOUND)
-                        RegistrationSentryLogger.logProgramNotFound(IllegalStateException("Program not found during registration"))
+                        RegistrationSentryLogger.logProgramNotFound(
+                            IllegalStateException("Program not found during registration")
+                        )
                         return@launch
                     }
 

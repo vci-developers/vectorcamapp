@@ -45,7 +45,9 @@ interface SpecimenDao {
         specimenId: String, sessionId: UUID
     ): Flow<List<SpecimenImageAndInferenceResultRelation>>
 
-    @Query("SELECT COUNT(*) FROM specimen JOIN session ON specimen.sessionId = session.localId WHERE specimen.shouldProcessFurther = 1 AND session.collectionDate BETWEEN :startDate AND :endDate")
+    @Query(
+        "SELECT COUNT(*) FROM specimen JOIN session ON specimen.sessionId = session.localId WHERE specimen.shouldProcessFurther = 1 AND session.collectionDate BETWEEN :startDate AND :endDate"
+    )
     suspend fun countSelectedSpecimensForFurtherProcessingBetweenSessionCollectionDates(
         startDate: Long, endDate: Long
     ): Int

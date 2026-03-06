@@ -1,5 +1,8 @@
 package com.vci.vectorcamapp.complete_session.list.presentation
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -18,21 +21,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.complete_session.list.presentation.components.CompleteSessionListTile
-import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
+import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent
+import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.ui.draw.rotate
-import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent
 
 @Composable
 fun CompleteSessionListScreen(
@@ -68,7 +68,8 @@ fun CompleteSessionListScreen(
                         .size(MaterialTheme.dimensions.iconSizeLarge)
                         .clickable {
                             onAction(CompleteSessionListAction.ReturnToLandingScreen)
-                        })
+                        }
+                )
             },
             modifier = modifier
         ) {
@@ -95,10 +96,11 @@ fun CompleteSessionListScreen(
             if (state.sessionAndSiteToUploadProgress.isEmpty()) {
                 item {
                     Text(
-                        text = if (state.searchQuery.isBlank())
+                        text = if (state.searchQuery.isBlank()) {
                             "No completed sessions found."
-                        else
-                            "No matching sessions found.",
+                        } else {
+                            "No matching sessions found."
+                        },
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colors.textSecondary,
                         textAlign = TextAlign.Center,
@@ -111,7 +113,8 @@ fun CompleteSessionListScreen(
 
             items(
                 items = state.sessionAndSiteToUploadProgress.toList().asReversed(),
-                key = { it.first.session.localId }) { (sessionAndSite, sessionUploadProgress) ->
+                key = { it.first.session.localId }
+            ) { (sessionAndSite, sessionUploadProgress) ->
 
                 CompleteSessionListTile(
                     sessionAndSite = sessionAndSite,
@@ -136,9 +139,13 @@ fun CompleteSessionListScreen(
                 .padding(MaterialTheme.dimensions.paddingLarge)
         ) {
             Icon(
-                painter = if (hasActiveUploads) painterResource(id = R.drawable.ic_refresh) else painterResource(
+                painter = if (hasActiveUploads) {
+                    painterResource(id = R.drawable.ic_refresh)
+                } else {
+                    painterResource(
                     id = R.drawable.ic_cloud_upload
-                ),
+                )
+                },
                 contentDescription = if (hasActiveUploads) "Refresh" else "Upload",
                 tint = MaterialTheme.colors.buttonText,
                 modifier = Modifier

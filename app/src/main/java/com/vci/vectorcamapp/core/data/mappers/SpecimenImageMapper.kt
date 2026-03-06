@@ -4,7 +4,7 @@ import com.vci.vectorcamapp.core.data.room.entities.SpecimenImageEntity
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import java.util.UUID
 
-fun SpecimenImageEntity.toDomain() : SpecimenImage {
+fun SpecimenImageEntity.toDomain(): SpecimenImage {
     return SpecimenImage(
         localId = this.localId,
         remoteId = this.remoteId,
@@ -19,7 +19,7 @@ fun SpecimenImageEntity.toDomain() : SpecimenImage {
     )
 }
 
-fun SpecimenImage.toEntity(specimenId: String, sessionId: UUID) : SpecimenImageEntity {
+fun SpecimenImage.toEntity(specimenId: String, sessionId: UUID): SpecimenImageEntity {
     return SpecimenImageEntity(
         localId = this.localId,
         specimenId = specimenId,

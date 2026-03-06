@@ -5,7 +5,7 @@ import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import javax.inject.Inject
 
 class ValidateDistrictUseCase @Inject constructor() {
-    operator fun invoke(district: String) : Result<Unit, FormValidationError> {
+    operator fun invoke(district: String): Result<Unit, FormValidationError> {
         return if (district.isBlank()) {
             Result.Error(FormValidationError.BLANK_DISTRICT)
         } else {

@@ -6,13 +6,18 @@ import androidx.room.Index
 import java.util.UUID
 
 @Entity(
-    tableName = "specimen", foreignKeys = [ForeignKey(
+    tableName = "specimen",
+        foreignKeys = [
+            ForeignKey(
         entity = SessionEntity::class,
         parentColumns = ["localId"],
         childColumns = ["sessionId"],
         onDelete = ForeignKey.CASCADE,
         onUpdate = ForeignKey.CASCADE
-    )], indices = [Index("sessionId")], primaryKeys = ["id", "sessionId"]
+    )
+        ],
+        indices = [Index("sessionId")],
+    primaryKeys = ["id", "sessionId"]
 )
 data class SpecimenEntity(
     val id: String = "",

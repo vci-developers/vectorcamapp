@@ -1,0 +1,647 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:CompleteSessionForm.kt$@Composable fun CompleteSessionForm( session: Session, site: Site, surveillanceForm: SurveillanceForm?, modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:CompleteSessionListTile.kt$@Composable fun CompleteSessionListTile( sessionAndSite: SessionAndSite, sessionUploadProgress: SessionUploadProgress, onClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:ErrorExtensions.kt$fun Error.toString(context: Context): String</ID>
+    <ID>CyclomaticComplexMethod:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun compressImageFile( uri: Uri, quality: Int, specimenId: String, imageId: String )</ID>
+    <ID>CyclomaticComplexMethod:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun executeUploadLoop( initialUploader: TusUploader, upload: TusUpload, file: File, ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>CyclomaticComplexMethod:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun uploadSingleImage( task: ImageUploadTask, sessionId: UUID ): DomainResult&lt;String, NetworkError&gt;</ID>
+    <ID>CyclomaticComplexMethod:ImagingScreen.kt$@Composable fun ImagingScreen( state: ImagingState, onAction: (ImagingAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:ImagingViewModel.kt$ImagingViewModel$fun onAction(action: ImagingAction)</ID>
+    <ID>CyclomaticComplexMethod:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$fun onAction(action: IncompleteSessionAction)</ID>
+    <ID>CyclomaticComplexMethod:IntakeScreen.kt$@Composable fun IntakeScreen( state: IntakeState, onAction: (IntakeAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:IntakeViewModel.kt$IntakeViewModel$fun onAction(action: IntakeAction)</ID>
+    <ID>CyclomaticComplexMethod:IntakeViewModel.kt$IntakeViewModel$private fun loadFormDetails()</ID>
+    <ID>CyclomaticComplexMethod:MetadataUploadWorker.kt$MetadataUploadWorker$override suspend fun doWork(): WorkerResult</ID>
+    <ID>CyclomaticComplexMethod:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSpecimenImageAndInferenceResultIfNeeded( localSpecimenImage: SpecimenImage, localInferenceResult: InferenceResult?, syncedSpecimen: Specimen, syncedLocalSessionId: UUID ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>CyclomaticComplexMethod:NavGraph.kt$@Composable fun NavGraph(startDestination: Destination)</ID>
+    <ID>CyclomaticComplexMethod:SettingsViewModel.kt$SettingsViewModel$fun onAction(action: SettingsAction)</ID>
+    <ID>Filename:Migration_10_11_AddClassificationDurationColumns.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_10_11_AddClassificationDurationColumns.kt</ID>
+    <ID>Filename:Migration_11_12_AddDetectionDurationColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_11_12_AddDetectionDurationColumn.kt</ID>
+    <ID>Filename:Migration_12_13_RemoveSentinelSiteAndMoveHouseNumberUnderSite.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_12_13_RemoveSentinelSiteAndMoveHouseNumberUnderSite.kt</ID>
+    <ID>Filename:Migration_13_14_AddCollectorTable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_13_14_AddCollectorTable.kt</ID>
+    <ID>Filename:Migration_14_15_BackfillCollectors.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_14_15_BackfillCollectors.kt</ID>
+    <ID>Filename:Migration_15_16_AddSpecimenShouldProcessFurtherColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_15_16_AddSpecimenShouldProcessFurtherColumn.kt</ID>
+    <ID>Filename:Migration_16_17_AddSessionCollectorLastTrainedOnColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_16_17_AddSessionCollectorLastTrainedOnColumn.kt</ID>
+    <ID>Filename:Migration_17_18_AddCollectorLastTrainedOnColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_17_18_AddCollectorLastTrainedOnColumn.kt</ID>
+    <ID>Filename:Migration_18_19_AddSessionHardwareIdColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_18_19_AddSessionHardwareIdColumn.kt</ID>
+    <ID>Filename:Migration_19_20_MakeHardwareIdColumnNullable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_19_20_MakeHardwareIdColumnNullable.kt</ID>
+    <ID>Filename:Migration_1_2_CreateBoundingBoxTable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_1_2_CreateBoundingBoxTable.kt</ID>
+    <ID>Filename:Migration_20_21_CreateLocationTypeTable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_20_21_CreateLocationTypeTable.kt</ID>
+    <ID>Filename:Migration_21_22_AddSiteNewHierarchyColumns.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_21_22_AddSiteNewHierarchyColumns.kt</ID>
+    <ID>Filename:Migration_22_23_MakeSiteLocationColumnsNullable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_22_23_MakeSiteLocationColumnsNullable.kt</ID>
+    <ID>Filename:Migration_23_24_AddLocationTypeLevelColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_23_24_AddLocationTypeLevelColumn.kt</ID>
+    <ID>Filename:Migration_2_3_CreateSurveillanceFormTable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_2_3_CreateSurveillanceFormTable.kt</ID>
+    <ID>Filename:Migration_3_4_Schema_V2.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_3_4_Schema_V2.kt</ID>
+    <ID>Filename:Migration_4_5_AddSubmittedAtColumnsToSpecimenAndSurveillanceFormTables.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_4_5_AddSubmittedAtColumnsToSpecimenAndSurveillanceFormTables.kt</ID>
+    <ID>Filename:Migration_5_6_AddUploadStatusToSpecimen.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_5_6_AddUploadStatusToSpecimen.kt</ID>
+    <ID>Filename:Migration_6_7_BoundingBoxToInferenceResult.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_6_7_BoundingBoxToInferenceResult.kt</ID>
+    <ID>Filename:Migration_7_8_SpecimenImageSeparation.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_7_8_SpecimenImageSeparation.kt</ID>
+    <ID>Filename:Migration_8_9_AddSessionTypeColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_8_9_AddSessionTypeColumn.kt</ID>
+    <ID>Filename:Migration_9_10_RefactorSpecimenImageAndInferenceResultKeys.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_9_10_RefactorSpecimenImageAndInferenceResultKeys.kt</ID>
+    <ID>Filename:WindowInfo.kt$com.vci.vectorcamapp.ui.theme.WindowInfo.kt</ID>
+    <ID>Filename:constructUrl.kt$com.vci.vectorcamapp.core.data.network.constructUrl.kt</ID>
+    <ID>Filename:responseToResult.kt$com.vci.vectorcamapp.core.data.network.responseToResult.kt</ID>
+    <ID>Filename:safeCall.kt$com.vci.vectorcamapp.core.data.network.safeCall.kt</ID>
+    <ID>FunctionNaming:ActionButton.kt$@Composable fun ActionButton( label: String, onClick: () -&gt; Unit, modifier: Modifier = Modifier, enabled: Boolean = true, iconPainter: Painter? = null, textSize: TextStyle = MaterialTheme.typography.bodyLarge, testTag: String? = null )</ID>
+    <ID>FunctionNaming:ActionTile.kt$@Composable fun ActionTile( onClick: () -&gt; Unit, modifier: Modifier = Modifier, hue: Color = MaterialTheme.colors.cardGlow, fillWidth: Boolean = true, content: @Composable () -&gt; Unit )</ID>
+    <ID>FunctionNaming:AnimatedArrowIcon.kt$@Composable fun AnimatedArrowIcon( isLeft: Boolean, enabled: Boolean, onClick: () -&gt; Unit, modifier: Modifier = Modifier, amplitude: Dp = MaterialTheme.dimensions.spacingSmall, durationMillis: Int = 800 )</ID>
+    <ID>FunctionNaming:BaseScaffold.kt$@Composable fun BaseScaffold( modifier: Modifier = Modifier, content: @Composable (PaddingValues) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:BoundingBoxOverlay.kt$@Composable fun BoundingBoxOverlay( inferenceResult: InferenceResult, overlaySize: IntSize, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:CaptureAnimation.kt$@Composable fun CaptureAnimation( modifier: Modifier = Modifier, isVisible: Boolean = true )</ID>
+    <ID>FunctionNaming:CapturedSpecimenTile.kt$@Composable fun CapturedSpecimenTile( specimen: Specimen, specimenImage: SpecimenImage, inferenceResult: InferenceResult?, modifier: Modifier = Modifier, badgeText: String? = null, )</ID>
+    <ID>FunctionNaming:CollectionMethodTooltipRow.kt$@Composable fun CollectionMethodTooltipRow( title: String, description: String, iconPainter: Painter, iconDescription: String, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:CollectorDialog.kt$@Composable fun CollectorDialog( collector: Collector, collectorNameError: CollectorValidationError?, collectorTitleError: CollectorValidationError?, collectorLastTrainedOnError: CollectorValidationError?, onNameChange: (String) -&gt; Unit, onTitleChange: (String) -&gt; Unit, onLastTrainedOnChange: (Long) -&gt; Unit, onDismiss: () -&gt; Unit, onSave: () -&gt; Unit, onDelete: () -&gt; Unit, onConfirmDelete: () -&gt; Unit, onDismissDeleteDialog: () -&gt; Unit, isEditDialogVisible: Boolean, isDeleteDialogVisible: Boolean, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:CompleteSessionDetailsScreen.kt$@Composable fun CompleteSessionDetailsScreen( state: CompleteSessionDetailsState, onAction: (CompleteSessionDetailsAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:CompleteSessionDetailsScreen.kt$@PreviewLightDark @Composable fun CompleteSessionDetailsScreenPreview()</ID>
+    <ID>FunctionNaming:CompleteSessionForm.kt$@Composable fun CompleteSessionForm( session: Session, site: Site, surveillanceForm: SurveillanceForm?, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:CompleteSessionFormTile.kt$@Composable fun CompleteSessionFormTile( title: String, iconPainter: Painter, iconDescription: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -&gt; Unit )</ID>
+    <ID>FunctionNaming:CompleteSessionListDetailRow.kt$@Composable fun CompleteSessionListDetailRow( iconPainter: Painter, iconDescription: String, text: String, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:CompleteSessionListScreen.kt$@Composable fun CompleteSessionListScreen( state: CompleteSessionListState, onAction: (CompleteSessionListAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:CompleteSessionListScreen.kt$@PreviewLightDark @Composable fun CompleteSessionListScreenPreview()</ID>
+    <ID>FunctionNaming:CompleteSessionListTile.kt$@Composable fun CompleteSessionListTile( sessionAndSite: SessionAndSite, sessionUploadProgress: SessionUploadProgress, onClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:CompleteSessionSpecimens.kt$@Composable fun CompleteSessionSpecimens( specimensWithImagesAndInferenceResults: List&lt;SpecimenWithSpecimenImagesAndInferenceResults&gt;, searchQuery: String, onUpdateSearchQuery: (String) -&gt; Unit, isSearchTooltipVisible: Boolean, onShowSearchTooltip: () -&gt; Unit, onDismissSearchTooltip: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:CompleteSessionSpecimensTile.kt$@Composable fun CompleteSessionSpecimensTile( specimen: Specimen, specimenImage: SpecimenImage, modifier: Modifier = Modifier, badgeText: String? = null, )</ID>
+    <ID>FunctionNaming:DatePickerField.kt$@Composable fun DatePickerField( selectedDateInMillis: Long, onDateSelected: (Long) -&gt; Unit, modifier: Modifier = Modifier, label: String? = null, error: Error? = null )</ID>
+    <ID>FunctionNaming:DropdownField.kt$@Composable fun &lt;T&gt; DropdownField( options: List&lt;T&gt;, selectedOption: T?, onOptionSelected: (T) -&gt; Unit, modifier: Modifier = Modifier, label: String? = null, error: Error? = null, menuTestTag: String? = null, menuItemTestTagPrefix: String? = null, itemContent: @Composable (T) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:EmptySpace.kt$@Composable fun EmptySpace(width: Dp, height: Dp, modifier: Modifier = Modifier)</ID>
+    <ID>FunctionNaming:ErrorSnackbarHost.kt$@Composable fun ErrorSnackbarHost( modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:ImagingScreen.kt$@Composable fun ImagingScreen( state: ImagingState, onAction: (ImagingAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:ImagingScreen.kt$@PreviewLightDark @Composable fun ImagingScreenPreview()</ID>
+    <ID>FunctionNaming:IncompleteSessionCard.kt$@Composable fun IncompleteSessionCard( sessionAndSite: SessionAndSite, onClick: () -&gt; Unit, onDelete: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:IncompleteSessionDeleteBackground.kt$@Composable fun IncompleteSessionDeleteBackground( onDelete: () -&gt; Unit, deleteWidth: Dp, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:IncompleteSessionListDetailRow.kt$@Composable fun IncompleteSessionListDetailRow( iconPainter: Painter, iconDescription: String, text: String, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:IncompleteSessionScreen.kt$@Composable fun IncompleteSessionScreen( state: IncompleteSessionState, onAction: (IncompleteSessionAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:InfoPill.kt$@Composable fun InfoPill( text: String, color: Color, modifier: Modifier = Modifier, iconPainter: Painter? = null )</ID>
+    <ID>FunctionNaming:InfoTile.kt$@Composable fun InfoTile( modifier: Modifier = Modifier, hue: Color = MaterialTheme.colors.cardGlow, fillWidth: Boolean = true, content: @Composable () -&gt; Unit )</ID>
+    <ID>FunctionNaming:IntakeScreen.kt$@Composable fun IntakeScreen( state: IntakeState, onAction: (IntakeAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:IntakeScreen.kt$@PreviewLightDark @Composable fun SurveillanceFormScreenPreview()</ID>
+    <ID>FunctionNaming:IntakeTile.kt$@Composable fun IntakeTile( title: String, iconPainter: Painter, iconDescription: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -&gt; Unit )</ID>
+    <ID>FunctionNaming:LandingActionTile.kt$@Composable fun LandingActionTile( title: String, description: String, icon: Painter, onClick: () -&gt; Unit, modifier: Modifier = Modifier, badgeCount: Int = 0, testTag: String? = null, )</ID>
+    <ID>FunctionNaming:LandingScreen.kt$@Composable fun LandingScreen( state: LandingState, onAction: (LandingAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:LandingScreen.kt$@PreviewLightDark @Composable fun LandingScreenPreview()</ID>
+    <ID>FunctionNaming:LandingSection.kt$@Composable fun LandingSection( title: String, modifier: Modifier = Modifier, testTag: String? = null, content: @Composable ColumnScope.() -&gt; Unit )</ID>
+    <ID>FunctionNaming:LiveCameraPreview.kt$@Composable fun LiveCameraPreview( surfaceRequest: SurfaceRequest?, camera: Camera?, inferenceResults: List&lt;InferenceResult&gt;, focusPoint: Offset?, onFocusAt: (Offset) -&gt; Unit, onCancelFocus: () -&gt; Unit, modifier: Modifier = Modifier, isManualFocusing: Boolean, isProcessing: Boolean )</ID>
+    <ID>FunctionNaming:ManualFocusRingOverlay.kt$@Composable fun ManualFocusRingOverlay( focusPoint: Offset, overlaySize: IntSize, onCancel: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:NavGraph.kt$@Composable fun NavGraph(startDestination: Destination)</ID>
+    <ID>FunctionNaming:ObserveAsEvents.kt$@Composable fun &lt;T&gt; ObserveAsEvents( events: Flow&lt;T&gt;, key1: Any? = null, key2: Any? = null, onEvent: (T) -&gt; Unit )</ID>
+    <ID>FunctionNaming:PermissionScreen.kt$@Composable fun PermissionScreen( state: MainState, onAction: (MainAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:PermissionTooltipRow.kt$@Composable fun PermissionTooltipRow( title: String, description: String, iconPainter: Painter, iconDescription: String, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:PullToRefresh.kt$@Composable fun PullToRefresh( isRefreshing: Boolean, onRefresh: () -&gt; Unit, modifier: Modifier = Modifier, content: @Composable BoxScope.() -&gt; Unit, )</ID>
+    <ID>FunctionNaming:RegistrationScreen.kt$@Composable fun RegistrationScreen( state: RegistrationState, onAction: (RegistrationAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:RegistrationScreen.kt$@PreviewLightDark @Composable fun RegistrationScreenPreview()</ID>
+    <ID>FunctionNaming:ScreenHeader.kt$@Composable fun ScreenHeader( title: String, subtitle: String, modifier: Modifier = Modifier, leadingIcon: @Composable () -&gt; Unit = {}, trailingIcon: @Composable () -&gt; Unit = {}, content: LazyListScope.() -&gt; Unit )</ID>
+    <ID>FunctionNaming:SearchHelpTooltipContent.kt$@Composable fun SearchHelpTooltipContent()</ID>
+    <ID>FunctionNaming:SearchTextField.kt$@Composable fun SearchTextField( searchQuery: String, onSearchQueryChange: (String) -&gt; Unit, placeholder: String, modifier: Modifier = Modifier, isSingleLine: Boolean = true, isTooltipVisible: Boolean = false, onSearchSubmitted: (() -&gt; Unit)? = null, onShowSearchTooltip: (() -&gt; Unit)? = null, onDismissSearchTooltip: (() -&gt; Unit)? = null, tooltipContent: (@Composable () -&gt; Unit)? = null, )</ID>
+    <ID>FunctionNaming:SegmentedTabBar.kt$@Composable fun SegmentedTabBar( tabs: List&lt;CompleteSessionDetailsTab&gt;, selectedTab: CompleteSessionDetailsTab, onTabSelected: (CompleteSessionDetailsTab) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:SettingsActionTile.kt$@Composable fun SettingsActionTile( title: String, modifier: Modifier = Modifier, onClick: (() -&gt; Unit), content: (@Composable ColumnScope.() -&gt; Unit)? = null, )</ID>
+    <ID>FunctionNaming:SettingsInfoTile.kt$@Composable fun SettingsInfoTile( title: String, modifier: Modifier = Modifier, initiallyExpanded: Boolean = false, content: (@Composable ColumnScope.() -&gt; Unit), )</ID>
+    <ID>FunctionNaming:SettingsScreen.kt$@Composable fun SettingsScreen( state: SettingsState, onAction: (SettingsAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:SettingsScreen.kt$@PreviewLightDark @Composable fun SettingsScreenPreview()</ID>
+    <ID>FunctionNaming:SettingsSection.kt$@Composable fun SettingsSection( title: String, modifier: Modifier = Modifier, testTag: String? = null, content: @Composable ColumnScope.() -&gt; Unit )</ID>
+    <ID>FunctionNaming:SpecimenImageOverlay.kt$@Composable fun SpecimenImageOverlay( inferenceResult: InferenceResult?, modifier: Modifier = Modifier, enableZoomPan: Boolean = true, showBoundingBoxOverlay: Boolean = true, imageContent: @Composable (containerSize: IntSize) -&gt; Unit )</ID>
+    <ID>FunctionNaming:SplashScreen.kt$@Composable fun SplashScreen( modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:SwipeToReveal.kt$@Composable fun SwipeToReveal( backgroundContent: @Composable () -&gt; Unit, revealWidth: Dp, modifier: Modifier = Modifier, content: @Composable () -&gt; Unit )</ID>
+    <ID>FunctionNaming:TextEntryField.kt$@Composable fun TextEntryField( value: String, onValueChange: (String) -&gt; Unit, modifier: Modifier = Modifier, label: String? = null, singleLine: Boolean = false, error: Error? = null, placeholder: String? = null, keyboardOptions: KeyboardOptions = KeyboardOptions.Default, keyboardActions: KeyboardActions = KeyboardActions.Default, maxCharacters: Int = 200, showErrorMessage: Boolean = true, )</ID>
+    <ID>FunctionNaming:Theme.kt$@Composable fun VectorcamappTheme( windowType: WindowType = WindowType.Compact, content: @Composable () -&gt; Unit )</ID>
+    <ID>FunctionNaming:ToggleField.kt$@Composable fun ToggleField( label: String, checked: Boolean, onCheckedChange: (Boolean) -&gt; Unit )</ID>
+    <ID>FunctionNaming:Tooltip.kt$@Composable fun Tooltip( isVisible: Boolean, onClick: () -&gt; Unit, onDismiss: () -&gt; Unit, modifier: Modifier = Modifier, buttonText: String? = null, confirmText: String = "Done", iconSize: Dp = MaterialTheme.dimensions.iconSizeSmall, textStyle: TextStyle = MaterialTheme.typography.bodySmall, content: @Composable (() -&gt; Unit) )</ID>
+    <ID>LargeClass:MetadataUploadWorker.kt$MetadataUploadWorker : CoroutineWorker</ID>
+    <ID>LongMethod:CaptureAnimation.kt$@Composable fun CaptureAnimation( modifier: Modifier = Modifier, isVisible: Boolean = true )</ID>
+    <ID>LongMethod:CapturedSpecimenTile.kt$@Composable fun CapturedSpecimenTile( specimen: Specimen, specimenImage: SpecimenImage, inferenceResult: InferenceResult?, modifier: Modifier = Modifier, badgeText: String? = null, )</ID>
+    <ID>LongMethod:CollectorDialog.kt$@Composable fun CollectorDialog( collector: Collector, collectorNameError: CollectorValidationError?, collectorTitleError: CollectorValidationError?, collectorLastTrainedOnError: CollectorValidationError?, onNameChange: (String) -&gt; Unit, onTitleChange: (String) -&gt; Unit, onLastTrainedOnChange: (Long) -&gt; Unit, onDismiss: () -&gt; Unit, onSave: () -&gt; Unit, onDelete: () -&gt; Unit, onConfirmDelete: () -&gt; Unit, onDismissDeleteDialog: () -&gt; Unit, isEditDialogVisible: Boolean, isDeleteDialogVisible: Boolean, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:CompleteSessionForm.kt$@Composable fun CompleteSessionForm( session: Session, site: Site, surveillanceForm: SurveillanceForm?, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:CompleteSessionListScreen.kt$@Composable fun CompleteSessionListScreen( state: CompleteSessionListState, onAction: (CompleteSessionListAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:CompleteSessionListTile.kt$@Composable fun CompleteSessionListTile( sessionAndSite: SessionAndSite, sessionUploadProgress: SessionUploadProgress, onClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:CompleteSessionSpecimens.kt$@Composable fun CompleteSessionSpecimens( specimensWithImagesAndInferenceResults: List&lt;SpecimenWithSpecimenImagesAndInferenceResults&gt;, searchQuery: String, onUpdateSearchQuery: (String) -&gt; Unit, isSearchTooltipVisible: Boolean, onShowSearchTooltip: () -&gt; Unit, onDismissSearchTooltip: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:CompleteSessionSpecimensTile.kt$@Composable fun CompleteSessionSpecimensTile( specimen: Specimen, specimenImage: SpecimenImage, modifier: Modifier = Modifier, badgeText: String? = null, )</ID>
+    <ID>LongMethod:DatePickerField.kt$@Composable fun DatePickerField( selectedDateInMillis: Long, onDateSelected: (Long) -&gt; Unit, modifier: Modifier = Modifier, label: String? = null, error: Error? = null )</ID>
+    <ID>LongMethod:DropdownField.kt$@Composable fun &lt;T&gt; DropdownField( options: List&lt;T&gt;, selectedOption: T?, onOptionSelected: (T) -&gt; Unit, modifier: Modifier = Modifier, label: String? = null, error: Error? = null, menuTestTag: String? = null, menuItemTestTagPrefix: String? = null, itemContent: @Composable (T) -&gt; Unit, )</ID>
+    <ID>LongMethod:ErrorExtensions.kt$fun Error.toString(context: Context): String</ID>
+    <ID>LongMethod:ErrorSnackbarHost.kt$@Composable fun ErrorSnackbarHost( modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ImageUploadWorker.kt$ImageUploadWorker$override suspend fun doWork(): WorkerResult</ID>
+    <ID>LongMethod:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun executeUploadLoop( initialUploader: TusUploader, upload: TusUpload, file: File, ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>LongMethod:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun uploadSingleImage( task: ImageUploadTask, sessionId: UUID ): DomainResult&lt;String, NetworkError&gt;</ID>
+    <ID>LongMethod:ImagingScreen.kt$@Composable fun ImagingScreen( state: ImagingState, onAction: (ImagingAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ImagingViewModel.kt$ImagingViewModel$fun onAction(action: ImagingAction)</ID>
+    <ID>LongMethod:IncompleteSessionCard.kt$@Composable fun IncompleteSessionCard( sessionAndSite: SessionAndSite, onClick: () -&gt; Unit, onDelete: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:IncompleteSessionScreen.kt$@Composable fun IncompleteSessionScreen( state: IncompleteSessionState, onAction: (IncompleteSessionAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$fun onAction(action: IncompleteSessionAction)</ID>
+    <ID>LongMethod:IntakeScreen.kt$@Composable fun IntakeScreen( state: IntakeState, onAction: (IntakeAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:IntakeViewModel.kt$IntakeViewModel$fun onAction(action: IntakeAction)</ID>
+    <ID>LongMethod:IntakeViewModel.kt$IntakeViewModel$private fun loadFormDetails()</ID>
+    <ID>LongMethod:LandingActionTile.kt$@Composable fun LandingActionTile( title: String, description: String, icon: Painter, onClick: () -&gt; Unit, modifier: Modifier = Modifier, badgeCount: Int = 0, testTag: String? = null, )</ID>
+    <ID>LongMethod:LandingScreen.kt$@Composable fun LandingScreen( state: LandingState, onAction: (LandingAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:LiveCameraPreview.kt$@Composable fun LiveCameraPreview( surfaceRequest: SurfaceRequest?, camera: Camera?, inferenceResults: List&lt;InferenceResult&gt;, focusPoint: Offset?, onFocusAt: (Offset) -&gt; Unit, onCancelFocus: () -&gt; Unit, modifier: Modifier = Modifier, isManualFocusing: Boolean, isProcessing: Boolean )</ID>
+    <ID>LongMethod:MetadataUploadWorker.kt$MetadataUploadWorker$override suspend fun doWork(): WorkerResult</ID>
+    <ID>LongMethod:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSessionIfNeeded( localSession: Session, localSiteId: Int, syncedDeviceId: Int, expectedSpecimens: Int ): DomainResult&lt;Session, NetworkError&gt;</ID>
+    <ID>LongMethod:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSpecimenImageAndInferenceResultIfNeeded( localSpecimenImage: SpecimenImage, localInferenceResult: InferenceResult?, syncedSpecimen: Specimen, syncedLocalSessionId: UUID ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>LongMethod:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSurveillanceFormIfNeeded( localSurveillanceForm: SurveillanceForm, syncedLocalSessionId: UUID, syncedRemoteSessionId: Int ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>LongMethod:Migration_12_13_RemoveSentinelSiteAndMoveHouseNumberUnderSite.kt$&lt;no name provided&gt;$override fun migrate(db: SupportSQLiteDatabase)</ID>
+    <ID>LongMethod:Migration_3_4_Schema_V2.kt$&lt;no name provided&gt;$override fun migrate(db: SupportSQLiteDatabase)</ID>
+    <ID>LongMethod:NavGraph.kt$@Composable fun NavGraph(startDestination: Destination)</ID>
+    <ID>LongMethod:PermissionScreen.kt$@Composable fun PermissionScreen( state: MainState, onAction: (MainAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:RegistrationScreen.kt$@Composable fun RegistrationScreen( state: RegistrationState, onAction: (RegistrationAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:RegistrationViewModel.kt$RegistrationViewModel$fun onAction(action: RegistrationAction)</ID>
+    <ID>LongMethod:ScreenHeader.kt$@Composable fun ScreenHeader( title: String, subtitle: String, modifier: Modifier = Modifier, leadingIcon: @Composable () -&gt; Unit = {}, trailingIcon: @Composable () -&gt; Unit = {}, content: LazyListScope.() -&gt; Unit )</ID>
+    <ID>LongMethod:SegmentedTabBar.kt$@Composable fun SegmentedTabBar( tabs: List&lt;CompleteSessionDetailsTab&gt;, selectedTab: CompleteSessionDetailsTab, onTabSelected: (CompleteSessionDetailsTab) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:SettingsScreen.kt$@Composable fun SettingsScreen( state: SettingsState, onAction: (SettingsAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:SettingsViewModel.kt$SettingsViewModel$fun onAction(action: SettingsAction)</ID>
+    <ID>LongMethod:TextEntryField.kt$@Composable fun TextEntryField( value: String, onValueChange: (String) -&gt; Unit, modifier: Modifier = Modifier, label: String? = null, singleLine: Boolean = false, error: Error? = null, placeholder: String? = null, keyboardOptions: KeyboardOptions = KeyboardOptions.Default, keyboardActions: KeyboardActions = KeyboardActions.Default, maxCharacters: Int = 200, showErrorMessage: Boolean = true, )</ID>
+    <ID>LongMethod:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$private fun getDetectedResults(boxes: FloatArray): List&lt;FloatArray&gt;</ID>
+    <ID>LongMethod:Type.kt$fun createTypography(scale: Float = 1f): Typography</ID>
+    <ID>LongParameterList:ActionButton.kt$( label: String, onClick: () -&gt; Unit, modifier: Modifier = Modifier, enabled: Boolean = true, iconPainter: Painter? = null, textSize: TextStyle = MaterialTheme.typography.bodyLarge, testTag: String? = null )</ID>
+    <ID>LongParameterList:AnimatedArrowIcon.kt$( isLeft: Boolean, enabled: Boolean, onClick: () -&gt; Unit, modifier: Modifier = Modifier, amplitude: Dp = MaterialTheme.dimensions.spacingSmall, durationMillis: Int = 800 )</ID>
+    <ID>LongParameterList:CaptureAnimation.kt$( color: Color, w: Float, h: Float, inset: Float, len: Float, stroke: Float )</ID>
+    <ID>LongParameterList:CollectorDialog.kt$( collector: Collector, collectorNameError: CollectorValidationError?, collectorTitleError: CollectorValidationError?, collectorLastTrainedOnError: CollectorValidationError?, onNameChange: (String) -&gt; Unit, onTitleChange: (String) -&gt; Unit, onLastTrainedOnChange: (Long) -&gt; Unit, onDismiss: () -&gt; Unit, onSave: () -&gt; Unit, onDelete: () -&gt; Unit, onConfirmDelete: () -&gt; Unit, onDismissDeleteDialog: () -&gt; Unit, isEditDialogVisible: Boolean, isDeleteDialogVisible: Boolean, modifier: Modifier = Modifier )</ID>
+    <ID>LongParameterList:CompleteSessionSpecimens.kt$( specimensWithImagesAndInferenceResults: List&lt;SpecimenWithSpecimenImagesAndInferenceResults&gt;, searchQuery: String, onUpdateSearchQuery: (String) -&gt; Unit, isSearchTooltipVisible: Boolean, onShowSearchTooltip: () -&gt; Unit, onDismissSearchTooltip: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongParameterList:Crashy.kt$Crashy$( throwable: Throwable, level: SentryLevel = SentryLevel.ERROR, context: CrashyContext? = null, tags: Map&lt;String, String&gt; = emptyMap(), extras: Map&lt;String, Any?&gt; = emptyMap(), attachments: List&lt;Attachment&gt; = emptyList() )</ID>
+    <ID>LongParameterList:DefaultIntakeFieldsCache.kt$DefaultIntakeFieldsCache$( collectorName: String, collectorTitle: String, collectorLastTrainedOn: Long, hardwareId: String?, district: String, villageName: String )</ID>
+    <ID>LongParameterList:DropdownField.kt$( options: List&lt;T&gt;, selectedOption: T?, onOptionSelected: (T) -&gt; Unit, modifier: Modifier = Modifier, label: String? = null, error: Error? = null, menuTestTag: String? = null, menuItemTestTagPrefix: String? = null, itemContent: @Composable (T) -&gt; Unit, )</ID>
+    <ID>LongParameterList:ImagingViewModel.kt$ImagingViewModel$( private val currentSessionCache: CurrentSessionCache, private val sessionRepository: SessionRepository, private val specimenRepository: SpecimenRepository, private val specimenImageRepository: SpecimenImageRepository, private val inferenceResultRepository: InferenceResultRepository, private val cameraRepository: CameraRepository, private val inferenceRepository: InferenceRepository, private val workRepository: WorkManagerRepository, private val validateSpecimenIdUseCase: ValidateSpecimenIdUseCase, errorMessageEmitter: ErrorMessageEmitter, )</ID>
+    <ID>LongParameterList:IntakeViewModel.kt$IntakeViewModel$( private val savedStateHandle: SavedStateHandle, private val intakeValidationUseCases: IntakeValidationUseCases, private val deviceCache: DeviceCache, private val currentSessionCache: CurrentSessionCache, private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache, private val siteRepository: SiteRepository, private val locationTypeRepository: LocationTypeRepository, private val surveillanceFormRepository: SurveillanceFormRepository, private val sessionRepository: SessionRepository, private val locationRepository: LocationRepository, private val collectorRepository: CollectorRepository, errorMessageEmitter: ErrorMessageEmitter, )</ID>
+    <ID>LongParameterList:LandingActionTile.kt$( title: String, description: String, icon: Painter, onClick: () -&gt; Unit, modifier: Modifier = Modifier, badgeCount: Int = 0, testTag: String? = null, )</ID>
+    <ID>LongParameterList:LiveCameraPreview.kt$( surfaceRequest: SurfaceRequest?, camera: Camera?, inferenceResults: List&lt;InferenceResult&gt;, focusPoint: Offset?, onFocusAt: (Offset) -&gt; Unit, onCancelFocus: () -&gt; Unit, modifier: Modifier = Modifier, isManualFocusing: Boolean, isProcessing: Boolean )</ID>
+    <ID>LongParameterList:MetadataUploadWorker.kt$MetadataUploadWorker$( @Assisted private val context: Context, @Assisted private val workerParams: WorkerParameters, private val deviceCache: DeviceCache, private val transactionHelper: TransactionHelper, private val sessionRepository: SessionRepository, private val surveillanceFormRepository: SurveillanceFormRepository, private val specimenRepository: SpecimenRepository, private val specimenImageRepository: SpecimenImageRepository, private val inferenceResultRepository: InferenceResultRepository, private val deviceDataSource: DeviceDataSource, private val sessionDataSource: SessionDataSource, private val surveillanceFormDataSource: SurveillanceFormDataSource, private val specimenDataSource: SpecimenDataSource, private val specimenImageDataSource: SpecimenImageDataSource )</ID>
+    <ID>LongParameterList:ModifierExtensions.kt$( color: Color = Color.Black, offsetX: Dp = 0.dp, offsetY: Dp = 0.dp, blurRadius: Dp = 0.dp, cornerRadius: Dp = 0.dp, spread: Dp = 0.dp )</ID>
+    <ID>LongParameterList:ModifierExtensions.kt$( color: Color, offsetX: Dp, offsetY: Dp, blurRadius: Dp, cornerRadius: Dp, spread: Dp )</ID>
+    <ID>LongParameterList:RegistrationViewModel.kt$RegistrationViewModel$( private val transactionHelper: TransactionHelper, private val deviceCache: DeviceCache, private val currentSessionCache: CurrentSessionCache, private val collectorRepository: CollectorRepository, private val collectorValidationUseCases: CollectorValidationUseCases, private val programDataSource: ProgramDataSource, private val programRepository: ProgramRepository, private val siteDataSource: SiteDataSource, private val siteRepository: SiteRepository, private val locationTypeDataSource: LocationTypeDataSource, private val locationTypeRepository: LocationTypeRepository, connectivityObserver: ConnectivityObserver, errorMessageEmitter: ErrorMessageEmitter, )</ID>
+    <ID>LongParameterList:ScreenHeader.kt$( title: String, subtitle: String, modifier: Modifier = Modifier, leadingIcon: @Composable () -&gt; Unit = {}, trailingIcon: @Composable () -&gt; Unit = {}, content: LazyListScope.() -&gt; Unit )</ID>
+    <ID>LongParameterList:SearchTextField.kt$( searchQuery: String, onSearchQueryChange: (String) -&gt; Unit, placeholder: String, modifier: Modifier = Modifier, isSingleLine: Boolean = true, isTooltipVisible: Boolean = false, onSearchSubmitted: (() -&gt; Unit)? = null, onShowSearchTooltip: (() -&gt; Unit)? = null, onDismissSearchTooltip: (() -&gt; Unit)? = null, tooltipContent: (@Composable () -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:TextEntryField.kt$( value: String, onValueChange: (String) -&gt; Unit, modifier: Modifier = Modifier, label: String? = null, singleLine: Boolean = false, error: Error? = null, placeholder: String? = null, keyboardOptions: KeyboardOptions = KeyboardOptions.Default, keyboardActions: KeyboardActions = KeyboardActions.Default, maxCharacters: Int = 200, showErrorMessage: Boolean = true, )</ID>
+    <ID>LongParameterList:Tooltip.kt$( isVisible: Boolean, onClick: () -&gt; Unit, onDismiss: () -&gt; Unit, modifier: Modifier = Modifier, buttonText: String? = null, confirmText: String = "Done", iconSize: Dp = MaterialTheme.dimensions.iconSizeSmall, textStyle: TextStyle = MaterialTheme.typography.bodySmall, content: @Composable (() -&gt; Unit) )</ID>
+    <ID>MagicNumber:CaptureAnimation.kt$0.15f</ID>
+    <ID>MagicNumber:CaptureAnimation.kt$0.7f</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0x80000000</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF00796B</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF0277BD</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF10B981</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF1A1A1A</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF34D399</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF43A047</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF4DBD8C</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF57C88B</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF64748B</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF6DCB81</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF6EDB81</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF828282</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFB6EAD8</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFD1FAE5</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFD3F5DF</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFD5D5D5</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFD9D9D9</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFE0F2F1</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFE54848</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFF2FDF5</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFF7F8F7</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFFFA600</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFFFFFFF</ID>
+    <ID>MagicNumber:CompleteSessionDetailsViewModel.kt$CompleteSessionDetailsViewModel$5000L</ID>
+    <ID>MagicNumber:CompleteSessionListScreen.kt$2000</ID>
+    <ID>MagicNumber:CompleteSessionListTile.kt$0.3f</ID>
+    <ID>MagicNumber:CompleteSessionListTile.kt$1000</ID>
+    <ID>MagicNumber:CompleteSessionListViewModel.kt$CompleteSessionListViewModel$5000L</ID>
+    <ID>MagicNumber:CompleteSessionSpecimens.kt$0.9f</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$12</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$14</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$16</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$18</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$24</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$240</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$3</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$32</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$36</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$3f</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$4</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$48</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$4f</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$6</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$60</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$64</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$72</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$8</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$84</ID>
+    <ID>MagicNumber:DropdownField.kt$0.3f</ID>
+    <ID>MagicNumber:ErrorSnackbarHost.kt$0.96f</ID>
+    <ID>MagicNumber:ImageProxyExtensions.kt$90f</ID>
+    <ID>MagicNumber:ImageUploadWorker.kt$ImageUploadWorker$100</ID>
+    <ID>MagicNumber:ImageUploadWorker.kt$ImageUploadWorker$1002</ID>
+    <ID>MagicNumber:ImagingViewModel.kt$ImagingViewModel$100</ID>
+    <ID>MagicNumber:ImagingViewModel.kt$ImagingViewModel$5000L</ID>
+    <ID>MagicNumber:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$5000L</ID>
+    <ID>MagicNumber:InferenceRepositoryImplementation.kt$InferenceRepositoryImplementation$255.0</ID>
+    <ID>MagicNumber:IntakeViewModel.kt$IntakeViewModel$5000L</ID>
+    <ID>MagicNumber:LandingViewModel.kt$LandingViewModel$5000L</ID>
+    <ID>MagicNumber:MainViewModel.kt$MainViewModel$5000</ID>
+    <ID>MagicNumber:MetadataUploadWorker.kt$MetadataUploadWorker$1001</ID>
+    <ID>MagicNumber:Migration_10_11_AddClassificationDurationColumns.kt$&lt;no name provided&gt;$10</ID>
+    <ID>MagicNumber:Migration_10_11_AddClassificationDurationColumns.kt$&lt;no name provided&gt;$11</ID>
+    <ID>MagicNumber:Migration_11_12_AddDetectionDurationColumn.kt$&lt;no name provided&gt;$11</ID>
+    <ID>MagicNumber:Migration_11_12_AddDetectionDurationColumn.kt$&lt;no name provided&gt;$12</ID>
+    <ID>MagicNumber:Migration_12_13_RemoveSentinelSiteAndMoveHouseNumberUnderSite.kt$&lt;no name provided&gt;$12</ID>
+    <ID>MagicNumber:Migration_12_13_RemoveSentinelSiteAndMoveHouseNumberUnderSite.kt$&lt;no name provided&gt;$13</ID>
+    <ID>MagicNumber:Migration_13_14_AddCollectorTable.kt$&lt;no name provided&gt;$13</ID>
+    <ID>MagicNumber:Migration_13_14_AddCollectorTable.kt$&lt;no name provided&gt;$14</ID>
+    <ID>MagicNumber:Migration_14_15_BackfillCollectors.kt$&lt;no name provided&gt;$14</ID>
+    <ID>MagicNumber:Migration_14_15_BackfillCollectors.kt$&lt;no name provided&gt;$15</ID>
+    <ID>MagicNumber:Migration_15_16_AddSpecimenShouldProcessFurtherColumn.kt$&lt;no name provided&gt;$15</ID>
+    <ID>MagicNumber:Migration_15_16_AddSpecimenShouldProcessFurtherColumn.kt$&lt;no name provided&gt;$16</ID>
+    <ID>MagicNumber:Migration_16_17_AddSessionCollectorLastTrainedOnColumn.kt$&lt;no name provided&gt;$16</ID>
+    <ID>MagicNumber:Migration_16_17_AddSessionCollectorLastTrainedOnColumn.kt$&lt;no name provided&gt;$17</ID>
+    <ID>MagicNumber:Migration_17_18_AddCollectorLastTrainedOnColumn.kt$&lt;no name provided&gt;$17</ID>
+    <ID>MagicNumber:Migration_17_18_AddCollectorLastTrainedOnColumn.kt$&lt;no name provided&gt;$18</ID>
+    <ID>MagicNumber:Migration_18_19_AddSessionHardwareIdColumn.kt$&lt;no name provided&gt;$18</ID>
+    <ID>MagicNumber:Migration_18_19_AddSessionHardwareIdColumn.kt$&lt;no name provided&gt;$19</ID>
+    <ID>MagicNumber:Migration_19_20_MakeHardwareIdColumnNullable.kt$&lt;no name provided&gt;$19</ID>
+    <ID>MagicNumber:Migration_19_20_MakeHardwareIdColumnNullable.kt$&lt;no name provided&gt;$20</ID>
+    <ID>MagicNumber:Migration_20_21_CreateLocationTypeTable.kt$&lt;no name provided&gt;$20</ID>
+    <ID>MagicNumber:Migration_20_21_CreateLocationTypeTable.kt$&lt;no name provided&gt;$21</ID>
+    <ID>MagicNumber:Migration_21_22_AddSiteNewHierarchyColumns.kt$&lt;no name provided&gt;$21</ID>
+    <ID>MagicNumber:Migration_21_22_AddSiteNewHierarchyColumns.kt$&lt;no name provided&gt;$22</ID>
+    <ID>MagicNumber:Migration_22_23_MakeSiteLocationColumnsNullable.kt$&lt;no name provided&gt;$22</ID>
+    <ID>MagicNumber:Migration_22_23_MakeSiteLocationColumnsNullable.kt$&lt;no name provided&gt;$23</ID>
+    <ID>MagicNumber:Migration_23_24_AddLocationTypeLevelColumn.kt$&lt;no name provided&gt;$23</ID>
+    <ID>MagicNumber:Migration_23_24_AddLocationTypeLevelColumn.kt$&lt;no name provided&gt;$24</ID>
+    <ID>MagicNumber:Migration_2_3_CreateSurveillanceFormTable.kt$&lt;no name provided&gt;$3</ID>
+    <ID>MagicNumber:Migration_3_4_Schema_V2.kt$&lt;no name provided&gt;$3</ID>
+    <ID>MagicNumber:Migration_3_4_Schema_V2.kt$&lt;no name provided&gt;$4</ID>
+    <ID>MagicNumber:Migration_4_5_AddSubmittedAtColumnsToSpecimenAndSurveillanceFormTables.kt$&lt;no name provided&gt;$4</ID>
+    <ID>MagicNumber:Migration_4_5_AddSubmittedAtColumnsToSpecimenAndSurveillanceFormTables.kt$&lt;no name provided&gt;$5</ID>
+    <ID>MagicNumber:Migration_5_6_AddUploadStatusToSpecimen.kt$&lt;no name provided&gt;$5</ID>
+    <ID>MagicNumber:Migration_5_6_AddUploadStatusToSpecimen.kt$&lt;no name provided&gt;$6</ID>
+    <ID>MagicNumber:Migration_6_7_BoundingBoxToInferenceResult.kt$&lt;no name provided&gt;$6</ID>
+    <ID>MagicNumber:Migration_6_7_BoundingBoxToInferenceResult.kt$&lt;no name provided&gt;$7</ID>
+    <ID>MagicNumber:Migration_7_8_SpecimenImageSeparation.kt$&lt;no name provided&gt;$7</ID>
+    <ID>MagicNumber:Migration_7_8_SpecimenImageSeparation.kt$&lt;no name provided&gt;$8</ID>
+    <ID>MagicNumber:Migration_8_9_AddSessionTypeColumn.kt$&lt;no name provided&gt;$8</ID>
+    <ID>MagicNumber:Migration_8_9_AddSessionTypeColumn.kt$&lt;no name provided&gt;$9</ID>
+    <ID>MagicNumber:Migration_9_10_RefactorSpecimenImageAndInferenceResultKeys.kt$&lt;no name provided&gt;$10</ID>
+    <ID>MagicNumber:Migration_9_10_RefactorSpecimenImageAndInferenceResultKeys.kt$&lt;no name provided&gt;$9</ID>
+    <ID>MagicNumber:ModifierExtensions.kt$0.5f</ID>
+    <ID>MagicNumber:RegistrationViewModel.kt$RegistrationViewModel$5000</ID>
+    <ID>MagicNumber:ScreenHeader.kt$0.1f</ID>
+    <ID>MagicNumber:SettingsViewModel.kt$SettingsViewModel$5000L</ID>
+    <ID>MagicNumber:SplashScreen.kt$0.8f</ID>
+    <ID>MagicNumber:TextEntryField.kt$255</ID>
+    <ID>MagicNumber:TfLiteSpecimenClassifier.kt$TfLiteSpecimenClassifier$3</ID>
+    <ID>MagicNumber:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$3</ID>
+    <ID>MagicNumber:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$4</ID>
+    <ID>MagicNumber:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$5</ID>
+    <ID>MagicNumber:Theme.kt$1.15f</ID>
+    <ID>MagicNumber:Theme.kt$1.2f</ID>
+    <ID>MagicNumber:ValidateSpecimenIdUseCase.kt$ValidateSpecimenIdUseCase$3</ID>
+    <ID>MagicNumber:WindowInfo.kt$600</ID>
+    <ID>MagicNumber:WindowInfo.kt$840</ID>
+    <ID>MagicNumber:responseToResult.kt$200</ID>
+    <ID>MagicNumber:responseToResult.kt$299</ID>
+    <ID>MagicNumber:responseToResult.kt$400</ID>
+    <ID>MagicNumber:responseToResult.kt$404</ID>
+    <ID>MagicNumber:responseToResult.kt$408</ID>
+    <ID>MagicNumber:responseToResult.kt$409</ID>
+    <ID>MagicNumber:responseToResult.kt$429</ID>
+    <ID>MagicNumber:responseToResult.kt$499</ID>
+    <ID>MagicNumber:responseToResult.kt$500</ID>
+    <ID>MagicNumber:responseToResult.kt$599</ID>
+    <ID>MatchingDeclarationName:WindowInfo.kt$WindowType</ID>
+    <ID>MaxLineLength:CapturedSpecimenTile.kt$text = if (specimenImage.abdomenStatus != null) "Abdomen Status: ${specimenImage.abdomenStatus}" else ""</ID>
+    <ID>MaxLineLength:CollectorDialog.kt$containerColor = if (isDeleteDialogVisible) MaterialTheme.colors.error else MaterialTheme.colors.secondary</ID>
+    <ID>MaxLineLength:CollectorDialog.kt$selectedOption = SettingsDropdownOptions.CollectorTitleOption.entries.firstOrNull { it.label == collector.title }</ID>
+    <ID>MaxLineLength:CompleteSessionDetailsViewModel.kt$CompleteSessionDetailsViewModel$specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults</ID>
+    <ID>MaxLineLength:CompleteSessionForm.kt$text = "Number of Long Lasting Insecticide-coated Nets (LLINs) Available: ${it.numLlinsAvailable}"</ID>
+    <ID>MaxLineLength:CompleteSessionListTile.kt$else -&gt; "${sessionUploadProgress.uploadedImageCount} / ${sessionUploadProgress.totalCount} images"</ID>
+    <ID>MaxLineLength:CompleteSessionListTile.kt$else -&gt; sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalCount.toFloat()</ID>
+    <ID>MaxLineLength:CompleteSessionListTile.kt$else -&gt; sessionUploadProgress.uploadedMetadataCount.toFloat() / sessionUploadProgress.totalCount.toFloat()</ID>
+    <ID>MaxLineLength:CompleteSessionListTile.kt$sessionMetadataUploaded &amp;&amp; sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount &amp;&amp; sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount -&gt; "Completed"</ID>
+    <ID>MaxLineLength:CompleteSessionListTile.kt$sessionMetadataUploaded &amp;&amp; sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount &amp;&amp; sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount -&gt; MaterialTheme.colors.primary</ID>
+    <ID>MaxLineLength:CompleteSessionListTile.kt$sessionUploadProgress.uploadedMetadataCount != sessionUploadProgress.totalCount -&gt; "${sessionUploadProgress.uploadedMetadataCount} / ${sessionUploadProgress.totalCount} metadata"</ID>
+    <ID>MaxLineLength:CompleteSessionListViewModel.kt$CompleteSessionListViewModel$image.metadataUploadStatus != UploadStatus.COMPLETED || image.imageUploadStatus != UploadStatus.COMPLETED</ID>
+    <ID>MaxLineLength:CompleteSessionListViewModel.kt$CompleteSessionListViewModel$val isComplete = sessionUploadProgress.totalCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount</ID>
+    <ID>MaxLineLength:CompleteSessionSpecimensTile.kt$text = if (specimenImage.abdomenStatus != null) "Abdomen Status: ${specimenImage.abdomenStatus}" else ""</ID>
+    <ID>MaxLineLength:DataStoreModule.kt$DataStoreModule$fun</ID>
+    <ID>MaxLineLength:DefaultMainSentryLogger.kt$DefaultMainSentryLogger$"possible_causes" to "Incorrect API key, network error during setup, SDK not initialized in Application, app context issues"</ID>
+    <ID>MaxLineLength:DefaultMainSentryLogger.kt$DefaultMainSentryLogger$"possible_causes" to "OpenCV not bundled properly in APK, initLocal() called too early, ABI mismatch, missing native libs"</ID>
+    <ID>MaxLineLength:DefaultMainSentryLogger.kt$DefaultMainSentryLogger$"possible_causes" to "Program ID not cached, database not initialized, device configuration incomplete, corruption in device cache"</ID>
+    <ID>MaxLineLength:DropdownField.kt$if (menuItemTestTagPrefix != null) "$menuItemTestTagPrefix-$index" else "dropdown-menu-item-$index"</ID>
+    <ID>MaxLineLength:DropdownField.kt$tint = if (selectedOption == null) MaterialTheme.colors.textSecondary else MaterialTheme.colors.textPrimary</ID>
+    <ID>MaxLineLength:ErrorExtensions.kt$CollectorValidationError.INVALID_LAST_TRAINED_ON_DATE -&gt; R.string.collector_validation_error_invalid_collector_last_trained_on</ID>
+    <ID>MaxLineLength:ErrorExtensions.kt$FormValidationError.BLANK_LOCATION_TYPE_SELECTION -&gt; R.string.form_validation_error_blank_location_type_selection</ID>
+    <ID>MaxLineLength:ErrorExtensions.kt$FormValidationError.INVALID_NUM_LLINS_AVAILABLE -&gt; R.string.form_validation_error_invalid_num_llins_available</ID>
+    <ID>MaxLineLength:ErrorExtensions.kt$FormValidationError.INVALID_NUM_PEOPLE_SLEPT_IN_HOUSE -&gt; R.string.form_validation_error_invalid_num_people_slept_in_house_condition</ID>
+    <ID>MaxLineLength:ErrorExtensions.kt$FormValidationError.INVALID_NUM_PEOPLE_SLEPT_UNDER_LLIN -&gt; R.string.form_validation_error_invalid_num_people_slept_under_llin_condition</ID>
+    <ID>MaxLineLength:ErrorExtensions.kt$IncompleteSessionError.SESSION_RETRIEVAL_FAILED -&gt; R.string.incomplete_session_error_session_retrieval_failed</ID>
+    <ID>MaxLineLength:ImageUploadWorker.kt$ImageUploadWorker$"Upload for ${task.image.localId} already exists on server (conflict). Treating as success."</ID>
+    <ID>MaxLineLength:ImagingScreen.kt$color = if (state.currentSpecimen.id == "") MaterialTheme.colors.textSecondary else MaterialTheme.colors.textPrimary</ID>
+    <ID>MaxLineLength:ImagingScreen.kt$if</ID>
+    <ID>MaxLineLength:ImagingScreen.kt$inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList()</ID>
+    <ID>MaxLineLength:ImagingScreen.kt$is ImagingAction.SaveSessionProgress -&gt; "Are you sure you want to save the session and exit?"</ID>
+    <ID>MaxLineLength:ImagingScreen.kt$text = "Abdomen Status: ${state.currentSpecimenImage.abdomenStatus}"</ID>
+    <ID>MaxLineLength:ImagingScreen.kt$text = "Please package the specimen separately for further laboratory processing before continuing."</ID>
+    <ID>MaxLineLength:ImagingScreen.kt$text = "Specimen ${page + 1} of ${state.specimensWithImagesAndInferenceResults.size} in this Session"</ID>
+    <ID>MaxLineLength:ImagingScreen.kt$text = if (state.currentSpecimen.id == "") "Specimen ID will appear here" else state.currentSpecimen.id</ID>
+    <ID>MaxLineLength:ImagingViewModel.kt$ImagingViewModel$(specimenInsertionResult !is Result.Error) &amp;&amp; (specimenImageInsertionResult !is Result.Error) &amp;&amp; (inferenceResultInsertionResult !is Result.Error)</ID>
+    <ID>MaxLineLength:ImagingViewModel.kt$ImagingViewModel$abdomenStatus = abdomenStatusIndex?.let { index -&gt; AbdomenStatusLabel.entries[index].label }</ID>
+    <ID>MaxLineLength:ImagingViewModel.kt$ImagingViewModel$abdomenStatusInferenceDuration = abdomenStatusResult?.inferenceDuration</ID>
+    <ID>MaxLineLength:ImagingViewModel.kt$ImagingViewModel$bboxDetectionDuration = captureDetectorResult.bboxDetectionDuration</ID>
+    <ID>MaxLineLength:ImagingViewModel.kt$ImagingViewModel$if</ID>
+    <ID>MaxLineLength:ImagingViewModel.kt$ImagingViewModel$species = speciesIndex?.let { index -&gt; SpeciesLabel.entries[index].label }</ID>
+    <ID>MaxLineLength:ImagingViewModel.kt$ImagingViewModel$var</ID>
+    <ID>MaxLineLength:IncompleteSessionCard.kt$text = "Collector: ${sessionAndSite.session.collectorName}, ${sessionAndSite.session.collectorTitle}"</ID>
+    <ID>MaxLineLength:IncompleteSessionScreen.kt$text = "This will permanently delete the session and all associated images from your device. This action cannot be undone."</ID>
+    <ID>MaxLineLength:IncompleteSessionSentryLogger.kt$IncompleteSessionSentryLogger$"possible_causes" to "Room database query failure, coroutine cancellation, database migration issue, session ID mismatch, I/O error"</ID>
+    <ID>MaxLineLength:IncompleteSessionSentryLogger.kt$IncompleteSessionSentryLogger$"possible_causes" to "Session ID is outdated, session was deleted from database, mismatch between cache and DB, corrupted local storage"</ID>
+    <ID>MaxLineLength:InferenceRepositoryImplementation.kt$InferenceRepositoryImplementation$override suspend</ID>
+    <ID>MaxLineLength:InferenceResultRepository.kt$InferenceResultRepository$suspend fun insertInferenceResult(inferenceResult: InferenceResult, specimenImageId: String): Result&lt;Unit, RoomDbError&gt;</ID>
+    <ID>MaxLineLength:InferenceResultRepository.kt$InferenceResultRepository$suspend fun updateInferenceResult(inferenceResult: InferenceResult, specimenImageId: String): Result&lt;Unit, RoomDbError&gt;</ID>
+    <ID>MaxLineLength:InferenceResultRepositoryImplementation.kt$InferenceResultRepositoryImplementation$override suspend</ID>
+    <ID>MaxLineLength:IntakeScreen.kt$.</ID>
+    <ID>MaxLineLength:IntakeScreen.kt$IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod }</ID>
+    <ID>MaxLineLength:IntakeScreen.kt$IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition }</ID>
+    <ID>MaxLineLength:IntakeScreen.kt$description = "A battery powered trap that uses a light to attract and collect mosquitoes at night."</ID>
+    <ID>MaxLineLength:IntakeScreen.kt$description = "A person exposes part of their body and collects mosquitoes that land on the skin."</ID>
+    <ID>MaxLineLength:IntakeScreen.kt$description = "An indoor collection method that uses insecticide spray to knock down resting mosquitoes onto a sheet."</ID>
+    <ID>MaxLineLength:IntakeScreen.kt$selectedOption = IntakeDropdownOptions.LlinBrandOption.entries.firstOrNull { it.label == current }</ID>
+    <ID>MaxLineLength:IntakeScreen.kt$selectedOption = IntakeDropdownOptions.LlinTypeOption.entries.firstOrNull { it.label == current }</ID>
+    <ID>MaxLineLength:IntakeScreen.kt$text = "The collector associated with this session isn’t in your current list. You can select an existing collector or register this one."</ID>
+    <ID>MaxLineLength:IntakeScreen.kt$val selectedParentOption = state.siteSelectionsByLocationTypeId[parentLocationType.id] ?: return@all false</ID>
+    <ID>MaxLineLength:IntakeViewModel.kt$IntakeViewModel$_state.value.siteSelectionsByLocationTypeId</ID>
+    <ID>MaxLineLength:LocationClient.kt$LocationClient$lastKnownLocation != null &amp;&amp; currentTime - lastKnownLocation.time &lt;= LOCATION_CACHE_DURATION_MS</ID>
+    <ID>MaxLineLength:MetadataUploadWorker.kt$MetadataUploadWorker$localSpecimensWithImagesAndInferenceResults</ID>
+    <ID>MaxLineLength:MetadataUploadWorker.kt$MetadataUploadWorker$specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults</ID>
+    <ID>MaxLineLength:Migration_7_8_SpecimenImageSeparation.kt$&lt;no name provided&gt;$"CREATE INDEX IF NOT EXISTS `index_specimen_image_specimenId_sessionId` ON `specimen_image` (`specimenId`, `sessionId`);"</ID>
+    <ID>MaxLineLength:Migration_9_10_RefactorSpecimenImageAndInferenceResultKeys.kt$&lt;no name provided&gt;$"CREATE INDEX IF NOT EXISTS `index_specimen_image_specimenId_sessionId` ON `specimen_image` (`specimenId`, `sessionId`)"</ID>
+    <ID>MaxLineLength:PermissionScreen.kt$description = "Allows the app to show upload progress, completion alerts, and other key background status updates."</ID>
+    <ID>MaxLineLength:PermissionScreen.kt$description = "Needed to log exact collection sites and associate each specimen with its geographic origin for field tracking."</ID>
+    <ID>MaxLineLength:PermissionScreen.kt$description = "Required to capture detailed images of mosquito specimens for accurate identification and analysis."</ID>
+    <ID>MaxLineLength:PermissionScreen.kt$text = "To work properly, this app needs access to your camera, location, and notifications. One or more of these permissions are currently disabled. Please enable them in settings to continue."</ID>
+    <ID>MaxLineLength:RemoteLocationTypeDataSource.kt$RemoteLocationTypeDataSource$override suspend</ID>
+    <ID>MaxLineLength:RemoteSpecimenDataSource.kt$RemoteSpecimenDataSource$override suspend</ID>
+    <ID>MaxLineLength:SessionDataSource.kt$SessionDataSource$suspend fun postSession(session: Session, siteId: Int, deviceId: Int, expectedSpecimens: Int): Result&lt;PostSessionResponseDto, NetworkError&gt;</ID>
+    <ID>MaxLineLength:SiteRepositoryImplementation.kt$SiteRepositoryImplementation$override suspend</ID>
+    <ID>MaxLineLength:SpecimenDao.kt$SpecimenDao$"SELECT COUNT(*) FROM specimen JOIN session ON specimen.sessionId = session.localId WHERE specimen.shouldProcessFurther = 1 AND session.collectionDate BETWEEN :startDate AND :endDate"</ID>
+    <ID>MaxLineLength:SpecimenImageDataSource.kt$SpecimenImageDataSource$suspend fun getSpecimenImageMetadata(specimenImageId: String, specimenId: Int): Result&lt;SpecimenImageDto, NetworkError&gt;</ID>
+    <ID>MaxLineLength:SpecimenImageRepository.kt$SpecimenImageRepository$suspend fun insertSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID): Result&lt;Unit, RoomDbError&gt;</ID>
+    <ID>MaxLineLength:SpecimenImageRepository.kt$SpecimenImageRepository$suspend fun updateSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID): Result&lt;Unit, RoomDbError&gt;</ID>
+    <ID>MaxLineLength:SpecimenImageRepositoryImplementation.kt$SpecimenImageRepositoryImplementation$override suspend</ID>
+    <ID>MaxLineLength:SpecimenRepository.kt$SpecimenRepository$fun observeSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): Flow&lt;List&lt;SpecimenWithSpecimenImagesAndInferenceResults&gt;&gt;</ID>
+    <ID>MaxLineLength:SpecimenRepository.kt$SpecimenRepository$suspend fun getSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): List&lt;SpecimenWithSpecimenImagesAndInferenceResults&gt;</ID>
+    <ID>MaxLineLength:SpecimenRepositoryImplementation.kt$SpecimenRepositoryImplementation$override suspend</ID>
+    <ID>MaximumLineLength:CapturedSpecimenTile.kt$ </ID>
+    <ID>MaximumLineLength:CollectorDialog.kt$ </ID>
+    <ID>MaximumLineLength:CompleteSessionDetailsViewModel.kt$CompleteSessionDetailsViewModel$ </ID>
+    <ID>MaximumLineLength:CompleteSessionForm.kt$ </ID>
+    <ID>MaximumLineLength:CompleteSessionListTile.kt$ </ID>
+    <ID>MaximumLineLength:CompleteSessionListViewModel.kt$CompleteSessionListViewModel$ </ID>
+    <ID>MaximumLineLength:CompleteSessionSpecimensTile.kt$ </ID>
+    <ID>MaximumLineLength:DataStoreModule.kt$DataStoreModule$ </ID>
+    <ID>MaximumLineLength:DefaultMainSentryLogger.kt$DefaultMainSentryLogger$ </ID>
+    <ID>MaximumLineLength:DropdownField.kt$ </ID>
+    <ID>MaximumLineLength:ErrorExtensions.kt$ </ID>
+    <ID>MaximumLineLength:ImageUploadWorker.kt$ImageUploadWorker$ </ID>
+    <ID>MaximumLineLength:ImagingScreen.kt$ </ID>
+    <ID>MaximumLineLength:ImagingViewModel.kt$ImagingViewModel$ </ID>
+    <ID>MaximumLineLength:IncompleteSessionCard.kt$ </ID>
+    <ID>MaximumLineLength:IncompleteSessionScreen.kt$ </ID>
+    <ID>MaximumLineLength:IncompleteSessionSentryLogger.kt$IncompleteSessionSentryLogger$ </ID>
+    <ID>MaximumLineLength:InferenceRepositoryImplementation.kt$InferenceRepositoryImplementation$ </ID>
+    <ID>MaximumLineLength:InferenceResultRepository.kt$InferenceResultRepository$ </ID>
+    <ID>MaximumLineLength:InferenceResultRepositoryImplementation.kt$InferenceResultRepositoryImplementation$ </ID>
+    <ID>MaximumLineLength:IntakeScreen.kt$ </ID>
+    <ID>MaximumLineLength:IntakeViewModel.kt$IntakeViewModel$ </ID>
+    <ID>MaximumLineLength:LocationClient.kt$LocationClient$ </ID>
+    <ID>MaximumLineLength:MetadataUploadWorker.kt$MetadataUploadWorker$ </ID>
+    <ID>MaximumLineLength:Migration_7_8_SpecimenImageSeparation.kt$&lt;no name provided&gt;$ </ID>
+    <ID>MaximumLineLength:Migration_9_10_RefactorSpecimenImageAndInferenceResultKeys.kt$&lt;no name provided&gt;$ </ID>
+    <ID>MaximumLineLength:PermissionScreen.kt$ </ID>
+    <ID>MaximumLineLength:RemoteLocationTypeDataSource.kt$RemoteLocationTypeDataSource$ </ID>
+    <ID>MaximumLineLength:RemoteSpecimenDataSource.kt$RemoteSpecimenDataSource$ </ID>
+    <ID>MaximumLineLength:SessionDataSource.kt$SessionDataSource$ </ID>
+    <ID>MaximumLineLength:SiteRepositoryImplementation.kt$SiteRepositoryImplementation$ </ID>
+    <ID>MaximumLineLength:SpecimenDao.kt$SpecimenDao$ </ID>
+    <ID>MaximumLineLength:SpecimenImageDataSource.kt$SpecimenImageDataSource$ </ID>
+    <ID>MaximumLineLength:SpecimenImageRepository.kt$SpecimenImageRepository$ </ID>
+    <ID>MaximumLineLength:SpecimenImageRepositoryImplementation.kt$SpecimenImageRepositoryImplementation$ </ID>
+    <ID>MaximumLineLength:SpecimenRepository.kt$SpecimenRepository$ </ID>
+    <ID>MaximumLineLength:SpecimenRepositoryImplementation.kt$SpecimenRepositoryImplementation$ </ID>
+    <ID>NestedBlockDepth:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$override suspend fun deleteSavedImage(uri: Uri)</ID>
+    <ID>NestedBlockDepth:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun executeUploadLoop( initialUploader: TusUploader, upload: TusUpload, file: File, ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>NestedBlockDepth:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun uploadSingleImage( task: ImageUploadTask, sessionId: UUID ): DomainResult&lt;String, NetworkError&gt;</ID>
+    <ID>NestedBlockDepth:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncDeviceIfNeeded( localDevice: Device, localProgramId: Int ): DomainResult&lt;Device, NetworkError&gt;</ID>
+    <ID>NestedBlockDepth:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSessionIfNeeded( localSession: Session, localSiteId: Int, syncedDeviceId: Int, expectedSpecimens: Int ): DomainResult&lt;Session, NetworkError&gt;</ID>
+    <ID>NestedBlockDepth:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSpecimenIfNeeded( localSpecimen: Specimen, syncedLocalSessionId: UUID, syncedRemoteSessionId: Int, expectedImages: Int ): DomainResult&lt;Specimen, NetworkError&gt;</ID>
+    <ID>NestedBlockDepth:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSpecimenImageAndInferenceResultIfNeeded( localSpecimenImage: SpecimenImage, localInferenceResult: InferenceResult?, syncedSpecimen: Specimen, syncedLocalSessionId: UUID ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>NestedBlockDepth:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSurveillanceFormIfNeeded( localSurveillanceForm: SurveillanceForm, syncedLocalSessionId: UUID, syncedRemoteSessionId: Int ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>NoSemicolons:InferenceRepositoryImplementation.kt$InferenceRepositoryImplementation$;</ID>
+    <ID>PackageName:CollectorValidationUseCases.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageName:CompleteSessionDetailsAction.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageName:CompleteSessionDetailsError.kt$package com.vci.vectorcamapp.complete_session.details.domain.util</ID>
+    <ID>PackageName:CompleteSessionDetailsEvent.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageName:CompleteSessionDetailsScreen.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageName:CompleteSessionDetailsState.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageName:CompleteSessionDetailsTab.kt$package com.vci.vectorcamapp.complete_session.details.presentation.enums</ID>
+    <ID>PackageName:CompleteSessionDetailsViewModel.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageName:CompleteSessionForm.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components.form</ID>
+    <ID>PackageName:CompleteSessionFormTile.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components.form</ID>
+    <ID>PackageName:CompleteSessionListAction.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageName:CompleteSessionListDetailRow.kt$package com.vci.vectorcamapp.complete_session.list.presentation.components</ID>
+    <ID>PackageName:CompleteSessionListEvent.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageName:CompleteSessionListScreen.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageName:CompleteSessionListState.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageName:CompleteSessionListTile.kt$package com.vci.vectorcamapp.complete_session.list.presentation.components</ID>
+    <ID>PackageName:CompleteSessionListViewModel.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageName:CompleteSessionSpecimens.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components.specimens</ID>
+    <ID>PackageName:CompleteSessionSpecimensTile.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components.specimens</ID>
+    <ID>PackageName:GetAllLocationTypesResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.location_type</ID>
+    <ID>PackageName:IncompleteSessionAction.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageName:IncompleteSessionCard.kt$package com.vci.vectorcamapp.incomplete_session.presentation.components</ID>
+    <ID>PackageName:IncompleteSessionDeleteBackground.kt$package com.vci.vectorcamapp.incomplete_session.presentation.components</ID>
+    <ID>PackageName:IncompleteSessionError.kt$package com.vci.vectorcamapp.incomplete_session.domain.util</ID>
+    <ID>PackageName:IncompleteSessionEvent.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageName:IncompleteSessionListDetailRow.kt$package com.vci.vectorcamapp.incomplete_session.presentation.components</ID>
+    <ID>PackageName:IncompleteSessionScreen.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageName:IncompleteSessionSentryLogger.kt$package com.vci.vectorcamapp.incomplete_session.logging</ID>
+    <ID>PackageName:IncompleteSessionState.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageName:IncompleteSessionTestTags.kt$package com.vci.vectorcamapp.incomplete_session.presentation.util</ID>
+    <ID>PackageName:IncompleteSessionViewModel.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageName:IncompleteSessionViewModelTest.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageName:InferenceResultDto.kt$package com.vci.vectorcamapp.core.data.dto.inference_result</ID>
+    <ID>PackageName:IntakeValidationUseCases.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:LocationTypeDto.kt$package com.vci.vectorcamapp.core.data.dto.location_type</ID>
+    <ID>PackageName:PostSpecimenImageRequestDto.kt$package com.vci.vectorcamapp.core.data.dto.specimen_image</ID>
+    <ID>PackageName:PostSpecimenImageResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.specimen_image</ID>
+    <ID>PackageName:PostSurveillanceFormRequestDto.kt$package com.vci.vectorcamapp.core.data.dto.surveillance_form</ID>
+    <ID>PackageName:PostSurveillanceFormResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.surveillance_form</ID>
+    <ID>PackageName:SegmentedTabBar.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components</ID>
+    <ID>PackageName:SpecimenImageDto.kt$package com.vci.vectorcamapp.core.data.dto.specimen_image</ID>
+    <ID>PackageName:SurveillanceFormDto.kt$package com.vci.vectorcamapp.core.data.dto.surveillance_form</ID>
+    <ID>PackageName:ValidateCollectionDateUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateCollectionMethodUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateCollectorLastTrainedOnUseCase.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageName:ValidateCollectorNameUseCase.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageName:ValidateCollectorTitleUseCase.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageName:ValidateCollectorUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateDistrictUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateHouseNumberUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateLlinBrandUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateLlinTypeUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateMonthsSinceIrsUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateNumLlinsAvailableUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateNumPeopleSleptInHouseUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateNumPeopleSleptUnderLlinUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateSpecimenConditionUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateSpecimenIdUseCase.kt$package com.vci.vectorcamapp.imaging.domain.use_cases</ID>
+    <ID>PackageName:ValidateVillageNameUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:CollectorValidationUseCases.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageNaming:CompleteSessionDetailsAction.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageNaming:CompleteSessionDetailsError.kt$package com.vci.vectorcamapp.complete_session.details.domain.util</ID>
+    <ID>PackageNaming:CompleteSessionDetailsEvent.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageNaming:CompleteSessionDetailsScreen.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageNaming:CompleteSessionDetailsState.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageNaming:CompleteSessionDetailsTab.kt$package com.vci.vectorcamapp.complete_session.details.presentation.enums</ID>
+    <ID>PackageNaming:CompleteSessionDetailsViewModel.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageNaming:CompleteSessionForm.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components.form</ID>
+    <ID>PackageNaming:CompleteSessionFormTile.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components.form</ID>
+    <ID>PackageNaming:CompleteSessionListAction.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageNaming:CompleteSessionListDetailRow.kt$package com.vci.vectorcamapp.complete_session.list.presentation.components</ID>
+    <ID>PackageNaming:CompleteSessionListEvent.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageNaming:CompleteSessionListScreen.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageNaming:CompleteSessionListState.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageNaming:CompleteSessionListTile.kt$package com.vci.vectorcamapp.complete_session.list.presentation.components</ID>
+    <ID>PackageNaming:CompleteSessionListViewModel.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageNaming:CompleteSessionSpecimens.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components.specimens</ID>
+    <ID>PackageNaming:CompleteSessionSpecimensTile.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components.specimens</ID>
+    <ID>PackageNaming:GetAllLocationTypesResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.location_type</ID>
+    <ID>PackageNaming:IncompleteSessionAction.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageNaming:IncompleteSessionCard.kt$package com.vci.vectorcamapp.incomplete_session.presentation.components</ID>
+    <ID>PackageNaming:IncompleteSessionDeleteBackground.kt$package com.vci.vectorcamapp.incomplete_session.presentation.components</ID>
+    <ID>PackageNaming:IncompleteSessionError.kt$package com.vci.vectorcamapp.incomplete_session.domain.util</ID>
+    <ID>PackageNaming:IncompleteSessionEvent.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageNaming:IncompleteSessionListDetailRow.kt$package com.vci.vectorcamapp.incomplete_session.presentation.components</ID>
+    <ID>PackageNaming:IncompleteSessionScreen.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageNaming:IncompleteSessionSentryLogger.kt$package com.vci.vectorcamapp.incomplete_session.logging</ID>
+    <ID>PackageNaming:IncompleteSessionState.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageNaming:IncompleteSessionTestTags.kt$package com.vci.vectorcamapp.incomplete_session.presentation.util</ID>
+    <ID>PackageNaming:IncompleteSessionViewModel.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageNaming:IncompleteSessionViewModelTest.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageNaming:InferenceResultDto.kt$package com.vci.vectorcamapp.core.data.dto.inference_result</ID>
+    <ID>PackageNaming:IntakeValidationUseCases.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:LocationTypeDto.kt$package com.vci.vectorcamapp.core.data.dto.location_type</ID>
+    <ID>PackageNaming:PostSpecimenImageRequestDto.kt$package com.vci.vectorcamapp.core.data.dto.specimen_image</ID>
+    <ID>PackageNaming:PostSpecimenImageResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.specimen_image</ID>
+    <ID>PackageNaming:PostSurveillanceFormRequestDto.kt$package com.vci.vectorcamapp.core.data.dto.surveillance_form</ID>
+    <ID>PackageNaming:PostSurveillanceFormResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.surveillance_form</ID>
+    <ID>PackageNaming:SegmentedTabBar.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components</ID>
+    <ID>PackageNaming:SpecimenImageDto.kt$package com.vci.vectorcamapp.core.data.dto.specimen_image</ID>
+    <ID>PackageNaming:SurveillanceFormDto.kt$package com.vci.vectorcamapp.core.data.dto.surveillance_form</ID>
+    <ID>PackageNaming:ValidateCollectionDateUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateCollectionMethodUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateCollectorLastTrainedOnUseCase.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageNaming:ValidateCollectorNameUseCase.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageNaming:ValidateCollectorTitleUseCase.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageNaming:ValidateCollectorUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateDistrictUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateHouseNumberUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateLlinBrandUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateLlinTypeUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateMonthsSinceIrsUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateNumLlinsAvailableUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateNumPeopleSleptInHouseUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateNumPeopleSleptUnderLlinUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateSpecimenConditionUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateSpecimenIdUseCase.kt$package com.vci.vectorcamapp.imaging.domain.use_cases</ID>
+    <ID>PackageNaming:ValidateVillageNameUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PrintStackTrace:CollectorRepositoryImplementation.kt$CollectorRepositoryImplementation$e</ID>
+    <ID>PrintStackTrace:CurrentSessionCacheDtoSerializer.kt$CurrentSessionCacheDtoSerializer$e</ID>
+    <ID>PrintStackTrace:DefaultIntakeFieldsCacheDtoSerializer.kt$DefaultIntakeFieldsCacheDtoSerializer$e</ID>
+    <ID>PrintStackTrace:DeviceCacheDtoSerializer.kt$DeviceCacheDtoSerializer$e</ID>
+    <ID>PrintStackTrace:safeCall.kt$e</ID>
+    <ID>ReturnCount:CameraFocusControllerImplementation.kt$CameraFocusControllerImplementation$override fun focusAt(offset: Offset)</ID>
+    <ID>ReturnCount:ImageUploadWorker.kt$ImageUploadWorker$override suspend fun doWork(): WorkerResult</ID>
+    <ID>ReturnCount:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun executeUploadLoop( initialUploader: TusUploader, upload: TusUpload, file: File, ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>ReturnCount:ImagingViewModel.kt$ImagingViewModel$private suspend fun determineSelectionForFurtherProcessing(selectionProbability: Float): Boolean</ID>
+    <ID>ReturnCount:MetadataUploadWorker.kt$MetadataUploadWorker$override suspend fun doWork(): WorkerResult</ID>
+    <ID>ReturnCount:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncDeviceIfNeeded( localDevice: Device, localProgramId: Int ): DomainResult&lt;Device, NetworkError&gt;</ID>
+    <ID>ReturnCount:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSessionIfNeeded( localSession: Session, localSiteId: Int, syncedDeviceId: Int, expectedSpecimens: Int ): DomainResult&lt;Session, NetworkError&gt;</ID>
+    <ID>ReturnCount:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSpecimenIfNeeded( localSpecimen: Specimen, syncedLocalSessionId: UUID, syncedRemoteSessionId: Int, expectedImages: Int ): DomainResult&lt;Specimen, NetworkError&gt;</ID>
+    <ID>ReturnCount:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSpecimenImageAndInferenceResultIfNeeded( localSpecimenImage: SpecimenImage, localInferenceResult: InferenceResult?, syncedSpecimen: Specimen, syncedLocalSessionId: UUID ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>ReturnCount:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSurveillanceFormIfNeeded( localSurveillanceForm: SurveillanceForm, syncedLocalSessionId: UUID, syncedRemoteSessionId: Int ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>ReturnCount:SortByHierarchy.kt$fun calculateDepth(siteId: Int, visited: MutableSet&lt;Int&gt; = mutableSetOf()): Int</ID>
+    <ID>ReturnCount:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$private fun getDetectedResults(boxes: FloatArray): List&lt;FloatArray&gt;</ID>
+    <ID>ReturnCount:ValidateCollectionMethodUseCase.kt$ValidateCollectionMethodUseCase$operator fun invoke(collectionMethod: String): Result&lt;Unit, FormValidationError&gt;</ID>
+    <ID>ReturnCount:ValidateSpecimenConditionUseCase.kt$ValidateSpecimenConditionUseCase$operator fun invoke(specimenCondition: String): Result&lt;Unit, FormValidationError&gt;</ID>
+    <ID>ReturnCount:safeCall.kt$suspend inline fun &lt;reified T&gt; safeCall( execute: () -&gt; HttpResponse ): Result&lt;T, NetworkError&gt;</ID>
+    <ID>SpreadOperator:ImagingViewModel.kt$ImagingViewModel$(*jpegByteArray)</ID>
+    <ID>SpreadOperator:RoomDatabaseModule.kt$RoomDatabaseModule$(*ALL_MIGRATIONS)</ID>
+    <ID>SpreadOperator:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$(*boxesForNms.toTypedArray())</ID>
+    <ID>SpreadOperator:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$(*confidenceScoresForNms.toFloatArray())</ID>
+    <ID>SwallowedException:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:ImagingViewModel.kt$ImagingViewModel$e: Exception</ID>
+    <ID>SwallowedException:InferenceResultRepositoryImplementation.kt$InferenceResultRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:InferenceResultRepositoryImplementation.kt$InferenceResultRepositoryImplementation$e: SQLiteConstraintException</ID>
+    <ID>SwallowedException:IntakeViewModel.kt$IntakeViewModel$e: SecurityException</ID>
+    <ID>SwallowedException:IntakeViewModel.kt$IntakeViewModel$e: TimeoutCancellationException</ID>
+    <ID>SwallowedException:LocationTypeRepositoryImplementation.kt$LocationTypeRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:MetadataUploadWorker.kt$MetadataUploadWorker$e: Exception</ID>
+    <ID>SwallowedException:MetadataUploadWorker.kt$MetadataUploadWorker$e: IOException</ID>
+    <ID>SwallowedException:MetadataUploadWorker.kt$MetadataUploadWorker$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:ProgramRepositoryImplementation.kt$ProgramRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:SessionRepositoryImplementation.kt$SessionRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>SwallowedException:SiteRepositoryImplementation.kt$SiteRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:SpecimenImageRepositoryImplementation.kt$SpecimenImageRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:SpecimenImageRepositoryImplementation.kt$SpecimenImageRepositoryImplementation$e: SQLiteConstraintException</ID>
+    <ID>SwallowedException:SpecimenRepositoryImplementation.kt$SpecimenRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:SpecimenRepositoryImplementation.kt$SpecimenRepositoryImplementation$e: SQLiteConstraintException</ID>
+    <ID>SwallowedException:SurveillanceFormRepositoryImplementation.kt$SurveillanceFormRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:responseToResult.kt$e: NoTransformationFoundException</ID>
+    <ID>ThrowsCount:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun uploadSingleImage( task: ImageUploadTask, sessionId: UUID ): DomainResult&lt;String, NetworkError&gt;</ID>
+    <ID>TooGenericExceptionCaught:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CollectorRepositoryImplementation.kt$CollectorRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CurrentSessionCacheDtoSerializer.kt$CurrentSessionCacheDtoSerializer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DefaultIntakeFieldsCacheDtoSerializer.kt$DefaultIntakeFieldsCacheDtoSerializer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DeviceCacheDtoSerializer.kt$DeviceCacheDtoSerializer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ImageUploadWorker.kt$ImageUploadWorker$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ImageUploadWorker.kt$ImageUploadWorker$restore: Exception</ID>
+    <ID>TooGenericExceptionCaught:ImageUploadWorker.kt$ImageUploadWorker$resumeException: Exception</ID>
+    <ID>TooGenericExceptionCaught:ImagingScreen.kt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ImagingViewModel.kt$ImagingViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:InferenceRepositoryImplementation.kt$InferenceRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:InferenceResultRepositoryImplementation.kt$InferenceResultRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:IntakeViewModel.kt$IntakeViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:LocationTypeRepositoryImplementation.kt$LocationTypeRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:MetadataUploadWorker.kt$MetadataUploadWorker$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProgramRepositoryImplementation.kt$ProgramRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:RegistrationViewModel.kt$RegistrationViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SessionRepositoryImplementation.kt$SessionRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SiteRepositoryImplementation.kt$SiteRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SpecimenImageRepositoryImplementation.kt$SpecimenImageRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SpecimenRepositoryImplementation.kt$SpecimenRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SurveillanceFormRepositoryImplementation.kt$SurveillanceFormRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:TfLiteSpecimenClassifier.kt$TfLiteSpecimenClassifier$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:VectorCamApp.kt$VectorCamApp$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:safeCall.kt$e: Exception</ID>
+    <ID>TooManyFunctions:ImageUploadWorker.kt$ImageUploadWorker : CoroutineWorker</ID>
+    <ID>TooManyFunctions:MetadataUploadWorker.kt$MetadataUploadWorker : CoroutineWorker</ID>
+    <ID>TooManyFunctions:RoomDatabaseModule.kt$RoomDatabaseModule</ID>
+    <ID>TooManyFunctions:SessionDao.kt$SessionDao</ID>
+    <ID>TooManyFunctions:SessionRepository.kt$SessionRepository</ID>
+    <ID>TooManyFunctions:SessionRepositoryImplementation.kt$SessionRepositoryImplementation : SessionRepository</ID>
+    <ID>UnusedPrivateProperty:SpecimenImageAnalyzer.kt$SpecimenImageAnalyzer$private var frameCounter = 0</ID>
+    <ID>VariableNaming:CompleteSessionListScreen.kt$val ROTATION_DURATION = 2000</ID>
+    <ID>VariableNaming:CompleteSessionListTile.kt$val PROGRESS_BAR_LOW_OPACITY = 0.3f</ID>
+    <ID>VariableNaming:CompleteSessionListTile.kt$val UPLOAD_ICON_ANIMATION_DURATION_MS = 1000</ID>
+    <ID>VariableNaming:CompleteSessionListTile.kt$val UPLOAD_ICON_MAX_ALPHA = 1f</ID>
+    <ID>VariableNaming:CompleteSessionListTile.kt$val UPLOAD_ICON_MIN_ALPHA = 0.3f</ID>
+    <ID>VariableNaming:ErrorSnackbarHost.kt$val SCREEN_WIDTH_FRACTION = 0.96f</ID>
+    <ID>VariableNaming:LiveCameraPreview.kt$val DOT_RADIUS_DP = 3.dp</ID>
+    <ID>Wrapping:ImagingScreen.kt$onAction( ImagingAction.SelectPendingAction(ImagingAction.SaveSessionProgress) )</ID>
+    <ID>Wrapping:ImagingScreen.kt$onAction( ImagingAction.SelectPendingAction(ImagingAction.SubmitSession) )</ID>
+    <ID>Wrapping:IntakeScreen.kt$it.locationHierarchy?.get( locationType.name )</ID>
+    <ID>Wrapping:IntakeScreen.kt$onAction( IntakeAction.SelectLocationTypeSiteOption(locationType.id, it) )</ID>
+    <ID>Wrapping:ValidateSpecimenConditionUseCase.kt$ValidateSpecimenConditionUseCase$(</ID>
+  </CurrentIssues>
+</SmellBaseline>

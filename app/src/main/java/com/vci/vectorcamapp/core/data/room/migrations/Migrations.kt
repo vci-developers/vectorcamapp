@@ -5,7 +5,16 @@ import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_11_12_A
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_12_13_REMOVE_SENTINEL_SITE_AND_MOVE_HOUSE_NUMBER_UNDER_SITE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_13_14_ADD_COLLECTOR_TABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_14_15_BACKFILL_COLLECTORS
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_15_16_ADD_SPECIMEN_SHOULD_PROCESS_FURTHER_COLUMN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_16_17_ADD_SESSION_COLLECTOR_LAST_TRAINED_ON_COLUMN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_17_18_ADD_COLLECTOR_LAST_TRAINED_ON_COLUMN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_18_19_ADD_SESSION_HARDWARE_ID_COLUMN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_19_20_MAKE_HARDWARE_ID_COLUMN_NULLABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_20_21_CREATE_LOCATION_TYPE_TABLE
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_21_22_UPDATE_SITE_TABLE
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_22_23_MAKE_SITE_LOCATION_COLUMNS_NULLABLE
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_23_24_ADD_LOCATION_TYPE_LEVEL_COLUMN
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_2_3_CREATE_SURVEILLANCE_FORM_TABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_3_4_SCHEMA_V2
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_4_5_ADD_SUBMITTED_AT_COLUMNS_TO_SPECIMEN_AND_SURVEILLANCE_FORM_TABLES
@@ -14,15 +23,6 @@ import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_6_7_BOU
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_7_8_SPECIMEN_IMAGE_SEPARATION
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_8_9_ADD_SESSION_TYPE_COLUMN
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_9_10_REFACTOR_SPECIMEN_IMAGE_AND_INFERENCE_RESULT_KEYS
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_15_16_ADD_SPECIMEN_SHOULD_PROCESS_FURTHER_COLUMN
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_16_17_ADD_SESSION_COLLECTOR_LAST_TRAINED_ON_COLUMN
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_17_18_ADD_COLLECTOR_LAST_TRAINED_ON_COLUMN
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_18_19_ADD_SESSION_HARDWARE_ID_COLUMN
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_19_20_MAKE_HARDWARE_ID_COLUMN_NULLABLE
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_20_21_CREATE_LOCATION_TYPE_TABLE
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_21_22_UPDATE_SITE_TABLE
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_22_23_MAKE_SITE_LOCATION_COLUMNS_NULLABLE
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_23_24_ADD_LOCATION_TYPE_LEVEL_COLUMN
 
 val ALL_MIGRATIONS = arrayOf(
     MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE,

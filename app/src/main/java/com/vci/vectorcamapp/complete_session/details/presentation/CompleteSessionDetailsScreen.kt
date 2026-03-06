@@ -27,7 +27,6 @@ fun CompleteSessionDetailsScreen(
     onAction: (CompleteSessionDetailsAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-
     ScreenHeader(
         title = "Session Information",
         subtitle = "ID: ${state.session.localId}",
@@ -40,7 +39,8 @@ fun CompleteSessionDetailsScreen(
                     .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
                         onAction(CompleteSessionDetailsAction.ReturnToCompleteSessionListScreen)
-                    })
+                    }
+            )
         },
         modifier = modifier
     ) {

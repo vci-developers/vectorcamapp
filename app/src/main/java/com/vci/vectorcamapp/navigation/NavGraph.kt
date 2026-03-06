@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -24,16 +23,16 @@ import com.vci.vectorcamapp.imaging.presentation.ImagingViewModel
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionEvent
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionScreen
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionViewModel
-import com.vci.vectorcamapp.landing.presentation.LandingEvent
-import com.vci.vectorcamapp.landing.presentation.LandingScreen
-import com.vci.vectorcamapp.landing.presentation.LandingViewModel
-import com.vci.vectorcamapp.registration.presentation.RegistrationEvent
-import com.vci.vectorcamapp.registration.presentation.RegistrationScreen
-import com.vci.vectorcamapp.registration.presentation.RegistrationViewModel
 import com.vci.vectorcamapp.intake.presentation.IntakeEvent
 import com.vci.vectorcamapp.intake.presentation.IntakeScreen
 import com.vci.vectorcamapp.intake.presentation.IntakeViewModel
+import com.vci.vectorcamapp.landing.presentation.LandingEvent
+import com.vci.vectorcamapp.landing.presentation.LandingScreen
+import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import com.vci.vectorcamapp.main.presentation.SplashScreen
+import com.vci.vectorcamapp.registration.presentation.RegistrationEvent
+import com.vci.vectorcamapp.registration.presentation.RegistrationScreen
+import com.vci.vectorcamapp.registration.presentation.RegistrationViewModel
 import com.vci.vectorcamapp.settings.presentation.SettingsEvent
 import com.vci.vectorcamapp.settings.presentation.SettingsScreen
 import com.vci.vectorcamapp.settings.presentation.SettingsViewModel
@@ -43,7 +42,8 @@ fun NavGraph(startDestination: Destination) {
     val navController = rememberNavController()
 
     NavHost(
-        navController = navController, startDestination = startDestination
+        navController = navController,
+        startDestination = startDestination
     ) {
         composable<Destination.Registration> {
             val viewModel = hiltViewModel<RegistrationViewModel>()
@@ -87,7 +87,8 @@ fun NavGraph(startDestination: Destination) {
                     )
 
                     LandingEvent.NavigateBackToRegistrationScreen -> navController.popBackStack(
-                        Destination.Registration, false
+                        Destination.Registration,
+                        false
                     )
 
                     LandingEvent.NavigateToSettingsScreen -> navController.navigate(
@@ -121,7 +122,8 @@ fun NavGraph(startDestination: Destination) {
                     IntakeEvent.NavigateBackToPreviousScreen -> navController.popBackStack()
 
                     IntakeEvent.NavigateBackToRegistrationScreen -> navController.popBackStack(
-                        Destination.Registration, false
+                        Destination.Registration,
+                        false
                     )
                 }
             }
@@ -153,7 +155,7 @@ fun NavGraph(startDestination: Destination) {
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 when (state.isLoading) {
                     true -> SplashScreen()
-                    
+
                     false -> ImagingScreen(
                         state = state,
                         onAction = viewModel::onAction
@@ -234,7 +236,8 @@ fun NavGraph(startDestination: Destination) {
                     )
 
                     SettingsEvent.NavigateBackToLandingScreen -> navController.popBackStack(
-                        Destination.Landing, false
+                        Destination.Landing,
+                        false
                     )
                 }
             }

@@ -5,7 +5,7 @@ import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.settings.presentation.model.SettingsErrors
 
-data class SettingsState (
+data class SettingsState(
     val device: Device = Device(
         id = -1,
         model = "",

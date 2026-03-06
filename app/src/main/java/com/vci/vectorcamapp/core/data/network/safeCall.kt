@@ -1,7 +1,7 @@
 package com.vci.vectorcamapp.core.data.network
 
-import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import io.ktor.client.statement.HttpResponse
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.coroutines.ensureActive

@@ -101,7 +101,8 @@ class TfLiteSpecimenClassifier(
                             preprocessedMatrixChannels,
                             preprocessedMatrixHeight,
                             preprocessedMatrixWidth
-                        ), DataType.FLOAT32
+                        ),
+                        DataType.FLOAT32
                     )
                     val inputFloatBuffer =
                         FloatArray(preprocessedMatrixHeight * preprocessedMatrixWidth * preprocessedMatrixChannels)
@@ -118,7 +119,8 @@ class TfLiteSpecimenClassifier(
                     inputTensor.loadArray(chwArray)
 
                     val outputTensor = TensorBuffer.createFixedSize(
-                        intArrayOf(1, outputNumClasses), DataType.FLOAT32
+                        intArrayOf(1, outputNumClasses),
+                        DataType.FLOAT32
                     )
 
                     val logits = synchronized(classifierLock) {
@@ -128,10 +130,12 @@ class TfLiteSpecimenClassifier(
                     }
 
                     Log.d(TAG, "Inference result: $logits")
-                    continuation.resume(ClassifierResult(
+                    continuation.resume(
+                        ClassifierResult(
                         logits = logits,
                         inferenceDuration = System.currentTimeMillis() - startTime
-                    ))
+                    )
+                    )
                 } catch (e: Exception) {
                     Log.e(TAG, "Inference failed: ${e.message}")
                     continuation.resume(null)

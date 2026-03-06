@@ -18,7 +18,7 @@ fun ActionTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     hue: Color = MaterialTheme.colors.cardGlow,
-    fillWidth : Boolean = true,
+    fillWidth: Boolean = true,
     content: @Composable () -> Unit
 ) {
     Card(

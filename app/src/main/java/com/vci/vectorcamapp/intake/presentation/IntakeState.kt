@@ -6,9 +6,8 @@ import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
-import com.vci.vectorcamapp.intake.presentation.model.IntakeErrors
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
-
+import com.vci.vectorcamapp.intake.presentation.model.IntakeErrors
 import java.util.UUID
 
 data class IntakeState(

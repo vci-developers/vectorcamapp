@@ -25,6 +25,7 @@ subprojects {
         allRules = false
         config.setFrom(rootProject.files("config/detekt/detekt.yml"))
         autoCorrect = rootProject.findProperty("detekt.autoCorrect")?.toString()?.toBoolean() ?: false
+        baseline = rootProject.file("config/detekt/baseline.xml")
     }
 }
 

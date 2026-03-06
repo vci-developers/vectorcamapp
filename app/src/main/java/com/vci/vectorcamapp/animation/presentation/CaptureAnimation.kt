@@ -84,16 +84,19 @@ fun CaptureAnimation(
 
         var containerHeightPx by remember { mutableIntStateOf(0) }
 
-        Box(modifier
+        Box(
+            modifier
                 .fillMaxSize()
                 .onSizeChanged { containerHeightPx = it.height }
         ) {
-            Box(Modifier
+            Box(
+                Modifier
                     .matchParentSize()
                     .background(MaterialTheme.colors.overlayColor)
             )
 
-            Box(Modifier
+            Box(
+                Modifier
                     .matchParentSize()
                     .drawWithCache {
                         val w = size.width
@@ -105,19 +108,23 @@ fun CaptureAnimation(
                     }
             )
 
-            Box(Modifier
+            Box(
+                Modifier
                     .fillMaxWidth()
                     .height(MaterialTheme.dimensions.scannerLineHeight)
                     .graphicsLayer {
                         translationY = (t * (containerHeightPx - lineHpx)).coerceAtLeast(0f)
                     }
-                    .background(Brush.horizontalGradient(
+                    .background(
+                        Brush.horizontalGradient(
                         listOf(Color.Transparent, MaterialTheme.colors.primary, Color.Transparent)
-                    ))
+                    )
+                    )
             )
 
             val pulseAlpha = (sin(t * Math.PI * PULSE_FREQ) * PULSE_AMP + PULSE_AMP).toFloat()
-            Box(Modifier
+            Box(
+                Modifier
                     .matchParentSize()
                     .graphicsLayer { alpha = pulseAlpha }
                     .background(MaterialTheme.colors.primary)

@@ -30,7 +30,10 @@ fun InfoPill(
                 color = color.copy(alpha = 0.25f),
                 shape = CircleShape
             )
-            .padding(horizontal = MaterialTheme.dimensions.paddingMedium, vertical = MaterialTheme.dimensions.paddingSmall),
+            .padding(
+                horizontal = MaterialTheme.dimensions.paddingMedium,
+                vertical = MaterialTheme.dimensions.paddingSmall
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Row(

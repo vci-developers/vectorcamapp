@@ -21,11 +21,15 @@ fun PullToRefresh(
     val scrollState = rememberScrollState()
 
     PullToRefreshBox(
-        state = pullToRefreshState, isRefreshing = isRefreshing, onRefresh = onRefresh
+        state = pullToRefreshState,
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh
     ) {
-        Box(modifier = modifier
+        Box(
+            modifier = modifier
             .fillMaxSize()
-            .verticalScroll(scrollState)) {
+            .verticalScroll(scrollState)
+        ) {
             content()
         }
     }

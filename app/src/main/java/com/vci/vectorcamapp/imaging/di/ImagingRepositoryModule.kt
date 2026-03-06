@@ -18,11 +18,11 @@ abstract class ImagingRepositoryModule {
     @ViewModelScoped
     abstract fun bindCameraRepository(
         cameraRepositoryImplementation: CameraRepositoryImplementation
-    ) : CameraRepository
+    ): CameraRepository
 
     @Binds
     @ViewModelScoped
     abstract fun bindInferenceRepository(
         inferenceRepositoryImplementation: InferenceRepositoryImplementation
-    ) : InferenceRepository
+    ): InferenceRepository
 }

@@ -9,11 +9,11 @@ import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
-import com.vci.vectorcamapp.main.domain.util.MainError
-import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.landing.domain.util.LandingError
+import com.vci.vectorcamapp.main.domain.util.MainError
+import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
 
 fun Error.toString(context: Context): String {

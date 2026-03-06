@@ -7,7 +7,7 @@ sealed interface Result<out D, out E : Error> {
     data class Error<out E : DomainError>(val error: E) : Result<Nothing, E>
 }
 
-fun <T, E: Error> Result<T, E>.successOrNull(): T? = when (this) {
+fun <T, E : Error> Result<T, E>.successOrNull(): T? = when (this) {
     is Result.Success -> data
     else -> null
 }

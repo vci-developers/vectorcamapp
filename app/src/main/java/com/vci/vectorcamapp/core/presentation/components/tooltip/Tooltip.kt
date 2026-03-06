@@ -33,7 +33,7 @@ fun Tooltip(
     iconSize: Dp = MaterialTheme.dimensions.iconSizeSmall,
     textStyle: TextStyle = MaterialTheme.typography.bodySmall,
     content: @Composable (() -> Unit)
-){
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier

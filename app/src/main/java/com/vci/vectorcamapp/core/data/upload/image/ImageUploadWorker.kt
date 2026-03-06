@@ -329,7 +329,6 @@ class ImageUploadWorker @AssistedInject constructor(
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
 
-
         val finalStatus = if (uploadResult is DomainResult.Success) {
             UploadStatus.COMPLETED
         } else {
@@ -342,7 +341,12 @@ class ImageUploadWorker @AssistedInject constructor(
                     "ImageUploadWorker",
                     "Upload successful. Compressing original file: ${task.image.imageUri}"
                 )
-                compressImageFile(task.image.imageUri, COMPRESSION_QUALITY, specimenId = task.specimen.id, imageId = task.image.localId)
+                compressImageFile(
+                    task.image.imageUri,
+                    COMPRESSION_QUALITY,
+                    specimenId = task.specimen.id,
+                    imageId = task.image.localId
+                )
             } catch (e: Exception) {
                 Log.e(
                     "ImageUploadWorker",
@@ -491,7 +495,7 @@ class ImageUploadWorker @AssistedInject constructor(
                 "image/png" -> "png"
                 else -> "bin"
             }
-            val filename = "upload_${specimenId}_${imageId}.$extension"
+            val filename = "upload_${specimenId}_$imageId.$extension"
             val destination = File(context.cacheDir, filename)
             if (!destination.exists()) {
                 resolver.openInputStream(source)?.use { input ->
@@ -591,7 +595,7 @@ class ImageUploadWorker @AssistedInject constructor(
         var backupFile: File? = null
 
         try {
-            backupFile = File.createTempFile("img_backup_${specimenId}_${imageId}", ".tmp", context.cacheDir)
+            backupFile = File.createTempFile("img_backup_${specimenId}_$imageId", ".tmp", context.cacheDir)
 
             resolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(backupFile).use { out ->

@@ -23,7 +23,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -215,7 +214,6 @@ class LandingViewModelTest {
         }
     }
 
-
     @Test
     fun landVm_b03_resume_whenNoSession_emitsError_andNoNavigation() = runTest {
         initViewModel(programId = 1, program = Program(1, "P", "C"), currentSession = null)
@@ -303,7 +301,7 @@ class LandingViewModelTest {
             val s2 = awaitItem()
             assertThat(s2.incompleteSessionsCount).isEqualTo(1)
 
-            incompleteFlow.value = List(4) { SessionAndSite(makeSession(SessionType.DATA_COLLECTION), dummySite)}
+            incompleteFlow.value = List(4) { SessionAndSite(makeSession(SessionType.DATA_COLLECTION), dummySite) }
             advanceUntilIdle()
             val s3 = awaitItem()
             assertThat(s3.incompleteSessionsCount).isEqualTo(4)
@@ -325,7 +323,7 @@ class LandingViewModelTest {
         viewModel.events.test {
             viewModel.onAction(LandingAction.DismissResumePrompt)
             advanceUntilIdle()
-            
+
             expectNoEvents()
         }
 

@@ -1,10 +1,10 @@
-    package com.vci.vectorcamapp.core.data.cache
+ package com.vci.vectorcamapp.core.data.cache
 
     import androidx.datastore.core.DataStore
-    import com.vci.vectorcamapp.core.data.dto.cache.DefaultIntakeFieldsCacheDto
-    import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
-    import kotlinx.coroutines.flow.firstOrNull
-    import javax.inject.Inject
+import com.vci.vectorcamapp.core.data.dto.cache.DefaultIntakeFieldsCacheDto
+import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
+import kotlinx.coroutines.flow.firstOrNull
+import javax.inject.Inject
 
     class DefaultIntakeFieldsCacheImplementation @Inject constructor(
         private val dataStore: DataStore<DefaultIntakeFieldsCacheDto>

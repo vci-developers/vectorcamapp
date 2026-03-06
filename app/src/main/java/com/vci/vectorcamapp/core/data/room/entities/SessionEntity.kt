@@ -8,13 +8,17 @@ import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import java.util.UUID
 
 @Entity(
-    tableName = "session", foreignKeys = [ForeignKey(
+    tableName = "session",
+    foreignKeys = [
+        ForeignKey(
         entity = SiteEntity::class,
         parentColumns = ["id"],
         childColumns = ["siteId"],
         onDelete = ForeignKey.CASCADE,
         onUpdate = ForeignKey.CASCADE
-    )], indices = [Index("completedAt"), Index("siteId"), Index("type")]
+    )
+    ],
+    indices = [Index("completedAt"), Index("siteId"), Index("type")]
 )
 data class SessionEntity(
     @PrimaryKey val localId: UUID = UUID(0, 0),

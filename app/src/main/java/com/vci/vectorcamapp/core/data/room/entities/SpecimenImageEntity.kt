@@ -9,7 +9,8 @@ import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import java.util.UUID
 
 @Entity(
-    tableName = "specimen_image", foreignKeys = [
+    tableName = "specimen_image",
+        foreignKeys = [
         ForeignKey(
             entity = SpecimenEntity::class,
             parentColumns = ["id", "sessionId"],
@@ -17,7 +18,8 @@ import java.util.UUID
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE
         )
-    ], indices = [Index(value = ["specimenId", "sessionId"])]
+    ],
+        indices = [Index(value = ["specimenId", "sessionId"])]
 )
 data class SpecimenImageEntity(
     @PrimaryKey val localId: String = "",

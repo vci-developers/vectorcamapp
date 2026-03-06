@@ -138,7 +138,9 @@ fun RegistrationScreen(
                     DropdownField(
                         label = "Collector Title",
                         options = RegistrationDropdownOptions.CollectorTitleOption.entries,
-                        selectedOption = RegistrationDropdownOptions.CollectorTitleOption.entries.firstOrNull { it.label == state.collector.title },
+                        selectedOption = RegistrationDropdownOptions.CollectorTitleOption.entries.firstOrNull {
+                            it.label == state.collector.title
+                        },
                         onOptionSelected = { option ->
                             onAction(RegistrationAction.EnterCollectorTitle(option.label))
                         },

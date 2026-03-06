@@ -80,7 +80,9 @@ class IntakeViewModel @Inject constructor(
     }.onStart {
         loadFormDetails()
     }.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000L), IntakeState()
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000L),
+        IntakeState()
     )
 
     private val _events = Channel<IntakeEvent>()
@@ -117,7 +119,9 @@ class IntakeViewModel @Inject constructor(
                         val selection = _state.value.siteSelectionsByLocationTypeId[locationType.id]
                         val error = if (selection.isNullOrBlank()) {
                             FormValidationError.BLANK_LOCATION_TYPE_SELECTION
-                        } else null
+                        } else {
+                            null
+                        }
                         locationType.id to error
                     }
 
@@ -150,7 +154,6 @@ class IntakeViewModel @Inject constructor(
                         surveillanceForm?.numPeopleSleptUnderLlin?.let {
                             intakeValidationUseCases.validateNumPeopleSleptUnderLlin(it)
                         }
-
 
                     _state.update {
                         it.copy(
@@ -192,11 +195,9 @@ class IntakeViewModel @Inject constructor(
 
                     if (hasFieldError || hasLocationTypeSiteSelectionError) {
                         emitError(IntakeError.FORM_INVALID)
-                    }
-                    else if (state.value.isCurrentCollectorMissing) {
+                    } else if (state.value.isCurrentCollectorMissing) {
                         emitError(IntakeError.MISSING_COLLECTOR)
-                    }
-                    else {
+                    } else {
                         val selectedSite = if (_state.value.allSitesInProgram.any { !it.district.isNullOrBlank() }) {
                             _state.value.allSitesInProgram.find {
                                 it.district == _state.value.selectedDistrict &&
@@ -225,7 +226,11 @@ class IntakeViewModel @Inject constructor(
                                 sessionRepository.upsertSession(session, selectedSite.id)
                             sessionResult.onError { error ->
                                 emitError(error)
-                                IntakeSentryLogger.logSessionUpsertFailed(Exception(error.name), session.localId, selectedSite.id)
+                                IntakeSentryLogger.logSessionUpsertFailed(
+                                    Exception(error.name),
+                                    session.localId,
+                                    selectedSite.id
+                                )
                                 return@runAsTransaction false
                             }
 
@@ -237,7 +242,10 @@ class IntakeViewModel @Inject constructor(
 
                             surveillanceFormResult.onError { error ->
                                 emitError(error)
-                                IntakeSentryLogger.logSurveillanceFormUpsertFailed(Exception(error.name), session.localId)
+                                IntakeSentryLogger.logSurveillanceFormUpsertFailed(
+                                    Exception(error.name),
+                                    session.localId
+                                )
                                 return@runAsTransaction false
                             }
                             true
@@ -372,7 +380,6 @@ class IntakeViewModel @Inject constructor(
                     }
                 }
 
-
                 is IntakeAction.EnterNumLlinsAvailable -> {
                     val oldValue = _state.value.surveillanceForm?.numLlinsAvailable
                     val normalized = normalizeNumericInput(oldValue, action.count)
@@ -398,7 +405,8 @@ class IntakeViewModel @Inject constructor(
                         _state.update {
                             it.copy(
                                 surveillanceForm = it.surveillanceForm?.copy(
-                                    llinType = "", numPeopleSleptUnderLlin = -1
+                                    llinType = "",
+                                    numPeopleSleptUnderLlin = -1
                                 )
                             )
                         }
@@ -484,7 +492,8 @@ class IntakeViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             session = it.session.copy(
-                                latitude = null, longitude = null
+                                latitude = null,
+                                longitude = null
                             )
                         )
                     }
@@ -662,7 +671,8 @@ class IntakeViewModel @Inject constructor(
                         session = it.session.copy(
                             latitude = location.latitude.toFloat(),
                             longitude = location.longitude.toFloat(),
-                        ), locationError = null
+                        ),
+                            locationError = null
                     )
                 }
             }.onError { error ->

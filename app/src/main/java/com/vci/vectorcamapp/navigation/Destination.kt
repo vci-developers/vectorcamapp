@@ -20,7 +20,7 @@ sealed interface Destination {
     data object IncompleteSession : Destination
 
     @Serializable
-    data object Settings: Destination
+    data object Settings : Destination
 
     @Serializable
     data object CompleteSessionList : Destination

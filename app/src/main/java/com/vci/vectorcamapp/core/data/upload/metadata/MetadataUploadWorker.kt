@@ -111,8 +111,10 @@ class MetadataUploadWorker @AssistedInject constructor(
                 specimenRepository.getSpecimenImagesAndInferenceResultsBySession(localSessionId)
             val totalSpecimensForSession = localSpecimensWithImagesAndInferenceResults.size
 
-            val syncedSession = when (val syncSessionResult =
-                syncSessionIfNeeded(localSession, localSiteId, syncedDevice.id, totalSpecimensForSession)) {
+            val syncedSession = when (
+                val syncSessionResult =
+                syncSessionIfNeeded(localSession, localSiteId, syncedDevice.id, totalSpecimensForSession)
+            ) {
                 is DomainResult.Success -> syncSessionResult.data
                 is DomainResult.Error -> return retryOrFailure(
                     syncSessionResult.error.toString(context)
@@ -125,9 +127,13 @@ class MetadataUploadWorker @AssistedInject constructor(
             val localSurveillanceForm =
                 surveillanceFormRepository.getSurveillanceFormBySessionId(syncedSession.localId)
             if (localSurveillanceForm != null) {
-                when (val syncSurveillanceFormResult = syncSurveillanceFormIfNeeded(
-                    localSurveillanceForm, syncedSession.localId, syncedSession.remoteId
-                )) {
+                when (
+                    val syncSurveillanceFormResult = syncSurveillanceFormIfNeeded(
+                    localSurveillanceForm,
+                    syncedSession.localId,
+                    syncedSession.remoteId
+                )
+                ) {
                     is DomainResult.Success -> syncSurveillanceFormResult.data
                     is DomainResult.Error -> return retryOrFailure(
                         syncSurveillanceFormResult.error.toString(context)
@@ -139,12 +145,14 @@ class MetadataUploadWorker @AssistedInject constructor(
             localSpecimensWithImagesAndInferenceResults.forEachIndexed { specimenIndex, specimenWithImagesAndInferenceResults ->
                 val totalImagesForSpecimen =
                     specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
-                val syncedSpecimen = when (val syncSpecimenResult = syncSpecimenIfNeeded(
+                val syncedSpecimen = when (
+                    val syncSpecimenResult = syncSpecimenIfNeeded(
                     specimenWithImagesAndInferenceResults.specimen,
                     syncedSession.localId,
                     syncedSession.remoteId,
                     totalImagesForSpecimen
-                )) {
+                )
+                ) {
                     is DomainResult.Success -> syncSpecimenResult.data
                     is DomainResult.Error -> {
                         hasFailure = true
@@ -164,7 +172,10 @@ class MetadataUploadWorker @AssistedInject constructor(
                 specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEachIndexed { imageIndex, (specimenImage, inferenceResult) ->
                     if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
                         syncSpecimenImageAndInferenceResultIfNeeded(
-                            specimenImage, inferenceResult, syncedSpecimen, syncedSession.localId
+                            specimenImage,
+                            inferenceResult,
+                            syncedSpecimen,
+                            syncedSession.localId
                         ).onSuccess {
                             showSpecimenProgressNotification(
                                 specimenId = syncedSpecimen.id,
@@ -314,14 +325,19 @@ class MetadataUploadWorker @AssistedInject constructor(
                 deviceId = syncedDeviceId,
             )
 
-            val remoteSessionDto = when (val remoteSessionResult =
-                sessionDataSource.getSessionByFrontendId(localSession.localId)) {
+            val remoteSessionDto = when (
+                val remoteSessionResult =
+                sessionDataSource.getSessionByFrontendId(localSession.localId)
+            ) {
                 is DomainResult.Success -> remoteSessionResult.data
                 is DomainResult.Error -> {
                     when (remoteSessionResult.error) {
                         NetworkError.NOT_FOUND -> {
                             val postSessionResult = sessionDataSource.postSession(
-                                localSession, localSiteId, syncedDeviceId, expectedSpecimens
+                                localSession,
+                                localSiteId,
+                                syncedDeviceId,
+                                expectedSpecimens
                             )
                             when (postSessionResult) {
                                 is DomainResult.Success -> postSessionResult.data.session
@@ -387,15 +403,18 @@ class MetadataUploadWorker @AssistedInject constructor(
                 submittedAt = localSurveillanceForm.submittedAt
             )
 
-            val remoteSurveillanceFormDto = when (val remoteSurveillanceFormResult =
-                surveillanceFormDataSource.getSurveillanceFormBySessionId(syncedRemoteSessionId)) {
+            val remoteSurveillanceFormDto = when (
+                val remoteSurveillanceFormResult =
+                surveillanceFormDataSource.getSurveillanceFormBySessionId(syncedRemoteSessionId)
+            ) {
                 is DomainResult.Success -> remoteSurveillanceFormResult.data
                 is DomainResult.Error -> {
                     when (remoteSurveillanceFormResult.error) {
                         NetworkError.NOT_FOUND -> {
                             val postSurveillanceFormResult =
                                 surveillanceFormDataSource.postSurveillanceForm(
-                                    localSurveillanceForm, syncedRemoteSessionId
+                                    localSurveillanceForm,
+                                    syncedRemoteSessionId
                                 )
                             when (postSurveillanceFormResult) {
                                 is DomainResult.Success -> postSurveillanceFormResult.data.form
@@ -424,7 +443,8 @@ class MetadataUploadWorker @AssistedInject constructor(
             if (remoteSurveillanceFormDto != localSurveillanceFormDto) {
                 val updateSurveillanceFormResult =
                     surveillanceFormRepository.upsertSurveillanceForm(
-                        remoteSurveillanceForm, syncedLocalSessionId
+                        remoteSurveillanceForm,
+                        syncedLocalSessionId
                     )
                 if (updateSurveillanceFormResult is DomainResult.Error) {
                     return DomainResult.Error(NetworkError.CLIENT_ERROR)
@@ -451,15 +471,20 @@ class MetadataUploadWorker @AssistedInject constructor(
             )
 
             val remoteSpecimenDto =
-                when (val remoteSpecimenResult = specimenDataSource.getSpecimenByIdAndSessionId(
-                    localSpecimen.id, syncedRemoteSessionId
-                )) {
+                when (
+                    val remoteSpecimenResult = specimenDataSource.getSpecimenByIdAndSessionId(
+                    localSpecimen.id,
+                    syncedRemoteSessionId
+                )
+                ) {
                     is DomainResult.Success -> remoteSpecimenResult.data
                     is DomainResult.Error -> {
                         when (remoteSpecimenResult.error) {
                             NetworkError.NOT_FOUND -> {
                                 val postSpecimenResult = specimenDataSource.postSpecimen(
-                                    localSpecimen, syncedRemoteSessionId, expectedImages
+                                    localSpecimen,
+                                    syncedRemoteSessionId,
+                                    expectedImages
                                 )
                                 when (postSpecimenResult) {
                                     is DomainResult.Success -> postSpecimenResult.data.specimen
@@ -475,7 +500,9 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
 
             val remoteSpecimen = Specimen(
-                id = remoteSpecimenDto.specimenId, remoteId = remoteSpecimenDto.id, shouldProcessFurther = remoteSpecimenDto.shouldProcessFurther
+                id = remoteSpecimenDto.specimenId,
+                remoteId = remoteSpecimenDto.id,
+                shouldProcessFurther = remoteSpecimenDto.shouldProcessFurther
             )
 
             if (remoteSpecimenDto != localSpecimenDto) {
@@ -538,10 +565,13 @@ class MetadataUploadWorker @AssistedInject constructor(
                 return DomainResult.Error(NetworkError.CLIENT_ERROR)
             }
 
-            val remoteSpecimenImageDto = when (val remoteSpecimenImageResult =
+            val remoteSpecimenImageDto = when (
+                val remoteSpecimenImageResult =
                 specimenImageDataSource.getSpecimenImageMetadata(
-                    localSpecimenImage.localId, syncedSpecimen.remoteId
-                )) {
+                    localSpecimenImage.localId,
+                    syncedSpecimen.remoteId
+                )
+            ) {
                 is DomainResult.Success -> remoteSpecimenImageResult.data
                 is DomainResult.Error -> {
                     when (remoteSpecimenImageResult.error) {
@@ -602,14 +632,17 @@ class MetadataUploadWorker @AssistedInject constructor(
             if (remoteSpecimenImageDto != localSpecimenImageDto) {
                 val transactionResult = transactionHelper.runAsTransaction {
                     specimenImageRepository.updateSpecimenImage(
-                        remoteSpecimenImage, syncedSpecimen.id, syncedLocalSessionId
+                        remoteSpecimenImage,
+                        syncedSpecimen.id,
+                        syncedLocalSessionId
                     ).onError {
                         return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
                     }
 
                     remoteInferenceResult?.let { remoteInferenceResult ->
                         inferenceResultRepository.updateInferenceResult(
-                            remoteInferenceResult, remoteSpecimenImage.localId
+                            remoteInferenceResult,
+                            remoteSpecimenImage.localId
                         ).onError {
                             return@runAsTransaction DomainResult.Error(NetworkError.CLIENT_ERROR)
                         }
@@ -638,7 +671,9 @@ class MetadataUploadWorker @AssistedInject constructor(
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW
+            CHANNEL_ID,
+            CHANNEL_NAME,
+            NotificationManager.IMPORTANCE_LOW
         )
         notificationManager.createNotificationChannel(channel)
     }
@@ -649,7 +684,9 @@ class MetadataUploadWorker @AssistedInject constructor(
             .setSmallIcon(R.drawable.ic_cloud_upload).setOngoing(true).build()
 
         return ForegroundInfo(
-            notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            notificationId,
+            notification,
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
         )
     }
 

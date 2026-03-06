@@ -68,7 +68,8 @@ class LocationClient @Inject constructor(
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             fusedLocationProviderClient.getCurrentLocation(
-                Priority.PRIORITY_HIGH_ACCURACY, cancellationTokenSource.token
+                Priority.PRIORITY_HIGH_ACCURACY,
+                cancellationTokenSource.token
             ).addOnSuccessListener { location ->
                 when {
                     location != null -> {

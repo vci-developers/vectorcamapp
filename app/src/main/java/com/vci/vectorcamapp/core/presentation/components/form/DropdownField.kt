@@ -85,7 +85,8 @@ fun <T> DropdownField(
                     )
                     .heightIn(min = MaterialTheme.dimensions.componentHeightMedium)
                     .clickable { expanded = true }
-                    .testTag(menuTestTag ?: "dropdown-menu")) {
+                    .testTag(menuTestTag ?: "dropdown-menu")
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
@@ -110,7 +111,9 @@ fun <T> DropdownField(
 
                     Box(modifier = Modifier.padding(start = MaterialTheme.dimensions.paddingSmall)) {
                         Icon(
-                            painter = painterResource(if (expanded) R.drawable.ic_arrow_up else R.drawable.ic_arrow_down),
+                            painter = painterResource(
+                                if (expanded) R.drawable.ic_arrow_up else R.drawable.ic_arrow_down
+                            ),
                             contentDescription = if (expanded) "Collapse dropdown" else "Expand dropdown",
                             tint = if (selectedOption == null) MaterialTheme.colors.textSecondary else MaterialTheme.colors.textPrimary,
                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
@@ -143,7 +146,9 @@ fun <T> DropdownField(
                             .fillMaxWidth()
                             .padding(start = MaterialTheme.dimensions.paddingSmall)
                             .height(parentHeight)
-                            .testTag(if (menuItemTestTagPrefix != null) "${menuItemTestTagPrefix}-$index" else "dropdown-menu-item-$index"),
+                            .testTag(
+                                if (menuItemTestTagPrefix != null) "$menuItemTestTagPrefix-$index" else "dropdown-menu-item-$index"
+                            ),
                     )
                     if (index != options.lastIndex) {
                         HorizontalDivider(

@@ -164,7 +164,6 @@ fun ImagingScreen(
 
             imageCaptureUseCase = imageCapture
             camera = boundCamera
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -172,7 +171,8 @@ fun ImagingScreen(
 
     val pagerState = rememberPagerState(
         initialPage = state.specimensWithImagesAndInferenceResults.size,
-        pageCount = { state.specimensWithImagesAndInferenceResults.size + 1 })
+        pageCount = { state.specimensWithImagesAndInferenceResults.size + 1 }
+    )
 
     var isImageLoaded by remember { mutableStateOf(false) }
 
@@ -181,7 +181,8 @@ fun ImagingScreen(
     }
 
     HorizontalPager(
-        state = pagerState, modifier = modifier.fillMaxSize()
+        state = pagerState,
+        modifier = modifier.fillMaxSize()
     ) { page ->
         when {
             page < state.specimensWithImagesAndInferenceResults.size -> {
@@ -314,7 +315,9 @@ fun ImagingScreen(
                         confirmButton = {
                             if (state.pendingAction == null) {
                                 OutlinedButton(
-                                    onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SubmitSession)) },
+                                    onClick = { onAction(
+                                        ImagingAction.SelectPendingAction(ImagingAction.SubmitSession)
+                                    ) },
                                     border = BorderStroke(
                                         MaterialTheme.dimensions.borderThicknessThick,
                                         MaterialTheme.colors.successConfirm
@@ -353,7 +356,9 @@ fun ImagingScreen(
                         dismissButton = {
                             if (state.pendingAction == null) {
                                 OutlinedButton(
-                                    onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SaveSessionProgress)) },
+                                    onClick = { onAction(
+                                        ImagingAction.SelectPendingAction(ImagingAction.SaveSessionProgress)
+                                    ) },
                                     border = BorderStroke(
                                         MaterialTheme.dimensions.borderThicknessThick,
                                         MaterialTheme.colors.info
@@ -391,7 +396,7 @@ fun ImagingScreen(
                         title = {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
-                            ){
+                            ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_info),
                                     contentDescription = "Info Icon",
@@ -618,7 +623,9 @@ fun ImagingScreen(
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Column(
-                                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.paddingSmall)
+                                            verticalArrangement = Arrangement.spacedBy(
+                                                MaterialTheme.dimensions.paddingSmall
+                                            )
                                         ) {
                                             if (state.currentSpecimenImage.species != null) {
                                                 Text(
@@ -752,7 +759,9 @@ fun ImagingScreenPreview() {
     VectorcamappTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             ImagingScreen(
-                state = ImagingState(), onAction = { }, modifier = Modifier.padding(innerPadding)
+                state = ImagingState(),
+                onAction = { },
+                modifier = Modifier.padding(innerPadding)
             )
         }
     }

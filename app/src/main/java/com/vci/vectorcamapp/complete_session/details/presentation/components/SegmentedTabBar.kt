@@ -53,26 +53,33 @@ fun SegmentedTabBar(
                         .weight(1f)
                         .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium))
                         .background(
-                            brush = if (isSelected) Brush.horizontalGradient(
+                            brush = if (isSelected) {
+                                Brush.horizontalGradient(
                                 listOf(
                                     MaterialTheme.colors.segmentedTabBarActiveGradientLeft,
                                     MaterialTheme.colors.segmentedTabBarActiveGradientRight
                                 )
-                            ) else Brush.horizontalGradient(
+                            )
+                            } else {
+                                Brush.horizontalGradient(
                                 listOf(
                                     MaterialTheme.colors.segmentedTabBarInactive,
                                     MaterialTheme.colors.segmentedTabBarInactive
                                 )
                             )
+                            }
                         )
                         .clickable { onTabSelected(tab) }
-                        .padding(vertical = MaterialTheme.dimensions.paddingMedium)) {
-
+                        .padding(vertical = MaterialTheme.dimensions.paddingMedium)
+                ) {
                     Text(
                         text = tab.label,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = if (isSelected) MaterialTheme.colors.segmentedTabBarActiveText
-                        else MaterialTheme.colors.segmentedTabBarInactiveText
+                        color = if (isSelected) {
+                            MaterialTheme.colors.segmentedTabBarActiveText
+                        } else {
+                            MaterialTheme.colors.segmentedTabBarInactiveText
+                        }
                     )
                 }
             }

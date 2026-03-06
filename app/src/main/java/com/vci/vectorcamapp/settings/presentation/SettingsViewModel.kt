@@ -2,11 +2,11 @@ package com.vci.vectorcamapp.settings.presentation
 
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
@@ -126,7 +126,9 @@ class SettingsViewModel @Inject constructor(
 
                     val nameValidationResult = collectorValidationUseCases.validateCollectorName(collector.name)
                     val titleValidationResult = collectorValidationUseCases.validateCollectorTitle(collector.title)
-                    val lastTrainedOnValidationResult = collectorValidationUseCases.validateCollectorLastTrainedOn(collector.lastTrainedOn)
+                    val lastTrainedOnValidationResult = collectorValidationUseCases.validateCollectorLastTrainedOn(
+                        collector.lastTrainedOn
+                    )
 
                     _state.update { currentState ->
                         currentState.copy(
@@ -138,7 +140,13 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
 
-                    val hasError = listOf(nameValidationResult, titleValidationResult, lastTrainedOnValidationResult).any { it is Result.Error }
+                    val hasError = listOf(
+                        nameValidationResult,
+                        titleValidationResult,
+                        lastTrainedOnValidationResult
+                    ).any {
+                        it is Result.Error
+                    }
                     if (hasError) return@launch
 
                     try {
