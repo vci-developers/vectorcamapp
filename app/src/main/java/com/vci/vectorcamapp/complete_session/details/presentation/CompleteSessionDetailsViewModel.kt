@@ -64,6 +64,11 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                             add(imageAndInferenceResult.specimenImage.abdomenStatus)
                             add(imageAndInferenceResult.specimenImage.metadataUploadStatus.displayText(context))
                             add(imageAndInferenceResult.specimenImage.imageUploadStatus.displayText(context))
+                            _state.value.site.locationHierarchy?.values?.forEach {
+                                if (it.isNotEmpty()) {
+                                    add(it)
+                                }
+                            }
                         }
                     }
                     SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
