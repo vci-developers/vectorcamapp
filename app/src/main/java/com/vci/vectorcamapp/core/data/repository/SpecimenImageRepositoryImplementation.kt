@@ -14,6 +14,7 @@ import javax.inject.Inject
 class SpecimenImageRepositoryImplementation @Inject constructor(
     private val specimenImageDao: SpecimenImageDao
 ) : SpecimenImageRepository {
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun insertSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID): Result<Unit, RoomDbError> {
         return try {
             specimenImageDao.insertSpecimenImage(specimenImage.toEntity(specimenId, sessionId))
@@ -25,6 +26,7 @@ class SpecimenImageRepositoryImplementation @Inject constructor(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun updateSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID): Result<Unit, RoomDbError> {
         return try {
             val updatedRows = specimenImageDao.updateSpecimenImage(specimenImage.toEntity(specimenId, sessionId))

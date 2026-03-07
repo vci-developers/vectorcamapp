@@ -15,6 +15,7 @@ class SiteRepositoryImplementation @Inject constructor(
     private val siteDao: SiteDao,
 ) : SiteRepository {
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun upsertSite(site: Site, programId: Int, locationTypeId: Int?, parentId: Int?): Result<Unit, RoomDbError> {
         return try {
             siteDao.upsertSite(site.toEntity(programId, locationTypeId, parentId))

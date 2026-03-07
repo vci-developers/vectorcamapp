@@ -18,6 +18,7 @@ object DeviceCacheDtoSerializer : Serializer<DeviceCacheDto> {
 
     override val defaultValue: DeviceCacheDto = DeviceCacheDto()
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun readFrom(input: InputStream): DeviceCacheDto {
         return try {
             json.decodeFromString(
@@ -25,7 +26,6 @@ object DeviceCacheDtoSerializer : Serializer<DeviceCacheDto> {
                 string = input.readBytes().decodeToString()
             )
         } catch (e: Exception) {
-            e.printStackTrace()
             defaultValue
         }
     }

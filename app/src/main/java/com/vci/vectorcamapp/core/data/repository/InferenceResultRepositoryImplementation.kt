@@ -12,6 +12,7 @@ import javax.inject.Inject
 class InferenceResultRepositoryImplementation @Inject constructor(
     private val inferenceResultDao: InferenceResultDao
 ) : InferenceResultRepository {
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun insertInferenceResult(inferenceResult: InferenceResult, specimenImageId: String): Result<Unit, RoomDbError> {
         return try {
             inferenceResultDao.insertInferenceResult(inferenceResult.toEntity(specimenImageId))
@@ -23,6 +24,7 @@ class InferenceResultRepositoryImplementation @Inject constructor(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun updateInferenceResult(inferenceResult: InferenceResult, specimenImageId: String): Result<Unit, RoomDbError> {
         return try {
             val updatedRows = inferenceResultDao.updateInferenceResult(inferenceResult.toEntity(specimenImageId))

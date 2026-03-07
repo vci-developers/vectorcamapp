@@ -157,7 +157,7 @@ class SettingsViewModel @Inject constructor(
                                 isEditCollectorDialogVisible = false
                             )
                         }
-                    } catch (e: Exception) {
+                    } @Suppress("TooGenericExceptionCaught", "SwallowedException") catch (e: Exception) {
                         emitError(SettingsError.COLLECTOR_SAVE_FAILED)
                     }
                 }
@@ -182,7 +182,7 @@ class SettingsViewModel @Inject constructor(
                                 isDeleteCollectorDialogVisible = false
                             )
                         }
-                    } catch (e: Exception) {
+                    } @Suppress("TooGenericExceptionCaught", "SwallowedException") catch (e: Exception) {
                         emitError(SettingsError.COLLECTOR_DELETION_FAILED)
                     }
                 }

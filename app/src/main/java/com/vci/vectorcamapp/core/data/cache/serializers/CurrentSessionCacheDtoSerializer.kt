@@ -18,6 +18,7 @@ object CurrentSessionCacheDtoSerializer : Serializer<CurrentSessionCacheDto> {
 
     override val defaultValue: CurrentSessionCacheDto = CurrentSessionCacheDto()
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun readFrom(input: InputStream): CurrentSessionCacheDto {
         return try {
             json.decodeFromString(
@@ -25,7 +26,6 @@ object CurrentSessionCacheDtoSerializer : Serializer<CurrentSessionCacheDto> {
                 string = input.readBytes().decodeToString()
             )
         } catch (e: Exception) {
-            e.printStackTrace()
             defaultValue
         }
     }

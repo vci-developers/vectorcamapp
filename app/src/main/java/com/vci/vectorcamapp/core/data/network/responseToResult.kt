@@ -11,6 +11,7 @@ suspend inline fun <reified T> responseToResult(
 ): Result<T, NetworkError> {
     return when (response.status.value) {
         in 200..299 -> {
+            @Suppress("SwallowedException")
             try {
                 Result.Success(response.body<T>())
             } catch (e: NoTransformationFoundException) {

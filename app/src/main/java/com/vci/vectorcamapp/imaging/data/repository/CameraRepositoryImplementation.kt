@@ -50,6 +50,7 @@ class CameraRepositoryImplementation @Inject constructor(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun saveImage(
         jpegBytes: ByteArray, filename: String, currentSession: Session
     ): Result<Uri, ImagingError> {

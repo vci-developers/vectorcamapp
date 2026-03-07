@@ -15,6 +15,7 @@ class ProgramRepositoryImplementation @Inject constructor(
     private val programDao: ProgramDao
 ) : ProgramRepository {
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun upsertProgram(program: Program): Result<Unit, RoomDbError> {
         return try {
             programDao.upsertProgram(program.toEntity())

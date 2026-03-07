@@ -238,7 +238,7 @@ class ImagingViewModel @Inject constructor(
                                 }
                             }
                         }
-                    } catch (e: Exception) {
+                    } @Suppress("TooGenericExceptionCaught", "SwallowedException") catch (e: Exception) {
                         emitError(ImagingError.PROCESSING_ERROR)
                     } finally {
                         action.frame.close()

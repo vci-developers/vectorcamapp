@@ -18,6 +18,7 @@ object DefaultIntakeFieldsCacheDtoSerializer : Serializer<DefaultIntakeFieldsCac
 
     override val defaultValue: DefaultIntakeFieldsCacheDto = DefaultIntakeFieldsCacheDto()
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun readFrom(input: InputStream): DefaultIntakeFieldsCacheDto {
         return try {
             json.decodeFromString(
@@ -25,7 +26,6 @@ object DefaultIntakeFieldsCacheDtoSerializer : Serializer<DefaultIntakeFieldsCac
                 string = input.readBytes().decodeToString()
             )
         } catch (e: Exception) {
-            e.printStackTrace()
             defaultValue
         }
     }

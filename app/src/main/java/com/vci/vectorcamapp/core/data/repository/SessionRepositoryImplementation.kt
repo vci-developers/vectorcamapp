@@ -19,6 +19,7 @@ import javax.inject.Inject
 class SessionRepositoryImplementation @Inject constructor(
     private val sessionDao: SessionDao
 ) : SessionRepository {
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun upsertSession(session: Session, siteId: Int): Result<Unit, RoomDbError> {
         return try {
             sessionDao.upsertSession(session.toEntity(siteId))

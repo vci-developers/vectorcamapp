@@ -660,7 +660,7 @@ class IntakeViewModel @Inject constructor(
                 Result.Error(IntakeError.LOCATION_PERMISSION_DENIED)
             } catch (e: TimeoutCancellationException) {
                 Result.Error(IntakeError.LOCATION_GPS_TIMEOUT)
-            } catch (e: Exception) {
+            } @Suppress("TooGenericExceptionCaught", "SwallowedException") catch (e: Exception) {
                 IntakeSentryLogger.logLocationFetchFailed(e)
                 Result.Error(IntakeError.UNKNOWN_ERROR)
             }

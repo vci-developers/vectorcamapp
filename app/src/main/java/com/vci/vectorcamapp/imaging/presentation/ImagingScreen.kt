@@ -164,8 +164,8 @@ fun ImagingScreen(
 
             imageCaptureUseCase = imageCapture
             camera = boundCamera
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
+            // Camera binding failed; the view will remain in its current state
         }
     }
 

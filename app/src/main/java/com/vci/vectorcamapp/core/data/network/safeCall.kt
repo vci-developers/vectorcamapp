@@ -9,23 +9,20 @@ import kotlinx.serialization.SerializationException
 import java.net.UnknownHostException
 import kotlin.coroutines.coroutineContext
 
+@Suppress("TooGenericExceptionCaught", "SwallowedException")
 suspend inline fun <reified T> safeCall(
     execute: () -> HttpResponse
 ): Result<T, NetworkError> {
     val response = try {
         execute()
     } catch (e: UnresolvedAddressException) {
-        e.printStackTrace()
         return Result.Error(NetworkError.NO_INTERNET)
     } catch (e: UnknownHostException) {
-        e.printStackTrace()
         return Result.Error(NetworkError.NO_INTERNET)
     } catch (e: SerializationException) {
-        e.printStackTrace()
         return Result.Error(NetworkError.SERIALIZATION_ERROR)
     } catch (e: Exception) {
         coroutineContext.ensureActive()
-        e.printStackTrace()
         return Result.Error(NetworkError.UNKNOWN_ERROR)
     }
 

@@ -203,7 +203,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             }
         } catch (e: IOException) {
             return retryOrFailure("Lost internet connection while uploading.")
-        } catch (e: Exception) {
+        } @Suppress("TooGenericExceptionCaught", "SwallowedException") catch (e: Exception) {
             return retryOrFailure("An unknown error occurred during upload.")
         } finally {
             if (isStopped) {
@@ -247,6 +247,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     private suspend fun syncDeviceIfNeeded(
         localDevice: Device, localProgramId: Int
     ): DomainResult<Device, NetworkError> {
@@ -299,6 +300,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     private suspend fun syncSessionIfNeeded(
         localSession: Session, localSiteId: Int, syncedDeviceId: Int, expectedSpecimens: Int
     ): DomainResult<Session, NetworkError> {
@@ -385,6 +387,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     private suspend fun syncSurveillanceFormIfNeeded(
         localSurveillanceForm: SurveillanceForm,
         syncedLocalSessionId: UUID,
@@ -459,6 +462,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     private suspend fun syncSpecimenIfNeeded(
         localSpecimen: Specimen, syncedLocalSessionId: UUID, syncedRemoteSessionId: Int, expectedImages: Int
     ): DomainResult<Specimen, NetworkError> {
@@ -521,6 +525,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     private suspend fun syncSpecimenImageAndInferenceResultIfNeeded(
         localSpecimenImage: SpecimenImage,
         localInferenceResult: InferenceResult?,

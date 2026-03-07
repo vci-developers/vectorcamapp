@@ -15,6 +15,7 @@ import javax.inject.Inject
 class SurveillanceFormRepositoryImplementation @Inject constructor(
     private val surveillanceFormDao: SurveillanceFormDao
 ) : SurveillanceFormRepository {
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun upsertSurveillanceForm(
         surveillanceForm: SurveillanceForm, sessionId: UUID
     ): Result<Unit, RoomDbError> {

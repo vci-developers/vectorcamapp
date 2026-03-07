@@ -14,12 +14,12 @@ import javax.inject.Inject
 class CollectorRepositoryImplementation @Inject constructor(
     private val collectorDao: CollectorDao
 ) : CollectorRepository {
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun upsertCollector(collector: Collector): Result<Unit, RoomDbError> {
         return try {
             collectorDao.upsertCollector(collector.toEntity())
             Result.Success(Unit)
         } catch (e: Exception) {
-            e.printStackTrace()
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }

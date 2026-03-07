@@ -22,6 +22,7 @@ import javax.inject.Inject
 class SpecimenRepositoryImplementation @Inject constructor(
     private val specimenDao: SpecimenDao
 ) : SpecimenRepository {
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun insertSpecimen(
         specimen: Specimen, sessionId: UUID
     ): Result<Unit, RoomDbError> {
@@ -35,6 +36,7 @@ class SpecimenRepositoryImplementation @Inject constructor(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun updateSpecimen(
         specimen: Specimen, sessionId: UUID
     ): Result<Unit, RoomDbError> {
