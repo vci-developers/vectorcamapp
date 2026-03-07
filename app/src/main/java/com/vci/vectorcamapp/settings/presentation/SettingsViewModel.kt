@@ -35,6 +35,8 @@ class SettingsViewModel @Inject constructor(
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
 
+    val MAX_EDIT_DISTANCE = 2
+
     private val _collectors = collectorRepository.observeAllCollectors()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
@@ -141,16 +143,34 @@ class SettingsViewModel @Inject constructor(
                     val hasError = listOf(nameValidationResult, titleValidationResult, lastTrainedOnValidationResult).any { it is Result.Error }
                     if (hasError) return@launch
 
-                    try {
-                        collectorRepository.upsertCollector(collector)
+                    val otherCollectors = state.value.collectors.filter { it.id != collector.id }
+                    val similar = otherCollectors.firstOrNull {
+                        val distance = calculateMED(collector.name.lowercase(), it.name.lowercase())
+                        distance in 0..MAX_EDIT_DISTANCE
+                    }
+
+                    if (similar != null) {
                         _state.update {
                             it.copy(
-                                selectedCollector = null,
-                                isEditCollectorDialogVisible = false
+                                isTypoDialogVisible = true,
+                                similarCollectorName = similar.name
                             )
                         }
-                    } catch (e: Exception) {
-                        emitError(SettingsError.COLLECTOR_SAVE_FAILED)
+                        return@launch
+                    }
+
+                    performSave(collector)
+                }
+                SettingsAction.ConfirmSaveCollector -> {
+                    val collector = state.value.selectedCollector ?: return@launch
+                    performSave(collector)
+                }
+                SettingsAction.DismissTypoDialog -> {
+                    _state.update {
+                        it.copy(
+                            isTypoDialogVisible = false,
+                            similarCollectorName = null
+                        )
                     }
                 }
                 SettingsAction.ShowDeleteCollectorDialog -> {
@@ -194,6 +214,40 @@ class SettingsViewModel @Inject constructor(
                     program = program,
                 )
             }
+        }
+    }
+
+    private fun calculateMED(s1: String, s2: String): Int {
+        val dp = Array(s1.length + 1) { IntArray(s2.length + 1) }
+        for (i in 0..s1.length) dp[i][0] = i
+        for (j in 0..s2.length) dp[0][j] = j
+
+        for (i in 1..s1.length) {
+            for (j in 1..s2.length) {
+                val cost = if (s1[i - 1] == s2[j - 1]) 0 else 1
+                dp[i][j] = minOf(
+                    dp[i - 1][j] + 1,
+                    dp[i][j - 1] + 1,
+                    dp[i - 1][j - 1] + cost
+                )
+            }
+        }
+        return dp[s1.length][s2.length]
+    }
+
+    private suspend fun performSave(collector: Collector) {
+        try {
+            collectorRepository.upsertCollector(collector)
+            _state.update {
+                it.copy(
+                    selectedCollector = null,
+                    isEditCollectorDialogVisible = false,
+                    isTypoDialogVisible = false,
+                    similarCollectorName = null
+                )
+            }
+        } catch (e: Exception) {
+            emitError(SettingsError.COLLECTOR_SAVE_FAILED)
         }
     }
 }

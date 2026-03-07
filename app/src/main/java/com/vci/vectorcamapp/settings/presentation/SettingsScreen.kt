@@ -27,6 +27,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.settings.presentation.components.CollectorDialog
+import com.vci.vectorcamapp.settings.presentation.components.CollectorTypoDialog
 import com.vci.vectorcamapp.settings.presentation.components.SettingsActionTile
 import com.vci.vectorcamapp.settings.presentation.components.SettingsInfoTile
 import com.vci.vectorcamapp.settings.presentation.components.SettingsSection
@@ -236,6 +237,15 @@ fun SettingsScreen(
             onDismissDeleteDialog = { onAction(SettingsAction.DismissDeleteCollectorDialog) },
             isEditDialogVisible = state.isEditCollectorDialogVisible,
             isDeleteDialogVisible = state.isDeleteCollectorDialogVisible
+        )
+    }
+
+    if (state.isTypoDialogVisible && state.similarCollectorName != null) {
+        CollectorTypoDialog(
+            collectorName = state.selectedCollector?.name.orEmpty(),
+            similarCollectorName = state.similarCollectorName,
+            onConfirmSave = { onAction(SettingsAction.ConfirmSaveCollector) },
+            onEditName = { onAction(SettingsAction.DismissTypoDialog) }
         )
     }
 }

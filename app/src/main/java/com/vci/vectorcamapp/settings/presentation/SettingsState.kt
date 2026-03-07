@@ -25,5 +25,7 @@ data class SettingsState (
     val collectors: List<Collector> = emptyList(),
     val selectedCollector: Collector? = null,
     val isEditCollectorDialogVisible: Boolean = false,
-    val isDeleteCollectorDialogVisible: Boolean = false
+    val isDeleteCollectorDialogVisible: Boolean = false,
+    val isTypoDialogVisible: Boolean = false,
+    val similarCollectorName: String? = null
 )
