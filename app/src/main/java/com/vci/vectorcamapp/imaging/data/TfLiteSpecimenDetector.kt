@@ -48,6 +48,11 @@ class TfLiteSpecimenDetector(
 
     private var isGpuDelegateInitialized = false
 
+    // Pre-allocated buffers — created once after interpreter init to avoid per-frame allocation.
+    private var inputTensorBuffer: TensorBuffer? = null
+    private var outputTensorBuffer: TensorBuffer? = null
+    private var inputFloatBuffer: FloatArray? = null
+
     init {
         handler.post { initializeInterpreter() }
     }
@@ -60,8 +65,10 @@ class TfLiteSpecimenDetector(
                 val model = FileUtil.loadMappedFile(context, "detect.tflite")
                 val options = Interpreter.Options().apply {
                     useNNAPI = false
-                    useXNNPACK = false
-                    numThreads = Runtime.getRuntime().availableProcessors()
+                    useXNNPACK = true
+                    // 2 threads: all cores would cause thermal throttling on efficiency-core
+                    // devices (e.g. Helio G25 on Moto G Play 2021).
+                    numThreads = minOf(2, Runtime.getRuntime().availableProcessors())
                 }
 
 //                if (CompatibilityList().isDelegateSupportedOnThisDevice) {
@@ -82,6 +89,14 @@ class TfLiteSpecimenDetector(
 
                     outputNumChannels = it.getOutputTensor(0).shape()[1]
                     outputNumElements = it.getOutputTensor(0).shape()[2]
+
+                    inputTensorBuffer = TensorBuffer.createFixedSize(
+                        intArrayOf(1, inputTensorHeight, inputTensorWidth, 3), DataType.FLOAT32
+                    )
+                    outputTensorBuffer = TensorBuffer.createFixedSize(
+                        intArrayOf(1, outputNumChannels, outputNumElements), DataType.FLOAT32
+                    )
+                    inputFloatBuffer = FloatArray(inputTensorHeight * inputTensorWidth * 3)
                 }
 
                 if (isGpuDelegateInitialized) {
@@ -106,36 +121,37 @@ class TfLiteSpecimenDetector(
 
         return suspendCoroutine { continuation ->
             handler.post {
+                val localInputTensor = inputTensorBuffer
+                val localInputFloat = inputFloatBuffer
+                val localOutputTensor = outputTensorBuffer
+                if (localInputTensor == null || localInputFloat == null || localOutputTensor == null) {
+                    continuation.resume(emptyList())
+                    return@post
+                }
+
                 try {
                     val startTime = System.currentTimeMillis()
-                    val inputMatrix = prepareInputMatrix(bitmap)
 
+                    // Downscale to the model's expected width before bitmapToMat so that
+                    // the pixel-conversion + resize work on a fraction of the original pixels.
+                    val targetW = (inputTensorWidth / ASPECT_RATIO).toInt()
+                    val targetH = inputTensorHeight
+                    val scaledBitmap = if (bitmap.width > targetW || bitmap.height > targetH) {
+                        Bitmap.createScaledBitmap(bitmap, targetW, targetH, false)
+                    } else bitmap
+
+                    val inputMatrix = prepareInputMatrix(scaledBitmap)
                     val preprocessedMatrix = preprocessMatrix(inputMatrix)
-                    val preprocessedMatrixHeight = preprocessedMatrix.height()
-                    val preprocessedMatrixWidth = preprocessedMatrix.width()
-                    val preprocessedMatrixChannels = preprocessedMatrix.channels()
+                    inputMatrix.release()
 
-                    val inputTensor = TensorBuffer.createFixedSize(
-                        intArrayOf(
-                            1,
-                            preprocessedMatrixHeight,
-                            preprocessedMatrixWidth,
-                            preprocessedMatrixChannels
-                        ), DataType.FLOAT32
-                    )
-                    val inputFloatBuffer =
-                        FloatArray(preprocessedMatrixHeight * preprocessedMatrixWidth * preprocessedMatrixChannels)
-                    preprocessedMatrix.get(0, 0, inputFloatBuffer)
-                    inputTensor.loadArray(inputFloatBuffer)
-
-                    val outputTensor = TensorBuffer.createFixedSize(
-                        intArrayOf(1, outputNumChannels, outputNumElements), DataType.FLOAT32
-                    )
+                    preprocessedMatrix.get(0, 0, localInputFloat)
+                    preprocessedMatrix.release()
+                    localInputTensor.loadArray(localInputFloat)
 
                     val result = synchronized(detectorLock) {
                         if (!isReady()) return@post continuation.resume(emptyList())
-                        detector?.run(inputTensor.buffer, outputTensor.buffer)
-                        getDetectedResults(outputTensor.floatArray).map { bboxPrediction ->
+                        detector?.run(localInputTensor.buffer, localOutputTensor.buffer)
+                        getDetectedResults(localOutputTensor.floatArray).map { bboxPrediction ->
                             DetectorResult(
                                 bboxTopLeftX = bboxPrediction[0],
                                 bboxTopLeftY = bboxPrediction[1],

@@ -41,6 +41,12 @@ class TfLiteSpecimenClassifier(
 
     private var outputNumClasses = DEFAULT_NUM_CLASSES
 
+    // Pre-allocated buffers — created once after interpreter init.
+    private var inputTensorBuffer: TensorBuffer? = null
+    private var outputTensorBuffer: TensorBuffer? = null
+    private var chwArray: FloatArray? = null
+    private var channelBuf: FloatArray? = null
+
     init {
         handler.post { initializeInterpreter() }
     }
@@ -53,8 +59,10 @@ class TfLiteSpecimenClassifier(
                 val model = FileUtil.loadMappedFile(context, filePath)
                 val options = Interpreter.Options().apply {
                     useNNAPI = false
-                    useXNNPACK = false
-                    numThreads = Runtime.getRuntime().availableProcessors()
+                    useXNNPACK = true
+                    // 3 classifiers run concurrently; 1 thread each avoids CPU saturation
+                    // and thermal throttling on efficiency-core devices.
+                    numThreads = 1
                 }
 
                 classifier = Interpreter(model, options)
@@ -64,6 +72,16 @@ class TfLiteSpecimenClassifier(
                     inputTensorWidth = it.getInputTensor(0).shape()[3]
 
                     outputNumClasses = it.getOutputTensor(0).shape()[1]
+
+                    val pixelCount = inputTensorHeight * inputTensorWidth
+                    inputTensorBuffer = TensorBuffer.createFixedSize(
+                        intArrayOf(1, 3, inputTensorHeight, inputTensorWidth), DataType.FLOAT32
+                    )
+                    outputTensorBuffer = TensorBuffer.createFixedSize(
+                        intArrayOf(1, outputNumClasses), DataType.FLOAT32
+                    )
+                    chwArray = FloatArray(3 * pixelCount)
+                    channelBuf = FloatArray(pixelCount)
                 }
 
                 Log.d(TAG, "TFLite interpreter initialized")
@@ -86,52 +104,48 @@ class TfLiteSpecimenClassifier(
 
         return suspendCoroutine { continuation ->
             handler.post {
+                val localInputTensor = inputTensorBuffer
+                val localOutputTensor = outputTensorBuffer
+                val localChwArray = chwArray
+                val localChannelBuf = channelBuf
+                if (localInputTensor == null || localOutputTensor == null ||
+                    localChwArray == null || localChannelBuf == null
+                ) {
+                    continuation.resume(null)
+                    return@post
+                }
+
                 try {
                     val startTime = System.currentTimeMillis()
                     val inputMatrix = prepareInputMatrix(croppedBitmap)
-
                     val preprocessedMatrix = preprocessMatrix(inputMatrix)
-                    val preprocessedMatrixHeight = preprocessedMatrix.height()
-                    val preprocessedMatrixWidth = preprocessedMatrix.width()
-                    val preprocessedMatrixChannels = preprocessedMatrix.channels()
+                    inputMatrix.release()
 
-                    val inputTensor = TensorBuffer.createFixedSize(
-                        intArrayOf(
-                            1,
-                            preprocessedMatrixChannels,
-                            preprocessedMatrixHeight,
-                            preprocessedMatrixWidth
-                        ), DataType.FLOAT32
-                    )
-                    val inputFloatBuffer =
-                        FloatArray(preprocessedMatrixHeight * preprocessedMatrixWidth * preprocessedMatrixChannels)
-                    preprocessedMatrix.get(0, 0, inputFloatBuffer)
-
-                    val chwArray =
-                        FloatArray(preprocessedMatrixChannels * preprocessedMatrixHeight * preprocessedMatrixWidth)
-                    for (channel in 0 until preprocessedMatrixChannels) {
-                        for (i in 0 until preprocessedMatrixHeight * preprocessedMatrixWidth) {
-                            chwArray[channel * preprocessedMatrixHeight * preprocessedMatrixWidth + i] =
-                                inputFloatBuffer[i * preprocessedMatrixChannels + channel]
-                        }
+                    // Split channels natively then pack into CHW using pre-allocated arrays.
+                    val channelMats = ArrayList<Mat>()
+                    Core.split(preprocessedMatrix, channelMats)
+                    preprocessedMatrix.release()
+                    val channelSize = inputTensorHeight * inputTensorWidth
+                    for (c in channelMats.indices) {
+                        channelMats[c].get(0, 0, localChannelBuf)
+                        localChannelBuf.copyInto(localChwArray, destinationOffset = c * channelSize)
+                        channelMats[c].release()
                     }
-                    inputTensor.loadArray(chwArray)
-
-                    val outputTensor = TensorBuffer.createFixedSize(
-                        intArrayOf(1, outputNumClasses), DataType.FLOAT32
-                    )
+                    localInputTensor.loadArray(localChwArray)
 
                     val logits = synchronized(classifierLock) {
                         if (!isReady()) return@post continuation.resume(null)
-                        classifier?.run(inputTensor.buffer, outputTensor.buffer)
-                        outputTensor.floatArray.toList()
+                        classifier?.run(localInputTensor.buffer, localOutputTensor.buffer)
+                        localOutputTensor.floatArray.toList()
                     }
 
                     Log.d(TAG, "Inference result: $logits")
-                    continuation.resume(ClassifierResult(
-                        logits = logits,
-                        inferenceDuration = System.currentTimeMillis() - startTime
-                    ))
+                    continuation.resume(
+                        ClassifierResult(
+                            logits = logits,
+                            inferenceDuration = System.currentTimeMillis() - startTime
+                        )
+                    )
                 } catch (e: Exception) {
                     Log.e(TAG, "Inference failed: ${e.message}")
                     continuation.resume(null)

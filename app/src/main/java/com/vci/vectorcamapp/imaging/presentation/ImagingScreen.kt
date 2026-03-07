@@ -7,8 +7,10 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceRequest
+import android.util.Size
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -146,6 +148,15 @@ fun ImagingScreen(
             .setResolutionSelector(
                 ResolutionSelector.Builder()
                     .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+                    // Cap analysis frames at 640×480 (landscape) so toUprightBitmap and
+                    // bitmapToMat work on ~0.3 MP instead of the full camera resolution.
+                    // The detector resizes to 640×640 internally so there is no quality loss.
+                    // .setResolutionStrategy(
+                    //     ResolutionStrategy(
+                    //         Size(640, 480),
+                    //         ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
+                    //     )
+                    // )
                     .build()
             )
             .build()
