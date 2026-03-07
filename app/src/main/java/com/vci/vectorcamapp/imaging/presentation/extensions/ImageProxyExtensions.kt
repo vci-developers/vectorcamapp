@@ -1,14 +1,26 @@
 package com.vci.vectorcamapp.imaging.presentation.extensions
 
 import android.graphics.Bitmap
-import android.graphics.Matrix
 import androidx.camera.core.ImageProxy
+import org.opencv.android.Utils.bitmapToMat
+import org.opencv.android.Utils.matToBitmap
+import org.opencv.core.Core
+import org.opencv.core.Mat
 
 fun ImageProxy.toUprightBitmap(): Bitmap {
-    val bitmap = this.toBitmap()
-    val matrix = Matrix().apply {
-        postRotate(90f, bitmap.width / 2f, bitmap.height / 2f)
-    }
+    val rawBitmap = this.toBitmap()
 
-    return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    val src = Mat()
+    bitmapToMat(rawBitmap, src)
+    rawBitmap.recycle()
+
+    val dst = Mat()
+    Core.rotate(src, dst, Core.ROTATE_90_CLOCKWISE)
+    src.release()
+
+    val result = Bitmap.createBitmap(dst.cols(), dst.rows(), Bitmap.Config.ARGB_8888)
+    matToBitmap(dst, result)
+    dst.release()
+
+    return result
 }
