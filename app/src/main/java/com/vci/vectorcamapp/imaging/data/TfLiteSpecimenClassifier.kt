@@ -160,9 +160,11 @@ class TfLiteSpecimenClassifier(
         val regionOfIntersection = paddedMatrix.submat(rowStart, rowEnd, colStart, colEnd)
         inputMatrix.copyTo(regionOfIntersection)
 
+        val balancedMatrix = whiteBalanceGrayWorld(paddedMatrix)
+
         val resizedMatrix = Mat()
         Imgproc.resize(
-            paddedMatrix,
+            balancedMatrix,
             resizedMatrix,
             Size(inputTensorWidth.toDouble(), inputTensorHeight.toDouble())
         )
@@ -174,6 +176,51 @@ class TfLiteSpecimenClassifier(
         Core.divide(resizedMatrix, stdDevMatrix, resizedMatrix)
 
         return resizedMatrix
+    }
+
+    private fun whiteBalanceGrayWorld(bgr: Mat): Mat {
+        // Convert to float for calculations
+        val img = Mat()
+        bgr.convertTo(img, CvType.CV_32F)
+        // Split into channels
+        val channels = ArrayList<Mat>()
+        Core.split(img, channels)
+        // Calculate mean for each channel
+        val bMean = Core.mean(channels[0]).`val`[0]
+        val gMean = Core.mean(channels[1]).`val`[0]
+        val rMean = Core.mean(channels[2]).`val`[0]
+        // Calculate gray average
+        val gray = (bMean + gMean + rMean) / 3.0
+        // Avoid division by zero
+        val eps = 1e-8
+        // Scale each channel
+        Core.multiply(
+            channels[0],
+            Scalar(gray / (bMean + eps)),
+            channels[0]
+        )
+        Core.multiply(
+            channels[1],
+            Scalar(gray / (gMean + eps)),
+            channels[1]
+        )
+        Core.multiply(
+            channels[2],
+            Scalar(gray / (rMean + eps)),
+            channels[2]
+        )
+        // Merge channels back
+        Core.merge(channels, img)
+        // Clip values to [0, 255]
+        Core.min(img, Scalar(255.0, 255.0, 255.0), img)
+        Core.max(img, Scalar(0.0, 0.0, 0.0), img)
+        // Convert back to 8-bit
+        val result = Mat()
+        img.convertTo(result, CvType.CV_8U)
+        // Release temp Mats
+        for (m in channels) m.release()
+        img.release()
+        return result
     }
 
     override fun close() {
