@@ -6,16 +6,18 @@ import com.vci.vectorcamapp.core.presentation.model.ErrorData
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import javax.inject.Inject
 
-object ErrorMessageBus {
+class DefaultErrorMessageEmitter @Inject constructor() : ErrorMessageEmitter {
+
     private val _errors = MutableSharedFlow<ErrorData>(
         replay = 0, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-    val errors = _errors.asSharedFlow()
+    override val errors = _errors.asSharedFlow()
 
     private var lastKey: String? = null
 
-    suspend fun emit(error: Error, duration: SnackbarDuration = SnackbarDuration.Long) {
+    override suspend fun emit(error: Error, duration: SnackbarDuration) {
         val key = "${error::class.simpleName}-${error.hashCode()}"
         if (key != lastKey) {
             lastKey = key
@@ -23,7 +25,7 @@ object ErrorMessageBus {
         }
     }
 
-    fun clearLastMessage() {
+    override fun clearLastMessage() {
         lastKey = null
     }
 }

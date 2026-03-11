@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.main.presentation
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.main.domain.util.MainError
 import com.vci.vectorcamapp.main.logging.MainSentryLogger
 import com.vci.vectorcamapp.navigation.Destination
@@ -21,8 +22,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val deviceCache: DeviceCache
-) : CoreViewModel() {
+    private val deviceCache: DeviceCache,
+    private val mainSentryLogger: MainSentryLogger,
+    errorMessageEmitter: ErrorMessageEmitter,
+) : CoreViewModel(errorMessageEmitter) {
 
     private val _state = MutableStateFlow(MainState())
     val state = _state.onStart {
@@ -74,7 +77,7 @@ class MainViewModel @Inject constructor(
                 .catch { throwable ->
                     emitError(MainError.DEVICE_FETCH_FAILED)
                     _state.update { it.copy(startDestination = Destination.Registration) }
-                    MainSentryLogger.logDeviceFetchFailure(Exception(MainError.DEVICE_FETCH_FAILED.name, throwable))
+                    mainSentryLogger.logDeviceFetchFailure(Exception(MainError.DEVICE_FETCH_FAILED.name, throwable))
                 }
                 .onEach { programId ->
                     if (programId != -1 && _state.value.startDestination != Destination.Landing) {

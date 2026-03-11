@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.vci.vectorcamapp.main.logging.MainSentryLogger
+import io.sentry.Sentry
 import dagger.hilt.android.HiltAndroidApp
 import org.opencv.android.OpenCVLoader
 import javax.inject.Inject
@@ -14,6 +15,9 @@ class VectorCamApp : Application(), Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    @Inject
+    lateinit var mainSentryLogger: MainSentryLogger
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
@@ -22,10 +26,15 @@ class VectorCamApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
+        Sentry.configureScope { scope ->
+            scope.setTag("region", BuildConfig.REGION)
+            scope.setTag("region_code", BuildConfig.REGION_CODE)
+        }
+
         try {
             OpenCVLoader.initLocal()
         } catch (e: Exception) {
-            MainSentryLogger.logOpenCvInitFailure(e)
+            mainSentryLogger.logOpenCvInitFailure(e)
         }
     }
 }

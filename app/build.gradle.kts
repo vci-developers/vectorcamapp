@@ -53,7 +53,7 @@ android {
         // Uganda is listed first to be the default flavor
         create("uganda") {
             dimension = "region"
-            applicationIdSuffix = ".uganda"
+            // applicationIdSuffix = ".uganda"
             versionCode = 2007
             versionName = "1.0.7"
             
@@ -124,6 +124,7 @@ android {
 
     buildTypes {
         debug {
+            applicationIdSuffix = ".debug"
             enableUnitTestCoverage = true
             enableAndroidTestCoverage = true
             buildConfigField("String", "BASE_URL", "\"https://test.api.vectorcam.org/\"")

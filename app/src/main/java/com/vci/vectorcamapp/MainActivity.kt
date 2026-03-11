@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp
 
 import android.Manifest
+import androidx.compose.runtime.CompositionLocalProvider
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
@@ -10,6 +11,7 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,18 +20,26 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.window.layout.WindowMetricsCalculator
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
 import com.vci.vectorcamapp.main.presentation.MainAction
 import com.vci.vectorcamapp.main.presentation.MainEvent
 import com.vci.vectorcamapp.main.presentation.MainViewModel
 import com.vci.vectorcamapp.main.presentation.SplashScreen
 import com.vci.vectorcamapp.main.presentation.PermissionScreen
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import com.vci.vectorcamapp.ui.theme.getWindowType
 import dagger.hilt.android.AndroidEntryPoint
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var errorMessageEmitter: ErrorMessageEmitter
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -50,8 +60,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
+        val metrics = WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(this)
+        val widthDp = metrics.bounds.width() / resources.displayMetrics.density
+        val windowType = getWindowType(widthDp)
+
         setContent {
-            VectorcamappTheme {
+            CompositionLocalProvider(LocalErrorMessageEmitter provides errorMessageEmitter) {
+                VectorcamappTheme(windowType = windowType) {
+            
                 val state by viewModel.state.collectAsState()
 
                 val isReady = state.permissionChecked && state.gpsChecked
@@ -84,6 +102,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
+                }
                 }
             }
         }

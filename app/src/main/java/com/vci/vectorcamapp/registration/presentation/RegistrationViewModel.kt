@@ -21,6 +21,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.registration.logging.RegistrationSentryLogger
 import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
@@ -50,8 +51,9 @@ class RegistrationViewModel @Inject constructor(
     private val siteRepository: SiteRepository,
     private val locationTypeDataSource: LocationTypeDataSource,
     private val locationTypeRepository: LocationTypeRepository,
-    connectivityObserver: ConnectivityObserver
-) : CoreViewModel() {
+    connectivityObserver: ConnectivityObserver,
+    errorMessageEmitter: ErrorMessageEmitter,
+) : CoreViewModel(errorMessageEmitter) {
 
     private val _isConnectedToInternet = connectivityObserver.isConnected
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
