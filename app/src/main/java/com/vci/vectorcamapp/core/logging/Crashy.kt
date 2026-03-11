@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.logging
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.vci.vectorcamapp.core.domain.model.Device
 import io.sentry.Attachment
 import io.sentry.Breadcrumb
@@ -30,6 +31,7 @@ object Crashy {
             context?.let { applyContextToBreadcrumb(this, it) }
         }
         Sentry.addBreadcrumb(breadcrumb)
+        logBreadcrumbToFirebase(message, category, level, data, context)
     }
 
     fun scopedBreadcrumb(
@@ -49,10 +51,10 @@ object Crashy {
                     data.forEach { (key, value) -> setData(key, value.toString()) }
                     context?.let { applyContextToBreadcrumb(this, it) }
                 }
-
                 scope.addBreadcrumb(breadcrumb)
             }
         }
+        logBreadcrumbToFirebase(message, category, level, data, context)
     }
 
     fun exception(
@@ -75,26 +77,43 @@ object Crashy {
                 id = Sentry.captureException(throwable)
             }
         }
+        val crashlytics = FirebaseCrashlytics.getInstance()
+        context?.let { ctx ->
+            ctx.screen?.let { crashlytics.setCustomKey("screen", it) }
+            ctx.feature?.let { crashlytics.setCustomKey("feature", it) }
+            ctx.action?.let { crashlytics.setCustomKey("action", it) }
+            ctx.sessionId?.let { crashlytics.setCustomKey("session_id", it) }
+            ctx.programId?.let { crashlytics.setCustomKey("program_id", it) }
+            ctx.siteId?.let { crashlytics.setCustomKey("site_id", it) }
+            ctx.specimenId?.let { crashlytics.setCustomKey("specimen_id", it) }
+        }
+        tags.forEach { (key, value) -> crashlytics.setCustomKey(key, value) }
+        crashlytics.recordException(throwable)
         return id
     }
 
     fun setDevice(device: Device?) {
         if (!enabled) return
+        val crashlytics = FirebaseCrashlytics.getInstance()
         if (device == null) {
             Sentry.setUser(null)
+            crashlytics.setUserId("")
             return
         }
+        val userId = "${device.id}_${device.registeredAt}"
         val user = User().apply {
-            this.id = "${device.id}_${device.registeredAt}"
+            this.id = userId
             this.username = device.model
         }
         Sentry.setUser(user)
+        crashlytics.setUserId(userId)
+        crashlytics.setCustomKey("device_model", device.model)
         globalBreadcrumb(
             message = "User context set",
             category = "user",
             level = SentryLevel.INFO,
             data = mapOf(
-                "user_id" to "${device.id}_${device.registeredAt}",
+                "user_id" to userId,
                 "username" to device.model,
             )
         )
@@ -103,11 +122,33 @@ object Crashy {
     fun clearDevice() {
         if (!enabled) return
         Sentry.setUser(null)
+        FirebaseCrashlytics.getInstance().setUserId("")
         globalBreadcrumb(
             message = "Device context cleared",
             category = "user",
             level = SentryLevel.INFO
         )
+    }
+
+    private fun logBreadcrumbToFirebase(
+        message: String,
+        category: String,
+        level: SentryLevel,
+        data: Map<String, Any?>,
+        context: CrashyContext?
+    ) {
+        val parts = buildList {
+            add("[${level.name}][$category] $message")
+            context?.screen?.let { add("screen=$it") }
+            context?.feature?.let { add("feature=$it") }
+            context?.action?.let { add("action=$it") }
+            context?.sessionId?.let { add("session_id=$it") }
+            context?.programId?.let { add("program_id=$it") }
+            context?.siteId?.let { add("site_id=$it") }
+            context?.specimenId?.let { add("specimen_id=$it") }
+            data.forEach { (key, value) -> add("$key=$value") }
+        }
+        FirebaseCrashlytics.getInstance().log(parts.joinToString(" | "))
     }
 
     private fun applyContextToScope(scope: IScope, context: CrashyContext) {
