@@ -2,10 +2,11 @@ package com.vci.vectorcamapp.main.presentation
 
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.logging.Crashy
+import com.vci.vectorcamapp.core.logging.CrashyContext
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.main.domain.util.MainError
-import com.vci.vectorcamapp.main.logging.MainSentryLogger
 import com.vci.vectorcamapp.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -23,7 +24,6 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val deviceCache: DeviceCache,
-    private val mainSentryLogger: MainSentryLogger,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
 
@@ -77,7 +77,21 @@ class MainViewModel @Inject constructor(
                 .catch { throwable ->
                     emitError(MainError.DEVICE_FETCH_FAILED)
                     _state.update { it.copy(startDestination = Destination.Registration) }
-                    mainSentryLogger.logDeviceFetchFailure(Exception(MainError.DEVICE_FETCH_FAILED.name, throwable))
+                    Crashy.exception(
+                        throwable = Exception(MainError.DEVICE_FETCH_FAILED.name, throwable),
+                        context = CrashyContext(
+                            screen = "Main", feature = "DeviceCache", action = "observe_program_id"
+                        ), tags = mapOf(
+                            "error_type" to "device_fetch_failure",
+                            "critical" to "true",
+                            "phase" to "startup",
+                        ), extras = mapOf(
+                            "fallback_destination" to "Registration",
+                            "error_context" to "User redirected to registration",
+                            "recovery_action" to "Defaulting to registration flow",
+                            "possible_causes" to "Program ID not cached, database not initialized, device configuration incomplete, corruption in device cache"
+                        )
+                    )
                 }
                 .onEach { programId ->
                     if (programId != -1 && _state.value.startDestination != Destination.Landing) {
