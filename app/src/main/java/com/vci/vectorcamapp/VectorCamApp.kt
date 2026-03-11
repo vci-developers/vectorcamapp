@@ -3,6 +3,7 @@ package com.vci.vectorcamapp
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.vci.vectorcamapp.core.logging.Crashy
 import com.vci.vectorcamapp.core.logging.CrashyContext
 import io.sentry.Sentry
@@ -23,6 +24,8 @@ class VectorCamApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+
+        Crashy.crashlytics = FirebaseCrashlytics.getInstance()
 
         Sentry.configureScope { scope ->
             scope.setTag("region", BuildConfig.REGION)
