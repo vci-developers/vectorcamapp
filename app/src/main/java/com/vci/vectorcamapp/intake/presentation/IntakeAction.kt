@@ -10,6 +10,7 @@ sealed interface IntakeAction {
     data object RegisterMissingCollector : IntakeAction
     data class SelectCollector(val collector: Collector) : IntakeAction
     data class EnterHardwareId(val text: String): IntakeAction
+    data class SelectLocationTypeSiteOption(val locationTypeId: Int, val selectedOption: String): IntakeAction
     data class SelectDistrict(val district: String) : IntakeAction
     data class SelectVillageName(val villageName: String) : IntakeAction
     data class SelectHouseNumber(val houseNumber: String) : IntakeAction

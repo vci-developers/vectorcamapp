@@ -10,6 +10,7 @@ import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
@@ -18,10 +19,12 @@ import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.intake.domain.repository.LocationRepository
 import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflow
 import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflowFactory
 import com.vci.vectorcamapp.intake.domain.use_cases.IntakeValidationUseCases
+import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.logging.IntakeSentryLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,11 +52,13 @@ class IntakeViewModel @Inject constructor(
     private val currentSessionCache: CurrentSessionCache,
     private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache,
     private val siteRepository: SiteRepository,
+    private val locationTypeRepository: LocationTypeRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
     private val sessionRepository: SessionRepository,
     private val locationRepository: LocationRepository,
     private val collectorRepository: CollectorRepository,
-) : CoreViewModel() {
+    errorMessageEmitter: ErrorMessageEmitter,
+) : CoreViewModel(errorMessageEmitter) {
 
     companion object {
         private const val LOCATION_TIMEOUT_MS = 30000L
@@ -95,12 +100,27 @@ class IntakeViewModel @Inject constructor(
 
                     val collectorValidationResult =
                         intakeValidationUseCases.validateCollector(session.collectorName, session.collectorTitle)
-                    val districtResult =
-                        intakeValidationUseCases.validateDistrict(_state.value.selectedDistrict)
-                    val villageNameResult =
-                        intakeValidationUseCases.validateVillageName(_state.value.selectedVillageName)
-                    val houseNumberResult =
-                        intakeValidationUseCases.validateHouseNumber(_state.value.selectedHouseNumber)
+
+                    var districtResult: Result<Unit, FormValidationError> = Result.Success(Unit)
+                    var villageNameResult: Result<Unit, FormValidationError> = Result.Success(Unit)
+                    var houseNumberResult: Result<Unit, FormValidationError> = Result.Success(Unit)
+                    if (_state.value.allSitesInProgram.any { !it.district.isNullOrBlank() }) {
+                        districtResult =
+                            intakeValidationUseCases.validateDistrict(_state.value.selectedDistrict)
+                        villageNameResult =
+                            intakeValidationUseCases.validateVillageName(_state.value.selectedVillageName)
+                        houseNumberResult =
+                            intakeValidationUseCases.validateHouseNumber(_state.value.selectedHouseNumber)
+                    }
+
+                    val locationTypeSiteSelections = _state.value.allLocationTypesInProgram.associate { locationType ->
+                        val selection = _state.value.siteSelectionsByLocationTypeId[locationType.id]
+                        val error = if (selection.isNullOrBlank()) {
+                            FormValidationError.BLANK_LOCATION_TYPE_SELECTION
+                        } else null
+                        locationType.id to error
+                    }
+
                     val llinTypeResult =
                         surveillanceForm?.llinType?.let { intakeValidationUseCases.validateLlinType(it) }
                     val llinBrandResult =
@@ -148,11 +168,12 @@ class IntakeViewModel @Inject constructor(
                                 numLlinsAvailable = numLlinsAvailableResult?.errorOrNull(),
                                 numPeopleSleptUnderLlin = numPeopleSleptUnderLlinResult?.errorOrNull(),
                                 numPeopleSleptInHouse = numPeopleSleptInHouseResult?.errorOrNull(),
+                                locationTypeSiteSelections = locationTypeSiteSelections
                             )
                         )
                     }
 
-                    val hasError = listOf(
+                    val hasFieldError = listOf(
                         collectorValidationResult,
                         districtResult,
                         villageNameResult,
@@ -167,19 +188,32 @@ class IntakeViewModel @Inject constructor(
                         numPeopleSleptInHouseResult,
                         numPeopleSleptUnderLlinResult
                     ).any { it is Result.Error }
+                    val hasLocationTypeSiteSelectionError = locationTypeSiteSelections.values.any { it != null }
 
-                    if (hasError) {
+                    if (hasFieldError || hasLocationTypeSiteSelectionError) {
                         emitError(IntakeError.FORM_INVALID)
                     }
                     else if (state.value.isCurrentCollectorMissing) {
                         emitError(IntakeError.MISSING_COLLECTOR)
                     }
                     else {
-                        val selectedSite = _state.value.allSitesInProgram.find {
-                            it.district == _state.value.selectedDistrict &&
-                                    it.villageName == _state.value.selectedVillageName &&
-                                    it.houseNumber == _state.value.selectedHouseNumber
+                        val selectedSite = if (_state.value.allSitesInProgram.any { !it.district.isNullOrBlank() }) {
+                            _state.value.allSitesInProgram.find {
+                                it.district == _state.value.selectedDistrict &&
+                                        it.villageName == _state.value.selectedVillageName &&
+                                        it.houseNumber == _state.value.selectedHouseNumber
+                            }
+                        } else {
+                            _state.value.allSitesInProgram.find { site ->
+                                val locationHierarchy = site.locationHierarchy ?: return@find false
+                                _state.value.siteSelectionsByLocationTypeId.all { (locationTypeId, selectedLocationTypeSite) ->
+                                    val locationTypeName = _state.value.allLocationTypesInProgram
+                                        .find { it.id == locationTypeId }?.name
+                                    locationHierarchy[locationTypeName] == selectedLocationTypeSite
+                                }
+                            }
                         }
+
                         if (selectedSite == null) {
                             emitError(IntakeError.SITE_NOT_FOUND)
                             IntakeSentryLogger.logSiteNotFound(Exception(IntakeError.SITE_NOT_FOUND.name))
@@ -246,6 +280,29 @@ class IntakeViewModel @Inject constructor(
                                 hardwareId = action.text
                             )
                         )
+                    }
+                }
+
+                is IntakeAction.SelectLocationTypeSiteOption -> {
+                    val locationTypeId = action.locationTypeId
+                    val selectedOption = action.selectedOption
+
+                    val allLocationTypes = _state.value.allLocationTypesInProgram
+
+                    val selectedIndex = allLocationTypes.indexOfFirst { it.id == locationTypeId }
+                    if (selectedIndex == -1) return@launch
+
+                    val updatedSiteSelections = _state.value.siteSelectionsByLocationTypeId
+                        .toMutableMap()
+                        .apply {
+                            put(locationTypeId, selectedOption)
+
+                            val downstreamLocationTypeIds = allLocationTypes.drop(selectedIndex + 1).map { it.id }
+                            downstreamLocationTypeIds.forEach { remove(it) }
+                        }
+
+                    _state.update {
+                        it.copy(siteSelectionsByLocationTypeId = updatedSiteSelections)
                     }
                 }
 
@@ -517,10 +574,20 @@ class IntakeViewModel @Inject constructor(
                 currentSession?.let {
                     surveillanceFormRepository.observeSurveillanceFormBySessionId(it.localId)
                 } ?: flowOf<SurveillanceForm?>(null),
-                collectorRepository.observeAllCollectors()
-            ) { currentAllSites, currentSavedForm, currentAllCollectors ->
+                collectorRepository.observeAllCollectors(),
+                locationTypeRepository.observeAllLocationTypesByProgramId(programId)
+            ) { currentAllSites, currentSavedForm, currentAllCollectors, currentAllLocationTypes ->
 
                 val validatedSite = currentAllSites.find { it.id == currentSessionSiteId }
+                val validatedSiteSelectionsByLocationTypeId = if (validatedSite?.locationHierarchy != null) {
+                    currentAllLocationTypes.mapNotNull { locationType ->
+                        validatedSite.locationHierarchy[locationType.name]?.let { selectedLocationTypeSite ->
+                            locationType.id to selectedLocationTypeSite
+                        }
+                    }.toMap()
+                } else {
+                    emptyMap()
+                }
 
                 val validatedDistrict =
                     when {
@@ -558,8 +625,10 @@ class IntakeViewModel @Inject constructor(
                         isLoading = false,
                         session = effectiveSession,
                         surveillanceForm = currentSavedForm ?: surveillanceFormWorkflow.createNewSurveillanceForm(),
+                        siteSelectionsByLocationTypeId = validatedSiteSelectionsByLocationTypeId,
                         allSitesInProgram = currentAllSites,
                         allCollectors = currentAllCollectors,
+                        allLocationTypesInProgram = currentAllLocationTypes,
                         selectedDistrict = validatedDistrict,
                         selectedVillageName = validatedVillageName,
                         selectedHouseNumber = validatedHouseNumber,

@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.registration.presentation
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,7 +37,6 @@ import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
-import com.vci.vectorcamapp.ui.theme.screenHeightFraction
 
 @Composable
 fun RegistrationScreen(
@@ -50,18 +50,7 @@ fun RegistrationScreen(
         val ctx = LocalCrashyContext.current
         PullToRefresh(
             isRefreshing = state.isLoadingPrograms,
-            onRefresh = {
-                if (ctx != null) {
-                    ClickTracking.trackAndInvoke(
-                        context = ctx.copy(feature = "Registration", action = "RefreshPrograms"),
-                        message = "RegistrationScreen: Pull to refresh programs",
-                        category = "ui.click",
-                        onClick = { onAction(RegistrationAction.RefreshPrograms) }
-                    )
-                } else {
-                    onAction(RegistrationAction.RefreshPrograms)
-                }
-            },
+            onRefresh = { onAction(RegistrationAction.RefreshPrograms) },
             modifier = modifier.fillMaxSize()
         ) {
             Image(
@@ -82,126 +71,136 @@ fun RegistrationScreen(
                     topEnd = MaterialTheme.dimensions.cornerRadiusMedium
                 ),
                 modifier = modifier
-                    .height(screenHeightFraction(0.8f))
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
             ) {
                 Column(
                     modifier = modifier
                         .padding(
                             horizontal = MaterialTheme.dimensions.paddingExtraLarge,
-                            vertical = MaterialTheme.dimensions.paddingLarge
+                            vertical = MaterialTheme.dimensions.paddingExtraExtraLarge
                         )
-                        .fillMaxSize(), verticalArrangement = Arrangement.SpaceAround
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingLarge)
                 ) {
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                        modifier = modifier
+                            .padding(
+                                horizontal = MaterialTheme.dimensions.paddingExtraLarge,
+                                vertical = MaterialTheme.dimensions.paddingLarge
+                            )
+                            .fillMaxSize(), verticalArrangement = Arrangement.SpaceAround
                     ) {
-                        Text(
-                            text = "Register",
-                            style = MaterialTheme.typography.displayMedium,
-                            color = MaterialTheme.colors.textPrimary
-                        )
-
-                        Text(
-                            text = "Select your affiliated program",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colors.textPrimary
-                        )
-                    }
-
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
-                    ) {
-                        DropdownField(
-                            label = "Program",
-                            options = state.programs,
-                            selectedOption = state.selectedProgram,
-                            onOptionSelected = { onAction(RegistrationAction.SelectProgram(it)) },
-                            menuTestTag = RegistrationTestTags.PROGRAM_DROPDOWN,
-                            menuItemTestTagPrefix = RegistrationTestTags.PROGRAM_OPTION,
-                            modifier = modifier
-                                .customShadow(
-                                    color = Color.Black.copy(alpha = 0.1f),
-                                    blurRadius = MaterialTheme.dimensions.shadowBlurMedium,
-                                    spread = MaterialTheme.dimensions.shadowBlurSmall,
-                                    cornerRadius = MaterialTheme.dimensions.cornerRadiusSmall,
-                                )
-                                .height(MaterialTheme.dimensions.componentHeightExtraExtraLarge),
-                        ) { program ->
-                            Column(
-                                verticalArrangement = Arrangement.SpaceEvenly,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = program.name,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colors.textPrimary
-                                )
-                                Text(
-                                    text = program.country,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colors.textSecondary
-                                )
-                            }
-                        }
-
-                        TextEntryField(
-                            label = "Collector Name",
-                            value = state.collector.name,
-                            onValueChange = { onAction(RegistrationAction.EnterCollectorName(it)) },
-                            singleLine = true,
-                            error = state.registrationErrors.collectorName
-                        )
-
-                        DropdownField(
-                            label = "Collector Title",
-                            options = RegistrationDropdownOptions.CollectorTitleOption.entries,
-                            selectedOption = RegistrationDropdownOptions.CollectorTitleOption.entries.firstOrNull { it.label == state.collector.title },
-                            onOptionSelected = { option ->
-                                onAction(RegistrationAction.EnterCollectorTitle(option.label))
-                            },
-                            error = state.registrationErrors.collectorTitle,
-                            modifier = modifier
-                                .fillMaxWidth()
-                                .height(MaterialTheme.dimensions.componentHeightLarge)
-                        ) { option ->
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                        ) {
                             Text(
-                                text = option.label,
-                                style = MaterialTheme.typography.bodyMedium,
+                                text = "Register",
+                                style = MaterialTheme.typography.displayMedium,
+                                color = MaterialTheme.colors.textPrimary
+                            )
+
+                            Text(
+                                text = "Select your affiliated program",
+                                style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colors.textPrimary
                             )
                         }
 
-                        DatePickerField(
-                            label = "When were you last trained?",
-                            selectedDateInMillis = state.collector.lastTrainedOn,
-                            onDateSelected = {
-                                onAction(
-                                    RegistrationAction.EnterCollectorLastTrainedOn(
-                                        it
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                        ) {
+                            DropdownField(
+                                label = "Program",
+                                options = state.programs,
+                                selectedOption = state.selectedProgram,
+                                onOptionSelected = { onAction(RegistrationAction.SelectProgram(it)) },
+                                menuTestTag = RegistrationTestTags.PROGRAM_DROPDOWN,
+                                menuItemTestTagPrefix = RegistrationTestTags.PROGRAM_OPTION,
+                                modifier = modifier
+                                    .customShadow(
+                                        color = Color.Black.copy(alpha = 0.1f),
+                                        blurRadius = MaterialTheme.dimensions.shadowBlurMedium,
+                                        spread = MaterialTheme.dimensions.shadowBlurSmall,
+                                        cornerRadius = MaterialTheme.dimensions.cornerRadiusSmall,
                                     )
+                                    .height(MaterialTheme.dimensions.componentHeightExtraExtraLarge),
+                            ) { program ->
+                                Column(
+                                    verticalArrangement = Arrangement.SpaceEvenly,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = program.name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.textPrimary
+                                    )
+                                    Text(
+                                        text = program.country,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colors.textSecondary
+                                    )
+                                }
+                            }
+
+                            TextEntryField(
+                                label = "Collector Name",
+                                value = state.collector.name,
+                                onValueChange = { onAction(RegistrationAction.EnterCollectorName(it)) },
+                                singleLine = true,
+                                error = state.registrationErrors.collectorName
+                            )
+
+                            DropdownField(
+                                label = "Collector Title",
+                                options = RegistrationDropdownOptions.CollectorTitleOption.entries,
+                                selectedOption = RegistrationDropdownOptions.CollectorTitleOption.entries.firstOrNull { it.label == state.collector.title },
+                                onOptionSelected = { option ->
+                                    onAction(RegistrationAction.EnterCollectorTitle(option.label))
+                                },
+                                error = state.registrationErrors.collectorTitle,
+                                modifier = modifier
+                                    .fillMaxWidth()
+                                    .height(MaterialTheme.dimensions.componentHeightLarge)
+                            ) { option ->
+                                Text(
+                                    text = option.label,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textPrimary
                                 )
-                            },
-                            error = state.registrationErrors.collectorLastTrainedOn,
-                            modifier = Modifier.fillMaxWidth()
+                            }
+
+                            DatePickerField(
+                                label = "When were you last trained?",
+                                selectedDateInMillis = state.collector.lastTrainedOn,
+                                onDateSelected = {
+                                    onAction(
+                                        RegistrationAction.EnterCollectorLastTrainedOn(
+                                            it
+                                        )
+                                    )
+                                },
+                                error = state.registrationErrors.collectorLastTrainedOn,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        TrackedActionButton(
+                            label = "Confirm",
+                            feature = "Registration",
+                            action = "ConfirmRegistration",
+                            onClick = { onAction(RegistrationAction.ConfirmRegistration) },
+                            enabled = state.selectedProgram != null &&
+                                    state.collector.name.isNotBlank() &&
+                                    state.collector.title.isNotBlank() &&
+                                    state.collector.lastTrainedOn != 0L &&
+                                    !state.isLoading,
+                            testTag = RegistrationTestTags.CONFIRM_PROGRAM_BUTTON,
+                            modifier = modifier
                         )
                     }
-
-                    TrackedActionButton(
-                        label = "Confirm",
-                        feature = "Registration",
-                        action = "ConfirmRegistration",
-                        onClick = { onAction(RegistrationAction.ConfirmRegistration) },
-                        enabled = state.selectedProgram != null &&
-                                state.collector.name.isNotBlank() &&
-                                state.collector.title.isNotBlank() &&
-                                state.collector.lastTrainedOn != 0L &&
-                                !state.isLoading,
-                        testTag = RegistrationTestTags.CONFIRM_PROGRAM_BUTTON,
-                        modifier = modifier
-                    )
                 }
             }
         }

@@ -10,6 +10,7 @@ import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
 import com.vci.vectorcamapp.settings.presentation.model.SettingsErrors
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,12 +27,13 @@ import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor (
+class SettingsViewModel @Inject constructor(
     private val deviceCache: DeviceCache,
     private val programRepository: ProgramRepository,
     private val collectorRepository: CollectorRepository,
-    private val collectorValidationUseCases: CollectorValidationUseCases
-): CoreViewModel(){
+    private val collectorValidationUseCases: CollectorValidationUseCases,
+    errorMessageEmitter: ErrorMessageEmitter,
+) : CoreViewModel(errorMessageEmitter) {
 
     private val _collectors = collectorRepository.observeAllCollectors()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())

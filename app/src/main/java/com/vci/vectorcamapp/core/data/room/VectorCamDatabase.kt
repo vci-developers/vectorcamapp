@@ -39,7 +39,7 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
         SpecimenImageEntity::class,
         InferenceResultEntity::class,
         SurveillanceFormEntity::class],
-    version = 23,
+    version = 24,
 )
 @TypeConverters(
     UuidConverter::class,

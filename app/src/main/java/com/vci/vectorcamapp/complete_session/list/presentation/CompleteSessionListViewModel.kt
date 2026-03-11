@@ -10,6 +10,7 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.ui.extensions.displayText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,7 +39,8 @@ class CompleteSessionListViewModel @Inject constructor(
     private val specimenImageRepository: SpecimenImageRepository,
     private val workManagerRepository: WorkManagerRepository,
     private val currentSessionCache: CurrentSessionCache
-) : CoreViewModel() {
+    errorMessageEmitter: ErrorMessageEmitter,
+) : CoreViewModel(errorMessageEmitter) {
 
     private val _state = MutableStateFlow(CompleteSessionListState())
 
@@ -100,6 +102,11 @@ class CompleteSessionListViewModel @Inject constructor(
                     add(site.villageName)
                     add(site.houseNumber)
                     add(getSessionUploadStatus(progress))
+                    site.locationHierarchy?.values?.forEach {
+                        if (it.isNotEmpty()) {
+                            add(it)
+                        }
+                    }
                 }
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
             }
