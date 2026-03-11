@@ -38,7 +38,7 @@ class CompleteSessionListViewModel @Inject constructor(
     private val specimenRepository: SpecimenRepository,
     private val specimenImageRepository: SpecimenImageRepository,
     private val workManagerRepository: WorkManagerRepository,
-    private val currentSessionCache: CurrentSessionCache
+    private val currentSessionCache: CurrentSessionCache,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
 

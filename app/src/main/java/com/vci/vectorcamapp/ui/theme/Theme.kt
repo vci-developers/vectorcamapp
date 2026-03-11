@@ -21,8 +21,8 @@ fun VectorcamappTheme(
 
     CompositionLocalProvider(
         LocalColors provides Colors(),
-        LocalDimensions provides dimensions
-        LocalCrashyContext provides null
+        LocalDimensions provides dimensions,
+        LocalCrashyContext provides null,
     ) {
         MaterialTheme(
             typography = typography,
