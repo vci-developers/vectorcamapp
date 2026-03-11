@@ -25,7 +25,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.logging.CrashyContext
 import com.vci.vectorcamapp.core.presentation.LocalCrashyContext
-import com.vci.vectorcamapp.core.presentation.components.button.ClickTracking
 import com.vci.vectorcamapp.core.presentation.components.button.TrackedActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
