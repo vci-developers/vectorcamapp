@@ -66,6 +66,7 @@ import coil3.request.crossfade
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.logging.CrashyContext
 import com.vci.vectorcamapp.core.presentation.LocalCrashyContext
+import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.button.ClickTracking
 import com.vci.vectorcamapp.core.presentation.components.button.TrackedActionButton
 import com.vci.vectorcamapp.core.presentation.components.button.TrackedIconButton
@@ -525,7 +526,10 @@ fun ImagingScreen(
                                             shape = CircleShape
                                         )
                                 ) {
-                                    IconButton(
+                                    TrackedIconButton(
+                                        message = "Imaging: Retake image",
+                                        feature = "Capture",
+                                        action = "RetakeImage",
                                         onClick = { onAction(ImagingAction.RetakeImage) },
                                         modifier = Modifier.fillMaxSize()
                                     ) {
@@ -578,7 +582,10 @@ fun ImagingScreen(
                                             shape = CircleShape
                                         )
                                 ) {
-                                    IconButton(
+                                    TrackedIconButton(
+                                        message = "Imaging: Show exit dialog",
+                                        feature = "Navigation",
+                                        action = "ShowExitDialog",
                                         onClick = { onAction(ImagingAction.ShowExitDialog) },
                                         modifier = Modifier.fillMaxSize()
                                     ) {
@@ -682,12 +689,11 @@ fun ImagingScreen(
                                             }
                                         }
 
-                                        Button(
-                                            onClick = { onAction(ImagingAction.SaveImageToSession) },
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = MaterialTheme.colors.successConfirm
-                                            ),
-                                            shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
+                                        TrackedTextButton(
+                                            label = "Save",
+                                            feature = "Camera",
+                                            action = "SaveImageToSession",
+                                            onClick = { onAction(ImagingAction.SaveImageToSession) }
                                         ) {
                                             Text(
                                                 text = "Save",
