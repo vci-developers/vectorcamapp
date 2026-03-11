@@ -49,6 +49,11 @@ class IncompleteSessionViewModel @Inject constructor(
                     add(site.parish)
                     add(site.villageName)
                     add(site.houseNumber)
+                    site.locationHierarchy?.values?.forEach {
+                        if (it.isNotEmpty()) {
+                            add(it)
+                        }
+                    }
                 }
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
             }
