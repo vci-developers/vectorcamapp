@@ -51,7 +51,8 @@ val MIGRATION_24_25_ADD_DYNAMIC_FORM_TABLES = object : Migration(24, 25) {
                 `submittedAt` INTEGER NOT NULL,
                 PRIMARY KEY(`id`),
                 FOREIGN KEY(`formId`) REFERENCES `form`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
-                FOREIGN KEY(`questionId`) REFERENCES `form_question`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
+                FOREIGN KEY(`questionId`) REFERENCES `form_question`(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+                FOREIGN KEY(`sessionId`) REFERENCES `session`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
             )
             """.trimIndent()
         )

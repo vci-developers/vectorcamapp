@@ -5,6 +5,6 @@ data class FormQuestion(
     val label: String,
     val type: String,
     val required: Boolean,
-    val options: List<String>? = null,
-    val order: Int? = null
+    val options: List<String>?,
+    val order: Int?
 )
