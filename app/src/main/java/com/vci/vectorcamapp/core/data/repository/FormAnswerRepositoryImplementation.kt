@@ -17,11 +17,12 @@ class FormAnswerRepositoryImplementation @Inject constructor(
 
     override suspend fun upsertFormAnswer(
         formAnswer: FormAnswer,
+        sessionId: Int,
         formId: Int,
         questionId: Int
     ): Result<Unit, RoomDbError> {
         return try {
-            formAnswerDao.upsertFormAnswer(formAnswer.toEntity(formId, questionId))
+            formAnswerDao.upsertFormAnswer(formAnswer.toEntity(sessionId, formId, questionId))
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(RoomDbError.UNKNOWN_ERROR)

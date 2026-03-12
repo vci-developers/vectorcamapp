@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface FormAnswerRepository {
     suspend fun upsertFormAnswer(
         formAnswer: FormAnswer,
+        sessionId: Int,
         formId: Int,
         questionId: Int
     ): Result<Unit, RoomDbError>

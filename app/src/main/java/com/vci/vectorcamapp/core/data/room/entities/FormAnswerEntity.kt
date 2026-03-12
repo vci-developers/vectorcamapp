@@ -38,7 +38,7 @@ import androidx.room.PrimaryKey
 )
 data class FormAnswerEntity(
     @PrimaryKey val id: Int = -1,
-    val sessionId: String,
+    val sessionId: Int = -1,
     val formId: Int = -1,
     val questionId: Int = -1,
     val value: String,

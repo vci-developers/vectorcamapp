@@ -12,7 +12,7 @@ fun FormAnswerEntity.toDomain(): FormAnswer {
     )
 }
 
-fun FormAnswer.toEntity(sessionId: String, formId: Int, questionId: Int): FormAnswerEntity {
+fun FormAnswer.toEntity(sessionId: Int, formId: Int, questionId: Int): FormAnswerEntity {
     return FormAnswerEntity(
         id = this.id,
         sessionId = sessionId,
