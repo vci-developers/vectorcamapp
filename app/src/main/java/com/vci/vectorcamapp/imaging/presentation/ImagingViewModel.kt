@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.imaging.presentation
 
 import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
@@ -286,13 +287,19 @@ class ImagingViewModel @Inject constructor(
 
                     withContext(Dispatchers.Default) {
                         captureResult.onSuccess { image ->
+                            val t0 = System.nanoTime()
+
                             val uprightMat = image.toUprightMat()
                             image.close()
+
+                            val t1 = System.nanoTime()
 
                             val jpegBuf = MatOfByte()
                             val params = MatOfInt(Imgcodecs.IMWRITE_JPEG_QUALITY, 100)
                             Imgcodecs.imencode(".jpg", uprightMat, jpegBuf, params)
                             val jpegByteArray = jpegBuf.toArray()
+
+                            val t2 = System.nanoTime()
 
                             val rgbaMatrix = Mat()
                             Imgproc.cvtColor(uprightMat, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
@@ -301,8 +308,12 @@ class ImagingViewModel @Inject constructor(
                             uprightMat.release()
                             rgbaMatrix.release()
 
+                            val t3 = System.nanoTime()
+
                             if (_state.value.shouldRunInference) {
                                 val captureDetectorResults = inferenceRepository.detectSpecimen(jpegBitmap)
+
+                                val t4 = System.nanoTime()
 
                                 when (captureDetectorResults.size) {
                                     0 -> emitError(ImagingError.NO_SPECIMEN_FOUND, SnackbarDuration.Short)
@@ -340,7 +351,13 @@ class ImagingViewModel @Inject constructor(
                                                 clampedHeight
                                             )
 
+                                            val t5 = System.nanoTime()
+
                                             var (speciesResult, sexResult, abdomenStatusResult) = inferenceRepository.classifySpecimen(croppedBitmap)
+
+                                            val t6 = System.nanoTime()
+
+                                            Log.d("Pipeline", "Capture: Decode (toUprightMat) = ${(t1-t0)/1000000}ms, Encode = ${(t2-t1)/1000000}ms, Bitmap = ${(t3-t2)/1_000_000}ms, Detector = ${(t4-t3)/1000000}ms, Crop = ${(t5-t4)/1000000}ms, Classification = ${(t6-t5)/1000000}ms, Total = ${(t6-t0)/1000000}ms")
 
                                             val speciesIndex = speciesResult?.logits?.let { logits -> logits.indexOf(logits.max()) }
                                             var sexIndex = sexResult?.logits?.let { logits -> logits.indexOf(logits.max()) }
