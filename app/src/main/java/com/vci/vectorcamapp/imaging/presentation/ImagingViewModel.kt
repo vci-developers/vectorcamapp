@@ -59,6 +59,7 @@ import kotlin.random.Random
 import androidx.core.graphics.createBitmap
 import org.opencv.android.Utils.matToBitmap
 import org.opencv.core.Mat
+import android.util.Log
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
@@ -288,6 +289,15 @@ class ImagingViewModel @Inject constructor(
                             val bitmap = image.toUprightBitmap()
                             image.close()
 
+                            val capturedMetadata = action.cameraMetadata?.copy(
+                                imageWidth = bitmap.width,
+                                imageHeight = bitmap.height,
+                                focalPointX = _state.value.focusPoint?.x,
+                                focalPointY = _state.value.focusPoint?.y
+                            )
+                            _state.update { it.copy(currentCameraMetadata = capturedMetadata) }
+
+                            Log.d("ImagingViewModel", "Captured metadata: ${capturedMetadata}")
                             val jpegStream = ByteArrayOutputStream()
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
                             val jpegByteArray = jpegStream.toByteArray()
@@ -561,7 +571,8 @@ class ImagingViewModel @Inject constructor(
                 focusPoint = null,
                 isManualFocusing = false,
                 hasConfirmedPackaging = false,
-                specimenIdError = null
+                specimenIdError = null,
+                currentCameraMetadata = null
             )
         }
     }

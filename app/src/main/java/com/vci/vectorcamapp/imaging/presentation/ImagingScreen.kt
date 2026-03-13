@@ -1,6 +1,11 @@
 package com.vci.vectorcamapp.imaging.presentation
 
+import android.hardware.camera2.CameraCaptureSession
+import android.hardware.camera2.CaptureRequest
+import android.hardware.camera2.CaptureResult
+import android.hardware.camera2.TotalCaptureResult
 import android.view.Surface
+import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -10,6 +15,7 @@ import androidx.camera.core.SurfaceRequest
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
+import java.util.concurrent.atomic.AtomicReference
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -95,6 +101,7 @@ fun ImagingScreen(
     var surfaceRequest by remember { mutableStateOf<SurfaceRequest?>(null) }
     var imageCaptureUseCase by remember { mutableStateOf<ImageCapture?>(null) }
     var camera by remember { mutableStateOf<Camera?>(null) }
+    val latestCaptureMetadata = remember { AtomicReference<CameraMetadata?>(null) }
 
     val isReviewing by rememberUpdatedState(newValue = state.currentImageBytes != null)
     val analyzer = remember {
@@ -129,7 +136,7 @@ fun ImagingScreen(
                 }
             }
 
-        val imageCapture = ImageCapture.Builder()
+        val imageCaptureBuilder = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
             .setTargetRotation(rotation)
             .setResolutionSelector(
@@ -138,7 +145,45 @@ fun ImagingScreen(
                     .setAllowedResolutionMode(ResolutionSelector.PREFER_HIGHER_RESOLUTION_OVER_CAPTURE_RATE)
                     .build()
             )
-            .build()
+
+        Camera2Interop.Extender(imageCaptureBuilder)
+            .setSessionCaptureCallback(object : CameraCaptureSession.CaptureCallback() {
+                override fun onCaptureCompleted(
+                    session: CameraCaptureSession,
+                    request: CaptureRequest,
+                    result: TotalCaptureResult
+                ) {
+                    val rggb = result[CaptureResult.COLOR_CORRECTION_GAINS]
+                    latestCaptureMetadata.set(
+                        CameraMetadata(
+                            focusDistance = result[CaptureResult.LENS_FOCUS_DISTANCE],
+                            aperture = result[CaptureResult.LENS_APERTURE],
+                            exposureTimeNs = result[CaptureResult.SENSOR_EXPOSURE_TIME],
+                            iso = result[CaptureResult.SENSOR_SENSITIVITY],
+                            colorCorrectionGains = rggb?.let {
+                                ColorCorrectionGains(
+                                    red = it.red,
+                                    greenEven = it.greenEven,
+                                    greenOdd = it.greenOdd,
+                                    blue = it.blue
+                                )
+                            },
+                            awbMode = result[CaptureResult.CONTROL_AWB_MODE],
+                            afRegions = result[CaptureResult.CONTROL_AF_REGIONS]?.map { region ->
+                                AfRegion(
+                                    x = region.x,
+                                    y = region.y,
+                                    width = region.width,
+                                    height = region.height,
+                                    weight = region.meteringWeight
+                                )
+                            } ?: emptyList()
+                        )
+                    )
+                }
+            })
+
+        val imageCapture = imageCaptureBuilder.build()
 
         val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -729,7 +774,7 @@ fun ImagingScreen(
                                         label = "Capture",
                                         onClick = {
                                             imageCaptureUseCase?.let {
-                                                onAction(ImagingAction.CaptureImage(it))
+                                                onAction(ImagingAction.CaptureImage(it, latestCaptureMetadata.get()))
                                             }
                                         },
                                         iconPainter = painterResource(id = R.drawable.ic_camera),
