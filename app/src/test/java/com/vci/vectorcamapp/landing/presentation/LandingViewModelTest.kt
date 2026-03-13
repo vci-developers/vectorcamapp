@@ -11,7 +11,7 @@ import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.landing.domain.util.LandingError
 import io.mockk.coEvery
@@ -19,8 +19,6 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -41,6 +39,7 @@ class LandingViewModelTest {
     private lateinit var sessionCache: CurrentSessionCache
     private lateinit var programRepository: ProgramRepository
     private lateinit var sessionRepository: SessionRepository
+    private lateinit var errorMessageEmitter: ErrorMessageEmitter
     private lateinit var viewModel: LandingViewModel
 
     // Observed by VM to derive incompleteSessionsCount
@@ -49,8 +48,8 @@ class LandingViewModelTest {
     @Before
     fun setUp() {
         // Error bus
-        mockkObject(ErrorMessageBus)
-        coEvery { ErrorMessageBus.emit(any(), any()) } returns Unit
+        errorMessageEmitter = mockk(relaxed = true)
+        coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
 
         // Mocks
         deviceCache = mockk(relaxed = true)
@@ -61,11 +60,6 @@ class LandingViewModelTest {
         // Default flow
         incompleteFlow = MutableStateFlow(emptyList())
         every { sessionRepository.observeIncompleteSessionsAndSites() } returns incompleteFlow
-    }
-
-    @After
-    fun tearDown() {
-        unmockkObject(ErrorMessageBus)
     }
 
     // ========================================
@@ -116,7 +110,8 @@ class LandingViewModelTest {
             deviceCache = deviceCache,
             currentSessionCache = sessionCache,
             programRepository = programRepository,
-            sessionRepository = sessionRepository
+            sessionRepository = sessionRepository,
+            errorMessageEmitter = errorMessageEmitter
         )
     }
 
@@ -232,7 +227,7 @@ class LandingViewModelTest {
             expectNoEvents()
         }
 
-        coVerify(exactly = 1) { ErrorMessageBus.emit(LandingError.SESSION_NOT_FOUND, any()) }
+        coVerify(exactly = 1) { errorMessageEmitter.emit(LandingError.SESSION_NOT_FOUND, any()) }
     }
 
     @Test
@@ -337,6 +332,6 @@ class LandingViewModelTest {
         coVerifyOrder {
             sessionCache.clearSession()
         }
-        coVerify(exactly = 0) { ErrorMessageBus.emit(LandingError.SESSION_NOT_FOUND, any()) }
+        coVerify(exactly = 0) { errorMessageEmitter.emit(LandingError.SESSION_NOT_FOUND, any()) }
     }
 }

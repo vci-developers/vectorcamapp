@@ -8,7 +8,7 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
@@ -17,9 +17,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
-import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,6 +38,7 @@ class IncompleteSessionViewModelTest {
     private lateinit var sessionRepository: SessionRepository
     private lateinit var currentSessionCache: CurrentSessionCache
     private lateinit var cameraRepository: CameraRepository
+    private lateinit var errorMessageEmitter: ErrorMessageEmitter
     private lateinit var viewModel: IncompleteSessionViewModel
 
     private lateinit var incompleteSessionsFlow: MutableStateFlow<List<SessionAndSite>>
@@ -49,8 +48,8 @@ class IncompleteSessionViewModelTest {
         mockkStatic(Uri::class)
         mockkStatic(Log::class)
 
-        mockkObject(ErrorMessageBus)
-        coEvery { ErrorMessageBus.emit(any(), any()) } returns Unit
+        errorMessageEmitter = mockk(relaxed = true)
+        coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
         every { Uri.parse(any()) } answers { mockk(relaxed = true) }
         every { Log.e(any(), any()) } returns 0
         every { Log.e(any(), any(), any()) } returns 0
@@ -65,7 +64,8 @@ class IncompleteSessionViewModelTest {
         viewModel = IncompleteSessionViewModel(
             sessionRepository = sessionRepository,
             currentSessionCache = currentSessionCache,
-            cameraRepository = cameraRepository
+            cameraRepository = cameraRepository,
+            errorMessageEmitter = errorMessageEmitter
         )
     }
 
@@ -73,7 +73,6 @@ class IncompleteSessionViewModelTest {
     fun tearDown() {
         unmockkStatic("android.net.Uri")
         unmockkStatic("android.util.Log")
-        unmockkObject(ErrorMessageBus)
     }
 
     // ========================================
@@ -176,7 +175,7 @@ class IncompleteSessionViewModelTest {
             expectNoEvents()
         }
 
-        coVerify(exactly = 1) { ErrorMessageBus.emit(IncompleteSessionError.SESSION_NOT_FOUND, any()) }
+        coVerify(exactly = 1) { errorMessageEmitter.emit(IncompleteSessionError.SESSION_NOT_FOUND, any()) }
         coVerify(exactly = 0) { currentSessionCache.saveSession(any(), any()) }
     }
 
@@ -191,7 +190,7 @@ class IncompleteSessionViewModelTest {
             expectNoEvents()
         }
 
-        coVerify(exactly = 1) { ErrorMessageBus.emit(IncompleteSessionError.SESSION_RETRIEVAL_FAILED, any()) }
+        coVerify(exactly = 1) { errorMessageEmitter.emit(IncompleteSessionError.SESSION_RETRIEVAL_FAILED, any()) }
         coVerify(exactly = 0) { currentSessionCache.saveSession(any(), any()) }
     }
 
@@ -331,7 +330,7 @@ class IncompleteSessionViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
 
-        coVerify(exactly = 1) { ErrorMessageBus.emit(IncompleteSessionError.SESSION_NOT_FOUND, any()) }
+        coVerify(exactly = 1) { errorMessageEmitter.emit(IncompleteSessionError.SESSION_NOT_FOUND, any()) }
         coVerify(exactly = 0) { cameraRepository.deleteSavedImage(any()) }
         coVerify(exactly = 0) { sessionRepository.deleteSession(any(), any()) }
     }
@@ -358,7 +357,7 @@ class IncompleteSessionViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
 
-        coVerify(exactly = 1) { ErrorMessageBus.emit(IncompleteSessionError.SESSION_DELETION_FAILED, any()) }
+        coVerify(exactly = 1) { errorMessageEmitter.emit(IncompleteSessionError.SESSION_DELETION_FAILED, any()) }
         coVerify(exactly = 1) { cameraRepository.deleteSavedImage(uri) }
         coVerify(exactly = 1) { sessionRepository.deleteSession(session, siteId) }
     }
@@ -410,7 +409,7 @@ class IncompleteSessionViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
 
-        coVerify(exactly = 1) { ErrorMessageBus.emit(IncompleteSessionError.SESSION_DELETION_FAILED, any()) }
+        coVerify(exactly = 1) { errorMessageEmitter.emit(IncompleteSessionError.SESSION_DELETION_FAILED, any()) }
         coVerify(exactly = 0) { cameraRepository.deleteSavedImage(any()) }
         coVerify(exactly = 0) { sessionRepository.deleteSession(any(), any()) }
     }
