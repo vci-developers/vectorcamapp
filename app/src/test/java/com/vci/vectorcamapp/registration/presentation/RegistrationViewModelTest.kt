@@ -63,8 +63,8 @@ class RegistrationViewModelTest {
     private lateinit var programsFlow: MutableStateFlow<List<Program>>
 
     private val testPrograms = listOf(
-        Program(id = 1, name = "Program 1", country = "Country 1"),
-        Program(id = 2, name = "Program 2", country = "Country 2")
+        Program(id = 1, name = "Program 1", country = "Country 1", 0),
+        Program(id = 2, name = "Program 2", country = "Country 2", 0)
     )
 
     @Before
@@ -177,7 +177,7 @@ class RegistrationViewModelTest {
             awaitItem()
             awaitItem()
 
-            val newPrograms = listOf(Program(id = 99, name = "Updated", country = "Test"))
+            val newPrograms = listOf(Program(id = 99, name = "Updated", country = "Test", 0))
             programsFlow.value = newPrograms
             advanceUntilIdle()
 
@@ -221,7 +221,7 @@ class RegistrationViewModelTest {
             advanceUntilIdle()
             awaitItem()
 
-            val newPrograms = listOf(Program(id = 3, name = "New", country = "New"))
+            val newPrograms = listOf(Program(id = 3, name = "New", country = "New", 0))
             programsFlow.value = newPrograms
             advanceUntilIdle()
 
