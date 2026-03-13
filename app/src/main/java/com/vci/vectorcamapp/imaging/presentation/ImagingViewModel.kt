@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
@@ -57,8 +56,10 @@ import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.random.Random
 import androidx.core.graphics.createBitmap
+import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightMat
 import org.opencv.android.Utils.matToBitmap
 import org.opencv.core.Mat
+import org.opencv.core.MatOfInt
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
@@ -285,19 +286,19 @@ class ImagingViewModel @Inject constructor(
 
                     withContext(Dispatchers.Default) {
                         captureResult.onSuccess { image ->
-                            val bitmap = image.toUprightBitmap()
+                            val uprightMat = image.toUprightMat()
                             image.close()
 
-                            val jpegStream = ByteArrayOutputStream()
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
-                            val jpegByteArray = jpegStream.toByteArray()
+                            val jpegBuf = MatOfByte()
+                            val params = MatOfInt(Imgcodecs.IMWRITE_JPEG_QUALITY, 100)
+                            Imgcodecs.imencode(".jpg", uprightMat, jpegBuf, params)
+                            val jpegByteArray = jpegBuf.toArray()
 
-                            val bgrMatrix = Imgcodecs.imdecode(MatOfByte(*jpegByteArray), Imgcodecs.IMREAD_COLOR)
                             val rgbaMatrix = Mat()
-                            Imgproc.cvtColor(bgrMatrix, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
+                            Imgproc.cvtColor(uprightMat, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
                             val jpegBitmap = createBitmap(rgbaMatrix.cols(), rgbaMatrix.rows())
                             matToBitmap(rgbaMatrix, jpegBitmap)
-                            bgrMatrix.release()
+                            uprightMat.release()
                             rgbaMatrix.release()
 
                             if (_state.value.shouldRunInference) {
