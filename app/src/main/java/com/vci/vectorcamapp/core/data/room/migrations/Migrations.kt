@@ -23,6 +23,7 @@ import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_20_21_C
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_21_22_UPDATE_SITE_TABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_22_23_MAKE_SITE_LOCATION_COLUMNS_NULLABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_23_24_ADD_LOCATION_TYPE_LEVEL_COLUMN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_24_25_ADD_DYNAMIC_FORM_TABLES
 
 val ALL_MIGRATIONS = arrayOf(
     MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE,
@@ -47,5 +48,6 @@ val ALL_MIGRATIONS = arrayOf(
     MIGRATION_20_21_CREATE_LOCATION_TYPE_TABLE,
     MIGRATION_21_22_UPDATE_SITE_TABLE,
     MIGRATION_22_23_MAKE_SITE_LOCATION_COLUMNS_NULLABLE,
-    MIGRATION_23_24_ADD_LOCATION_TYPE_LEVEL_COLUMN
+    MIGRATION_23_24_ADD_LOCATION_TYPE_LEVEL_COLUMN,
+    MIGRATION_24_25_ADD_DYNAMIC_FORM_TABLES
 )
