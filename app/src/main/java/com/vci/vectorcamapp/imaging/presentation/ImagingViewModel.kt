@@ -47,6 +47,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.vci.vectorcamapp.core.data.dto.specimen_image.AfRegionDto
+import com.vci.vectorcamapp.core.data.dto.specimen_image.ImageMetadataDto
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.opencv.core.MatOfByte
 import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
@@ -485,7 +489,30 @@ class ImagingViewModel @Inject constructor(
                             remoteId = null,
                             shouldProcessFurther = shouldProcessFurther
                         )
-                        val specimenImage = SpecimenImage(
+                        val imageMetadataJson = _state.value.currentCameraMetadata?.let { meta ->
+                            Json.encodeToString(
+                                ImageMetadataDto(
+                                    focusDistance = meta.focusDistance,
+                                    aperture = meta.aperture,
+                                    exposureTimeNs = meta.exposureTimeNs,
+                                    iso = meta.iso,
+                                    colorCorrectionGainsRed = meta.colorCorrectionGains?.red,
+                                    colorCorrectionGainsGreenEven = meta.colorCorrectionGains?.greenEven,
+                                    colorCorrectionGainsGreenOdd = meta.colorCorrectionGains?.greenOdd,
+                                    colorCorrectionGainsBlue = meta.colorCorrectionGains?.blue,
+                                    awbMode = meta.awbMode,
+                                    imageWidth = meta.imageWidth,
+                                    imageHeight = meta.imageHeight,
+                                    focalPointX = meta.focalPointX,
+                                    focalPointY = meta.focalPointY,
+                                    afRegions = meta.afRegions.map { r ->
+                                        AfRegionDto(r.x, r.y, r.width, r.height, r.weight)
+                                    }
+                                )
+                            )
+                        }
+
+                    val specimenImage = SpecimenImage(
                             localId = calculateMd5(jpegBytes),
                             remoteId = null,
                             species = _state.value.currentSpecimenImage.species,
@@ -495,7 +522,8 @@ class ImagingViewModel @Inject constructor(
                             imageUploadStatus = UploadStatus.NOT_STARTED,
                             metadataUploadStatus = UploadStatus.NOT_STARTED,
                             capturedAt = timestamp,
-                            submittedAt = null
+                            submittedAt = null,
+                            imageMetadata = imageMetadataJson
                         )
 
                         val success = transactionHelper.runAsTransaction {

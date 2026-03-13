@@ -31,5 +31,6 @@ data class SpecimenImageEntity(
     val metadataUploadStatus: UploadStatus = UploadStatus.NOT_STARTED,
     val imageUploadStatus: UploadStatus = UploadStatus.NOT_STARTED,
     val capturedAt: Long = 0L,
-    val submittedAt: Long? = null
+    val submittedAt: Long? = null,
+    val imageMetadata: String? = null,
 )

@@ -13,5 +13,6 @@ data class SpecimenImage(
     val metadataUploadStatus: UploadStatus,
     val imageUploadStatus: UploadStatus,
     val capturedAt: Long,
-    val submittedAt: Long?
+    val submittedAt: Long?,
+    val imageMetadata: String? = null
 )

@@ -15,7 +15,8 @@ fun SpecimenImageEntity.toDomain() : SpecimenImage {
         metadataUploadStatus = this.metadataUploadStatus,
         imageUploadStatus = this.imageUploadStatus,
         capturedAt = this.capturedAt,
-        submittedAt = this.submittedAt
+        submittedAt = this.submittedAt,
+        imageMetadata = this.imageMetadata
     )
 }
 
@@ -32,6 +33,7 @@ fun SpecimenImage.toEntity(specimenId: String, sessionId: UUID) : SpecimenImageE
         metadataUploadStatus = this.metadataUploadStatus,
         imageUploadStatus = this.imageUploadStatus,
         capturedAt = this.capturedAt,
-        submittedAt = this.submittedAt
+        submittedAt = this.submittedAt,
+        imageMetadata = this.imageMetadata
     )
 }

@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.core.data.network.api
 
 import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto
+import com.vci.vectorcamapp.core.data.dto.specimen_image.ImageMetadataDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageRequestDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageResponseDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.SpecimenImageDto
@@ -19,6 +20,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 class RemoteSpecimenImageDataSource @Inject constructor(
@@ -54,6 +56,12 @@ class RemoteSpecimenImageDataSource @Inject constructor(
                                 sexInferenceDuration = it.sexInferenceDuration,
                                 abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration
                             )
+                        },
+                        imageMetadata = specimenImage.imageMetadata?.let {
+                            @Suppress("SwallowedException")
+                            try { 
+                                Json.decodeFromString<ImageMetadataDto>(it) 
+                            } catch (_: Exception) { null }
                         }
                     )
                 )
