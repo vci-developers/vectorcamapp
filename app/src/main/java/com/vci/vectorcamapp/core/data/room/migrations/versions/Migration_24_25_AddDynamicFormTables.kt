@@ -5,6 +5,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 val MIGRATION_24_25_ADD_DYNAMIC_FORM_TABLES = object : Migration(24, 25) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `program` ADD COLUMN `formVersion` INTEGER DEFAULT NULL")
+
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `form` (

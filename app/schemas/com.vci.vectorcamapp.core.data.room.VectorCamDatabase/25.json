@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 25,
-    "identityHash": "8de0c665e1d5f10ad2d713d14edcf4aa",
+    "identityHash": "7fdd67f5b404751e437d131cdc44d4b0",
     "entities": [
       {
         "tableName": "collector",
@@ -42,7 +42,7 @@
       },
       {
         "tableName": "program",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `country` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `country` TEXT NOT NULL, `formVersion` INTEGER, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -61,6 +61,11 @@
             "columnName": "country",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "formVersion",
+            "columnName": "formVersion",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -781,7 +786,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8de0c665e1d5f10ad2d713d14edcf4aa')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7fdd67f5b404751e437d131cdc44d4b0')"
     ]
   }
 }
