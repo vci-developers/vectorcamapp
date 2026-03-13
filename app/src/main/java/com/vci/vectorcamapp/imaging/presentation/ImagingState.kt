@@ -30,6 +30,7 @@ data class ImagingState(
     val previewInferenceResults: List<InferenceResult> = emptyList(),
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),
     val focusPoint: Offset? = null,
+    val manualFocusDistance: Float? = null,
     val allowModelInferenceToggle: Boolean = false,
     val shouldRunInference: Boolean = true,
     val isManualFocusing: Boolean = false,

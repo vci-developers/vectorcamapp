@@ -144,6 +144,16 @@ class ImagingViewModel @Inject constructor(
                     _state.update { it.copy(focusPoint = null, isManualFocusing = false) }
                 }
 
+                is ImagingAction.SetFocusDistance -> {
+                    _state.update {
+                        it.copy(
+                            manualFocusDistance = action.distance,
+                            focusPoint = null,
+                            isManualFocusing = false
+                        )
+                    }
+                }
+
                 is ImagingAction.CorrectSpecimenId -> {
                     _state.update {
                         it.copy(
@@ -210,8 +220,12 @@ class ImagingViewModel @Inject constructor(
                                 }
 
                                 _state.update {
-                                    val shouldUseAutofocusThisFrame =
-                                        !it.isManualFocusing || (it.focusPoint == null && autofocusPoint != null)
+                                    // Skip inference-driven autofocus when user controls
+                                    // focus distance manually via the slider
+                                    val isManualFocusDistanceActive = it.manualFocusDistance != null
+
+                                    val shouldUseAutofocusThisFrame = !isManualFocusDistanceActive &&
+                                        (!it.isManualFocusing || (it.focusPoint == null && autofocusPoint != null))
 
                                     val nextFocusPoint = if (shouldUseAutofocusThisFrame) {
                                         autofocusPoint ?: it.focusPoint
@@ -220,6 +234,7 @@ class ImagingViewModel @Inject constructor(
                                     }
 
                                     val nextIsAutofocusing = when {
+                                        isManualFocusDistanceActive -> false
                                         !it.isManualFocusing -> true
                                         it.focusPoint == null && autofocusPoint != null -> true
                                         else -> false
@@ -559,6 +574,7 @@ class ImagingViewModel @Inject constructor(
                 isCameraReady = false,
                 previewInferenceResults = emptyList(),
                 focusPoint = null,
+                manualFocusDistance = null,
                 isManualFocusing = false,
                 hasConfirmedPackaging = false,
                 specimenIdError = null

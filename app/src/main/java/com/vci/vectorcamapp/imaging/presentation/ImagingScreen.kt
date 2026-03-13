@@ -11,7 +11,11 @@ import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +52,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -56,11 +61,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.compose.AsyncImage
@@ -175,6 +189,16 @@ fun ImagingScreen(
         pageCount = { state.specimensWithImagesAndInferenceResults.size + 1 })
 
     var isImageLoaded by remember { mutableStateOf(false) }
+
+    // Local slider value for the manual focus distance control (0 = far, 1 = near)
+    var focusSliderValue by remember { mutableFloatStateOf(0.5f) }
+
+    // Reset slider position when returning to auto focus
+    LaunchedEffect(state.manualFocusDistance) {
+        if (state.manualFocusDistance == null) {
+            focusSliderValue = 0.5f
+        }
+    }
 
     LaunchedEffect(state.specimensWithImagesAndInferenceResults.size) {
         pagerState.scrollToPage(state.specimensWithImagesAndInferenceResults.size)
@@ -685,7 +709,24 @@ fun ImagingScreen(
                                     onCancelFocus = { onAction(ImagingAction.CancelFocus) },
                                     modifier = Modifier.fillMaxSize(),
                                     isManualFocusing = state.isManualFocusing,
-                                    isProcessing = state.isProcessing
+                                    isProcessing = state.isProcessing,
+                                    manualFocusDistance = state.manualFocusDistance
+                                )
+
+                                VerticalFocusSlider(
+                                    value = focusSliderValue,
+                                    isManualMode = state.manualFocusDistance != null,
+                                    onValueChange = { value ->
+                                        focusSliderValue = value
+                                        onAction(ImagingAction.SetFocusDistance(value))
+                                    },
+                                    onResetToAuto = {
+                                        onAction(ImagingAction.SetFocusDistance(null))
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterEnd)
+                                        .fillMaxHeight()
+                                        .width(52.dp)
                                 )
                             }
 
@@ -743,6 +784,145 @@ fun ImagingScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun VerticalFocusSlider(
+    value: Float,
+    isManualMode: Boolean,
+    onValueChange: (Float) -> Unit,
+    onResetToAuto: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val activeColor = MaterialTheme.colors.warning
+    val inactiveColor = MaterialTheme.colors.textSecondary.copy(alpha = 0.6f)
+    val thumbColor = if (isManualMode) activeColor else inactiveColor
+
+    var sliderHeightPx by remember { mutableFloatStateOf(0f) }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier
+            .background(
+                color = Color.Black.copy(alpha = 0.45f),
+                shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
+            )
+            .padding(horizontal = 4.dp, vertical = 8.dp)
+    ) {
+        // AF / Manual toggle button
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(
+                    color = if (!isManualMode) activeColor.copy(alpha = 0.85f)
+                            else Color.White.copy(alpha = 0.12f)
+                )
+                .clickable { onResetToAuto() }
+        ) {
+            Text(
+                text = "AF",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = if (!isManualMode) Color.White else inactiveColor,
+                fontSize = 10.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // "Near" label
+        Text(
+            text = "N",
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isManualMode && value > 0.7f) activeColor else inactiveColor,
+            fontWeight = if (isManualMode && value > 0.7f) FontWeight.Bold else FontWeight.Normal,
+            fontSize = 9.sp
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Vertical slider track
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .width(24.dp)
+                .onSizeChanged { sliderHeightPx = it.height.toFloat() }
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown()
+                        if (sliderHeightPx > 0f) {
+                            val newValue = 1f - (down.position.y / sliderHeightPx).coerceIn(0f, 1f)
+                            onValueChange(newValue)
+                        }
+                        do {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull() ?: break
+                            if (sliderHeightPx > 0f) {
+                                val newValue = 1f - (change.position.y / sliderHeightPx).coerceIn(0f, 1f)
+                                onValueChange(newValue)
+                                change.consume()
+                            }
+                        } while (event.changes.any { it.pressed })
+                    }
+                }
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val trackX = size.width / 2f
+                val thumbY = (1f - value) * size.height
+
+                // Background track
+                drawLine(
+                    color = inactiveColor,
+                    start = Offset(trackX, 0f),
+                    end = Offset(trackX, size.height),
+                    strokeWidth = 3.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+
+                // Active portion of track (from thumb down to "far" end)
+                if (isManualMode) {
+                    drawLine(
+                        color = activeColor.copy(alpha = 0.7f),
+                        start = Offset(trackX, thumbY),
+                        end = Offset(trackX, size.height),
+                        strokeWidth = 3.dp.toPx(),
+                        cap = StrokeCap.Round
+                    )
+                }
+
+                // Thumb circle
+                drawCircle(
+                    color = thumbColor,
+                    radius = 9.dp.toPx(),
+                    center = Offset(trackX, if (isManualMode) thumbY else size.height / 2f)
+                )
+
+                // Thumb outline ring
+                drawCircle(
+                    color = Color.White.copy(alpha = if (isManualMode) 0.85f else 0.3f),
+                    radius = 9.dp.toPx(),
+                    center = Offset(trackX, if (isManualMode) thumbY else size.height / 2f),
+                    style = Stroke(width = 1.5.dp.toPx())
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // "Far" label
+        Text(
+            text = "F",
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isManualMode && value < 0.3f) activeColor else inactiveColor,
+            fontWeight = if (isManualMode && value < 0.3f) FontWeight.Bold else FontWeight.Normal,
+            fontSize = 9.sp
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
     }
 }
 

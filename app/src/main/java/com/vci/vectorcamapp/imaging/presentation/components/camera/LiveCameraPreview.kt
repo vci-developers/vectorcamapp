@@ -35,7 +35,8 @@ fun LiveCameraPreview(
     onCancelFocus: () -> Unit,
     modifier: Modifier = Modifier,
     isManualFocusing: Boolean,
-    isProcessing: Boolean
+    isProcessing: Boolean,
+    manualFocusDistance: Float? = null,
 ) {
     val density = LocalDensity.current
     val view = LocalView.current
@@ -67,6 +68,11 @@ fun LiveCameraPreview(
             }
         }
 
+        // Apply manual lens focus distance whenever it changes
+        LaunchedEffect(manualFocusDistance, cameraFocusController) {
+            cameraFocusController.setFocusDistance(manualFocusDistance)
+        }
+
         if (surfaceRequest != null) {
             CameraXViewfinder(
                 surfaceRequest = surfaceRequest,
@@ -85,7 +91,9 @@ fun LiveCameraPreview(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(Unit) {
+                // Disable tap-to-focus when user is controlling focus distance manually
+                .pointerInput(manualFocusDistance) {
+                    if (manualFocusDistance != null) return@pointerInput
                     detectTapGestures { tapOffsetInPixels ->
                         if (containerSize.width > 0 && containerSize.height > 0) {
                             val normalizedTap = Offset(
