@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 25,
-    "identityHash": "30abd7ace79cde427035e8f7b49af3d7",
+    "identityHash": "7fdd67f5b404751e437d131cdc44d4b0",
     "entities": [
       {
         "tableName": "collector",
@@ -42,7 +42,7 @@
       },
       {
         "tableName": "program",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `country` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `country` TEXT NOT NULL, `formVersion` INTEGER, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -61,6 +61,11 @@
             "columnName": "country",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "formVersion",
+            "columnName": "formVersion",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -497,7 +502,7 @@
       },
       {
         "tableName": "specimen_image",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`localId` TEXT NOT NULL, `specimenId` TEXT NOT NULL, `sessionId` TEXT NOT NULL, `remoteId` INTEGER, `species` TEXT, `sex` TEXT, `abdomenStatus` TEXT, `imageUri` TEXT NOT NULL, `metadataUploadStatus` TEXT NOT NULL, `imageUploadStatus` TEXT NOT NULL, `capturedAt` INTEGER NOT NULL, `submittedAt` INTEGER, `imageMetadata` TEXT, PRIMARY KEY(`localId`), FOREIGN KEY(`specimenId`, `sessionId`) REFERENCES `specimen`(`id`, `sessionId`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`localId` TEXT NOT NULL, `specimenId` TEXT NOT NULL, `sessionId` TEXT NOT NULL, `remoteId` INTEGER, `species` TEXT, `sex` TEXT, `abdomenStatus` TEXT, `imageUri` TEXT NOT NULL, `metadataUploadStatus` TEXT NOT NULL, `imageUploadStatus` TEXT NOT NULL, `capturedAt` INTEGER NOT NULL, `submittedAt` INTEGER, PRIMARY KEY(`localId`), FOREIGN KEY(`specimenId`, `sessionId`) REFERENCES `specimen`(`id`, `sessionId`) ON UPDATE CASCADE ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "localId",
@@ -565,11 +570,6 @@
             "fieldPath": "submittedAt",
             "columnName": "submittedAt",
             "affinity": "INTEGER"
-          },
-          {
-            "fieldPath": "imageMetadata",
-            "columnName": "imageMetadata",
-            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -786,7 +786,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '30abd7ace79cde427035e8f7b49af3d7')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7fdd67f5b404751e437d131cdc44d4b0')"
     ]
   }
 }
