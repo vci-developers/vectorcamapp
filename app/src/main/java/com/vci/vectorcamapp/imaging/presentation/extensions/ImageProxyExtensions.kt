@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.imaging.presentation.extensions
 
 import android.graphics.Bitmap
 import androidx.camera.core.ImageProxy
+import androidx.core.graphics.createBitmap
 import org.opencv.android.Utils.bitmapToMat
 import org.opencv.android.Utils.matToBitmap
 import org.opencv.core.Core
@@ -18,7 +19,7 @@ fun ImageProxy.toUprightBitmap(): Bitmap {
     Core.rotate(src, dst, Core.ROTATE_90_CLOCKWISE)
     src.release()
 
-    val result = Bitmap.createBitmap(dst.cols(), dst.rows(), Bitmap.Config.ARGB_8888)
+    val result = createBitmap(dst.cols(), dst.rows())
     matToBitmap(dst, result)
     dst.release()
 
