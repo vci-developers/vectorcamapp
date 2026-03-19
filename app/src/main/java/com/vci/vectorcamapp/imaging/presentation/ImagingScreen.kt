@@ -90,7 +90,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@ExperimentalCamera2Interop
 @Composable
 fun ImagingScreen(
     state: ImagingState, onAction: (ImagingAction) -> Unit, modifier: Modifier = Modifier
@@ -793,7 +792,6 @@ fun ImagingScreen(
     }
 }
 
-@ExperimentalCamera2Interop
 @PreviewLightDark
 @Composable
 fun ImagingScreenPreview() {

@@ -18,6 +18,7 @@ import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionLi
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListViewModel
 import com.vci.vectorcamapp.core.presentation.components.scaffold.BaseScaffold
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import com.vci.vectorcamapp.imaging.presentation.ImagingEvent
 import com.vci.vectorcamapp.imaging.presentation.ImagingScreen
 import com.vci.vectorcamapp.imaging.presentation.ImagingViewModel

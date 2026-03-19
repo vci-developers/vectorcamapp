@@ -28,6 +28,7 @@ import com.vci.vectorcamapp.main.presentation.MainViewModel
 import com.vci.vectorcamapp.main.presentation.SplashScreen
 import com.vci.vectorcamapp.main.presentation.PermissionScreen
 import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import com.vci.vectorcamapp.ui.theme.getWindowType
@@ -58,6 +59,7 @@ class MainActivity : ComponentActivity() {
         viewModel.onAction(MainAction.UpdatePermissionStatus(allGranted))
     }
 
+    @OptIn(ExperimentalCamera2Interop::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
