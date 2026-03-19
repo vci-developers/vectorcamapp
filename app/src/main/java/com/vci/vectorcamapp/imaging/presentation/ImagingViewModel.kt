@@ -63,7 +63,6 @@ import kotlin.random.Random
 import androidx.core.graphics.createBitmap
 import org.opencv.android.Utils.matToBitmap
 import org.opencv.core.Mat
-import android.util.Log
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
@@ -301,7 +300,6 @@ class ImagingViewModel @Inject constructor(
                             )
                             _state.update { it.copy(currentCameraMetadata = capturedMetadata) }
 
-                            Log.d("ImagingViewModel", "Captured metadata: ${capturedMetadata}")
                             val jpegStream = ByteArrayOutputStream()
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
                             val jpegByteArray = jpegStream.toByteArray()
