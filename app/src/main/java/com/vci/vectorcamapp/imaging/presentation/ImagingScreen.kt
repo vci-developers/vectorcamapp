@@ -68,6 +68,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
@@ -311,7 +312,7 @@ fun ImagingScreen(
                                     )
                                 }
 
-                                if (state.isPracticeSession) {
+                                if (state.sessionType == SessionType.PRACTICE) {
                                     Text(
                                         text = "Warning: This is a practice session. Submitted data will not be considered routine surveillance data.",
                                         style = MaterialTheme.typography.titleMedium,
@@ -700,7 +701,7 @@ fun ImagingScreen(
                             }
 
                             Column(modifier = Modifier.height(MaterialTheme.dimensions.componentHeightExtraExtraExtraLarge)) {
-                                if (state.isPracticeSession) {
+                                if (state.sessionType == SessionType.PRACTICE) {
                                     Surface(
                                         modifier = Modifier
                                             .padding(horizontal = MaterialTheme.dimensions.paddingMedium)

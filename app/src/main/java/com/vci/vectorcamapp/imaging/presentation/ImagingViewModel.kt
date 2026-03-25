@@ -56,6 +56,7 @@ import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.random.Random
 import androidx.core.graphics.createBitmap
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import org.opencv.android.Utils.matToBitmap
 import org.opencv.core.Mat
 
@@ -599,12 +600,11 @@ class ImagingViewModel @Inject constructor(
             if (session != null) {
                 imagingWorkflow = imagingWorkflowFactory.create(session.type)
                 val allowModelInferenceToggle = imagingWorkflow.allowModelInferenceToggle
-                val isPracticeSession = imagingWorkflow.isPracticeSession
                 _state.update {
                     it.copy(
                         allowModelInferenceToggle = allowModelInferenceToggle,
                         shouldRunInference = !allowModelInferenceToggle,
-                        isPracticeSession = isPracticeSession
+                        sessionType = session.type
                     )
                 }
             } else {

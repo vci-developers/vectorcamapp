@@ -17,7 +17,7 @@ import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
-fun PracticeWarningBanner(modifier: Modifier = Modifier) {
+fun PracticeSessionWarningBanner(modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
         shape = MaterialTheme.shapes.medium,

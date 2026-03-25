@@ -46,7 +46,7 @@ import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
-import com.vci.vectorcamapp.intake.presentation.components.PracticeWarningBanner
+import com.vci.vectorcamapp.intake.presentation.components.PracticeSessionWarningBanner
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import java.util.UUID
 
@@ -79,7 +79,7 @@ fun IntakeScreen(
     ) {
         if (state.session.type == SessionType.PRACTICE) {
             item {
-                PracticeWarningBanner(
+                PracticeSessionWarningBanner(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
@@ -634,7 +634,7 @@ fun IntakeScreen(
 
         if (state.session.type == SessionType.PRACTICE) {
             item {
-                PracticeWarningBanner(
+                PracticeSessionWarningBanner(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = MaterialTheme.dimensions.paddingMedium)

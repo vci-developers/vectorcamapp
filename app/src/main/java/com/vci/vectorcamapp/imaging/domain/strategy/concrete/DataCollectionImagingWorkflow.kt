@@ -8,7 +8,4 @@ class DataCollectionImagingWorkflow : ImagingWorkflow {
 
     override val allowModelInferenceToggle: Boolean
         get() = true
-
-    override val isPracticeSession: Boolean
-        get() = false
 }

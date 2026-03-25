@@ -8,7 +8,4 @@ class PracticeImagingWorkflow : ImagingWorkflow {
 
     override val allowModelInferenceToggle: Boolean
         get() = false
-
-    override val isPracticeSession: Boolean
-        get() = true
 }
