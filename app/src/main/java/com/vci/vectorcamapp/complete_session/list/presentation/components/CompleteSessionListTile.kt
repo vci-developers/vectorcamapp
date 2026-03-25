@@ -175,19 +175,29 @@ fun CompleteSessionListTile(
                     }
 
                     site.locationHierarchy?.let { locationHierarchy ->
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(
-                                MaterialTheme.dimensions.spacingExtraSmall
-                            )
+                        Row(
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                         ) {
-                            locationHierarchy.toList().forEachIndexed { index, (key, value) ->
-                                CompleteSessionListDetailRow(
-                                    iconPainter = if (index == 0)
-                                        painterResource(R.drawable.ic_pin)
-                                    else null,
-                                    iconDescription = "Location",
-                                    text = "$key: $value"
+                            Icon(
+                                painter = painterResource(R.drawable.ic_pin),
+                                contentDescription = "Location",
+                                tint = MaterialTheme.colors.icon,
+                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                            )
+
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(
+                                    MaterialTheme.dimensions.spacingExtraSmall
                                 )
+                            ) {
+                                locationHierarchy.forEach { (key, value) ->
+                                    Text(
+                                        text = "$key: $value",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colors.textPrimary
+                                    )
+                                }
                             }
                         }
                     }

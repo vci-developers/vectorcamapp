@@ -17,22 +17,18 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
 fun CompleteSessionListDetailRow(
-    iconPainter: Painter?, iconDescription: String, text: String, modifier: Modifier = Modifier
+    iconPainter: Painter, iconDescription: String, text: String, modifier: Modifier = Modifier
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.fillMaxWidth()
     ) {
-        if (iconPainter != null) {
-            Icon(
-                painter = iconPainter,
-                contentDescription = iconDescription,
-                tint = MaterialTheme.colors.icon,
-                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
-            )
-        } else {
-            Spacer(modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall))
-        }
+        Icon(
+            painter = iconPainter,
+            contentDescription = iconDescription,
+            tint = MaterialTheme.colors.icon,
+            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+        )
 
         Spacer(modifier = Modifier.size(MaterialTheme.dimensions.spacingSmall))
 
