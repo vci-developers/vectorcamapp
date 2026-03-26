@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.imaging.presentation
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageProxy
 import androidx.compose.ui.geometry.Offset
+import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
 
 sealed interface ImagingAction {
     data class CorrectSpecimenId(val specimenId: String) : ImagingAction

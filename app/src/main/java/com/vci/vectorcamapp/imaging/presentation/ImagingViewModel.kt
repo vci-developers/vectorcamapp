@@ -30,6 +30,9 @@ import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
 import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
+import com.vci.vectorcamapp.imaging.domain.model.AfRegion
+import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
+import com.vci.vectorcamapp.imaging.domain.model.ColorCorrectionGains
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel

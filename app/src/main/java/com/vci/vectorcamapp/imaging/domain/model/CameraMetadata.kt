@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.imaging.presentation
+package com.vci.vectorcamapp.imaging.domain.model
 
 data class CameraMetadata(
     val focusDistance: Float? = null,
