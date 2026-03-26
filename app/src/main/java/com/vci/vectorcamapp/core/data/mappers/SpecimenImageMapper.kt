@@ -1,10 +1,17 @@
 package com.vci.vectorcamapp.core.data.mappers
 
+import com.vci.vectorcamapp.core.data.dto.specimen_image.AfRegionDto
+import com.vci.vectorcamapp.core.data.dto.specimen_image.ImageMetadataDto
 import com.vci.vectorcamapp.core.data.room.entities.SpecimenImageEntity
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
+import com.vci.vectorcamapp.imaging.domain.model.AfRegion
+import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
+import com.vci.vectorcamapp.imaging.domain.model.ColorCorrectionGains
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.util.UUID
 
-fun SpecimenImageEntity.toDomain() : SpecimenImage {
+fun SpecimenImageEntity.toDomain(): SpecimenImage {
     return SpecimenImage(
         localId = this.localId,
         remoteId = this.remoteId,
@@ -16,11 +23,11 @@ fun SpecimenImageEntity.toDomain() : SpecimenImage {
         imageUploadStatus = this.imageUploadStatus,
         capturedAt = this.capturedAt,
         submittedAt = this.submittedAt,
-        imageMetadata = this.imageMetadata
+        imageMetadata = this.imageMetadata?.toCameraMetadata()
     )
 }
 
-fun SpecimenImage.toEntity(specimenId: String, sessionId: UUID) : SpecimenImageEntity {
+fun SpecimenImage.toEntity(specimenId: String, sessionId: UUID): SpecimenImageEntity {
     return SpecimenImageEntity(
         localId = this.localId,
         specimenId = specimenId,
@@ -34,6 +41,47 @@ fun SpecimenImage.toEntity(specimenId: String, sessionId: UUID) : SpecimenImageE
         imageUploadStatus = this.imageUploadStatus,
         capturedAt = this.capturedAt,
         submittedAt = this.submittedAt,
-        imageMetadata = this.imageMetadata
+        imageMetadata = this.imageMetadata?.let { Json.encodeToString(it.toImageMetadataDto()) }
     )
 }
+
+fun CameraMetadata.toImageMetadataDto(): ImageMetadataDto = ImageMetadataDto(
+    focusDistance = focusDistance,
+    aperture = aperture,
+    exposureTimeNs = exposureTimeNs,
+    iso = iso,
+    colorCorrectionGainsRed = colorCorrectionGains?.red,
+    colorCorrectionGainsGreenEven = colorCorrectionGains?.greenEven,
+    colorCorrectionGainsGreenOdd = colorCorrectionGains?.greenOdd,
+    colorCorrectionGainsBlue = colorCorrectionGains?.blue,
+    awbMode = awbMode,
+    imageWidth = imageWidth,
+    imageHeight = imageHeight,
+    focalPointX = focalPointX,
+    focalPointY = focalPointY,
+    afRegions = afRegions.map { AfRegionDto(it.x, it.y, it.width, it.height, it.weight) }
+)
+
+private fun String.toCameraMetadata(): CameraMetadata? =
+    runCatching { Json.decodeFromString<ImageMetadataDto>(this).toCameraMetadata() }.getOrNull()
+
+internal fun ImageMetadataDto.toCameraMetadata(): CameraMetadata = CameraMetadata(
+    focusDistance = focusDistance,
+    aperture = aperture,
+    exposureTimeNs = exposureTimeNs,
+    iso = iso,
+    colorCorrectionGains = if (colorCorrectionGainsRed != null) {
+        ColorCorrectionGains(
+            red = colorCorrectionGainsRed,
+            greenEven = colorCorrectionGainsGreenEven ?: 0f,
+            greenOdd = colorCorrectionGainsGreenOdd ?: 0f,
+            blue = colorCorrectionGainsBlue ?: 0f
+        )
+    } else null,
+    awbMode = awbMode,
+    imageWidth = imageWidth,
+    imageHeight = imageHeight,
+    focalPointX = focalPointX,
+    focalPointY = focalPointY,
+    afRegions = afRegions.map { AfRegion(it.x, it.y, it.width, it.height, it.weight) }
+)
