@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.core.data.room
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.vci.vectorcamapp.core.data.room.converters.CameraMetadataConverter
 import com.vci.vectorcamapp.core.data.room.converters.FloatListConverter
 import com.vci.vectorcamapp.core.data.room.converters.LocationHierarchyConverter
 import com.vci.vectorcamapp.core.data.room.converters.SessionTypeConverter
@@ -48,6 +49,7 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
     UploadStatusConverter::class,
     SessionTypeConverter::class,
     FloatListConverter::class,
+    CameraMetadataConverter::class,
     LocationHierarchyConverter::class,
     StringListConverter::class
 )

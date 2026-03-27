@@ -7,8 +7,6 @@ import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.imaging.domain.model.AfRegion
 import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
 import com.vci.vectorcamapp.imaging.domain.model.ColorCorrectionGains
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.util.UUID
 
 fun SpecimenImageEntity.toDomain(): SpecimenImage {
@@ -23,7 +21,7 @@ fun SpecimenImageEntity.toDomain(): SpecimenImage {
         imageUploadStatus = this.imageUploadStatus,
         capturedAt = this.capturedAt,
         submittedAt = this.submittedAt,
-        imageMetadata = this.imageMetadata?.toCameraMetadata()
+        imageMetadata = this.imageMetadata
     )
 }
 
@@ -41,7 +39,7 @@ fun SpecimenImage.toEntity(specimenId: String, sessionId: UUID): SpecimenImageEn
         imageUploadStatus = this.imageUploadStatus,
         capturedAt = this.capturedAt,
         submittedAt = this.submittedAt,
-        imageMetadata = this.imageMetadata?.let { Json.encodeToString(it.toImageMetadataDto()) }
+        imageMetadata = this.imageMetadata
     )
 }
 
@@ -61,9 +59,6 @@ fun CameraMetadata.toImageMetadataDto(): ImageMetadataDto = ImageMetadataDto(
     focalPointY = focalPointY,
     afRegions = afRegions.map { AfRegionDto(it.x, it.y, it.width, it.height, it.weight) }
 )
-
-private fun String.toCameraMetadata(): CameraMetadata? =
-    runCatching { Json.decodeFromString<ImageMetadataDto>(this).toCameraMetadata() }.getOrNull()
 
 internal fun ImageMetadataDto.toCameraMetadata(): CameraMetadata = CameraMetadata(
     focusDistance = focusDistance,

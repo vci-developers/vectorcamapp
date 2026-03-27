@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.imaging.presentation
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
@@ -297,6 +298,8 @@ class ImagingViewModel @Inject constructor(
                                 focalPointX = _state.value.focusPoint?.x,
                                 focalPointY = _state.value.focusPoint?.y
                             )
+                            Log.d("capturedMetadata", "data: $capturedMetadata")
+
                             _state.update { it.copy(currentCameraMetadata = capturedMetadata) }
 
                             val jpegStream = ByteArrayOutputStream()
