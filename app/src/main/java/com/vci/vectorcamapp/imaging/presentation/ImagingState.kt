@@ -24,7 +24,8 @@ data class ImagingState(
         metadataUploadStatus = UploadStatus.NOT_STARTED,
         imageUploadStatus = UploadStatus.NOT_STARTED,
         capturedAt = 0L,
-        submittedAt = null
+        submittedAt = null,
+        imageMetadata = null
     ),
     val currentInferenceResult: InferenceResult? = null,
     val currentImageBytes: ByteArray? = null,

@@ -4,7 +4,7 @@ import android.net.Uri
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
 
-data class SpecimenImage(
+data class SpecimenImage constructor(
     val localId: String,
     val remoteId: Int?,
     val species: String?,
@@ -15,5 +15,5 @@ data class SpecimenImage(
     val imageUploadStatus: UploadStatus,
     val capturedAt: Long,
     val submittedAt: Long?,
-    val imageMetadata: CameraMetadata? = null
+    val imageMetadata: CameraMetadata?,
 )
