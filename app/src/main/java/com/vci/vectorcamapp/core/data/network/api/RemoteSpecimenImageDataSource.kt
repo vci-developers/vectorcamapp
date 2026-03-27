@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.core.data.network.api
 
-import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageRequestDto
 import com.vci.vectorcamapp.core.data.mappers.toImageMetadataDto
@@ -14,12 +13,9 @@ import com.vci.vectorcamapp.core.domain.network.api.SpecimenImageDataSource
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import io.ktor.client.HttpClient
-import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import javax.inject.Inject
 
 class RemoteSpecimenImageDataSource @Inject constructor(
@@ -30,8 +26,6 @@ class RemoteSpecimenImageDataSource @Inject constructor(
     ): Result<PostSpecimenImageResponseDto, NetworkError> {
         return safeCall<PostSpecimenImageResponseDto> {
             httpClient.post(constructUrl("specimens/${specimenId}/images/data")) {
-                bearerAuth(BuildConfig.VECTORCAM_API_KEY)
-                contentType(ContentType.Application.Json)
                 setBody(
                     PostSpecimenImageRequestDto(
                         filemd5 = specimenImage.localId,
@@ -67,10 +61,7 @@ class RemoteSpecimenImageDataSource @Inject constructor(
         specimenImageId: String, specimenId: Int
     ): Result<SpecimenImageDto, NetworkError> {
         return safeCall<SpecimenImageDto> {
-            httpClient.get(constructUrl("specimens/${specimenId}/images/data/${specimenImageId}")) {
-                bearerAuth(BuildConfig.VECTORCAM_API_KEY)
-                contentType(ContentType.Application.Json)
-            }
+            httpClient.get(constructUrl("specimens/${specimenId}/images/data/${specimenImageId}"))
         }
     }
 }
