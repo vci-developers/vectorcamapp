@@ -772,7 +772,7 @@ fun ImagingScreen(
                                             label = "Capture",
                                             onClick = {
                                                 imageCaptureUseCase?.let {
-                                                    onAction(ImagingAction.CaptureImage(it))
+                                                    onAction(ImagingAction.CaptureImage(it, metadataListener.latestMetadata))
                                                 }
                                             },
                                             iconPainter = painterResource(id = R.drawable.ic_camera),
