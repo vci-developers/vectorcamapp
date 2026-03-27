@@ -298,7 +298,6 @@ class ImagingViewModel @Inject constructor(
                                 focalPointX = _state.value.focusPoint?.x,
                                 focalPointY = _state.value.focusPoint?.y
                             )
-                            Log.d("capturedMetadata", "data: $capturedMetadata")
 
                             _state.update { it.copy(currentCameraMetadata = capturedMetadata) }
 

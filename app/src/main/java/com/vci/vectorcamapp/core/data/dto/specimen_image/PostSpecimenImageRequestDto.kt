@@ -11,5 +11,5 @@ data class PostSpecimenImageRequestDto(
     val abdomenStatus: String? = null,
     val capturedAt: Long = 0L,
     val inferenceResult: InferenceResultDto? = null,
-    val imageMetadata: ImageMetadataDto? = null
+    val metadata: ImageMetadataDto? = null
 )

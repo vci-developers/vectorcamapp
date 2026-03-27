@@ -56,7 +56,7 @@ class RemoteSpecimenImageDataSource @Inject constructor(
                                 abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration
                             )
                         },
-                        imageMetadata = specimenImage.imageMetadata?.toImageMetadataDto()
+                        metadata = specimenImage.imageMetadata?.toImageMetadataDto()
                     )
                 )
             }
