@@ -14,7 +14,14 @@ plugins {
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.sentry.android.gradle)
+    alias(libs.plugins.google.firebase.crashlytics)
     kotlin("plugin.serialization") version "2.0.21"
+}
+
+// Apply Google Services plugin only when google-services.json exists (e.g. local dev).
+// CI can build without the file when it is not committed (e.g. in .gitignore).
+if (file("${project.projectDir}/google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 android {
@@ -31,9 +38,6 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "com.vci.vectorcamapp.HiltTestRunner"
-
-        buildConfigField("String", "POSTHOG_API_KEY", "\"${secretsProperties["POSTHOG_API_KEY"]}\"")
-        buildConfigField("String", "POSTHOG_HOST", "\"${secretsProperties["POSTHOG_HOST"]}\"")
 
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a")
@@ -68,7 +72,7 @@ android {
             applicationIdSuffix = ".colombia"
             versionCode = 1007
             versionName = "1.0.7"
-            
+
             // Region-specific build config fields
             buildConfigField("String", "REGION", "\"colombia\"")
             buildConfigField("String", "REGION_CODE", "\"CO\"")
@@ -250,15 +254,17 @@ dependencies {
     // Work Manager Library
     implementation(libs.androidx.work.runtime.ktx)
 
-    // PostHog AnalyticsLibrary
-    implementation(libs.posthog.android)
-
     // JSON Serialization Library
     implementation(libs.kotlinx.serialization.json) // Kotlinx JSON serialization library
 
     // TUS Library
     implementation(libs.tus.android.client)
     implementation(libs.tus.java.client)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
     // Testing Dependencies
     testImplementation(libs.junit) // JUnit for unit tests

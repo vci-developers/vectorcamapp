@@ -92,6 +92,11 @@ class CompleteSessionListViewModel @Inject constructor(
                     add(site.villageName)
                     add(site.houseNumber)
                     add(getSessionUploadStatus(progress))
+                    site.locationHierarchy?.values?.forEach {
+                        if (it.isNotEmpty()) {
+                            add(it)
+                        }
+                    }
                 }
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
             }

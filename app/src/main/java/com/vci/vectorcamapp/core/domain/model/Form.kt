@@ -1,8 +1,7 @@
 package com.vci.vectorcamapp.core.domain.model
 
-data class Program(
+data class Form(
     val id: Int,
     val name: String,
-    val country: String,
-    val formVersion: Int?
+    val version: String
 )
