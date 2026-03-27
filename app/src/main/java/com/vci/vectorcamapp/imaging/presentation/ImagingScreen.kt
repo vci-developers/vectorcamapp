@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.view.Surface
+import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -72,6 +73,7 @@ import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
+import com.vci.vectorcamapp.imaging.data.camera.CameraMetadataListenerImplementation
 import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreview
 import com.vci.vectorcamapp.imaging.presentation.components.icon.AnimatedArrowIcon
 import com.vci.vectorcamapp.imaging.presentation.components.specimen.CapturedSpecimenTile
@@ -95,6 +97,7 @@ fun ImagingScreen(
     var surfaceRequest by remember { mutableStateOf<SurfaceRequest?>(null) }
     var imageCaptureUseCase by remember { mutableStateOf<ImageCapture?>(null) }
     var camera by remember { mutableStateOf<Camera?>(null) }
+    val metadataListener = remember { CameraMetadataListenerImplementation() }
 
     val isReviewing by rememberUpdatedState(newValue = state.currentImageBytes != null)
     val analyzer = remember {
@@ -129,7 +132,7 @@ fun ImagingScreen(
                 }
             }
 
-        val imageCapture = ImageCapture.Builder()
+        val imageCaptureBuilder = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
             .setTargetRotation(rotation)
             .setResolutionSelector(
@@ -138,7 +141,11 @@ fun ImagingScreen(
                     .setAllowedResolutionMode(ResolutionSelector.PREFER_HIGHER_RESOLUTION_OVER_CAPTURE_RATE)
                     .build()
             )
-            .build()
+
+        Camera2Interop.Extender(imageCaptureBuilder)
+            .setSessionCaptureCallback(metadataListener)
+
+        val imageCapture = imageCaptureBuilder.build()
 
         val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -729,7 +736,7 @@ fun ImagingScreen(
                                         label = "Capture",
                                         onClick = {
                                             imageCaptureUseCase?.let {
-                                                onAction(ImagingAction.CaptureImage(it))
+                                                onAction(ImagingAction.CaptureImage(it, metadataListener.latestMetadata))
                                             }
                                         },
                                         iconPainter = painterResource(id = R.drawable.ic_camera),

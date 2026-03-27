@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
+import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
 import java.util.UUID
 
 @Entity(
@@ -31,5 +32,6 @@ data class SpecimenImageEntity(
     val metadataUploadStatus: UploadStatus = UploadStatus.NOT_STARTED,
     val imageUploadStatus: UploadStatus = UploadStatus.NOT_STARTED,
     val capturedAt: Long = 0L,
-    val submittedAt: Long? = null
+    val submittedAt: Long? = null,
+    val imageMetadata: CameraMetadata? = null,
 )

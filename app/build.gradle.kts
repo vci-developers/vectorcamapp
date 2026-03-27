@@ -157,6 +157,10 @@ android {
         compose = true
     }
 
+    lint {
+        lintConfig = file("lint.xml")
+    }
+
     androidResources {
         noCompress += "tflite"
     }

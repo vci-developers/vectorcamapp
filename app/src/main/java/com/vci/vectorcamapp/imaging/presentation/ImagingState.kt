@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 
 data class ImagingState(
@@ -23,7 +24,8 @@ data class ImagingState(
         metadataUploadStatus = UploadStatus.NOT_STARTED,
         imageUploadStatus = UploadStatus.NOT_STARTED,
         capturedAt = 0L,
-        submittedAt = null
+        submittedAt = null,
+        imageMetadata = null
     ),
     val currentInferenceResult: InferenceResult? = null,
     val currentImageBytes: ByteArray? = null,
@@ -38,5 +40,6 @@ data class ImagingState(
     val showProcessFurtherDialog: Boolean = false,
     val hasConfirmedPackaging: Boolean = false,
     val pendingAction: ImagingAction? = null,
-    val specimenIdError: ImagingError? = null
+    val specimenIdError: ImagingError? = null,
+    val currentCameraMetadata: CameraMetadata? = null
 )

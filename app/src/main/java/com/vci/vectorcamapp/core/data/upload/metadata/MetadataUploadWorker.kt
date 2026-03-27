@@ -15,6 +15,8 @@ import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto
 import com.vci.vectorcamapp.core.data.dto.session.SessionDto
 import com.vci.vectorcamapp.core.data.dto.specimen.SpecimenDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.SpecimenImageDto
+import com.vci.vectorcamapp.core.data.mappers.toCameraMetadata
+import com.vci.vectorcamapp.core.data.mappers.toImageMetadataDto
 import com.vci.vectorcamapp.core.data.dto.surveillance_form.SurveillanceFormDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
@@ -531,7 +533,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                         sexInferenceDuration = it.sexInferenceDuration,
                         abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration
                     )
-                }
+                },
+                imageMetadata = localSpecimenImage.imageMetadata?.toImageMetadataDto()
             )
 
             if (syncedSpecimen.remoteId == null) {
@@ -578,7 +581,9 @@ class MetadataUploadWorker @AssistedInject constructor(
                 metadataUploadStatus = localSpecimenImage.metadataUploadStatus,
                 imageUploadStatus = localSpecimenImage.imageUploadStatus,
                 capturedAt = remoteSpecimenImageDto.capturedAt,
-                submittedAt = remoteSpecimenImageDto.submittedAt
+                submittedAt = remoteSpecimenImageDto.submittedAt,
+                imageMetadata = remoteSpecimenImageDto.imageMetadata?.toCameraMetadata()
+                    ?: localSpecimenImage.imageMetadata
             )
 
             val remoteInferenceResult = remoteSpecimenImageDto.inferenceResult?.let {
