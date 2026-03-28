@@ -15,4 +15,5 @@ interface SettingsAction {
     data object ShowDeleteCollectorDialog : SettingsAction
     data object DismissDeleteCollectorDialog : SettingsAction
     data object ConfirmDeleteCollector : SettingsAction
+    object ResyncLocations : SettingsAction
 }

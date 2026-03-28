@@ -123,6 +123,7 @@ fun Error.toString(context: Context): String {
         is SettingsError -> when (this) {
             SettingsError.COLLECTOR_SAVE_FAILED -> R.string.settings_error_collector_save_failed
             SettingsError.COLLECTOR_DELETION_FAILED -> R.string.settings_error_collector_deletion_failed
+            SettingsError.LOCATION_SYNC_FAILED -> R.string.settings_error_location_sync_failed
         }
 
         else -> R.string.error_fallback

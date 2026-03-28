@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -67,6 +68,30 @@ fun SettingsScreen(
                     onClick = { onAction(SettingsAction.StartNewDataCollectionSession) },
                     modifier = modifier
                 )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SettingsActionTile(
+                        title = if (state.isSyncingLocations) "Syncing Locations..." else "Resync Locations",
+                        onClick = {
+                            if (!state.isSyncingLocations) {
+                                onAction(SettingsAction.ResyncLocations)
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (state.isSyncingLocations) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .padding(end = MaterialTheme.dimensions.paddingMedium)
+                                .size(MaterialTheme.dimensions.iconSizeMedium),
+                            color = MaterialTheme.colors.primary
+                        )
+                    }
+                }
             }
             SettingsSection("About") {
                 SettingsInfoTile(

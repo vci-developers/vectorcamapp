@@ -4,5 +4,6 @@ import com.vci.vectorcamapp.core.domain.util.Error
 
 enum class SettingsError : Error {
     COLLECTOR_SAVE_FAILED,
-    COLLECTOR_DELETION_FAILED
+    COLLECTOR_DELETION_FAILED,
+    LOCATION_SYNC_FAILED
 }
