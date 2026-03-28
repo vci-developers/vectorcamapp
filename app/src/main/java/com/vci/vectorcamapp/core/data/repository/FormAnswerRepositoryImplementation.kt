@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 import javax.inject.Inject
 
 class FormAnswerRepositoryImplementation @Inject constructor(
@@ -17,19 +18,18 @@ class FormAnswerRepositoryImplementation @Inject constructor(
 
     override suspend fun upsertFormAnswer(
         formAnswer: FormAnswer,
-        sessionId: Int,
-        formId: Int,
+        sessionId: UUID,
         questionId: Int
     ): Result<Unit, RoomDbError> {
         return try {
-            formAnswerDao.upsertFormAnswer(formAnswer.toEntity(sessionId, formId, questionId))
+            formAnswerDao.upsertFormAnswer(formAnswer.toEntity(sessionId, questionId))
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }
 
-    override fun observeAnswersBySessionId(sessionId: String): Flow<List<FormAnswer>> {
+    override fun observeAnswersBySessionId(sessionId: UUID): Flow<List<FormAnswer>> {
         return formAnswerDao.observeAnswersBySessionId(sessionId).map { entities -> entities.map { it.toDomain() } }
     }
 }
