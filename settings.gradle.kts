@@ -21,3 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "vectorcamapp"
 include(":app")
+include(":core")
+include(":feature:imaging")

@@ -12,7 +12,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.dagger.hilt.android)
     alias(libs.plugins.google.devtools.ksp)
-    alias(libs.plugins.androidx.room)
     alias(libs.plugins.sentry.android.gradle)
     alias(libs.plugins.google.firebase.crashlytics)
     kotlin("plugin.serialization") version "2.0.21"
@@ -161,128 +160,55 @@ android {
         lintConfig = file("lint.xml")
     }
 
-    androidResources {
-        noCompress += "tflite"
-    }
-
-    room {
-        schemaDirectory("$projectDir/schemas")
-    }
-
-    sourceSets {
-        getByName("androidTest").assets.srcDir("$projectDir/schemas")
-    }
 }
 
 dependencies {
-    // Core Android Libraries
-    implementation(libs.androidx.core.ktx) // Kotlin extensions for Android core libraries
-    implementation(libs.androidx.lifecycle.runtime.ktx) // Lifecycle-aware components
-    implementation(libs.androidx.activity.compose) // Compose integration with activities
+    // Feature modules — transitively expose :core via api()
+    implementation(project(":core"))
+    implementation(project(":feature:imaging"))
 
-    // Jetpack Window Manager Library
-    implementation(libs.androidx.window)
-    implementation(libs.androidx.window.testing)
+    // Activity + Compose entry point (app-level only)
+    implementation(libs.androidx.activity.compose)
 
-    // Jetpack Compose Dependencies
-    implementation(platform(libs.androidx.compose.bom)) // BOM for Compose version alignment
-    implementation(libs.androidx.ui) // Compose UI components
-    implementation(libs.androidx.ui.graphics) // Compose graphics library
-    implementation(libs.androidx.ui.tooling.preview) // Preview support for Compose
-    implementation(libs.androidx.material3) // Material Design 3 components
-    implementation(libs.androidx.ui.text.google.fonts) // Google Fonts support for Compose
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation.fragment)
+    implementation(libs.androidx.navigation.ui)
+    implementation(libs.androidx.navigation.dynamic.features.fragment)
+    androidTestImplementation(libs.androidx.navigation.testing)
 
-    // Navigation Libraries
-    implementation(libs.androidx.navigation.compose) // Jetpack Compose navigation
-    implementation(libs.androidx.navigation.fragment) // Navigation for Fragments
-    implementation(libs.androidx.navigation.ui) // Navigation UI helpers
-    implementation(libs.androidx.navigation.dynamic.features.fragment) // Feature module support for Fragments
-    androidTestImplementation(libs.androidx.navigation.testing) // Testing navigation
-
-    // CameraX Dependencies
-    implementation(libs.camera.core)
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.camera.lifecycle) // CameraX Lifecycle library
-    implementation(libs.androidx.camera.video)
-    implementation(libs.androidx.camera.mlkit.vision) // CameraX ML Kit Vision Integration
-    implementation(libs.androidx.camera.extensions) // CameraX Extensions library
-    implementation(libs.androidx.camera.compose) // CameraX Compose integration
-
-    // Ktor (Networking) Dependencies
-    implementation(libs.ktor.client.android) // Android client for Ktor
-    implementation(libs.ktor.client.json) // JSON plugin for Ktor
-    implementation(libs.ktor.client.logging) // Logging plugin for Ktor
-    implementation(libs.ktor.client.core) // Core Ktor client
-    implementation(libs.ktor.client.cio) // CIO engine for Ktor
-    implementation(libs.ktor.client.content.negotiation) // Content negotiation plugin
-    implementation(libs.ktor.serialization.kotlinx.json) // Kotlinx JSON serialization for Ktor
-
-    // Dagger Hilt Dependencies
+    // Hilt (app-level wiring + test)
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
-    implementation(libs.androidx.hilt.work)
-    ksp(libs.androidx.hilt.compiler)
     ksp(libs.hilt.android.compiler)
+    ksp(libs.androidx.hilt.compiler)
     testImplementation(libs.hilt.android.testing)
     kspTest(libs.hilt.android.compiler)
     androidTestImplementation(libs.hilt.android.testing)
     kspAndroidTest(libs.hilt.android.compiler)
 
-    // Open CV Library
-    implementation(libs.opencv)
-
-    // LiteRT Library
-    implementation(libs.litert)
-    implementation(libs.litert.gpu)
-    implementation(libs.litert.gpu.api)
-    implementation(libs.litert.support)
-
-    // Room Database Dependencies
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
-    testImplementation(libs.androidx.room.testing)
-
-    // Google Play Services Dependencies
-    implementation(libs.play.services.location) // Location Services Library
-
-    // Coil Async Image Rendering Library
-    implementation(libs.coil.compose)
-
-    // MLKit Text Recognition Library
-    implementation(libs.text.recognition)
-
-    // Proto Data Store Library
-    implementation(libs.androidx.datastore)
-
-    // Work Manager Library
-    implementation(libs.androidx.work.runtime.ktx)
-
-    // JSON Serialization Library
-    implementation(libs.kotlinx.serialization.json) // Kotlinx JSON serialization library
-
-    // TUS Library
-    implementation(libs.tus.android.client)
-    implementation(libs.tus.java.client)
-
-    // Firebase
+    // Firebase (app-level analytics + crash reporting)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
 
-    // Testing Dependencies
-    testImplementation(libs.junit) // JUnit for unit tests
-    testImplementation(libs.truth) // Google truth library for assertions
-    testImplementation(libs.kotlinx.coroutines.test) // Kotlin coroutines test library
+    // Window testing
+    implementation(libs.androidx.window.testing)
+
+    // Testing
+    testImplementation(libs.junit)
+    testImplementation(libs.truth)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
-    androidTestImplementation(libs.androidx.junit) // AndroidX JUnit test library
-    androidTestImplementation(libs.androidx.espresso.core) // Espresso for UI testing
-    androidTestImplementation(libs.truth) // Google truth library for assertions
-    androidTestImplementation(platform(libs.androidx.compose.bom)) // Compose testing BOM
-    androidTestImplementation(libs.androidx.ui.test.junit4) // Compose JUnit testing
-    debugImplementation(libs.androidx.ui.tooling) // Debugging tools for Compose
-    debugImplementation(libs.androidx.ui.test.manifest) // Debugging Compose manifest tests
+    testImplementation(libs.androidx.room.testing)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.truth)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }
 
 sentry {
