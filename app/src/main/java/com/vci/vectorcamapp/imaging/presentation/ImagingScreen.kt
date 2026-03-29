@@ -43,6 +43,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -209,6 +211,8 @@ fun ImagingScreen(
     // Multi-focus capture state: list of (focusValue, jpegBytes) pairs, null when not showing results
     var multiFocusImages by remember { mutableStateOf<List<Pair<Float, ByteArray>>?>(null) }
     var isMultiFocusCapturing by remember { mutableStateOf(false) }
+    // Full-screen viewer: holds the (focusValue, bytes) pair currently being previewed
+    var fullScreenImage by remember { mutableStateOf<Pair<Float, ByteArray>?>(null) }
 
     // Reset slider position when returning to auto focus
     LaunchedEffect(state.manualFocusDistance) {
@@ -471,6 +475,7 @@ fun ImagingScreen(
                                             modifier = Modifier
                                                 .size(150.dp)
                                                 .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
+                                                .clickable { fullScreenImage = Pair(focusValue, bytes) }
                                         )
                                     }
                                 }
@@ -486,6 +491,67 @@ fun ImagingScreen(
                             }
                         }
                     )
+                }
+
+                fullScreenImage?.let { (focusValue, bytes) ->
+                    Dialog(
+                        onDismissRequest = { fullScreenImage = null },
+                        properties = DialogProperties(usePlatformDefaultWidth = false)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black)
+                                .clickable { fullScreenImage = null },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data(bytes)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = "Focus ${(focusValue * 100).toInt()}% full screen",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(MaterialTheme.dimensions.paddingMedium)
+                                    .background(
+                                        color = Color.Black.copy(alpha = 0.55f),
+                                        shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
+                                    )
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "Focus: ${(focusValue * 100).toInt()}%",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(MaterialTheme.dimensions.paddingMedium)
+                                    .size(MaterialTheme.dimensions.componentHeightMedium)
+                                    .background(
+                                        color = Color.Black.copy(alpha = 0.55f),
+                                        shape = CircleShape
+                                    )
+                                    .clickable { fullScreenImage = null }
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_close),
+                                    contentDescription = "Close full screen",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                                )
+                            }
+                        }
+                    }
                 }
 
                 if (state.currentSpecimen.shouldProcessFurther) {
