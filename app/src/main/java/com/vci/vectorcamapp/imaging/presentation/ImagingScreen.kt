@@ -319,7 +319,7 @@ fun ImagingScreen(
                                     )
                                 }
 
-                                if (state.sessionType == SessionType.PRACTICE) {
+                                if (state.sessionType == SessionType.PRACTICE && state.pendingAction is ImagingAction.SubmitSession) {
                                     Text(
                                         text = "Warning: This is a practice session. Submitted data will not be considered routine surveillance data.",
                                         style = MaterialTheme.typography.titleMedium,
