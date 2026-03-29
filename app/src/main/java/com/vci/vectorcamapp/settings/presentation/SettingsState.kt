@@ -15,7 +15,8 @@ data class SettingsState (
     val program: Program = Program(
         id = -1,
         name = "",
-        country = ""
+        country = "",
+        formVersion = null
     ),
     val settingsErrors: SettingsErrors = SettingsErrors(
         collectorName = null,

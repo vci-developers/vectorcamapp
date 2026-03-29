@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.core.data.network.api
 import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageRequestDto
+import com.vci.vectorcamapp.core.data.mappers.toImageMetadataDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageResponseDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.SpecimenImageDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
@@ -54,7 +55,8 @@ class RemoteSpecimenImageDataSource @Inject constructor(
                                 sexInferenceDuration = it.sexInferenceDuration,
                                 abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration
                             )
-                        }
+                        },
+                        metadata = specimenImage.imageMetadata?.toImageMetadataDto()
                     )
                 )
             }
