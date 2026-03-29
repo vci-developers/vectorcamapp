@@ -430,12 +430,13 @@ fun ImagingScreen(
                     )
                 }
 
-                if (multiFocusImages != null) {
+                val capturedImages = multiFocusImages
+                if (capturedImages != null) {
                     AlertDialog(
                         onDismissRequest = { multiFocusImages = null },
                         title = {
                             Text(
-                                text = "Multi-Focus Capture (${multiFocusImages!!.size} images)",
+                                text = "Multi-Focus Capture (${capturedImages.size} images)",
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = MaterialTheme.colors.textPrimary
                             )
@@ -444,7 +445,7 @@ fun ImagingScreen(
                             LazyRow(
                                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
                             ) {
-                                itemsIndexed(multiFocusImages!!) { _, (focusValue, bytes) ->
+                                itemsIndexed(capturedImages) { _, (focusValue, bytes) ->
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(4.dp)
