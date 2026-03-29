@@ -580,8 +580,9 @@ class IntakeViewModel @Inject constructor(
 
                 val validatedSite = currentAllSites.find { it.id == currentSessionSiteId }
                 val validatedSiteSelectionsByLocationTypeId = if (validatedSite?.locationHierarchy != null) {
+                    val locationHierarchy = validatedSite.locationHierarchy!!
                     currentAllLocationTypes.mapNotNull { locationType ->
-                        validatedSite.locationHierarchy[locationType.name]?.let { selectedLocationTypeSite ->
+                        locationHierarchy[locationType.name]?.let { selectedLocationTypeSite ->
                             locationType.id to selectedLocationTypeSite
                         }
                     }.toMap()

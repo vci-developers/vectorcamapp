@@ -7,7 +7,7 @@ import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
-import com.vci.vectorcamapp.imaging.domain.util.ImagingError
+import com.vci.vectorcamapp.core.domain.util.ImagingError
 import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
 import com.vci.vectorcamapp.main.domain.util.MainError
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
