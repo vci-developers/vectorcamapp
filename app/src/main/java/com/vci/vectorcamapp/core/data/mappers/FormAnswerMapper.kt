@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.core.data.mappers
 
 import com.vci.vectorcamapp.core.data.room.entities.FormAnswerEntity
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import java.util.UUID
 
 fun FormAnswerEntity.toDomain(): FormAnswer {
     return FormAnswer(
@@ -12,11 +13,10 @@ fun FormAnswerEntity.toDomain(): FormAnswer {
     )
 }
 
-fun FormAnswer.toEntity(sessionId: Int, formId: Int, questionId: Int): FormAnswerEntity {
+fun FormAnswer.toEntity(sessionId: UUID, questionId: Int): FormAnswerEntity {
     return FormAnswerEntity(
         id = this.id,
         sessionId = sessionId,
-        formId = formId,
         questionId = questionId,
         value = this.value,
         dataType = this.dataType,

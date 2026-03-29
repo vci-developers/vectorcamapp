@@ -5,6 +5,7 @@ import androidx.room.Query
 import androidx.room.Upsert
 import com.vci.vectorcamapp.core.data.room.entities.FormAnswerEntity
 import kotlinx.coroutines.flow.Flow
+import java.util.UUID
 
 @Dao
 interface FormAnswerDao {
@@ -12,5 +13,5 @@ interface FormAnswerDao {
     suspend fun upsertFormAnswer(formAnswer: FormAnswerEntity)
 
     @Query("SELECT * FROM form_answer WHERE sessionId = :sessionId")
-    fun observeAnswersBySessionId(sessionId: String): Flow<List<FormAnswerEntity>>
+    fun observeAnswersBySessionId(sessionId: UUID): Flow<List<FormAnswerEntity>>
 }

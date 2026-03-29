@@ -25,6 +25,7 @@ import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_22_23_M
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_23_24_ADD_LOCATION_TYPE_LEVEL_COLUMN
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_24_25_ADD_DYNAMIC_FORM_TABLES
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_25_26_ADD_IMAGE_METADATA_TO_SPECIMEN_IMAGE
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_26_27_RECREATE_FORM_TABLES
 
 val ALL_MIGRATIONS = arrayOf(
     MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE,
@@ -51,5 +52,6 @@ val ALL_MIGRATIONS = arrayOf(
     MIGRATION_22_23_MAKE_SITE_LOCATION_COLUMNS_NULLABLE,
     MIGRATION_23_24_ADD_LOCATION_TYPE_LEVEL_COLUMN,
     MIGRATION_24_25_ADD_DYNAMIC_FORM_TABLES,
-    MIGRATION_25_26_ADD_IMAGE_METADATA_TO_SPECIMEN_IMAGE
+    MIGRATION_25_26_ADD_IMAGE_METADATA_TO_SPECIMEN_IMAGE,
+    MIGRATION_26_27_RECREATE_FORM_TABLES
 )

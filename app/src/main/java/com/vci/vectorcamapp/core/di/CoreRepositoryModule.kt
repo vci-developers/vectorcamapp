@@ -1,6 +1,9 @@
 package com.vci.vectorcamapp.core.di
 
 import com.vci.vectorcamapp.core.data.repository.CollectorRepositoryImplementation
+import com.vci.vectorcamapp.core.data.repository.FormAnswerRepositoryImplementation
+import com.vci.vectorcamapp.core.data.repository.FormQuestionRepositoryImplementation
+import com.vci.vectorcamapp.core.data.repository.FormRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.InferenceResultRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.LocationTypeRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.ProgramRepositoryImplementation
@@ -11,6 +14,9 @@ import com.vci.vectorcamapp.core.data.repository.SpecimenRepositoryImplementatio
 import com.vci.vectorcamapp.core.data.repository.SurveillanceFormRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.WorkManagerRepositoryImplementation
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
+import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
@@ -83,6 +89,24 @@ abstract class CoreRepositoryModule {
     abstract fun bindCollectorRepository(
         collectorRepositoryImplementation: CollectorRepositoryImplementation
     ): CollectorRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFormRepository(
+        formRepositoryImplementation: FormRepositoryImplementation
+    ): FormRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFormQuestionRepository(
+        formQuestionRepositoryImplementation: FormQuestionRepositoryImplementation
+    ): FormQuestionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFormAnswerRepository(
+        formAnswerRepositoryImplementation: FormAnswerRepositoryImplementation
+    ): FormAnswerRepository
 
     @Binds
     abstract fun bindWorkManagerRepository(
