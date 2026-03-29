@@ -6,6 +6,8 @@ import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceRequest
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
@@ -33,6 +35,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -96,8 +99,11 @@ import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
 
 @Composable
 fun ImagingScreen(
@@ -199,6 +205,10 @@ fun ImagingScreen(
 
     // Local slider value for the manual focus distance control (0 = far, 1 = near)
     var focusSliderValue by remember { mutableFloatStateOf(0.5f) }
+
+    // Multi-focus capture state: list of (focusValue, jpegBytes) pairs, null when not showing results
+    var multiFocusImages by remember { mutableStateOf<List<Pair<Float, ByteArray>>?>(null) }
+    var isMultiFocusCapturing by remember { mutableStateOf(false) }
 
     // Reset slider position when returning to auto focus
     LaunchedEffect(state.manualFocusDistance) {
@@ -411,6 +421,68 @@ fun ImagingScreen(
                                         color = MaterialTheme.colors.textPrimary
                                     )
                                 }
+                            }
+                        }
+                    )
+                }
+
+                if (multiFocusImages != null) {
+                    AlertDialog(
+                        onDismissRequest = { multiFocusImages = null },
+                        title = {
+                            Text(
+                                text = "Multi-Focus Capture (${multiFocusImages!!.size} images)",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colors.textPrimary
+                            )
+                        },
+                        text = {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                            ) {
+                                itemsIndexed(multiFocusImages!!) { _, (focusValue, bytes) ->
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .background(
+                                                    color = MaterialTheme.colors.accent,
+                                                    shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
+                                                )
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "${(focusValue * 100).toInt()}%",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colors.textPrimary,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(context)
+                                                .data(bytes)
+                                                .crossfade(true)
+                                                .build(),
+                                            contentDescription = "Focus ${(focusValue * 100).toInt()}%",
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .size(150.dp)
+                                                .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(onClick = { multiFocusImages = null }) {
+                                Text(
+                                    text = "Done",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textPrimary
+                                )
                             }
                         }
                     )
@@ -774,14 +846,51 @@ fun ImagingScreen(
                                     Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
 
                                     ActionButton(
-                                        label = "Capture",
+                                        label = if (isMultiFocusCapturing) "Capturing…" else "Capture",
                                         onClick = {
-                                            imageCaptureUseCase?.let {
-                                                onAction(ImagingAction.CaptureImage(it, metadataListener.latestMetadata))
+                                            val captureUseCase = imageCaptureUseCase ?: return@ActionButton
+                                            scope.launch {
+                                                isMultiFocusCapturing = true
+                                                val captured = mutableListOf<Pair<Float, ByteArray>>()
+                                                val focusValues = listOf(0f, 0.25f, 0.5f, 0.75f, 1f)
+
+                                                for (focusValue in focusValues) {
+                                                    focusSliderValue = focusValue
+                                                    onAction(ImagingAction.SetFocusDistance(focusValue))
+                                                    // Allow lens time to physically move to the target distance
+                                                    delay(700L)
+
+                                                    val bytes = suspendCancellableCoroutine<ByteArray?> { cont ->
+                                                        captureUseCase.takePicture(
+                                                            ContextCompat.getMainExecutor(context),
+                                                            object : ImageCapture.OnImageCapturedCallback() {
+                                                                override fun onCaptureSuccess(image: ImageProxy) {
+                                                                    val buffer = image.planes[0].buffer
+                                                                    val data = ByteArray(buffer.remaining())
+                                                                    buffer.get(data)
+                                                                    image.close()
+                                                                    cont.resume(data)
+                                                                }
+
+                                                                override fun onError(exception: ImageCaptureException) {
+                                                                    cont.resume(null)
+                                                                }
+                                                            }
+                                                        )
+                                                    }
+                                                    bytes?.let { captured.add(Pair(focusValue, it)) }
+                                                }
+
+                                                multiFocusImages = captured
+                                                isMultiFocusCapturing = false
+
+                                                // Restore auto-focus and reset slider
+                                                onAction(ImagingAction.SetFocusDistance(null))
+                                                focusSliderValue = 0.5f
                                             }
                                         },
                                         iconPainter = painterResource(id = R.drawable.ic_camera),
-                                        enabled = (!state.isProcessing && state.isCameraReady),
+                                        enabled = (!state.isProcessing && state.isCameraReady && !isMultiFocusCapturing),
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
