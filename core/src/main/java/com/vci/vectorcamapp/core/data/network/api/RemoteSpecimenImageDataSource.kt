@@ -1,6 +1,6 @@
 package com.vci.vectorcamapp.core.data.network.api
 
-import com.vci.vectorcamapp.BuildConfig
+import com.vci.vectorcamapp.core.BuildConfig
 import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageRequestDto
 import com.vci.vectorcamapp.core.data.mappers.toImageMetadataDto

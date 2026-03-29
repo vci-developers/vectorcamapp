@@ -1,7 +1,7 @@
 package com.vci.vectorcamapp.core.di
 
 import android.content.Context
-import com.vci.vectorcamapp.BuildConfig
+import com.vci.vectorcamapp.core.BuildConfig
 import com.vci.vectorcamapp.core.data.network.connectivity.AndroidConnectivityObserver
 import com.vci.vectorcamapp.core.data.upload.image.util.TimeoutConfiguredTusClient
 import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver

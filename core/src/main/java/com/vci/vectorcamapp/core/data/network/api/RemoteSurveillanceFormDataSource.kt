@@ -1,6 +1,6 @@
 package com.vci.vectorcamapp.core.data.network.api
 
-import com.vci.vectorcamapp.BuildConfig
+import com.vci.vectorcamapp.core.BuildConfig
 import com.vci.vectorcamapp.core.data.dto.surveillance_form.PostSurveillanceFormRequestDto
 import com.vci.vectorcamapp.core.data.dto.surveillance_form.PostSurveillanceFormResponseDto
 import com.vci.vectorcamapp.core.data.dto.surveillance_form.SurveillanceFormDto

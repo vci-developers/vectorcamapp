@@ -1,6 +1,6 @@
 package com.vci.vectorcamapp.core.data.network.api
 
-import com.vci.vectorcamapp.BuildConfig
+import com.vci.vectorcamapp.core.BuildConfig
 import com.vci.vectorcamapp.core.data.dto.session.PostSessionRequestDto
 import com.vci.vectorcamapp.core.data.dto.session.PostSessionResponseDto
 import com.vci.vectorcamapp.core.data.dto.session.SessionDto

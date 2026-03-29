@@ -1,6 +1,6 @@
 package com.vci.vectorcamapp.core.data.network
 
-import com.vci.vectorcamapp.BuildConfig
+import com.vci.vectorcamapp.core.BuildConfig
 
 fun constructUrl(url: String): String {
     return when {
