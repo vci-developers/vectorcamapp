@@ -167,6 +167,20 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":feature:imaging"))
 
+    // Compose
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.ui.text.google.fonts)
+
+    // Coil (image loading)
+    implementation(libs.coil.compose)
+
+    // OpenCV
+    implementation(libs.opencv)
+
     // Activity + Compose entry point (app-level only)
     implementation(libs.androidx.activity.compose)
 
@@ -180,12 +194,16 @@ dependencies {
     // Hilt (app-level wiring + test)
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.work)
     ksp(libs.hilt.android.compiler)
     ksp(libs.androidx.hilt.compiler)
     testImplementation(libs.hilt.android.testing)
     kspTest(libs.hilt.android.compiler)
     androidTestImplementation(libs.hilt.android.testing)
     kspAndroidTest(libs.hilt.android.compiler)
+
+    // Location
+    implementation(libs.play.services.location)
 
     // Firebase (app-level analytics + crash reporting)
     implementation(platform(libs.firebase.bom))

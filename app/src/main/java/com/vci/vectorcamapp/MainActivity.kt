@@ -27,7 +27,9 @@ import com.vci.vectorcamapp.main.presentation.MainEvent
 import com.vci.vectorcamapp.main.presentation.MainViewModel
 import com.vci.vectorcamapp.main.presentation.SplashScreen
 import com.vci.vectorcamapp.main.presentation.PermissionScreen
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorFormatter
 import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import com.vci.vectorcamapp.ui.theme.getWindowType
@@ -67,7 +69,10 @@ class MainActivity : ComponentActivity() {
         val windowType = getWindowType(widthDp)
 
         setContent {
-            CompositionLocalProvider(LocalErrorMessageEmitter provides errorMessageEmitter) {
+            CompositionLocalProvider(
+                LocalErrorMessageEmitter provides errorMessageEmitter,
+                LocalErrorFormatter provides { error, context -> error.toString(context) }
+            ) {
                 VectorcamappTheme(windowType = windowType) {
             
                 val state by viewModel.state.collectAsState()

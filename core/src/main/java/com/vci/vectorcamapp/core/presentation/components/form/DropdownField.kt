@@ -35,7 +35,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.core.R
 import com.vci.vectorcamapp.core.domain.util.Error
-import com.vci.vectorcamapp.core.presentation.util.error.toString
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorFormatter
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.screenHeightFraction
@@ -53,6 +53,7 @@ fun <T> DropdownField(
     itemContent: @Composable (T) -> Unit,
 ) {
     val context = LocalContext.current
+    val errorFormatter = LocalErrorFormatter.current
     var expanded by remember { mutableStateOf(false) }
 
     Column(
@@ -157,7 +158,7 @@ fun <T> DropdownField(
 
         if (error != null) {
             Text(
-                text = error.toString(context),
+                text = errorFormatter(error, context),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.error
             )

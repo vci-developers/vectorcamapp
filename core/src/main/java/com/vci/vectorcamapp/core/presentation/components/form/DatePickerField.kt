@@ -26,7 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.core.R
 import com.vci.vectorcamapp.core.domain.util.Error
-import com.vci.vectorcamapp.core.presentation.util.error.toString
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorFormatter
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
@@ -41,6 +41,7 @@ fun DatePickerField(
     error: Error? = null
 ) {
     val context = LocalContext.current
+    val errorFormatter = LocalErrorFormatter.current
 
     val calendar = remember(selectedDateInMillis) {
         Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault()).apply {
@@ -129,7 +130,7 @@ fun DatePickerField(
 
         if (error != null) {
             Text(
-                text = error.toString(context),
+                text = errorFormatter(error, context),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.error
             )

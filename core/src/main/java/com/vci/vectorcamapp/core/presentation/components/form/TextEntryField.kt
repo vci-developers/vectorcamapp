@@ -18,7 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.vci.vectorcamapp.core.domain.util.Error
-import com.vci.vectorcamapp.core.presentation.util.error.toString
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorFormatter
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
@@ -37,6 +37,7 @@ fun TextEntryField(
     showErrorMessage: Boolean = true,
 ) {
     val context = LocalContext.current
+    val errorFormatter = LocalErrorFormatter.current
 
     Column(
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall),
@@ -106,7 +107,7 @@ fun TextEntryField(
 
         if (error != null && showErrorMessage) {
             Text(
-                text = error.toString(context),
+                text = errorFormatter(error, context),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.error
             )

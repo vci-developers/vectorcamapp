@@ -25,8 +25,8 @@ import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.core.R
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
 import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorDataFlow
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorFormatter
 import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
-import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.screenWidthFraction
@@ -42,6 +42,7 @@ fun ErrorSnackbarHost(
     val context = LocalContext.current
     val errorFlow = LocalErrorDataFlow.current
     val errorMessageEmitter = LocalErrorMessageEmitter.current
+    val errorFormatter = LocalErrorFormatter.current
     val coroutineScope = rememberCoroutineScope()
 
     ObserveAsEvents(errorFlow) { errorData ->
@@ -49,7 +50,7 @@ fun ErrorSnackbarHost(
             errorMessageEmitter.clearLastMessage()
             snackbarHostState.currentSnackbarData?.dismiss()
             snackbarHostState.showSnackbar(
-                message = errorData.error.toString(context),
+                message = errorFormatter(errorData.error, context),
                 duration = errorData.duration
             )
         }

@@ -1,7 +1,7 @@
 package com.vci.vectorcamapp.core.presentation.util.error
 
 import android.content.Context
-import com.vci.vectorcamapp.core.R
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError
 import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
