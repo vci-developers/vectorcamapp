@@ -30,7 +30,8 @@ import java.util.UUID
     ]
 )
 data class FormAnswerEntity(
-    @PrimaryKey val id: Int = -1,
+    @PrimaryKey val localId: UUID = UUID(0, 0),
+    val remoteId: Int? = null,
     val sessionId: UUID = UUID(0, 0),
     val questionId: Int = -1,
     val value: String = "",

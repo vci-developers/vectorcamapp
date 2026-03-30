@@ -6,7 +6,8 @@ import java.util.UUID
 
 fun FormAnswerEntity.toDomain(): FormAnswer {
     return FormAnswer(
-        id = this.id,
+        localId = this.localId,
+        remoteId = this.remoteId,
         value = this.value,
         dataType = this.dataType,
         submittedAt = this.submittedAt
@@ -15,7 +16,8 @@ fun FormAnswerEntity.toDomain(): FormAnswer {
 
 fun FormAnswer.toEntity(sessionId: UUID, questionId: Int): FormAnswerEntity {
     return FormAnswerEntity(
-        id = this.id,
+        localId = this.localId,
+        remoteId = this.remoteId,
         sessionId = sessionId,
         questionId = questionId,
         value = this.value,

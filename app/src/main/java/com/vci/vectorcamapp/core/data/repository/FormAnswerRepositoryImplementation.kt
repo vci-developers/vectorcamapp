@@ -29,7 +29,7 @@ class FormAnswerRepositoryImplementation @Inject constructor(
         }
     }
 
-    override fun observeAnswersBySessionId(sessionId: UUID): Flow<List<FormAnswer>> {
-        return formAnswerDao.observeAnswersBySessionId(sessionId).map { entities -> entities.map { it.toDomain() } }
+    override suspend fun getFormAnswersBySessionId(sessionId: UUID): Map<Int, FormAnswer> {
+        return formAnswerDao.getFormAnswersBySessionId(sessionId).associate { it.questionId to it.toDomain() }
     }
 }

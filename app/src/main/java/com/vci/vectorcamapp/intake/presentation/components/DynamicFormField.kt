@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
+import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
@@ -18,7 +19,8 @@ fun DynamicFormField(
     question: FormQuestion,
     value: String,
     onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    error: Error? = null,
 ) {
     when (question.type) {
         "text" -> {
@@ -27,6 +29,7 @@ fun DynamicFormField(
                 value = value,
                 onValueChange = onValueChange,
                 singleLine = true,
+                error = error,
                 modifier = modifier
             )
         }
@@ -38,6 +41,7 @@ fun DynamicFormField(
                 onValueChange = { newValue -> onValueChange(newValue.filter { it.isDigit() }) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                error = error,
                 modifier = modifier
             )
         }
@@ -57,6 +61,7 @@ fun DynamicFormField(
                 options = options,
                 selectedOption = options.firstOrNull { it == value },
                 onOptionSelected = onValueChange,
+                error = error,
                 modifier = modifier.fillMaxWidth()
             ) { option ->
                 Text(

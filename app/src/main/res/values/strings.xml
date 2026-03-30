@@ -82,6 +82,9 @@
     <!-- Form validation error: Invalid months since irs -->
     <string name="form_validation_error_invalid_months_since_irs">This field is required when IRS is conducted.</string>
 
+    <!-- Form validation error: Invalid form answer -->
+    <string name="form_validation_error_invalid_form_answer">This field is required. Please provide a valid answer.</string>
+
     <!-- Imaging error: Capture error -->
     <string name="imaging_error_capture_error">Could not take the photo. Please try again.</string>
 

@@ -506,7 +506,8 @@ fun IntakeScreen(
                     state.formQuestions.forEach { question ->
                         DynamicFormField(
                             question = question,
-                            value = state.formAnswers[question.id].orEmpty(),
+                            value = state.formAnswers[question.id]?.value.orEmpty(),
+                            error = state.intakeErrors.formAnswerErrors[question.id],
                             onValueChange = {
                                 onAction(
                                     IntakeAction.UpdateFormAnswer(
