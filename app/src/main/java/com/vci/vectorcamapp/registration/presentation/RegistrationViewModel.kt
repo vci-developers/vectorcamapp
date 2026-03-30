@@ -9,14 +9,12 @@ import com.vci.vectorcamapp.core.data.util.sortByHierarchy
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
-import com.vci.vectorcamapp.core.domain.network.api.FormAnswerDataSource
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
 import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
-import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
@@ -60,8 +58,6 @@ class RegistrationViewModel @Inject constructor(
     private val locationTypeRepository: LocationTypeRepository,
     private val formDataSource: FormDataSource,
     private val formRepository: FormRepository,
-    private val formAnswerDataSource: FormAnswerDataSource,
-    private val formAnswerRepository: FormAnswerRepository,
     private val formQuestionRepository: FormQuestionRepository,
     connectivityObserver: ConnectivityObserver,
     errorMessageEmitter: ErrorMessageEmitter,

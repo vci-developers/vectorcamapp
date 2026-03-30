@@ -16,4 +16,7 @@ interface FormDao {
 
     @Query("SELECT * FROM form WHERE id = :id")
     suspend fun getFormById(id: Int): FormEntity?
+
+    @Query("SELECT * FROM form WHERE version = :version")
+    suspend fun getFormByVersion(version: String): FormEntity?
 }

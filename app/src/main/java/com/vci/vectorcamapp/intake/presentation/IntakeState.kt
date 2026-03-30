@@ -1,6 +1,8 @@
 package com.vci.vectorcamapp.intake.presentation
 
 import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.model.Form
+import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.LocationType
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
@@ -41,6 +43,9 @@ data class IntakeState(
         type = SessionType.SURVEILLANCE,
     ),
     val surveillanceForm: SurveillanceForm? = null,
+    val form: Form? = null,
+    val formQuestions: List<FormQuestion> = emptyList(),
+    val formAnswers: Map<Int, String> = emptyMap(),
     val intakeErrors: IntakeErrors = IntakeErrors(
         collector = null,
         district = null,

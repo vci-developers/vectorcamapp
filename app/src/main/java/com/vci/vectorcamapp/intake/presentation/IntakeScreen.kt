@@ -37,14 +37,15 @@ import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip
+import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.presentation.components.CollectionMethodTooltipRow
+import com.vci.vectorcamapp.intake.presentation.components.DynamicFormField
 import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
-import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import java.util.UUID
 
@@ -70,8 +71,7 @@ fun IntakeScreen(
                     .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
                         onAction(IntakeAction.ReturnToPreviousScreen)
-                    }
-            )
+                    })
         },
         modifier = modifier
     ) {
@@ -231,19 +231,15 @@ fun IntakeScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                val isOtherCollectionMethod =
-                    state.session.collectionMethod.startsWith(
-                        IntakeDropdownOptions.CollectionMethodOption.OTHER.label,
-                        ignoreCase = true
-                    )
+                val isOtherCollectionMethod = state.session.collectionMethod.startsWith(
+                    IntakeDropdownOptions.CollectionMethodOption.OTHER.label, ignoreCase = true
+                )
 
                 DropdownField(
                     label = "Collection Method",
                     options = IntakeDropdownOptions.CollectionMethodOption.entries,
-                    selectedOption = if (isOtherCollectionMethod)
-                        IntakeDropdownOptions.CollectionMethodOption.OTHER
-                    else
-                        IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
+                    selectedOption = if (isOtherCollectionMethod) IntakeDropdownOptions.CollectionMethodOption.OTHER
+                    else IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
                     onOptionSelected = { onAction(IntakeAction.UpdateCollectionMethod(it.label)) },
                     error = state.intakeErrors.collectionMethod,
                     modifier = Modifier.fillMaxWidth()
@@ -303,19 +299,15 @@ fun IntakeScreen(
                     )
                 }
 
-                val isOtherSpecimenCondition =
-                    state.session.specimenCondition.startsWith(
-                        IntakeDropdownOptions.SpecimenConditionOption.OTHER.label,
-                        ignoreCase = true
-                    )
+                val isOtherSpecimenCondition = state.session.specimenCondition.startsWith(
+                    IntakeDropdownOptions.SpecimenConditionOption.OTHER.label, ignoreCase = true
+                )
 
                 DropdownField(
                     label = "Specimen Condition",
                     options = IntakeDropdownOptions.SpecimenConditionOption.entries,
-                    selectedOption = if (isOtherSpecimenCondition)
-                        IntakeDropdownOptions.SpecimenConditionOption.OTHER
-                    else
-                        IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition },
+                    selectedOption = if (isOtherSpecimenCondition) IntakeDropdownOptions.SpecimenConditionOption.OTHER
+                    else IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition },
                     onOptionSelected = { onAction(IntakeAction.UpdateSpecimenCondition(it.label)) },
                     error = state.intakeErrors.specimenCondition,
                     modifier = Modifier.fillMaxWidth()
@@ -365,10 +357,8 @@ fun IntakeScreen(
                     if (state.selectedDistrict.isNotBlank()) {
                         DropdownField(
                             label = "Village Name",
-                            options = state.allSitesInProgram
-                                .filter { it.district == state.selectedDistrict }
-                                .mapNotNull { it.villageName }
-                                .distinct(),
+                            options = state.allSitesInProgram.filter { it.district == state.selectedDistrict }
+                                .mapNotNull { it.villageName }.distinct(),
                             selectedOption = state.selectedVillageName,
                             onOptionSelected = {
                                 onAction(IntakeAction.SelectVillageName(it))
@@ -386,10 +376,8 @@ fun IntakeScreen(
                     if (state.selectedVillageName.isNotBlank()) {
                         DropdownField(
                             label = "House Number",
-                            options = state.allSitesInProgram
-                                .filter { it.district == state.selectedDistrict && it.villageName == state.selectedVillageName }
-                                .mapNotNull { it.houseNumber }
-                                .distinct(),
+                            options = state.allSitesInProgram.filter { it.district == state.selectedDistrict && it.villageName == state.selectedVillageName }
+                                .mapNotNull { it.houseNumber }.distinct(),
                             selectedOption = state.selectedHouseNumber,
                             onOptionSelected = { onAction(IntakeAction.SelectHouseNumber(it)) },
                             error = state.intakeErrors.houseNumber,
@@ -404,24 +392,36 @@ fun IntakeScreen(
                 } else {
                     state.allLocationTypesInProgram.forEachIndexed { index, locationType ->
                         val parentLocationTypes = state.allLocationTypesInProgram.take(index)
-                        val shouldShowDropdown = index == 0 || parentLocationTypes.all { !state.siteSelectionsByLocationTypeId[it.id].isNullOrBlank() }
+                        val shouldShowDropdown =
+                            index == 0 || parentLocationTypes.all { !state.siteSelectionsByLocationTypeId[it.id].isNullOrBlank() }
 
                         if (shouldShowDropdown) {
                             val filteredSites = state.allSitesInProgram.filter { site ->
-                                val locationHierarchy = site.locationHierarchy ?: return@filter false
+                                val locationHierarchy =
+                                    site.locationHierarchy ?: return@filter false
                                 parentLocationTypes.all { parentLocationType ->
-                                    val selectedParentOption = state.siteSelectionsByLocationTypeId[parentLocationType.id] ?: return@all false
+                                    val selectedParentOption =
+                                        state.siteSelectionsByLocationTypeId[parentLocationType.id]
+                                            ?: return@all false
                                     locationHierarchy[parentLocationType.name] == selectedParentOption
                                 }
                             }
 
-                            val availableOptions = filteredSites.mapNotNull { it.locationHierarchy?.get(locationType.name) }.distinct()
+                            val availableOptions =
+                                filteredSites.mapNotNull { it.locationHierarchy?.get(locationType.name) }
+                                    .distinct()
 
                             DropdownField(
                                 label = locationType.name,
                                 options = availableOptions,
                                 selectedOption = state.siteSelectionsByLocationTypeId[locationType.id],
-                                onOptionSelected = { onAction(IntakeAction.SelectLocationTypeSiteOption(locationType.id, it))},
+                                onOptionSelected = {
+                                    onAction(
+                                        IntakeAction.SelectLocationTypeSiteOption(
+                                            locationType.id, it
+                                        )
+                                    )
+                                },
                                 error = state.intakeErrors.locationTypeSiteSelections[locationType.id]
                             ) { locationTypeSiteOption ->
                                 Text(
@@ -432,19 +432,6 @@ fun IntakeScreen(
                             }
                         }
                     }
-                }
-
-                state.surveillanceForm?.let { surveillanceForm ->
-                    TextEntryField(
-                        label = "Number of People Living in the House",
-                        value = if (surveillanceForm.numPeopleSleptInHouse < 0)
-                            ""
-                        else
-                            surveillanceForm.numPeopleSleptInHouse.toString(),
-                        onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it)) },
-                        singleLine = true,
-                        error = state.intakeErrors.numPeopleSleptInHouse,
-                    )
                 }
 
                 when {
@@ -509,95 +496,127 @@ fun IntakeScreen(
             }
         }
 
-        state.surveillanceForm?.let { surveillanceForm ->
+        if (state.form != null) {
             item {
                 IntakeTile(
-                    title = "Surveillance Form",
+                    title = state.form.name,
                     iconPainter = painterResource(id = R.drawable.ic_clipboard),
                     iconDescription = "Surveillance Form Icon"
                 ) {
-                    ToggleField(
-                        label = "Was IRS conducted in this household?",
-                        checked = surveillanceForm.wasIrsConducted,
-                        onCheckedChange = {
-                            onAction(
-                                IntakeAction.ToggleIrsConducted(
-                                    it
+                    state.formQuestions.forEach { question ->
+                        DynamicFormField(
+                            question = question,
+                            value = state.formAnswers[question.id].orEmpty(),
+                            onValueChange = {
+                                onAction(
+                                    IntakeAction.UpdateFormAnswer(
+                                        question.id, it
+                                    )
                                 )
-                            )
-                        })
-
-                    surveillanceForm.monthsSinceIrs?.let { monthsSinceIrs ->
-                        TextEntryField(
-                            label = "Months Since IRS",
-                            value = if (monthsSinceIrs < 0)
-                                ""
-                            else
-                                monthsSinceIrs.toString(),
-                            onValueChange = { onAction(IntakeAction.EnterMonthsSinceIrs(it)) },
-                            singleLine = true,
-                            error = state.intakeErrors.monthsSinceIrs,
-                        )
+                            })
                     }
+                }
+            }
+        } else {
+            state.surveillanceForm?.let { surveillanceForm ->
+                item {
+                    IntakeTile(
+                        title = "Surveillance Form",
+                        iconPainter = painterResource(id = R.drawable.ic_clipboard),
+                        iconDescription = "Surveillance Form Icon"
+                    ) {
+                        TextEntryField(
+                            label = "Number of People Living in the House",
+                            value = if (surveillanceForm.numPeopleSleptInHouse < 0) ""
+                            else surveillanceForm.numPeopleSleptInHouse.toString(),
+                            onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it)) },
+                            singleLine = true,
+                            error = state.intakeErrors.numPeopleSleptInHouse,
+                        )
 
-                    TextEntryField(
-                        label = "Number of LLINs Available",
-                        value = if (surveillanceForm.numLlinsAvailable < 0)
-                            ""
-                        else
-                            surveillanceForm.numLlinsAvailable.toString(),
-                        onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it)) },
-                        singleLine = true,
-                        error = state.intakeErrors.numLlinsAvailable,
-                    )
+                        ToggleField(
+                            label = "Was IRS conducted in this household?",
+                            checked = surveillanceForm.wasIrsConducted,
+                            onCheckedChange = {
+                                onAction(
+                                    IntakeAction.ToggleIrsConducted(
+                                        it
+                                    )
+                                )
+                            })
 
-                    surveillanceForm.llinType?.let { current ->
-                        DropdownField(
-                            label = "LLIN Type",
-                            options = IntakeDropdownOptions.LlinTypeOption.entries,
-                            selectedOption = IntakeDropdownOptions.LlinTypeOption.entries.firstOrNull { it.label == current },
-                            onOptionSelected = {
-                                onAction(IntakeAction.SelectLlinType(it))
-                            },
-                            error = state.intakeErrors.llinType,
-                        ) { llinType ->
-                            Text(
-                                text = llinType.label,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colors.textPrimary
+                        surveillanceForm.monthsSinceIrs?.let { monthsSinceIrs ->
+                            TextEntryField(
+                                label = "Months Since IRS",
+                                value = if (monthsSinceIrs < 0) ""
+                                else monthsSinceIrs.toString(),
+                                onValueChange = { onAction(IntakeAction.EnterMonthsSinceIrs(it)) },
+                                singleLine = true,
+                                error = state.intakeErrors.monthsSinceIrs,
                             )
                         }
-                    }
 
-                    surveillanceForm.llinBrand?.let { current ->
-                        DropdownField(
-                            label = "LLIN Brand",
-                            options = IntakeDropdownOptions.LlinBrandOption.entries.filter { it.type?.label == surveillanceForm.llinType || it.type == null},
-                            selectedOption = IntakeDropdownOptions.LlinBrandOption.entries.firstOrNull { it.label == current },
-                            onOptionSelected = {
-                                onAction(IntakeAction.SelectLlinBrand(it))
-                            },
-                            error = state.intakeErrors.llinBrand,
-                        ) { llinBrand ->
-                            Text(
-                                text = llinBrand.label,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colors.textPrimary
+                        TextEntryField(
+                            label = "Number of LLINs Available",
+                            value = if (surveillanceForm.numLlinsAvailable < 0) ""
+                            else surveillanceForm.numLlinsAvailable.toString(),
+                            onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it)) },
+                            singleLine = true,
+                            error = state.intakeErrors.numLlinsAvailable,
+                        )
+
+                        surveillanceForm.llinType?.let { current ->
+                            DropdownField(
+                                label = "LLIN Type",
+                                options = IntakeDropdownOptions.LlinTypeOption.entries,
+                                selectedOption = IntakeDropdownOptions.LlinTypeOption.entries.firstOrNull { it.label == current },
+                                onOptionSelected = {
+                                    onAction(IntakeAction.SelectLlinType(it))
+                                },
+                                error = state.intakeErrors.llinType,
+                            ) { llinType ->
+                                Text(
+                                    text = llinType.label,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textPrimary
+                                )
+                            }
+                        }
+
+                        surveillanceForm.llinBrand?.let { current ->
+                            DropdownField(
+                                label = "LLIN Brand",
+                                options = IntakeDropdownOptions.LlinBrandOption.entries.filter { it.type?.label == surveillanceForm.llinType || it.type == null },
+                                selectedOption = IntakeDropdownOptions.LlinBrandOption.entries.firstOrNull { it.label == current },
+                                onOptionSelected = {
+                                    onAction(IntakeAction.SelectLlinBrand(it))
+                                },
+                                error = state.intakeErrors.llinBrand,
+                            ) { llinBrand ->
+                                Text(
+                                    text = llinBrand.label,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textPrimary
+                                )
+                            }
+                        }
+
+                        surveillanceForm.numPeopleSleptUnderLlin?.let { numPeopleSleptUnderLlin ->
+                            TextEntryField(
+                                label = "Number of People who Slept Under LLIN",
+                                value = if (numPeopleSleptUnderLlin < 0) ""
+                                else numPeopleSleptUnderLlin.toString(),
+                                onValueChange = {
+                                    onAction(
+                                        IntakeAction.EnterNumPeopleSleptUnderLlin(
+                                            it
+                                        )
+                                    )
+                                },
+                                singleLine = true,
+                                error = state.intakeErrors.numPeopleSleptUnderLlin,
                             )
                         }
-                    }
-
-                    surveillanceForm.numPeopleSleptUnderLlin?.let { numPeopleSleptUnderLlin ->
-                        TextEntryField(
-                            label = "Number of People who Slept Under LLIN",
-                            value = if (numPeopleSleptUnderLlin < 0)
-                                ""
-                            else
-                                numPeopleSleptUnderLlin.toString(),
-                            onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(it)) },
-                            singleLine = true,
-                            error = state.intakeErrors.numPeopleSleptUnderLlin,
-                        )
                     }
                 }
             }

@@ -7,8 +7,6 @@ import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class FormQuestionRepositoryImplementation @Inject constructor(
@@ -16,9 +14,7 @@ class FormQuestionRepositoryImplementation @Inject constructor(
 ) : FormQuestionRepository {
 
     override suspend fun upsertFormQuestion(
-        formQuestion: FormQuestion,
-        formId: Int,
-        parentId: Int?
+        formQuestion: FormQuestion, formId: Int, parentId: Int?
     ): Result<Unit, RoomDbError> {
         return try {
             formQuestionDao.upsertFormQuestion(formQuestion.toEntity(formId, parentId))
@@ -28,7 +24,7 @@ class FormQuestionRepositoryImplementation @Inject constructor(
         }
     }
 
-    override fun observeQuestionsByFormId(formId: Int): Flow<List<FormQuestion>> {
-        return formQuestionDao.observeQuestionsByFormId(formId).map { entities -> entities.map { it.toDomain() } }
+    override suspend fun getQuestionsByFormId(formId: Int): List<FormQuestion> {
+        return formQuestionDao.getQuestionsByFormId(formId).map { it.toDomain() }
     }
 }
