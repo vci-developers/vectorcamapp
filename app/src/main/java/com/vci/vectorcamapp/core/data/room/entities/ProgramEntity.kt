@@ -9,5 +9,5 @@ data class ProgramEntity(
     @PrimaryKey val id: Int = -1,
     val name: String = "",
     val country: String = "",
-    val formVersion: Int? = null
+    val formVersion: String? = null
 )

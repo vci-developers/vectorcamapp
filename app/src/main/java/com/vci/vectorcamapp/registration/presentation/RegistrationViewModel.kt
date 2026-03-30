@@ -2,17 +2,23 @@ package com.vci.vectorcamapp.registration.presentation
 
 import android.os.Build
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto
 import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.util.sortByHierarchy
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
+import com.vci.vectorcamapp.core.domain.network.api.FormAnswerDataSource
+import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
 import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
+import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
@@ -20,6 +26,7 @@ import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationU
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
+import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
@@ -51,6 +58,11 @@ class RegistrationViewModel @Inject constructor(
     private val siteRepository: SiteRepository,
     private val locationTypeDataSource: LocationTypeDataSource,
     private val locationTypeRepository: LocationTypeRepository,
+    private val formDataSource: FormDataSource,
+    private val formRepository: FormRepository,
+    private val formAnswerDataSource: FormAnswerDataSource,
+    private val formAnswerRepository: FormAnswerRepository,
+    private val formQuestionRepository: FormQuestionRepository,
     connectivityObserver: ConnectivityObserver,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
@@ -164,6 +176,7 @@ class RegistrationViewModel @Inject constructor(
                         transactionHelper.runAsTransaction {
                             fetchAndSeedAllLocationTypesForProgram(selectedProgram.id)
                             fetchAndSeedAllSitesForProgram(selectedProgram.id)
+                            fetchAndSeedFormForProgram(selectedProgram.id)
                         }
 
                         val device = Device(
@@ -217,18 +230,20 @@ class RegistrationViewModel @Inject constructor(
     private suspend fun fetchAndSeedAllLocationTypesForProgram(programId: Int) {
         when (val result = locationTypeDataSource.getAllLocationTypesForProgram(programId)) {
             is Result.Success -> {
-                transactionHelper.runAsTransaction {
-                    result.data.locationTypes.forEach { locationTypeDto ->
-                        locationTypeRepository.upsertLocationType(
-                            locationTypeDto.toDomain(),
-                            programId
-                        )
+                result.data.locationTypes.forEach { locationTypeDto ->
+                    locationTypeRepository.upsertLocationType(
+                        locationTypeDto.toDomain(),
+                        programId
+                    ).onError { error ->
+                        emitError(error)
+                        throw Exception("Failed to save location types for program $programId")
                     }
                 }
             }
 
             is Result.Error -> {
                 emitError(result.error)
+                throw Exception("Failed to fetch location types for program $programId")
             }
         }
     }
@@ -236,23 +251,65 @@ class RegistrationViewModel @Inject constructor(
     private suspend fun fetchAndSeedAllSitesForProgram(programId: Int) {
         when (val result = siteDataSource.getAllSitesForProgram(programId)) {
             is Result.Success -> {
-                transactionHelper.runAsTransaction {
-                    result.data.sortByHierarchy().forEach { siteDto ->
-                        val locationTypeId = siteDto.locationTypeId
-                        val parentId = siteDto.parentId
+                result.data.sortByHierarchy().forEach { siteDto ->
+                    val locationTypeId = siteDto.locationTypeId
+                    val parentId = siteDto.parentId
 
-                        siteRepository.upsertSite(
-                            siteDto.toDomain(),
-                            programId,
-                            locationTypeId,
-                            parentId
-                        )
+                    siteRepository.upsertSite(
+                        siteDto.toDomain(),
+                        programId,
+                        locationTypeId,
+                        parentId
+                    ).onError { error ->
+                        emitError(error)
+                        throw Exception("Failed to save sites for program $programId")
                     }
                 }
             }
 
             is Result.Error -> {
                 emitError(result.error)
+                throw Exception("Failed to fetch sites for program $programId")
+            }
+        }
+    }
+
+    private suspend fun fetchAndSeedFormForProgram(programId: Int) {
+        when (val result = formDataSource.getCurrentFormByProgramId(programId)) {
+            is Result.Success -> {
+                val formDto = result.data
+                formRepository.upsertForm(formDto.toDomain(), programId).onError { error ->
+                    emitError(error)
+                    throw Exception("Failed to save surveillance form for program $programId")
+                }
+                seedFormQuestionsForProgram(formDto.questions, formDto.id, null)
+                val currentProgram = programRepository.getProgramById(programId)
+                if (currentProgram != null) {
+                    programRepository.upsertProgram(currentProgram.copy(formVersion = formDto.version))
+                }
+            }
+
+            is Result.Error -> {
+                if (result.error != NetworkError.NOT_FOUND) {
+                    emitError(result.error)
+                    throw Exception("Failed to fetch surveillance form for program $programId")
+                }
+            }
+        }
+    }
+
+    private suspend fun seedFormQuestionsForProgram(
+        questionDtos: List<FormQuestionDto>,
+        formId: Int,
+        parentId: Int?
+    ) {
+        questionDtos.forEach { questionDto ->
+            formQuestionRepository.upsertFormQuestion(questionDto.toDomain(), formId, parentId).onError { error ->
+                emitError(error)
+                throw Exception("Failed to save surveillance form questions")
+            }
+            questionDto.subQuestions?.let { subQuestions ->
+                seedFormQuestionsForProgram(subQuestions, formId, questionDto.id)
             }
         }
     }
