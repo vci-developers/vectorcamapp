@@ -949,6 +949,9 @@ fun ImagingScreen(
                                                 }
 
                                                 multiFocusImages = captured
+                                                if (captured.isNotEmpty()) {
+                                                    onAction(ImagingAction.SaveMultiFocusImagesToGallery(captured))
+                                                }
                                                 isMultiFocusCapturing = false
 
                                                 // Restore auto-focus and reset slider

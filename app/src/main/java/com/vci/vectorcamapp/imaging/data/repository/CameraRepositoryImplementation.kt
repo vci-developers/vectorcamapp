@@ -103,6 +103,32 @@ class CameraRepositoryImplementation @Inject constructor(
         }
     }
 
+    override suspend fun saveImagesToGallery(images: List<Pair<Float, ByteArray>>) {
+        val appName = context.getString(R.string.app_name)
+        val directory = "${Environment.DIRECTORY_PICTURES}/$appName"
+        withContext(Dispatchers.IO) {
+            images.forEach { (focusValue, bytes) ->
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.Images.Media.DISPLAY_NAME, "vectorcam_${System.currentTimeMillis()}_focus${(focusValue * 100).toInt()}.jpg")
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, directory)
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
+                }
+                val resolver = context.contentResolver
+                val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                val uri = resolver.insert(collection, contentValues) ?: return@forEach
+                try {
+                    resolver.openOutputStream(uri)?.use { it.write(bytes) }
+                    contentValues.clear()
+                    contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                    resolver.update(uri, contentValues, null, null)
+                } catch (e: Exception) {
+                    resolver.delete(uri, null, null)
+                }
+            }
+        }
+    }
+
     override suspend fun deleteSavedImage(uri: Uri) {
         val resolver = context.contentResolver
 

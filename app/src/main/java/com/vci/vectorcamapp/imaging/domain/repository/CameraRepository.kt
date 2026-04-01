@@ -11,4 +11,5 @@ interface CameraRepository {
     suspend fun captureImage(imageCapture: ImageCapture): Result<ImageProxy, ImagingError>
     suspend fun saveImage(jpegBytes: ByteArray, filename: String, currentSession: Session) : Result<Uri, ImagingError>
     suspend fun deleteSavedImage(uri: Uri)
+    suspend fun saveImagesToGallery(images: List<Pair<Float, ByteArray>>)
 }

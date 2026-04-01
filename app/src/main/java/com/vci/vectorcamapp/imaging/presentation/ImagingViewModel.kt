@@ -140,6 +140,10 @@ class ImagingViewModel @Inject constructor(
                     actionToConfirm?.let { onAction(it) }
                 }
 
+                is ImagingAction.SaveMultiFocusImagesToGallery -> {
+                    cameraRepository.saveImagesToGallery(action.images)
+                }
+
                 is ImagingAction.FocusAt -> {
                     _state.update { it.copy(focusPoint = action.offset, isManualFocusing = true) }
                 }
