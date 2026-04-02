@@ -67,6 +67,11 @@ fun SettingsScreen(
                     onClick = { onAction(SettingsAction.StartNewDataCollectionSession) },
                     modifier = modifier
                 )
+                SettingsActionTile(
+                    title = "Start Practice Session",
+                    onClick = { onAction(SettingsAction.StartNewPracticeSession) },
+                    modifier = modifier
+                )
             }
             SettingsSection("About") {
                 SettingsInfoTile(

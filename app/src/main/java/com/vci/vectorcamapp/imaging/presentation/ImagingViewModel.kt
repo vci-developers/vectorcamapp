@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import androidx.compose.material3.SnackbarDuration
@@ -61,6 +60,7 @@ import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.random.Random
 import androidx.core.graphics.createBitmap
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import org.opencv.android.Utils.matToBitmap
 import org.opencv.core.Mat
 
@@ -618,7 +618,8 @@ class ImagingViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         allowModelInferenceToggle = allowModelInferenceToggle,
-                        shouldRunInference = !allowModelInferenceToggle
+                        shouldRunInference = !allowModelInferenceToggle,
+                        sessionType = session.type
                     )
                 }
             } else {

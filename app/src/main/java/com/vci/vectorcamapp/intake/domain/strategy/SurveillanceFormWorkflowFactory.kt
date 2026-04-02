@@ -10,6 +10,7 @@ class SurveillanceFormWorkflowFactory @Inject constructor() {
         return when (sessionType) {
             SessionType.SURVEILLANCE -> SurveillanceFormPresentWorkflow()
             SessionType.DATA_COLLECTION -> SurveillanceFormAbsentWorkflow()
+            SessionType.PRACTICE -> SurveillanceFormPresentWorkflow()
         }
     }
 }
