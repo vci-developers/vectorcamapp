@@ -28,6 +28,7 @@ import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_25_26_A
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_26_27_RECREATE_FORM_TABLES
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_27_28_CHANGE_PROGRAM_FORM_VERSION_TO_TEXT
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_28_29_UPDATE_FORM_ANSWER_PRIMARY_KEY
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_29_30_ADD_PREREQUISITE_TO_FORM_QUESTION
 
 val ALL_MIGRATIONS = arrayOf(
     MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE,
@@ -57,5 +58,6 @@ val ALL_MIGRATIONS = arrayOf(
     MIGRATION_25_26_ADD_IMAGE_METADATA_TO_SPECIMEN_IMAGE,
     MIGRATION_26_27_RECREATE_FORM_TABLES,
     MIGRATION_27_28_CHANGE_PROGRAM_FORM_VERSION_TO_TEXT,
-    MIGRATION_28_29_UPDATE_FORM_ANSWER_PRIMARY_KEY
+    MIGRATION_28_29_UPDATE_FORM_ANSWER_PRIMARY_KEY,
+    MIGRATION_29_30_ADD_PREREQUISITE_TO_FORM_QUESTION,
 )

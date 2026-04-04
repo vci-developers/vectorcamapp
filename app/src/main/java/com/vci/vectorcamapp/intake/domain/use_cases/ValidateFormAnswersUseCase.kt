@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.intake.domain.use_cases
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
+import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import javax.inject.Inject
 
@@ -11,7 +12,13 @@ class ValidateFormAnswersUseCase @Inject constructor() {
         formQuestions: List<FormQuestion>,
         formAnswers: Map<Int, FormAnswer>
     ): Map<Int, Result<Unit, FormValidationError>> {
+        val answerMap = formAnswers.mapValues { (_, answer) -> answer.value.trim() }
+
         return formQuestions.associate { question ->
+            if (!FormQuestionPrerequisiteEvaluator.evaluate(question.prerequisite, answerMap)) {
+                return@associate question.id to Result.Success(Unit)
+            }
+
             val answer = formAnswers[question.id]?.value.orEmpty().trim()
 
             val formAnswerResult = when {

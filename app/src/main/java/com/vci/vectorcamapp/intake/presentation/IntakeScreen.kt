@@ -40,6 +40,7 @@ import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions
+import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.presentation.components.CollectionMethodTooltipRow
 import com.vci.vectorcamapp.intake.presentation.components.DynamicFormField
@@ -503,18 +504,21 @@ fun IntakeScreen(
                     iconPainter = painterResource(id = R.drawable.ic_clipboard),
                     iconDescription = "Surveillance Form Icon"
                 ) {
+                    val answerMap = state.formAnswers.mapValues { (_, answer) -> answer.value }
+
                     state.formQuestions.forEach { question ->
-                        DynamicFormField(
-                            question = question,
-                            value = state.formAnswers[question.id]?.value.orEmpty(),
-                            error = state.intakeErrors.formAnswerErrors[question.id],
-                            onValueChange = {
-                                onAction(
-                                    IntakeAction.UpdateFormAnswer(
-                                        question.id, it
-                                    )
-                                )
-                            })
+                        if (FormQuestionPrerequisiteEvaluator.evaluate(
+                                question.prerequisite, answerMap
+                            )
+                        ) {
+                            DynamicFormField(
+                                question = question,
+                                value = state.formAnswers[question.id]?.value.orEmpty(),
+                                error = state.intakeErrors.formAnswerErrors[question.id],
+                                onValueChange = {
+                                    onAction(IntakeAction.UpdateFormAnswer(question.id, it))
+                                })
+                        }
                     }
                 }
             }

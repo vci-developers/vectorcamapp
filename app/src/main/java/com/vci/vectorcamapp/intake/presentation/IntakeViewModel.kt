@@ -27,6 +27,7 @@ import com.vci.vectorcamapp.intake.domain.repository.LocationRepository
 import com.vci.vectorcamapp.intake.domain.strategy.ProgramFormWorkflow
 import com.vci.vectorcamapp.intake.domain.strategy.ProgramFormWorkflowFactory
 import com.vci.vectorcamapp.intake.domain.use_cases.IntakeValidationUseCases
+import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.logging.IntakeSentryLogger
@@ -503,13 +504,31 @@ class IntakeViewModel @Inject constructor(
 
                 is IntakeAction.UpdateFormAnswer -> {
                     _state.update {
-                        it.copy(
-                            formAnswers = it.formAnswers.toMutableMap().apply {
-                                val existingFormAnswer = get(action.questionId)
-                                if (existingFormAnswer != null) {
-                                    put(action.questionId, existingFormAnswer.copy(value = action.value))
+                        val updatedAnswers = it.formAnswers.toMutableMap().apply {
+                            val existingFormAnswer = get(action.questionId)
+                            if (existingFormAnswer != null) {
+                                put(action.questionId, existingFormAnswer.copy(value = action.value))
+                            }
+                        }
+
+                        val answerMap = updatedAnswers.mapValues { (_, answer) -> answer.value }.toMutableMap()
+
+                        it.formQuestions.forEach { question ->
+                            if (question.id != action.questionId &&
+                                !FormQuestionPrerequisiteEvaluator.evaluate(question.prerequisite, answerMap)
+                            ) {
+                                updatedAnswers[question.id]?.let { answer ->
+                                    val defaultValue = when (question.type) {
+                                        "boolean" -> "false"
+                                        else -> ""
+                                    }
+                                    updatedAnswers[question.id] = answer.copy(value = defaultValue)
+                                    answerMap[question.id] = defaultValue
                                 }
-                            })
+                            }
+                        }
+
+                        it.copy(formAnswers = updatedAnswers)
                     }
                 }
 
