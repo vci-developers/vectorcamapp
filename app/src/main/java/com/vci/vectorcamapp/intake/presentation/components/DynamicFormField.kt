@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.util.Error
+import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
@@ -51,6 +52,16 @@ fun DynamicFormField(
                 label = question.label,
                 checked = value.toBooleanStrictOrNull() ?: false,
                 onCheckedChange = { onValueChange(it.toString()) }
+            )
+        }
+        
+        "date" -> {
+            DatePickerField(
+                label = question.label,
+                selectedDateInMillis = value.toLongOrNull() ?: System.currentTimeMillis(),
+                onDateSelected = { onValueChange(it.toString()) },
+                error = error,
+                modifier = modifier.fillMaxWidth()
             )
         }
 
