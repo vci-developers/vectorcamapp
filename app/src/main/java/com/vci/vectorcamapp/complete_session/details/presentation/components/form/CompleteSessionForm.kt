@@ -140,13 +140,15 @@ fun CompleteSessionForm(
                     )
                 }
 
-                site.locationHierarchy?.let { locationHierarchy ->
-                    Text(
-                        text = "Location: $locationHierarchy",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colors.textPrimary
-                    )
-                }
+                site.locationHierarchy
+                    ?.filterValues { it.isNotBlank() }
+                    ?.forEach { (key, value) ->
+                        Text(
+                            text = "$key: $value",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colors.textPrimary
+                        )
+                    }
             }
 
             surveillanceForm?.let {

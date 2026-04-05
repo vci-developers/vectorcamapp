@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteExpression
 
 @Entity(
     tableName = "form_question",
@@ -35,6 +36,7 @@ data class FormQuestionEntity(
     val label: String,
     val type: String,
     val required: Boolean = false,
+    val prerequisite: FormQuestionPrerequisiteExpression? = null,
     val options: List<String>? = null,
     val order: Int? = null
 )

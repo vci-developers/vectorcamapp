@@ -12,5 +12,5 @@ interface FormQuestionDao {
     suspend fun upsertFormQuestion(formQuestion: FormQuestionEntity)
 
     @Query("SELECT * FROM form_question WHERE formId = :formId ORDER BY `order` ASC")
-    fun observeQuestionsByFormId(formId: Int): Flow<List<FormQuestionEntity>>
+    suspend fun getQuestionsByFormId(formId: Int): List<FormQuestionEntity>
 }

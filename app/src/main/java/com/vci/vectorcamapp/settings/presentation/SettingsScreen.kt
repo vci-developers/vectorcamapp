@@ -28,6 +28,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.settings.presentation.components.CollectorDialog
+import com.vci.vectorcamapp.settings.presentation.components.CollectorWarningDialog
 import com.vci.vectorcamapp.settings.presentation.components.SettingsActionTile
 import com.vci.vectorcamapp.settings.presentation.components.SettingsInfoTile
 import com.vci.vectorcamapp.settings.presentation.components.SettingsSection
@@ -66,6 +67,12 @@ fun SettingsScreen(
                 SettingsActionTile(
                     title = "Start Data Collection",
                     onClick = { onAction(SettingsAction.StartNewDataCollectionSession) },
+                    modifier = modifier
+                )
+
+                SettingsActionTile(
+                    title = "Start Practice Session",
+                    onClick = { onAction(SettingsAction.StartNewPracticeSession) },
                     modifier = modifier
                 )
 
@@ -261,6 +268,15 @@ fun SettingsScreen(
             onDismissDeleteDialog = { onAction(SettingsAction.DismissDeleteCollectorDialog) },
             isEditDialogVisible = state.isEditCollectorDialogVisible,
             isDeleteDialogVisible = state.isDeleteCollectorDialogVisible
+        )
+    }
+
+    if (state.selectedCollector != null && state.similarCollector != null) {
+        CollectorWarningDialog(
+            selectedCollector = state.selectedCollector,
+            similarCollector = state.similarCollector,
+            onConfirmSave = { onAction(SettingsAction.ConfirmSaveCollector) },
+            onDismiss = { onAction(SettingsAction.DismissCollectorWarningDialog) }
         )
     }
 }

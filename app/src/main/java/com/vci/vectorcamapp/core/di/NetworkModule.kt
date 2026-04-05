@@ -12,12 +12,16 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
+import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.request.bearerAuth
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.tus.android.client.TusPreferencesURLStore
 import io.tus.java.client.TusClient
 import kotlinx.serialization.json.Json
@@ -58,6 +62,10 @@ object NetworkModule {
                     prettyPrint = false
                     explicitNulls = false
                 })
+            }
+            install(DefaultRequest) {
+                bearerAuth(BuildConfig.VECTORCAM_API_KEY)
+                contentType(ContentType.Application.Json)
             }
         }
     }

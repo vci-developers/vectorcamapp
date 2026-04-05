@@ -5,6 +5,7 @@ import com.vci.vectorcamapp.core.domain.model.Collector
 interface SettingsAction {
     data object ReturnToLandingScreen : SettingsAction
     data object StartNewDataCollectionSession : SettingsAction
+    data object StartNewPracticeSession : SettingsAction
     data object ShowAddCollectorDialog : SettingsAction
     data class ShowEditCollectorDialog(val collector: Collector) : SettingsAction
     data object DismissCollectorDialog : SettingsAction
@@ -16,4 +17,6 @@ interface SettingsAction {
     data object DismissDeleteCollectorDialog : SettingsAction
     data object ConfirmDeleteCollector : SettingsAction
     object ResyncLocations : SettingsAction
+    data object ConfirmSaveCollector : SettingsAction
+    data object DismissCollectorWarningDialog : SettingsAction
 }

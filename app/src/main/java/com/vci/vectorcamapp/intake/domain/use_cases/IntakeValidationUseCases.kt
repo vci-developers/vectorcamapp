@@ -16,4 +16,5 @@ data class IntakeValidationUseCases @Inject constructor(
     val validateMonthsSinceIrs: ValidateMonthsSinceIrsUseCase,
     val validateNumLlinsAvailable: ValidateNumLlinsAvailableUseCase,
     val validateNumPeopleSleptUnderLlin: ValidateNumPeopleSleptUnderLlinUseCase,
+    val validateFormAnswersUseCase: ValidateFormAnswersUseCase
 )

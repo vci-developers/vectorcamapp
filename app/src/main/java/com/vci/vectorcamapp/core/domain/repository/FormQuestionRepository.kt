@@ -12,5 +12,5 @@ interface FormQuestionRepository {
         parentId: Int?
     ): Result<Unit, RoomDbError>
 
-    fun observeQuestionsByFormId(formId: Int): Flow<List<FormQuestion>>
+    suspend fun getQuestionsByFormId(formId: Int): List<FormQuestion>
 }

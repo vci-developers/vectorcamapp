@@ -23,6 +23,6 @@ import androidx.room.PrimaryKey
 data class FormEntity(
     @PrimaryKey val id: Int = -1,
     val programId: Int = -1,
-    val name: String,
-    val version: String
+    val name: String = "",
+    val version: String = ""
 )

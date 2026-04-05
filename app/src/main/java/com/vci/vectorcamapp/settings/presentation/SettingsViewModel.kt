@@ -55,6 +55,7 @@ class SettingsViewModel @Inject constructor(
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
+    val MAX_EDIT_DISTANCE = 2
 
     private val _collectors = collectorRepository.observeAllCollectors()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
@@ -76,6 +77,9 @@ class SettingsViewModel @Inject constructor(
             when (action) {
                 SettingsAction.StartNewDataCollectionSession -> {
                     _events.send(SettingsEvent.NavigateToIntakeScreen(SessionType.DATA_COLLECTION))
+                }
+                SettingsAction.StartNewPracticeSession -> {
+                    _events.send(SettingsEvent.NavigateToIntakeScreen(SessionType.PRACTICE))
                 }
                 SettingsAction.ReturnToLandingScreen -> {
                     _events.send(SettingsEvent.NavigateBackToLandingScreen)
@@ -162,16 +166,54 @@ class SettingsViewModel @Inject constructor(
                     val hasError = listOf(nameValidationResult, titleValidationResult, lastTrainedOnValidationResult).any { it is Result.Error }
                     if (hasError) return@launch
 
+                    val otherCollectors = state.value.collectors.filter { it.id != collector.id }
+                    val similarCollector = otherCollectors.firstOrNull {
+                        val distance = calculateMinimumEditDistance(collector.name.lowercase(), it.name.lowercase())
+                        distance in 0..MAX_EDIT_DISTANCE
+                    }
+
+                    if (similarCollector != null) {
+                        _state.update {
+                            it.copy(
+                                similarCollector = similarCollector
+                            )
+                        }
+                        return@launch
+                    }
+
                     try {
                         collectorRepository.upsertCollector(collector)
                         _state.update {
                             it.copy(
                                 selectedCollector = null,
-                                isEditCollectorDialogVisible = false
+                                isEditCollectorDialogVisible = false,
+                                similarCollector = null
                             )
                         }
                     } catch (e: Exception) {
                         emitError(SettingsError.COLLECTOR_SAVE_FAILED)
+                    }
+                }
+                SettingsAction.ConfirmSaveCollector -> {
+                    val collector = state.value.selectedCollector ?: return@launch
+                    try {
+                        collectorRepository.upsertCollector(collector)
+                        _state.update {
+                            it.copy(
+                                selectedCollector = null,
+                                isEditCollectorDialogVisible = false,
+                                similarCollector = null
+                            )
+                        }
+                    } catch (e: Exception) {
+                        emitError(SettingsError.COLLECTOR_SAVE_FAILED)
+                    }
+                }
+                SettingsAction.DismissCollectorWarningDialog -> {
+                    _state.update {
+                        it.copy(
+                            similarCollector = null
+                        )
                     }
                 }
                 SettingsAction.ShowDeleteCollectorDialog -> {
@@ -308,5 +350,23 @@ class SettingsViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun calculateMinimumEditDistance(string1: String, string2: String): Int {
+        val distances = Array(string1.length + 1) { IntArray(string2.length + 1) }
+        for (i in 0..string1.length) distances[i][0] = i
+        for (j in 0..string2.length) distances[0][j] = j
+
+        for (i in 1..string1.length) {
+            for (j in 1..string2.length) {
+                val cost = if (string1[i - 1] == string2[j - 1]) 0 else 1
+                distances[i][j] = minOf(
+                    distances[i - 1][j] + 1,
+                    distances[i][j - 1] + 1,
+                    distances[i - 1][j - 1] + cost
+                )
+            }
+        }
+        return distances[string1.length][string2.length]
     }
 }

@@ -4,17 +4,11 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.util.UUID
 
 @Entity(
     tableName = "form_answer",
     foreignKeys = [
-        ForeignKey(
-            entity = FormEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["formId"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.CASCADE
-        ),
         ForeignKey(
             entity = FormQuestionEntity::class,
             parentColumns = ["id"],
@@ -24,24 +18,23 @@ import androidx.room.PrimaryKey
         ),
         ForeignKey(
             entity = SessionEntity::class,
-            parentColumns = ["id"],
+            parentColumns = ["localId"],
             childColumns = ["sessionId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE
         )
     ],
     indices = [
-        Index("formId"),
         Index("questionId"),
         Index("sessionId")
     ]
 )
 data class FormAnswerEntity(
-    @PrimaryKey val id: Int = -1,
-    val sessionId: Int = -1,
-    val formId: Int = -1,
+    @PrimaryKey val localId: UUID = UUID(0, 0),
+    val remoteId: Int? = null,
+    val sessionId: UUID = UUID(0, 0),
     val questionId: Int = -1,
-    val value: String,
-    val dataType: String,
-    val submittedAt: Long
+    val value: String = "",
+    val dataType: String = "",
+    val submittedAt: Long = 0L
 )
