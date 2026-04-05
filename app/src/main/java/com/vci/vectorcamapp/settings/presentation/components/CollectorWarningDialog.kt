@@ -16,14 +16,14 @@ import java.util.Locale
 
 @Composable
 fun CollectorWarningDialog(
-    collector: Collector,
-    similarCollectorName: String,
+    selectedCollector: Collector,
+    similarCollector: Collector,
     onConfirmSave: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
-    val formattedDate = dateFormatter.format(collector.lastTrainedOn)
+    val formattedDate = dateFormatter.format(selectedCollector.lastTrainedOn)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -35,7 +35,7 @@ fun CollectorWarningDialog(
         },
         text = {
             Text(
-                text = "The name '${collector.name}' is very similar to an existing collector '$similarCollectorName'.\n\nTitle: ${collector.title}\nLast Trained On: $formattedDate\n\nAre you sure you want to add this profile?",                style = MaterialTheme.typography.bodyMedium,
+                text = "The name '${selectedCollector.name}' is very similar to an existing collector '${similarCollector.name}'.\n\nTitle: ${selectedCollector.title}\nLast Trained On: $formattedDate\n\nAre you sure you want to add this profile?",                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colors.textSecondary
             )
         },

@@ -240,15 +240,13 @@ fun SettingsScreen(
         )
     }
 
-    state.similarCollectorName?.let { similarName ->
-        state.selectedCollector?.let { collector ->
-            CollectorWarningDialog(
-                collector = collector,
-                similarCollectorName = similarName,
-                onConfirmSave = { onAction(SettingsAction.ConfirmSaveCollector) },
-                onDismiss = { onAction(SettingsAction.DismissCollectorWarningDialog) }
-            )
-        }
+    if (state.selectedCollector != null && state.similarCollector != null) {
+        CollectorWarningDialog(
+            selectedCollector = state.selectedCollector,
+            similarCollector = state.similarCollector,
+            onConfirmSave = { onAction(SettingsAction.ConfirmSaveCollector) },
+            onDismiss = { onAction(SettingsAction.DismissCollectorWarningDialog) }
+        )
     }
 }
 

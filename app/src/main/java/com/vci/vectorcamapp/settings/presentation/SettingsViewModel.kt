@@ -152,7 +152,7 @@ class SettingsViewModel @Inject constructor(
                     if (similarCollector != null) {
                         _state.update {
                             it.copy(
-                                similarCollectorName = similarCollector.name
+                                similarCollector = similarCollector
                             )
                         }
                         return@launch
@@ -164,7 +164,7 @@ class SettingsViewModel @Inject constructor(
                             it.copy(
                                 selectedCollector = null,
                                 isEditCollectorDialogVisible = false,
-                                similarCollectorName = null
+                                similarCollector = null
                             )
                         }
                     } catch (e: Exception) {
@@ -179,7 +179,7 @@ class SettingsViewModel @Inject constructor(
                             it.copy(
                                 selectedCollector = null,
                                 isEditCollectorDialogVisible = false,
-                                similarCollectorName = null
+                                similarCollector = null
                             )
                         }
                     } catch (e: Exception) {
@@ -189,7 +189,7 @@ class SettingsViewModel @Inject constructor(
                 SettingsAction.DismissCollectorWarningDialog -> {
                     _state.update {
                         it.copy(
-                            similarCollectorName = null
+                            similarCollector = null
                         )
                     }
                 }
