@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.vci.vectorcamapp.core.data.room.converters.CameraMetadataConverter
 import com.vci.vectorcamapp.core.data.room.converters.FloatListConverter
+import com.vci.vectorcamapp.core.data.room.converters.FormQuestionPrerequisiteExpressionConverter
 import com.vci.vectorcamapp.core.data.room.converters.LocationHierarchyConverter
 import com.vci.vectorcamapp.core.data.room.converters.SessionTypeConverter
 import com.vci.vectorcamapp.core.data.room.converters.StringListConverter
@@ -12,6 +13,9 @@ import com.vci.vectorcamapp.core.data.room.converters.UploadStatusConverter
 import com.vci.vectorcamapp.core.data.room.converters.UriConverter
 import com.vci.vectorcamapp.core.data.room.converters.UuidConverter
 import com.vci.vectorcamapp.core.data.room.dao.CollectorDao
+import com.vci.vectorcamapp.core.data.room.dao.FormAnswerDao
+import com.vci.vectorcamapp.core.data.room.dao.FormDao
+import com.vci.vectorcamapp.core.data.room.dao.FormQuestionDao
 import com.vci.vectorcamapp.core.data.room.dao.InferenceResultDao
 import com.vci.vectorcamapp.core.data.room.dao.LocationTypeDao
 import com.vci.vectorcamapp.core.data.room.dao.ProgramDao
@@ -21,6 +25,9 @@ import com.vci.vectorcamapp.core.data.room.dao.SpecimenDao
 import com.vci.vectorcamapp.core.data.room.dao.SpecimenImageDao
 import com.vci.vectorcamapp.core.data.room.dao.SurveillanceFormDao
 import com.vci.vectorcamapp.core.data.room.entities.CollectorEntity
+import com.vci.vectorcamapp.core.data.room.entities.FormAnswerEntity
+import com.vci.vectorcamapp.core.data.room.entities.FormEntity
+import com.vci.vectorcamapp.core.data.room.entities.FormQuestionEntity
 import com.vci.vectorcamapp.core.data.room.entities.InferenceResultEntity
 import com.vci.vectorcamapp.core.data.room.entities.LocationTypeEntity
 import com.vci.vectorcamapp.core.data.room.entities.ProgramEntity
@@ -40,8 +47,12 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
         SpecimenEntity::class,
         SpecimenImageEntity::class,
         InferenceResultEntity::class,
-        SurveillanceFormEntity::class],
-    version = 26,
+        SurveillanceFormEntity::class,
+        FormEntity::class,
+        FormQuestionEntity::class,
+        FormAnswerEntity::class
+    ],
+    version = 30,
 )
 @TypeConverters(
     UuidConverter::class,
@@ -51,6 +62,7 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
     FloatListConverter::class,
     CameraMetadataConverter::class,
     LocationHierarchyConverter::class,
+    FormQuestionPrerequisiteExpressionConverter::class,
     StringListConverter::class
 )
 abstract class VectorCamDatabase : RoomDatabase() {
@@ -63,4 +75,7 @@ abstract class VectorCamDatabase : RoomDatabase() {
     abstract val programDao: ProgramDao
     abstract val siteDao: SiteDao
     abstract val locationTypeDao: LocationTypeDao
+    abstract val formDao: FormDao
+    abstract val formQuestionDao: FormQuestionDao
+    abstract val formAnswerDao: FormAnswerDao
 }

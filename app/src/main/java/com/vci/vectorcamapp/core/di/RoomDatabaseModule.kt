@@ -5,6 +5,9 @@ import androidx.room.Room
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.room.VectorCamDatabase
 import com.vci.vectorcamapp.core.data.room.dao.CollectorDao
+import com.vci.vectorcamapp.core.data.room.dao.FormAnswerDao
+import com.vci.vectorcamapp.core.data.room.dao.FormDao
+import com.vci.vectorcamapp.core.data.room.dao.FormQuestionDao
 import com.vci.vectorcamapp.core.data.room.dao.InferenceResultDao
 import com.vci.vectorcamapp.core.data.room.dao.LocationTypeDao
 import com.vci.vectorcamapp.core.data.room.dao.ProgramDao
@@ -69,4 +72,13 @@ object RoomDatabaseModule {
 
     @Provides
     fun provideCollectorDao(db: VectorCamDatabase): CollectorDao = db.collectorDao
+
+    @Provides
+    fun provideFormDao(db: VectorCamDatabase): FormDao = db.formDao
+
+    @Provides
+    fun provideFormQuestionDao(db: VectorCamDatabase): FormQuestionDao = db.formQuestionDao
+
+    @Provides
+    fun provideFormAnswerDao(db: VectorCamDatabase): FormAnswerDao = db.formAnswerDao
 }

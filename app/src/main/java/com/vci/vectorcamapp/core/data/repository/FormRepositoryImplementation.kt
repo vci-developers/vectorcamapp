@@ -31,4 +31,8 @@ class FormRepositoryImplementation @Inject constructor(
     override suspend fun getFormById(id: Int): Form? {
         return formDao.getFormById(id)?.toDomain()
     }
+
+    override suspend fun getFormByVersion(version: String): Form? {
+        return formDao.getFormByVersion(version)?.toDomain()
+    }
 }
