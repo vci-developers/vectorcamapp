@@ -152,7 +152,6 @@ class SettingsViewModel @Inject constructor(
                     if (similarCollector != null) {
                         _state.update {
                             it.copy(
-                                isCollectorWarningDialogVisible = true,
                                 similarCollectorName = similarCollector.name
                             )
                         }
@@ -165,7 +164,6 @@ class SettingsViewModel @Inject constructor(
                             it.copy(
                                 selectedCollector = null,
                                 isEditCollectorDialogVisible = false,
-                                isCollectorWarningDialogVisible = false,
                                 similarCollectorName = null
                             )
                         }
@@ -181,7 +179,6 @@ class SettingsViewModel @Inject constructor(
                             it.copy(
                                 selectedCollector = null,
                                 isEditCollectorDialogVisible = false,
-                                isCollectorWarningDialogVisible = false,
                                 similarCollectorName = null
                             )
                         }
@@ -192,7 +189,6 @@ class SettingsViewModel @Inject constructor(
                 SettingsAction.DismissCollectorWarningDialog -> {
                     _state.update {
                         it.copy(
-                            isCollectorWarningDialogVisible = false,
                             similarCollectorName = null
                         )
                     }
@@ -257,21 +253,5 @@ class SettingsViewModel @Inject constructor(
             }
         }
         return distances[string1.length][string2.length]
-    }
-
-    private suspend fun performSave(collector: Collector) {
-        try {
-            collectorRepository.upsertCollector(collector)
-            _state.update {
-                it.copy(
-                    selectedCollector = null,
-                    isEditCollectorDialogVisible = false,
-                    isCollectorWarningDialogVisible = false,
-                    similarCollectorName = null
-                )
-            }
-        } catch (e: Exception) {
-            emitError(SettingsError.COLLECTOR_SAVE_FAILED)
-        }
     }
 }

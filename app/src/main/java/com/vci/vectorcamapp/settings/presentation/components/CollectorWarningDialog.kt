@@ -9,22 +9,21 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.ui.extensions.colors
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Composable
 fun CollectorWarningDialog(
-    collectorName: String,
-    collectorTitle: String,
-    collectorLastTrainedOn: Long,
+    collector: Collector,
     similarCollectorName: String,
     onConfirmSave: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
-    val formattedDate = dateFormatter.format(collectorLastTrainedOn)
+    val formattedDate = dateFormatter.format(collector.lastTrainedOn)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -36,7 +35,7 @@ fun CollectorWarningDialog(
         },
         text = {
             Text(
-                text = "The name '$collectorName' is very similar to an existing collector '$similarCollectorName'.\n\nTitle: $collectorTitle\nLast Trained On: $formattedDate\n\nAre you sure you want to add this profile?",                style = MaterialTheme.typography.bodyMedium,
+                text = "The name '${collector.name}' is very similar to an existing collector '$similarCollectorName'.\n\nTitle: ${collector.title}\nLast Trained On: $formattedDate\n\nAre you sure you want to add this profile?",                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colors.textSecondary
             )
         },
