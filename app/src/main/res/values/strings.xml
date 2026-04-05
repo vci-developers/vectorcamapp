@@ -220,8 +220,8 @@
     <!-- Settings error: Collector deletion failed -->
     <string name="settings_error_collector_deletion_failed">Could not delete collector. Please try again.</string>
 
-    <!-- Settings error: Location sync failed -->
-    <string name="settings_error_location_sync_failed">Could not sync location. Please try again.</string>
+    <!-- Settings error: Data sync failed -->
+    <string name="settings_error_data_sync_failed">Could not sync data. Please try again.</string>
 
     <!-- Image Upload Status: Upload completed -->
     <string name="upload_status_completed">Completed</string>

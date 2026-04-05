@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
@@ -26,10 +27,18 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 fun SettingsActionTile(
     title: String,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     onClick: (() -> Unit),
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
-    ActionTile(onClick = onClick, modifier = modifier) {
+    ActionTile(
+        onClick = {
+            if (enabled) {
+                onClick()
+            }
+        },
+        modifier = modifier.alpha(if (enabled) 1f else 0.5f)
+    ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
             modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)

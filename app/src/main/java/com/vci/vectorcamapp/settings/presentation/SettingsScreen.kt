@@ -82,15 +82,20 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     SettingsActionTile(
-                        title = if (state.isSyncingLocations) "Syncing Locations..." else "Resync Locations",
+                        title = when {
+                            !state.isConnectedToInternet -> "Resync Data Requires Internet Connection"
+                            state.isSyncingData -> "Syncing Data..."
+                            else -> "Resync Data"
+                        },
+                        enabled = state.isConnectedToInternet,
                         onClick = {
-                            if (!state.isSyncingLocations) {
-                                onAction(SettingsAction.ResyncLocations)
+                            if (!state.isSyncingData) {
+                                onAction(SettingsAction.ResyncData)
                             }
                         },
                         modifier = Modifier.weight(1f)
                     )
-                    if (state.isSyncingLocations) {
+                    if (state.isSyncingData) {
                         CircularProgressIndicator(
                             modifier = Modifier
                                 .padding(end = MaterialTheme.dimensions.paddingMedium)

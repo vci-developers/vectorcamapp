@@ -1,22 +1,29 @@
 package com.vci.vectorcamapp.settings.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.model.Form
+import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.LocationType
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
+import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
+import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
@@ -45,11 +52,15 @@ class SettingsViewModel @Inject constructor(
     private val collectorValidationUseCases: CollectorValidationUseCases,
     private val locationTypeDataSource: LocationTypeDataSource,
     private val siteDataSource: SiteDataSource,
+    private val formDataSource: FormDataSource,
     private val locationTypeRepository: LocationTypeRepository,
     private val siteRepository: SiteRepository,
     private val sessionRepository: SessionRepository,
+    private val formRepository: FormRepository,
+    private val formQuestionRepository: FormQuestionRepository,
     private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache,
     private val currentSessionCache: CurrentSessionCache,
+    connectivityObserver: ConnectivityObserver,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
 
@@ -57,17 +68,25 @@ class SettingsViewModel @Inject constructor(
     lateinit var transactionHelper: TransactionHelper
     val MAX_EDIT_DISTANCE = 2
 
+    private val _isConnectedToInternet = connectivityObserver.isConnected
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
+
     private val _collectors = collectorRepository.observeAllCollectors()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _state = MutableStateFlow(SettingsState())
-    val state = combine(_collectors, _state) { collectors, state ->
+    val state = combine(
+        _isConnectedToInternet,
+        _collectors,
+        _state
+    ) { isConnectedToInternet, collectors, state ->
         state.copy(
+            isConnectedToInternet = isConnectedToInternet,
             collectors = collectors
         )
     }
-    .onStart { loadSettingsDetails() }
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), SettingsState())
+        .onStart { loadSettingsDetails() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), SettingsState())
 
     private val _events = Channel<SettingsEvent>()
     val events = _events.receiveAsFlow()
@@ -241,37 +260,42 @@ class SettingsViewModel @Inject constructor(
                         emitError(SettingsError.COLLECTOR_DELETION_FAILED)
                     }
                 }
-                SettingsAction.ResyncLocations -> {
-                    resyncLocations()
+                SettingsAction.ResyncData -> {
+                    resyncData()
                 }
             }
         }
     }
 
-    private suspend fun resyncLocations() {
-        _state.update { it.copy(isSyncingLocations = true) }
+    private suspend fun resyncData() {
+        _state.update { it.copy(isSyncingData = true) }
         try {
-            val programId = state.value.program?.id ?: return
+            val program = state.value.program ?: return
+            val programId = program.id
 
             val locationTypesResult = locationTypeDataSource.getAllLocationTypesForProgram(programId)
             if (locationTypesResult is Result.Error) {
-                emitError(SettingsError.LOCATION_SYNC_FAILED)
+                emitError(SettingsError.DATA_SYNC_FAILED)
                 return
             }
             val locationTypeDtos = (locationTypesResult as Result.Success).data.locationTypes
 
             val sitesResult = siteDataSource.getAllSitesForProgram(programId)
             if (sitesResult is Result.Error) {
-                emitError(SettingsError.LOCATION_SYNC_FAILED)
+                emitError(SettingsError.DATA_SYNC_FAILED)
                 return
             }
             val siteDtos = (sitesResult as Result.Success).data
+
+            val formResult = formDataSource.getCurrentFormByProgramId(programId)
+            val formDto = if (formResult is Result.Success) formResult.data else null
 
             val incompleteSessions = sessionRepository.observeIncompleteSessionsAndSites().first()
             val currentSession = currentSessionCache.getSession()
             val defaultFields = defaultIntakeFieldsCache.getDefaultIntakeFields()
 
             val success = transactionHelper.runAsTransaction {
+
                 val groupedLocationTypes = locationTypeDtos.groupBy { it.level }.toSortedMap()
                 for ((_, typesAtLevel) in groupedLocationTypes) {
                     typesAtLevel.forEach { dto ->
@@ -305,6 +329,31 @@ class SettingsViewModel @Inject constructor(
                     )
                 }
 
+                if (formDto != null) {
+                    val domainForm = Form(
+                        id = formDto.id,
+                        name = formDto.name,
+                        version = formDto.version
+                    )
+                    formRepository.upsertForm(domainForm, programId)
+
+                    formDto.questions.forEach { questionDto ->
+                        val domainQuestion = FormQuestion(
+                            id = questionDto.id,
+                            label = questionDto.label,
+                            type = questionDto.type,
+                            required = questionDto.required,
+                            prerequisite = questionDto.prerequisite?.toDomain(),
+                            options = questionDto.options,
+                            order = questionDto.order
+                        )
+                        formQuestionRepository.upsertFormQuestion(domainQuestion, formDto.id, null)
+                    }
+
+                    val updatedProgram = program.copy(formVersion = formDto.version)
+                    programRepository.upsertProgram(updatedProgram)
+                }
+
                 incompleteSessions.forEach { sessionAndSite ->
                     sessionRepository.upsertSession(sessionAndSite.session, siteId = -1)
                 }
@@ -328,12 +377,12 @@ class SettingsViewModel @Inject constructor(
                     currentSessionCache.saveSession(currentSession, siteId = -1)
                 }
             } else {
-                emitError(SettingsError.LOCATION_SYNC_FAILED)
+                emitError(SettingsError.DATA_SYNC_FAILED)
             }
         } catch (e: Exception) {
-            emitError(SettingsError.LOCATION_SYNC_FAILED)
+            emitError(SettingsError.DATA_SYNC_FAILED)
         } finally {
-            _state.update { it.copy(isSyncingLocations = false) }
+            _state.update { it.copy(isSyncingData = false) }
         }
     }
 

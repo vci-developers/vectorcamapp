@@ -50,7 +50,7 @@ fun FormQuestionDto.toDomain(): FormQuestion {
     )
 }
 
-private fun FormQuestionPrerequisiteExpressionDto.toDomain(): FormQuestionPrerequisiteExpression {
+fun FormQuestionPrerequisiteExpressionDto.toDomain(): FormQuestionPrerequisiteExpression {
     return when {
         questionId != null && operator != null -> FormQuestionPrerequisiteExpression.Predicate(
             questionId = questionId,
