@@ -1,0 +1,238 @@
+{
+  "project_info": {
+    "project_number": "1034845910675",
+    "project_id": "vectorcam-app",
+    "storage_bucket": "vectorcam-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034845910675:android:e0e0d65bfab47c8422bf66",
+        "android_client_info": {
+          "package_name": "com.vci.vectorcamapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWInIiLb1ZolxLFaxSAxZikB4ytp60Uns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034845910675:android:cffc2c032e42a41522bf66",
+        "android_client_info": {
+          "package_name": "com.vci.vectorcamapp.colombia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWInIiLb1ZolxLFaxSAxZikB4ytp60Uns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034845910675:android:970fc30cb02ad55a22bf66",
+        "android_client_info": {
+          "package_name": "com.vci.vectorcamapp.colombia.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWInIiLb1ZolxLFaxSAxZikB4ytp60Uns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034845910675:android:e48017f3aaeb25e022bf66",
+        "android_client_info": {
+          "package_name": "com.vci.vectorcamapp.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWInIiLb1ZolxLFaxSAxZikB4ytp60Uns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034845910675:android:9d22b820f78fdc4e22bf66",
+        "android_client_info": {
+          "package_name": "com.vci.vectorcamapp.ghana"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWInIiLb1ZolxLFaxSAxZikB4ytp60Uns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034845910675:android:556343ba973c7d8922bf66",
+        "android_client_info": {
+          "package_name": "com.vci.vectorcamapp.ghana.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWInIiLb1ZolxLFaxSAxZikB4ytp60Uns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034845910675:android:3a346cbe2b7fd28e22bf66",
+        "android_client_info": {
+          "package_name": "com.vci.vectorcamapp.kenya"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWInIiLb1ZolxLFaxSAxZikB4ytp60Uns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034845910675:android:07c443dde9dc414322bf66",
+        "android_client_info": {
+          "package_name": "com.vci.vectorcamapp.kenya.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWInIiLb1ZolxLFaxSAxZikB4ytp60Uns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034845910675:android:1d478ea7fa8c289922bf66",
+        "android_client_info": {
+          "package_name": "com.vci.vectorcamapp.nigeria"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWInIiLb1ZolxLFaxSAxZikB4ytp60Uns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034845910675:android:af11c116e179f33422bf66",
+        "android_client_info": {
+          "package_name": "com.vci.vectorcamapp.nigeria.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWInIiLb1ZolxLFaxSAxZikB4ytp60Uns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034845910675:android:6a6ccd4fd8b125e922bf66",
+        "android_client_info": {
+          "package_name": "com.vci.vectorcamapp.uganda"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWInIiLb1ZolxLFaxSAxZikB4ytp60Uns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034845910675:android:55f5e607d03933d822bf66",
+        "android_client_info": {
+          "package_name": "com.vci.vectorcamapp.uganda.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWInIiLb1ZolxLFaxSAxZikB4ytp60Uns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

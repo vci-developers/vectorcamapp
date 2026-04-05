@@ -15,6 +15,6 @@ interface SettingsAction {
     data object ShowDeleteCollectorDialog : SettingsAction
     data object DismissDeleteCollectorDialog : SettingsAction
     data object ConfirmDeleteCollector : SettingsAction
-    object ConfirmSaveCollector : SettingsAction
-    object DismissTypoDialog : SettingsAction
+    data object ConfirmSaveCollector : SettingsAction
+    data object DismissCollectorWarningDialog : SettingsAction
 }

@@ -144,31 +144,55 @@ class SettingsViewModel @Inject constructor(
                     if (hasError) return@launch
 
                     val otherCollectors = state.value.collectors.filter { it.id != collector.id }
-                    val similar = otherCollectors.firstOrNull {
-                        val distance = calculateMED(collector.name.lowercase(), it.name.lowercase())
+                    val similarCollector = otherCollectors.firstOrNull {
+                        val distance = calculateMinimumEditDistance(collector.name.lowercase(), it.name.lowercase())
                         distance in 0..MAX_EDIT_DISTANCE
                     }
 
-                    if (similar != null) {
+                    if (similarCollector != null) {
                         _state.update {
                             it.copy(
-                                isTypoDialogVisible = true,
-                                similarCollectorName = similar.name
+                                isCollectorWarningDialogVisible = true,
+                                similarCollectorName = similarCollector.name
                             )
                         }
                         return@launch
                     }
 
-                    performSave(collector)
+                    try {
+                        collectorRepository.upsertCollector(collector)
+                        _state.update {
+                            it.copy(
+                                selectedCollector = null,
+                                isEditCollectorDialogVisible = false,
+                                isCollectorWarningDialogVisible = false,
+                                similarCollectorName = null
+                            )
+                        }
+                    } catch (e: Exception) {
+                        emitError(SettingsError.COLLECTOR_SAVE_FAILED)
+                    }
                 }
                 SettingsAction.ConfirmSaveCollector -> {
                     val collector = state.value.selectedCollector ?: return@launch
-                    performSave(collector)
+                    try {
+                        collectorRepository.upsertCollector(collector)
+                        _state.update {
+                            it.copy(
+                                selectedCollector = null,
+                                isEditCollectorDialogVisible = false,
+                                isCollectorWarningDialogVisible = false,
+                                similarCollectorName = null
+                            )
+                        }
+                    } catch (e: Exception) {
+                        emitError(SettingsError.COLLECTOR_SAVE_FAILED)
+                    }
                 }
-                SettingsAction.DismissTypoDialog -> {
+                SettingsAction.DismissCollectorWarningDialog -> {
                     _state.update {
                         it.copy(
-                            isTypoDialogVisible = false,
+                            isCollectorWarningDialogVisible = false,
                             similarCollectorName = null
                         )
                     }
@@ -217,22 +241,22 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun calculateMED(s1: String, s2: String): Int {
-        val dp = Array(s1.length + 1) { IntArray(s2.length + 1) }
-        for (i in 0..s1.length) dp[i][0] = i
-        for (j in 0..s2.length) dp[0][j] = j
+    private fun calculateMinimumEditDistance(string1: String, string2: String): Int {
+        val distances = Array(string1.length + 1) { IntArray(string2.length + 1) }
+        for (i in 0..string1.length) distances[i][0] = i
+        for (j in 0..string2.length) distances[0][j] = j
 
-        for (i in 1..s1.length) {
-            for (j in 1..s2.length) {
-                val cost = if (s1[i - 1] == s2[j - 1]) 0 else 1
-                dp[i][j] = minOf(
-                    dp[i - 1][j] + 1,
-                    dp[i][j - 1] + 1,
-                    dp[i - 1][j - 1] + cost
+        for (i in 1..string1.length) {
+            for (j in 1..string2.length) {
+                val cost = if (string1[i - 1] == string2[j - 1]) 0 else 1
+                distances[i][j] = minOf(
+                    distances[i - 1][j] + 1,
+                    distances[i][j - 1] + 1,
+                    distances[i - 1][j - 1] + cost
                 )
             }
         }
-        return dp[s1.length][s2.length]
+        return distances[string1.length][string2.length]
     }
 
     private suspend fun performSave(collector: Collector) {
@@ -242,7 +266,7 @@ class SettingsViewModel @Inject constructor(
                 it.copy(
                     selectedCollector = null,
                     isEditCollectorDialogVisible = false,
-                    isTypoDialogVisible = false,
+                    isCollectorWarningDialogVisible = false,
                     similarCollectorName = null
                 )
             }

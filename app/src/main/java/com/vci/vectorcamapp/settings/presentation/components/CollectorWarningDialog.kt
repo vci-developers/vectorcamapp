@@ -7,19 +7,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.vci.vectorcamapp.ui.extensions.colors
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
-fun CollectorTypoDialog(
+fun CollectorWarningDialog(
     collectorName: String,
+    collectorTitle: String,
+    collectorLastTrainedOn: Long,
     similarCollectorName: String,
     onConfirmSave: () -> Unit,
-    onEditName: () -> Unit,
+    onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
+    val formattedDate = dateFormatter.format(collectorLastTrainedOn)
+
     AlertDialog(
-        onDismissRequest = onEditName,
+        onDismissRequest = onDismiss,
         title = {
             Text(
                 text = "Possible Typo Detected",
@@ -28,8 +36,7 @@ fun CollectorTypoDialog(
         },
         text = {
             Text(
-                text = "The name '$collectorName' is very similar to an existing collector '$similarCollectorName'. Are you sure you want to add this profile?",
-                style = MaterialTheme.typography.bodyMedium,
+                text = "The name '$collectorName' is very similar to an existing collector '$similarCollectorName'.\n\nTitle: $collectorTitle\nLast Trained On: $formattedDate\n\nAre you sure you want to add this profile?",                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colors.textSecondary
             )
         },
@@ -48,7 +55,7 @@ fun CollectorTypoDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onEditName) {
+            TextButton(onClick = onDismiss) {
                 Text(
                     text = "Edit Name",
                     color = MaterialTheme.colors.textSecondary,
