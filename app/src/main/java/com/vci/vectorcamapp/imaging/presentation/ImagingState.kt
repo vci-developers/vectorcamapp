@@ -7,12 +7,14 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 
 data class ImagingState(
     val isLoading: Boolean = false,
     val isProcessing: Boolean = false,
+    val sessionType: SessionType = SessionType.SURVEILLANCE,
     val currentSpecimen: Specimen = Specimen(id = "", remoteId = null, shouldProcessFurther = false),
     val currentSpecimenImage: SpecimenImage = SpecimenImage(
         localId = "",

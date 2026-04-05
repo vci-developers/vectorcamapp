@@ -56,6 +56,9 @@ class SettingsViewModel @Inject constructor(
                 SettingsAction.StartNewDataCollectionSession -> {
                     _events.send(SettingsEvent.NavigateToIntakeScreen(SessionType.DATA_COLLECTION))
                 }
+                SettingsAction.StartNewPracticeSession -> {
+                    _events.send(SettingsEvent.NavigateToIntakeScreen(SessionType.PRACTICE))
+                }
                 SettingsAction.ReturnToLandingScreen -> {
                     _events.send(SettingsEvent.NavigateBackToLandingScreen)
                 }

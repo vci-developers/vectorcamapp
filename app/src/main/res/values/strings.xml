@@ -237,4 +237,7 @@
 
     <!-- Session Type: Data Collection -->
     <string name="session_type_data_collection">Data Collection</string>
+
+    <!-- Session Type: Practice -->
+    <string name="session_type_practice">Practice</string>
 </resources>
