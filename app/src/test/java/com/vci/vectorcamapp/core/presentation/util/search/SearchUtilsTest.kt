@@ -172,7 +172,7 @@ class SearchUtilsTest {
     }
 
     @Test
-    fun termNotInAnyField_returnsFalse() {
+    fun termNotInAnyOfMultipleFields_returnsFalse() {
         assertFalse(SearchUtils.matchesQuery("xyz", listOf("Alice Smith", "Kampala District")))
     }
 
