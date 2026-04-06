@@ -53,7 +53,7 @@ class ValidateFormAnswersUseCaseTest {
     // region a - Required field validation
 
     @Test
-    fun a01_requiredField_withAnswer_returnsSuccess() {
+    fun requiredField_withAnswer_returnsSuccess() {
         val questions = listOf(question(id = 1, required = true))
         val answers = mapOf(answer(1, "some value"))
         val result = useCase(questions, answers)
@@ -61,7 +61,7 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun a02_requiredField_withBlankAnswer_returnsError() {
+    fun requiredField_withBlankAnswer_returnsError() {
         val questions = listOf(question(id = 1, required = true))
         val answers = mapOf(answer(1, "   "))
         val result = useCase(questions, answers)
@@ -69,21 +69,21 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun a03_requiredField_withNoAnswer_returnsError() {
+    fun requiredField_withNoAnswer_returnsError() {
         val questions = listOf(question(id = 1, required = true))
         val result = useCase(questions, emptyMap())
         assertEquals(FormValidationError.INVALID_FORM_ANSWER, (result[1] as Result.Error).error)
     }
 
     @Test
-    fun a04_optionalField_withNoAnswer_returnsSuccess() {
+    fun optionalField_withNoAnswer_returnsSuccess() {
         val questions = listOf(question(id = 1, required = false))
         val result = useCase(questions, emptyMap())
         assertTrue(result[1] is Result.Success)
     }
 
     @Test
-    fun a05_optionalField_withBlankAnswer_returnsSuccess() {
+    fun optionalField_withBlankAnswer_returnsSuccess() {
         val questions = listOf(question(id = 1, required = false))
         val answers = mapOf(answer(1, "  "))
         val result = useCase(questions, answers)
@@ -95,7 +95,7 @@ class ValidateFormAnswersUseCaseTest {
     // region b - Type: number
 
     @Test
-    fun b01_numberField_validInteger_returnsSuccess() {
+    fun numberField_validInteger_returnsSuccess() {
         val questions = listOf(question(id = 1, type = "number"))
         val answers = mapOf(answer(1, "42"))
         val result = useCase(questions, answers)
@@ -103,7 +103,7 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun b02_numberField_invalidText_returnsError() {
+    fun numberField_invalidText_returnsError() {
         val questions = listOf(question(id = 1, type = "number"))
         val answers = mapOf(answer(1, "hello"))
         val result = useCase(questions, answers)
@@ -111,7 +111,7 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun b03_numberField_decimalValue_returnsError() {
+    fun numberField_decimalValue_returnsError() {
         val questions = listOf(question(id = 1, type = "number"))
         val answers = mapOf(answer(1, "3.14"))
         val result = useCase(questions, answers)
@@ -124,7 +124,7 @@ class ValidateFormAnswersUseCaseTest {
     // region c - Type: boolean
 
     @Test
-    fun c01_booleanField_trueString_returnsSuccess() {
+    fun booleanField_trueString_returnsSuccess() {
         val questions = listOf(question(id = 1, type = "boolean"))
         val answers = mapOf(answer(1, "true"))
         val result = useCase(questions, answers)
@@ -132,7 +132,7 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun c02_booleanField_falseString_returnsSuccess() {
+    fun booleanField_falseString_returnsSuccess() {
         val questions = listOf(question(id = 1, type = "boolean"))
         val answers = mapOf(answer(1, "false"))
         val result = useCase(questions, answers)
@@ -140,7 +140,7 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun c03_booleanField_invalidString_returnsError() {
+    fun booleanField_invalidString_returnsError() {
         val questions = listOf(question(id = 1, type = "boolean"))
         val answers = mapOf(answer(1, "yes"))
         val result = useCase(questions, answers)
@@ -152,7 +152,7 @@ class ValidateFormAnswersUseCaseTest {
     // region d - Type: select
 
     @Test
-    fun d01_selectField_validOption_returnsSuccess() {
+    fun selectField_validOption_returnsSuccess() {
         val questions = listOf(question(id = 1, type = "select", options = listOf("A", "B", "C")))
         val answers = mapOf(answer(1, "B"))
         val result = useCase(questions, answers)
@@ -160,7 +160,7 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun d02_selectField_invalidOption_returnsError() {
+    fun selectField_invalidOption_returnsError() {
         val questions = listOf(question(id = 1, type = "select", options = listOf("A", "B", "C")))
         val answers = mapOf(answer(1, "D"))
         val result = useCase(questions, answers)
@@ -168,7 +168,7 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun d03_selectField_noOptions_anyAnswerReturnsSuccess() {
+    fun selectField_noOptions_anyAnswerReturnsSuccess() {
         val questions = listOf(question(id = 1, type = "select", options = null))
         val answers = mapOf(answer(1, "anything"))
         val result = useCase(questions, answers)
@@ -180,7 +180,7 @@ class ValidateFormAnswersUseCaseTest {
     // region e - Prerequisite: question skipped when prerequisite not met
 
     @Test
-    fun e01_prerequisiteNotMet_questionSkipped_returnsSuccess() {
+    fun prerequisiteNotMet_questionSkipped_returnsSuccess() {
         val prerequisite = FormQuestionPrerequisiteExpression.Predicate(
             questionId = 1,
             operator = "eq",
@@ -198,7 +198,7 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun e02_prerequisiteMet_questionValidated_blankRequiredAnswer_returnsError() {
+    fun prerequisiteMet_questionValidated_blankRequiredAnswer_returnsError() {
         val prerequisite = FormQuestionPrerequisiteExpression.Predicate(
             questionId = 1,
             operator = "eq",
@@ -216,7 +216,7 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun e03_noPrerequisite_questionAlwaysValidated() {
+    fun noPrerequisite_questionAlwaysValidated() {
         val questions = listOf(question(id = 1, required = true))
         val result = useCase(questions, emptyMap())
         assertEquals(FormValidationError.INVALID_FORM_ANSWER, (result[1] as Result.Error).error)
@@ -227,7 +227,7 @@ class ValidateFormAnswersUseCaseTest {
     // region f - Multiple questions validated together
 
     @Test
-    fun f01_multipleQuestions_allValid_allReturnSuccess() {
+    fun multipleQuestions_allValid_allReturnSuccess() {
         val questions = listOf(
             question(id = 1, required = true, type = "text"),
             question(id = 2, required = true, type = "number"),
@@ -245,7 +245,7 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun f02_multipleQuestions_someInvalid_mixedResults() {
+    fun multipleQuestions_someInvalid_mixedResults() {
         val questions = listOf(
             question(id = 1, required = true, type = "text"),
             question(id = 2, required = true, type = "number")
@@ -260,7 +260,7 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun f03_emptyQuestions_returnsEmptyMap() {
+    fun emptyQuestions_returnsEmptyMap() {
         val result = useCase(emptyList(), emptyMap())
         assertTrue(result.isEmpty())
     }
