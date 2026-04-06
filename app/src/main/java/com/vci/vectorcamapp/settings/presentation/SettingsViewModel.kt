@@ -1,16 +1,14 @@
 package com.vci.vectorcamapp.settings.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto
 import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
+import com.vci.vectorcamapp.core.data.util.sortByHierarchy
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Collector
-import com.vci.vectorcamapp.core.domain.model.Form
-import com.vci.vectorcamapp.core.domain.model.FormQuestion
-import com.vci.vectorcamapp.core.domain.model.LocationType
-import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
@@ -26,6 +24,8 @@ import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
+import com.vci.vectorcamapp.core.domain.util.network.NetworkError
+import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
@@ -46,6 +46,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    private val transactionHelper: TransactionHelper,
     private val deviceCache: DeviceCache,
     private val programRepository: ProgramRepository,
     private val collectorRepository: CollectorRepository,
@@ -64,8 +65,6 @@ class SettingsViewModel @Inject constructor(
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
 
-    @Inject
-    lateinit var transactionHelper: TransactionHelper
     val MAX_EDIT_DISTANCE = 2
 
     private val _isConnectedToInternet = connectivityObserver.isConnected
@@ -260,7 +259,7 @@ class SettingsViewModel @Inject constructor(
                         emitError(SettingsError.COLLECTOR_DELETION_FAILED)
                     }
                 }
-                SettingsAction.ResyncData -> {
+                SettingsAction.ResyncProgramData -> {
                     resyncData()
                 }
             }
@@ -270,89 +269,17 @@ class SettingsViewModel @Inject constructor(
     private suspend fun resyncData() {
         _state.update { it.copy(isSyncingData = true) }
         try {
-            val program = state.value.program ?: return
+            val program = state.value.program
             val programId = program.id
-
-            val locationTypesResult = locationTypeDataSource.getAllLocationTypesForProgram(programId)
-            if (locationTypesResult is Result.Error) {
-                emitError(SettingsError.DATA_SYNC_FAILED)
-                return
-            }
-            val locationTypeDtos = (locationTypesResult as Result.Success).data.locationTypes
-
-            val sitesResult = siteDataSource.getAllSitesForProgram(programId)
-            if (sitesResult is Result.Error) {
-                emitError(SettingsError.DATA_SYNC_FAILED)
-                return
-            }
-            val siteDtos = (sitesResult as Result.Success).data
-
-            val formResult = formDataSource.getCurrentFormByProgramId(programId)
-            val formDto = if (formResult is Result.Success) formResult.data else null
 
             val incompleteSessions = sessionRepository.observeIncompleteSessionsAndSites().first()
             val currentSession = currentSessionCache.getSession()
             val defaultFields = defaultIntakeFieldsCache.getDefaultIntakeFields()
 
             val success = transactionHelper.runAsTransaction {
-
-                val groupedLocationTypes = locationTypeDtos.groupBy { it.level }.toSortedMap()
-                for ((_, typesAtLevel) in groupedLocationTypes) {
-                    typesAtLevel.forEach { dto ->
-                        val domainType = LocationType(
-                            id = dto.id,
-                            name = dto.name,
-                            level = dto.level
-                        )
-                        locationTypeRepository.upsertLocationType(domainType, programId)
-                    }
-                }
-
-                siteDtos.forEach { dto ->
-                    val domainSite = Site(
-                        id = dto.siteId,
-                        district = dto.district,
-                        subCounty = dto.subCounty,
-                        parish = dto.parish,
-                        villageName = dto.villageName,
-                        houseNumber = dto.houseNumber,
-                        healthCenter = dto.healthCenter,
-                        isActive = dto.isActive,
-                        name = dto.name,
-                        locationHierarchy = dto.locationHierarchy
-                    )
-                    siteRepository.upsertSite(
-                        site = domainSite,
-                        programId = programId,
-                        locationTypeId = dto.locationTypeId,
-                        parentId = dto.parentId
-                    )
-                }
-
-                if (formDto != null) {
-                    val domainForm = Form(
-                        id = formDto.id,
-                        name = formDto.name,
-                        version = formDto.version
-                    )
-                    formRepository.upsertForm(domainForm, programId)
-
-                    formDto.questions.forEach { questionDto ->
-                        val domainQuestion = FormQuestion(
-                            id = questionDto.id,
-                            label = questionDto.label,
-                            type = questionDto.type,
-                            required = questionDto.required,
-                            prerequisite = questionDto.prerequisite?.toDomain(),
-                            options = questionDto.options,
-                            order = questionDto.order
-                        )
-                        formQuestionRepository.upsertFormQuestion(domainQuestion, formDto.id, null)
-                    }
-
-                    val updatedProgram = program.copy(formVersion = formDto.version)
-                    programRepository.upsertProgram(updatedProgram)
-                }
+                fetchAndSeedAllLocationTypesForProgram(programId)
+                fetchAndSeedAllSitesForProgram(programId)
+                fetchAndSeedFormForProgram(programId)
 
                 incompleteSessions.forEach { sessionAndSite ->
                     sessionRepository.upsertSession(sessionAndSite.session, siteId = -1)
@@ -383,6 +310,91 @@ class SettingsViewModel @Inject constructor(
             emitError(SettingsError.DATA_SYNC_FAILED)
         } finally {
             _state.update { it.copy(isSyncingData = false) }
+        }
+    }
+
+    private suspend fun fetchAndSeedAllLocationTypesForProgram(programId: Int) {
+        when (val result = locationTypeDataSource.getAllLocationTypesForProgram(programId)) {
+            is Result.Success -> {
+                result.data.locationTypes.forEach { locationTypeDto ->
+                    locationTypeRepository.upsertLocationType(
+                        locationTypeDto.toDomain(),
+                        programId
+                    ).onError { error ->
+                        emitError(error)
+                        throw Exception("Failed to save location types for program $programId")
+                    }
+                }
+            }
+            is Result.Error -> {
+                emitError(result.error)
+                throw Exception("Failed to fetch location types for program $programId")
+            }
+        }
+    }
+
+    private suspend fun fetchAndSeedAllSitesForProgram(programId: Int) {
+        when (val result = siteDataSource.getAllSitesForProgram(programId)) {
+            is Result.Success -> {
+                result.data.sortByHierarchy().forEach { siteDto ->
+                    val locationTypeId = siteDto.locationTypeId
+                    val parentId = siteDto.parentId
+
+                    siteRepository.upsertSite(
+                        siteDto.toDomain(),
+                        programId,
+                        locationTypeId,
+                        parentId
+                    ).onError { error ->
+                        emitError(error)
+                        throw Exception("Failed to save sites for program $programId")
+                    }
+                }
+            }
+            is Result.Error -> {
+                emitError(result.error)
+                throw Exception("Failed to fetch sites for program $programId")
+            }
+        }
+    }
+
+    private suspend fun fetchAndSeedFormForProgram(programId: Int) {
+        when (val result = formDataSource.getCurrentFormByProgramId(programId)) {
+            is Result.Success -> {
+                val formDto = result.data
+                formRepository.upsertForm(formDto.toDomain(), programId).onError { error ->
+                    emitError(error)
+                    throw Exception("Failed to save surveillance form for program $programId")
+                }
+                seedFormQuestionsForProgram(formDto.questions, formDto.id, null)
+
+                val currentProgram = programRepository.getProgramById(programId)
+                if (currentProgram != null) {
+                    programRepository.upsertProgram(currentProgram.copy(formVersion = formDto.version))
+                }
+            }
+            is Result.Error -> {
+                if (result.error != NetworkError.NOT_FOUND) {
+                    emitError(result.error)
+                    throw Exception("Failed to fetch surveillance form for program $programId")
+                }
+            }
+        }
+    }
+
+    private suspend fun seedFormQuestionsForProgram(
+        questionDtos: List<FormQuestionDto>,
+        formId: Int,
+        parentId: Int?
+    ) {
+        questionDtos.forEach { questionDto ->
+            formQuestionRepository.upsertFormQuestion(questionDto.toDomain(), formId, parentId).onError { error ->
+                emitError(error)
+                throw Exception("Failed to save surveillance form questions")
+            }
+            questionDto.subQuestions?.let { subQuestions ->
+                seedFormQuestionsForProgram(subQuestions, formId, questionDto.id)
+            }
         }
     }
 
