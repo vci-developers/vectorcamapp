@@ -1,9 +1,11 @@
 package com.vci.vectorcamapp.complete_session.details.presentation
 
 import com.vci.vectorcamapp.complete_session.details.presentation.enums.CompleteSessionDetailsTab
+import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
+import com.vci.vectorcamapp.core.domain.model.composites.FormAnswerAndQuestion
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import java.util.UUID
@@ -39,6 +41,8 @@ data class CompleteSessionDetailsState(
         isActive = true
     ),
     val surveillanceForm: SurveillanceForm? = null,
+    val form: Form? = null,
+    val formAnswersAndQuestions: List<FormAnswerAndQuestion> = emptyList(),
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),
     val searchQuery: String = "",
     val isSearchTooltipVisible: Boolean = false

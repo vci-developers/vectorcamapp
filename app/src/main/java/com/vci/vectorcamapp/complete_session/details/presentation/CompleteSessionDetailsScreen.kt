@@ -58,6 +58,8 @@ fun CompleteSessionDetailsScreen(
                     session = state.session,
                     site = state.site,
                     surveillanceForm = state.surveillanceForm,
+                    form = state.form,
+                    formAnswersAndQuestions = state.formAnswersAndQuestions,
                     modifier = modifier
                 )
 

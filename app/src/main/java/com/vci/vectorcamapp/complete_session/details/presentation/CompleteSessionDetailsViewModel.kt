@@ -5,6 +5,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
@@ -34,6 +36,8 @@ class CompleteSessionDetailsViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
+    private val formRepository: FormRepository,
+    private val formAnswerRepository: FormAnswerRepository,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
 
@@ -129,11 +133,25 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                 return@launch
             }
 
+            val formAnswersAndQuestions = formAnswerRepository.getFormAnswersAndQuestionsBySessionId(sessionId)
+
+            val formIds = formAnswersAndQuestions.map { it.question.formId }.distinct()
+            val form = when {
+                formIds.isEmpty() -> null
+                formIds.size == 1 -> formRepository.getFormById(formIds.first())
+                else -> {
+                    emitError(CompleteSessionDetailsError.FORM_DATA_INCONSISTENT)
+                    return@launch
+                }
+            }
+
             _state.update {
                 it.copy(
                     session = session,
                     site = site,
                     surveillanceForm = surveillanceForm,
+                    form = form,
+                    formAnswersAndQuestions = formAnswersAndQuestions
                 )
             }
         }

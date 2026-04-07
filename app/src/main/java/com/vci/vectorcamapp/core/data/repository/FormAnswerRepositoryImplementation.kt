@@ -4,11 +4,10 @@ import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.dao.FormAnswerDao
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.composites.FormAnswerAndQuestion
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import java.util.UUID
 import javax.inject.Inject
 
@@ -31,5 +30,16 @@ class FormAnswerRepositoryImplementation @Inject constructor(
 
     override suspend fun getFormAnswersBySessionId(sessionId: UUID): Map<Int, FormAnswer> {
         return formAnswerDao.getFormAnswersBySessionId(sessionId).associate { it.questionId to it.toDomain() }
+    }
+
+    override suspend fun getFormAnswersAndQuestionsBySessionId(sessionId: UUID): List<FormAnswerAndQuestion> {
+        return formAnswerDao.getFormAnswersAndQuestionsBySessionId(sessionId)
+            .map {
+                FormAnswerAndQuestion(
+                    answer = it.answer.toDomain(),
+                    question = it.question.toDomain()
+                )
+            }
+            .sortedBy { it.question.order }
     }
 }

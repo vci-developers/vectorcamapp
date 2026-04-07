@@ -6,5 +6,6 @@ enum class CompleteSessionDetailsError : Error {
     SESSION_NOT_FOUND,
     SITE_NOT_FOUND,
     SPECIMENS_NOT_FOUND,
+    FORM_DATA_INCONSISTENT,
     UNKNOWN_ERROR;
 }

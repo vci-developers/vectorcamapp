@@ -15,6 +15,7 @@ import kotlinx.serialization.json.doubleOrNull
 fun FormQuestionEntity.toDomain(): FormQuestion {
     return FormQuestion(
         id = this.id,
+        formId = this.formId,
         label = this.label,
         type = this.type,
         required = this.required,
@@ -41,6 +42,7 @@ fun FormQuestion.toEntity(formId: Int, parentId: Int?): FormQuestionEntity {
 fun FormQuestionDto.toDomain(): FormQuestion {
     return FormQuestion(
         id = this.id,
+        formId = this.formId,
         label = this.label,
         type = this.type,
         required = this.required,

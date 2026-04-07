@@ -1,9 +1,9 @@
 package com.vci.vectorcamapp.core.domain.repository
 
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.composites.FormAnswerAndQuestion
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
-import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 interface FormAnswerRepository {
@@ -14,4 +14,5 @@ interface FormAnswerRepository {
     ): Result<Unit, RoomDbError>
 
     suspend fun getFormAnswersBySessionId(sessionId: UUID): Map<Int, FormAnswer>
+    suspend fun getFormAnswersAndQuestionsBySessionId(sessionId: UUID): List<FormAnswerAndQuestion>
 }
