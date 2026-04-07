@@ -81,7 +81,7 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsSection(title = "Data Synchronization") {
+            SettingsSection(title = "Update Data from Server") {
                 SettingsInfoTile(
                     title = "Cloud Sync",
                     modifier = modifier

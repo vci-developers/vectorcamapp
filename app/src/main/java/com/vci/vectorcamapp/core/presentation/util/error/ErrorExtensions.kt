@@ -125,6 +125,8 @@ fun Error.toString(context: Context): String {
             SettingsError.COLLECTOR_SAVE_FAILED -> R.string.settings_error_collector_save_failed
             SettingsError.COLLECTOR_DELETION_FAILED -> R.string.settings_error_collector_deletion_failed
             SettingsError.DATA_SYNC_FAILED -> R.string.settings_error_data_sync_failed
+            SettingsError.DATA_SYNC_IN_PROGRESS_SESSION_EXIST -> R.string.settings_error_data_sync_in_progress_session_exist
+
         }
 
         else -> R.string.error_fallback

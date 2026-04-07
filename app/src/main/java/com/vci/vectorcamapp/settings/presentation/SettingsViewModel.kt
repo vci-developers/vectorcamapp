@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.settings.presentation
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto
 import com.vci.vectorcamapp.core.data.mappers.toDomain
@@ -15,6 +16,7 @@ import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
 import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
@@ -35,7 +37,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -58,6 +59,7 @@ class SettingsViewModel @Inject constructor(
     private val siteRepository: SiteRepository,
     private val sessionRepository: SessionRepository,
     private val formRepository: FormRepository,
+    private val formAnswerRepository: FormAnswerRepository,
     private val formQuestionRepository: FormQuestionRepository,
     private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache,
     private val currentSessionCache: CurrentSessionCache,
@@ -96,12 +98,15 @@ class SettingsViewModel @Inject constructor(
                 SettingsAction.StartNewDataCollectionSession -> {
                     _events.send(SettingsEvent.NavigateToIntakeScreen(SessionType.DATA_COLLECTION))
                 }
+
                 SettingsAction.StartNewPracticeSession -> {
                     _events.send(SettingsEvent.NavigateToIntakeScreen(SessionType.PRACTICE))
                 }
+
                 SettingsAction.ReturnToLandingScreen -> {
                     _events.send(SettingsEvent.NavigateBackToLandingScreen)
                 }
+
                 SettingsAction.ShowAddCollectorDialog -> {
                     _state.update {
                         it.copy(
@@ -115,6 +120,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is SettingsAction.ShowEditCollectorDialog -> {
                     _state.update {
                         it.copy(
@@ -123,6 +129,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 SettingsAction.DismissCollectorDialog -> {
                     _state.update {
                         it.copy(
@@ -137,6 +144,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is SettingsAction.EnterCollectorName -> {
                     _state.update {
                         it.copy(
@@ -146,6 +154,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is SettingsAction.EnterCollectorTitle -> {
                     _state.update {
                         it.copy(
@@ -155,6 +164,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is SettingsAction.EnterCollectorLastTrainedOn -> {
                     _state.update {
                         it.copy(
@@ -164,6 +174,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 SettingsAction.SaveCollector -> {
                     val collector = state.value.selectedCollector ?: return@launch
 
@@ -212,6 +223,7 @@ class SettingsViewModel @Inject constructor(
                         emitError(SettingsError.COLLECTOR_SAVE_FAILED)
                     }
                 }
+
                 SettingsAction.ConfirmSaveCollector -> {
                     val collector = state.value.selectedCollector ?: return@launch
                     try {
@@ -227,6 +239,7 @@ class SettingsViewModel @Inject constructor(
                         emitError(SettingsError.COLLECTOR_SAVE_FAILED)
                     }
                 }
+
                 SettingsAction.DismissCollectorWarningDialog -> {
                     _state.update {
                         it.copy(
@@ -234,16 +247,19 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 SettingsAction.ShowDeleteCollectorDialog -> {
                     _state.update {
                         it.copy(isDeleteCollectorDialogVisible = true)
                     }
                 }
+
                 SettingsAction.DismissDeleteCollectorDialog -> {
                     _state.update {
                         it.copy(isDeleteCollectorDialogVisible = false)
                     }
                 }
+
                 SettingsAction.ConfirmDeleteCollector -> {
                     val collector = state.value.selectedCollector ?: return@launch
                     try {
@@ -259,6 +275,7 @@ class SettingsViewModel @Inject constructor(
                         emitError(SettingsError.COLLECTOR_DELETION_FAILED)
                     }
                 }
+
                 SettingsAction.ResyncProgramData -> {
                     resyncData()
                 }
@@ -269,21 +286,27 @@ class SettingsViewModel @Inject constructor(
     private suspend fun resyncData() {
         _state.update { it.copy(isSyncingData = true) }
         try {
-            val program = state.value.program
+            val program = _state.value.program
             val programId = program.id
 
-            val incompleteSessions = sessionRepository.observeIncompleteSessionsAndSites().first()
+            val incompleteSessions = sessionRepository.getIncompleteSessionsAndSites()
             val currentSession = currentSessionCache.getSession()
+
+            if (incompleteSessions.isNotEmpty() || currentSession != null) {
+                emitError(SettingsError.DATA_SYNC_IN_PROGRESS_SESSION_EXIST)
+                _state.update { it.copy(isSyncingData = false) }
+                return
+            }
+
             val defaultFields = defaultIntakeFieldsCache.getDefaultIntakeFields()
 
             val success = transactionHelper.runAsTransaction {
                 fetchAndSeedAllLocationTypesForProgram(programId)
+
+                siteRepository.setAllSitesInactiveForProgram(programId)
+
                 fetchAndSeedAllSitesForProgram(programId)
                 fetchAndSeedFormForProgram(programId)
-
-                incompleteSessions.forEach { sessionAndSite ->
-                    sessionRepository.upsertSession(sessionAndSite.session, siteId = -1)
-                }
 
                 true
             }

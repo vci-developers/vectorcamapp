@@ -223,6 +223,9 @@
     <!-- Settings error: Data sync failed -->
     <string name="settings_error_data_sync_failed">Could not sync data. Please try again.</string>
 
+    <!-- Settings error: Data sync in progress session exist -->
+    <string name="settings_error_data_sync_in_progress_session_exist">Please complete all in progress sessions and try again.</string>
+
     <!-- Image Upload Status: Upload completed -->
     <string name="upload_status_completed">Completed</string>
 
