@@ -1,14 +1,33 @@
 package com.vci.vectorcamapp.settings.presentation
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto
+import com.vci.vectorcamapp.core.data.mappers.toDomain
+import com.vci.vectorcamapp.core.data.room.TransactionHelper
+import com.vci.vectorcamapp.core.data.util.sortByHierarchy
+import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
+import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
+import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
+import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
+import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
+import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SiteRepository
+import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
+import com.vci.vectorcamapp.core.domain.util.network.NetworkError
+import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
@@ -28,26 +47,47 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    private val transactionHelper: TransactionHelper,
     private val deviceCache: DeviceCache,
     private val programRepository: ProgramRepository,
     private val collectorRepository: CollectorRepository,
     private val collectorValidationUseCases: CollectorValidationUseCases,
+    private val locationTypeDataSource: LocationTypeDataSource,
+    private val siteDataSource: SiteDataSource,
+    private val formDataSource: FormDataSource,
+    private val locationTypeRepository: LocationTypeRepository,
+    private val siteRepository: SiteRepository,
+    private val sessionRepository: SessionRepository,
+    private val formRepository: FormRepository,
+    private val formAnswerRepository: FormAnswerRepository,
+    private val formQuestionRepository: FormQuestionRepository,
+    private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache,
+    private val currentSessionCache: CurrentSessionCache,
+    connectivityObserver: ConnectivityObserver,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
 
     val MAX_EDIT_DISTANCE = 2
 
+    private val _isConnectedToInternet = connectivityObserver.isConnected
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
+
     private val _collectors = collectorRepository.observeAllCollectors()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _state = MutableStateFlow(SettingsState())
-    val state = combine(_collectors, _state) { collectors, state ->
+    val state = combine(
+        _isConnectedToInternet,
+        _collectors,
+        _state
+    ) { isConnectedToInternet, collectors, state ->
         state.copy(
+            isConnectedToInternet = isConnectedToInternet,
             collectors = collectors
         )
     }
-    .onStart { loadSettingsDetails() }
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), SettingsState())
+        .onStart { loadSettingsDetails() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), SettingsState())
 
     private val _events = Channel<SettingsEvent>()
     val events = _events.receiveAsFlow()
@@ -58,12 +98,15 @@ class SettingsViewModel @Inject constructor(
                 SettingsAction.StartNewDataCollectionSession -> {
                     _events.send(SettingsEvent.NavigateToIntakeScreen(SessionType.DATA_COLLECTION))
                 }
+
                 SettingsAction.StartNewPracticeSession -> {
                     _events.send(SettingsEvent.NavigateToIntakeScreen(SessionType.PRACTICE))
                 }
+
                 SettingsAction.ReturnToLandingScreen -> {
                     _events.send(SettingsEvent.NavigateBackToLandingScreen)
                 }
+
                 SettingsAction.ShowAddCollectorDialog -> {
                     _state.update {
                         it.copy(
@@ -77,6 +120,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is SettingsAction.ShowEditCollectorDialog -> {
                     _state.update {
                         it.copy(
@@ -85,6 +129,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 SettingsAction.DismissCollectorDialog -> {
                     _state.update {
                         it.copy(
@@ -99,6 +144,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is SettingsAction.EnterCollectorName -> {
                     _state.update {
                         it.copy(
@@ -108,6 +154,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is SettingsAction.EnterCollectorTitle -> {
                     _state.update {
                         it.copy(
@@ -117,6 +164,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is SettingsAction.EnterCollectorLastTrainedOn -> {
                     _state.update {
                         it.copy(
@@ -126,6 +174,7 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 SettingsAction.SaveCollector -> {
                     val collector = state.value.selectedCollector ?: return@launch
 
@@ -174,6 +223,7 @@ class SettingsViewModel @Inject constructor(
                         emitError(SettingsError.COLLECTOR_SAVE_FAILED)
                     }
                 }
+
                 SettingsAction.ConfirmSaveCollector -> {
                     val collector = state.value.selectedCollector ?: return@launch
                     try {
@@ -189,6 +239,7 @@ class SettingsViewModel @Inject constructor(
                         emitError(SettingsError.COLLECTOR_SAVE_FAILED)
                     }
                 }
+
                 SettingsAction.DismissCollectorWarningDialog -> {
                     _state.update {
                         it.copy(
@@ -196,16 +247,19 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 SettingsAction.ShowDeleteCollectorDialog -> {
                     _state.update {
                         it.copy(isDeleteCollectorDialogVisible = true)
                     }
                 }
+
                 SettingsAction.DismissDeleteCollectorDialog -> {
                     _state.update {
                         it.copy(isDeleteCollectorDialogVisible = false)
                     }
                 }
+
                 SettingsAction.ConfirmDeleteCollector -> {
                     val collector = state.value.selectedCollector ?: return@launch
                     try {
@@ -221,6 +275,144 @@ class SettingsViewModel @Inject constructor(
                         emitError(SettingsError.COLLECTOR_DELETION_FAILED)
                     }
                 }
+
+                SettingsAction.ResyncProgramData -> {
+                    resyncData()
+                }
+            }
+        }
+    }
+
+    private suspend fun resyncData() {
+        _state.update { it.copy(isSyncingData = true) }
+        try {
+            val program = _state.value.program
+            val programId = program.id
+
+            val incompleteSessions = sessionRepository.getIncompleteSessionsAndSites()
+            val currentSession = currentSessionCache.getSession()
+
+            if (incompleteSessions.isNotEmpty() || currentSession != null) {
+                emitError(SettingsError.DATA_SYNC_IN_PROGRESS_SESSION_EXIST)
+                _state.update { it.copy(isSyncingData = false) }
+                return
+            }
+
+            val defaultFields = defaultIntakeFieldsCache.getDefaultIntakeFields()
+
+            val success = transactionHelper.runAsTransaction {
+                fetchAndSeedAllLocationTypesForProgram(programId)
+
+                siteRepository.setAllSitesInactiveForProgram(programId)
+
+                fetchAndSeedAllSitesForProgram(programId)
+                fetchAndSeedFormForProgram(programId)
+
+                true
+            }
+
+            if (success) {
+                if (defaultFields != null) {
+                    defaultIntakeFieldsCache.saveDefaultIntakeFields(
+                        collectorName = defaultFields.collectorName,
+                        collectorTitle = defaultFields.collectorTitle,
+                        collectorLastTrainedOn = defaultFields.collectorLastTrainedOn,
+                        hardwareId = defaultFields.hardwareId,
+                        district = "",
+                        villageName = ""
+                    )
+                }
+            } else {
+                emitError(SettingsError.DATA_SYNC_FAILED)
+            }
+        } catch (e: Exception) {
+            emitError(SettingsError.DATA_SYNC_FAILED)
+        } finally {
+            _state.update { it.copy(isSyncingData = false) }
+        }
+    }
+
+    private suspend fun fetchAndSeedAllLocationTypesForProgram(programId: Int) {
+        when (val result = locationTypeDataSource.getAllLocationTypesForProgram(programId)) {
+            is Result.Success -> {
+                result.data.locationTypes.forEach { locationTypeDto ->
+                    locationTypeRepository.upsertLocationType(
+                        locationTypeDto.toDomain(),
+                        programId
+                    ).onError { error ->
+                        emitError(error)
+                        throw Exception("Failed to save location types for program $programId")
+                    }
+                }
+            }
+            is Result.Error -> {
+                emitError(result.error)
+                throw Exception("Failed to fetch location types for program $programId")
+            }
+        }
+    }
+
+    private suspend fun fetchAndSeedAllSitesForProgram(programId: Int) {
+        when (val result = siteDataSource.getAllSitesForProgram(programId)) {
+            is Result.Success -> {
+                result.data.sortByHierarchy().forEach { siteDto ->
+                    val locationTypeId = siteDto.locationTypeId
+                    val parentId = siteDto.parentId
+
+                    siteRepository.upsertSite(
+                        siteDto.toDomain(),
+                        programId,
+                        locationTypeId,
+                        parentId
+                    ).onError { error ->
+                        emitError(error)
+                        throw Exception("Failed to save sites for program $programId")
+                    }
+                }
+            }
+            is Result.Error -> {
+                emitError(result.error)
+                throw Exception("Failed to fetch sites for program $programId")
+            }
+        }
+    }
+
+    private suspend fun fetchAndSeedFormForProgram(programId: Int) {
+        when (val result = formDataSource.getCurrentFormByProgramId(programId)) {
+            is Result.Success -> {
+                val formDto = result.data
+                formRepository.upsertForm(formDto.toDomain(), programId).onError { error ->
+                    emitError(error)
+                    throw Exception("Failed to save surveillance form for program $programId")
+                }
+                seedFormQuestionsForProgram(formDto.questions, formDto.id, null)
+
+                val currentProgram = programRepository.getProgramById(programId)
+                if (currentProgram != null) {
+                    programRepository.upsertProgram(currentProgram.copy(formVersion = formDto.version))
+                }
+            }
+            is Result.Error -> {
+                if (result.error != NetworkError.NOT_FOUND) {
+                    emitError(result.error)
+                    throw Exception("Failed to fetch surveillance form for program $programId")
+                }
+            }
+        }
+    }
+
+    private suspend fun seedFormQuestionsForProgram(
+        questionDtos: List<FormQuestionDto>,
+        formId: Int,
+        parentId: Int?
+    ) {
+        questionDtos.forEach { questionDto ->
+            formQuestionRepository.upsertFormQuestion(questionDto.toDomain(), formId, parentId).onError { error ->
+                emitError(error)
+                throw Exception("Failed to save surveillance form questions")
+            }
+            questionDto.subQuestions?.let { subQuestions ->
+                seedFormQuestionsForProgram(subQuestions, formId, questionDto.id)
             }
         }
     }

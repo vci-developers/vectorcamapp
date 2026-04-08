@@ -27,5 +27,7 @@ data class SettingsState (
     val selectedCollector: Collector? = null,
     val similarCollector: Collector? = null,
     val isEditCollectorDialogVisible: Boolean = false,
-    val isDeleteCollectorDialogVisible: Boolean = false
+    val isDeleteCollectorDialogVisible: Boolean = false,
+    val isSyncingData: Boolean = false,
+    val isConnectedToInternet: Boolean = false
 )
