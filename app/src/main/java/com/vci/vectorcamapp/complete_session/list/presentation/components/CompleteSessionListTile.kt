@@ -174,8 +174,10 @@ fun CompleteSessionListTile(
                         )
                     }
 
-                    site.locationHierarchy?.let { locationHierarchy ->
-                        if (locationHierarchy.isNotEmpty()) {
+                    site.locationHierarchy
+                        ?.filterValues { it.isNotBlank() }
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { locationHierarchy ->
                             Row(
                                 verticalAlignment = Alignment.Top,
                                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
@@ -201,7 +203,6 @@ fun CompleteSessionListTile(
                                     }
                                 }
                             }
-                        }
                     }
                 }
 

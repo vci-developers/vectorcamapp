@@ -135,14 +135,11 @@ class CompleteSessionDetailsViewModel @Inject constructor(
 
             val formAnswersAndQuestions = formAnswerRepository.getFormAnswersAndQuestionsBySessionId(sessionId)
 
-            val formIds = formAnswersAndQuestions.map { it.question.formId }.distinct()
-            val form = when {
-                formIds.isEmpty() -> null
-                formIds.size == 1 -> formRepository.getFormById(formIds.first())
-                else -> {
-                    emitError(CompleteSessionDetailsError.FORM_DATA_INCONSISTENT)
-                    return@launch
-                }
+            val form = try {
+                formRepository.getFormBySessionId(sessionId)
+            } catch (e: IllegalStateException) {
+                emitError(CompleteSessionDetailsError.FORM_DATA_INCONSISTENT)
+                null
             }
 
             _state.update {

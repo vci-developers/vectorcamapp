@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 import javax.inject.Inject
 
 class FormRepositoryImplementation @Inject constructor(
@@ -34,5 +35,14 @@ class FormRepositoryImplementation @Inject constructor(
 
     override suspend fun getFormByVersion(version: String): Form? {
         return formDao.getFormByVersion(version)?.toDomain()
+    }
+
+    override suspend fun getFormBySessionId(sessionId: UUID): Form? {
+        val forms = formDao.getFormsBySessionId(sessionId)
+        return when {
+            forms.isEmpty() -> null
+            forms.size == 1 -> forms.first().toDomain()
+            else -> throw IllegalStateException("Multiple forms found for session")
+        }
     }
 }

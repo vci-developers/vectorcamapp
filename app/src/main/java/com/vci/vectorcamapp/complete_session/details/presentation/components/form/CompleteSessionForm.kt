@@ -157,7 +157,7 @@ fun CompleteSessionForm(
                     }
             }
 
-            if (form != null) {
+            form?.let {
                 CompleteSessionFormTile(
                     title = form.name,
                     iconPainter = painterResource(R.drawable.ic_clipboard),
@@ -188,62 +188,62 @@ fun CompleteSessionForm(
                         )
                     }
                 }
-            } else {
-                surveillanceForm?.let {
-                    CompleteSessionFormTile(
-                        title = "Surveillance Form",
-                        iconPainter = painterResource(R.drawable.ic_clipboard),
-                        iconDescription = "Clipboard"
-                    ) {
+            }
+
+            surveillanceForm?.let {
+                CompleteSessionFormTile(
+                    title = "Surveillance Form",
+                    iconPainter = painterResource(R.drawable.ic_clipboard),
+                    iconDescription = "Clipboard"
+                ) {
+                    Text(
+                        text = "Number of People who Slept in the House: ${it.numPeopleSleptInHouse}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+
+                    Text(
+                        text = "Was Indoor Residual Spray (IRS) Conducted: ${if (it.wasIrsConducted) "Yes" else "No"}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+
+                    it.monthsSinceIrs?.let { monthsSinceIrs ->
                         Text(
-                            text = "Number of People who Slept in the House: ${it.numPeopleSleptInHouse}",
+                            text = "Months Since IRS: $monthsSinceIrs",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textPrimary
                         )
+                    }
 
+                    Text(
+                        text = "Number of Long Lasting Insecticide-coated Nets (LLINs) Available: ${it.numLlinsAvailable}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+
+                    it.llinType?.let { llinType ->
                         Text(
-                            text = "Was Indoor Residual Spray (IRS) Conducted: ${if (it.wasIrsConducted) "Yes" else "No"}",
+                            text = "LLIN Type: $llinType",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textPrimary
                         )
+                    }
 
-                        it.monthsSinceIrs?.let { monthsSinceIrs ->
-                            Text(
-                                text = "Months Since IRS: $monthsSinceIrs",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colors.textPrimary
-                            )
-                        }
-
+                    it.llinBrand?.let { llinBrand ->
                         Text(
-                            text = "Number of Long Lasting Insecticide-coated Nets (LLINs) Available: ${it.numLlinsAvailable}",
+                            text = "LLIN Brand: $llinBrand",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textPrimary
                         )
+                    }
 
-                        it.llinType?.let { llinType ->
-                            Text(
-                                text = "LLIN Type: $llinType",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colors.textPrimary
-                            )
-                        }
-
-                        it.llinBrand?.let { llinBrand ->
-                            Text(
-                                text = "LLIN Brand: $llinBrand",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colors.textPrimary
-                            )
-                        }
-
-                        it.numPeopleSleptUnderLlin?.let { numPeopleSleptUnderLlin ->
-                            Text(
-                                text = "Number of People who Slept Under LLIN: $numPeopleSleptUnderLlin",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colors.textPrimary
-                            )
-                        }
+                    it.numPeopleSleptUnderLlin?.let { numPeopleSleptUnderLlin ->
+                        Text(
+                            text = "Number of People who Slept Under LLIN: $numPeopleSleptUnderLlin",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colors.textPrimary
+                        )
                     }
                 }
             }
