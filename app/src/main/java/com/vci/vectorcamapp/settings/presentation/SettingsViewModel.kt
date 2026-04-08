@@ -322,10 +322,6 @@ class SettingsViewModel @Inject constructor(
                         villageName = ""
                     )
                 }
-
-                if (currentSession != null) {
-                    currentSessionCache.saveSession(currentSession, siteId = -1)
-                }
             } else {
                 emitError(SettingsError.DATA_SYNC_FAILED)
             }
