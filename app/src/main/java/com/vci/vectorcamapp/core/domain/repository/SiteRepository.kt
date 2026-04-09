@@ -15,4 +15,5 @@ interface SiteRepository {
 
     fun observeAllSitesByProgramId(programId: Int): Flow<List<Site>>
     suspend fun getSiteById(id: Int): Site?
+    suspend fun setAllSitesInactiveForProgram(programId: Int)
 }

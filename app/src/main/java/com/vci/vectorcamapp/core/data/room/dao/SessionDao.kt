@@ -54,4 +54,8 @@ interface SessionDao {
     @Transaction
     @Query("SELECT * FROM session WHERE localId = :sessionId")
     fun observeSessionWithSpecimens(sessionId: UUID): Flow<SessionWithSpecimensRelation?>
+
+    @Transaction
+    @Query("SELECT * FROM session WHERE completedAt IS NULL")
+    suspend fun getIncompleteSessionsAndSites(): List<SessionAndSiteRelation>
 }
