@@ -58,7 +58,7 @@ fun DynamicFormField(
         "date" -> {
             DatePickerField(
                 label = question.label,
-                selectedDateInMillis = value.toLongOrNull() ?: System.currentTimeMillis(),
+                selectedDateInMillis = value.toLongOrNull(),
                 onDateSelected = { onValueChange(it.toString()) },
                 error = error,
                 modifier = modifier.fillMaxWidth()
