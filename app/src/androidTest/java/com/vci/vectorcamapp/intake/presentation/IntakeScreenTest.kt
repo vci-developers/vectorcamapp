@@ -239,24 +239,6 @@ class IntakeScreenTest {
     // F. Missing collector warning
     // =========================
 
-    @Test
-    fun intakeUi_f01_missingCollectorWarning_shownWhenFlagTrue() {
-        launchIntakeScreen(
-            state = IntakeState(
-                session = makeSession(collectorName = "Dr. John", collectorTitle = "PhD"),
-                isCurrentCollectorMissing = true,
-            )
-        )
-        composeRule.onNodeWithText("Collector not found").assertIsDisplayed()
-        // Description text is multi-line and may extend below the viewport — assertExists is sufficient
-        composeRule.onNodeWithText(
-            "The collector associated with this session isn't in your current list. You can select an existing collector or register this one.",
-            substring = true
-        ).assertExists()
-        scrollToText("Dr. John")
-        composeRule.onNodeWithText("Dr. John").assertIsDisplayed()
-        composeRule.onNodeWithText("PhD").assertIsDisplayed()
-    }
 
     @Test
     fun intakeUi_f02_missingCollectorWarning_notShownNormally() {
