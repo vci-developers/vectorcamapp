@@ -1,5 +1,10 @@
 package com.vci.vectorcamapp.core.presentation.components.header
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import com.vci.vectorcamapp.ui.extensions.colors
+import com.vci.vectorcamapp.ui.extensions.dimensions
+import com.vci.vectorcamapp.ui.theme.screenHeightFraction
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,11 +21,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import com.vci.vectorcamapp.ui.extensions.colors
-import com.vci.vectorcamapp.ui.extensions.dimensions
-import com.vci.vectorcamapp.ui.theme.screenHeightFraction
+import androidx.compose.ui.platform.testTag
+
+object ScreenHeaderTestTags {
+    const val LIST = "screen_header_list"
+}
 
 @Composable
 fun ScreenHeader(
@@ -34,7 +39,9 @@ fun ScreenHeader(
     val headerHeightFraction = 0.1f
 
     LazyColumn(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(ScreenHeaderTestTags.LIST)
     ) {
         item {
             Box(

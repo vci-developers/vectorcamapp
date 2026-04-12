@@ -3,11 +3,14 @@ package com.vci.vectorcamapp.registration.presentation
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.vci.vectorcamapp.core.presentation.util.error.DefaultErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -43,21 +46,22 @@ class RegistrationScreenTest {
     private lateinit var navController: TestNavHostController
 
     private val testPrograms = listOf(
-        Program(id = 1, name = "Test Program 1", country = "Country 1"),
-        Program(id = 2, name = "Test Program 2", country = "Country 2"),
+        Program(id = 1, name = "Test Program 1", country = "Country 1", formVersion = null),
+        Program(id = 2, name = "Test Program 2", country = "Country 2", formVersion = null),
         Program(
             id = 3,
             name = "Very Very Very Long Name For Test Program 3",
-            country = "Very Very Very Long Name For Country 3"
+            country = "Very Very Very Long Name For Country 3",
+            formVersion = null
         ),
-        Program(id = 4, name = "Test Program 4", country = "Country 4"),
-        Program(id = 5, name = "Test Program 5", country = "Country 5"),
-        Program(id = 6, name = "Test Program 6", country = "Country 6"),
-        Program(id = 7, name = "Test Program 7", country = "Country 7"),
-        Program(id = 8, name = "Test Program 8", country = "Country 8"),
-        Program(id = 9, name = "Test Program 9", country = "Country 9"),
-        Program(id = 10, name = "Test Program 10", country = "Country 10"),
-        Program(id = 11, name = "Test Program 11", country = "Country 11"),
+        Program(id = 4, name = "Test Program 4", country = "Country 4", formVersion = null),
+        Program(id = 5, name = "Test Program 5", country = "Country 5", formVersion = null),
+        Program(id = 6, name = "Test Program 6", country = "Country 6", formVersion = null),
+        Program(id = 7, name = "Test Program 7", country = "Country 7", formVersion = null),
+        Program(id = 8, name = "Test Program 8", country = "Country 8", formVersion = null),
+        Program(id = 9, name = "Test Program 9", country = "Country 9", formVersion = null),
+        Program(id = 10, name = "Test Program 10", country = "Country 10", formVersion = null),
+        Program(id = 11, name = "Test Program 11", country = "Country 11", formVersion = null),
     )
 
     @get:Rule(order = 0)
@@ -85,6 +89,7 @@ class RegistrationScreenTest {
             var state by remember { mutableStateOf(initialState) }
 
             VectorcamappTheme {
+                CompositionLocalProvider(LocalErrorMessageEmitter provides DefaultErrorMessageEmitter()) {
                 NavHost(
                     navController = navController,
                     startDestination = Destination.Registration
@@ -121,6 +126,7 @@ class RegistrationScreenTest {
                     }
                     composable<Destination.Landing> { /* empty landing */ }
                 }
+                } // CompositionLocalProvider
             }
         }
         composeRule.waitForIdle()
