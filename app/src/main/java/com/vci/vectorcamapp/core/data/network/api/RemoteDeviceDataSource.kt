@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.data.network.api
 
+import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.data.dto.device.DeviceDto
 import com.vci.vectorcamapp.core.data.dto.device.RegisterDeviceRequestDto
 import com.vci.vectorcamapp.core.data.dto.device.RegisterDeviceResponseDto
@@ -27,7 +28,8 @@ class RemoteDeviceDataSource @Inject constructor(
                     RegisterDeviceRequestDto(
                         model = device.model,
                         registeredAt = device.registeredAt,
-                        programId = programId
+                        programId = programId,
+                        appVersion = BuildConfig.VERSION_NAME,
                     )
                 )
             }
