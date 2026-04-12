@@ -29,7 +29,7 @@ class RemoteDeviceDataSource @Inject constructor(
                         model = device.model,
                         registeredAt = device.registeredAt,
                         programId = programId,
-                        appVersion = BuildConfig.VERSION_NAME,
+                        appVersion = BuildConfig.VERSION_CODE.toString() + "(" + BuildConfig.VERSION_NAME + ")",
                     )
                 )
             }
