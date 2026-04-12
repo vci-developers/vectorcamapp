@@ -9,6 +9,9 @@ jobs:
   lint:
     name: Lint - ${{ matrix.flavor }}
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -22,6 +25,15 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
 
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
@@ -39,6 +51,9 @@ jobs:
   unit-tests:
     name: Unit Tests - ${{ matrix.flavor }}
     runs-on: ubuntu-latest
+    permissions:
+      checks: write        # needed by publish-unit-test-result-action
+      pull-requests: write # needed by jacoco-report to post a PR comment
     strategy:
       fail-fast: false
       matrix:
@@ -53,18 +68,64 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
       - name: Run unit tests for ${{ matrix.flavor }}
         run: ./gradlew test${{ matrix.flavor }}DebugUnitTest
 
-      - name: Upload test report
+      # Publishes a check run (visible under the PR's Checks tab) with
+      # pass/fail counts and annotations for each failing test.
+      # comment_mode: off avoids one noisy PR comment per flavor.
+      - name: Publish test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          check_name: "Tests — ${{ matrix.flavor }}"
+          files: app/build/test-results/test${{ matrix.flavor }}DebugUnitTest/**/*.xml
+          comment_mode: off
+
+      # Generate JaCoCo HTML + XML coverage report (Uganda only — same sources,
+      # so one report is enough; running all 5 would post 5 identical comments).
+      - name: Generate coverage report
+        if: matrix.flavor == 'Uganda'
+        run: ./gradlew jacocoUgandaDebugUnitTestReport
+
+      # Posts (or updates) a single PR comment with an overall coverage % table
+      # and per-package breakdown. Only runs on pull_request events, not manual dispatches.
+      - name: Post coverage comment
+        if: matrix.flavor == 'Uganda' && github.event_name == 'pull_request'
+        uses: madrapps/jacoco-report@v1.6.0
+        with:
+          paths: app/build/reports/jacoco/jacocoUgandaDebugUnitTestReport/jacocoUgandaDebugUnitTestReport.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Unit Test Coverage"
+          update-comment: true
+          min-coverage-overall: 0     # report-only; set higher once coverage improves
+          min-coverage-changed-files: 0
+
+      - name: Upload HTML test report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-report-${{ matrix.flavor }}
           path: app/build/reports/tests/test${{ matrix.flavor }}DebugUnitTest/
+
+      - name: Upload coverage report
+        if: matrix.flavor == 'Uganda'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: app/build/reports/jacoco/jacocoUgandaDebugUnitTestReport/
 
 #  instrumentation-tests:
 #    name: Run Instrumentation Tests

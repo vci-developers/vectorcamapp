@@ -2,13 +2,26 @@ package com.vci.vectorcamapp.settings.presentation
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.vci.vectorcamapp.core.data.room.TransactionHelper
+import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
+import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
+import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
+import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
+import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
+import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
@@ -35,12 +48,28 @@ class SettingsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    // Core mocks used across tests
     private lateinit var deviceCache: DeviceCache
     private lateinit var programRepository: ProgramRepository
     private lateinit var collectorRepository: CollectorRepository
     private lateinit var collectorValidationUseCases: CollectorValidationUseCases
     private lateinit var errorMessageEmitter: ErrorMessageEmitter
     private lateinit var viewModel: SettingsViewModel
+
+    // New constructor params — relaxed mocks (not exercised by existing tests)
+    private lateinit var transactionHelper: TransactionHelper
+    private lateinit var locationTypeDataSource: LocationTypeDataSource
+    private lateinit var siteDataSource: SiteDataSource
+    private lateinit var formDataSource: FormDataSource
+    private lateinit var locationTypeRepository: LocationTypeRepository
+    private lateinit var siteRepository: SiteRepository
+    private lateinit var sessionRepository: SessionRepository
+    private lateinit var formRepository: FormRepository
+    private lateinit var formAnswerRepository: FormAnswerRepository
+    private lateinit var formQuestionRepository: FormQuestionRepository
+    private lateinit var defaultIntakeFieldsCache: DefaultIntakeFieldsCache
+    private lateinit var currentSessionCache: CurrentSessionCache
+    private lateinit var connectivityObserver: ConnectivityObserver
 
     private lateinit var collectorsFlow: MutableStateFlow<List<Collector>>
 
@@ -58,6 +87,22 @@ class SettingsViewModelTest {
         collectorRepository = mockk(relaxed = true)
         collectorValidationUseCases = mockk()
 
+        // New relaxed mocks — not exercised by these tests
+        transactionHelper = mockk(relaxed = true)
+        locationTypeDataSource = mockk(relaxed = true)
+        siteDataSource = mockk(relaxed = true)
+        formDataSource = mockk(relaxed = true)
+        locationTypeRepository = mockk(relaxed = true)
+        siteRepository = mockk(relaxed = true)
+        sessionRepository = mockk(relaxed = true)
+        formRepository = mockk(relaxed = true)
+        formAnswerRepository = mockk(relaxed = true)
+        formQuestionRepository = mockk(relaxed = true)
+        defaultIntakeFieldsCache = mockk(relaxed = true)
+        currentSessionCache = mockk(relaxed = true)
+        connectivityObserver = mockk(relaxed = true)
+        every { connectivityObserver.isConnected } returns MutableStateFlow(false)
+
         every { collectorValidationUseCases.validateCollectorName(any()) } returns Result.Success(Unit)
         every { collectorValidationUseCases.validateCollectorTitle(any()) } returns Result.Success(Unit)
         every { collectorValidationUseCases.validateCollectorLastTrainedOn(any()) } returns Result.Success(Unit)
@@ -69,14 +114,29 @@ class SettingsViewModelTest {
         coEvery { deviceCache.getProgramId() } returns testProgram.id
         coEvery { programRepository.getProgramById(testProgram.id) } returns testProgram
 
-        viewModel = SettingsViewModel(
-            deviceCache = deviceCache,
-            programRepository = programRepository,
-            collectorRepository = collectorRepository,
-            collectorValidationUseCases = collectorValidationUseCases,
-            errorMessageEmitter = errorMessageEmitter,
-        )
+        viewModel = buildViewModel()
     }
+
+    private fun buildViewModel() = SettingsViewModel(
+        transactionHelper = transactionHelper,
+        deviceCache = deviceCache,
+        programRepository = programRepository,
+        collectorRepository = collectorRepository,
+        collectorValidationUseCases = collectorValidationUseCases,
+        locationTypeDataSource = locationTypeDataSource,
+        siteDataSource = siteDataSource,
+        formDataSource = formDataSource,
+        locationTypeRepository = locationTypeRepository,
+        siteRepository = siteRepository,
+        sessionRepository = sessionRepository,
+        formRepository = formRepository,
+        formAnswerRepository = formAnswerRepository,
+        formQuestionRepository = formQuestionRepository,
+        defaultIntakeFieldsCache = defaultIntakeFieldsCache,
+        currentSessionCache = currentSessionCache,
+        connectivityObserver = connectivityObserver,
+        errorMessageEmitter = errorMessageEmitter,
+    )
 
     // ========================================
     // A. Initialization & Loading
@@ -111,13 +171,7 @@ class SettingsViewModelTest {
     fun settingsVm_a03_noProgramId_doesNotCrash_andStateRemainsDefault() = runTest {
         coEvery { deviceCache.getProgramId() } returns null
 
-        val vm = SettingsViewModel(
-            deviceCache = deviceCache,
-            programRepository = programRepository,
-            collectorRepository = collectorRepository,
-            collectorValidationUseCases = collectorValidationUseCases,
-            errorMessageEmitter = errorMessageEmitter,
-        )
+        val vm = buildViewModel()
 
         vm.state.test {
             val s = awaitItem() // initialValue (no load update since programId is null)
