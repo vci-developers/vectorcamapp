@@ -104,7 +104,7 @@ jobs:
       # and per-package breakdown. Only runs on pull_request events, not manual dispatches.
       - name: Post coverage comment
         if: matrix.flavor == 'Uganda' && github.event_name == 'pull_request'
-        uses: madrapps/jacoco-report@v1.6.0
+        uses: madrapps/jacoco-report@v1.7.2
         with:
           paths: app/build/reports/jacoco/jacocoUgandaDebugUnitTestReport/jacocoUgandaDebugUnitTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
