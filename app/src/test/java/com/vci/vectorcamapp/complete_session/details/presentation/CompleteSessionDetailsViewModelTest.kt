@@ -10,6 +10,7 @@ import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
@@ -38,6 +39,7 @@ class CompleteSessionDetailsViewModelTest {
     private lateinit var sessionRepository: SessionRepository
     private lateinit var specimenRepository: SpecimenRepository
     private lateinit var errorMessageEmitter: ErrorMessageEmitter
+    private lateinit var formRepository: FormRepository
 
     private val testSessionId = UUID.randomUUID()
     private val testSession = Session(
@@ -77,6 +79,7 @@ class CompleteSessionDetailsViewModelTest {
         sessionRepository = mockk(relaxed = true)
         specimenRepository = mockk(relaxed = true)
         errorMessageEmitter = mockk(relaxed = true)
+        formRepository = mockk(relaxed = true)
         coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
 
         every { specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(any()) } returns
@@ -99,7 +102,8 @@ class CompleteSessionDetailsViewModelTest {
             savedStateHandle = savedStateHandle,
             sessionRepository = sessionRepository,
             specimenRepository = specimenRepository,
-            errorMessageEmitter = errorMessageEmitter,
+            formRepository = formRepository,
+            errorMessageEmitter = errorMessageEmitter
         )
     }
 
@@ -146,6 +150,7 @@ class CompleteSessionDetailsViewModelTest {
             savedStateHandle = savedStateHandle,
             sessionRepository = sessionRepository,
             specimenRepository = specimenRepository,
+            formRepository = formRepository,
             errorMessageEmitter = errorMessageEmitter,
         )
 
