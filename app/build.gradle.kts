@@ -285,6 +285,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest) // Debugging Compose manifest tests
 }
 
+apply(from = "jacoco.gradle.kts")
+
 sentry {
     org.set("vectorcam")
     projectName.set("android")
