@@ -10,11 +10,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
-import com.vci.vectorcamapp.core.domain.model.composites.FormAnswerAndQuestion
+import com.vci.vectorcamapp.core.domain.model.composites.FormWithFormAnswersAndQuestions
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -25,8 +24,7 @@ import java.util.Locale
 fun CompleteSessionForm(
     session: Session, site: Site,
     surveillanceForm: SurveillanceForm?,
-    form: Form?,
-    formAnswersAndQuestions: List<FormAnswerAndQuestion>,
+    formWithFormAnswersAndQuestions: FormWithFormAnswersAndQuestions?,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -157,14 +155,14 @@ fun CompleteSessionForm(
                     }
             }
 
-            form?.let {
+            formWithFormAnswersAndQuestions?.let { formWithAnswersAndQuestions ->
                 CompleteSessionFormTile(
-                    title = form.name,
+                    title = formWithAnswersAndQuestions.form.name,
                     iconPainter = painterResource(R.drawable.ic_clipboard),
                     iconDescription = "Clipboard"
                 ) {
-                    if (formAnswersAndQuestions.isNotEmpty()) {
-                        formAnswersAndQuestions
+                    if (formWithAnswersAndQuestions.formAnswersAndQuestions.isNotEmpty()) {
+                        formWithAnswersAndQuestions.formAnswersAndQuestions
                             .filter { (answer, _) -> answer.value.isNotBlank() }
                             .forEach { (answer, question) ->
                                 val displayValue = when (question.type) {

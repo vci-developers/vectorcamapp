@@ -5,7 +5,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
-import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
@@ -37,7 +36,6 @@ class CompleteSessionDetailsViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
     private val formRepository: FormRepository,
-    private val formAnswerRepository: FormAnswerRepository,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
 
@@ -133,22 +131,24 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                 return@launch
             }
 
-            val formAnswersAndQuestions = formAnswerRepository.getFormAnswersAndQuestionsBySessionId(sessionId)
-
-            val form = try {
-                formRepository.getFormBySessionId(sessionId)
-            } catch (e: IllegalStateException) {
-                emitError(CompleteSessionDetailsError.FORM_DATA_INCONSISTENT)
-                null
-            }
+            val formWithFormAnswersAndQuestions = formRepository.getFormsWithFormAnswersAndQuestionsBySessionId(sessionId)
+                .let { forms ->
+                    when {
+                        forms.isEmpty() -> null
+                        forms.size == 1 -> forms.first()
+                        else -> {
+                            emitError(CompleteSessionDetailsError.FORM_DATA_INCONSISTENT)
+                            null
+                        }
+                    }
+                }
 
             _state.update {
                 it.copy(
                     session = session,
                     site = site,
                     surveillanceForm = surveillanceForm,
-                    form = form,
-                    formAnswersAndQuestions = formAnswersAndQuestions
+                    formWithFormAnswersAndQuestions = formWithFormAnswersAndQuestions,
                 )
             }
         }
