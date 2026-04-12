@@ -9,6 +9,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
+import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.data.dto.device.DeviceDto
 import com.vci.vectorcamapp.core.data.dto.form_answer.FormAnswerDto
@@ -129,7 +130,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                     localSession,
                     localSiteId,
                     syncedDevice.id,
-                    totalSpecimensForSession
+                    totalSpecimensForSession,
+                    BuildConfig.VERSION_NAME
                 )) {
                 is DomainResult.Success -> syncSessionResult.data
                 is DomainResult.Error -> return retryOrFailure(
@@ -325,7 +327,8 @@ class MetadataUploadWorker @AssistedInject constructor(
     }
 
     private suspend fun syncSessionIfNeeded(
-        localSession: Session, localSiteId: Int, syncedDeviceId: Int, expectedSpecimens: Int
+        localSession: Session, localSiteId: Int, syncedDeviceId: Int, expectedSpecimens: Int,
+        appVersion: String
     ): DomainResult<Session, NetworkError> {
         return try {
             val localSessionDto = SessionDto(
@@ -357,7 +360,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                     when (remoteSessionResult.error) {
                         NetworkError.NOT_FOUND -> {
                             val postSessionResult = sessionDataSource.postSession(
-                                localSession, localSiteId, syncedDeviceId, expectedSpecimens
+                                localSession, localSiteId, syncedDeviceId, expectedSpecimens,
+                                appVersion
                             )
                             when (postSessionResult) {
                                 is DomainResult.Success -> postSessionResult.data.session

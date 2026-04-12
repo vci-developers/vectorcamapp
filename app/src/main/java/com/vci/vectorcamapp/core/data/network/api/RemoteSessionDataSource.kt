@@ -21,7 +21,7 @@ class RemoteSessionDataSource @Inject constructor(
 ) : SessionDataSource {
 
     override suspend fun postSession(
-        session: Session, siteId: Int, deviceId: Int, expectedSpecimens: Int
+        session: Session, siteId: Int, deviceId: Int, expectedSpecimens: Int, appVersion: String
     ): Result<PostSessionResponseDto, NetworkError> {
         if (session.completedAt == null) {
             return Result.Error(NetworkError.SESSION_NOT_COMPLETED)
@@ -48,6 +48,7 @@ class RemoteSessionDataSource @Inject constructor(
                         expectedSpecimens = expectedSpecimens,
                         siteId = siteId,
                         deviceId = deviceId,
+                        appVersion = appVersion,
                     )
                 )
             }

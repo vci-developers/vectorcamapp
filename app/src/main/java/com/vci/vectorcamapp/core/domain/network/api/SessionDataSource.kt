@@ -8,6 +8,6 @@ import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import java.util.UUID
 
 interface SessionDataSource {
-    suspend fun postSession(session: Session, siteId: Int, deviceId: Int, expectedSpecimens: Int): Result<PostSessionResponseDto, NetworkError>
+    suspend fun postSession(session: Session, siteId: Int, deviceId: Int, expectedSpecimens: Int, appVersion: String): Result<PostSessionResponseDto, NetworkError>
     suspend fun getSessionByFrontendId(localId: UUID): Result<SessionDto, NetworkError>
 }

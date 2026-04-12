@@ -27,4 +27,5 @@ data class PostSessionRequestDto(
     val expectedSpecimens: Int = 0,
     val siteId: Int = -1,
     val deviceId: Int = -1,
+    val appVersion: String = "",
 )
