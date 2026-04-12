@@ -28,40 +28,39 @@ configure<JacocoPluginExtension> {
 }
 
 // ---------------------------------------------------------------------------
-// Classes to exclude from coverage measurement
+// Only measure coverage for classes we actually write tests for.
+// Everything else (UI, DI, data binding, generated code, etc.) is excluded.
 // ---------------------------------------------------------------------------
-val coverageExclusions = listOf(
-    // Android framework boilerplate
-    "**/R.class",
-    "**/R$*.class",
-    "**/BuildConfig.*",
-    "**/Manifest*.*",
 
-    // Hilt / Dagger generated
-    "**/*Hilt*.*",
-    "**/Dagger*.*",
-    "**/*_Factory.*",
-    "**/*_Factory\$*.*",
-    "**/*_MembersInjector.*",
-    "**/*_HiltModules.*",
-    "**/*_HiltModules\$*.*",
+/** Patterns that MUST match for a class to be included in the report. */
+val coverageIncludes = listOf(
+    // ViewModels
+    "**/*ViewModel.class",
+    "**/*ViewModel\$*.class",       // lambdas / anonymous classes inside ViewModels
+
+    // Use cases  (package name: use_cases)
+    "**/use_cases/**/*.class",
+
+    // Repositories (domain interfaces + data implementations)
+    "**/repository/**/*.class",
+
+    // Utility classes (util / utils packages)
+    "**/util/**/*.class",
+    "**/utils/**/*.class",
+)
+
+/** Generated files that might accidentally match an include pattern above. */
+val generatedExcludes = listOf(
+    "**/*_Factory.class",
+    "**/*_Factory\$*.class",
+    "**/*_HiltModules.class",
+    "**/*_HiltModules\$*.class",
+    "**/*_MembersInjector.class",
+    "**/*Dao_Impl.class",
+    "**/*Dao_Impl\$*.class",
+    "**/*Database_Impl.class",
     "**/hilt_aggregated_deps/**",
-
-    // Room generated
-    "**/*Dao_Impl.*",
-    "**/*Dao_Impl\$*.*",
-    "**/*Database_Impl.*",
-
-    // KSP / KAPT general output
     "**/generated/**",
-
-    // Sealed-class boilerplate (companion objects, etc.)
-    "**/*\$DefaultImpls.*",
-    "**/*\$WhenMappings.*",
-
-    // Test classes themselves
-    "**/*Test.*",
-    "**/*Test\$*.*",
 )
 
 // ---------------------------------------------------------------------------
@@ -78,7 +77,8 @@ fun execFileFor(variantName: String): File {
 
 fun classTreeFor(variantName: String) =
     fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/$variantName")) {
-        exclude(coverageExclusions)
+        include(coverageIncludes)
+        exclude(generatedExcludes)
     }
 
 val sourceDirs = files("${project.projectDir}/src/main/java")
@@ -127,18 +127,18 @@ flavors.forEach { flavor ->
         violationRules {
             rule {
                 limit {
-                    // Minimum LINE coverage across the whole app module
+                    // ViewModel + UseCase + Repository + Util classes are specifically
+                    // tested, so the bar is intentionally higher than the old whole-app threshold.
                     counter = "LINE"
                     value   = "COVEREDRATIO"
-                    minimum = "0.50".toBigDecimal() // 50% — raise as coverage improves
+                    minimum = "0.70".toBigDecimal() // 70%
                 }
             }
             rule {
                 limit {
-                    // Minimum BRANCH coverage across the whole app module
                     counter = "BRANCH"
                     value   = "COVEREDRATIO"
-                    minimum = "0.40".toBigDecimal() // 40%
+                    minimum = "0.60".toBigDecimal() // 60%
                 }
             }
         }

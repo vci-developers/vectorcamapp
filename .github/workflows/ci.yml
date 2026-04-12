@@ -100,18 +100,94 @@ jobs:
         if: matrix.flavor == 'Uganda'
         run: ./gradlew jacocoUgandaDebugUnitTestReport
 
-      # Posts (or updates) a single PR comment with an overall coverage % table
-      # and per-package breakdown. Only runs on pull_request events, not manual dispatches.
+      # Parse the JaCoCo XML and build a detailed markdown coverage table.
+      # The table is written to:
+      #   - $GITHUB_STEP_SUMMARY  → visible in the workflow run "Summary" tab
+      #   - coverage_comment.md   → used by the sticky PR comment step below
+      - name: Build coverage summary
+        if: matrix.flavor == 'Uganda'
+        run: |
+          python3 << 'EOF'
+          import xml.etree.ElementTree as ET, os
+
+          XML = 'app/build/reports/jacoco/jacocoUgandaDebugUnitTestReport/jacocoUgandaDebugUnitTestReport.xml'
+          root = ET.parse(XML).getroot()
+
+          def pct(missed, covered):
+              total = missed + covered
+              return round(covered / total * 100, 1) if total > 0 else 0.0
+
+          def bar(p):
+              filled = int(round(p / 10))
+              return '█' * filled + '░' * (10 - filled)
+
+          def badge(p):
+              if p >= 80: return '🟢'
+              if p >= 50: return '🟡'
+              return '🔴'
+
+          overall = {c.get('type'): (int(c.get('missed')), int(c.get('covered')))
+                     for c in root.findall('counter')}
+
+          lm, lc = overall.get('LINE',   (0, 0))
+          bm, bc = overall.get('BRANCH', (0, 0))
+          mm, mc = overall.get('METHOD', (0, 0))
+          lp, bp, mp = pct(lm, lc), pct(bm, bc), pct(mm, mc)
+
+          pkgs = []
+          for pkg in root.findall('package'):
+              name = pkg.get('name').replace('com/vci/vectorcamapp/', '')
+              cs = {c.get('type'): (int(c.get('missed')), int(c.get('covered')))
+                    for c in pkg.findall('counter')}
+              lmiss, lcov = cs.get('LINE', (0, 0))
+              bmiss, bcov = cs.get('BRANCH', (0, 0))
+              total_lines = lmiss + lcov
+              if total_lines > 0:
+                  pkgs.append((name, lcov, total_lines, pct(lmiss, lcov),
+                               bcov, bmiss + bcov, pct(bmiss, bcov)))
+
+          pkgs.sort(key=lambda x: -x[3])
+
+          md = [
+              '## 📊 Unit Test Coverage',
+              '> Scope: **ViewModels · Use Cases · Repositories · Utils**',
+              '',
+              '| Metric | Coverage | Progress | Covered / Total |',
+              '|--------|----------|----------|-----------------|',
+              f'| 📏 Lines    | {badge(lp)} **{lp}%**   | `{bar(lp)}` | {lc} / {lc+lm} |',
+              f'| 🌿 Branches | {badge(bp)} **{bp}%**   | `{bar(bp)}` | {bc} / {bc+bm} |',
+              f'| 🔧 Methods  | {badge(mp)} **{mp}%**   | `{bar(mp)}` | {mc} / {mc+mm} |',
+              '',
+              '<details>',
+              '<summary>📦 Per-package breakdown</summary>',
+              '',
+              '| Package | Lines | Line % | Branches | Branch % |',
+              '|---------|-------|--------|----------|----------|',
+          ]
+
+          for name, lcov, ltotal, lp2, bcov, btotal, bp2 in pkgs:
+              md.append(f'| `{name}` | {lcov}/{ltotal} | {badge(lp2)} {lp2}% | {bcov}/{btotal} | {badge(bp2)} {bp2}% |')
+
+          md += ['', '</details>']
+          output = '\n'.join(md)
+
+          with open('coverage_comment.md', 'w') as f:
+              f.write(output)
+
+          summary_path = os.environ.get('GITHUB_STEP_SUMMARY')
+          if summary_path:
+              with open(summary_path, 'a') as f:
+                  f.write(output + '\n')
+          EOF
+
+      # Post (or update) a single sticky PR comment with the coverage table.
       - name: Post coverage comment
         if: matrix.flavor == 'Uganda' && github.event_name == 'pull_request'
-        uses: madrapps/jacoco-report@v1.7.2
+        uses: marocchino/sticky-pull-request-comment@v2
         with:
-          paths: app/build/reports/jacoco/jacocoUgandaDebugUnitTestReport/jacocoUgandaDebugUnitTestReport.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "Unit Test Coverage"
-          update-comment: true
-          min-coverage-overall: 0     # report-only; set higher once coverage improves
-          min-coverage-changed-files: 0
+          header: unit-test-coverage
+          path: coverage_comment.md
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload HTML test report
         if: always()
