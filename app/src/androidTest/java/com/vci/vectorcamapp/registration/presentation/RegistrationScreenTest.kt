@@ -90,42 +90,52 @@ class RegistrationScreenTest {
 
             VectorcamappTheme {
                 CompositionLocalProvider(LocalErrorMessageEmitter provides DefaultErrorMessageEmitter()) {
-                NavHost(
-                    navController = navController,
-                    startDestination = Destination.Registration
-                ) {
-                    composable<Destination.Registration> {
-                        BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                            RegistrationScreen(
-                                state = state,
-                                onAction = { action ->
-                                    when (action) {
-                                        is RegistrationAction.SelectProgram -> {
-                                            state = state.copy(selectedProgram = action.program)
+                    NavHost(
+                        navController = navController,
+                        startDestination = Destination.Registration
+                    ) {
+                        composable<Destination.Registration> {
+                            BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                                RegistrationScreen(
+                                    state = state,
+                                    onAction = { action ->
+                                        when (action) {
+                                            is RegistrationAction.SelectProgram -> {
+                                                state = state.copy(selectedProgram = action.program)
+                                            }
+
+                                            is RegistrationAction.ConfirmRegistration -> {
+                                                navController.navigate(Destination.Landing)
+                                            }
+
+                                            is RegistrationAction.EnterCollectorName -> {
+                                                state =
+                                                    state.copy(collector = state.collector.copy(name = action.text))
+                                            }
+
+                                            is RegistrationAction.EnterCollectorTitle -> {
+                                                state = state.copy(
+                                                    collector = state.collector.copy(title = action.text)
+                                                )
+                                            }
+
+                                            is RegistrationAction.EnterCollectorLastTrainedOn -> {
+                                                state = state.copy(
+                                                    collector = state.collector.copy(lastTrainedOn = action.lastTrainedOn)
+                                                )
+                                            }
+
+                                            RegistrationAction.RefreshPrograms -> {
+                                                // No-op for UI test
+                                            }
                                         }
-                                        is RegistrationAction.ConfirmRegistration -> {
-                                            navController.navigate(Destination.Landing)
-                                        }
-                                        is RegistrationAction.EnterCollectorName -> {
-                                            state = state.copy(collector = state.collector.copy(name = action.text))
-                                        }
-                                        is RegistrationAction.EnterCollectorTitle -> {
-                                            state = state.copy(collector = state.collector.copy(title = action.text))
-                                        }
-                                        is RegistrationAction.EnterCollectorLastTrainedOn -> {
-                                            state = state.copy(collector = state.collector.copy(lastTrainedOn = action.lastTrainedOn))
-                                        }
-                                        RegistrationAction.RefreshPrograms -> {
-                                            // No-op for UI test
-                                        }
-                                    }
-                                },
-                                modifier = Modifier.padding(innerPadding)
-                            )
+                                    },
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
                         }
+                        composable<Destination.Landing> { /* empty landing */ }
                     }
-                    composable<Destination.Landing> { /* empty landing */ }
-                }
                 } // CompositionLocalProvider
             }
         }
@@ -162,7 +172,8 @@ class RegistrationScreenTest {
 
     private fun assertConfirmEnabled(isEnabled: Boolean) {
         composeRule.waitForIdle()
-        val node = composeRule.onNodeWithTag(RegistrationTestTags.CONFIRM_PROGRAM_BUTTON).assertExists()
+        val node =
+            composeRule.onNodeWithTag(RegistrationTestTags.CONFIRM_PROGRAM_BUTTON).assertExists()
         if (isEnabled) node.assertIsEnabled() else node.assertIsNotEnabled()
     }
 
