@@ -211,6 +211,9 @@
     <!-- Complete session error: Specimens not found -->
     <string name="complete_session_error_specimens_not_found">Could not load specimens. Please try again.</string>
 
+    <!-- Complete session error: Form data inconsistent -->
+    <string name="complete_session_error_form_data_inconsistent">Could not load form data. Please try again or contact support if the issue persists.</string>
+
     <!-- Complete session error: Unknown error -->
     <string name="complete_session_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 

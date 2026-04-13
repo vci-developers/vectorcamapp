@@ -43,6 +43,7 @@ fun Error.toString(context: Context): String {
             CompleteSessionDetailsError.SESSION_NOT_FOUND -> R.string.complete_session_error_session_not_found
             CompleteSessionDetailsError.SITE_NOT_FOUND -> R.string.complete_session_error_site_not_found
             CompleteSessionDetailsError.SPECIMENS_NOT_FOUND -> R.string.complete_session_error_specimens_not_found
+            CompleteSessionDetailsError.FORM_DATA_INCONSISTENT -> R.string.complete_session_error_form_data_inconsistent
             CompleteSessionDetailsError.UNKNOWN_ERROR -> R.string.complete_session_error_unknown_error
         }
 

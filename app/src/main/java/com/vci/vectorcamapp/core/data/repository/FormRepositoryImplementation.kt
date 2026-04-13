@@ -4,11 +4,14 @@ import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.dao.FormDao
 import com.vci.vectorcamapp.core.domain.model.Form
+import com.vci.vectorcamapp.core.domain.model.composites.FormAnswerAndQuestion
+import com.vci.vectorcamapp.core.domain.model.composites.FormWithFormAnswersAndQuestions
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 import javax.inject.Inject
 
 class FormRepositoryImplementation @Inject constructor(
@@ -34,5 +37,27 @@ class FormRepositoryImplementation @Inject constructor(
 
     override suspend fun getFormByVersion(version: String): Form? {
         return formDao.getFormByVersion(version)?.toDomain()
+    }
+
+    override suspend fun getFormsWithFormAnswersAndQuestionsBySessionId(sessionId: UUID): List<FormWithFormAnswersAndQuestions> {
+        val relations = formDao.getFormAnswersAndQuestionsBySessionId(sessionId)
+        val groupedRelations = relations.groupBy { it.question.formId }
+
+        return groupedRelations.mapNotNull { (formId, formRelations) ->
+            val form = formDao.getFormById(formId)?.toDomain() ?: return@mapNotNull null
+            val formAnswersAndQuestions = formRelations
+                .map {
+                    FormAnswerAndQuestion(
+                        answer = it.answer.toDomain(),
+                        question = it.question.toDomain()
+                    )
+                }
+                .sortedBy { it.question.order }
+
+            FormWithFormAnswersAndQuestions(
+                form = form,
+                formAnswersAndQuestions = formAnswersAndQuestions
+            )
+        }
     }
 }
