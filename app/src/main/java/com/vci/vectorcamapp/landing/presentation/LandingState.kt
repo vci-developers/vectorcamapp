@@ -7,7 +7,8 @@ data class LandingState(
     val enrolledProgram: Program = Program(
         id = -1,
         name = "",
-        country = ""
+        country = "",
+        formVersion = null
     ),
     val showResumeDialog: Boolean = false,
     val incompleteSessionsCount: Int = 0

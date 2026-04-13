@@ -1,8 +1,8 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import androidx.compose.material3.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
@@ -21,6 +21,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel
@@ -29,6 +30,9 @@ import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
 import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
+import com.vci.vectorcamapp.imaging.domain.model.AfRegion
+import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
+import com.vci.vectorcamapp.imaging.domain.model.ColorCorrectionGains
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -56,6 +60,7 @@ import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.random.Random
 import androidx.core.graphics.createBitmap
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import org.opencv.android.Utils.matToBitmap
 import org.opencv.core.Mat
 
@@ -70,7 +75,8 @@ class ImagingViewModel @Inject constructor(
     private val inferenceRepository: InferenceRepository,
     private val workRepository: WorkManagerRepository,
     private val validateSpecimenIdUseCase: ValidateSpecimenIdUseCase,
-) : CoreViewModel() {
+    errorMessageEmitter: ErrorMessageEmitter,
+) : CoreViewModel(errorMessageEmitter) {
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
@@ -286,6 +292,15 @@ class ImagingViewModel @Inject constructor(
                             val bitmap = image.toUprightBitmap()
                             image.close()
 
+                            val capturedMetadata = action.cameraMetadata?.copy(
+                                imageWidth = bitmap.width,
+                                imageHeight = bitmap.height,
+                                focalPointX = _state.value.focusPoint?.x,
+                                focalPointY = _state.value.focusPoint?.y
+                            )
+
+                            _state.update { it.copy(currentCameraMetadata = capturedMetadata) }
+
                             val jpegStream = ByteArrayOutputStream()
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
                             val jpegByteArray = jpegStream.toByteArray()
@@ -473,7 +488,7 @@ class ImagingViewModel @Inject constructor(
                             remoteId = null,
                             shouldProcessFurther = shouldProcessFurther
                         )
-                        val specimenImage = SpecimenImage(
+                    val specimenImage = SpecimenImage(
                             localId = calculateMd5(jpegBytes),
                             remoteId = null,
                             species = _state.value.currentSpecimenImage.species,
@@ -483,7 +498,8 @@ class ImagingViewModel @Inject constructor(
                             imageUploadStatus = UploadStatus.NOT_STARTED,
                             metadataUploadStatus = UploadStatus.NOT_STARTED,
                             capturedAt = timestamp,
-                            submittedAt = null
+                            submittedAt = null,
+                            imageMetadata = _state.value.currentCameraMetadata
                         )
 
                         val success = transactionHelper.runAsTransaction {
@@ -559,7 +575,8 @@ class ImagingViewModel @Inject constructor(
                 focusPoint = null,
                 isManualFocusing = false,
                 hasConfirmedPackaging = false,
-                specimenIdError = null
+                specimenIdError = null,
+                currentCameraMetadata = null
             )
         }
     }
@@ -601,7 +618,8 @@ class ImagingViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         allowModelInferenceToggle = allowModelInferenceToggle,
-                        shouldRunInference = !allowModelInferenceToggle
+                        shouldRunInference = !allowModelInferenceToggle,
+                        sessionType = session.type
                     )
                 }
             } else {

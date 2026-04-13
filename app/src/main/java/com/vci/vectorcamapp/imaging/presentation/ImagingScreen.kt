@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.view.Surface
+import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -43,6 +44,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -67,11 +69,13 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
+import com.vci.vectorcamapp.imaging.data.camera.CameraMetadataListenerImplementation
 import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreview
 import com.vci.vectorcamapp.imaging.presentation.components.icon.AnimatedArrowIcon
 import com.vci.vectorcamapp.imaging.presentation.components.specimen.CapturedSpecimenTile
@@ -95,6 +99,7 @@ fun ImagingScreen(
     var surfaceRequest by remember { mutableStateOf<SurfaceRequest?>(null) }
     var imageCaptureUseCase by remember { mutableStateOf<ImageCapture?>(null) }
     var camera by remember { mutableStateOf<Camera?>(null) }
+    val metadataListener = remember { CameraMetadataListenerImplementation() }
 
     val isReviewing by rememberUpdatedState(newValue = state.currentImageBytes != null)
     val analyzer = remember {
@@ -129,7 +134,7 @@ fun ImagingScreen(
                 }
             }
 
-        val imageCapture = ImageCapture.Builder()
+        val imageCaptureBuilder = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
             .setTargetRotation(rotation)
             .setResolutionSelector(
@@ -138,7 +143,11 @@ fun ImagingScreen(
                     .setAllowedResolutionMode(ResolutionSelector.PREFER_HIGHER_RESOLUTION_OVER_CAPTURE_RATE)
                     .build()
             )
-            .build()
+
+        Camera2Interop.Extender(imageCaptureBuilder)
+            .setSessionCaptureCallback(metadataListener)
+
+        val imageCapture = imageCaptureBuilder.build()
 
         val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -304,7 +313,16 @@ fun ImagingScreen(
                                 if (state.specimensWithImagesAndInferenceResults.isEmpty() && state.pendingAction is ImagingAction.SubmitSession) {
                                     Text(
                                         text = "Warning: You are about to submit a session with zero specimens.",
-                                        style = MaterialTheme.typography.titleLarge,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colors.error,
+                                        modifier = Modifier.padding(top = MaterialTheme.dimensions.paddingMedium)
+                                    )
+                                }
+
+                                if (state.sessionType == SessionType.PRACTICE && state.pendingAction is ImagingAction.SubmitSession) {
+                                    Text(
+                                        text = "Warning: This is a practice session. Submitted data will not be considered routine surveillance data.",
+                                        style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colors.error,
                                         modifier = Modifier.padding(top = MaterialTheme.dimensions.paddingMedium)
                                     )
@@ -508,7 +526,7 @@ fun ImagingScreen(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.width(MaterialTheme.dimensions.spacingExtraSmall))
+                            Spacer(modifier = Modifier.width(MaterialTheme.dimensions.spacingSmall))
 
                             Box(
                                 contentAlignment = Alignment.Center,
@@ -525,7 +543,7 @@ fun ImagingScreen(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.width(MaterialTheme.dimensions.spacingExtraSmall))
+                            Spacer(modifier = Modifier.width(MaterialTheme.dimensions.spacingSmall))
 
                             if (state.currentImageBytes != null) {
                                 EmptySpace(
@@ -689,53 +707,79 @@ fun ImagingScreen(
                                 )
                             }
 
-                            InfoTile(
-                                modifier = Modifier.height(MaterialTheme.dimensions.componentHeightExtraExtraExtraLarge)
-                            ) {
-                                Column(
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier
-                                        .fillMaxHeight()
-                                        .padding(
-                                            vertical = MaterialTheme.dimensions.paddingExtraExtraLarge,
-                                            horizontal = MaterialTheme.dimensions.paddingExtraLarge
-                                        )
-                                ) {
-                                    if (state.allowModelInferenceToggle) {
-                                        ToggleField(
-                                            label = "Run Model Inference",
-                                            checked = state.shouldRunInference,
-                                            onCheckedChange = {
-                                                onAction(
-                                                    ImagingAction.ToggleModelInference(
-                                                        it
-                                                    )
-                                                )
-                                            },
-                                        )
-                                        Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingLarge))
+                            Column(modifier = Modifier.height(MaterialTheme.dimensions.componentHeightExtraExtraExtraLarge)) {
+                                if (state.sessionType == SessionType.PRACTICE) {
+                                    Surface(
+                                        modifier = Modifier
+                                            .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                                            .fillMaxWidth(),
+                                        shape = MaterialTheme.shapes.medium,
+                                        color = MaterialTheme.colors.warningBackground,
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(R.drawable.ic_warning),
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colors.warning,
+                                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                                            )
+                                            Text(
+                                                text = "Practice Session: Data will not be tracked.",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colors.textPrimary
+                                            )
+                                        }
                                     }
+                                }
+                                InfoTile {
+                                    Column(
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .padding(
+                                                horizontal = MaterialTheme.dimensions.paddingExtraLarge
+                                            )
+                                    ) {
+                                        if (state.allowModelInferenceToggle) {
+                                            ToggleField(
+                                                label = "Run Model Inference",
+                                                checked = state.shouldRunInference,
+                                                onCheckedChange = {
+                                                    onAction(
+                                                        ImagingAction.ToggleModelInference(
+                                                            it
+                                                        )
+                                                    )
+                                                },
+                                            )
+                                            Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
+                                        }
 
-                                    Text(
-                                        text = if (state.currentSpecimen.id == "") "Specimen ID will appear here" else state.currentSpecimen.id,
-                                        style = MaterialTheme.typography.headlineLarge,
-                                        color = if (state.currentSpecimen.id == "") MaterialTheme.colors.textSecondary else MaterialTheme.colors.textPrimary,
-                                    )
+                                        Text(
+                                            text = if (state.currentSpecimen.id == "") "Specimen ID will appear here" else state.currentSpecimen.id,
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            color = if (state.currentSpecimen.id == "") MaterialTheme.colors.textSecondary else MaterialTheme.colors.textPrimary,
+                                        )
 
-                                    Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
+                                        Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
 
-                                    ActionButton(
-                                        label = "Capture",
-                                        onClick = {
-                                            imageCaptureUseCase?.let {
-                                                onAction(ImagingAction.CaptureImage(it))
-                                            }
-                                        },
-                                        iconPainter = painterResource(id = R.drawable.ic_camera),
-                                        enabled = (!state.isProcessing && state.isCameraReady),
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
+                                        ActionButton(
+                                            label = "Capture",
+                                            onClick = {
+                                                imageCaptureUseCase?.let {
+                                                    onAction(ImagingAction.CaptureImage(it, metadataListener.latestMetadata))
+                                                }
+                                            },
+                                            iconPainter = painterResource(id = R.drawable.ic_camera),
+                                            enabled = (!state.isProcessing && state.isCameraReady),
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
                                 }
                             }
                         }

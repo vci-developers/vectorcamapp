@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.imaging.presentation
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageProxy
 import androidx.compose.ui.geometry.Offset
+import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
 
 sealed interface ImagingAction {
     data class CorrectSpecimenId(val specimenId: String) : ImagingAction
@@ -10,7 +11,10 @@ sealed interface ImagingAction {
     data object SaveSessionProgress : ImagingAction
     data object SubmitSession : ImagingAction
     data class ToggleModelInference(val isChecked: Boolean) : ImagingAction
-    data class CaptureImage(val imageCapture: ImageCapture) : ImagingAction
+    data class CaptureImage(
+        val imageCapture: ImageCapture,
+        val cameraMetadata: CameraMetadata? = null
+    ) : ImagingAction
     data object SaveImageToSession : ImagingAction
     data object RetakeImage : ImagingAction
     data class FocusAt(val offset: Offset) : ImagingAction

@@ -5,9 +5,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.ui.extensions.displayText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,7 +35,9 @@ class CompleteSessionDetailsViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
-) : CoreViewModel() {
+    private val formRepository: FormRepository,
+    errorMessageEmitter: ErrorMessageEmitter,
+) : CoreViewModel(errorMessageEmitter) {
 
     private val _specimensWithImagesAndInferenceResults: Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> =
         flow {
@@ -127,11 +131,24 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                 return@launch
             }
 
+            val formWithFormAnswersAndQuestions = formRepository.getFormsWithFormAnswersAndQuestionsBySessionId(sessionId)
+                .let { forms ->
+                    when {
+                        forms.isEmpty() -> null
+                        forms.size == 1 -> forms.first()
+                        else -> {
+                            emitError(CompleteSessionDetailsError.FORM_DATA_INCONSISTENT)
+                            null
+                        }
+                    }
+                }
+
             _state.update {
                 it.copy(
                     session = session,
                     site = site,
                     surveillanceForm = surveillanceForm,
+                    formWithFormAnswersAndQuestions = formWithFormAnswersAndQuestions,
                 )
             }
         }

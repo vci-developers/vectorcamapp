@@ -9,17 +9,20 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
+import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
 import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import io.mockk.coEvery
@@ -27,14 +30,11 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -53,25 +53,29 @@ class RegistrationViewModelTest {
     private lateinit var siteRepository: SiteRepository
     private lateinit var locationTypeDataSource: LocationTypeDataSource
     private lateinit var locationTypeRepository: LocationTypeRepository
+    private lateinit var formDataSource: FormDataSource
+    private lateinit var formRepository: FormRepository
+    private lateinit var formQuestionRepository: FormQuestionRepository
     private lateinit var transactionHelper: TransactionHelper
     private lateinit var connectivityObserver: ConnectivityObserver
 
     private lateinit var collectorRepository: CollectorRepository
     private lateinit var collectorValidationUseCases: CollectorValidationUseCases
+    private lateinit var errorMessageEmitter: ErrorMessageEmitter
 
     private lateinit var viewModel: RegistrationViewModel
     private lateinit var programsFlow: MutableStateFlow<List<Program>>
 
     private val testPrograms = listOf(
-        Program(id = 1, name = "Program 1", country = "Country 1"),
-        Program(id = 2, name = "Program 2", country = "Country 2")
+        Program(id = 1, name = "Program 1", country = "Country 1", "1.0.0"),
+        Program(id = 2, name = "Program 2", country = "Country 2", "1.0.0")
     )
 
     @Before
     fun setUp() {
-        ErrorMessageBus.clearLastMessage()
-        mockkObject(ErrorMessageBus)
-        coEvery { ErrorMessageBus.emit(any(), any()) } returns Unit
+        errorMessageEmitter = mockk(relaxed = true)
+        coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
+        every { errorMessageEmitter.clearLastMessage() } returns Unit
 
         deviceCache = mockk(relaxed = true)
         sessionCache = mockk(relaxed = true)
@@ -88,6 +92,9 @@ class RegistrationViewModelTest {
         siteRepository = mockk()
         locationTypeDataSource = mockk()
         locationTypeRepository = mockk()
+        formDataSource = mockk()
+        formRepository = mockk()
+        formQuestionRepository = mockk()
         transactionHelper = mockk(relaxed = true)
         connectivityObserver = mockk()
         every { connectivityObserver.isConnected } returns flowOf(true)
@@ -115,13 +122,12 @@ class RegistrationViewModelTest {
             siteRepository = siteRepository,
             locationTypeDataSource = locationTypeDataSource,
             locationTypeRepository = locationTypeRepository,
-            connectivityObserver = connectivityObserver
+            formDataSource = formDataSource,
+            formRepository = formRepository,
+            formQuestionRepository = formQuestionRepository,
+            connectivityObserver = connectivityObserver,
+            errorMessageEmitter = errorMessageEmitter,
         )
-    }
-
-    @After
-    fun tearDown() {
-        unmockkObject(ErrorMessageBus)
     }
 
     // ========================================
@@ -177,7 +183,7 @@ class RegistrationViewModelTest {
             awaitItem()
             awaitItem()
 
-            val newPrograms = listOf(Program(id = 99, name = "Updated", country = "Test"))
+            val newPrograms = listOf(Program(id = 99, name = "Updated", country = "Test", "1.0.0"))
             programsFlow.value = newPrograms
             advanceUntilIdle()
 
@@ -221,7 +227,7 @@ class RegistrationViewModelTest {
             advanceUntilIdle()
             awaitItem()
 
-            val newPrograms = listOf(Program(id = 3, name = "New", country = "New"))
+            val newPrograms = listOf(Program(id = 3, name = "New", country = "New", "1.0.0"))
             programsFlow.value = newPrograms
             advanceUntilIdle()
 
@@ -247,7 +253,7 @@ class RegistrationViewModelTest {
 
         coVerify(exactly = 0) { deviceCache.saveDevice(any(), any()) }
         coVerify(exactly = 0) { sessionCache.clearSession() }
-        coVerify(exactly = 1) { ErrorMessageBus.emit(RegistrationError.PROGRAM_NOT_FOUND, any()) }
+        coVerify(exactly = 1) { errorMessageEmitter.emit(RegistrationError.PROGRAM_NOT_FOUND, any()) }
     }
 
     @Test
@@ -257,7 +263,7 @@ class RegistrationViewModelTest {
             advanceUntilIdle()
         }
 
-        coVerify(exactly = 3) { ErrorMessageBus.emit(RegistrationError.PROGRAM_NOT_FOUND, any()) }
+        coVerify(exactly = 3) { errorMessageEmitter.emit(RegistrationError.PROGRAM_NOT_FOUND, any()) }
     }
 
     @Test
@@ -354,7 +360,7 @@ class RegistrationViewModelTest {
         coVerify(exactly = 1) { deviceCache.saveDevice(any(), selectedProgram.id) }
         coVerify(exactly = 0) { sessionCache.clearSession() }
         coVerify(exactly = 0) { collectorRepository.upsertCollector(any()) }
-        coVerify(exactly = 1) { ErrorMessageBus.emit(RegistrationError.UNKNOWN_ERROR, any()) }
+        coVerify(exactly = 1) { errorMessageEmitter.emit(RegistrationError.UNKNOWN_ERROR, any()) }
     }
 
     @Test
@@ -373,7 +379,7 @@ class RegistrationViewModelTest {
         coVerify(exactly = 1) { deviceCache.saveDevice(any(), selectedProgram.id) }
         coVerify(exactly = 1) { sessionCache.clearSession() }
         coVerify(exactly = 0) { collectorRepository.upsertCollector(any()) }
-        coVerify(exactly = 1) { ErrorMessageBus.emit(RegistrationError.UNKNOWN_ERROR, any()) }
+        coVerify(exactly = 1) { errorMessageEmitter.emit(RegistrationError.UNKNOWN_ERROR, any()) }
     }
 
     @Test
@@ -388,7 +394,7 @@ class RegistrationViewModelTest {
             expectNoEvents()
         }
 
-        coVerify { ErrorMessageBus.emit(RegistrationError.UNKNOWN_ERROR, any()) }
+        coVerify { errorMessageEmitter.emit(RegistrationError.UNKNOWN_ERROR, any()) }
     }
 
     // ========================================
@@ -412,13 +418,17 @@ class RegistrationViewModelTest {
             siteRepository = siteRepository,
             locationTypeDataSource = locationTypeDataSource,
             locationTypeRepository = locationTypeRepository,
-            connectivityObserver = connectivityObserver
+            formDataSource = formDataSource,
+            formRepository = formRepository,
+            formQuestionRepository = formQuestionRepository,
+            connectivityObserver = connectivityObserver,
+            errorMessageEmitter = errorMessageEmitter,
         )
 
         emptyRepoViewModel.onAction(RegistrationAction.ConfirmRegistration)
         advanceUntilIdle()
 
-        coVerify { ErrorMessageBus.emit(RegistrationError.PROGRAM_NOT_FOUND, any()) }
+        coVerify { errorMessageEmitter.emit(RegistrationError.PROGRAM_NOT_FOUND, any()) }
 
         emptyRepoViewModel.events.test {
             expectNoEvents()

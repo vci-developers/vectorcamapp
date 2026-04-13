@@ -34,7 +34,7 @@ import java.util.Locale
 
 @Composable
 fun DatePickerField(
-    selectedDateInMillis: Long,
+    selectedDateInMillis: Long?,
     onDateSelected: (Long) -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null,
@@ -44,7 +44,7 @@ fun DatePickerField(
 
     val calendar = remember(selectedDateInMillis) {
         Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault()).apply {
-            timeInMillis = selectedDateInMillis
+            selectedDateInMillis?.let { timeInMillis = it }
         }
     }
 
@@ -53,7 +53,7 @@ fun DatePickerField(
     }
 
     val formattedDate = remember(selectedDateInMillis) {
-        dateFormatter.format(selectedDateInMillis)
+        selectedDateInMillis?.let { dateFormatter.format(it) }
     }
 
     Column(
@@ -103,8 +103,7 @@ fun DatePickerField(
                     ).apply {
                         datePicker.maxDate = System.currentTimeMillis()
                     }.show()
-                }
-        ) {
+                }) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -113,9 +112,9 @@ fun DatePickerField(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = formattedDate,
+                    text = formattedDate ?: "Select a date",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colors.textPrimary
+                    color = if (formattedDate != null) MaterialTheme.colors.textPrimary else MaterialTheme.colors.textSecondary
                 )
 
                 Icon(

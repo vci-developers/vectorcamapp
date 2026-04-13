@@ -11,14 +11,18 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.data.dto.device.DeviceDto
+import com.vci.vectorcamapp.core.data.dto.form_answer.FormAnswerDto
 import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto
 import com.vci.vectorcamapp.core.data.dto.session.SessionDto
 import com.vci.vectorcamapp.core.data.dto.specimen.SpecimenDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.SpecimenImageDto
 import com.vci.vectorcamapp.core.data.dto.surveillance_form.SurveillanceFormDto
+import com.vci.vectorcamapp.core.data.mappers.toCameraMetadata
+import com.vci.vectorcamapp.core.data.mappers.toImageMetadataDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
+import com.vci.vectorcamapp.core.domain.model.FormAnswer
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Specimen
@@ -26,11 +30,14 @@ import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.network.api.DeviceDataSource
+import com.vci.vectorcamapp.core.domain.network.api.FormAnswerDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SessionDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenImageDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SurveillanceFormDataSource
+import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
+import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
@@ -51,6 +58,7 @@ class MetadataUploadWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted private val workerParams: WorkerParameters,
     private val deviceCache: DeviceCache,
+    private val programRepository: ProgramRepository,
     private val transactionHelper: TransactionHelper,
     private val sessionRepository: SessionRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
@@ -61,7 +69,9 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val sessionDataSource: SessionDataSource,
     private val surveillanceFormDataSource: SurveillanceFormDataSource,
     private val specimenDataSource: SpecimenDataSource,
-    private val specimenImageDataSource: SpecimenImageDataSource
+    private val specimenImageDataSource: SpecimenImageDataSource,
+    private val formAnswerDataSource: FormAnswerDataSource,
+    private val formAnswerRepository: FormAnswerRepository
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -94,6 +104,9 @@ class MetadataUploadWorker @AssistedInject constructor(
             return retryOrFailure("Device or session not found.")
         }
 
+        val localProgram = programRepository.getProgramById(localProgramId)
+            ?: return retryOrFailure("Program not found.")
+
         createNotificationChannel()
         notificationId = localSessionId.hashCode()
         setForeground(showInitialMetadataNotification())
@@ -112,7 +125,12 @@ class MetadataUploadWorker @AssistedInject constructor(
             val totalSpecimensForSession = localSpecimensWithImagesAndInferenceResults.size
 
             val syncedSession = when (val syncSessionResult =
-                syncSessionIfNeeded(localSession, localSiteId, syncedDevice.id, totalSpecimensForSession)) {
+                syncSessionIfNeeded(
+                    localSession,
+                    localSiteId,
+                    syncedDevice.id,
+                    totalSpecimensForSession
+                )) {
                 is DomainResult.Success -> syncSessionResult.data
                 is DomainResult.Error -> return retryOrFailure(
                     syncSessionResult.error.toString(context)
@@ -122,16 +140,34 @@ class MetadataUploadWorker @AssistedInject constructor(
                 return retryOrFailure("Session not found on the server.")
             }
 
-            val localSurveillanceForm =
-                surveillanceFormRepository.getSurveillanceFormBySessionId(syncedSession.localId)
-            if (localSurveillanceForm != null) {
-                when (val syncSurveillanceFormResult = syncSurveillanceFormIfNeeded(
-                    localSurveillanceForm, syncedSession.localId, syncedSession.remoteId
-                )) {
-                    is DomainResult.Success -> syncSurveillanceFormResult.data
-                    is DomainResult.Error -> return retryOrFailure(
-                        syncSurveillanceFormResult.error.toString(context)
-                    )
+            if (localProgram.formVersion != null) {
+                val localFormAnswers =
+                    formAnswerRepository.getFormAnswersBySessionId(syncedSession.localId)
+                if (localFormAnswers.isNotEmpty()) {
+                    when (val syncFormAnswersResult = syncFormAnswersIfNeeded(
+                        localFormAnswers,
+                        localProgram.formVersion,
+                        syncedSession.localId,
+                        syncedSession.remoteId
+                    )) {
+                        is DomainResult.Success -> syncFormAnswersResult.data
+                        is DomainResult.Error -> return retryOrFailure(
+                            syncFormAnswersResult.error.toString(context)
+                        )
+                    }
+                }
+            } else {
+                val localSurveillanceForm =
+                    surveillanceFormRepository.getSurveillanceFormBySessionId(syncedSession.localId)
+                if (localSurveillanceForm != null) {
+                    when (val syncSurveillanceFormResult = syncSurveillanceFormIfNeeded(
+                        localSurveillanceForm, syncedSession.localId, syncedSession.remoteId
+                    )) {
+                        is DomainResult.Success -> syncSurveillanceFormResult.data
+                        is DomainResult.Error -> return retryOrFailure(
+                            syncSurveillanceFormResult.error.toString(context)
+                        )
+                    }
                 }
             }
 
@@ -439,8 +475,101 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
+    private suspend fun syncFormAnswersIfNeeded(
+        localFormAnswers: Map<Int, FormAnswer>,
+        formVersion: String,
+        syncedLocalSessionId: UUID,
+        syncedRemoteSessionId: Int
+    ): DomainResult<Unit, NetworkError> {
+        return try {
+            val localFormAnswersDto = localFormAnswers.map { (questionId, answer) ->
+                FormAnswerDto(
+                    id = answer.remoteId,
+                    frontendId = answer.localId,
+                    sessionId = syncedRemoteSessionId,
+                    questionId = questionId,
+                    value = answer.value,
+                    dataType = answer.dataType,
+                    submittedAt = answer.submittedAt
+                )
+            }
+
+            val remoteFormAnswersDto = when (val remoteFormAnswersResult =
+                formAnswerDataSource.getFormAnswersForSession(syncedRemoteSessionId)) {
+                is DomainResult.Success -> {
+                    val answers = remoteFormAnswersResult.data.answers
+                    answers.ifEmpty {
+                        val postFormAnswersResult =
+                            formAnswerDataSource.postFormAnswersForSession(
+                                syncedRemoteSessionId, formVersion, localFormAnswers
+                            )
+                        when (postFormAnswersResult) {
+                            is DomainResult.Success -> postFormAnswersResult.data.answers
+                            is DomainResult.Error -> return DomainResult.Error(
+                                postFormAnswersResult.error
+                            )
+                        }
+                    }
+                }
+                is DomainResult.Error -> {
+                    when (remoteFormAnswersResult.error) {
+                        NetworkError.NOT_FOUND -> {
+                            val postFormAnswersResult =
+                                formAnswerDataSource.postFormAnswersForSession(
+                                    syncedRemoteSessionId, formVersion, localFormAnswers
+                                )
+                            when (postFormAnswersResult) {
+                                is DomainResult.Success -> postFormAnswersResult.data.answers
+                                is DomainResult.Error -> return DomainResult.Error(
+                                    postFormAnswersResult.error
+                                )
+                            }
+                        }
+
+                        else -> return DomainResult.Error(remoteFormAnswersResult.error)
+                    }
+                }
+            }
+
+            val remoteFormAnswers = remoteFormAnswersDto.associate { remoteFormAnswerDto ->
+                remoteFormAnswerDto.questionId to FormAnswer(
+                    localId = remoteFormAnswerDto.frontendId,
+                    remoteId = remoteFormAnswerDto.id,
+                    value = remoteFormAnswerDto.value,
+                    dataType = remoteFormAnswerDto.dataType,
+                    submittedAt = remoteFormAnswerDto.submittedAt
+                )
+            }
+
+            for ((questionId, remoteFormAnswer) in remoteFormAnswers) {
+                val localFormAnswerDto =
+                    localFormAnswersDto.firstOrNull { it.questionId == questionId }
+                val remoteFormAnswerDto =
+                    remoteFormAnswersDto.firstOrNull { it.questionId == questionId }
+
+                if (localFormAnswerDto != remoteFormAnswerDto) {
+                    val formAnswerUpdateResult = formAnswerRepository.upsertFormAnswer(
+                        remoteFormAnswer, syncedLocalSessionId, questionId
+                    )
+                    if (formAnswerUpdateResult is DomainResult.Error) {
+                        return DomainResult.Error(NetworkError.CLIENT_ERROR)
+                    }
+                }
+            }
+
+            DomainResult.Success(Unit)
+        } catch (e: IOException) {
+            DomainResult.Error(NetworkError.NO_INTERNET)
+        } catch (e: Exception) {
+            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
+        }
+    }
+
     private suspend fun syncSpecimenIfNeeded(
-        localSpecimen: Specimen, syncedLocalSessionId: UUID, syncedRemoteSessionId: Int, expectedImages: Int
+        localSpecimen: Specimen,
+        syncedLocalSessionId: UUID,
+        syncedRemoteSessionId: Int,
+        expectedImages: Int
     ): DomainResult<Specimen, NetworkError> {
         return try {
             val localSpecimenDto = SpecimenDto(
@@ -475,7 +604,9 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
 
             val remoteSpecimen = Specimen(
-                id = remoteSpecimenDto.specimenId, remoteId = remoteSpecimenDto.id, shouldProcessFurther = remoteSpecimenDto.shouldProcessFurther
+                id = remoteSpecimenDto.specimenId,
+                remoteId = remoteSpecimenDto.id,
+                shouldProcessFurther = remoteSpecimenDto.shouldProcessFurther
             )
 
             if (remoteSpecimenDto != localSpecimenDto) {
@@ -531,7 +662,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                         sexInferenceDuration = it.sexInferenceDuration,
                         abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration
                     )
-                }
+                },
+                imageMetadata = localSpecimenImage.imageMetadata?.toImageMetadataDto()
             )
 
             if (syncedSpecimen.remoteId == null) {
@@ -578,7 +710,9 @@ class MetadataUploadWorker @AssistedInject constructor(
                 metadataUploadStatus = localSpecimenImage.metadataUploadStatus,
                 imageUploadStatus = localSpecimenImage.imageUploadStatus,
                 capturedAt = remoteSpecimenImageDto.capturedAt,
-                submittedAt = remoteSpecimenImageDto.submittedAt
+                submittedAt = remoteSpecimenImageDto.submittedAt,
+                imageMetadata = remoteSpecimenImageDto.imageMetadata?.toCameraMetadata()
+                    ?: localSpecimenImage.imageMetadata
             )
 
             val remoteInferenceResult = remoteSpecimenImageDto.inferenceResult?.let {

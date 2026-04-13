@@ -106,4 +106,13 @@ class SessionRepositoryImplementation @Inject constructor(
             }
         }
     }
+
+    override suspend fun getIncompleteSessionsAndSites(): List<SessionAndSite> {
+        return sessionDao.getIncompleteSessionsAndSites().map { sessionAndSiteRelation ->
+            SessionAndSite(
+                session = sessionAndSiteRelation.session.toDomain(),
+                site = sessionAndSiteRelation.site.toDomain()
+            )
+        }
+    }
 }
