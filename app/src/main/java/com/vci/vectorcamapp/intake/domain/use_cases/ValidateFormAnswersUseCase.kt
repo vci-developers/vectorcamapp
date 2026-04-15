@@ -28,7 +28,7 @@ class ValidateFormAnswersUseCase @Inject constructor() {
 
                 else -> when (question.type) {
                     "number" -> {
-                        if (answer.toDoubleOrNull() == null || answer.startsWith(".") || answer.endsWith(".") || answer.substringAfter(".", "").length > 2) {
+                        if (answer.toDoubleOrNull() == null || answer.startsWith(".") || answer.endsWith(".")) {
                             Result.Error(FormValidationError.INVALID_FORM_ANSWER)
                         } else Result.Success(Unit)
                     }

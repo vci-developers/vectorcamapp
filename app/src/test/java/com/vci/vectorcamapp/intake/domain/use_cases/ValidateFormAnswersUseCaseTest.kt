@@ -119,14 +119,6 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun numberField_tooManyDecimalPlaces_returnsError() {
-        val questions = listOf(question(id = 1, type = "number"))
-        val answers = mapOf(answer(1, "3.141"))
-        val result = useCase(questions, answers)
-        assertEquals(FormValidationError.INVALID_FORM_ANSWER, (result[1] as Result.Error).error)
-    }
-
-    @Test
     fun numberField_trailingDot_returnsError() {
         val questions = listOf(question(id = 1, type = "number"))
         val answers = mapOf(answer(1, "5."))
