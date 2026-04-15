@@ -643,7 +643,7 @@ class IntakeViewModel @Inject constructor(
             val cachedDefaultDistrict = defaultFields?.district.orEmpty()
             val cachedDefaultVillageName = defaultFields?.villageName.orEmpty()
             val cachedFormAnswers = defaultFields?.formAnswers ?: emptyMap()
-            val cachedLocationSelection = defaultFields?.locationSelection ?: emptyMap()
+            val cachedLocationSelection = defaultFields?.locationSelections ?: emptyMap()
 
             val effectiveSession = currentSession ?: _state.value.session.copy(
                 type = resolvedSessionType,
