@@ -39,7 +39,11 @@ fun DynamicFormField(
             TextEntryField(
                 label = question.label,
                 value = value,
-                onValueChange = { newValue -> onValueChange(newValue.filter { it.isDigit() }) },
+                onValueChange = { newValue ->
+                    if (newValue.isEmpty() || newValue.matches(Regex("^\\d+\\.?\\d{0,2}$"))) {
+                        onValueChange(newValue)
+                    }
+                },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 error = error,
