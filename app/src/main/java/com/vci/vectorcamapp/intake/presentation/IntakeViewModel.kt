@@ -281,6 +281,19 @@ class IntakeViewModel @Inject constructor(
 
                         if (success) {
                             currentSessionCache.saveSession(session, selectedSite.id)
+
+                            val answersToCache = _state.value.formAnswers.mapValues { (_, formAnswer) ->
+                                formAnswer.value
+                            }
+
+                            val allLocationTypes = _state.value.allLocationTypesInProgram
+                            val locationSelectionsToCache = if (allLocationTypes.isNotEmpty()) {
+                                val lowestLevelId = allLocationTypes.last().id
+                                _state.value.siteSelectionsByLocationTypeId.filterKeys { it != lowestLevelId }
+                            } else {
+                                _state.value.siteSelectionsByLocationTypeId
+                            }
+
                             defaultIntakeFieldsCache.saveDefaultIntakeFields(
                                 collectorName = session.collectorName,
                                 collectorTitle = session.collectorTitle,
@@ -288,6 +301,8 @@ class IntakeViewModel @Inject constructor(
                                 hardwareId = session.hardwareId,
                                 district = _state.value.selectedDistrict,
                                 villageName = _state.value.selectedVillageName,
+                                formAnswers = answersToCache,
+                                locationSelections = locationSelectionsToCache
                             )
                             _events.send(IntakeEvent.NavigateToImagingScreen)
                         }
@@ -627,6 +642,8 @@ class IntakeViewModel @Inject constructor(
             val cachedDefaultHardwareId = defaultFields?.hardwareId.orEmpty()
             val cachedDefaultDistrict = defaultFields?.district.orEmpty()
             val cachedDefaultVillageName = defaultFields?.villageName.orEmpty()
+            val cachedFormAnswers = defaultFields?.formAnswers ?: emptyMap()
+            val cachedLocationSelection = defaultFields?.locationSelection ?: emptyMap()
 
             val effectiveSession = currentSession ?: _state.value.session.copy(
                 type = resolvedSessionType,
@@ -659,7 +676,9 @@ class IntakeViewModel @Inject constructor(
                             }
                         }.toMap()
                     } else {
-                        emptyMap()
+                        cachedLocationSelection.filterKeys { cachedId ->
+                            currentAllLocationTypes.any { it.id == cachedId }
+                        }
                     }
 
                 val validatedDistrict = when {
@@ -701,7 +720,7 @@ class IntakeViewModel @Inject constructor(
                             question.id to (savedFormAnswers[question.id] ?: FormAnswer(
                                 localId = UUID.randomUUID(),
                                 remoteId = null,
-                                value = when (question.type) { "boolean" -> "false"; else -> "" },
+                                value = cachedFormAnswers[question.id] ?: when (question.type) { "boolean" -> "false"; else -> "" },
                                 dataType = question.type,
                                 submittedAt = 0L
                             ))

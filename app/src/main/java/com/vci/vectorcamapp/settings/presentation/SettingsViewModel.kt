@@ -319,7 +319,9 @@ class SettingsViewModel @Inject constructor(
                         collectorLastTrainedOn = defaultFields.collectorLastTrainedOn,
                         hardwareId = defaultFields.hardwareId,
                         district = "",
-                        villageName = ""
+                        villageName = "",
+                        formAnswers = emptyMap(),
+                        locationSelections = emptyMap()
                     )
                 }
             } else {
