@@ -1,5 +1,7 @@
 package com.vci.vectorcamapp.core.presentation.components.header
 
+import com.vci.vectorcamapp.core.presentation.util.ScreenHeaderTestTags
+
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -22,10 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-
-object ScreenHeaderTestTags {
-    const val LIST = "screen_header_list"
-}
 
 @Composable
 fun ScreenHeader(

@@ -14,7 +14,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
-import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeaderTestTags
+import com.vci.vectorcamapp.core.presentation.util.ScreenHeaderTestTags
 import com.vci.vectorcamapp.MainActivity
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.Session
