@@ -171,7 +171,7 @@ fun RegistrationScreen(
                             state.collector.lastTrainedOn != 0L &&
                             !state.isLoading,
                     testTag = RegistrationTestTags.CONFIRM_PROGRAM_BUTTON,
-                    modifier = modifier
+                    modifier = modifier.height(MaterialTheme.dimensions.componentHeightMedium)
                 )
             }
         }

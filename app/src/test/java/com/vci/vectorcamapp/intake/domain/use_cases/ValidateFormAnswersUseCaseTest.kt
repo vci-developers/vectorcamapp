@@ -103,6 +103,14 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
+    fun numberField_validDecimal_returnsSuccess() {
+        val questions = listOf(question(id = 1, type = "number"))
+        val answers = mapOf(answer(1, "3.14"))
+        val result = useCase(questions, answers)
+        assertTrue(result[1] is Result.Success)
+    }
+
+    @Test
     fun numberField_invalidText_returnsError() {
         val questions = listOf(question(id = 1, type = "number"))
         val answers = mapOf(answer(1, "hello"))
@@ -111,11 +119,18 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     @Test
-    fun numberField_decimalValue_returnsError() {
+    fun numberField_trailingDot_returnsError() {
         val questions = listOf(question(id = 1, type = "number"))
-        val answers = mapOf(answer(1, "3.14"))
+        val answers = mapOf(answer(1, "5."))
         val result = useCase(questions, answers)
-        // toIntOrNull() on "3.14" returns null → error
+        assertEquals(FormValidationError.INVALID_FORM_ANSWER, (result[1] as Result.Error).error)
+    }
+
+    @Test
+    fun numberField_leadingDot_returnsError() {
+        val questions = listOf(question(id = 1, type = "number"))
+        val answers = mapOf(answer(1, ".5"))
+        val result = useCase(questions, answers)
         assertEquals(FormValidationError.INVALID_FORM_ANSWER, (result[1] as Result.Error).error)
     }
 
