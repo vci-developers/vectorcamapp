@@ -669,14 +669,16 @@ class IntakeViewModel @Inject constructor(
 
                 val validatedSite = currentAllSites.find { it.id == currentSessionSiteId }
                 val validatedSiteSelectionsByLocationTypeId =
-                    if (validatedSite?.locationHierarchy != null) {
+                    if (validatedSite?.locationHierarchy?.isNotEmpty() == true) {
                         currentAllLocationTypes.mapNotNull { locationType ->
                             validatedSite.locationHierarchy[locationType.name]?.let { selectedLocationTypeSite ->
                                 locationType.id to selectedLocationTypeSite
                             }
                         }.toMap()
                     } else {
-                        emptyMap()
+                        cachedLocationSelection.filterKeys { cachedId ->
+                            currentAllLocationTypes.any { it.id == cachedId }
+                        }
                     }
 
                 val validatedDistrict = when {
