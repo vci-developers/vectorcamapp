@@ -291,7 +291,7 @@ class IntakeViewModel @Inject constructor(
                                 val lowestLevelId = allLocationTypes.last().id
                                 _state.value.siteSelectionsByLocationTypeId.filterKeys { it != lowestLevelId }
                             } else {
-                                _state.value.siteSelectionsByLocationTypeId
+                                emptyMap()
                             }
 
                             defaultIntakeFieldsCache.saveDefaultIntakeFields(
@@ -676,9 +676,7 @@ class IntakeViewModel @Inject constructor(
                             }
                         }.toMap()
                     } else {
-                        cachedLocationSelection.filterKeys { cachedId ->
-                            currentAllLocationTypes.any { it.id == cachedId }
-                        }
+                        emptyMap()
                     }
 
                 val validatedDistrict = when {
