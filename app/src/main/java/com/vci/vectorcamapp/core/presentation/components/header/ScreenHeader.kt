@@ -1,9 +1,8 @@
 package com.vci.vectorcamapp.core.presentation.components.header
 
-import com.vci.vectorcamapp.core.presentation.util.ScreenHeaderTestTags
-
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import com.vci.vectorcamapp.core.presentation.util.ScreenHeaderTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.screenHeightFraction
