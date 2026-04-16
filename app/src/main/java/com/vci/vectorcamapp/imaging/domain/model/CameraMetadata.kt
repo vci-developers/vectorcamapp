@@ -11,7 +11,13 @@ data class CameraMetadata(
     val imageHeight: Int = 0,
     val focalPointX: Float? = null,
     val focalPointY: Float? = null,
-    val afRegions: List<AfRegion> = emptyList()
+    val afRegions: List<AfRegion> = emptyList(),
+    val modelFileNames: List<String> = listOf(
+        "detect.tflite",
+        "species.tflite",
+        "sex.tflite",
+        "abdomen-status.tflite"
+    )
 )
 
 data class ColorCorrectionGains(
