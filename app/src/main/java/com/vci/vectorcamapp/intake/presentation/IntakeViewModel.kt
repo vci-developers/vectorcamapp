@@ -668,18 +668,23 @@ class IntakeViewModel @Inject constructor(
                 locationTypeRepository.observeAllLocationTypesByProgramId(programId)) { currentAllSites, currentSavedSurveillanceForm, currentAllCollectors, currentAllLocationTypes ->
 
                 val validatedSite = currentAllSites.find { it.id == currentSessionSiteId }
-                val validatedSiteSelectionsByLocationTypeId =
-                    if (validatedSite?.locationHierarchy?.isNotEmpty() == true) {
+                val validatedSiteSelectionsByLocationTypeId = when {
+                    validatedSite == null -> {
+                        cachedLocationSelection.filterKeys { cachedId ->
+                            currentAllLocationTypes.any { it.id == cachedId }
+                        }
+                    }
+                    validatedSite.locationHierarchy?.isNotEmpty() == true -> {
                         currentAllLocationTypes.mapNotNull { locationType ->
                             validatedSite.locationHierarchy[locationType.name]?.let { selectedLocationTypeSite ->
                                 locationType.id to selectedLocationTypeSite
                             }
                         }.toMap()
-                    } else {
-                        cachedLocationSelection.filterKeys { cachedId ->
-                            currentAllLocationTypes.any { it.id == cachedId }
-                        }
                     }
+                    else -> {
+                        emptyMap()
+                    }
+                }
 
                 val validatedDistrict = when {
                     validatedSite != null -> validatedSite.district.orEmpty()
