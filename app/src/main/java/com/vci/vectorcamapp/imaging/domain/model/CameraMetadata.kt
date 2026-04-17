@@ -1,5 +1,7 @@
 package com.vci.vectorcamapp.imaging.domain.model
 
+import com.vci.vectorcamapp.imaging.domain.ModelFileNames
+
 data class CameraMetadata(
     val focusDistance: Float? = null,
     val aperture: Float? = null,
@@ -12,12 +14,7 @@ data class CameraMetadata(
     val focalPointX: Float? = null,
     val focalPointY: Float? = null,
     val afRegions: List<AfRegion> = emptyList(),
-    val modelFileNames: List<String> = listOf(
-        "detect.tflite",
-        "species.tflite",
-        "sex.tflite",
-        "abdomen-status.tflite"
-    )
+    val modelFileNames: List<String> = ModelFileNames.ALL
 )
 
 data class ColorCorrectionGains(
