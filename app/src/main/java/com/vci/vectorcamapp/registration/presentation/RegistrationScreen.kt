@@ -12,13 +12,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
@@ -174,6 +180,51 @@ fun RegistrationScreen(
                     modifier = modifier.height(MaterialTheme.dimensions.componentHeightMedium)
                 )
             }
+        }
+
+        if (state.isPasswordDialogVisible) {
+            AlertDialog(
+                onDismissRequest = { onAction(RegistrationAction.DismissRegistrationPasswordDialog) },
+                title = { Text(text = "Program Password") },
+                text = {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                    ) {
+                        OutlinedTextField(
+                            value = state.registrationPasswordInput,
+                            onValueChange = { onAction(RegistrationAction.EnterRegistrationPassword(it)) },
+                            label = { Text("Password") },
+                            singleLine = true,
+                            isError = state.registrationPasswordError != null,
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        state.registrationPasswordError?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = { onAction(RegistrationAction.SubmitRegistrationPassword) },
+                        enabled = state.registrationPasswordInput.isNotBlank() && !state.isLoading
+                    ) {
+                        Text("Confirm")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { onAction(RegistrationAction.DismissRegistrationPasswordDialog) }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }
