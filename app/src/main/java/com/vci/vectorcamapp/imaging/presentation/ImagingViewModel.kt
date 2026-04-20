@@ -8,11 +8,13 @@ import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
+import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
@@ -57,6 +59,7 @@ import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import java.time.Instant
 import java.time.ZoneId
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
 import androidx.core.graphics.createBitmap
@@ -68,6 +71,7 @@ import org.opencv.core.Mat
 class ImagingViewModel @Inject constructor(
     private val currentSessionCache: CurrentSessionCache,
     private val sessionRepository: SessionRepository,
+    private val formRepository: FormRepository,
     private val specimenRepository: SpecimenRepository,
     private val specimenImageRepository: SpecimenImageRepository,
     private val inferenceResultRepository: InferenceResultRepository,
@@ -251,8 +255,37 @@ class ImagingViewModel @Inject constructor(
 
                 ImagingAction.SubmitSession -> {
                     val currentSession = currentSessionCache.getSession()
-                    val currentSessionSiteId = currentSessionCache.getSiteId()
+                    if (currentSession == null) {
+                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        return@launch
+                    }
 
+                    val formEntries = buildSessionInputSummaryEntries(currentSession) +
+                        buildFormSummaryEntries(currentSession.localId)
+                    val speciesEntries = buildDetectionSummaryEntries()
+
+                    _state.update {
+                        it.copy(
+                            showSubmitSummaryDialog = true,
+                            submitSummaryFormEntries = formEntries,
+                            submitSummarySpeciesEntries = speciesEntries
+                        )
+                    }
+                }
+
+                ImagingAction.DismissSubmitSessionSummaryDialog -> {
+                    _state.update {
+                        it.copy(
+                            showSubmitSummaryDialog = false,
+                            submitSummaryFormEntries = emptyList(),
+                            submitSummarySpeciesEntries = emptyList()
+                        )
+                    }
+                }
+
+                ImagingAction.ConfirmSubmitSession -> {
+                    val currentSession = currentSessionCache.getSession()
+                    val currentSessionSiteId = currentSessionCache.getSiteId()
                     if (currentSession == null || currentSessionSiteId == null) {
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
                         return@launch
@@ -260,6 +293,13 @@ class ImagingViewModel @Inject constructor(
 
                     val success = sessionRepository.markSessionAsComplete(currentSession.localId)
                     if (success) {
+                        _state.update {
+                            it.copy(
+                                showSubmitSummaryDialog = false,
+                                submitSummaryFormEntries = emptyList(),
+                                submitSummarySpeciesEntries = emptyList()
+                            )
+                        }
                         workRepository.enqueueSessionUpload(
                             currentSession.localId, currentSessionSiteId
                         )
@@ -579,6 +619,46 @@ class ImagingViewModel @Inject constructor(
                 currentCameraMetadata = null
             )
         }
+    }
+
+    private fun buildSessionInputSummaryEntries(session: Session): List<Pair<String, String>> {
+        return listOf(
+            "Collector Name" to session.collectorName,
+            "Collector Title" to session.collectorTitle,
+            "Collection Method" to session.collectionMethod,
+            "Specimen Condition" to session.specimenCondition,
+            "Session Notes" to session.notes
+        ).filter { (_, value) -> value.isNotBlank() }
+    }
+
+    private suspend fun buildFormSummaryEntries(sessionId: UUID): List<Pair<String, String>> {
+        val formsWithAnswers = formRepository.getFormsWithFormAnswersAndQuestionsBySessionId(sessionId)
+        return formsWithAnswers
+            .flatMap { it.formAnswersAndQuestions }
+            .sortedBy { it.question.order ?: Int.MAX_VALUE }
+            .map { formAnswerAndQuestion ->
+                formAnswerAndQuestion.question.label to formAnswerAndQuestion.answer.value
+            }
+    }
+
+    private fun buildDetectionSummaryEntries(): List<String> {
+        return _state.value.specimensWithImagesAndInferenceResults
+            .flatMap { it.specimenImagesAndInferenceResults }
+            .map { (specimenImage, _) ->
+                buildString {
+                    append("Species: ")
+                    append(specimenImage.species ?: "N/A")
+                    append(", Sex: ")
+                    append(specimenImage.sex ?: "N/A")
+                    append(", Abdomen Status: ")
+                    append(specimenImage.abdomenStatus ?: "N/A")
+                }
+            }
+            .groupingBy { it }
+            .eachCount()
+            .toList()
+            .sortedByDescending { (_, count) -> count }
+            .map { (summary, count) -> "$summary ($count)" }
     }
 
     private suspend fun determineSelectionForFurtherProcessing(selectionProbability: Float): Boolean {

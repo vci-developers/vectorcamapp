@@ -32,8 +32,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -468,6 +470,96 @@ fun ImagingScreen(
                                     text = "Continue",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colors.buttonText
+                                )
+                            }
+                        }
+                    )
+                }
+
+                if (state.showSubmitSummaryDialog) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            onAction(ImagingAction.DismissSubmitSessionSummaryDialog)
+                        },
+                        title = {
+                            Text(
+                                text = "Submit Session Summary",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colors.textPrimary
+                            )
+                        },
+                        text = {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                                modifier = Modifier.verticalScroll(rememberScrollState())
+                            ) {
+                                Text(
+                                    text = "Form Inputs",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colors.textPrimary
+                                )
+                                if (state.submitSummaryFormEntries.isEmpty()) {
+                                    Text(
+                                        text = "No saved form answers.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.textSecondary
+                                    )
+                                } else {
+                                    state.submitSummaryFormEntries.forEach { (label, value) ->
+                                        Text(
+                                            text = "$label: $value",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colors.textSecondary
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
+
+                                Text(
+                                    text = "Detected Classification",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colors.textPrimary
+                                )
+                                if (state.submitSummarySpeciesEntries.isEmpty()) {
+                                    Text(
+                                        text = "No detection results yet in this session.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.textSecondary
+                                    )
+                                } else {
+                                    state.submitSummarySpeciesEntries.forEach { speciesSummary ->
+                                        Text(
+                                            text = "- $speciesSummary",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colors.textSecondary
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = { onAction(ImagingAction.ConfirmSubmitSession) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colors.successConfirm
+                                )
+                            ) {
+                                Text(
+                                    text = "Confirm Submit",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.buttonText
+                                )
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = { onAction(ImagingAction.DismissSubmitSessionSummaryDialog) }
+                            ) {
+                                Text(
+                                    text = "Cancel",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textPrimary
                                 )
                             }
                         }
