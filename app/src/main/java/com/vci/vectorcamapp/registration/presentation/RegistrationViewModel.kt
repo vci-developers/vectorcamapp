@@ -150,7 +150,7 @@ class RegistrationViewModel @Inject constructor(
                 }
 
                 RegistrationAction.ConfirmRegistration -> {
-                    val selectedProgram = state.value.selectedProgram
+                    val selectedProgram = _state.value.selectedProgram
 
                     if (selectedProgram == null) {
                         emitError(RegistrationError.PROGRAM_NOT_FOUND)
@@ -172,7 +172,7 @@ class RegistrationViewModel @Inject constructor(
                 }
 
                 RegistrationAction.SubmitRegistrationPassword -> {
-                    val selectedProgram = state.value.selectedProgram
+                    val selectedProgram = _state.value.selectedProgram
                     if (selectedProgram == null) {
                         emitError(RegistrationError.PROGRAM_NOT_FOUND)
                         RegistrationSentryLogger.logProgramNotFound(
@@ -183,7 +183,7 @@ class RegistrationViewModel @Inject constructor(
 
                     val expectedPassword =
                         ProgramRegistrationPasswords.passwordForProgram(selectedProgram.id)
-                    val providedPassword = state.value.registrationPasswordInput
+                    val providedPassword = _state.value.registrationPasswordInput
                     if (expectedPassword == null || expectedPassword != providedPassword) {
                         _state.update {
                             it.copy(registrationPasswordError = "Incorrect password")
@@ -206,7 +206,7 @@ class RegistrationViewModel @Inject constructor(
     }
 
     private fun validateCollectorInputs(): Boolean {
-        val collector = state.value.collector
+        val collector = _state.value.collector
         val collectorNameValidationResult =
             collectorValidationUseCases.validateCollectorName(collector.name)
         val collectorTitleValidationResult =
@@ -232,7 +232,7 @@ class RegistrationViewModel @Inject constructor(
     }
 
     private suspend fun registerCollectorAndProceed(selectedProgram: Program) {
-        if (!state.value.isConnectedToInternet) {
+        if (!_isConnectedToInternet.value) {
             emitError(NetworkError.NO_INTERNET)
             return
         }
