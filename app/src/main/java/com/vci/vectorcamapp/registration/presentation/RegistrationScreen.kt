@@ -14,16 +14,23 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -183,6 +190,7 @@ fun RegistrationScreen(
         }
 
         if (state.isPasswordDialogVisible) {
+            var passwordVisible by remember { mutableStateOf(false) }
             AlertDialog(
                 onDismissRequest = { onAction(RegistrationAction.DismissRegistrationPasswordDialog) },
                 title = { Text(text = "Program Password") },
@@ -196,8 +204,19 @@ fun RegistrationScreen(
                             label = { Text("Password") },
                             singleLine = true,
                             isError = state.registrationPasswordError != null,
-                            visualTransformation = PasswordVisualTransformation(),
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            trailingIcon = {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(
+                                        painter = painterResource(
+                                            if (passwordVisible) R.drawable.ic_visibility_off
+                                            else R.drawable.ic_visibility
+                                        ),
+                                        contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                                    )
+                                }
+                            },
                             modifier = Modifier.fillMaxWidth()
                         )
                         state.registrationPasswordError?.let {
