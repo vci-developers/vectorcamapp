@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -59,6 +60,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -491,7 +493,9 @@ fun ImagingScreen(
                         text = {
                             Column(
                                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
-                                modifier = Modifier.verticalScroll(rememberScrollState())
+                                modifier = Modifier
+                                    .heightIn(max = 360.dp)
+                                    .verticalScroll(rememberScrollState())
                             ) {
                                 Text(
                                     text = "Form Inputs",
@@ -528,12 +532,20 @@ fun ImagingScreen(
                                         color = MaterialTheme.colors.textSecondary
                                     )
                                 } else {
-                                    state.submitSummarySpeciesEntries.forEach { speciesSummary ->
+                                    state.submitSummarySpeciesEntries.forEach { (specimenId, classifications) ->
+                                        Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
                                         Text(
-                                            text = "- $speciesSummary",
+                                            text = "Specimen: $specimenId",
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colors.textSecondary
+                                            color = MaterialTheme.colors.textPrimary
                                         )
+                                        classifications.forEach { classification ->
+                                            Text(
+                                                text = "  $classification",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colors.textSecondary
+                                            )
+                                        }
                                     }
                                 }
                             }

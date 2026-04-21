@@ -675,24 +675,22 @@ class ImagingViewModel @Inject constructor(
             }
     }
 
-    private fun buildDetectionSummaryEntries(): List<String> {
-        return _state.value.specimensWithImagesAndInferenceResults
-            .flatMap { it.specimenImagesAndInferenceResults }
-            .map { (specimenImage, _) ->
-                buildString {
-                    append("Species: ")
-                    append(specimenImage.species ?: "N/A")
-                    append(", Sex: ")
-                    append(specimenImage.sex ?: "N/A")
-                    append(", Abdomen Status: ")
-                    append(specimenImage.abdomenStatus ?: "N/A")
+    private fun buildDetectionSummaryEntries(): List<Pair<String, List<String>>> {
+        return state.value.specimensWithImagesAndInferenceResults.map { specimenWithImages ->
+            val specimenId = specimenWithImages.specimen.id
+            val imageClassifications = specimenWithImages.specimenImagesAndInferenceResults
+                .mapIndexed { index, (specimenImage, _) ->
+                    buildString {
+                        append("Image ${index + 1}: ")
+                        append("Species: ${specimenImage.species ?: "N/A"}")
+                        append(", Sex: ${specimenImage.sex ?: "N/A"}")
+                        if (specimenImage.abdomenStatus != null) {
+                            append(", Abdomen: ${specimenImage.abdomenStatus}")
+                        }
+                    }
                 }
-            }
-            .groupingBy { it }
-            .eachCount()
-            .toList()
-            .sortedByDescending { (_, count) -> count }
-            .map { (summary, count) -> "$summary ($count)" }
+            specimenId to imageClassifications
+        }
     }
 
     private suspend fun determineSelectionForFurtherProcessing(selectionProbability: Float): Boolean {
