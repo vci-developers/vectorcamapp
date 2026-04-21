@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
@@ -260,7 +261,8 @@ class ImagingViewModel @Inject constructor(
                         return@launch
                     }
 
-                    val formEntries = buildSessionInputSummaryEntries(currentSession) +
+                    val sessionAndSite = sessionRepository.getSessionAndSiteById(currentSession.localId)
+                    val formEntries = buildSessionInputSummaryEntries(currentSession, sessionAndSite?.site) +
                         buildFormSummaryEntries(currentSession.localId)
                     val speciesEntries = buildDetectionSummaryEntries()
 
@@ -621,14 +623,46 @@ class ImagingViewModel @Inject constructor(
         }
     }
 
-    private fun buildSessionInputSummaryEntries(session: Session): List<Pair<String, String>> {
-        return listOf(
-            "Collector Name" to session.collectorName,
-            "Collector Title" to session.collectorTitle,
-            "Collection Method" to session.collectionMethod,
-            "Specimen Condition" to session.specimenCondition,
-            "Session Notes" to session.notes
-        ).filter { (_, value) -> value.isNotBlank() }
+    private fun buildSessionInputSummaryEntries(session: Session, site: Site?): List<Pair<String, String>> {
+        val dateFormatter = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault())
+
+        val entries = mutableListOf<Pair<String, String>>()
+
+        entries += "Session Type" to session.type.name.lowercase()
+            .replaceFirstChar { it.uppercase() }
+
+        if (session.collectorName.isNotBlank()) entries += "Collector Name" to session.collectorName
+        if (session.collectorTitle.isNotBlank()) entries += "Collector Title" to session.collectorTitle
+        if (session.collectorLastTrainedOn > 0L) {
+            entries += "Last Trained On" to dateFormatter.format(java.util.Date(session.collectorLastTrainedOn))
+        }
+        if (session.collectionDate > 0L) {
+            entries += "Collection Date" to dateFormatter.format(java.util.Date(session.collectionDate))
+        }
+        if (session.collectionMethod.isNotBlank()) entries += "Collection Method" to session.collectionMethod
+        if (session.specimenCondition.isNotBlank()) entries += "Specimen Condition" to session.specimenCondition
+
+        site?.let { s ->
+            s.locationHierarchy?.forEach { (level, value) ->
+                if (value.isNotBlank()) entries += level to value
+            }
+            if (s.district?.isNotBlank() == true && s.locationHierarchy?.containsKey("District") != true) {
+                entries += "District" to s.district
+            }
+            if (s.subCounty?.isNotBlank() == true) entries += "Sub-County" to s.subCounty
+            if (s.parish?.isNotBlank() == true) entries += "Parish" to s.parish
+            if (s.villageName?.isNotBlank() == true) entries += "Village" to s.villageName
+            if (s.houseNumber?.isNotBlank() == true) entries += "House Number" to s.houseNumber
+            if (s.healthCenter?.isNotBlank() == true) entries += "Health Center" to s.healthCenter
+            if (s.name?.isNotBlank() == true) entries += "Site" to s.name
+        }
+
+        if (session.latitude != null && session.longitude != null) {
+            entries += "GPS" to "%.6f, %.6f".format(session.latitude, session.longitude)
+        }
+        if (session.notes.isNotBlank()) entries += "Notes" to session.notes
+
+        return entries
     }
 
     private suspend fun buildFormSummaryEntries(sessionId: UUID): List<Pair<String, String>> {
