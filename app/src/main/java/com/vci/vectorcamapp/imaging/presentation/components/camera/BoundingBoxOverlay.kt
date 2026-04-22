@@ -25,12 +25,18 @@ fun BoundingBoxOverlay(
 ) {
     val density = LocalDensity.current
     val strokeWidth = MaterialTheme.dimensions.borderThicknessThick
+    val halfStrokeWidth = strokeWidth / 2
     val boxColor = MaterialTheme.colors.successConfirm
 
-    val xOffsetDp = with(density) { (inferenceResult.bboxTopLeftX * overlaySize.width).toDp() }
-    val yOffsetDp = with(density) { (inferenceResult.bboxTopLeftY * overlaySize.height).toDp() }
-    val widthDp = with(density) { (inferenceResult.bboxWidth * overlaySize.width).toDp() }
-    val heightDp = with(density) { (inferenceResult.bboxHeight * overlaySize.height).toDp() }
+    val baseXOffsetDp = with(density) { (inferenceResult.bboxTopLeftX * overlaySize.width).toDp() }
+    val baseYOffsetDp = with(density) { (inferenceResult.bboxTopLeftY * overlaySize.height).toDp() }
+    val baseWidthDp = with(density) { (inferenceResult.bboxWidth * overlaySize.width).toDp() }
+    val baseHeightDp = with(density) { (inferenceResult.bboxHeight * overlaySize.height).toDp() }
+
+    val xOffsetDp = baseXOffsetDp - halfStrokeWidth
+    val yOffsetDp = baseYOffsetDp - halfStrokeWidth
+    val widthDp = baseWidthDp + strokeWidth
+    val heightDp = baseHeightDp + strokeWidth
 
     val formattedConfidence = "%.2f".format(inferenceResult.bboxConfidence)
 
