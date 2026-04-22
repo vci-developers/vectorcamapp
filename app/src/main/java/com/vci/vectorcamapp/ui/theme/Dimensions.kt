@@ -11,6 +11,7 @@ data class Dimensions(
     private val scale: Float = 1f,
 
     // Padding & Spacing
+    val paddingExtraExtraSmall: Dp = (2 * scale).dp,
     val paddingExtraSmall: Dp = (4 * scale).dp,
     val paddingSmall: Dp = (8 * scale).dp,
     val paddingMedium: Dp = (16 * scale).dp,
