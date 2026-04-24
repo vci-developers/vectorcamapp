@@ -387,6 +387,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 latitude = remoteSessionDto.latitude,
                 longitude = remoteSessionDto.longitude,
                 type = remoteSessionDto.type,
+                // todo stephen add collection cycle here
             )
 
             if (localSessionDto != remoteSessionDto) {
