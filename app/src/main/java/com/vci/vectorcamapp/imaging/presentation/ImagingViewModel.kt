@@ -49,7 +49,11 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlin.math.max
+import kotlin.math.min
 import org.opencv.core.MatOfByte
 import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
@@ -77,6 +81,11 @@ class ImagingViewModel @Inject constructor(
     private val validateSpecimenIdUseCase: ValidateSpecimenIdUseCase,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
+
+    private val processFrameMutex = Mutex()
+
+    private var lastAutoCaptureBbox: InferenceResult? = null
+    private var autoCaptureStableFrameCount: Int = 0
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
@@ -158,89 +167,95 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 is ImagingAction.ProcessFrame -> {
-                    try {
-                        if (!_state.value.isCameraReady) {
-                            _state.update { it.copy(isCameraReady = true) }
-                        }
-
-                        if (!_state.value.isProcessing) {
-                            val bitmap = action.frame.toUprightBitmap()
-
-                            val specimenId = inferenceRepository.readSpecimenId(bitmap)
-                            validateSpecimenIdUseCase(specimenId, shouldAutoCorrect = true).onSuccess { correctedSpecimenId ->
-                                _state.update {
-                                    it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
-                                }
-                            }.onError {
-                                _state.update {
-                                    it.copy(currentSpecimen = it.currentSpecimen.copy(id = ""))
-                                }
+                    processFrameMutex.withLock {
+                        try {
+                            if (!_state.value.isCameraReady) {
+                                _state.update { it.copy(isCameraReady = true) }
                             }
 
-                            if (_state.value.shouldRunInference) {
-                                val jpegStream = ByteArrayOutputStream()
-                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
-                                val jpegByteArray = jpegStream.toByteArray()
+                            if (!_state.value.isProcessing) {
+                                val bitmap = action.frame.toUprightBitmap()
 
-                                val bgrMatrix = Imgcodecs.imdecode(MatOfByte(*jpegByteArray), Imgcodecs.IMREAD_COLOR)
-                                val rgbaMatrix = Mat()
-                                Imgproc.cvtColor(bgrMatrix, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
-                                val jpegBitmap = createBitmap(rgbaMatrix.cols(), rgbaMatrix.rows())
-                                matToBitmap(rgbaMatrix, jpegBitmap)
-                                bgrMatrix.release()
-                                rgbaMatrix.release()
-
-                                val previewInferenceResults = inferenceRepository.detectSpecimen(jpegBitmap).map { detectorResult ->
-                                    InferenceResult(
-                                        bboxTopLeftX = detectorResult.bboxTopLeftX,
-                                        bboxTopLeftY = detectorResult.bboxTopLeftY,
-                                        bboxWidth = detectorResult.bboxWidth,
-                                        bboxHeight = detectorResult.bboxHeight,
-                                        bboxConfidence = detectorResult.bboxConfidence,
-                                        bboxClassId = detectorResult.bboxClassId,
-                                        speciesLogits = null,
-                                        sexLogits = null,
-                                        abdomenStatusLogits = null,
-                                        bboxDetectionDuration = detectorResult.bboxDetectionDuration,
-                                        speciesInferenceDuration = null,
-                                        sexInferenceDuration = null,
-                                        abdomenStatusInferenceDuration = null
-                                    )
-                                }
-                                val highestConfidenceDetection =
-                                    previewInferenceResults.maxByOrNull { it.bboxConfidence }
-                                val autofocusPoint = highestConfidenceDetection?.let { detection ->
-                                    inferenceRepository.computeAutofocusCentroid(jpegBitmap, detection)
+                                val specimenId = inferenceRepository.readSpecimenId(bitmap)
+                                validateSpecimenIdUseCase(specimenId, shouldAutoCorrect = true).onSuccess { correctedSpecimenId ->
+                                    _state.update {
+                                        it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
+                                    }
+                                }.onError {
+                                    _state.update {
+                                        it.copy(currentSpecimen = it.currentSpecimen.copy(id = ""))
+                                    }
                                 }
 
-                                _state.update {
-                                    val shouldUseAutofocusThisFrame =
-                                        !it.isManualFocusing || (it.focusPoint == null && autofocusPoint != null)
+                                if (_state.value.shouldRunInference) {
+                                    val jpegStream = ByteArrayOutputStream()
+                                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
+                                    val jpegByteArray = jpegStream.toByteArray()
 
-                                    val nextFocusPoint = if (shouldUseAutofocusThisFrame) {
-                                        autofocusPoint ?: it.focusPoint
-                                    } else {
-                                        it.focusPoint
+                                    val bgrMatrix = Imgcodecs.imdecode(MatOfByte(*jpegByteArray), Imgcodecs.IMREAD_COLOR)
+                                    val rgbaMatrix = Mat()
+                                    Imgproc.cvtColor(bgrMatrix, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
+                                    val jpegBitmap = createBitmap(rgbaMatrix.cols(), rgbaMatrix.rows())
+                                    matToBitmap(rgbaMatrix, jpegBitmap)
+                                    bgrMatrix.release()
+                                    rgbaMatrix.release()
+
+                                    val previewInferenceResults = inferenceRepository.detectSpecimen(jpegBitmap).map { detectorResult ->
+                                        InferenceResult(
+                                            bboxTopLeftX = detectorResult.bboxTopLeftX,
+                                            bboxTopLeftY = detectorResult.bboxTopLeftY,
+                                            bboxWidth = detectorResult.bboxWidth,
+                                            bboxHeight = detectorResult.bboxHeight,
+                                            bboxConfidence = detectorResult.bboxConfidence,
+                                            bboxClassId = detectorResult.bboxClassId,
+                                            speciesLogits = null,
+                                            sexLogits = null,
+                                            abdomenStatusLogits = null,
+                                            bboxDetectionDuration = detectorResult.bboxDetectionDuration,
+                                            speciesInferenceDuration = null,
+                                            sexInferenceDuration = null,
+                                            abdomenStatusInferenceDuration = null
+                                        )
+                                    }
+                                    val highestConfidenceDetection =
+                                        previewInferenceResults.maxByOrNull { it.bboxConfidence }
+                                    val autofocusPoint = highestConfidenceDetection?.let { detection ->
+                                        inferenceRepository.computeAutofocusCentroid(jpegBitmap, detection)
                                     }
 
-                                    val nextIsAutofocusing = when {
-                                        !it.isManualFocusing -> true
-                                        it.focusPoint == null && autofocusPoint != null -> true
-                                        else -> false
+                                    _state.update {
+                                        val shouldUseAutofocusThisFrame =
+                                            !it.isManualFocusing || (it.focusPoint == null && autofocusPoint != null)
+
+                                        val nextFocusPoint = if (shouldUseAutofocusThisFrame) {
+                                            autofocusPoint ?: it.focusPoint
+                                        } else {
+                                            it.focusPoint
+                                        }
+
+                                        val nextIsAutofocusing = when {
+                                            !it.isManualFocusing -> true
+                                            it.focusPoint == null && autofocusPoint != null -> true
+                                            else -> false
+                                        }
+
+                                        it.copy(
+                                            previewInferenceResults = previewInferenceResults,
+                                            focusPoint = nextFocusPoint,
+                                            isManualFocusing = !nextIsAutofocusing
+                                        )
                                     }
 
-                                    it.copy(
-                                        previewInferenceResults = previewInferenceResults,
-                                        focusPoint = nextFocusPoint,
-                                        isManualFocusing = !nextIsAutofocusing
-                                    )
+                                    maybeSignalAutoCapture(highestConfidenceDetection)
+                                } else {
+                                    resetAutoCaptureStability()
                                 }
                             }
+                        } catch (e: Exception) {
+                            emitError(ImagingError.PROCESSING_ERROR)
+                        } finally {
+                            action.frame.close()
                         }
-                    } catch (e: Exception) {
-                        emitError(ImagingError.PROCESSING_ERROR)
-                    } finally {
-                        action.frame.close()
                     }
                 }
 
@@ -270,9 +285,11 @@ class ImagingViewModel @Inject constructor(
 
                 is ImagingAction.ToggleModelInference -> {
                     val shouldRunInference = action.isChecked
+                    resetAutoCaptureStability()
                     _state.update {
                         it.copy(
                             shouldRunInference = shouldRunInference,
+                            isAutoCaptureEnabled = if (shouldRunInference) it.isAutoCaptureEnabled else false,
                             previewInferenceResults = emptyList(),
                             currentInferenceResult = null,
                             focusPoint = null
@@ -280,10 +297,21 @@ class ImagingViewModel @Inject constructor(
                     }
                 }
 
+                is ImagingAction.ToggleAutoCapture -> {
+                    resetAutoCaptureStability()
+                    _state.update { it.copy(isAutoCaptureEnabled = action.isChecked) }
+                }
+
                 is ImagingAction.CaptureImage -> {
                     if (!_state.value.isCameraReady) return@launch
 
-                    _state.update { it.copy(isProcessing = true) }
+                    resetAutoCaptureStability()
+                    _state.update {
+                        it.copy(
+                            isProcessing = true,
+                            autoCaptureSignal = 0L,
+                        )
+                    }
 
                     val captureResult = cameraRepository.captureImage(action.imageCapture)
 
@@ -551,8 +579,10 @@ class ImagingViewModel @Inject constructor(
     }
 
     private fun clearStateFields() {
+        resetAutoCaptureStability()
         _state.update {
             it.copy(
+                autoCaptureSignal = 0L,
                 currentSpecimen = it.currentSpecimen.copy(
                     id = "", remoteId = null, shouldProcessFurther = false
                 ),
@@ -636,5 +666,57 @@ class ImagingViewModel @Inject constructor(
 
     private companion object {
         private const val MONTHLY_FURTHER_PROCESSING_CAP = 20
+        private const val AUTO_CAPTURE_MIN_CONFIDENCE = 0.5f
+        private const val AUTO_CAPTURE_MIN_BBOX_IOU = 0.7f
+    }
+
+    private fun resetAutoCaptureStability() {
+        lastAutoCaptureBbox = null
+        autoCaptureStableFrameCount = 0
+    }
+
+    private fun bboxIoU(a: InferenceResult, b: InferenceResult): Float {
+        val ax2 = a.bboxTopLeftX + a.bboxWidth
+        val ay2 = a.bboxTopLeftY + a.bboxHeight
+        val bx2 = b.bboxTopLeftX + b.bboxWidth
+        val by2 = b.bboxTopLeftY + b.bboxHeight
+        val interLeft = max(a.bboxTopLeftX, b.bboxTopLeftX)
+        val interTop = max(a.bboxTopLeftY, b.bboxTopLeftY)
+        val interRight = min(ax2, bx2)
+        val interBottom = min(ay2, by2)
+        val interW = max(0f, interRight - interLeft)
+        val interH = max(0f, interBottom - interTop)
+        val interArea = interW * interH
+        val areaA = a.bboxWidth * a.bboxHeight
+        val areaB = b.bboxWidth * b.bboxHeight
+        val union = areaA + areaB - interArea
+        return if (union <= 0f) 0f else interArea / union
+    }
+
+    private fun maybeSignalAutoCapture(highestConfidenceDetection: InferenceResult?) {
+        val snapshot = _state.value
+        if (!snapshot.isAutoCaptureEnabled || !snapshot.shouldRunInference || snapshot.currentImageBytes != null) {
+            resetAutoCaptureStability()
+            return
+        }
+
+        val det = highestConfidenceDetection
+        if (det == null || det.bboxConfidence <= AUTO_CAPTURE_MIN_CONFIDENCE) {
+            resetAutoCaptureStability()
+            return
+        }
+
+        val prev = lastAutoCaptureBbox
+        if (prev != null && bboxIoU(prev, det) >= AUTO_CAPTURE_MIN_BBOX_IOU) {
+            autoCaptureStableFrameCount++
+        } else {
+            autoCaptureStableFrameCount = 1
+        }
+        lastAutoCaptureBbox = det
+
+        if (autoCaptureStableFrameCount >= 2) {
+            resetAutoCaptureStability()
+            _state.update { it.copy(autoCaptureSignal = it.autoCaptureSignal + 1L) }
+        }
     }
 }

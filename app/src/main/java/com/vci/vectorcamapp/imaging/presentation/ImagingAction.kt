@@ -11,6 +11,7 @@ sealed interface ImagingAction {
     data object SaveSessionProgress : ImagingAction
     data object SubmitSession : ImagingAction
     data class ToggleModelInference(val isChecked: Boolean) : ImagingAction
+    data class ToggleAutoCapture(val isChecked: Boolean) : ImagingAction
     data class CaptureImage(
         val imageCapture: ImageCapture,
         val cameraMetadata: CameraMetadata? = null

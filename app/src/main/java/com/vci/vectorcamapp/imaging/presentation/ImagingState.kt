@@ -36,6 +36,8 @@ data class ImagingState(
     val focusPoint: Offset? = null,
     val allowModelInferenceToggle: Boolean = false,
     val shouldRunInference: Boolean = true,
+    val isAutoCaptureEnabled: Boolean = false,
+    val autoCaptureSignal: Long = 0L,
     val isManualFocusing: Boolean = false,
     val isCameraReady: Boolean = false,
     val showExitDialog: Boolean = false,

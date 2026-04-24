@@ -101,14 +101,24 @@ fun ImagingScreen(
     var camera by remember { mutableStateOf<Camera?>(null) }
     val metadataListener = remember { CameraMetadataListenerImplementation() }
 
-    val isReviewing by rememberUpdatedState(newValue = state.currentImageBytes != null)
+    val isReviewingRef = rememberUpdatedState(newValue = state.currentImageBytes != null)
+    val pagerState = rememberPagerState(
+        initialPage = state.specimensWithImagesAndInferenceResults.size,
+        pageCount = { state.specimensWithImagesAndInferenceResults.size + 1 })
+    val currentPageRef = rememberUpdatedState(newValue = pagerState.currentPage)
+    val livePageIndexRef = rememberUpdatedState(newValue = state.specimensWithImagesAndInferenceResults.size)
+
     val analyzer = remember {
         SpecimenImageAnalyzer { frame ->
-            if (!isReviewing) {
-                onAction(ImagingAction.ProcessFrame(frame))
-            } else {
+            if (isReviewingRef.value) {
                 frame.close()
+                return@SpecimenImageAnalyzer
             }
+            if (currentPageRef.value != livePageIndexRef.value) {
+                frame.close()
+                return@SpecimenImageAnalyzer
+            }
+            onAction(ImagingAction.ProcessFrame(frame))
         }
     }
 
@@ -179,14 +189,17 @@ fun ImagingScreen(
         }
     }
 
-    val pagerState = rememberPagerState(
-        initialPage = state.specimensWithImagesAndInferenceResults.size,
-        pageCount = { state.specimensWithImagesAndInferenceResults.size + 1 })
-
     var isImageLoaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.specimensWithImagesAndInferenceResults.size) {
         pagerState.scrollToPage(state.specimensWithImagesAndInferenceResults.size)
+    }
+
+    LaunchedEffect(state.autoCaptureSignal, imageCaptureUseCase) {
+        if (state.autoCaptureSignal <= 0L) return@LaunchedEffect
+        val ic = imageCaptureUseCase ?: return@LaunchedEffect
+        if (state.currentImageBytes != null || state.isProcessing) return@LaunchedEffect
+        onAction(ImagingAction.CaptureImage(ic, metadataListener.latestMetadata))
     }
 
     HorizontalPager(
@@ -759,6 +772,13 @@ fun ImagingScreen(
                                             )
                                             Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
                                         }
+
+                                        ToggleField(
+                                            label = "Auto-capture",
+                                            checked = state.isAutoCaptureEnabled,
+                                            onCheckedChange = { onAction(ImagingAction.ToggleAutoCapture(it)) },
+                                        )
+                                        Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
 
                                         Text(
                                             text = if (state.currentSpecimen.id == "") "Specimen ID will appear here" else state.currentSpecimen.id,
