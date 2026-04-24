@@ -15,6 +15,7 @@ data class PostSessionRequestDto(
     val collectorName: String = "",
     val collectorLastTrainedOn: Long = 0L,
     val collectionDate: Long = 0L,
+    val collectionCycle: String? = null,
     val collectionMethod: String = "",
     val specimenCondition: String = "",
     val createdAt: Long = 0L,

@@ -33,6 +33,7 @@ import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
+import com.vci.vectorcamapp.core.presentation.components.form.MonthYearPickerField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
@@ -242,6 +243,13 @@ fun IntakeScreen(
                     selectedDateInMillis = state.session.collectionDate,
                     onDateSelected = { onAction(IntakeAction.PickCollectionDate(it)) },
                     error = state.intakeErrors.collectionDate,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                MonthYearPickerField(
+                    label = "Collection Cycle",
+                    selectedCycle = state.session.collectionCycle,
+                    onCycleSelected = { onAction(IntakeAction.PickCollectionCycle(it)) },
                     modifier = Modifier.fillMaxWidth()
                 )
 

@@ -497,6 +497,16 @@ class IntakeViewModel @Inject constructor(
                     }
                 }
 
+                is IntakeAction.PickCollectionCycle -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(
+                                collectionCycle = action.cycle
+                            )
+                        )
+                    }
+                }
+
                 is IntakeAction.UpdateCollectionMethod -> {
                     _state.update {
                         it.copy(

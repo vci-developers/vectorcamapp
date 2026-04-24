@@ -16,6 +16,7 @@ data class SessionDto(
     val collectorName: String = "",
     val collectorLastTrainedOn: Long? = null,
     val collectionDate: Long = 0L,
+    val collectionCycle: String? = null,
     val collectionMethod: String = "",
     val specimenCondition: String = "",
     val createdAt: Long = 0L,
