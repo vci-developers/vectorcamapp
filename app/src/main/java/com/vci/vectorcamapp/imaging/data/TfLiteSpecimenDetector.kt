@@ -8,6 +8,7 @@ import android.util.Log
 import com.vci.vectorcamapp.core.domain.model.results.DetectorResult
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import org.opencv.android.Utils
+import org.opencv.core.Core
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.core.MatOfFloat
@@ -169,14 +170,18 @@ class TfLiteSpecimenDetector(
     }
 
     private fun preprocessMatrix(inputMatrix: Mat): Mat {
+        val balancedMatrix = whiteBalanceGrayWorld(inputMatrix)
+        inputMatrix.release()
+
         val resizedMatrix = Mat()
         val resizedMatrixWidth = (inputTensorWidth / ASPECT_RATIO).toInt()
         val resizedMatrixHeight = inputTensorHeight
         Imgproc.resize(
-            inputMatrix,
+            balancedMatrix,
             resizedMatrix,
             Size(resizedMatrixWidth.toDouble(), resizedMatrixHeight.toDouble())
         )
+        balancedMatrix.release()
 
         val paddedSideLength = max(resizedMatrixWidth, resizedMatrixHeight)
         val paddedMatrix =
@@ -190,6 +195,35 @@ class TfLiteSpecimenDetector(
         resizedMatrix.copyTo(regionOfIntersection)
         paddedMatrix.convertTo(paddedMatrix, CvType.CV_32F, PIXEL_NORMALIZATION_SCALE.toDouble())
         return paddedMatrix
+    }
+
+    private fun whiteBalanceGrayWorld(bgr: Mat): Mat {
+        val floatMat = Mat()
+        bgr.convertTo(floatMat, CvType.CV_32F)
+
+        val channels = ArrayList<Mat>()
+        Core.split(floatMat, channels)
+
+        val means = channels.map { Core.mean(it).`val`[0] }
+        val gray = means.average()
+        val eps = 1e-8
+
+        for (i in channels.indices) {
+            Core.multiply(channels[i], Scalar(gray / (means[i] + eps)), channels[i])
+        }
+
+        Core.merge(channels, floatMat)
+
+        Core.min(floatMat, Scalar(255.0, 255.0, 255.0), floatMat)
+        Core.max(floatMat, Scalar(0.0, 0.0, 0.0), floatMat)
+
+        val result = Mat()
+        floatMat.convertTo(result, CvType.CV_8U)
+
+        for (channel in channels) channel.release()
+        floatMat.release()
+
+        return result
     }
 
     private fun getDetectedResults(boxes: FloatArray): List<FloatArray> {
