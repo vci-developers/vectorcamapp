@@ -58,7 +58,11 @@ class TfLiteSpecimenDetector(
 
             try {
                 val model = FileUtil.loadMappedFile(context, "detect.tflite")
-                val options = Interpreter.Options()
+                val options = Interpreter.Options().apply {
+                    useNNAPI = false
+                    useXNNPACK = false
+                    numThreads = Runtime.getRuntime().availableProcessors()
+                }
 
 //                if (CompatibilityList().isDelegateSupportedOnThisDevice) {
 //                    try {
@@ -69,8 +73,7 @@ class TfLiteSpecimenDetector(
 //                        Log.w(TAG, "GPU delegate for Detector failed: ${e.message}. Falling back to CPU.")
 //                    }
 //                }
-
-                options.setNumThreads(Runtime.getRuntime().availableProcessors())
+                
                 detector = Interpreter(model, options)
 
                 detector?.let {

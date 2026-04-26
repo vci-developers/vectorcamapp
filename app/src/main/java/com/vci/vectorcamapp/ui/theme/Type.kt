@@ -22,7 +22,7 @@ val bodyMediumSize = 14.sp
 val bodySmallSize = 12.sp
 val labelLargeSize = 12.sp
 val labelMediumSize = 11.sp
-val labelSmallSize = 9.sp
+val labelSmallSize = 10.sp
 
 val provider = GoogleFont.Provider(
     providerAuthority = "com.google.android.gms.fonts",
@@ -47,95 +47,97 @@ val displayFontFamily = FontFamily(
 // Default Material 3 typography values
 val baseline = Typography()
 
-val AppTypography = Typography(
-    displayLarge = baseline.displayLarge.copy(
-        fontFamily = displayFontFamily,
-        fontSize = displayLargeSize,
-        lineHeight = displayLargeSize,
-        fontWeight = FontWeight.Black
-    ),
-    displayMedium = baseline.displayMedium.copy(
-        fontFamily = displayFontFamily,
-        fontSize = displayMediumSize,
-        lineHeight = displayMediumSize,
-        fontWeight = FontWeight.ExtraBold
-    ),
-    displaySmall = baseline.displaySmall.copy(
-        fontFamily = displayFontFamily,
-        fontSize = displaySmallSize,
-        lineHeight = displaySmallSize,
-        fontWeight = FontWeight.Bold
-    ),
-    headlineLarge = baseline.headlineLarge.copy(
-        fontFamily = displayFontFamily,
-        fontSize = headlineLargeSize,
-        lineHeight = headlineLargeSize,
-        fontWeight = FontWeight.SemiBold
-    ),
-    headlineMedium = baseline.headlineMedium.copy(
-        fontFamily = displayFontFamily,
-        fontSize = headlineMediumSize,
-        lineHeight = headlineMediumSize,
-        fontWeight = FontWeight.SemiBold
-    ),
-    headlineSmall = baseline.headlineSmall.copy(
-        fontFamily = displayFontFamily,
-        fontSize = headlineSmallSize,
-        lineHeight = headlineSmallSize,
-        fontWeight = FontWeight.Medium
-    ),
-    titleLarge = baseline.titleLarge.copy(
-        fontFamily = displayFontFamily,
-        fontSize = titleLargeSize,
-        lineHeight = titleLargeSize,
-        fontWeight = FontWeight.Medium
-    ),
-    titleMedium = baseline.titleMedium.copy(
-        fontFamily = displayFontFamily,
-        fontSize = titleMediumSize,
-        lineHeight = titleMediumSize,
-        fontWeight = FontWeight.Medium
-    ),
-    titleSmall = baseline.titleSmall.copy(
-        fontFamily = displayFontFamily,
-        fontSize = titleSmallSize,
-        lineHeight = titleSmallSize,
-        fontWeight = FontWeight.Medium
-    ),
-    bodyLarge = baseline.bodyLarge.copy(
-        fontFamily = bodyFontFamily,
-        fontSize = bodyLargeSize,
-        lineHeight = bodyLargeSize,
-        fontWeight = FontWeight.Normal
-    ),
-    bodyMedium = baseline.bodyMedium.copy(
-        fontFamily = bodyFontFamily,
-        fontSize = bodyMediumSize,
-        lineHeight = bodyMediumSize,
-        fontWeight = FontWeight.Normal
-    ),
-    bodySmall = baseline.bodySmall.copy(
-        fontFamily = bodyFontFamily,
-        fontSize = bodySmallSize,
-        lineHeight = bodySmallSize,
-        fontWeight = FontWeight.Normal
-    ),
-    labelLarge = baseline.labelLarge.copy(
-        fontFamily = bodyFontFamily,
-        fontSize = labelLargeSize,
-        lineHeight = labelLargeSize,
-        fontWeight = FontWeight.Light
-    ),
-    labelMedium = baseline.labelMedium.copy(
-        fontFamily = bodyFontFamily,
-        fontSize = labelMediumSize,
-        lineHeight = labelMediumSize,
-        fontWeight = FontWeight.Light
-    ),
-    labelSmall = baseline.labelSmall.copy(
-        fontFamily = bodyFontFamily,
-        fontSize = labelSmallSize,
-        lineHeight = labelSmallSize,
-        fontWeight = FontWeight.Light
-    ),
-)
+fun createTypography(scale: Float = 1f): Typography {
+    return Typography(
+        displayLarge = baseline.displayLarge.copy(
+            fontFamily = displayFontFamily,
+            fontSize = displayLargeSize * scale,
+            lineHeight = displayLargeSize * scale,
+            fontWeight = FontWeight.Black
+        ),
+        displayMedium = baseline.displayMedium.copy(
+            fontFamily = displayFontFamily,
+            fontSize = displayMediumSize * scale,
+            lineHeight = displayMediumSize * scale,
+            fontWeight = FontWeight.ExtraBold
+        ),
+        displaySmall = baseline.displaySmall.copy(
+            fontFamily = displayFontFamily,
+            fontSize = displaySmallSize * scale,
+            lineHeight = displaySmallSize * scale,
+            fontWeight = FontWeight.Bold
+        ),
+        headlineLarge = baseline.headlineLarge.copy(
+            fontFamily = displayFontFamily,
+            fontSize = headlineLargeSize * scale,
+            lineHeight = headlineLargeSize * scale,
+            fontWeight = FontWeight.SemiBold
+        ),
+        headlineMedium = baseline.headlineMedium.copy(
+            fontFamily = displayFontFamily,
+            fontSize = headlineMediumSize * scale,
+            lineHeight = headlineMediumSize * scale,
+            fontWeight = FontWeight.SemiBold
+        ),
+        headlineSmall = baseline.headlineSmall.copy(
+            fontFamily = displayFontFamily,
+            fontSize = headlineSmallSize * scale,
+            lineHeight = headlineSmallSize * scale,
+            fontWeight = FontWeight.Medium
+        ),
+        titleLarge = baseline.titleLarge.copy(
+            fontFamily = displayFontFamily,
+            fontSize = titleLargeSize * scale,
+            lineHeight = titleLargeSize * scale,
+            fontWeight = FontWeight.Medium
+        ),
+        titleMedium = baseline.titleMedium.copy(
+            fontFamily = displayFontFamily,
+            fontSize = titleMediumSize * scale,
+            lineHeight = titleMediumSize * scale,
+            fontWeight = FontWeight.Medium
+        ),
+        titleSmall = baseline.titleSmall.copy(
+            fontFamily = displayFontFamily,
+            fontSize = titleSmallSize * scale,
+            lineHeight = titleSmallSize * scale,
+            fontWeight = FontWeight.Medium
+        ),
+        bodyLarge = baseline.bodyLarge.copy(
+            fontFamily = bodyFontFamily,
+            fontSize = bodyLargeSize * scale,
+            lineHeight = bodyLargeSize * scale,
+            fontWeight = FontWeight.Normal
+        ),
+        bodyMedium = baseline.bodyMedium.copy(
+            fontFamily = bodyFontFamily,
+            fontSize = bodyMediumSize * scale,
+            lineHeight = bodyMediumSize * scale,
+            fontWeight = FontWeight.Normal
+        ),
+        bodySmall = baseline.bodySmall.copy(
+            fontFamily = bodyFontFamily,
+            fontSize = bodySmallSize * scale,
+            lineHeight = bodySmallSize * scale,
+            fontWeight = FontWeight.Normal
+        ),
+        labelLarge = baseline.labelLarge.copy(
+            fontFamily = bodyFontFamily,
+            fontSize = labelLargeSize * scale,
+            lineHeight = labelLargeSize * scale,
+            fontWeight = FontWeight.Light
+        ),
+        labelMedium = baseline.labelMedium.copy(
+            fontFamily = bodyFontFamily,
+            fontSize = labelMediumSize * scale,
+            lineHeight = labelMediumSize * scale,
+            fontWeight = FontWeight.Light
+        ),
+        labelSmall = baseline.labelSmall.copy(
+            fontFamily = bodyFontFamily,
+            fontSize = labelSmallSize * scale,
+            lineHeight = labelSmallSize * scale,
+            fontWeight = FontWeight.Light
+        ),
+    )
+}

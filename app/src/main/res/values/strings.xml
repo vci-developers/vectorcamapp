@@ -52,6 +52,9 @@
     <!-- Form validation error: Blank household number -->
     <string name="form_validation_error_blank_house_number">House number is required.</string>
 
+    <!-- Form validation error: Blank location type selection -->
+    <string name="form_validation_error_blank_location_type_selection">A site selection for this location type is required.</string>
+
     <!-- Form validation error: Blank LLIN type -->
     <string name="form_validation_error_blank_llin_type">This field is required when LLINs are available.</string>
 
@@ -78,6 +81,9 @@
 
     <!-- Form validation error: Invalid months since irs -->
     <string name="form_validation_error_invalid_months_since_irs">This field is required when IRS is conducted.</string>
+
+    <!-- Form validation error: Invalid form answer -->
+    <string name="form_validation_error_invalid_form_answer">This field is required. Please provide a valid answer.</string>
 
     <!-- Imaging error: Capture error -->
     <string name="imaging_error_capture_error">Could not take the photo. Please try again.</string>
@@ -205,6 +211,9 @@
     <!-- Complete session error: Specimens not found -->
     <string name="complete_session_error_specimens_not_found">Could not load specimens. Please try again.</string>
 
+    <!-- Complete session error: Form data inconsistent -->
+    <string name="complete_session_error_form_data_inconsistent">Could not load form data. Please try again or contact support if the issue persists.</string>
+
     <!-- Complete session error: Unknown error -->
     <string name="complete_session_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
@@ -213,6 +222,12 @@
 
     <!-- Settings error: Collector deletion failed -->
     <string name="settings_error_collector_deletion_failed">Could not delete collector. Please try again.</string>
+
+    <!-- Settings error: Data sync failed -->
+    <string name="settings_error_data_sync_failed">Could not sync data. Please try again.</string>
+
+    <!-- Settings error: Data sync in progress session exist -->
+    <string name="settings_error_data_sync_in_progress_session_exist">Please complete all in progress sessions and try again.</string>
 
     <!-- Image Upload Status: Upload completed -->
     <string name="upload_status_completed">Completed</string>
@@ -231,4 +246,7 @@
 
     <!-- Session Type: Data Collection -->
     <string name="session_type_data_collection">Data Collection</string>
+
+    <!-- Session Type: Practice -->
+    <string name="session_type_practice">Practice</string>
 </resources>

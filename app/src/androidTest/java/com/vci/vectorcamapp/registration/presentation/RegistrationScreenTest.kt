@@ -101,12 +101,17 @@ class RegistrationScreenTest {
                                         is RegistrationAction.ConfirmRegistration -> {
                                             navController.navigate(Destination.Landing)
                                         }
-
                                         is RegistrationAction.EnterCollectorName -> {
                                             state = state.copy(collector = state.collector.copy(name = action.text))
                                         }
                                         is RegistrationAction.EnterCollectorTitle -> {
                                             state = state.copy(collector = state.collector.copy(title = action.text))
+                                        }
+                                        is RegistrationAction.EnterCollectorLastTrainedOn -> {
+                                            state = state.copy(collector = state.collector.copy(lastTrainedOn = action.lastTrainedOn))
+                                        }
+                                        RegistrationAction.RefreshPrograms -> {
+                                            // No-op for UI test
                                         }
                                     }
                                 },

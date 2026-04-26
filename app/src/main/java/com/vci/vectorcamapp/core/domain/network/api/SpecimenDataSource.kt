@@ -8,7 +8,7 @@ import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 
 interface SpecimenDataSource {
     suspend fun postSpecimen(
-        specimen: Specimen, sessionId: Int
+        specimen: Specimen, sessionId: Int, expectedImages: Int
     ): Result<PostSpecimenResponseDto, NetworkError>
 
     suspend fun getSpecimenByIdAndSessionId(

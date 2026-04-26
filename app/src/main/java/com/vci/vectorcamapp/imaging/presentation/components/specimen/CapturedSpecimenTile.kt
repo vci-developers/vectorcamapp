@@ -3,12 +3,17 @@ package com.vci.vectorcamapp.imaging.presentation.components.specimen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Badge
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -16,7 +21,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -48,122 +56,148 @@ fun CapturedSpecimenTile(
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
-    InfoTile(modifier = modifier) {
-        Column(
-            modifier = Modifier
-                .padding(vertical = MaterialTheme.dimensions.paddingLarge)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
-        ) {
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = MaterialTheme.dimensions.paddingLarge)
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-            ) {
-                SpecimenImageOverlay(
-                    inferenceResult = inferenceResult
-                ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(context)
-                            .data(specimenImage.imageUri)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = specimen.id,
-                        contentScale = ContentScale.Fit
-                    )
-                }
+    var isImageLoaded by remember { mutableStateOf(false) }
 
-                badgeText?.let {
-                    Badge(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(MaterialTheme.dimensions.paddingSmall),
-                        containerColor = MaterialTheme.colors.info,
-                        contentColor = MaterialTheme.colors.buttonText
+    InfoTile(modifier = modifier.fillMaxHeight(), fillWidth = false) {
+        Box (modifier = Modifier.fillMaxHeight().width(IntrinsicSize.Min)){
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(vertical = MaterialTheme.dimensions.paddingLarge),
+                verticalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = MaterialTheme.dimensions.paddingLarge)
+                        .weight(1f, fill = false)
+                        .aspectRatio(1f / MaterialTheme.dimensions.aspectRatio)
+                        .align(Alignment.CenterHorizontally)
+                ) {
+                    SpecimenImageOverlay(
+                        inferenceResult = inferenceResult,
+                        showBoundingBoxOverlay = isImageLoaded,
+                        modifier = Modifier.wrapContentWidth()
                     ) {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.padding(MaterialTheme.dimensions.paddingExtraSmall)
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(specimenImage.imageUri)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = specimen.id,
+                            contentScale = ContentScale.Fit,
+                            onSuccess = { isImageLoaded = true },
+                            onError = { isImageLoaded = false },
+                            error = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
+                            fallback = painterResource(R.drawable.specimen_image_placeholder_not_uploaded),
+                        )
+                    }
+
+                    badgeText?.let {
+                        Badge(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(MaterialTheme.dimensions.paddingSmall),
+                            containerColor = MaterialTheme.colors.info,
+                            contentColor = MaterialTheme.colors.buttonText
+                        ) {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.padding(MaterialTheme.dimensions.paddingExtraSmall)
+                            )
+                        }
+                    }
+
+                    if (specimen.shouldProcessFurther) {
+                        InfoPill(
+                            text = "Pack this specimen for further processing",
+                            color = MaterialTheme.colors.warning,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(MaterialTheme.dimensions.paddingSmall)
                         )
                     }
                 }
 
-                if (specimen.shouldProcessFurther) {
-                    InfoPill(
-                        text = "Pack this specimen for further processing",
-                        color = MaterialTheme.colors.warning,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(MaterialTheme.dimensions.paddingSmall)
-                    )
-                }
-            }
+                Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
-                modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingLarge)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
-                    modifier = Modifier.height(MaterialTheme.dimensions.componentHeightSmall)
+                HorizontalDivider(
+                    thickness = MaterialTheme.dimensions.dividerThicknessThin,
+                    color = MaterialTheme.colors.disabled,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                    modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingLarge)
                 ) {
-                    VerticalDivider(
-                        thickness = MaterialTheme.dimensions.dividerThickness,
-                        color = MaterialTheme.colors.primary,
-                        modifier = Modifier.fillMaxHeight()
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall),
+                        modifier = Modifier
+                            .height(MaterialTheme.dimensions.componentHeightSmall)
+                            .padding(bottom = MaterialTheme.dimensions.paddingSmall)
+                    ) {
+                        VerticalDivider(
+                            thickness = MaterialTheme.dimensions.dividerThicknessThick,
+                            color = MaterialTheme.colors.primary,
+                            modifier = Modifier.fillMaxHeight()
+                        )
 
-                    Icon(
-                        painter = painterResource(R.drawable.ic_specimen),
-                        contentDescription = "Mosquito",
-                        tint = MaterialTheme.colors.icon,
-                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                        Icon(
+                            painter = painterResource(R.drawable.ic_specimen),
+                            contentDescription = "Mosquito",
+                            tint = MaterialTheme.colors.icon,
+                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                        )
+
+                        Text(
+                            text = "Specimen ID: ${specimen.id}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colors.textPrimary
+                        )
+                    }
+
+                    Text(
+                        text = if (specimenImage.species != null) "Species: ${specimenImage.species}" else "",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colors.textPrimary
                     )
 
                     Text(
-                        text = "Specimen ID: ${specimen.id}",
-                        style = MaterialTheme.typography.headlineMedium,
+                        text = if (specimenImage.sex != null) "Sex: ${specimenImage.sex}" else "",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+
+                    Text(
+                        text = if (specimenImage.abdomenStatus != null) "Abdomen Status: ${specimenImage.abdomenStatus}" else "",
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colors.textPrimary
                     )
                 }
 
-                Text(
-                    text = if (specimenImage.species != null) "Species: ${specimenImage.species}" else "",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colors.textPrimary
+                Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
+
+                HorizontalDivider(
+                    color = MaterialTheme.colors.divider,
+                    thickness = MaterialTheme.dimensions.dividerThicknessThick
                 )
 
-                Text(
-                    text = if (specimenImage.sex != null) "Sex: ${specimenImage.sex}" else "",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colors.textPrimary
-                )
+                Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
 
                 Text(
-                    text = if (specimenImage.abdomenStatus != null) "Abdomen Status: ${specimenImage.abdomenStatus}" else "",
+                    text = "Captured At: ${dateTimeFormatter.format(specimenImage.capturedAt)}",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colors.textPrimary
+                    color = MaterialTheme.colors.textPrimary,
+                    modifier = Modifier.padding(
+                        start = MaterialTheme.dimensions.paddingLarge,
+                        end = MaterialTheme.dimensions.paddingLarge
+                    )
                 )
             }
-
-            HorizontalDivider(
-                color = MaterialTheme.colors.divider,
-                thickness = MaterialTheme.dimensions.dividerThickness
-            )
-
-            Text(
-                text = "Captured At: ${dateTimeFormatter.format(specimenImage.capturedAt)}",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colors.textPrimary,
-                modifier = Modifier.padding(
-                    start = MaterialTheme.dimensions.paddingLarge,
-                    end = MaterialTheme.dimensions.paddingLarge,
-                    top = MaterialTheme.dimensions.paddingSmall
-                )
-            )
         }
     }
 }

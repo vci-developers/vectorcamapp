@@ -24,8 +24,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageBus
 import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorDataFlow
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -41,11 +41,12 @@ fun ErrorSnackbarHost(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val errorFlow = LocalErrorDataFlow.current
+    val errorMessageEmitter = LocalErrorMessageEmitter.current
     val coroutineScope = rememberCoroutineScope()
 
     ObserveAsEvents(errorFlow) { errorData ->
         coroutineScope.launch {
-            ErrorMessageBus.clearLastMessage()
+            errorMessageEmitter.clearLastMessage()
             snackbarHostState.currentSnackbarData?.dismiss()
             snackbarHostState.showSnackbar(
                 message = errorData.error.toString(context),
@@ -95,10 +96,10 @@ fun ErrorSnackbarHost(
                         contentDescription = "Dismiss Icon",
                         tint = MaterialTheme.colors.textSecondary,
                         modifier = Modifier
-                            .size(MaterialTheme.dimensions.iconSizeExtraSmall)
-                            .clickable {
+                                .size(MaterialTheme.dimensions.iconSizeExtraSmall)
+                                .clickable {
                                 snackbarData.dismiss()
-                                ErrorMessageBus.clearLastMessage()
+                                errorMessageEmitter.clearLastMessage()
                             }
                     )
                 }

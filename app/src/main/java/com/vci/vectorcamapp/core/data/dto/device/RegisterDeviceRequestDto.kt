@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class RegisterDeviceRequestDto(
     val model: String = "",
     val registeredAt: Long = 0L,
-    val programId: Int = -1
+    val programId: Int = -1,
+    val appVersion: String = "",
 )

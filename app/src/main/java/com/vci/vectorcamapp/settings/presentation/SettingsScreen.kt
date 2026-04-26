@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.settings.presentation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -20,13 +23,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.settings.presentation.components.CollectorDialog
+import com.vci.vectorcamapp.settings.presentation.components.CollectorWarningDialog
 import com.vci.vectorcamapp.settings.presentation.components.SettingsActionTile
 import com.vci.vectorcamapp.settings.presentation.components.SettingsInfoTile
 import com.vci.vectorcamapp.settings.presentation.components.SettingsSection
@@ -67,7 +73,75 @@ fun SettingsScreen(
                     onClick = { onAction(SettingsAction.StartNewDataCollectionSession) },
                     modifier = modifier
                 )
+
+                SettingsActionTile(
+                    title = "Start Practice Session",
+                    onClick = { onAction(SettingsAction.StartNewPracticeSession) },
+                    modifier = modifier
+                )
             }
+
+            SettingsSection(title = "Update Data from Server") {
+                SettingsInfoTile(
+                    title = "Cloud Sync",
+                    modifier = modifier
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(MaterialTheme.dimensions.componentHeightExtraExtraSmall)
+                                    .background(
+                                        color = if (state.isConnectedToInternet) MaterialTheme.colors.successConfirm else MaterialTheme.colors.error,
+                                        shape = CircleShape
+                                    )
+                            )
+                            Text(
+                                text = if (state.isConnectedToInternet) "Connected to Internet" else "No Internet Connection - Resync Unavailable",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (state.isConnectedToInternet) MaterialTheme.colors.textSecondary else MaterialTheme.colors.error
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .alpha(if (state.isConnectedToInternet) 1f else 0.5f)
+                            ) {
+                                ActionButton(
+                                    label = if (state.isSyncingData) "Syncing Data..." else "Resync Data",
+                                    onClick = {
+                                        if (state.isConnectedToInternet && !state.isSyncingData) {
+                                            onAction(SettingsAction.ResyncProgramData)
+                                        }
+                                    },
+                                    textSize = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+
+                            if (state.isSyncingData) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .padding(start = MaterialTheme.dimensions.paddingMedium)
+                                        .size(MaterialTheme.dimensions.iconSizeMedium),
+                                    color = MaterialTheme.colors.primary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             SettingsSection("About") {
                 SettingsInfoTile(
                     title = "Registered Collectors",
@@ -132,7 +206,7 @@ fun SettingsScreen(
                             if (index < state.collectors.lastIndex) {
                                 HorizontalDivider(
                                     color = MaterialTheme.colors.divider,
-                                    thickness = MaterialTheme.dimensions.dividerThickness
+                                    thickness = MaterialTheme.dimensions.dividerThicknessThick
                                 )
                             }
                         }
@@ -236,6 +310,15 @@ fun SettingsScreen(
             onDismissDeleteDialog = { onAction(SettingsAction.DismissDeleteCollectorDialog) },
             isEditDialogVisible = state.isEditCollectorDialogVisible,
             isDeleteDialogVisible = state.isDeleteCollectorDialogVisible
+        )
+    }
+
+    if (state.selectedCollector != null && state.similarCollector != null) {
+        CollectorWarningDialog(
+            selectedCollector = state.selectedCollector,
+            similarCollector = state.similarCollector,
+            onConfirmSave = { onAction(SettingsAction.ConfirmSaveCollector) },
+            onDismiss = { onAction(SettingsAction.DismissCollectorWarningDialog) }
         )
     }
 }

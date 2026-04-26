@@ -12,5 +12,6 @@ data class SpecimenImageDto(
     val abdomenStatus: String? = null,
     val capturedAt: Long = 0L,
     val submittedAt: Long? = null,
-    val inferenceResult: InferenceResultDto? = null
+    val inferenceResult: InferenceResultDto? = null,
+    val imageMetadata: ImageMetadataDto? = null
 )

@@ -15,7 +15,8 @@ data class SettingsState (
     val program: Program = Program(
         id = -1,
         name = "",
-        country = ""
+        country = "",
+        formVersion = null
     ),
     val settingsErrors: SettingsErrors = SettingsErrors(
         collectorName = null,
@@ -24,6 +25,9 @@ data class SettingsState (
     ),
     val collectors: List<Collector> = emptyList(),
     val selectedCollector: Collector? = null,
+    val similarCollector: Collector? = null,
     val isEditCollectorDialogVisible: Boolean = false,
-    val isDeleteCollectorDialogVisible: Boolean = false
+    val isDeleteCollectorDialogVisible: Boolean = false,
+    val isSyncingData: Boolean = false,
+    val isConnectedToInternet: Boolean = false
 )

@@ -7,8 +7,15 @@ on:
 
 jobs:
   lint:
-    name: Run Lint Check
+    name: Lint - ${{ matrix.flavor }}
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [Uganda, Colombia, Nigeria, Kenya, Ghana]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,21 +26,38 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Run lint
-        run: ./gradlew lintDebug
+      - name: Run lint for ${{ matrix.flavor }}
+        run: ./gradlew lint${{ matrix.flavor }}Debug
 
       - name: Upload lint report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lint-report
-          path: app/build/reports/lint-results-debug.html
+          name: lint-report-${{ matrix.flavor }}
+          path: app/build/reports/lint-results-*.html
 
   unit-tests:
-    name: Run Unit Tests
+    name: Unit Tests - ${{ matrix.flavor }}
     runs-on: ubuntu-latest
+    permissions:
+      checks: write        # needed by publish-unit-test-result-action
+      pull-requests: write # needed by jacoco-report to post a PR comment
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [Uganda, Colombia, Nigeria, Kenya, Ghana]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,17 +68,140 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest
+      - name: Run unit tests for ${{ matrix.flavor }}
+        run: ./gradlew test${{ matrix.flavor }}DebugUnitTest
 
-      - name: Upload test report
+      # Publishes a check run (visible under the PR's Checks tab) with
+      # pass/fail counts and annotations for each failing test.
+      # comment_mode: off avoids one noisy PR comment per flavor.
+      - name: Publish test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          check_name: "Tests — ${{ matrix.flavor }}"
+          files: app/build/test-results/test${{ matrix.flavor }}DebugUnitTest/**/*.xml
+          comment_mode: off
+
+      # Generate JaCoCo HTML + XML coverage report (Uganda only — same sources,
+      # so one report is enough; running all 5 would post 5 identical comments).
+      - name: Generate coverage report
+        if: matrix.flavor == 'Uganda'
+        run: ./gradlew jacocoUgandaDebugUnitTestReport
+
+      # Parse the JaCoCo XML and build a detailed markdown coverage table.
+      # The table is written to:
+      #   - $GITHUB_STEP_SUMMARY  → visible in the workflow run "Summary" tab
+      #   - coverage_comment.md   → used by the sticky PR comment step below
+      - name: Build coverage summary
+        if: matrix.flavor == 'Uganda'
+        run: |
+          python3 << 'EOF'
+          import xml.etree.ElementTree as ET, os
+
+          XML = 'app/build/reports/jacoco/jacocoUgandaDebugUnitTestReport/jacocoUgandaDebugUnitTestReport.xml'
+          root = ET.parse(XML).getroot()
+
+          def pct(missed, covered):
+              total = missed + covered
+              return round(covered / total * 100, 1) if total > 0 else 0.0
+
+          def bar(p):
+              filled = int(round(p / 10))
+              return '█' * filled + '░' * (10 - filled)
+
+          def badge(p):
+              if p >= 80: return '🟢'
+              if p >= 50: return '🟡'
+              return '🔴'
+
+          overall = {c.get('type'): (int(c.get('missed')), int(c.get('covered')))
+                     for c in root.findall('counter')}
+
+          lm, lc = overall.get('LINE',   (0, 0))
+          bm, bc = overall.get('BRANCH', (0, 0))
+          mm, mc = overall.get('METHOD', (0, 0))
+          lp, bp, mp = pct(lm, lc), pct(bm, bc), pct(mm, mc)
+
+          pkgs = []
+          for pkg in root.findall('package'):
+              name = pkg.get('name').replace('com/vci/vectorcamapp/', '')
+              cs = {c.get('type'): (int(c.get('missed')), int(c.get('covered')))
+                    for c in pkg.findall('counter')}
+              lmiss, lcov = cs.get('LINE', (0, 0))
+              bmiss, bcov = cs.get('BRANCH', (0, 0))
+              total_lines = lmiss + lcov
+              if total_lines > 0:
+                  pkgs.append((name, lcov, total_lines, pct(lmiss, lcov),
+                               bcov, bmiss + bcov, pct(bmiss, bcov)))
+
+          pkgs.sort(key=lambda x: -x[3])
+
+          md = [
+              '## 📊 Unit Test Coverage',
+              '> Scope: **ViewModels · Use Cases · Repositories · Utils**',
+              '',
+              '| Metric | Coverage | Progress | Covered / Total |',
+              '|--------|----------|----------|-----------------|',
+              f'| 📏 Lines    | {badge(lp)} **{lp}%**   | `{bar(lp)}` | {lc} / {lc+lm} |',
+              f'| 🌿 Branches | {badge(bp)} **{bp}%**   | `{bar(bp)}` | {bc} / {bc+bm} |',
+              f'| 🔧 Methods  | {badge(mp)} **{mp}%**   | `{bar(mp)}` | {mc} / {mc+mm} |',
+              '',
+              '<details>',
+              '<summary>📦 Per-package breakdown</summary>',
+              '',
+              '| Package | Lines | Line % | Branches | Branch % |',
+              '|---------|-------|--------|----------|----------|',
+          ]
+
+          for name, lcov, ltotal, lp2, bcov, btotal, bp2 in pkgs:
+              md.append(f'| `{name}` | {lcov}/{ltotal} | {badge(lp2)} {lp2}% | {bcov}/{btotal} | {badge(bp2)} {bp2}% |')
+
+          md += ['', '</details>']
+          output = '\n'.join(md)
+
+          with open('coverage_comment.md', 'w') as f:
+              f.write(output)
+
+          summary_path = os.environ.get('GITHUB_STEP_SUMMARY')
+          if summary_path:
+              with open(summary_path, 'a') as f:
+                  f.write(output + '\n')
+          EOF
+
+      # Post (or update) a single sticky PR comment with the coverage table.
+      - name: Post coverage comment
+        if: matrix.flavor == 'Uganda' && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: unit-test-coverage
+          path: coverage_comment.md
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload HTML test report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: unit-test-report
-          path: app/build/reports/tests/testDebugUnitTest/
+          name: unit-test-report-${{ matrix.flavor }}
+          path: app/build/reports/tests/test${{ matrix.flavor }}DebugUnitTest/
+
+      - name: Upload coverage report
+        if: matrix.flavor == 'Uganda'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: app/build/reports/jacoco/jacocoUgandaDebugUnitTestReport/
 
 #  instrumentation-tests:
 #    name: Run Instrumentation Tests

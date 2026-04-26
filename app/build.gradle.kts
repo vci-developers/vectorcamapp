@@ -6,34 +6,6 @@ if (secretsFile.exists()) {
     secretsFile.inputStream().use { secretsProperties.load(it) }
 }
 
-// Region configuration
-val region = project.findProperty("region")?.toString()?.lowercase() ?: "default"
-println("✅ Building VectorCam for region: $region")
-
-fun getRegionBasedVersionCode(): Int {
-    return when (region) {
-        "colombia" -> 1006
-        "uganda" -> 2004
-        "nigeria" -> 3001
-        else -> {
-            println("⚠️ Unknown region '$region', using default version code")
-            4000
-        }
-    }
-}
-
-fun getRegionBasedVersionName(): String {
-    return when (region) {
-        "colombia" -> "1.0.6"
-        "uganda" -> "1.0.4"
-        "nigeria" -> "1.0.1"
-        else -> {
-            println("⚠️ Unknown region '$region', using default version name")
-            "1.0.0"
-        }
-    }
-}
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -42,7 +14,14 @@ plugins {
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.sentry.android.gradle)
+    alias(libs.plugins.google.firebase.crashlytics)
     kotlin("plugin.serialization") version "2.0.21"
+}
+
+// Apply Google Services plugin only when google-services.json exists (e.g. local dev).
+// CI can build without the file when it is not committed (e.g. in .gitignore).
+if (file("${project.projectDir}/google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 android {
@@ -54,21 +33,98 @@ android {
         minSdk = 29
         targetSdk = 36
 
-        versionCode = getRegionBasedVersionCode()
-        versionName = getRegionBasedVersionName()
+        // Base version - will be overridden by flavors
+        versionCode = 1
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "com.vci.vectorcamapp.HiltTestRunner"
-
-        buildConfigField("String", "POSTHOG_API_KEY", "\"${secretsProperties["POSTHOG_API_KEY"]}\"")
-        buildConfigField("String", "POSTHOG_HOST", "\"${secretsProperties["POSTHOG_HOST"]}\"")
 
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a")
         }
     }
 
+    // Define flavor dimension
+    flavorDimensions += "region"
+
+    // Product flavors for different regions
+    // NOTE: First flavor listed becomes the default in Android Studio
+    productFlavors {
+        // Uganda is listed first to be the default flavor
+        create("uganda") {
+            dimension = "region"
+            // applicationIdSuffix = ".uganda"
+            versionCode = 2010
+            versionName = "1.0.10"
+            
+            buildConfigField("String", "REGION", "\"uganda\"")
+            buildConfigField("String", "REGION_CODE", "\"UG\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Uganda\"")
+            
+            resValue("string", "app_name_region", "VectorCam Uganda")
+            
+            // Set as default flavor (helps with IDE)
+            isDefault = true
+        }
+
+        create("colombia") {
+            dimension = "region"
+            applicationIdSuffix = ".colombia"
+            versionCode = 1007
+            versionName = "1.0.7"
+
+            // Region-specific build config fields
+            buildConfigField("String", "REGION", "\"colombia\"")
+            buildConfigField("String", "REGION_CODE", "\"CO\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Colombia\"")
+            
+            // Custom app name for this region
+            resValue("string", "app_name_region", "VectorCam Colombia")
+        }
+
+        create("nigeria") {
+            dimension = "region"
+            applicationIdSuffix = ".nigeria"
+            versionCode = 3001
+            versionName = "1.0.1"
+            
+            buildConfigField("String", "REGION", "\"nigeria\"")
+            buildConfigField("String", "REGION_CODE", "\"NG\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Nigeria\"")
+            
+            resValue("string", "app_name_region", "VectorCam Nigeria")
+        }
+
+        create("kenya") {
+            dimension = "region"
+            applicationIdSuffix = ".kenya"
+            versionCode = 4003
+            versionName = "1.0.3"
+            
+            buildConfigField("String", "REGION", "\"kenya\"")
+            buildConfigField("String", "REGION_CODE", "\"KE\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Kenya\"")
+            
+            resValue("string", "app_name_region", "VectorCam Kenya")
+        }
+
+        create("ghana") {
+            dimension = "region"
+            applicationIdSuffix = ".ghana"
+            versionCode = 5002
+            versionName = "1.0.2"
+            
+            buildConfigField("String", "REGION", "\"ghana\"")
+            buildConfigField("String", "REGION_CODE", "\"GH\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Ghana\"")
+            
+            resValue("string", "app_name_region", "VectorCam Ghana")
+        }
+    }
+
     buildTypes {
         debug {
+            applicationIdSuffix = ".debug"
             enableUnitTestCoverage = true
             enableAndroidTestCoverage = true
             buildConfigField("String", "BASE_URL", "\"https://test.api.vectorcam.org/\"")
@@ -99,6 +155,10 @@ android {
     buildFeatures {
         buildConfig = true
         compose = true
+    }
+
+    lint {
+        lintConfig = file("lint.xml")
     }
 
     androidResources {
@@ -143,10 +203,10 @@ dependencies {
     implementation(libs.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle) // CameraX Lifecycle library
-    implementation(libs.androidx.camera.view) // CameraX View class
     implementation(libs.androidx.camera.video)
     implementation(libs.androidx.camera.mlkit.vision) // CameraX ML Kit Vision Integration
     implementation(libs.androidx.camera.extensions) // CameraX Extensions library
+    implementation(libs.androidx.camera.compose) // CameraX Compose integration
 
     // Ktor (Networking) Dependencies
     implementation(libs.ktor.client.android) // Android client for Ktor
@@ -198,15 +258,17 @@ dependencies {
     // Work Manager Library
     implementation(libs.androidx.work.runtime.ktx)
 
-    // PostHog AnalyticsLibrary
-    implementation(libs.posthog.android)
-
     // JSON Serialization Library
     implementation(libs.kotlinx.serialization.json) // Kotlinx JSON serialization library
 
     // TUS Library
     implementation(libs.tus.android.client)
     implementation(libs.tus.java.client)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
     // Testing Dependencies
     testImplementation(libs.junit) // JUnit for unit tests
@@ -222,6 +284,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling) // Debugging tools for Compose
     debugImplementation(libs.androidx.ui.test.manifest) // Debugging Compose manifest tests
 }
+
+apply(from = "jacoco.gradle.kts")
 
 sentry {
     org.set("vectorcam")

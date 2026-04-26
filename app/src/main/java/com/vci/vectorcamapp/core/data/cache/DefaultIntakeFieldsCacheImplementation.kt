@@ -16,6 +16,8 @@
             hardwareId: String?,
             district: String,
             villageName: String,
+            formAnswers: Map<Int, String>,
+            locationSelections: Map<Int, String>
         ) {
             dataStore.updateData {
                 DefaultIntakeFieldsCacheDto(
@@ -24,7 +26,9 @@
                     collectorLastTrainedOn = collectorLastTrainedOn,
                     hardwareId = hardwareId,
                     district = district,
-                    villageName = villageName
+                    villageName = villageName,
+                    formAnswers = formAnswers,
+                    locationSelections = locationSelections
                 )
             }
         }

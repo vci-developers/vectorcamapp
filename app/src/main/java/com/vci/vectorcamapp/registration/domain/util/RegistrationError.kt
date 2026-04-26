@@ -4,5 +4,5 @@ import com.vci.vectorcamapp.core.domain.util.Error
 
 enum class RegistrationError : Error {
     PROGRAM_NOT_FOUND,
-    UNKNOWN_ERROR;
+    UNKNOWN_ERROR
 }

@@ -126,46 +126,89 @@ fun CompleteSessionListTile(
                         text = "Collector: ${session.collectorName}, ${session.collectorTitle}",
                     )
 
-                    CompleteSessionListDetailRow(
-                        iconPainter = painterResource(R.drawable.ic_pin),
-                        iconDescription = "Pin",
-                        text = "District: ${site.district}",
-                    )
+                    site.district?.let { district ->
+                        CompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_pin),
+                            iconDescription = "Pin",
+                            text = "District: $district",
+                        )
+                    }
 
-                    CompleteSessionListDetailRow(
-                        iconPainter = painterResource(R.drawable.ic_map),
-                        iconDescription = "Map",
-                        text = "Sub-County: ${site.subCounty}",
-                    )
+                    site.subCounty?.let { subCounty ->
+                        CompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_map),
+                            iconDescription = "Map",
+                            text = "Sub-County: $subCounty",
+                        )
+                    }
 
-                    CompleteSessionListDetailRow(
-                        iconPainter = painterResource(R.drawable.ic_navigation),
-                        iconDescription = "Navigation",
-                        text = "Parish: ${site.parish}",
-                    )
+                    site.parish?.let { parish ->
+                        CompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_navigation),
+                            iconDescription = "Navigation",
+                            text = "Parish: $parish",
+                        )
+                    }
 
-                    CompleteSessionListDetailRow(
-                        iconPainter = painterResource(R.drawable.ic_clipboard),
-                        iconDescription = "Clipboard",
-                        text = "Village Name: ${site.villageName}",
-                    )
+                    site.villageName?.let { villageName ->
+                        CompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_clipboard),
+                            iconDescription = "Clipboard",
+                            text = "Village Name: $villageName",
+                        )
+                    }
 
-                    CompleteSessionListDetailRow(
-                        iconPainter = painterResource(R.drawable.ic_house),
-                        iconDescription = "House",
-                        text = "House Number: ${site.houseNumber}",
-                    )
+                    site.houseNumber?.let { houseNumber ->
+                        CompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_house),
+                            iconDescription = "House",
+                            text = "House Number: $houseNumber",
+                        )
+                    }
 
-                    CompleteSessionListDetailRow(
-                        iconPainter = painterResource(R.drawable.ic_hospital),
-                        iconDescription = "Hospital",
-                        text = "Nearest Health Center: ${site.healthCenter}",
-                    )
+                    site.healthCenter?.let { healthCenter ->
+                        CompleteSessionListDetailRow(
+                            iconPainter = painterResource(R.drawable.ic_hospital),
+                            iconDescription = "Hospital",
+                            text = "Nearest Health Center: $healthCenter",
+                        )
+                    }
+
+                    site.locationHierarchy
+                        ?.filterValues { it.isNotBlank() }
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { locationHierarchy ->
+                            Row(
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_pin),
+                                    contentDescription = "Location",
+                                    tint = MaterialTheme.colors.icon,
+                                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                                )
+
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(
+                                        MaterialTheme.dimensions.spacingExtraSmall
+                                    )
+                                ) {
+                                    locationHierarchy.forEach { (key, value) ->
+                                        Text(
+                                            text = "$key: $value",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colors.textPrimary
+                                        )
+                                    }
+                                }
+                            }
+                    }
                 }
 
                 HorizontalDivider(
                     color = MaterialTheme.colors.divider,
-                    thickness = MaterialTheme.dimensions.dividerThickness
+                    thickness = MaterialTheme.dimensions.dividerThicknessThick
                 )
 
                 Column(

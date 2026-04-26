@@ -24,7 +24,6 @@ class SessionRepositoryImplementation @Inject constructor(
             sessionDao.upsertSession(session.toEntity(siteId))
             Result.Success(Unit)
         } catch (e: Exception) {
-            e.printStackTrace()
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }
@@ -105,6 +104,15 @@ class SessionRepositoryImplementation @Inject constructor(
                     specimens = it.specimenEntities.map { specimenEntity -> specimenEntity.toDomain() }
                 )
             }
+        }
+    }
+
+    override suspend fun getIncompleteSessionsAndSites(): List<SessionAndSite> {
+        return sessionDao.getIncompleteSessionsAndSites().map { sessionAndSiteRelation ->
+            SessionAndSite(
+                session = sessionAndSiteRelation.session.toDomain(),
+                site = sessionAndSiteRelation.site.toDomain()
+            )
         }
     }
 }

@@ -2,8 +2,8 @@ package com.vci.vectorcamapp.registration.presentation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,19 +26,23 @@ import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
+import com.vci.vectorcamapp.core.presentation.components.gestures.PullToRefresh
 import com.vci.vectorcamapp.registration.domain.model.RegistrationDropdownOptions
 import com.vci.vectorcamapp.registration.presentation.util.RegistrationTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
-import com.vci.vectorcamapp.ui.theme.screenHeightFraction
 
 @Composable
 fun RegistrationScreen(
     state: RegistrationState, onAction: (RegistrationAction) -> Unit, modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    PullToRefresh(
+        isRefreshing = state.isLoadingPrograms,
+        onRefresh = { onAction(RegistrationAction.RefreshPrograms) },
+        modifier = modifier.fillMaxSize()
+    ) {
         Image(
             painter = painterResource(R.drawable.registration_background),
             contentDescription = "Mosquito background",
@@ -57,17 +61,18 @@ fun RegistrationScreen(
                 topEnd = MaterialTheme.dimensions.cornerRadiusMedium
             ),
             modifier = modifier
-                .height(screenHeightFraction(0.8f))
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                .height(IntrinsicSize.Min)
         ) {
             Column(
                 modifier = modifier
                     .padding(
                         horizontal = MaterialTheme.dimensions.paddingExtraLarge,
-                        vertical = MaterialTheme.dimensions.paddingLarge
+                        vertical = MaterialTheme.dimensions.paddingExtraExtraLarge
                     )
-                    .fillMaxSize(), verticalArrangement = Arrangement.SpaceAround
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingLarge)
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
@@ -163,9 +168,10 @@ fun RegistrationScreen(
                     enabled = state.selectedProgram != null &&
                             state.collector.name.isNotBlank() &&
                             state.collector.title.isNotBlank() &&
-                            state.collector.lastTrainedOn != 0L,
+                            state.collector.lastTrainedOn != 0L &&
+                            !state.isLoading,
                     testTag = RegistrationTestTags.CONFIRM_PROGRAM_BUTTON,
-                    modifier = modifier
+                    modifier = modifier.height(MaterialTheme.dimensions.componentHeightMedium)
                 )
             }
         }
