@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.complete_session.list.presentation
 import android.content.Context
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
@@ -40,6 +41,7 @@ class CompleteSessionListViewModelTest {
     private lateinit var specimenRepository: SpecimenRepository
     private lateinit var specimenImageRepository: SpecimenImageRepository
     private lateinit var workManagerRepository: WorkManagerRepository
+    private lateinit var currentSessionCache: CurrentSessionCache
     private lateinit var errorMessageEmitter: ErrorMessageEmitter
 
     private lateinit var completeSessionsFlow: MutableStateFlow<List<SessionAndSite>>
@@ -83,6 +85,9 @@ class CompleteSessionListViewModelTest {
         specimenRepository = mockk(relaxed = true)
         specimenImageRepository = mockk(relaxed = true)
         workManagerRepository = mockk(relaxed = true)
+        currentSessionCache = mockk(relaxed = true)
+        coEvery { currentSessionCache.getSession() } returns null
+        coEvery { currentSessionCache.getSiteId() } returns null
         errorMessageEmitter = mockk(relaxed = true)
         coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
 
@@ -102,6 +107,7 @@ class CompleteSessionListViewModelTest {
         specimenRepository = specimenRepository,
         specimenImageRepository = specimenImageRepository,
         workManagerRepository = workManagerRepository,
+        currentSessionCache = currentSessionCache,
         errorMessageEmitter = errorMessageEmitter,
     )
 

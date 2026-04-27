@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,12 +22,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
+import com.vci.vectorcamapp.core.logging.CrashyContext
+import com.vci.vectorcamapp.core.presentation.LocalCrashyContext
+import com.vci.vectorcamapp.core.presentation.components.button.ClickTracking
+import com.vci.vectorcamapp.core.presentation.components.button.TrackedActionButton
 import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip
 import com.vci.vectorcamapp.main.presentation.components.PermissionTooltipRow
 import com.vci.vectorcamapp.main.presentation.util.PermissionTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
+
+private val permissionCrashyContext = CrashyContext(screen = "PermissionScreen")
 
 @Composable
 fun PermissionScreen(
@@ -34,124 +40,145 @@ fun PermissionScreen(
     onAction: (MainAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LaunchedEffect(Unit) {
-        if (!state.allGranted) {
-            onAction(MainAction.RequestPermissions)
+    CompositionLocalProvider(LocalCrashyContext provides permissionCrashyContext) {
+        val ctx = LocalCrashyContext.current
+        LaunchedEffect(Unit) {
+            if (!state.allGranted) {
+                onAction(MainAction.RequestPermissions)
+            }
         }
-    }
 
-    Column(
-        modifier = Modifier
-            .fillMaxHeight()
-            .background(MaterialTheme.colors.cardBackground)
-            .testTag(PermissionTestTags.ROOT),
-        verticalArrangement = Arrangement.Center
-    ) {
         Column(
-            modifier = modifier
-                .padding(
-                    horizontal = MaterialTheme.dimensions.paddingExtraExtraLarge,
-                    vertical = MaterialTheme.dimensions.paddingExtraExtraLarge
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxHeight()
+                .background(MaterialTheme.colors.cardBackground)
+                .testTag(PermissionTestTags.ROOT),
             verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(R.drawable.permission_background),
-                contentDescription = "Mosquito background",
-                contentScale = ContentScale.Fit,
-                modifier = modifier
-                    .padding(horizontal = MaterialTheme.dimensions.paddingLarge)
-                    .fillMaxWidth()
-                    .testTag(PermissionTestTags.IMAGE)
-            )
-
-            Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingLarge))
-
-            Text(
-                text = if (!state.allGranted) "Permissions Required" else "GPS Required",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colors.textPrimary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.testTag(PermissionTestTags.TITLE)
-            )
-
-            Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
-
-            Text(
-                text = "To work properly, this app needs access to your camera, location, and notifications. One or more of these permissions are currently disabled. Please enable them in settings to continue.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colors.textSecondary,
-                textAlign = TextAlign.Left,
-                lineHeight = MaterialTheme.typography.headlineLarge.lineHeight,
-                modifier = Modifier
-                    .padding(
-                        start = MaterialTheme.dimensions.paddingMedium,
-                        end = MaterialTheme.dimensions.paddingExtraSmall
-                    )
-                    .testTag(PermissionTestTags.DESCRIPTION)
-            )
-
-            Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
-
-            Tooltip(
-                isVisible = state.isPermissionTooltipVisible,
-                onClick = { onAction(MainAction.ShowPermissionTooltipDialog) },
-                onDismiss = { onAction(MainAction.HidePermissionTooltipDialog) },
-                buttonText = "Tap to learn more about app permissions"
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
-                    modifier = Modifier.testTag(PermissionTestTags.PERMISSION_TOOLTIP_CONTENT)
-                ) {
-                    Text(
-                        text = "App Permissions",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colors.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = MaterialTheme.dimensions.paddingSmall)
-                    )
-                    PermissionTooltipRow(
-                        title = "Camera Permission",
-                        description = "Required to capture detailed images of mosquito specimens for accurate identification and analysis.",
-                        iconPainter = painterResource(id = R.drawable.ic_camera),
-                        iconDescription = "Camera",
-                    )
-                    PermissionTooltipRow(
-                        title = "Location Permission",
-                        description = "Needed to log exact collection sites and associate each specimen with its geographic origin for field tracking.",
-                        iconPainter = painterResource(id = R.drawable.ic_pin),
-                        iconDescription = "Location"
-                    )
-                    PermissionTooltipRow(
-                        title = "Notification Permission",
-                        description = "Allows the app to show upload progress, completion alerts, and other key background status updates.",
-                        iconPainter = painterResource(id = R.drawable.ic_notification),
-                        iconDescription = "Notification"
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingExtraLarge))
-
             Column(
+                modifier = modifier
+                    .padding(
+                        horizontal = MaterialTheme.dimensions.paddingExtraExtraLarge,
+                        vertical = MaterialTheme.dimensions.paddingExtraExtraLarge
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                verticalArrangement = Arrangement.Center
             ) {
-                if (!state.allGranted) {
-                    ActionButton(
-                        onClick = { onAction(MainAction.OpenAppSettings) },
-                        label = "Grant Permissions",
-                        modifier = Modifier.testTag(PermissionTestTags.GRANT_PERMISSIONS_BUTTON)
-                    )
+                Image(
+                    painter = painterResource(R.drawable.permission_background),
+                    contentDescription = "Mosquito background",
+                    contentScale = ContentScale.Fit,
+                    modifier = modifier
+                        .padding(horizontal = MaterialTheme.dimensions.paddingLarge)
+                        .fillMaxWidth()
+                        .testTag(PermissionTestTags.IMAGE)
+                )
+
+                Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingLarge))
+
+                Text(
+                    text = if (!state.allGranted) "Permissions Required" else "GPS Required",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colors.textPrimary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.testTag(PermissionTestTags.TITLE)
+                )
+
+                Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
+
+                Text(
+                    text = "To work properly, this app needs access to your camera, location, and notifications. One or more of these permissions are currently disabled. Please enable them in settings to continue.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colors.textSecondary,
+                    textAlign = TextAlign.Left,
+                    lineHeight = MaterialTheme.typography.headlineLarge.lineHeight,
+                    modifier = Modifier
+                        .padding(
+                            start = MaterialTheme.dimensions.paddingMedium,
+                            end = MaterialTheme.dimensions.paddingExtraSmall
+                        )
+                        .testTag(PermissionTestTags.DESCRIPTION)
+                )
+
+                Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
+
+                Tooltip(
+                    isVisible = state.isPermissionTooltipVisible,
+                    onClick = {
+                        if (ctx != null) {
+                            ClickTracking.trackAndInvoke(
+                                context = ctx.copy(
+                                    feature = "Permissions",
+                                    action = "ShowPermissionTooltipDialog"
+                                ),
+                                message = "PermissionScreen: Show permission tooltip",
+                                category = "ui.click",
+                                onClick = { onAction(MainAction.ShowPermissionTooltipDialog) }
+                            )
+                        } else {
+                            onAction(MainAction.ShowPermissionTooltipDialog)
+                        }
+                    },
+                    onDismiss = { onAction(MainAction.HidePermissionTooltipDialog) },
+                    buttonText = "Tap to learn more about app permissions"
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+                        modifier = Modifier.testTag(PermissionTestTags.PERMISSION_TOOLTIP_CONTENT)
+                    ) {
+                        Text(
+                            text = "App Permissions",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colors.textPrimary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = MaterialTheme.dimensions.paddingSmall)
+                        )
+                        PermissionTooltipRow(
+                            title = "Camera Permission",
+                            description = "Required to capture detailed images of mosquito specimens for accurate identification and analysis.",
+                            iconPainter = painterResource(id = R.drawable.ic_camera),
+                            iconDescription = "Camera",
+                        )
+                        PermissionTooltipRow(
+                            title = "Location Permission",
+                            description = "Needed to log exact collection sites and associate each specimen with its geographic origin for field tracking.",
+                            iconPainter = painterResource(id = R.drawable.ic_pin),
+                            iconDescription = "Location"
+                        )
+                        PermissionTooltipRow(
+                            title = "Notification Permission",
+                            description = "Allows the app to show upload progress, completion alerts, and other key background status updates.",
+                            iconPainter = painterResource(id = R.drawable.ic_notification),
+                            iconDescription = "Notification"
+                        )
+                    }
                 }
-                if (!state.isGpsEnabled) {
-                    ActionButton(
-                        onClick = { onAction(MainAction.OpenLocationSettings) },
-                        label = "Enable GPS",
-                        modifier = Modifier.testTag(PermissionTestTags.ENABLE_GPS_BUTTON)
-                    )
+
+                Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingExtraLarge))
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                ) {
+                    if (!state.allGranted) {
+                        TrackedActionButton(
+                            label = "Grant Permissions",
+                            feature = "Permissions",
+                            action = "OpenAppSettings",
+                            onClick = { onAction(MainAction.OpenAppSettings) },
+                            modifier = Modifier.testTag(PermissionTestTags.GRANT_PERMISSIONS_BUTTON)
+                        )
+                    }
+                    if (!state.isGpsEnabled) {
+                        TrackedActionButton(
+                            label = "Enable GPS",
+                            feature = "Permissions",
+                            action = "OpenLocationSettings",
+                            onClick = { onAction(MainAction.OpenLocationSettings) },
+                            modifier = Modifier.testTag(PermissionTestTags.ENABLE_GPS_BUTTON)
+                        )
+                    }
                 }
             }
         }

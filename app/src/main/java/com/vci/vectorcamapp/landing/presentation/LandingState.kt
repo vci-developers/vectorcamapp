@@ -11,5 +11,9 @@ data class LandingState(
         formVersion = null
     ),
     val showResumeDialog: Boolean = false,
-    val incompleteSessionsCount: Int = 0
+    val incompleteSessionsCount: Int = 0,
+    /** Current session localId (UUID) for CrashyContext when a session is in progress. */
+    val currentSessionId: String? = null,
+    /** Current site id for CrashyContext when a session is in progress. */
+    val currentSiteId: String? = null
 )

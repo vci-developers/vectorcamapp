@@ -183,6 +183,7 @@ class RegistrationViewModel @Inject constructor(
                         )
                         deviceCache.saveDevice(device, selectedProgram.id)
                         currentSessionCache.clearSession()
+
                         collectorRepository.upsertCollector(_state.value.collector)
                         _events.send(RegistrationEvent.NavigateToLandingScreen)
                     } catch (e: Exception) {

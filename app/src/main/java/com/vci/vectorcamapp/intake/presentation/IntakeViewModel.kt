@@ -737,7 +737,9 @@ class IntakeViewModel @Inject constructor(
                         selectedDistrict = validatedDistrict,
                         selectedVillageName = validatedVillageName,
                         selectedHouseNumber = validatedHouseNumber,
-                        isCurrentCollectorMissing = isCollectorMissing
+                        isCurrentCollectorMissing = isCollectorMissing,
+                        programId = programId,
+                        selectedSiteId = validatedSite?.id
                     )
                 }
             }.first()

@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.complete_session.list.presentation
 
 import android.content.Context
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
@@ -19,6 +20,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -36,10 +38,17 @@ class CompleteSessionListViewModel @Inject constructor(
     private val specimenRepository: SpecimenRepository,
     private val specimenImageRepository: SpecimenImageRepository,
     private val workManagerRepository: WorkManagerRepository,
+    private val currentSessionCache: CurrentSessionCache,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
 
     private val _state = MutableStateFlow(CompleteSessionListState())
+
+    private val _currentSessionFromCache = flow {
+        val session = currentSessionCache.getSession()
+        val siteId = currentSessionCache.getSiteId()
+        emit(Pair(session?.localId?.toString(), siteId?.toString()))
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), Pair(null as String?, null as String?))
 
     private val _sessionAndSiteToUploadProgress = sessionRepository.observeCompleteSessionsAndSites()
         .flatMapLatest { sessions ->
@@ -74,8 +83,9 @@ class CompleteSessionListViewModel @Inject constructor(
 
     val state = combine(
         _sessionAndSiteToUploadProgress,
-        _state
-    ) { sessionAndSiteToUploadProgress, currentState ->
+        _state,
+        _currentSessionFromCache
+    ) { sessionAndSiteToUploadProgress, currentState, cache ->
         val filteredProgressMap = if (currentState.searchQuery.isBlank()) {
             sessionAndSiteToUploadProgress
         } else {
@@ -101,7 +111,11 @@ class CompleteSessionListViewModel @Inject constructor(
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
             }
         }
-        currentState.copy(sessionAndSiteToUploadProgress = filteredProgressMap)
+        currentState.copy(
+            sessionAndSiteToUploadProgress = filteredProgressMap,
+            currentSessionId = cache.first,
+            currentSiteId = cache.second
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CompleteSessionListState())
 
     private val _events = Channel<CompleteSessionListEvent>()
