@@ -1,11 +1,13 @@
 package com.vci.vectorcamapp.intake.domain.strategy.concrete
 
+import com.vci.vectorcamapp.core.domain.model.Form
+import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
-import com.vci.vectorcamapp.intake.domain.strategy.SurveillanceFormWorkflow
+import com.vci.vectorcamapp.intake.domain.strategy.ProgramFormWorkflow
 
-class SurveillanceFormPresentWorkflow : SurveillanceFormWorkflow {
-    override fun createNewSurveillanceForm(): SurveillanceForm {
-        return SurveillanceForm(
+class SurveillanceFormPresentWorkflow : ProgramFormWorkflow {
+    override val surveillanceForm: SurveillanceForm
+        get() = SurveillanceForm(
             numPeopleSleptInHouse = -1,
             wasIrsConducted = false,
             monthsSinceIrs = null,
@@ -15,5 +17,10 @@ class SurveillanceFormPresentWorkflow : SurveillanceFormWorkflow {
             numPeopleSleptUnderLlin = null,
             submittedAt = null
         )
-    }
+
+    override val form: Form?
+        get() = null
+
+    override val formQuestions: List<FormQuestion>
+        get() = emptyList()
 }

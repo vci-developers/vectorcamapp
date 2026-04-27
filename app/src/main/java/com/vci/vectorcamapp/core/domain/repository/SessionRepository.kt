@@ -22,4 +22,5 @@ interface SessionRepository {
     fun observeIncompleteSessionsAndSites(): Flow<List<SessionAndSite>>
     fun observeCompleteSessionsAndSites(): Flow<List<SessionAndSite>>
     fun observeSessionWithSpecimens(sessionId: UUID): Flow<SessionWithSpecimens?>
+    suspend fun getIncompleteSessionsAndSites(): List<SessionAndSite>
 }

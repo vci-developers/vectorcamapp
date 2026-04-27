@@ -9,11 +9,14 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
+import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
 import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
@@ -32,7 +35,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -51,6 +53,9 @@ class RegistrationViewModelTest {
     private lateinit var siteRepository: SiteRepository
     private lateinit var locationTypeDataSource: LocationTypeDataSource
     private lateinit var locationTypeRepository: LocationTypeRepository
+    private lateinit var formDataSource: FormDataSource
+    private lateinit var formRepository: FormRepository
+    private lateinit var formQuestionRepository: FormQuestionRepository
     private lateinit var transactionHelper: TransactionHelper
     private lateinit var connectivityObserver: ConnectivityObserver
 
@@ -62,8 +67,8 @@ class RegistrationViewModelTest {
     private lateinit var programsFlow: MutableStateFlow<List<Program>>
 
     private val testPrograms = listOf(
-        Program(id = 1, name = "Program 1", country = "Country 1"),
-        Program(id = 2, name = "Program 2", country = "Country 2")
+        Program(id = 1, name = "Program 1", country = "Country 1", "1.0.0"),
+        Program(id = 2, name = "Program 2", country = "Country 2", "1.0.0")
     )
 
     @Before
@@ -87,6 +92,9 @@ class RegistrationViewModelTest {
         siteRepository = mockk()
         locationTypeDataSource = mockk()
         locationTypeRepository = mockk()
+        formDataSource = mockk()
+        formRepository = mockk()
+        formQuestionRepository = mockk()
         transactionHelper = mockk(relaxed = true)
         connectivityObserver = mockk()
         every { connectivityObserver.isConnected } returns flowOf(true)
@@ -114,8 +122,11 @@ class RegistrationViewModelTest {
             siteRepository = siteRepository,
             locationTypeDataSource = locationTypeDataSource,
             locationTypeRepository = locationTypeRepository,
+            formDataSource = formDataSource,
+            formRepository = formRepository,
+            formQuestionRepository = formQuestionRepository,
             connectivityObserver = connectivityObserver,
-            errorMessageEmitter = errorMessageEmitter
+            errorMessageEmitter = errorMessageEmitter,
         )
     }
 
@@ -172,7 +183,7 @@ class RegistrationViewModelTest {
             awaitItem()
             awaitItem()
 
-            val newPrograms = listOf(Program(id = 99, name = "Updated", country = "Test"))
+            val newPrograms = listOf(Program(id = 99, name = "Updated", country = "Test", "1.0.0"))
             programsFlow.value = newPrograms
             advanceUntilIdle()
 
@@ -216,7 +227,7 @@ class RegistrationViewModelTest {
             advanceUntilIdle()
             awaitItem()
 
-            val newPrograms = listOf(Program(id = 3, name = "New", country = "New"))
+            val newPrograms = listOf(Program(id = 3, name = "New", country = "New", "1.0.0"))
             programsFlow.value = newPrograms
             advanceUntilIdle()
 
@@ -407,6 +418,9 @@ class RegistrationViewModelTest {
             siteRepository = siteRepository,
             locationTypeDataSource = locationTypeDataSource,
             locationTypeRepository = locationTypeRepository,
+            formDataSource = formDataSource,
+            formRepository = formRepository,
+            formQuestionRepository = formQuestionRepository,
             connectivityObserver = connectivityObserver,
             errorMessageEmitter = errorMessageEmitter,
         )

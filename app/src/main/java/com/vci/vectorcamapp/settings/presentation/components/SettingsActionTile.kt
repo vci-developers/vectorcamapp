@@ -29,7 +29,10 @@ fun SettingsActionTile(
     onClick: (() -> Unit),
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
-    ActionTile(onClick = onClick, modifier = modifier) {
+    ActionTile(
+        onClick = onClick,
+        modifier = modifier
+    ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
             modifier = Modifier.padding(MaterialTheme.dimensions.paddingLarge)

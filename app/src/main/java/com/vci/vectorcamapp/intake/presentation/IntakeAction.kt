@@ -24,6 +24,7 @@ sealed interface IntakeAction {
     data class PickCollectionDate(val date: Long) : IntakeAction
     data class UpdateCollectionMethod(val collectionMethod: String) : IntakeAction
     data class UpdateSpecimenCondition(val specimenCondition: String) : IntakeAction
+    data class UpdateFormAnswer(val questionId: Int, val value: String) : IntakeAction
     data class EnterNotes(val text: String) : IntakeAction
     data object RetryLocation: IntakeAction
     data object ShowCollectionMethodTooltipDialog: IntakeAction

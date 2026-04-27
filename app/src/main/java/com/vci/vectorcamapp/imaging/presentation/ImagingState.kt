@@ -7,11 +7,14 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 
 data class ImagingState(
     val isLoading: Boolean = false,
     val isProcessing: Boolean = false,
+    val sessionType: SessionType = SessionType.SURVEILLANCE,
     val currentSpecimen: Specimen = Specimen(id = "", remoteId = null, shouldProcessFurther = false),
     val currentSpecimenImage: SpecimenImage = SpecimenImage(
         localId = "",
@@ -23,7 +26,8 @@ data class ImagingState(
         metadataUploadStatus = UploadStatus.NOT_STARTED,
         imageUploadStatus = UploadStatus.NOT_STARTED,
         capturedAt = 0L,
-        submittedAt = null
+        submittedAt = null,
+        imageMetadata = null
     ),
     val currentInferenceResult: InferenceResult? = null,
     val currentImageBytes: ByteArray? = null,
@@ -42,5 +46,6 @@ data class ImagingState(
     /** Current session localId (UUID) for CrashyContext. */
     val currentSessionId: String? = null,
     /** Current site id for CrashyContext. */
-    val currentSiteId: String? = null
+    val currentSiteId: String? = null,
+    val currentCameraMetadata: CameraMetadata? = null,
 )

@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.incomplete_session.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -19,7 +20,6 @@ fun IncompleteSessionListDetailRow(
     iconPainter: Painter, iconDescription: String, text: String, modifier: Modifier = Modifier
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.fillMaxWidth()
     ) {
@@ -29,6 +29,8 @@ fun IncompleteSessionListDetailRow(
             tint = MaterialTheme.colors.icon,
             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
         )
+
+        Spacer(modifier = Modifier.size(MaterialTheme.dimensions.spacingSmall))
 
         Text(
             text = text,

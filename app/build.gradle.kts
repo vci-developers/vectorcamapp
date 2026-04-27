@@ -54,8 +54,8 @@ android {
         create("uganda") {
             dimension = "region"
             // applicationIdSuffix = ".uganda"
-            versionCode = 2007
-            versionName = "1.0.7"
+            versionCode = 2010
+            versionName = "1.0.10"
             
             buildConfigField("String", "REGION", "\"uganda\"")
             buildConfigField("String", "REGION_CODE", "\"UG\"")
@@ -98,8 +98,8 @@ android {
         create("kenya") {
             dimension = "region"
             applicationIdSuffix = ".kenya"
-            versionCode = 4001
-            versionName = "1.0.1"
+            versionCode = 4003
+            versionName = "1.0.3"
             
             buildConfigField("String", "REGION", "\"kenya\"")
             buildConfigField("String", "REGION_CODE", "\"KE\"")
@@ -111,8 +111,8 @@ android {
         create("ghana") {
             dimension = "region"
             applicationIdSuffix = ".ghana"
-            versionCode = 5001
-            versionName = "1.0.1"
+            versionCode = 5002
+            versionName = "1.0.2"
             
             buildConfigField("String", "REGION", "\"ghana\"")
             buildConfigField("String", "REGION_CODE", "\"GH\"")
@@ -155,6 +155,10 @@ android {
     buildFeatures {
         buildConfig = true
         compose = true
+    }
+
+    lint {
+        lintConfig = file("lint.xml")
     }
 
     androidResources {
@@ -280,6 +284,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling) // Debugging tools for Compose
     debugImplementation(libs.androidx.ui.test.manifest) // Debugging Compose manifest tests
 }
+
+apply(from = "jacoco.gradle.kts")
 
 sentry {
     org.set("vectorcam")

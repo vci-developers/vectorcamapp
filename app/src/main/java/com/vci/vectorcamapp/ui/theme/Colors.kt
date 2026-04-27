@@ -16,6 +16,7 @@ data class Colors(
     val successConfirm: Color = Color(0xFF43A047),
     val info: Color = Color(0xFF0277BD),
     val warning: Color = Color(0xFFFFA600),
+    val warningBackground: Color = Color(0xFFFFF3CD),
     val error: Color = Color(0xFFE54848),
     val textPrimary: Color = Color(0xFF1A1A1A),
     val textSecondary: Color = Color(0xFF64748B),

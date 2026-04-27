@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.complete_session.details.presentation
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,12 +13,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.complete_session.details.presentation.components.SegmentedTabBar
-import com.vci.vectorcamapp.core.logging.CrashyContext
-import com.vci.vectorcamapp.core.presentation.LocalCrashyContext
-import com.vci.vectorcamapp.core.presentation.components.button.ClickTracking
 import com.vci.vectorcamapp.complete_session.details.presentation.components.form.CompleteSessionForm
 import com.vci.vectorcamapp.complete_session.details.presentation.components.specimens.CompleteSessionSpecimens
 import com.vci.vectorcamapp.complete_session.details.presentation.enums.CompleteSessionDetailsTab
+import com.vci.vectorcamapp.core.logging.CrashyContext
+import com.vci.vectorcamapp.core.presentation.LocalCrashyContext
+import com.vci.vectorcamapp.core.presentation.components.button.TrackedIconButton
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -37,31 +36,23 @@ fun CompleteSessionDetailsScreen(
         siteId = state.site.id.takeIf { it != -1 }?.toString()
     )
     CompositionLocalProvider(LocalCrashyContext provides crashyContext) {
-        val screenContext = LocalCrashyContext.current
         ScreenHeader(
             title = "Session Information",
             subtitle = "ID: ${state.session.localId}",
             leadingIcon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_arrow_left),
-                    contentDescription = "Back Button",
-                    tint = MaterialTheme.colors.icon,
-                    modifier = Modifier
-                        .size(MaterialTheme.dimensions.iconSizeLarge)
-                        .clickable {
-                            screenContext?.let { ctx ->
-                                ClickTracking.trackAndInvoke(
-                                    context = ctx.copy(
-                                        feature = "Header",
-                                        action = "ReturnToCompleteSessionListScreen"
-                                    ),
-                                    message = "CompleteSessionDetails: Back pressed",
-                                    category = "ui.click",
-                                    onClick = { onAction(CompleteSessionDetailsAction.ReturnToCompleteSessionListScreen) }
-                                )
-                            }
-                                ?: onAction(CompleteSessionDetailsAction.ReturnToCompleteSessionListScreen)
-                        })
+                TrackedIconButton(
+                    message = "CompleteSessionDetails: Back pressed",
+                    onClick = { onAction(CompleteSessionDetailsAction.ReturnToCompleteSessionListScreen) },
+                    feature = "Header",
+                    action = "ReturnToCompleteSessionListScreen",
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_left),
+                        contentDescription = "Back Button",
+                        tint = MaterialTheme.colors.icon,
+                    )
+                }
             },
             modifier = modifier
         ) {
@@ -69,25 +60,7 @@ fun CompleteSessionDetailsScreen(
                 SegmentedTabBar(
                     tabs = CompleteSessionDetailsTab.entries,
                     selectedTab = state.selectedTab,
-                    onTabSelected = { tab ->
-                        screenContext?.let { ctx ->
-                            ClickTracking.trackAndInvoke(
-                                context = ctx.copy(
-                                    feature = "Tabs",
-                                    action = "ChangeSelectedTab_${tab.name}"
-                                ),
-                                message = "CompleteSessionDetails: Tab selected ${tab.name}",
-                                category = "ui.click",
-                                onClick = {
-                                    onAction(
-                                        CompleteSessionDetailsAction.ChangeSelectedTab(
-                                            tab
-                                        )
-                                    )
-                                }
-                            )
-                        } ?: onAction(CompleteSessionDetailsAction.ChangeSelectedTab(tab))
-                    },
+                    onTabSelected = { onAction(CompleteSessionDetailsAction.ChangeSelectedTab(it)) },
                 )
             }
 
@@ -97,6 +70,7 @@ fun CompleteSessionDetailsScreen(
                         session = state.session,
                         site = state.site,
                         surveillanceForm = state.surveillanceForm,
+                        formWithFormAnswersAndQuestions = state.formWithFormAnswersAndQuestions,
                         modifier = modifier
                     )
 
@@ -108,19 +82,7 @@ fun CompleteSessionDetailsScreen(
                         },
                         modifier = modifier,
                         isSearchTooltipVisible = state.isSearchTooltipVisible,
-                        onShowSearchTooltip = {
-                            screenContext?.let { ctx ->
-                                ClickTracking.trackAndInvoke(
-                                    context = ctx.copy(
-                                        feature = "Specimens",
-                                        action = "ShowSearchTooltipDialog"
-                                    ),
-                                    message = "CompleteSessionDetails: Show search tooltip",
-                                    category = "ui.click",
-                                    onClick = { onAction(CompleteSessionDetailsAction.ShowSearchTooltipDialog) }
-                                )
-                            } ?: onAction(CompleteSessionDetailsAction.ShowSearchTooltipDialog)
-                        },
+                        onShowSearchTooltip = { onAction(CompleteSessionDetailsAction.ShowSearchTooltipDialog) },
                         onDismissSearchTooltip = { onAction(CompleteSessionDetailsAction.HideSearchTooltipDialog) }
                     )
                 }

@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class ProgramDto(
     val programId: Int = -1,
     val name: String = "",
-    val country: String = ""
+    val country: String = "",
+    val formVersion: String? = null
 )

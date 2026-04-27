@@ -174,12 +174,35 @@ fun CompleteSessionListTile(
                         )
                     }
 
-                    site.locationHierarchy?.let { locationHierarchy ->
-                        CompleteSessionListDetailRow(
-                            iconPainter = painterResource(R.drawable.ic_pin),
-                            iconDescription = "Location",
-                            text = "Location: $locationHierarchy",
-                        )
+                    site.locationHierarchy
+                        ?.filterValues { it.isNotBlank() }
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { locationHierarchy ->
+                            Row(
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_pin),
+                                    contentDescription = "Location",
+                                    tint = MaterialTheme.colors.icon,
+                                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                                )
+
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(
+                                        MaterialTheme.dimensions.spacingExtraSmall
+                                    )
+                                ) {
+                                    locationHierarchy.forEach { (key, value) ->
+                                        Text(
+                                            text = "$key: $value",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colors.textPrimary
+                                        )
+                                    }
+                                }
+                            }
                     }
                 }
 

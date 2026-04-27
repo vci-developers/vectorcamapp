@@ -9,7 +9,9 @@ interface DefaultIntakeFieldsCache {
         collectorLastTrainedOn: Long,
         hardwareId: String?,
         district: String,
-        villageName: String
+        villageName: String,
+        formAnswers: Map<Int, String>,
+        locationSelections: Map<Int, String>
     )
 
     suspend fun getDefaultIntakeFields(): DefaultIntakeFieldsCacheDto?

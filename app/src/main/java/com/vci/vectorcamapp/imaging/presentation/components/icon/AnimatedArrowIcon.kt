@@ -28,7 +28,7 @@ fun AnimatedArrowIcon(
     enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    amplitude: Dp = MaterialTheme.dimensions.spacingSmall,
+    amplitude: Dp = MaterialTheme.dimensions.spacingExtraSmall,
     durationMillis: Int = 800
 ) {
     if (!enabled) {

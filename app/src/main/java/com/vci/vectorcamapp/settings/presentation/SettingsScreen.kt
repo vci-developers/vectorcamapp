@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.settings.presentation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -21,16 +24,18 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.logging.CrashyContext
 import com.vci.vectorcamapp.core.presentation.LocalCrashyContext
-import com.vci.vectorcamapp.core.presentation.components.button.ClickTracking
 import com.vci.vectorcamapp.core.presentation.components.button.TrackedActionButton
+import com.vci.vectorcamapp.core.presentation.components.button.TrackedIconButton
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.settings.presentation.components.CollectorDialog
+import com.vci.vectorcamapp.settings.presentation.components.CollectorWarningDialog
 import com.vci.vectorcamapp.settings.presentation.components.SettingsActionTile
 import com.vci.vectorcamapp.settings.presentation.components.SettingsInfoTile
 import com.vci.vectorcamapp.settings.presentation.components.SettingsSection
@@ -49,32 +54,25 @@ fun SettingsScreen(
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
     val crashyContext = CrashyContext.fromIds(screen = "SettingsScreen")
-    val screenContext = crashyContext
+
     CompositionLocalProvider(LocalCrashyContext provides crashyContext) {
         ScreenHeader(
             title = "Settings",
             subtitle = "Configure app preferences",
             leadingIcon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_arrow_left),
-                    contentDescription = "Back Button",
-                    tint = MaterialTheme.colors.icon,
-                    modifier = Modifier
-                        .size(MaterialTheme.dimensions.iconSizeLarge)
-                        .clickable {
-                            screenContext?.let { ctx ->
-                                ClickTracking.trackAndInvoke(
-                                    context = ctx.copy(
-                                        feature = "Header",
-                                        action = "ReturnToLandingScreen"
-                                    ),
-                                    message = "Settings: Back pressed",
-                                    category = "ui.click",
-                                    onClick = { onAction(SettingsAction.ReturnToLandingScreen) }
-                                )
-                            } ?: onAction(SettingsAction.ReturnToLandingScreen)
-                        }
-                )
+                TrackedIconButton(
+                    message = "Settings: Back pressed",
+                    onClick = { onAction(SettingsAction.ReturnToLandingScreen) },
+                    feature = "Header",
+                    action = "ReturnToLandingScreen",
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_left),
+                        contentDescription = "Back Button",
+                        tint = MaterialTheme.colors.icon,
+                    )
+                }
             },
             modifier = modifier
         ) {
@@ -82,22 +80,81 @@ fun SettingsScreen(
                 SettingsSection(title = "Actions") {
                     SettingsActionTile(
                         title = "Start Data Collection",
-                        onClick = {
-                            screenContext?.let { ctx ->
-                                ClickTracking.trackAndInvoke(
-                                    context = ctx.copy(
-                                        feature = "Actions",
-                                        action = "StartNewDataCollectionSession"
-                                    ),
-                                    message = "Settings: Start Data Collection",
-                                    category = "ui.click",
-                                    onClick = { onAction(SettingsAction.StartNewDataCollectionSession) }
-                                )
-                            } ?: onAction(SettingsAction.StartNewDataCollectionSession)
-                        },
+                        onClick = { onAction(SettingsAction.StartNewDataCollectionSession) },
+                        modifier = modifier
+                    )
+
+                    SettingsActionTile(
+                        title = "Start Practice Session",
+                        onClick = { onAction(SettingsAction.StartNewPracticeSession) },
                         modifier = modifier
                     )
                 }
+
+                SettingsSection(title = "Update Data from Server") {
+                    SettingsInfoTile(
+                        title = "Cloud Sync",
+                        modifier = modifier
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(MaterialTheme.dimensions.componentHeightExtraExtraSmall)
+                                        .background(
+                                            color = if (state.isConnectedToInternet) MaterialTheme.colors.successConfirm else MaterialTheme.colors.error,
+                                            shape = CircleShape
+                                        )
+                                )
+                                Text(
+                                    text = if (state.isConnectedToInternet) "Connected to Internet" else "No Internet Connection - Resync Unavailable",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = if (state.isConnectedToInternet) MaterialTheme.colors.textSecondary else MaterialTheme.colors.error
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .alpha(if (state.isConnectedToInternet) 1f else 0.5f)
+                                ) {
+                                    TrackedActionButton(
+                                        label = if (state.isSyncingData) "Syncing Data..." else "Resync Data",
+                                        feature = "CloudSync",
+                                        action = "ResyncProgramData",
+                                        onClick = {
+                                            if (state.isConnectedToInternet && !state.isSyncingData) {
+                                                onAction(SettingsAction.ResyncProgramData)
+                                            }
+                                        },
+                                        enabled = state.isConnectedToInternet && !state.isSyncingData,
+                                        textSize = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+
+                                if (state.isSyncingData) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier
+                                            .padding(start = MaterialTheme.dimensions.paddingMedium)
+                                            .size(MaterialTheme.dimensions.iconSizeMedium),
+                                        color = MaterialTheme.colors.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 SettingsSection("About") {
                     SettingsInfoTile(
                         title = "Registered Collectors",
@@ -113,23 +170,7 @@ fun SettingsScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            screenContext?.let { ctx ->
-                                                ClickTracking.trackAndInvoke(
-                                                    context = ctx.copy(
-                                                        feature = "Collectors",
-                                                        action = "ShowEditCollectorDialog"
-                                                    ),
-                                                    message = "Settings: Edit collector",
-                                                    category = "ui.click",
-                                                    onClick = {
-                                                        onAction(
-                                                            SettingsAction.ShowEditCollectorDialog(
-                                                                collector
-                                                            )
-                                                        )
-                                                    }
-                                                )
-                                            } ?: onAction(
+                                            onAction(
                                                 SettingsAction.ShowEditCollectorDialog(
                                                     collector
                                                 )
@@ -277,73 +318,22 @@ fun SettingsScreen(
                 onNameChange = { onAction(SettingsAction.EnterCollectorName(it)) },
                 onTitleChange = { onAction(SettingsAction.EnterCollectorTitle(it)) },
                 onLastTrainedOnChange = { onAction(SettingsAction.EnterCollectorLastTrainedOn(it)) },
-                onDismiss = {
-                    screenContext?.let { ctx ->
-                        ClickTracking.trackAndInvoke(
-                            context = ctx.copy(
-                                feature = "CollectorDialog",
-                                action = "DismissCollectorDialog"
-                            ),
-                            message = "Settings: Dismiss collector dialog",
-                            category = "ui.click",
-                            onClick = { onAction(SettingsAction.DismissCollectorDialog) }
-                        )
-                    } ?: onAction(SettingsAction.DismissCollectorDialog)
-                },
-                onSave = {
-                    screenContext?.let { ctx ->
-                        ClickTracking.trackAndInvoke(
-                            context = ctx.copy(
-                                feature = "CollectorDialog",
-                                action = "SaveCollector"
-                            ),
-                            message = "Settings: Save collector",
-                            category = "ui.click",
-                            onClick = { onAction(SettingsAction.SaveCollector) }
-                        )
-                    } ?: onAction(SettingsAction.SaveCollector)
-                },
-                onDelete = {
-                    screenContext?.let { ctx ->
-                        ClickTracking.trackAndInvoke(
-                            context = ctx.copy(
-                                feature = "CollectorDialog",
-                                action = "ShowDeleteCollectorDialog"
-                            ),
-                            message = "Settings: Show delete collector dialog",
-                            category = "ui.click",
-                            onClick = { onAction(SettingsAction.ShowDeleteCollectorDialog) }
-                        )
-                    } ?: onAction(SettingsAction.ShowDeleteCollectorDialog)
-                },
-                onConfirmDelete = {
-                    screenContext?.let { ctx ->
-                        ClickTracking.trackAndInvoke(
-                            context = ctx.copy(
-                                feature = "CollectorDialog",
-                                action = "ConfirmDeleteCollector"
-                            ),
-                            message = "Settings: Confirm delete collector",
-                            category = "ui.click",
-                            onClick = { onAction(SettingsAction.ConfirmDeleteCollector) }
-                        )
-                    } ?: onAction(SettingsAction.ConfirmDeleteCollector)
-                },
-                onDismissDeleteDialog = {
-                    screenContext?.let { ctx ->
-                        ClickTracking.trackAndInvoke(
-                            context = ctx.copy(
-                                feature = "CollectorDialog",
-                                action = "DismissDeleteCollectorDialog"
-                            ),
-                            message = "Settings: Dismiss delete collector dialog",
-                            category = "ui.click",
-                            onClick = { onAction(SettingsAction.DismissDeleteCollectorDialog) }
-                        )
-                    } ?: onAction(SettingsAction.DismissDeleteCollectorDialog)
-                },
-                    isEditDialogVisible = state.isEditCollectorDialogVisible,
+                onDismiss = { onAction(SettingsAction.DismissCollectorDialog) },
+                onSave = { onAction(SettingsAction.SaveCollector) },
+                onDelete = { onAction(SettingsAction.ShowDeleteCollectorDialog) },
+                onConfirmDelete = { onAction(SettingsAction.ConfirmDeleteCollector) },
+                onDismissDeleteDialog = { onAction(SettingsAction.DismissDeleteCollectorDialog) },
+                isEditDialogVisible = state.isEditCollectorDialogVisible,
                 isDeleteDialogVisible = state.isDeleteCollectorDialogVisible
+            )
+        }
+
+        if (state.selectedCollector != null && state.similarCollector != null) {
+            CollectorWarningDialog(
+                selectedCollector = state.selectedCollector,
+                similarCollector = state.similarCollector,
+                onConfirmSave = { onAction(SettingsAction.ConfirmSaveCollector) },
+                onDismiss = { onAction(SettingsAction.DismissCollectorWarningDialog) }
             )
         }
     }

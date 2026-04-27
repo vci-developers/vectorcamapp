@@ -43,6 +43,7 @@ fun Error.toString(context: Context): String {
             CompleteSessionDetailsError.SESSION_NOT_FOUND -> R.string.complete_session_error_session_not_found
             CompleteSessionDetailsError.SITE_NOT_FOUND -> R.string.complete_session_error_site_not_found
             CompleteSessionDetailsError.SPECIMENS_NOT_FOUND -> R.string.complete_session_error_specimens_not_found
+            CompleteSessionDetailsError.FORM_DATA_INCONSISTENT -> R.string.complete_session_error_form_data_inconsistent
             CompleteSessionDetailsError.UNKNOWN_ERROR -> R.string.complete_session_error_unknown_error
         }
 
@@ -112,6 +113,7 @@ fun Error.toString(context: Context): String {
             FormValidationError.INVALID_NUM_PEOPLE_SLEPT_IN_HOUSE -> R.string.form_validation_error_invalid_num_people_slept_in_house_condition
             FormValidationError.INVALID_NUM_LLINS_AVAILABLE -> R.string.form_validation_error_invalid_num_llins_available
             FormValidationError.INVALID_MONTHS_SINCE_IRS -> R.string.form_validation_error_invalid_months_since_irs
+            FormValidationError.INVALID_FORM_ANSWER -> R.string.form_validation_error_invalid_form_answer
         }
 
         is CollectorValidationError -> when (this) {
@@ -123,6 +125,9 @@ fun Error.toString(context: Context): String {
         is SettingsError -> when (this) {
             SettingsError.COLLECTOR_SAVE_FAILED -> R.string.settings_error_collector_save_failed
             SettingsError.COLLECTOR_DELETION_FAILED -> R.string.settings_error_collector_deletion_failed
+            SettingsError.DATA_SYNC_FAILED -> R.string.settings_error_data_sync_failed
+            SettingsError.DATA_SYNC_IN_PROGRESS_SESSION_EXIST -> R.string.settings_error_data_sync_in_progress_session_exist
+
         }
 
         else -> R.string.error_fallback
