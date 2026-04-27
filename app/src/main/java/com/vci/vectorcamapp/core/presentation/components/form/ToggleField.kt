@@ -17,7 +17,8 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 fun ToggleField(
     label: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -26,12 +27,13 @@ fun ToggleField(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colors.textSecondary,
+            color = if (enabled) MaterialTheme.colors.textSecondary else MaterialTheme.colors.disabled,
             modifier = Modifier.weight(1f)
         )
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
+            enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = MaterialTheme.colors.successConfirm,
                 uncheckedThumbColor = MaterialTheme.colors.disabled,
