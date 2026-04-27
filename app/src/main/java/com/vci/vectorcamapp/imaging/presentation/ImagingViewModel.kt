@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.imaging.presentation
 
 import android.graphics.Bitmap
+import android.os.SystemClock
 import android.net.Uri
 import android.util.Log
 import androidx.compose.material3.SnackbarDuration
@@ -52,6 +53,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import org.opencv.core.MatOfByte
@@ -86,6 +88,8 @@ class ImagingViewModel @Inject constructor(
 
     private var lastAutoCaptureBbox: InferenceResult? = null
     private var autoCaptureStableFrameCount: Int = 0
+    /** [SystemClock.elapsedRealtime] when the current stable streak began; 0 = unset. */
+    private var autoCaptureStableStreakStartElapsedMs: Long = 0L
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
@@ -668,11 +672,17 @@ class ImagingViewModel @Inject constructor(
         private const val MONTHLY_FURTHER_PROCESSING_CAP = 20
         private const val AUTO_CAPTURE_MIN_CONFIDENCE = 0.5f
         private const val AUTO_CAPTURE_MIN_BBOX_IOU = 0.7f
+        /** Max normalized (0–1) L∞ delta between bbox centers for consecutive frames to count as stable. */
+        private const val AUTO_CAPTURE_MAX_CENTER_SHIFT = 0.05f
+        /** Need at least this many consecutive stable frames (pairs with IoU/center checks) before time gate applies. */
+        private const val AUTO_CAPTURE_MIN_STABLE_FRAMES = 2
+        private const val AUTO_CAPTURE_MIN_STABLE_DURATION_MS = 2_000L
     }
 
     private fun resetAutoCaptureStability() {
         lastAutoCaptureBbox = null
         autoCaptureStableFrameCount = 0
+        autoCaptureStableStreakStartElapsedMs = 0L
     }
 
     private fun bboxIoU(a: InferenceResult, b: InferenceResult): Float {
@@ -693,6 +703,15 @@ class ImagingViewModel @Inject constructor(
         return if (union <= 0f) 0f else interArea / union
     }
 
+    /** Largest absolute normalized shift of bbox center along x or y between two detections. */
+    private fun bboxMaxCenterShiftNorm(a: InferenceResult, b: InferenceResult): Float {
+        val acx = a.bboxTopLeftX + a.bboxWidth * 0.5f
+        val acy = a.bboxTopLeftY + a.bboxHeight * 0.5f
+        val bcx = b.bboxTopLeftX + b.bboxWidth * 0.5f
+        val bcy = b.bboxTopLeftY + b.bboxHeight * 0.5f
+        return max(abs(acx - bcx), abs(acy - bcy))
+    }
+
     private fun maybeSignalAutoCapture(highestConfidenceDetection: InferenceResult?) {
         val snapshot = _state.value
         if (!snapshot.isAutoCaptureEnabled || !snapshot.shouldRunInference || snapshot.currentImageBytes != null) {
@@ -707,14 +726,26 @@ class ImagingViewModel @Inject constructor(
         }
 
         val prev = lastAutoCaptureBbox
-        if (prev != null && bboxIoU(prev, det) >= AUTO_CAPTURE_MIN_BBOX_IOU) {
+        val iouOk = prev != null && bboxIoU(prev, det) >= AUTO_CAPTURE_MIN_BBOX_IOU
+        val positionStable =
+            prev != null && bboxMaxCenterShiftNorm(prev, det) <= AUTO_CAPTURE_MAX_CENTER_SHIFT
+        if (iouOk && positionStable) {
             autoCaptureStableFrameCount++
         } else {
             autoCaptureStableFrameCount = 1
+            autoCaptureStableStreakStartElapsedMs = SystemClock.elapsedRealtime()
         }
         lastAutoCaptureBbox = det
 
-        if (autoCaptureStableFrameCount >= 2) {
+        val streakAgeMs =
+            if (autoCaptureStableStreakStartElapsedMs > 0L) {
+                SystemClock.elapsedRealtime() - autoCaptureStableStreakStartElapsedMs
+            } else {
+                0L
+            }
+        if (autoCaptureStableFrameCount >= AUTO_CAPTURE_MIN_STABLE_FRAMES &&
+            streakAgeMs >= AUTO_CAPTURE_MIN_STABLE_DURATION_MS
+        ) {
             resetAutoCaptureStability()
             _state.update { it.copy(autoCaptureSignal = it.autoCaptureSignal + 1L) }
         }
