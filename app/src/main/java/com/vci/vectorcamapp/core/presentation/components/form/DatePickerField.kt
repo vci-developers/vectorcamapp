@@ -38,7 +38,8 @@ fun DatePickerField(
     onDateSelected: (Long) -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null,
-    error: Error? = null
+    error: Error? = null,
+    required: Boolean = false,
 ) {
     val context = LocalContext.current
 
@@ -61,11 +62,7 @@ fun DatePickerField(
         modifier = Modifier.fillMaxWidth()
     ) {
         label?.let {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colors.textSecondary,
-            )
+            FormFieldLabel(text = it, required = required)
         }
 
         Box(

@@ -109,7 +109,8 @@ fun IntakeScreen(
                 }
 
                 DropdownField(
-                    label = "Collector *",
+                    label = "Collector",
+                    required = true,
                     options = state.allCollectors,
                     selectedOption = selectedCollector,
                     onOptionSelected = { selected: Collector ->
@@ -238,7 +239,8 @@ fun IntakeScreen(
                 )
 
                 DatePickerField(
-                    label = "Collection Date *",
+                    label = "Collection Date",
+                    required = true,
                     selectedDateInMillis = state.session.collectionDate,
                     onDateSelected = { onAction(IntakeAction.PickCollectionDate(it)) },
                     error = state.intakeErrors.collectionDate,
@@ -250,7 +252,8 @@ fun IntakeScreen(
                 )
 
                 DropdownField(
-                    label = "Collection Method *",
+                    label = "Collection Method",
+                    required = true,
                     options = IntakeDropdownOptions.CollectionMethodOption.entries,
                     selectedOption = if (isOtherCollectionMethod) IntakeDropdownOptions.CollectionMethodOption.OTHER
                     else IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
@@ -304,7 +307,8 @@ fun IntakeScreen(
 
                 if (isOtherCollectionMethod) {
                     TextEntryField(
-                        label = "Other Collection Method *",
+                        label = "Other Collection Method",
+                        required = true,
                         value = state.session.collectionMethod.removePrefix(IntakeDropdownOptions.CollectionMethodOption.OTHER.label)
                             .trimStart(),
                         onValueChange = { onAction(IntakeAction.UpdateCollectionMethod("${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it")) },
@@ -318,7 +322,8 @@ fun IntakeScreen(
                 )
 
                 DropdownField(
-                    label = "Specimen Condition *",
+                    label = "Specimen Condition",
+                    required = true,
                     options = IntakeDropdownOptions.SpecimenConditionOption.entries,
                     selectedOption = if (isOtherSpecimenCondition) IntakeDropdownOptions.SpecimenConditionOption.OTHER
                     else IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition },
@@ -335,7 +340,8 @@ fun IntakeScreen(
 
                 if (isOtherSpecimenCondition) {
                     TextEntryField(
-                        label = "Other Specimen Condition *",
+                        label = "Other Specimen Condition",
+                        required = true,
                         value = state.session.specimenCondition.removePrefix(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label)
                             .trimStart(),
                         onValueChange = { onAction(IntakeAction.UpdateSpecimenCondition("${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it")) },
@@ -354,7 +360,8 @@ fun IntakeScreen(
             ) {
                 if (state.allSitesInProgram.any { !it.district.isNullOrBlank() }) {
                     DropdownField(
-                        label = "District *",
+                        label = "District",
+                        required = true,
                         options = state.allSitesInProgram.mapNotNull { it.district }.distinct(),
                         selectedOption = state.selectedDistrict,
                         onOptionSelected = { onAction(IntakeAction.SelectDistrict(it)) },
@@ -370,7 +377,8 @@ fun IntakeScreen(
 
                     if (state.selectedDistrict.isNotBlank()) {
                         DropdownField(
-                            label = "Village Name *",
+                            label = "Village Name",
+                            required = true,
                             options = state.allSitesInProgram.filter { it.district == state.selectedDistrict }
                                 .mapNotNull { it.villageName }.distinct(),
                             selectedOption = state.selectedVillageName,
@@ -389,7 +397,8 @@ fun IntakeScreen(
 
                     if (state.selectedVillageName.isNotBlank()) {
                         DropdownField(
-                            label = "House Number *",
+                            label = "House Number",
+                            required = true,
                             options = state.allSitesInProgram.filter { it.district == state.selectedDistrict && it.villageName == state.selectedVillageName }
                                 .mapNotNull { it.houseNumber }.distinct(),
                             selectedOption = state.selectedHouseNumber,
@@ -426,7 +435,8 @@ fun IntakeScreen(
                                     .distinct()
 
                             DropdownField(
-                                label = "${locationType.name} *",
+                                label = locationType.name,
+                                required = true,
                                 options = availableOptions,
                                 selectedOption = state.siteSelectionsByLocationTypeId[locationType.id],
                                 onOptionSelected = {
@@ -544,7 +554,8 @@ fun IntakeScreen(
                         iconDescription = "Surveillance Form Icon"
                     ) {
                         TextEntryField(
-                            label = "Number of People Living in the House *",
+                            label = "Number of People Living in the House",
+                            required = true,
                             value = if (surveillanceForm.numPeopleSleptInHouse < 0) ""
                             else surveillanceForm.numPeopleSleptInHouse.toString(),
                             onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it)) },
@@ -565,7 +576,8 @@ fun IntakeScreen(
 
                         surveillanceForm.monthsSinceIrs?.let { monthsSinceIrs ->
                             TextEntryField(
-                                label = "Months Since IRS *",
+                                label = "Months Since IRS",
+                                required = true,
                                 value = if (monthsSinceIrs < 0) ""
                                 else monthsSinceIrs.toString(),
                                 onValueChange = { onAction(IntakeAction.EnterMonthsSinceIrs(it)) },
@@ -575,7 +587,8 @@ fun IntakeScreen(
                         }
 
                         TextEntryField(
-                            label = "Number of LLINs Available *",
+                            label = "Number of LLINs Available",
+                            required = true,
                             value = if (surveillanceForm.numLlinsAvailable < 0) ""
                             else surveillanceForm.numLlinsAvailable.toString(),
                             onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it)) },
@@ -585,7 +598,8 @@ fun IntakeScreen(
 
                         surveillanceForm.llinType?.let { current ->
                             DropdownField(
-                                label = "LLIN Type *",
+                                label = "LLIN Type",
+                                required = true,
                                 options = IntakeDropdownOptions.LlinTypeOption.entries,
                                 selectedOption = IntakeDropdownOptions.LlinTypeOption.entries.firstOrNull { it.label == current },
                                 onOptionSelected = {
@@ -603,7 +617,8 @@ fun IntakeScreen(
 
                         surveillanceForm.llinBrand?.let { current ->
                             DropdownField(
-                                label = "LLIN Brand *",
+                                label = "LLIN Brand",
+                                required = true,
                                 options = IntakeDropdownOptions.LlinBrandOption.entries.filter { it.type?.label == surveillanceForm.llinType || it.type == null },
                                 selectedOption = IntakeDropdownOptions.LlinBrandOption.entries.firstOrNull { it.label == current },
                                 onOptionSelected = {
@@ -621,7 +636,8 @@ fun IntakeScreen(
 
                         surveillanceForm.numPeopleSleptUnderLlin?.let { numPeopleSleptUnderLlin ->
                             TextEntryField(
-                                label = "Number of People who Slept Under LLIN *",
+                                label = "Number of People who Slept Under LLIN",
+                                required = true,
                                 value = if (numPeopleSleptUnderLlin < 0) ""
                                 else numPeopleSleptUnderLlin.toString(),
                                 onValueChange = {

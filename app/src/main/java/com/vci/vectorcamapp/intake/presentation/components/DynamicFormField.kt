@@ -23,11 +23,12 @@ fun DynamicFormField(
     modifier: Modifier = Modifier,
     error: Error? = null,
 ) {
-    val label = if (question.required) "${question.label} *" else question.label
+    val label = question.label
     when (question.type) {
         "text" -> {
             TextEntryField(
                 label = label,
+                required = question.required,
                 value = value,
                 onValueChange = onValueChange,
                 singleLine = true,
@@ -39,6 +40,7 @@ fun DynamicFormField(
         "number" -> {
             TextEntryField(
                 label = label,
+                required = question.required,
                 value = value,
                 onValueChange = { newValue ->
                     if (newValue.isEmpty() || newValue.matches(Regex("^\\d+\\.?\\d{0,2}$"))) {
@@ -55,6 +57,7 @@ fun DynamicFormField(
         "boolean" -> {
             ToggleField(
                 label = label,
+                required = question.required,
                 checked = value.toBooleanStrictOrNull() ?: false,
                 onCheckedChange = { onValueChange(it.toString()) }
             )
@@ -63,6 +66,7 @@ fun DynamicFormField(
         "date" -> {
             DatePickerField(
                 label = label,
+                required = question.required,
                 selectedDateInMillis = value.toLongOrNull(),
                 onDateSelected = { onValueChange(it.toString()) },
                 error = error,
@@ -74,6 +78,7 @@ fun DynamicFormField(
             val options = question.options.orEmpty()
             DropdownField(
                 label = label,
+                required = question.required,
                 options = options,
                 selectedOption = options.firstOrNull { it == value },
                 onOptionSelected = onValueChange,
