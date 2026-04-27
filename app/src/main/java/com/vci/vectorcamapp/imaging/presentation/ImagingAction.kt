@@ -10,6 +10,8 @@ sealed interface ImagingAction {
     data class ProcessFrame(val frame: ImageProxy) : ImagingAction
     data object SaveSessionProgress : ImagingAction
     data object SubmitSession : ImagingAction
+    data object ConfirmSubmitSession : ImagingAction
+    data object DismissSubmitSessionSummaryDialog : ImagingAction
     data class ToggleModelInference(val isChecked: Boolean) : ImagingAction
     data class CaptureImage(
         val imageCapture: ImageCapture,

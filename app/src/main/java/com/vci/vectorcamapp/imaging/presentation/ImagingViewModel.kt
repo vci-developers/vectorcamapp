@@ -8,11 +8,14 @@ import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
+import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
@@ -57,6 +60,7 @@ import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import java.time.Instant
 import java.time.ZoneId
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
 import androidx.core.graphics.createBitmap
@@ -68,6 +72,7 @@ import org.opencv.core.Mat
 class ImagingViewModel @Inject constructor(
     private val currentSessionCache: CurrentSessionCache,
     private val sessionRepository: SessionRepository,
+    private val formRepository: FormRepository,
     private val specimenRepository: SpecimenRepository,
     private val specimenImageRepository: SpecimenImageRepository,
     private val inferenceResultRepository: InferenceResultRepository,
@@ -251,8 +256,38 @@ class ImagingViewModel @Inject constructor(
 
                 ImagingAction.SubmitSession -> {
                     val currentSession = currentSessionCache.getSession()
-                    val currentSessionSiteId = currentSessionCache.getSiteId()
+                    if (currentSession == null) {
+                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        return@launch
+                    }
 
+                    val sessionAndSite = sessionRepository.getSessionAndSiteById(currentSession.localId)
+                    val formEntries = buildSessionInputSummaryEntries(currentSession, sessionAndSite?.site) +
+                        buildFormSummaryEntries(currentSession.localId)
+                    val speciesEntries = buildDetectionSummaryEntries()
+
+                    _state.update {
+                        it.copy(
+                            showSubmitSummaryDialog = true,
+                            submitSummaryFormEntries = formEntries,
+                            submitSummarySpeciesEntries = speciesEntries
+                        )
+                    }
+                }
+
+                ImagingAction.DismissSubmitSessionSummaryDialog -> {
+                    _state.update {
+                        it.copy(
+                            showSubmitSummaryDialog = false,
+                            submitSummaryFormEntries = emptyList(),
+                            submitSummarySpeciesEntries = emptyList()
+                        )
+                    }
+                }
+
+                ImagingAction.ConfirmSubmitSession -> {
+                    val currentSession = currentSessionCache.getSession()
+                    val currentSessionSiteId = currentSessionCache.getSiteId()
                     if (currentSession == null || currentSessionSiteId == null) {
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
                         return@launch
@@ -260,6 +295,13 @@ class ImagingViewModel @Inject constructor(
 
                     val success = sessionRepository.markSessionAsComplete(currentSession.localId)
                     if (success) {
+                        _state.update {
+                            it.copy(
+                                showSubmitSummaryDialog = false,
+                                submitSummaryFormEntries = emptyList(),
+                                submitSummarySpeciesEntries = emptyList()
+                            )
+                        }
                         workRepository.enqueueSessionUpload(
                             currentSession.localId, currentSessionSiteId
                         )
@@ -578,6 +620,76 @@ class ImagingViewModel @Inject constructor(
                 specimenIdError = null,
                 currentCameraMetadata = null
             )
+        }
+    }
+
+    private fun buildSessionInputSummaryEntries(session: Session, site: Site?): List<Pair<String, String>> {
+        val dateFormatter = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault())
+
+        val entries = mutableListOf<Pair<String, String>>()
+
+        entries += "Session Type" to session.type.name.lowercase()
+            .replaceFirstChar { it.uppercase() }
+
+        if (session.collectorName.isNotBlank()) entries += "Collector Name" to session.collectorName
+        if (session.collectorTitle.isNotBlank()) entries += "Collector Title" to session.collectorTitle
+        if (session.collectorLastTrainedOn > 0L) {
+            entries += "Last Trained On" to dateFormatter.format(java.util.Date(session.collectorLastTrainedOn))
+        }
+        if (session.collectionDate > 0L) {
+            entries += "Collection Date" to dateFormatter.format(java.util.Date(session.collectionDate))
+        }
+        if (session.collectionMethod.isNotBlank()) entries += "Collection Method" to session.collectionMethod
+        if (session.specimenCondition.isNotBlank()) entries += "Specimen Condition" to session.specimenCondition
+
+        site?.let { s ->
+            s.locationHierarchy?.forEach { (level, value) ->
+                if (value.isNotBlank()) entries += level to value
+            }
+            if (s.district?.isNotBlank() == true && s.locationHierarchy?.containsKey("District") != true) {
+                entries += "District" to s.district
+            }
+            if (s.subCounty?.isNotBlank() == true) entries += "Sub-County" to s.subCounty
+            if (s.parish?.isNotBlank() == true) entries += "Parish" to s.parish
+            if (s.villageName?.isNotBlank() == true) entries += "Village" to s.villageName
+            if (s.houseNumber?.isNotBlank() == true) entries += "House Number" to s.houseNumber
+            if (s.healthCenter?.isNotBlank() == true) entries += "Health Center" to s.healthCenter
+            if (s.name?.isNotBlank() == true) entries += "Site" to s.name
+        }
+
+        if (session.latitude != null && session.longitude != null) {
+            entries += "GPS" to "%.6f, %.6f".format(session.latitude, session.longitude)
+        }
+        if (session.notes.isNotBlank()) entries += "Notes" to session.notes
+
+        return entries
+    }
+
+    private suspend fun buildFormSummaryEntries(sessionId: UUID): List<Pair<String, String>> {
+        val formsWithAnswers = formRepository.getFormsWithFormAnswersAndQuestionsBySessionId(sessionId)
+        return formsWithAnswers
+            .flatMap { it.formAnswersAndQuestions }
+            .sortedBy { it.question.order ?: Int.MAX_VALUE }
+            .map { formAnswerAndQuestion ->
+                formAnswerAndQuestion.question.label to formAnswerAndQuestion.answer.value
+            }
+    }
+
+    private fun buildDetectionSummaryEntries(): List<Pair<String, List<String>>> {
+        return state.value.specimensWithImagesAndInferenceResults.map { specimenWithImages ->
+            val specimenId = specimenWithImages.specimen.id
+            val imageClassifications = specimenWithImages.specimenImagesAndInferenceResults
+                .mapIndexed { index, (specimenImage, _) ->
+                    buildString {
+                        append("Image ${index + 1}: ")
+                        append("Species: ${specimenImage.species ?: "N/A"}")
+                        append(", Sex: ${specimenImage.sex ?: "N/A"}")
+                        if (specimenImage.abdomenStatus != null) {
+                            append(", Abdomen: ${specimenImage.abdomenStatus}")
+                        }
+                    }
+                }
+            specimenId to imageClassifications
         }
     }
 

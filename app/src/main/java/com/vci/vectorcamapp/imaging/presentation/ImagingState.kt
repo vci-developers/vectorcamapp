@@ -39,6 +39,10 @@ data class ImagingState(
     val isManualFocusing: Boolean = false,
     val isCameraReady: Boolean = false,
     val showExitDialog: Boolean = false,
+    val showSubmitSummaryDialog: Boolean = false,
+    val submitSummaryFormEntries: List<Pair<String, String>> = emptyList(),
+    // Each entry is (specimenId, list of per-image classification strings)
+    val submitSummarySpeciesEntries: List<Pair<String, List<String>>> = emptyList(),
     val showProcessFurtherDialog: Boolean = false,
     val hasConfirmedPackaging: Boolean = false,
     val pendingAction: ImagingAction? = null,
