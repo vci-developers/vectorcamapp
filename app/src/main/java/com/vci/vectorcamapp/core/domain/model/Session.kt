@@ -11,6 +11,7 @@ data class Session(
     val collectorName: String,
     val collectorLastTrainedOn: Long,
     val collectionDate: Long,
+    val collectionCycle: String? = null,
     val collectionMethod: String,
     val specimenCondition: String,
     val createdAt: Long,

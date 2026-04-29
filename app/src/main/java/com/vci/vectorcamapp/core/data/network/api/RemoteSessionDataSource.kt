@@ -37,6 +37,7 @@ class RemoteSessionDataSource @Inject constructor(
                         collectorName = session.collectorName,
                         collectorLastTrainedOn = session.collectorLastTrainedOn,
                         collectionDate = session.collectionDate,
+                        collectionCycle = session.collectionCycle,
                         collectionMethod = session.collectionMethod,
                         specimenCondition = session.specimenCondition,
                         createdAt = session.createdAt,
