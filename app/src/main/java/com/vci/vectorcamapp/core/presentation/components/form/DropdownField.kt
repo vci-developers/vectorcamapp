@@ -50,6 +50,7 @@ fun <T> DropdownField(
     error: Error? = null,
     menuTestTag: String? = null,
     menuItemTestTagPrefix: String? = null,
+    required: Boolean = false,
     itemContent: @Composable (T) -> Unit,
 ) {
     val context = LocalContext.current
@@ -60,11 +61,7 @@ fun <T> DropdownField(
         modifier = Modifier.fillMaxWidth()
     ) {
         label?.let {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colors.textSecondary,
-            )
+            FormFieldLabel(text = it, required = required)
         }
 
         BoxWithConstraints(modifier = modifier) {

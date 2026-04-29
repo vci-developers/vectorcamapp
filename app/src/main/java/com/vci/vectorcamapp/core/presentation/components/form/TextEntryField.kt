@@ -35,6 +35,7 @@ fun TextEntryField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     maxCharacters: Int = 200,
     showErrorMessage: Boolean = true,
+    required: Boolean = false,
 ) {
     val context = LocalContext.current
 
@@ -43,11 +44,7 @@ fun TextEntryField(
         modifier = Modifier.fillMaxWidth()
     ) {
         label?.let {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colors.textSecondary,
-            )
+            FormFieldLabel(text = it, required = required)
         }
 
         OutlinedTextField(
