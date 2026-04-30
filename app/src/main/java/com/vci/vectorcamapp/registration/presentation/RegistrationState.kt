@@ -20,5 +20,8 @@ data class RegistrationState(
     val registrationErrors: RegistrationErrors = RegistrationErrors(
         collectorName = null,
         collectorTitle = null
-    )
+    ),
+    val isPasswordDialogVisible: Boolean = false,
+    val registrationPasswordInput: String = "",
+    val registrationPasswordError: String? = null
 )
