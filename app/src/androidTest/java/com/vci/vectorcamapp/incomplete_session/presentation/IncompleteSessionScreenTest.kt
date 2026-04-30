@@ -3,10 +3,13 @@ package com.vci.vectorcamapp.incomplete_session.presentation
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.vci.vectorcamapp.core.presentation.util.error.DefaultErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertCountEquals
@@ -111,6 +114,7 @@ class IncompleteSessionScreenTest {
             hardwareId = "TEST123",
             collectorTitle = "",
             collectorName = "",
+            collectorLastTrainedOn = 0L,
             collectionDate = createdAt,
             collectionMethod = "",
             specimenCondition = "",
@@ -137,6 +141,7 @@ class IncompleteSessionScreenTest {
             var state by remember { mutableStateOf(initialState) }
 
             VectorcamappTheme {
+                CompositionLocalProvider(LocalErrorMessageEmitter provides DefaultErrorMessageEmitter()) {
                 NavHost(
                     navController = navController,
                     startDestination = TestDestinations.Incomplete
@@ -168,7 +173,15 @@ class IncompleteSessionScreenTest {
                                             state = state.copy(deleteDialogSessionId = null)
                                         }
 
-                                        is IncompleteSessionAction.UpdateSearchQuery -> TODO()
+                                        is IncompleteSessionAction.UpdateSearchQuery -> {
+                                            // no-op for UI test
+                                        }
+                                        IncompleteSessionAction.ShowSearchTooltipDialog -> {
+                                            // no-op for UI test
+                                        }
+                                        IncompleteSessionAction.HideSearchTooltipDialog -> {
+                                            // no-op for UI test
+                                        }
                                     }
                                 },
                                 modifier = Modifier.padding(innerPadding)
@@ -178,6 +191,7 @@ class IncompleteSessionScreenTest {
                     composable(TestDestinations.Landing) { }
                     composable(TestDestinations.Intake) { }
                 }
+                } // CompositionLocalProvider
             }
         }
         composeRule.waitForIdle()

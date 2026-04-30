@@ -3,7 +3,10 @@ package com.vci.vectorcamapp.landing.presentation
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import com.vci.vectorcamapp.core.presentation.util.error.DefaultErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
@@ -14,6 +17,7 @@ import androidx.compose.ui.test.hasAnyChild
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -56,6 +60,8 @@ class LandingScreenTest {
 
     private val dummyProgramName = "My Program"
     private val dummyCountryName = "My Country"
+    private val dummyProgram get() = Program(0, dummyProgramName, dummyCountryName, formVersion = null)
+    private val emptyProgram get() = Program(0, "", "", formVersion = null)
 
     // =========================
     // Harness / Helpers
@@ -71,6 +77,7 @@ class LandingScreenTest {
 
         composeRule.activity.setContent {
             VectorcamappTheme {
+                CompositionLocalProvider(LocalErrorMessageEmitter provides DefaultErrorMessageEmitter()) {
                 NavHost(
                     navController = navController,
                     startDestination = Destination.Landing
@@ -106,6 +113,7 @@ class LandingScreenTest {
                     composable<Destination.IncompleteSession> { }
                     composable<Destination.CompleteSessionList> { }
                 }
+                } // CompositionLocalProvider
             }
         }
         composeRule.waitForIdle()
@@ -140,9 +148,7 @@ class LandingScreenTest {
     @Test
     fun landUi_a01_headerAndSectionsVisible() {
         launchLandingScreen(
-            initialState = LandingState(
-                enrolledProgram = Program(0, dummyProgramName, dummyCountryName)
-            )
+            initialState = LandingState(enrolledProgram = dummyProgram)
         )
         composeRule.onNodeWithText("Welcome to VectorCam!").assertIsDisplayed()
         composeRule.onNodeWithText("Program: $dummyProgramName").assertIsDisplayed()
@@ -152,9 +158,7 @@ class LandingScreenTest {
 
     @Test
     fun landUi_a02_tileDescriptionsVisible() {
-        launchLandingScreen(
-            initialState = LandingState(enrolledProgram = Program(0, "", ""))
-        )
+        launchLandingScreen(initialState = LandingState(enrolledProgram = emptyProgram))
         composeRule.onNodeWithText("Begin a new household visit and capture mosquito images.").assertIsDisplayed()
         composeRule.onNodeWithText("Resume and complete any unfinished sessions.").assertIsDisplayed()
         composeRule.onNodeWithText("Review fully completed sessions and uploaded data.").assertIsDisplayed()
@@ -162,18 +166,24 @@ class LandingScreenTest {
 
     @Test
     fun landUi_a03_rootScreenHasTag_andHeaderVisible() {
-        launchLandingScreen(
-            initialState = LandingState(enrolledProgram = Program(0, dummyProgramName, dummyCountryName))
-        )
+        launchLandingScreen(initialState = LandingState(enrolledProgram = dummyProgram))
         composeRule.onNodeWithTag(LandingTestTags.SCREEN).assertExists()
         composeRule.onNodeWithText("Welcome to VectorCam!").assertIsDisplayed()
     }
 
     @Test
     fun landUi_a04_sectionHeadersTextPresent() {
-        launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", "")))
+        launchLandingScreen(initialState = LandingState(enrolledProgram = emptyProgram))
         composeRule.onNodeWithText("Imaging").assertIsDisplayed()
         composeRule.onNodeWithText("Library").assertIsDisplayed()
+    }
+
+    @Test
+    fun landUi_a05_tileTitlesVisible() {
+        launchLandingScreen(initialState = LandingState(enrolledProgram = emptyProgram))
+        composeRule.onNodeWithText("New Surveillance Session").assertIsDisplayed()
+        composeRule.onNodeWithText("View Sessions in Progress").assertIsDisplayed()
+        composeRule.onNodeWithText("View Complete Sessions").assertIsDisplayed()
     }
 
     // =========================
@@ -184,7 +194,7 @@ class LandingScreenTest {
     fun landUi_b01_clickingTiles_invokesActions() {
         var lastAction: LandingAction? = null
         launchLandingScreen(
-            initialState = LandingState(enrolledProgram = Program(0, "", "")),
+            initialState = LandingState(enrolledProgram = emptyProgram),
             onAction = { lastAction = it },
             navigateOnAction = false
         )
@@ -201,10 +211,22 @@ class LandingScreenTest {
 
     @Test
     fun landUi_b02_tilesHaveClickActions() {
-        launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", "")))
+        launchLandingScreen(initialState = LandingState(enrolledProgram = emptyProgram))
         composeRule.onNodeWithTag(LandingTestTags.TILE_NEW_SURVEILLANCE).assertExists().assertHasClickAction()
         composeRule.onNodeWithTag(LandingTestTags.TILE_INCOMPLETE).assertExists().assertHasClickAction()
         composeRule.onNodeWithTag(LandingTestTags.TILE_COMPLETE).assertExists().assertHasClickAction()
+    }
+
+    @Test
+    fun landUi_b03_settingsButton_invokesOpenSettingsAction() {
+        var lastAction: LandingAction? = null
+        launchLandingScreen(
+            initialState = LandingState(enrolledProgram = emptyProgram),
+            onAction = { lastAction = it },
+            navigateOnAction = false
+        )
+        composeRule.onNodeWithContentDescription("Settings Icon").assertExists().assertHasClickAction().performClick()
+        assert(lastAction == LandingAction.OpenSettings)
     }
 
     // =========================
@@ -215,7 +237,7 @@ class LandingScreenTest {
     fun landUi_c01_badgeVisible_whenCountPositive() {
         launchLandingScreen(
             initialState = LandingState(
-                enrolledProgram = Program(0, "", ""),
+                enrolledProgram = emptyProgram,
                 incompleteSessionsCount = 3
             )
         )
@@ -232,7 +254,7 @@ class LandingScreenTest {
     fun landUi_c02_badgeNotShown_whenZero() {
         launchLandingScreen(
             initialState = LandingState(
-                enrolledProgram = Program(0, "", ""),
+                enrolledProgram = emptyProgram,
                 incompleteSessionsCount = 0
             )
         )
@@ -244,7 +266,7 @@ class LandingScreenTest {
     fun landUi_c03_badgeUpdatesAcrossRelaunch() {
         launchLandingScreen(
             initialState = LandingState(
-                enrolledProgram = Program(0, "", ""),
+                enrolledProgram = emptyProgram,
                 incompleteSessionsCount = 0
             )
         )
@@ -252,7 +274,7 @@ class LandingScreenTest {
 
         launchLandingScreen(
             initialState = LandingState(
-                enrolledProgram = Program(0, "", ""),
+                enrolledProgram = emptyProgram,
                 incompleteSessionsCount = 7
             )
         )
@@ -267,7 +289,7 @@ class LandingScreenTest {
     fun landUi_d01_resumeDialog_shown_whenFlagTrue_buttonsWork() {
         var lastAction: LandingAction? = null
         launchLandingScreen(
-            initialState = LandingState(enrolledProgram = Program(0, "", ""), showResumeDialog = true),
+            initialState = LandingState(enrolledProgram = emptyProgram, showResumeDialog = true),
             onAction = { lastAction = it },
             navigateOnAction = false
         )
@@ -278,7 +300,7 @@ class LandingScreenTest {
 
         lastAction = null
         launchLandingScreen(
-            initialState = LandingState(enrolledProgram = Program(0, "", ""), showResumeDialog = true),
+            initialState = LandingState(enrolledProgram = emptyProgram, showResumeDialog = true),
             onAction = { lastAction = it },
             navigateOnAction = false
         )
@@ -290,7 +312,7 @@ class LandingScreenTest {
     fun landUi_d02_resumeDialog_notShown_whenFlagFalse() {
         launchLandingScreen(
             initialState = LandingState(
-                enrolledProgram = Program(0, "", ""),
+                enrolledProgram = emptyProgram,
                 showResumeDialog = false
             )
         )
@@ -301,12 +323,13 @@ class LandingScreenTest {
     fun landUi_d03_resumeDialog_hasTestTag_andButtonsEnabled() {
         launchLandingScreen(
             initialState = LandingState(
-                enrolledProgram = Program(0, "", ""),
+                enrolledProgram = emptyProgram,
                 showResumeDialog = true
             )
         )
         composeRule.onNodeWithTag(LandingTestTags.RESUME_DIALOG).assertExists()
         composeRule.onNodeWithText("Resume unfinished session?").assertIsDisplayed()
+        composeRule.onNodeWithText("You have a surveillance session in progress. Resume where you left off?").assertIsDisplayed()
         composeRule.onNodeWithTag(LandingTestTags.RESUME_CONFIRM).assertIsEnabled()
         composeRule.onNodeWithTag(LandingTestTags.RESUME_DISMISS).assertIsEnabled()
         composeRule.onNodeWithText("Yes, resume").assertIsDisplayed()
@@ -322,7 +345,7 @@ class LandingScreenTest {
         val longName = "P".repeat(200)
         launchLandingScreen(
             initialState = LandingState(
-                enrolledProgram = Program(0, longName, dummyCountryName)
+                enrolledProgram = Program(0, longName, dummyCountryName, formVersion = null)
             )
         )
         composeRule.onNodeWithText("Program: $longName").assertIsDisplayed()
@@ -331,7 +354,7 @@ class LandingScreenTest {
     @Test
     fun landUi_e02_clickingTiles_withNoCallback_doesNotCrash() {
         launchLandingScreen(
-            initialState = LandingState(enrolledProgram = Program(0, "", "")),
+            initialState = LandingState(enrolledProgram = emptyProgram),
             navigateOnAction = false
         )
         clickTile(LandingTestTags.TILE_NEW_SURVEILLANCE)
@@ -345,7 +368,7 @@ class LandingScreenTest {
 
     @Test
     fun landUi_f01_clickNewSurveillance_navigatesToIntake() {
-        launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", "")))
+        launchLandingScreen(initialState = LandingState(enrolledProgram = emptyProgram))
         clickTile(LandingTestTags.TILE_NEW_SURVEILLANCE)
         assertOnWithArgPattern(Destination.Intake::class)
         val intakeRoute = navController.currentBackStackEntry!!.toRoute<Destination.Intake>()
@@ -354,7 +377,7 @@ class LandingScreenTest {
 
     @Test
     fun landUi_f03_clickIncomplete_navigatesToIncomplete() {
-        launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", "")))
+        launchLandingScreen(initialState = LandingState(enrolledProgram = emptyProgram))
         assertOn(Destination.Landing::class)
         clickTile(LandingTestTags.TILE_INCOMPLETE)
         assertOn(Destination.IncompleteSession::class)
@@ -362,7 +385,7 @@ class LandingScreenTest {
 
     @Test
     fun landUi_f04_clickComplete_navigatesToCompleteList() {
-        launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", "")))
+        launchLandingScreen(initialState = LandingState(enrolledProgram = emptyProgram))
         assertOn(Destination.Landing::class)
         clickTile(LandingTestTags.TILE_COMPLETE)
         assertOn(Destination.CompleteSessionList::class)
@@ -370,7 +393,7 @@ class LandingScreenTest {
 
     @Test
     fun landUi_f05_resumeConfirm_navigatesToIntake() {
-        launchLandingScreen(initialState = LandingState(enrolledProgram = Program(0, "", ""), showResumeDialog = true))
+        launchLandingScreen(initialState = LandingState(enrolledProgram = emptyProgram, showResumeDialog = true))
         composeRule.onNodeWithTag(LandingTestTags.RESUME_CONFIRM).performClick()
         assertOnWithArgPattern(Destination.Intake::class)
         val intake = navController.currentBackStackEntry!!.toRoute<Destination.Intake>()
@@ -381,7 +404,7 @@ class LandingScreenTest {
     fun landUi_f06_resumeDismiss_staysOnLanding() {
         launchLandingScreen(
             initialState = LandingState(
-                enrolledProgram = Program(0, "", ""),
+                enrolledProgram = emptyProgram,
                 showResumeDialog = true
             )
         )

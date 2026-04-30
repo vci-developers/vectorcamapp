@@ -16,7 +16,12 @@ fun ImageProxy.toUprightBitmap(): Bitmap {
     rawBitmap.recycle()
 
     val dst = Mat()
-    Core.rotate(src, dst, Core.ROTATE_90_CLOCKWISE)
+    when (this.imageInfo.rotationDegrees) {
+        90 -> Core.rotate(src, dst, Core.ROTATE_90_CLOCKWISE)
+        180 -> Core.rotate(src, dst, Core.ROTATE_180)
+        270 -> Core.rotate(src, dst, Core.ROTATE_90_COUNTERCLOCKWISE)
+        else -> src.copyTo(dst)
+    }
     src.release()
 
     val result = createBitmap(dst.cols(), dst.rows())
