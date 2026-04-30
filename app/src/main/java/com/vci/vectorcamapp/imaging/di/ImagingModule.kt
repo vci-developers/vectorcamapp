@@ -6,6 +6,7 @@ import com.google.mlkit.vision.text.TextRecognizer
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenClassifier
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
+import com.vci.vectorcamapp.imaging.domain.ModelFileNames
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import dagger.Module
@@ -37,14 +38,14 @@ object ImagingModule {
     @ViewModelScoped
     @SpeciesClassifier
     fun provideSpeciesClassifier(@ApplicationContext context: Context): SpecimenClassifier {
-        return TfLiteSpecimenClassifier(context, "species.tflite", "TFLiteSpeciesClassifierThread")
+        return TfLiteSpecimenClassifier(context, ModelFileNames.SPECIES_CLASSIFIER, "TFLiteSpeciesClassifierThread")
     }
 
     @Provides
     @ViewModelScoped
     @SexClassifier
     fun provideSexClassifier(@ApplicationContext context: Context): SpecimenClassifier {
-        return TfLiteSpecimenClassifier(context, "sex.tflite", "TFLiteSexClassifierThread")
+        return TfLiteSpecimenClassifier(context, ModelFileNames.SEX_CLASSIFIER, "TFLiteSexClassifierThread")
     }
 
     @Provides
@@ -52,7 +53,7 @@ object ImagingModule {
     @AbdomenStatusClassifier
     fun provideAbdomenStatusClassifier(@ApplicationContext context: Context): SpecimenClassifier {
         return TfLiteSpecimenClassifier(
-            context, "abdomen_status.tflite", "TFLiteAbdomenStatusClassifierThread"
+            context, ModelFileNames.ABDOMEN_STATUS_CLASSIFIER, "TFLiteAbdomenStatusClassifierThread"
         )
     }
 }

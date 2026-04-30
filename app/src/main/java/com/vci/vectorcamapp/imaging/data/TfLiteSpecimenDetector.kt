@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import com.vci.vectorcamapp.core.domain.model.results.DetectorResult
+import com.vci.vectorcamapp.imaging.domain.ModelFileNames
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import org.opencv.android.Utils
 import org.opencv.core.CvType
@@ -57,7 +58,7 @@ class TfLiteSpecimenDetector(
             if (detector != null || isClosed) return
 
             try {
-                val model = FileUtil.loadMappedFile(context, "detect.tflite")
+                val model = FileUtil.loadMappedFile(context, ModelFileNames.DETECTOR)
                 val options = Interpreter.Options().apply {
                     useNNAPI = false
                     useXNNPACK = false

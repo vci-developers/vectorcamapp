@@ -57,7 +57,8 @@ fun CameraMetadata.toImageMetadataDto(): ImageMetadataDto = ImageMetadataDto(
     imageHeight = imageHeight,
     focalPointX = focalPointX,
     focalPointY = focalPointY,
-    afRegions = afRegions.map { AfRegionDto(it.x, it.y, it.width, it.height, it.weight) }
+    afRegions = afRegions.map { AfRegionDto(it.x, it.y, it.width, it.height, it.weight) },
+    modelFileNames = modelFileNames
 )
 
 internal fun ImageMetadataDto.toCameraMetadata(): CameraMetadata = CameraMetadata(
@@ -78,5 +79,6 @@ internal fun ImageMetadataDto.toCameraMetadata(): CameraMetadata = CameraMetadat
     imageHeight = imageHeight,
     focalPointX = focalPointX,
     focalPointY = focalPointY,
-    afRegions = afRegions.map { AfRegion(it.x, it.y, it.width, it.height, it.weight) }
+    afRegions = afRegions.map { AfRegion(it.x, it.y, it.width, it.height, it.weight) },
+    modelFileNames = modelFileNames
 )
