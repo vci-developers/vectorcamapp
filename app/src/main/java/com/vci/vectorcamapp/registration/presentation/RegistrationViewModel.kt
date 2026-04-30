@@ -13,6 +13,7 @@ import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
+import com.vci.vectorcamapp.core.domain.network.api.VerifyAccessCodeResult
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
 import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
@@ -28,7 +29,6 @@ import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
-import com.vci.vectorcamapp.registration.domain.constants.ProgramRegistrationPasswords
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.registration.logging.RegistrationSentryLogger
 import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
@@ -181,25 +181,50 @@ class RegistrationViewModel @Inject constructor(
                         return@launch
                     }
 
-                    val expectedPassword =
-                        ProgramRegistrationPasswords.passwordForProgram(selectedProgram.id)
-                    val providedPassword = _state.value.registrationPasswordInput
-                    if (expectedPassword == null || expectedPassword != providedPassword) {
-                        _state.update {
-                            it.copy(registrationPasswordError = "Incorrect password")
-                        }
+                    if (!_isConnectedToInternet.value) {
+                        emitError(NetworkError.NO_INTERNET)
                         return@launch
                     }
 
+                    val accessCode = _state.value.registrationPasswordInput
                     _state.update {
                         it.copy(
-                            isPasswordDialogVisible = false,
-                            registrationPasswordInput = "",
+                            isLoading = true,
                             registrationPasswordError = null
                         )
                     }
 
-                    registerCollectorAndProceed(selectedProgram)
+                    when (
+                        val verifyResult = programDataSource.verifyAccessCode(
+                            selectedProgram.id,
+                            accessCode
+                        )
+                    ) {
+                        is VerifyAccessCodeResult.Valid -> {
+                            _state.update {
+                                it.copy(
+                                    isPasswordDialogVisible = false,
+                                    registrationPasswordInput = "",
+                                    registrationPasswordError = null
+                                )
+                            }
+                            registerCollectorAndProceed(selectedProgram)
+                        }
+
+                        is VerifyAccessCodeResult.Invalid -> {
+                            _state.update {
+                                it.copy(
+                                    registrationPasswordError = verifyResult.message,
+                                    isLoading = false
+                                )
+                            }
+                        }
+
+                        is VerifyAccessCodeResult.Failed -> {
+                            emitError(verifyResult.error)
+                            _state.update { it.copy(isLoading = false) }
+                        }
+                    }
                 }
             }
         }

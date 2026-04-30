@@ -12,6 +12,7 @@ import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
+import com.vci.vectorcamapp.core.domain.network.api.VerifyAccessCodeResult
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
 import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
@@ -24,7 +25,6 @@ import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationU
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
-import com.vci.vectorcamapp.registration.domain.constants.ProgramRegistrationPasswords
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -89,6 +89,7 @@ class RegistrationViewModelTest {
                 }
             )
         )
+        coEvery { programDataSource.verifyAccessCode(any(), any()) } returns VerifyAccessCodeResult.Valid
         siteDataSource = mockk()
         siteRepository = mockk()
         locationTypeDataSource = mockk()
@@ -152,10 +153,9 @@ class RegistrationViewModelTest {
      * a bare [RegistrationAction.ConfirmRegistration] when you want the registration to
      * proceed all the way through (i.e. past the password gate).
      */
-    private fun confirmWithPassword(program: Program) {
-        val password = ProgramRegistrationPasswords.passwordForProgram(program.id) ?: ""
+    private fun confirmWithPassword(program: Program, accessCode: String = "test-code") {
         viewModel.onAction(RegistrationAction.ConfirmRegistration)
-        viewModel.onAction(RegistrationAction.EnterRegistrationPassword(password))
+        viewModel.onAction(RegistrationAction.EnterRegistrationPassword(accessCode))
         viewModel.onAction(RegistrationAction.SubmitRegistrationPassword)
     }
 
