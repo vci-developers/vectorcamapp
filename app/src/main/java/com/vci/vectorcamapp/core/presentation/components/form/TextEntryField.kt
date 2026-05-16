@@ -37,8 +37,8 @@ fun TextEntryField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     maxCharacters: Int = 200,
     showErrorMessage: Boolean = true,
-    trailingIcon: @Composable() (() -> Unit)? = null,
-    required: Boolean = false
+    required: Boolean = false,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     val context = LocalContext.current
 
