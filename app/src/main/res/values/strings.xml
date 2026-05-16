@@ -249,4 +249,7 @@
 
     <!-- Session Type: Practice -->
     <string name="session_type_practice">Practice</string>
+
+    <!-- Access code error: Invalid access code -->
+    <string name="access_code_error_invalid_access_code">Invalid access code. Please try again.</string>
 </resources>

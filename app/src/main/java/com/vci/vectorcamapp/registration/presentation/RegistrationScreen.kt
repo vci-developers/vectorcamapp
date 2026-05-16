@@ -10,13 +10,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -193,17 +194,19 @@ fun RegistrationScreen(
             var passwordVisible by remember { mutableStateOf(false) }
             AlertDialog(
                 onDismissRequest = { onAction(RegistrationAction.DismissRegistrationPasswordDialog) },
-                title = { Text(text = "Program Password") },
+                title = {
+                    Text(text = "Enter Program Access Code")
+                },
                 text = {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                     ) {
-                        OutlinedTextField(
+                        TextEntryField(
                             value = state.registrationPasswordInput,
                             onValueChange = { onAction(RegistrationAction.EnterRegistrationPassword(it)) },
-                            label = { Text("Password") },
+                            label = "Access Code",
                             singleLine = true,
-                            isError = state.registrationPasswordError != null,
+                            error = state.registrationPasswordError,
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             trailingIcon = {
@@ -219,30 +222,35 @@ fun RegistrationScreen(
                             },
                             modifier = Modifier.fillMaxWidth()
                         )
-                        state.registrationPasswordError?.let {
-                            Text(
-                                text = it,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
                     }
                 },
                 confirmButton = {
-                    TextButton(
+                    Button(
                         onClick = { onAction(RegistrationAction.SubmitRegistrationPassword) },
-                        enabled = state.registrationPasswordInput.isNotBlank() && !state.isLoading
+                        enabled = state.registrationPasswordInput.isNotBlank() && !state.isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colors.secondary,
+                            contentColor = MaterialTheme.colors.buttonText
+                        )
                     ) {
-                        Text("Confirm")
+                        Text(
+                            text = "Confirm",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { onAction(RegistrationAction.DismissRegistrationPasswordDialog) }
                     ) {
-                        Text("Cancel")
+                        Text(
+                            text = "Cancel",
+                            color = MaterialTheme.colors.textSecondary,
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                        )
                     }
-                }
+                },
+                containerColor = MaterialTheme.colors.cardBackground
             )
         }
     }

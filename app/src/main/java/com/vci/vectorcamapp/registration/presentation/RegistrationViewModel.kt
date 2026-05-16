@@ -29,6 +29,7 @@ import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.registration.domain.util.AccessCodeError
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.registration.logging.RegistrationSentryLogger
 import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
@@ -214,7 +215,7 @@ class RegistrationViewModel @Inject constructor(
                         is VerifyAccessCodeResult.Invalid -> {
                             _state.update {
                                 it.copy(
-                                    registrationPasswordError = verifyResult.message,
+                                    registrationPasswordError = AccessCodeError.INVALID_ACCESS_CODE,
                                     isLoading = false
                                 )
                             }

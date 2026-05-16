@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.registration.presentation
 
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.Program
+import com.vci.vectorcamapp.registration.domain.util.AccessCodeError
 import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
 import java.util.UUID
 
@@ -23,5 +24,5 @@ data class RegistrationState(
     ),
     val isPasswordDialogVisible: Boolean = false,
     val registrationPasswordInput: String = "",
-    val registrationPasswordError: String? = null
+    val registrationPasswordError: AccessCodeError? = null
 )
