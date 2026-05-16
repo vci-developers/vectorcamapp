@@ -17,16 +17,16 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 fun ToggleField(
     label: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    required: Boolean = false,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
+        FormFieldLabel(
             text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colors.textSecondary,
+            required = required,
             modifier = Modifier.weight(1f)
         )
         Switch(
