@@ -8,17 +8,31 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
@@ -174,6 +188,70 @@ fun RegistrationScreen(
                     modifier = modifier.height(MaterialTheme.dimensions.componentHeightMedium)
                 )
             }
+        }
+
+        if (state.isPasswordDialogVisible) {
+            var passwordVisible by remember { mutableStateOf(false) }
+            AlertDialog(
+                onDismissRequest = { onAction(RegistrationAction.DismissRegistrationPasswordDialog) },
+                title = {
+                    Text(text = "Enter Program Access Code")
+                },
+                text = {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                    ) {
+                        TextEntryField(
+                            value = state.registrationPasswordInput,
+                            onValueChange = { onAction(RegistrationAction.EnterRegistrationPassword(it)) },
+                            label = "Access Code",
+                            singleLine = true,
+                            error = state.registrationPasswordError,
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            trailingIcon = {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(
+                                        painter = painterResource(
+                                            if (passwordVisible) R.drawable.ic_visibility_off
+                                            else R.drawable.ic_visibility
+                                        ),
+                                        contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { onAction(RegistrationAction.SubmitRegistrationPassword) },
+                        enabled = state.registrationPasswordInput.isNotBlank() && !state.isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colors.secondary,
+                            contentColor = MaterialTheme.colors.buttonText
+                        )
+                    ) {
+                        Text(
+                            text = "Confirm",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { onAction(RegistrationAction.DismissRegistrationPasswordDialog) }
+                    ) {
+                        Text(
+                            text = "Cancel",
+                            color = MaterialTheme.colors.textSecondary,
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                        )
+                    }
+                },
+                containerColor = MaterialTheme.colors.cardBackground
+            )
         }
     }
 }
