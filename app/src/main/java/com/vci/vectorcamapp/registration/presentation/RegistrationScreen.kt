@@ -191,7 +191,7 @@ fun RegistrationScreen(
         }
 
         if (state.isProgramAccessCodeDialogVisible) {
-            var programAccessCodeVisible by remember { mutableStateOf(false) }
+            var isProgramAccessCodeVisible by remember { mutableStateOf(false) }
             AlertDialog(
                 onDismissRequest = { onAction(RegistrationAction.DismissProgramAccessCodeDialog) },
                 title = {
@@ -207,16 +207,16 @@ fun RegistrationScreen(
                             label = "Access Code",
                             singleLine = true,
                             error = state.programAccessCodeError,
-                            visualTransformation = if (programAccessCodeVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            visualTransformation = if (isProgramAccessCodeVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             trailingIcon = {
-                                IconButton(onClick = { programAccessCodeVisible = !programAccessCodeVisible }) {
+                                IconButton(onClick = { isProgramAccessCodeVisible = !isProgramAccessCodeVisible }) {
                                     Icon(
                                         painter = painterResource(
-                                            if (programAccessCodeVisible) R.drawable.ic_visibility_off
+                                            if (isProgramAccessCodeVisible) R.drawable.ic_visibility_off
                                             else R.drawable.ic_visibility
                                         ),
-                                        contentDescription = if (programAccessCodeVisible) "Hide access code" else "Show access code"
+                                        contentDescription = if (isProgramAccessCodeVisible) "Hide access code" else "Show access code"
                                     )
                                 }
                             },
