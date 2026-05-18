@@ -22,7 +22,7 @@ data class RegistrationState(
         collectorName = null,
         collectorTitle = null
     ),
-    val isPasswordDialogVisible: Boolean = false,
-    val registrationPasswordInput: String = "",
-    val registrationPasswordError: AccessCodeError? = null
+    val isAccessCodeDialogVisible: Boolean = false,
+    val registrationAccessCodeInput: String = "",
+    val registrationAccessCodeError: AccessCodeError? = null
 )

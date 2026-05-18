@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.data.dto.program.GetAllProgramsResponseDto
 import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
+import com.vci.vectorcamapp.core.data.dto.program.VerifyAccessCodeResponseDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
@@ -12,7 +13,6 @@ import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
-import com.vci.vectorcamapp.core.domain.network.api.VerifyAccessCodeResult
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
 import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
@@ -89,7 +89,9 @@ class RegistrationViewModelTest {
                 }
             )
         )
-        coEvery { programDataSource.verifyAccessCode(any(), any()) } returns VerifyAccessCodeResult.Valid
+        coEvery { programDataSource.verifyAccessCode(any(), any()) } returns Result.Success(
+            VerifyAccessCodeResponseDto(valid = true)
+        )
         siteDataSource = mockk()
         siteRepository = mockk()
         locationTypeDataSource = mockk()
@@ -149,14 +151,14 @@ class RegistrationViewModelTest {
     }
 
     /**
-     * Drives the full confirm+password flow for a given program. Call this instead of
+     * Drives the full confirm + access code flow for a given program. Call this instead of
      * a bare [RegistrationAction.ConfirmRegistration] when you want the registration to
-     * proceed all the way through (i.e. past the password gate).
+     * proceed all the way through (i.e. past the access code gate).
      */
-    private fun confirmWithPassword(program: Program, accessCode: String = "test-code") {
+    private fun confirmWithAccessCode(accessCode: String = "test-code") {
         viewModel.onAction(RegistrationAction.ConfirmRegistration)
-        viewModel.onAction(RegistrationAction.EnterRegistrationPassword(accessCode))
-        viewModel.onAction(RegistrationAction.SubmitRegistrationPassword)
+        viewModel.onAction(RegistrationAction.EnterRegistrationAccessCode(accessCode))
+        viewModel.onAction(RegistrationAction.SubmitRegistrationAccessCode)
     }
 
     // ========================================
@@ -285,7 +287,7 @@ class RegistrationViewModelTest {
         selectProgram(selectedProgram)
 
         viewModel.events.test {
-            confirmWithPassword(selectedProgram)
+            confirmWithAccessCode()
             advanceUntilIdle()
 
             val event = awaitItem()
@@ -306,7 +308,7 @@ class RegistrationViewModelTest {
         selectProgram(selectedProgram)
 
         viewModel.events.test {
-            confirmWithPassword(selectedProgram)
+            confirmWithAccessCode()
             advanceUntilIdle()
             awaitItem()
         }
@@ -339,13 +341,13 @@ class RegistrationViewModelTest {
         viewModel.events.test {
             viewModel.onAction(RegistrationAction.SelectProgram(testPrograms[0]))
             advanceUntilIdle()
-            confirmWithPassword(testPrograms[0])
+            confirmWithAccessCode()
             advanceUntilIdle()
             assertThat(awaitItem()).isEqualTo(RegistrationEvent.NavigateToLandingScreen)
 
             viewModel.onAction(RegistrationAction.SelectProgram(testPrograms[1]))
             advanceUntilIdle()
-            confirmWithPassword(testPrograms[1])
+            confirmWithAccessCode()
             advanceUntilIdle()
             assertThat(awaitItem()).isEqualTo(RegistrationEvent.NavigateToLandingScreen)
 
@@ -365,7 +367,7 @@ class RegistrationViewModelTest {
         coEvery { deviceCache.saveDevice(any(), any()) } throws RuntimeException("Save failed")
 
         viewModel.events.test {
-            confirmWithPassword(selectedProgram)
+            confirmWithAccessCode()
             advanceUntilIdle()
             expectNoEvents()
         }
@@ -384,7 +386,7 @@ class RegistrationViewModelTest {
         coEvery { sessionCache.clearSession() } throws RuntimeException("Clear failed")
 
         viewModel.events.test {
-            confirmWithPassword(selectedProgram)
+            confirmWithAccessCode()
             advanceUntilIdle()
             expectNoEvents()
         }
@@ -402,7 +404,7 @@ class RegistrationViewModelTest {
         coEvery { deviceCache.saveDevice(any(), any()) } throws IllegalStateException("Custom error")
 
         viewModel.events.test {
-            confirmWithPassword(selectedProgram)
+            confirmWithAccessCode()
             advanceUntilIdle()
             expectNoEvents()
         }
@@ -453,7 +455,7 @@ class RegistrationViewModelTest {
         val selectedProgram = testPrograms[0]
         selectProgram(selectedProgram)
 
-        confirmWithPassword(selectedProgram)
+        confirmWithAccessCode()
         advanceUntilIdle()
 
         coVerify(exactly = 1) { deviceCache.saveDevice(any(), selectedProgram.id) }

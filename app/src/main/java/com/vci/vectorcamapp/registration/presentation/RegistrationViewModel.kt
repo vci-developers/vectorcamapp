@@ -13,7 +13,6 @@ import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
-import com.vci.vectorcamapp.core.domain.network.api.VerifyAccessCodeResult
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
 import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
@@ -127,21 +126,21 @@ class RegistrationViewModel @Inject constructor(
                     }
                 }
 
-                is RegistrationAction.EnterRegistrationPassword -> {
+                is RegistrationAction.EnterRegistrationAccessCode -> {
                     _state.update {
                         it.copy(
-                            registrationPasswordInput = action.password,
-                            registrationPasswordError = null
+                            registrationAccessCodeInput = action.accessCode,
+                            registrationAccessCodeError = null
                         )
                     }
                 }
 
-                RegistrationAction.DismissRegistrationPasswordDialog -> {
+                RegistrationAction.DismissRegistrationAccessCodeDialog -> {
                     _state.update {
                         it.copy(
-                            isPasswordDialogVisible = false,
-                            registrationPasswordInput = "",
-                            registrationPasswordError = null
+                            isAccessCodeDialogVisible = false,
+                            registrationAccessCodeInput = "",
+                            registrationAccessCodeError = null
                         )
                     }
                 }
@@ -165,19 +164,19 @@ class RegistrationViewModel @Inject constructor(
 
                     _state.update {
                         it.copy(
-                            isPasswordDialogVisible = true,
-                            registrationPasswordInput = "",
-                            registrationPasswordError = null
+                            isAccessCodeDialogVisible = true,
+                            registrationAccessCodeInput = "",
+                            registrationAccessCodeError = null
                         )
                     }
                 }
 
-                RegistrationAction.SubmitRegistrationPassword -> {
+                RegistrationAction.SubmitRegistrationAccessCode -> {
                     val selectedProgram = _state.value.selectedProgram
                     if (selectedProgram == null) {
                         emitError(RegistrationError.PROGRAM_NOT_FOUND)
                         RegistrationSentryLogger.logProgramNotFound(
-                            IllegalStateException("Program not found during password submission")
+                            IllegalStateException("Program not found during access code submission")
                         )
                         return@launch
                     }
@@ -187,42 +186,36 @@ class RegistrationViewModel @Inject constructor(
                         return@launch
                     }
 
-                    val accessCode = _state.value.registrationPasswordInput
+                    val accessCode = _state.value.registrationAccessCodeInput
                     _state.update {
                         it.copy(
                             isLoading = true,
-                            registrationPasswordError = null
+                            registrationAccessCodeError = null
                         )
                     }
 
-                    when (
-                        val verifyResult = programDataSource.verifyAccessCode(
-                            selectedProgram.id,
-                            accessCode
-                        )
-                    ) {
-                        is VerifyAccessCodeResult.Valid -> {
-                            _state.update {
-                                it.copy(
-                                    isPasswordDialogVisible = false,
-                                    registrationPasswordInput = "",
-                                    registrationPasswordError = null
-                                )
-                            }
-                            registerCollectorAndProceed(selectedProgram)
-                        }
-
-                        is VerifyAccessCodeResult.Invalid -> {
-                            _state.update {
-                                it.copy(
-                                    registrationPasswordError = AccessCodeError.INVALID_ACCESS_CODE,
-                                    isLoading = false
-                                )
+                    when (val result = programDataSource.verifyAccessCode(selectedProgram.id, accessCode)) {
+                        is Result.Success -> {
+                            if (result.data.valid) {
+                                _state.update {
+                                    it.copy(
+                                        isAccessCodeDialogVisible = false,
+                                        registrationAccessCodeInput = "",
+                                        registrationAccessCodeError = null
+                                    )
+                                }
+                                registerCollectorAndProceed(selectedProgram)
+                            } else {
+                                _state.update {
+                                    it.copy(
+                                        registrationAccessCodeError = AccessCodeError.INVALID_ACCESS_CODE,
+                                        isLoading = false
+                                    )
+                                }
                             }
                         }
-
-                        is VerifyAccessCodeResult.Failed -> {
-                            emitError(verifyResult.error)
+                        is Result.Error -> {
+                            emitError(result.error)
                             _state.update { it.copy(isLoading = false) }
                         }
                     }

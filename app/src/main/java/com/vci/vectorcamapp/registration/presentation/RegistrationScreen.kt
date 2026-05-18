@@ -190,10 +190,10 @@ fun RegistrationScreen(
             }
         }
 
-        if (state.isPasswordDialogVisible) {
-            var passwordVisible by remember { mutableStateOf(false) }
+        if (state.isAccessCodeDialogVisible) {
+            var accessCodeVisible by remember { mutableStateOf(false) }
             AlertDialog(
-                onDismissRequest = { onAction(RegistrationAction.DismissRegistrationPasswordDialog) },
+                onDismissRequest = { onAction(RegistrationAction.DismissRegistrationAccessCodeDialog) },
                 title = {
                     Text(text = "Enter Program Access Code")
                 },
@@ -202,21 +202,21 @@ fun RegistrationScreen(
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                     ) {
                         TextEntryField(
-                            value = state.registrationPasswordInput,
-                            onValueChange = { onAction(RegistrationAction.EnterRegistrationPassword(it)) },
+                            value = state.registrationAccessCodeInput,
+                            onValueChange = { onAction(RegistrationAction.EnterRegistrationAccessCode(it)) },
                             label = "Access Code",
                             singleLine = true,
-                            error = state.registrationPasswordError,
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            error = state.registrationAccessCodeError,
+                            visualTransformation = if (accessCodeVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                IconButton(onClick = { accessCodeVisible = !accessCodeVisible }) {
                                     Icon(
                                         painter = painterResource(
-                                            if (passwordVisible) R.drawable.ic_visibility_off
+                                            if (accessCodeVisible) R.drawable.ic_visibility_off
                                             else R.drawable.ic_visibility
                                         ),
-                                        contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                                        contentDescription = if (accessCodeVisible) "Hide access code" else "Show access code"
                                     )
                                 }
                             },
@@ -226,8 +226,8 @@ fun RegistrationScreen(
                 },
                 confirmButton = {
                     Button(
-                        onClick = { onAction(RegistrationAction.SubmitRegistrationPassword) },
-                        enabled = state.registrationPasswordInput.isNotBlank() && !state.isLoading,
+                        onClick = { onAction(RegistrationAction.SubmitRegistrationAccessCode) },
+                        enabled = state.registrationAccessCodeInput.isNotBlank() && !state.isLoading,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colors.secondary,
                             contentColor = MaterialTheme.colors.buttonText
@@ -241,7 +241,7 @@ fun RegistrationScreen(
                 },
                 dismissButton = {
                     TextButton(
-                        onClick = { onAction(RegistrationAction.DismissRegistrationPasswordDialog) }
+                        onClick = { onAction(RegistrationAction.DismissRegistrationAccessCodeDialog) }
                     ) {
                         Text(
                             text = "Cancel",
