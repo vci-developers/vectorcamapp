@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.data.util.sortByHierarchy
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
+import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
@@ -124,37 +125,31 @@ class RegistrationViewModel @Inject constructor(
                     }
                 }
 
+                is RegistrationAction.EnterProgramAccessCode -> {
+                    _state.update {
+                        it.copy(
+                            programAccessCodeInput = action.accessCode,
+                            programAccessCodeError = null
+                        )
+                    }
+                }
+
+                RegistrationAction.DismissProgramAccessCodeDialog -> {
+                    _state.update {
+                        it.copy(
+                            isProgramAccessCodeDialogVisible = false,
+                            programAccessCodeInput = "",
+                            programAccessCodeError = null
+                        )
+                    }
+                }
+
                 RegistrationAction.RefreshPrograms -> {
                     fetchAndSeedAllPrograms()
                 }
 
                 RegistrationAction.ConfirmRegistration -> {
-                    val selectedProgram = state.value.selectedProgram
-
-                    val collector = state.value.collector
-                    val collectorNameValidationResult =
-                        collectorValidationUseCases.validateCollectorName(collector.name)
-                    val collectorTitleValidationResult =
-                        collectorValidationUseCases.validateCollectorTitle(collector.title)
-                    val collectorLastTrainedOnValidationResult =
-                        collectorValidationUseCases.validateCollectorLastTrainedOn(collector.lastTrainedOn)
-
-                    _state.update { currentState ->
-                        currentState.copy(
-                            registrationErrors = RegistrationErrors(
-                                collectorName = collectorNameValidationResult.errorOrNull(),
-                                collectorTitle = collectorTitleValidationResult.errorOrNull(),
-                                collectorLastTrainedOn = collectorLastTrainedOnValidationResult.errorOrNull()
-                            )
-                        )
-                    }
-
-                    val hasError = listOf(
-                        collectorNameValidationResult,
-                        collectorTitleValidationResult,
-                        collectorLastTrainedOnValidationResult
-                    ).any { it is Result.Error }
-                    if (hasError) return@launch
+                    val selectedProgram = _state.value.selectedProgram
 
                     if (selectedProgram == null) {
                         emitError(RegistrationError.PROGRAM_NOT_FOUND)
@@ -162,37 +157,127 @@ class RegistrationViewModel @Inject constructor(
                         return@launch
                     }
 
-                    if (!state.value.isConnectedToInternet) {
+                    if (!validateCollectorInputs()) {
+                        return@launch
+                    }
+
+                    _state.update {
+                        it.copy(
+                            isProgramAccessCodeDialogVisible = true,
+                            programAccessCodeInput = "",
+                            programAccessCodeError = null
+                        )
+                    }
+                }
+
+                RegistrationAction.SubmitProgramAccessCode -> {
+                    val selectedProgram = _state.value.selectedProgram
+                    if (selectedProgram == null) {
+                        emitError(RegistrationError.PROGRAM_NOT_FOUND)
+                        RegistrationSentryLogger.logProgramNotFound(
+                            IllegalStateException("Program not found during access code submission")
+                        )
+                        return@launch
+                    }
+
+                    if (!_isConnectedToInternet.value) {
                         emitError(NetworkError.NO_INTERNET)
                         return@launch
                     }
 
-                    try {
-                        _state.update { it.copy(isLoading = true) }
-                        transactionHelper.runAsTransaction {
-                            fetchAndSeedAllLocationTypesForProgram(selectedProgram.id)
-                            fetchAndSeedAllSitesForProgram(selectedProgram.id)
-                            fetchAndSeedFormForProgram(selectedProgram.id)
-                        }
-
-                        val device = Device(
-                            id = -1,
-                            model = "${Build.MANUFACTURER} ${Build.MODEL}",
-                            registeredAt = System.currentTimeMillis(),
-                            submittedAt = null,
+                    val programAccessCode = _state.value.programAccessCodeInput
+                    _state.update {
+                        it.copy(
+                            isLoading = true,
+                            programAccessCodeError = null
                         )
-                        deviceCache.saveDevice(device, selectedProgram.id)
-                        currentSessionCache.clearSession()
-                        collectorRepository.upsertCollector(_state.value.collector)
-                        _events.send(RegistrationEvent.NavigateToLandingScreen)
-                    } catch (e: Exception) {
-                        emitError(RegistrationError.UNKNOWN_ERROR)
-                        RegistrationSentryLogger.logDeviceRegistrationFailure(e, selectedProgram.id)
-                    } finally {
-                        _state.update { it.copy(isLoading = false) }
+                    }
+
+                    when (val result = programDataSource.verifyAccessCode(selectedProgram.id, programAccessCode)) {
+                        is Result.Success -> {
+                            if (result.data.valid) {
+                                _state.update {
+                                    it.copy(
+                                        isProgramAccessCodeDialogVisible = false,
+                                        programAccessCodeInput = "",
+                                        programAccessCodeError = null
+                                    )
+                                }
+                                registerCollectorAndProceed(selectedProgram)
+                            } else {
+                                _state.update {
+                                    it.copy(
+                                        programAccessCodeError = RegistrationError.INVALID_PROGRAM_ACCESS_CODE,
+                                        isLoading = false
+                                    )
+                                }
+                            }
+                        }
+                        is Result.Error -> {
+                            emitError(result.error)
+                            _state.update { it.copy(isLoading = false) }
+                        }
                     }
                 }
             }
+        }
+    }
+
+    private fun validateCollectorInputs(): Boolean {
+        val collector = _state.value.collector
+        val collectorNameValidationResult =
+            collectorValidationUseCases.validateCollectorName(collector.name)
+        val collectorTitleValidationResult =
+            collectorValidationUseCases.validateCollectorTitle(collector.title)
+        val collectorLastTrainedOnValidationResult =
+            collectorValidationUseCases.validateCollectorLastTrainedOn(collector.lastTrainedOn)
+
+        _state.update { currentState ->
+            currentState.copy(
+                registrationErrors = RegistrationErrors(
+                    collectorName = collectorNameValidationResult.errorOrNull(),
+                    collectorTitle = collectorTitleValidationResult.errorOrNull(),
+                    collectorLastTrainedOn = collectorLastTrainedOnValidationResult.errorOrNull()
+                )
+            )
+        }
+
+        return listOf(
+            collectorNameValidationResult,
+            collectorTitleValidationResult,
+            collectorLastTrainedOnValidationResult
+        ).none { it is Result.Error }
+    }
+
+    private suspend fun registerCollectorAndProceed(selectedProgram: Program) {
+        if (!_isConnectedToInternet.value) {
+            emitError(NetworkError.NO_INTERNET)
+            return
+        }
+
+        try {
+            _state.update { it.copy(isLoading = true) }
+            transactionHelper.runAsTransaction {
+                fetchAndSeedAllLocationTypesForProgram(selectedProgram.id)
+                fetchAndSeedAllSitesForProgram(selectedProgram.id)
+                fetchAndSeedFormForProgram(selectedProgram.id)
+            }
+
+            val device = Device(
+                id = -1,
+                model = "${Build.MANUFACTURER} ${Build.MODEL}",
+                registeredAt = System.currentTimeMillis(),
+                submittedAt = null,
+            )
+            deviceCache.saveDevice(device, selectedProgram.id)
+            currentSessionCache.clearSession()
+            collectorRepository.upsertCollector(_state.value.collector)
+            _events.send(RegistrationEvent.NavigateToLandingScreen)
+        } catch (e: Exception) {
+            emitError(RegistrationError.UNKNOWN_ERROR)
+            RegistrationSentryLogger.logDeviceRegistrationFailure(e, selectedProgram.id)
+        } finally {
+            _state.update { it.copy(isLoading = false) }
         }
     }
 

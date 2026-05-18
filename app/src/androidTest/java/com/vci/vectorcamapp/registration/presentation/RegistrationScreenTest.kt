@@ -125,6 +125,18 @@ class RegistrationScreenTest {
                                                 )
                                             }
 
+                                            is RegistrationAction.EnterProgramAccessCode -> {
+                                                // No-op for UI test
+                                            }
+
+                                            RegistrationAction.SubmitProgramAccessCode -> {
+                                                // No-op for UI test
+                                            }
+
+                                            RegistrationAction.DismissProgramAccessCodeDialog -> {
+                                                // No-op for UI test
+                                            }
+
                                             RegistrationAction.RefreshPrograms -> {
                                                 // No-op for UI test
                                             }

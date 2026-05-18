@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.VisualTransformation
 import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -31,11 +32,13 @@ fun TextEntryField(
     singleLine: Boolean = false,
     error: Error? = null,
     placeholder: String? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     maxCharacters: Int = 200,
     showErrorMessage: Boolean = true,
     required: Boolean = false,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     val context = LocalContext.current
 
@@ -59,6 +62,7 @@ fun TextEntryField(
             },
             isError = error != null,
             singleLine = singleLine,
+            visualTransformation = visualTransformation,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             placeholder = {
@@ -87,6 +91,7 @@ fun TextEntryField(
                     backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.25f)
                 )
             ),
+            trailingIcon = trailingIcon,
             modifier = modifier
                 .fillMaxWidth()
                 .background(

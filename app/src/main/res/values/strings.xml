@@ -178,6 +178,9 @@
     <!-- Registration error: Program not found -->
     <string name="registration_error_program_not_found">Program not found. Please contact support.</string>
 
+    <!-- Registration error: Invalid program access code -->
+    <string name="registration_error_invalid_program_access_code">Invalid access code. Please try again.</string>
+
     <!-- Registration error: Unknown error -->
     <string name="registration_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 

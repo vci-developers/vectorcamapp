@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.data.dto.program.GetAllProgramsResponseDto
 import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
+import com.vci.vectorcamapp.core.data.dto.program.VerifyProgramAccessCodeResponseDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
@@ -88,6 +89,9 @@ class RegistrationViewModelTest {
                 }
             )
         )
+        coEvery { programDataSource.verifyAccessCode(any(), any()) } returns Result.Success(
+            VerifyProgramAccessCodeResponseDto(valid = true)
+        )
         siteDataSource = mockk()
         siteRepository = mockk()
         locationTypeDataSource = mockk()
@@ -144,6 +148,17 @@ class RegistrationViewModelTest {
             assertThat(selectedState.selectedProgram).isEqualTo(program)
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    /**
+     * Drives the full confirm + access code flow for a given program. Call this instead of
+     * a bare [RegistrationAction.ConfirmRegistration] when you want the registration to
+     * proceed all the way through (i.e. past the access code gate).
+     */
+    private fun confirmWithProgramAccessCode(accessCode: String = "test-code") {
+        viewModel.onAction(RegistrationAction.ConfirmRegistration)
+        viewModel.onAction(RegistrationAction.EnterProgramAccessCode(accessCode))
+        viewModel.onAction(RegistrationAction.SubmitProgramAccessCode)
     }
 
     // ========================================
@@ -272,7 +287,7 @@ class RegistrationViewModelTest {
         selectProgram(selectedProgram)
 
         viewModel.events.test {
-            viewModel.onAction(RegistrationAction.ConfirmRegistration)
+            confirmWithProgramAccessCode()
             advanceUntilIdle()
 
             val event = awaitItem()
@@ -293,7 +308,7 @@ class RegistrationViewModelTest {
         selectProgram(selectedProgram)
 
         viewModel.events.test {
-            viewModel.onAction(RegistrationAction.ConfirmRegistration)
+            confirmWithProgramAccessCode()
             advanceUntilIdle()
             awaitItem()
         }
@@ -318,21 +333,21 @@ class RegistrationViewModelTest {
     @Test
     fun regVm_d01_multipleSuccessfulConfirmationsEmitMultipleEvents() = runTest {
         viewModel.state.test {
-            awaitItem() 
-            awaitItem() 
+            awaitItem()
+            awaitItem()
             cancelAndIgnoreRemainingEvents()
         }
 
         viewModel.events.test {
             viewModel.onAction(RegistrationAction.SelectProgram(testPrograms[0]))
             advanceUntilIdle()
-            viewModel.onAction(RegistrationAction.ConfirmRegistration)
+            confirmWithProgramAccessCode()
             advanceUntilIdle()
             assertThat(awaitItem()).isEqualTo(RegistrationEvent.NavigateToLandingScreen)
 
             viewModel.onAction(RegistrationAction.SelectProgram(testPrograms[1]))
             advanceUntilIdle()
-            viewModel.onAction(RegistrationAction.ConfirmRegistration)
+            confirmWithProgramAccessCode()
             advanceUntilIdle()
             assertThat(awaitItem()).isEqualTo(RegistrationEvent.NavigateToLandingScreen)
 
@@ -352,7 +367,7 @@ class RegistrationViewModelTest {
         coEvery { deviceCache.saveDevice(any(), any()) } throws RuntimeException("Save failed")
 
         viewModel.events.test {
-            viewModel.onAction(RegistrationAction.ConfirmRegistration)
+            confirmWithProgramAccessCode()
             advanceUntilIdle()
             expectNoEvents()
         }
@@ -371,7 +386,7 @@ class RegistrationViewModelTest {
         coEvery { sessionCache.clearSession() } throws RuntimeException("Clear failed")
 
         viewModel.events.test {
-            viewModel.onAction(RegistrationAction.ConfirmRegistration)
+            confirmWithProgramAccessCode()
             advanceUntilIdle()
             expectNoEvents()
         }
@@ -389,7 +404,7 @@ class RegistrationViewModelTest {
         coEvery { deviceCache.saveDevice(any(), any()) } throws IllegalStateException("Custom error")
 
         viewModel.events.test {
-            viewModel.onAction(RegistrationAction.ConfirmRegistration)
+            confirmWithProgramAccessCode()
             advanceUntilIdle()
             expectNoEvents()
         }
@@ -440,11 +455,11 @@ class RegistrationViewModelTest {
         val selectedProgram = testPrograms[0]
         selectProgram(selectedProgram)
 
-        viewModel.onAction(RegistrationAction.ConfirmRegistration)
+        confirmWithProgramAccessCode()
         advanceUntilIdle()
 
         coVerify(exactly = 1) { deviceCache.saveDevice(any(), selectedProgram.id) }
         coVerify(exactly = 1) { sessionCache.clearSession() }
-        coVerify(exactly = 1) { collectorRepository.upsertCollector(any()) } // NEW
+        coVerify(exactly = 1) { collectorRepository.upsertCollector(any()) }
     }
 }
