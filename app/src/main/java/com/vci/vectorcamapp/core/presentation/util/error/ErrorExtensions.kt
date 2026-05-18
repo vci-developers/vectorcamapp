@@ -14,7 +14,6 @@ import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.landing.domain.util.LandingError
-import com.vci.vectorcamapp.registration.domain.util.AccessCodeError
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
 
 fun Error.toString(context: Context): String {
@@ -80,6 +79,7 @@ fun Error.toString(context: Context): String {
 
         is RegistrationError -> when (this) {
             RegistrationError.PROGRAM_NOT_FOUND -> R.string.registration_error_program_not_found
+            RegistrationError.INVALID_PROGRAM_ACCESS_CODE -> R.string.registration_error_invalid_program_access_code
             RegistrationError.UNKNOWN_ERROR -> R.string.registration_error_unknown_error
         }
 
@@ -128,10 +128,6 @@ fun Error.toString(context: Context): String {
             SettingsError.COLLECTOR_DELETION_FAILED -> R.string.settings_error_collector_deletion_failed
             SettingsError.DATA_SYNC_FAILED -> R.string.settings_error_data_sync_failed
             SettingsError.DATA_SYNC_IN_PROGRESS_SESSION_EXIST -> R.string.settings_error_data_sync_in_progress_session_exist
-        }
-
-        is AccessCodeError -> when (this) {
-            AccessCodeError.INVALID_ACCESS_CODE -> R.string.access_code_error_invalid_access_code
         }
 
         else -> R.string.error_fallback

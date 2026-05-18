@@ -28,7 +28,6 @@ import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
-import com.vci.vectorcamapp.registration.domain.util.AccessCodeError
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.registration.logging.RegistrationSentryLogger
 import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
@@ -126,21 +125,21 @@ class RegistrationViewModel @Inject constructor(
                     }
                 }
 
-                is RegistrationAction.EnterRegistrationAccessCode -> {
+                is RegistrationAction.EnterProgramAccessCode -> {
                     _state.update {
                         it.copy(
-                            registrationAccessCodeInput = action.accessCode,
-                            registrationAccessCodeError = null
+                            programAccessCodeInput = action.accessCode,
+                            programAccessCodeError = null
                         )
                     }
                 }
 
-                RegistrationAction.DismissRegistrationAccessCodeDialog -> {
+                RegistrationAction.DismissProgramAccessCodeDialog -> {
                     _state.update {
                         it.copy(
-                            isAccessCodeDialogVisible = false,
-                            registrationAccessCodeInput = "",
-                            registrationAccessCodeError = null
+                            isProgramAccessCodeDialogVisible = false,
+                            programAccessCodeInput = "",
+                            programAccessCodeError = null
                         )
                     }
                 }
@@ -164,14 +163,14 @@ class RegistrationViewModel @Inject constructor(
 
                     _state.update {
                         it.copy(
-                            isAccessCodeDialogVisible = true,
-                            registrationAccessCodeInput = "",
-                            registrationAccessCodeError = null
+                            isProgramAccessCodeDialogVisible = true,
+                            programAccessCodeInput = "",
+                            programAccessCodeError = null
                         )
                     }
                 }
 
-                RegistrationAction.SubmitRegistrationAccessCode -> {
+                RegistrationAction.SubmitProgramAccessCode -> {
                     val selectedProgram = _state.value.selectedProgram
                     if (selectedProgram == null) {
                         emitError(RegistrationError.PROGRAM_NOT_FOUND)
@@ -186,29 +185,29 @@ class RegistrationViewModel @Inject constructor(
                         return@launch
                     }
 
-                    val accessCode = _state.value.registrationAccessCodeInput
+                    val programAccessCode = _state.value.programAccessCodeInput
                     _state.update {
                         it.copy(
                             isLoading = true,
-                            registrationAccessCodeError = null
+                            programAccessCodeError = null
                         )
                     }
 
-                    when (val result = programDataSource.verifyAccessCode(selectedProgram.id, accessCode)) {
+                    when (val result = programDataSource.verifyAccessCode(selectedProgram.id, programAccessCode)) {
                         is Result.Success -> {
                             if (result.data.valid) {
                                 _state.update {
                                     it.copy(
-                                        isAccessCodeDialogVisible = false,
-                                        registrationAccessCodeInput = "",
-                                        registrationAccessCodeError = null
+                                        isProgramAccessCodeDialogVisible = false,
+                                        programAccessCodeInput = "",
+                                        programAccessCodeError = null
                                     )
                                 }
                                 registerCollectorAndProceed(selectedProgram)
                             } else {
                                 _state.update {
                                     it.copy(
-                                        registrationAccessCodeError = AccessCodeError.INVALID_ACCESS_CODE,
+                                        programAccessCodeError = RegistrationError.INVALID_PROGRAM_ACCESS_CODE,
                                         isLoading = false
                                     )
                                 }

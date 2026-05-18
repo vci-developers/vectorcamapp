@@ -1,8 +1,8 @@
 package com.vci.vectorcamapp.core.data.network.api
 
 import com.vci.vectorcamapp.core.data.dto.program.GetAllProgramsResponseDto
-import com.vci.vectorcamapp.core.data.dto.program.VerifyAccessCodeRequestDto
-import com.vci.vectorcamapp.core.data.dto.program.VerifyAccessCodeResponseDto
+import com.vci.vectorcamapp.core.data.dto.program.VerifyProgramAccessCodeRequestDto
+import com.vci.vectorcamapp.core.data.dto.program.VerifyProgramAccessCodeResponseDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.safeCall
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
@@ -26,10 +26,10 @@ class RemoteProgramDataSource @Inject constructor(
     override suspend fun verifyAccessCode(
         programId: Int,
         accessCode: String,
-    ): Result<VerifyAccessCodeResponseDto, NetworkError> {
-        return safeCall<VerifyAccessCodeResponseDto> {
+    ): Result<VerifyProgramAccessCodeResponseDto, NetworkError> {
+        return safeCall<VerifyProgramAccessCodeResponseDto> {
             httpClient.post(constructUrl("programs/$programId/verify-access-code")) {
-                setBody(VerifyAccessCodeRequestDto(accessCode = accessCode))
+                setBody(VerifyProgramAccessCodeRequestDto(accessCode = accessCode))
             }
         }
     }

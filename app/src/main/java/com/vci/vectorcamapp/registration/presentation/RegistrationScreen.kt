@@ -190,10 +190,10 @@ fun RegistrationScreen(
             }
         }
 
-        if (state.isAccessCodeDialogVisible) {
-            var accessCodeVisible by remember { mutableStateOf(false) }
+        if (state.isProgramAccessCodeDialogVisible) {
+            var programAccessCodeVisible by remember { mutableStateOf(false) }
             AlertDialog(
-                onDismissRequest = { onAction(RegistrationAction.DismissRegistrationAccessCodeDialog) },
+                onDismissRequest = { onAction(RegistrationAction.DismissProgramAccessCodeDialog) },
                 title = {
                     Text(text = "Enter Program Access Code")
                 },
@@ -202,21 +202,21 @@ fun RegistrationScreen(
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                     ) {
                         TextEntryField(
-                            value = state.registrationAccessCodeInput,
-                            onValueChange = { onAction(RegistrationAction.EnterRegistrationAccessCode(it)) },
+                            value = state.programAccessCodeInput,
+                            onValueChange = { onAction(RegistrationAction.EnterProgramAccessCode(it)) },
                             label = "Access Code",
                             singleLine = true,
-                            error = state.registrationAccessCodeError,
-                            visualTransformation = if (accessCodeVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            error = state.programAccessCodeError,
+                            visualTransformation = if (programAccessCodeVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             trailingIcon = {
-                                IconButton(onClick = { accessCodeVisible = !accessCodeVisible }) {
+                                IconButton(onClick = { programAccessCodeVisible = !programAccessCodeVisible }) {
                                     Icon(
                                         painter = painterResource(
-                                            if (accessCodeVisible) R.drawable.ic_visibility_off
+                                            if (programAccessCodeVisible) R.drawable.ic_visibility_off
                                             else R.drawable.ic_visibility
                                         ),
-                                        contentDescription = if (accessCodeVisible) "Hide access code" else "Show access code"
+                                        contentDescription = if (programAccessCodeVisible) "Hide access code" else "Show access code"
                                     )
                                 }
                             },
@@ -226,8 +226,8 @@ fun RegistrationScreen(
                 },
                 confirmButton = {
                     Button(
-                        onClick = { onAction(RegistrationAction.SubmitRegistrationAccessCode) },
-                        enabled = state.registrationAccessCodeInput.isNotBlank() && !state.isLoading,
+                        onClick = { onAction(RegistrationAction.SubmitProgramAccessCode) },
+                        enabled = state.programAccessCodeInput.isNotBlank() && !state.isLoading,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colors.secondary,
                             contentColor = MaterialTheme.colors.buttonText
@@ -241,7 +241,7 @@ fun RegistrationScreen(
                 },
                 dismissButton = {
                     TextButton(
-                        onClick = { onAction(RegistrationAction.DismissRegistrationAccessCodeDialog) }
+                        onClick = { onAction(RegistrationAction.DismissProgramAccessCodeDialog) }
                     ) {
                         Text(
                             text = "Cancel",
