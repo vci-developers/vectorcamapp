@@ -49,6 +49,8 @@ fun Error.toString(context: Context): String {
 
         is ImagingError -> when (this) {
             ImagingError.CAPTURE_ERROR -> R.string.imaging_error_capture_error
+            ImagingError.CAMERA_OPEN_FAILED -> R.string.imaging_error_camera_open_failed
+            ImagingError.SESSION_CONFIG_FAILED -> R.string.imaging_error_session_config_failed
             ImagingError.SAVE_ERROR -> R.string.imaging_error_save_error
             ImagingError.PROCESSING_ERROR -> R.string.imaging_error_processing_error
             ImagingError.INVALID_SPECIMEN_ID -> R.string.imaging_error_invalid_specimen_id

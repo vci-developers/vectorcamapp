@@ -4,6 +4,8 @@ import com.vci.vectorcamapp.core.domain.util.Error
 
 enum class ImagingError : Error {
     CAPTURE_ERROR,
+    CAMERA_OPEN_FAILED,
+    SESSION_CONFIG_FAILED,
     SAVE_ERROR,
     INVALID_SPECIMEN_ID,
     PROCESSING_ERROR,

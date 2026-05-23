@@ -1,7 +1,9 @@
 package com.vci.vectorcamapp.imaging.di
 
+import com.vci.vectorcamapp.imaging.data.camera.Camera2SessionControllerImplementation
 import com.vci.vectorcamapp.imaging.data.repository.CameraRepositoryImplementation
 import com.vci.vectorcamapp.imaging.data.repository.InferenceRepositoryImplementation
+import com.vci.vectorcamapp.imaging.domain.camera.CameraSessionController
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
 import dagger.Binds
@@ -25,4 +27,10 @@ abstract class ImagingRepositoryModule {
     abstract fun bindInferenceRepository(
         inferenceRepositoryImplementation: InferenceRepositoryImplementation
     ) : InferenceRepository
+
+    @Binds
+    @ViewModelScoped
+    abstract fun bindCameraSessionController(
+        camera2SessionControllerImplementation: Camera2SessionControllerImplementation
+    ) : CameraSessionController
 }

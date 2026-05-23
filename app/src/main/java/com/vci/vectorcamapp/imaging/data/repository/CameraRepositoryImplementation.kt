@@ -5,14 +5,11 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCapture.OnImageCapturedCallback
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
-import androidx.core.content.ContextCompat
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.imaging.domain.camera.CameraSessionController
+import com.vci.vectorcamapp.imaging.domain.model.CapturedImage
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -23,36 +20,18 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class CameraRepositoryImplementation @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val cameraSessionController: CameraSessionController
 ) : CameraRepository {
-    override suspend fun captureImage(imageCapture: ImageCapture): Result<ImageProxy, ImagingError> {
-        return withContext(Dispatchers.Main) {
-            suspendCoroutine { continuation ->
-                imageCapture.takePicture(
-                    ContextCompat.getMainExecutor(context),
-                    object : OnImageCapturedCallback() {
-                        override fun onCaptureSuccess(image: ImageProxy) {
-                            super.onCaptureSuccess(image)
-                            continuation.resume(Result.Success(image))
-                        }
-
-                        override fun onError(exception: ImageCaptureException) {
-                            super.onError(exception)
-                            continuation.resume(Result.Error(ImagingError.CAPTURE_ERROR))
-                        }
-                    })
-            }
-        }
-    }
+    override suspend fun captureImage(): Result<CapturedImage, ImagingError> =
+        cameraSessionController.captureImage()
 
     override suspend fun saveImage(
         jpegBytes: ByteArray, filename: String, currentSession: Session
     ): Result<Uri, ImagingError> {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault())
+        val dateFormat = SimpleDateFormat(SESSION_TIMESTAMP_PATTERN, Locale.getDefault())
         val sessionTimestamp = dateFormat.format(Date(currentSession.createdAt))
 
         return withContext(Dispatchers.IO) {
@@ -61,7 +40,7 @@ class CameraRepositoryImplementation @Inject constructor(
 
             val contentValues = ContentValues().apply {
                 put(MediaStore.Images.Media.DISPLAY_NAME, filename)
-                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                put(MediaStore.Images.Media.MIME_TYPE, MIME_TYPE_JPEG)
                 put(MediaStore.MediaColumns.RELATIVE_PATH, directory)
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
             }
@@ -131,5 +110,10 @@ class CameraRepositoryImplementation @Inject constructor(
                 }
             }
         }
+    }
+
+    private companion object {
+        private const val SESSION_TIMESTAMP_PATTERN = "yyyy-MM-dd_HH-mm-ss"
+        private const val MIME_TYPE_JPEG = "image/jpeg"
     }
 }

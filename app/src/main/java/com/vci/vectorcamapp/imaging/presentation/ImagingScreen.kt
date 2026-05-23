@@ -1,16 +1,5 @@
 package com.vci.vectorcamapp.imaging.presentation
 
-import android.view.Surface
-import androidx.camera.camera2.interop.Camera2Interop
-import androidx.camera.core.Camera
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.Preview
-import androidx.camera.core.SurfaceRequest
-import androidx.camera.core.resolutionselector.AspectRatioStrategy
-import androidx.camera.core.resolutionselector.ResolutionSelector
-import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -53,18 +42,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -75,7 +60,6 @@ import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
-import com.vci.vectorcamapp.imaging.data.camera.CameraMetadataListenerImplementation
 import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreview
 import com.vci.vectorcamapp.imaging.presentation.components.icon.AnimatedArrowIcon
 import com.vci.vectorcamapp.imaging.presentation.components.specimen.CapturedSpecimenTile
@@ -83,101 +67,15 @@ import com.vci.vectorcamapp.imaging.presentation.components.specimen.SpecimenIma
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun ImagingScreen(
     state: ImagingState, onAction: (ImagingAction) -> Unit, modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
 
     val scope = rememberCoroutineScope()
-
-    var surfaceRequest by remember { mutableStateOf<SurfaceRequest?>(null) }
-    var imageCaptureUseCase by remember { mutableStateOf<ImageCapture?>(null) }
-    var camera by remember { mutableStateOf<Camera?>(null) }
-    val metadataListener = remember { CameraMetadataListenerImplementation() }
-
-    val isReviewing by rememberUpdatedState(newValue = state.currentImageBytes != null)
-    val analyzer = remember {
-        SpecimenImageAnalyzer { frame ->
-            if (!isReviewing) {
-                onAction(ImagingAction.ProcessFrame(frame))
-            } else {
-                frame.close()
-            }
-        }
-    }
-
-    val view = LocalView.current
-
-    val rotation = view.display?.rotation ?: Surface.ROTATION_0
-
-    LaunchedEffect(lifecycleOwner, rotation) {
-        val provider = withContext(Dispatchers.IO) {
-            ProcessCameraProvider.getInstance(context).get()
-        }
-
-        val previewUseCase = Preview.Builder()
-            .setTargetRotation(rotation)
-            .setResolutionSelector(
-                ResolutionSelector.Builder()
-                    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
-                    .build()
-            )
-            .build().apply {
-                setSurfaceProvider { request ->
-                    surfaceRequest = request
-                }
-            }
-
-        val imageCaptureBuilder = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-            .setTargetRotation(rotation)
-            .setResolutionSelector(
-                ResolutionSelector.Builder()
-                    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
-                    .setAllowedResolutionMode(ResolutionSelector.PREFER_HIGHER_RESOLUTION_OVER_CAPTURE_RATE)
-                    .build()
-            )
-
-        Camera2Interop.Extender(imageCaptureBuilder)
-            .setSessionCaptureCallback(metadataListener)
-
-        val imageCapture = imageCaptureBuilder.build()
-
-        val imageAnalysis = ImageAnalysis.Builder()
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .setTargetRotation(rotation)
-            .setResolutionSelector(
-                ResolutionSelector.Builder()
-                    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
-                    .build()
-            )
-            .build()
-
-        imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context), analyzer)
-
-        try {
-            provider.unbindAll()
-            val boundCamera = provider.bindToLifecycle(
-                lifecycleOwner,
-                CameraSelector.DEFAULT_BACK_CAMERA,
-                previewUseCase,
-                imageCapture,
-                imageAnalysis
-            )
-
-            imageCaptureUseCase = imageCapture
-            camera = boundCamera
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
 
     val pagerState = rememberPagerState(
         initialPage = state.specimensWithImagesAndInferenceResults.size,
@@ -689,18 +587,16 @@ fun ImagingScreen(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 LiveCameraPreview(
-                                    surfaceRequest = surfaceRequest,
-                                    camera = camera,
                                     inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
                                     focusPoint = state.focusPoint,
                                     onFocusAt = { normalizedOffset ->
-                                        onAction(
-                                            ImagingAction.FocusAt(
-                                                normalizedOffset
-                                            )
-                                        )
+                                        onAction(ImagingAction.FocusAt(normalizedOffset))
                                     },
                                     onCancelFocus = { onAction(ImagingAction.CancelFocus) },
+                                    onAttachSurface = { surface, displayRotation ->
+                                        onAction(ImagingAction.AttachSurface(surface, displayRotation))
+                                    },
+                                    onDetachSurface = { onAction(ImagingAction.DetachSurface) },
                                     modifier = Modifier.fillMaxSize(),
                                     isManualFocusing = state.isManualFocusing,
                                     isProcessing = state.isProcessing
@@ -770,11 +666,7 @@ fun ImagingScreen(
 
                                         ActionButton(
                                             label = "Capture",
-                                            onClick = {
-                                                imageCaptureUseCase?.let {
-                                                    onAction(ImagingAction.CaptureImage(it, metadataListener.latestMetadata))
-                                                }
-                                            },
+                                            onClick = { onAction(ImagingAction.CaptureImage) },
                                             iconPainter = painterResource(id = R.drawable.ic_camera),
                                             enabled = (!state.isProcessing && state.isCameraReady),
                                             modifier = Modifier.fillMaxWidth()

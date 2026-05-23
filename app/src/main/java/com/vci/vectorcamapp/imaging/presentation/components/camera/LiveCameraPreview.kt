@@ -1,9 +1,8 @@
 package com.vci.vectorcamapp.imaging.presentation.components.camera
 
-import androidx.camera.compose.CameraXViewfinder
-import androidx.camera.core.Camera
-import androidx.camera.core.SurfaceRequest
-import androidx.camera.viewfinder.core.ImplementationMode
+import android.view.Surface
+import android.view.SurfaceHolder
+import android.view.SurfaceView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -11,7 +10,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -20,19 +19,20 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.vci.vectorcamapp.animation.presentation.CaptureAnimation
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
-import com.vci.vectorcamapp.imaging.data.camera.CameraFocusControllerImplementation
+import com.vci.vectorcamapp.imaging.domain.camera.DisplayRotation
 import com.vci.vectorcamapp.ui.extensions.colors
 
 @Composable
 fun LiveCameraPreview(
-    surfaceRequest: SurfaceRequest?,
-    camera: Camera?,
     inferenceResults: List<InferenceResult>,
     focusPoint: Offset?,
     onFocusAt: (Offset) -> Unit,
     onCancelFocus: () -> Unit,
+    onAttachSurface: (Surface, DisplayRotation) -> Unit,
+    onDetachSurface: () -> Unit,
     modifier: Modifier = Modifier,
     isManualFocusing: Boolean,
     isProcessing: Boolean
@@ -40,7 +40,14 @@ fun LiveCameraPreview(
     val density = LocalDensity.current
     val view = LocalView.current
 
-    val DOT_RADIUS_DP = 3.dp
+    val displayRotation = remember(view) {
+        when (view.display?.rotation ?: Surface.ROTATION_0) {
+            Surface.ROTATION_90 -> DisplayRotation.ROTATION_90
+            Surface.ROTATION_180 -> DisplayRotation.ROTATION_180
+            Surface.ROTATION_270 -> DisplayRotation.ROTATION_270
+            else -> DisplayRotation.ROTATION_0
+        }
+    }
 
     BoxWithConstraints(
         modifier = modifier
@@ -49,31 +56,26 @@ fun LiveCameraPreview(
         val containerHeight = with(density) { maxHeight.toPx() }
         val containerSize = IntSize(containerWidth.toInt(), containerHeight.toInt())
 
-        val cameraFocusController = remember(camera, containerWidth, containerHeight) {
-            CameraFocusControllerImplementation(
-                cameraControl = camera?.cameraControl,
-                cameraInfo = camera?.cameraInfo,
-                view = view,
-                width = containerWidth,
-                height = containerHeight
-            )
-        }
+        AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { context ->
+                SurfaceView(context).apply {
+                    holder.addCallback(object : SurfaceHolder.Callback {
+                        override fun surfaceCreated(holder: SurfaceHolder) {
+                            onAttachSurface(holder.surface, displayRotation)
+                        }
 
-        LaunchedEffect(focusPoint) {
-            if (focusPoint == null) {
-                cameraFocusController.cancelFocus()
-            } else {
-                cameraFocusController.focusAt(focusPoint)
+                        override fun surfaceChanged(
+                            holder: SurfaceHolder, format: Int, width: Int, height: Int
+                        ) = Unit
+
+                        override fun surfaceDestroyed(holder: SurfaceHolder) {
+                            onDetachSurface()
+                        }
+                    })
+                }
             }
-        }
-
-        if (surfaceRequest != null) {
-            CameraXViewfinder(
-                surfaceRequest = surfaceRequest,
-                implementationMode = ImplementationMode.EXTERNAL,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+        )
 
         inferenceResults.map {
             BoundingBoxOverlay(
@@ -119,10 +121,7 @@ fun LiveCameraPreview(
                         ManualFocusRingOverlay(
                             focusPoint = centerPx,
                             overlaySize = containerSize,
-                            onCancel = {
-                                cameraFocusController.cancelFocus()
-                                onCancelFocus()
-                            }
+                            onCancel = { onCancelFocus() }
                         )
                     }
                 }
@@ -134,4 +133,10 @@ fun LiveCameraPreview(
             isVisible = isProcessing
         )
     }
+
+    DisposableEffect(Unit) {
+        onDispose { onDetachSurface() }
+    }
 }
+
+private val DOT_RADIUS_DP = 3.dp

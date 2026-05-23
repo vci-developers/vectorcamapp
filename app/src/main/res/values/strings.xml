@@ -88,6 +88,12 @@
     <!-- Imaging error: Capture error -->
     <string name="imaging_error_capture_error">Could not take the photo. Please try again.</string>
 
+    <!-- Imaging error: Camera open failed -->
+    <string name="imaging_error_camera_open_failed">Could not open the camera. Please try again.</string>
+
+    <!-- Imaging error: Session config failed -->
+    <string name="imaging_error_session_config_failed">Could not configure the camera. Please try again.</string>
+
     <!-- Imaging error: Save error -->
     <string name="imaging_error_save_error">Could not save the photo. Please try again.</string>
 
