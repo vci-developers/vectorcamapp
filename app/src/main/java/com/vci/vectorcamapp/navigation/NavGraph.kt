@@ -30,6 +30,12 @@ import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import com.vci.vectorcamapp.registration.presentation.RegistrationEvent
 import com.vci.vectorcamapp.registration.presentation.RegistrationScreen
 import com.vci.vectorcamapp.registration.presentation.RegistrationViewModel
+import com.vci.vectorcamapp.add_hour.presentation.AddHourEvent
+import com.vci.vectorcamapp.add_hour.presentation.AddHourScreen
+import com.vci.vectorcamapp.add_hour.presentation.AddHourViewModel
+import com.vci.vectorcamapp.hour_log.presentation.HourLogEvent
+import com.vci.vectorcamapp.hour_log.presentation.HourLogScreen
+import com.vci.vectorcamapp.hour_log.presentation.HourLogViewModel
 import com.vci.vectorcamapp.intake.presentation.IntakeEvent
 import com.vci.vectorcamapp.intake.presentation.IntakeScreen
 import com.vci.vectorcamapp.intake.presentation.IntakeViewModel
@@ -116,6 +122,10 @@ fun NavGraph(startDestination: Destination) {
                 when (event) {
                     IntakeEvent.NavigateToImagingScreen -> navController.navigate(
                         Destination.Imaging
+                    )
+
+                    is IntakeEvent.NavigateToHourLogScreen -> navController.navigate(
+                        Destination.HourLog(event.sessionId)
                     )
 
                     IntakeEvent.NavigateBackToPreviousScreen -> navController.popBackStack()
@@ -241,6 +251,54 @@ fun NavGraph(startDestination: Destination) {
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 SettingsScreen(
+                    state = state,
+                    onAction = viewModel::onAction
+                )
+            }
+        }
+
+        composable<Destination.HourLog> {
+            val viewModel = hiltViewModel<HourLogViewModel>()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+
+            ObserveAsEvents(events = viewModel.events) { event ->
+                when (event) {
+                    HourLogEvent.NavigateBackToPreviousScreen -> navController.popBackStack()
+
+                    is HourLogEvent.NavigateToAddHourScreen -> navController.navigate(
+                        Destination.AddHour(event.sessionId)
+                    )
+
+                    is HourLogEvent.NavigateToImagingScreen -> navController.navigate(
+                        Destination.Imaging
+                    )
+                }
+            }
+
+            BaseScaffold(modifier = Modifier.fillMaxSize()) {
+                HourLogScreen(
+                    state = state,
+                    onAction = viewModel::onAction
+                )
+            }
+        }
+
+        composable<Destination.AddHour> {
+            val viewModel = hiltViewModel<AddHourViewModel>()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+
+            ObserveAsEvents(events = viewModel.events) { event ->
+                when (event) {
+                    AddHourEvent.NavigateBackToPreviousScreen -> navController.popBackStack()
+
+                    AddHourEvent.NavigateToImagingScreen -> navController.navigate(
+                        Destination.Imaging
+                    )
+                }
+            }
+
+            BaseScaffold(modifier = Modifier.fillMaxSize()) {
+                AddHourScreen(
                     state = state,
                     onAction = viewModel::onAction
                 )

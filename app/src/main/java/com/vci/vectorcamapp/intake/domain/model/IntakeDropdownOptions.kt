@@ -15,6 +15,11 @@ object IntakeDropdownOptions {
         OTHER("Other")
     }
 
+    enum class CollectionPlaceOption(val label: String) {
+        INDOOR("Indoor"),
+        OUTDOOR("Outdoor")
+    }
+
     enum class LlinTypeOption(val label: String) {
         PYRETHROID_ONLY("Pyrethroid Only"),
         PYRETHROID_PBO("Pyrethroid + PBO"),

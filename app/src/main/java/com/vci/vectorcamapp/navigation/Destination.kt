@@ -27,4 +27,10 @@ sealed interface Destination {
 
     @Serializable
     data class CompleteSessionDetails(val sessionId: String) : Destination
+
+    @Serializable
+    data class HourLog(val sessionId: String) : Destination
+
+    @Serializable
+    data class AddHour(val sessionId: String) : Destination
 }
