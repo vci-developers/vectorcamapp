@@ -8,4 +8,5 @@ data class RegisterDeviceRequestDto(
     val registeredAt: Long = 0L,
     val programId: Int = -1,
     val appVersion: String = "",
+    val ssaid: String? = null
 )
