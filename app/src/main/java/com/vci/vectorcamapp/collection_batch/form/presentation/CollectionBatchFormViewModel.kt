@@ -4,8 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vci.vectorcamapp.collection_batch.domain.util.CollectionBatchIdentityValidator
+import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
+import com.vci.vectorcamapp.core.data.room.dao.FormAnswerDao
 import com.vci.vectorcamapp.core.data.room.dao.SessionUnitDao
+import com.vci.vectorcamapp.core.data.room.entities.FormAnswerEntity
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.AnswerScopes
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
@@ -36,6 +39,7 @@ class CollectionBatchFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val sessionUnitRepository: SessionUnitRepository,
     private val sessionUnitDao: SessionUnitDao,
+    private val formAnswerDao: FormAnswerDao,
     private val formAnswerRepository: FormAnswerRepository,
     private val deviceCache: DeviceCache,
     private val programRepository: ProgramRepository,
@@ -79,8 +83,8 @@ class CollectionBatchFormViewModel @Inject constructor(
 
             val existingAnswers: Map<Int, String> = if (destination.unitId != null) {
                 val unitId = UUID.fromString(destination.unitId)
-                val withAnswers = sessionUnitDao.getSessionUnitWithAnswers(unitId)
-                withAnswers?.answerEntities?.associate { it.questionId to it.value } ?: emptyMap()
+                formAnswerDao.getFormAnswersBySessionUnitId(unitId)
+                    .associate { it.questionId to it.value }
             } else {
                 emptyMap()
             }
@@ -187,21 +191,20 @@ class CollectionBatchFormViewModel @Inject constructor(
 
         transactionHelper.runAsTransaction {
             sessionUnitRepository.upsertSessionUnit(unit)
+            // Delete old answers for this unit before re-inserting so edits are clean
+            formAnswerDao.deleteFormAnswersForSessionUnit(unit.localId)
             allUnitQuestions.forEach { q ->
                 val answerValue = current.answers[q.id].orEmpty()
                 if (answerValue.isNotBlank()) {
-                    formAnswerRepository.upsertFormAnswer(
-                        formAnswer = FormAnswer(
+                    formAnswerDao.upsertFormAnswer(
+                        FormAnswer(
                             localId = UUID.randomUUID(),
                             remoteId = null,
                             value = answerValue,
                             dataType = q.type,
                             submittedAt = now,
                             sessionUnitId = unit.localId,
-                        ),
-                        sessionId = sessionId,
-                        questionId = q.id,
-                        sessionUnitId = unit.localId,
+                        ).toEntity(sessionId, q.id, unit.localId)
                     )
                 }
             }

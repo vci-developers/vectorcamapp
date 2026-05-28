@@ -665,6 +665,7 @@ class IntakeViewModel @Inject constructor(
 
             val savedFormAnswers = currentSession?.let {
                 formAnswerRepository.getFormAnswersBySessionId(it.localId)
+                    .filterValues { answer -> answer.sessionUnitId == null }
             } ?: emptyMap()
 
             combine(

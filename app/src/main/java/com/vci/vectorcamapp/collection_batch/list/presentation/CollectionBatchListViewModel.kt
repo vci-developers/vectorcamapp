@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vci.vectorcamapp.collection_batch.domain.util.CollectionBatchIdentityResolver
 import com.vci.vectorcamapp.core.data.room.dao.SessionUnitDao
+import com.vci.vectorcamapp.core.data.room.dao.SpecimenDao
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
@@ -34,6 +35,7 @@ class CollectionBatchListViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val sessionUnitRepository: SessionUnitRepository,
     private val sessionUnitDao: SessionUnitDao,
+    private val specimenDao: SpecimenDao,
     private val currentSessionCache: CurrentSessionCache,
     private val deviceCache: DeviceCache,
     private val programRepository: ProgramRepository,
@@ -72,25 +74,28 @@ class CollectionBatchListViewModel @Inject constructor(
     private fun observeUnits() {
         viewModelScope.launch {
             val questions = loadQuestions()
-            sessionUnitRepository.observeSessionUnitsForSession(sessionId).collect { units ->
-                val cardData = units.map { unit ->
-                    val withAnswers = sessionUnitDao.getSessionUnitWithAnswers(unit.localId)
-                    val answersByQuestionId = withAnswers?.answerEntities
-                        ?.associate { it.questionId to it.value }
-                        ?: emptyMap()
+            combine(
+                sessionUnitDao.observeSessionUnitsWithAnswersForSession(sessionId),
+                specimenDao.observeSpecimensBySession(sessionId),
+            ) { unitsWithAnswers, specimens ->
+                val specimensByUnitId = specimens.groupBy { it.sessionUnitId }
+                unitsWithAnswers.map { rel ->
+                    val answersByQuestionId = rel.answerEntities
+                        .associate { it.questionId to it.value }
                     val bucketName = CollectionBatchIdentityResolver
                         .deriveBucketName(questions, answersByQuestionId)
-                        .ifBlank { "Batch ${unit.unitOrder}" }
-                    val specimenCount = sessionUnitRepository.countSpecimensForUnit(unit.localId)
+                        .ifBlank { "Batch ${rel.sessionUnitEntity.unitOrder}" }
+                    val specimenCount = specimensByUnitId[rel.sessionUnitEntity.localId]?.size ?: 0
                     CollectionBatchCardData(
-                        localId = unit.localId,
-                        unitOrder = unit.unitOrder,
+                        localId = rel.sessionUnitEntity.localId,
+                        unitOrder = rel.sessionUnitEntity.unitOrder,
                         bucketName = bucketName,
                         specimenCount = specimenCount,
-                        createdAt = unit.createdAt,
+                        createdAt = rel.sessionUnitEntity.createdAt,
                         canDelete = specimenCount == 0,
                     )
                 }
+            }.collect { cardData ->
                 _unitScoped.update { cardData }
                 _isLoading.update { false }
             }
