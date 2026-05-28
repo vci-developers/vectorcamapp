@@ -43,5 +43,6 @@ data class ImagingState(
     val hasConfirmedPackaging: Boolean = false,
     val pendingAction: ImagingAction? = null,
     val specimenIdError: ImagingError? = null,
-    val currentCameraMetadata: CameraMetadata? = null
+    val currentCameraMetadata: CameraMetadata? = null,
+    val isUnitScoped: Boolean = false,
 )

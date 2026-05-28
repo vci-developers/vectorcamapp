@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.hour_log.presentation.components
+package com.vci.vectorcamapp.collection_batch.list.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,19 +19,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchCardData
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
-import com.vci.vectorcamapp.hour_log.domain.model.HourSession
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Composable
-fun HourSessionCard(
-    hourSession: HourSession,
+fun CollectionBatchCard(
+    cardData: CollectionBatchCardData,
+    onArrowClick: () -> Unit,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val formatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
@@ -49,7 +50,7 @@ fun HourSessionCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = hourSession.timeSlot.replace(" - ", " to "),
+                        text = cardData.bucketName,
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colors.textPrimary,
                         modifier = Modifier.weight(1f)
@@ -66,15 +67,21 @@ fun HourSessionCard(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrow_right),
-                            contentDescription = "Resume hour session",
+                            contentDescription = "Open imaging for this batch",
                             tint = MaterialTheme.colors.icon,
-                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                            modifier = Modifier
+                                .size(MaterialTheme.dimensions.iconSizeMedium)
+                                .run {
+                                    this.then(
+                                        Modifier.padding(MaterialTheme.dimensions.paddingExtraSmall)
+                                    )
+                                }
                         )
                     }
                 }
 
                 InfoPill(
-                    text = "Specimen Count: ${hourSession.specimenCount}",
+                    text = "Specimen Count: ${cardData.specimenCount}",
                     color = MaterialTheme.colors.info
                 )
             }
@@ -84,20 +91,11 @@ fun HourSessionCard(
                 thickness = MaterialTheme.dimensions.dividerThicknessThick
             )
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
-            ) {
-                Text(
-                    text = "Created: ${formatter.format(hourSession.createdAt)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colors.textSecondary
-                )
-                Text(
-                    text = "Last Updated: ${formatter.format(hourSession.updatedAt)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colors.textSecondary
-                )
-            }
+            Text(
+                text = "Created: ${formatter.format(cardData.createdAt)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colors.textSecondary
+            )
         }
     }
 }

@@ -8,7 +8,8 @@ fun SpecimenEntity.toDomain(): Specimen {
     return Specimen(
         id = this.id,
         remoteId = this.remoteId,
-        shouldProcessFurther = this.shouldProcessFurther
+        shouldProcessFurther = this.shouldProcessFurther,
+        sessionUnitId = this.sessionUnitId,
     )
 }
 
@@ -16,7 +17,8 @@ fun Specimen.toEntity(sessionId: UUID): SpecimenEntity {
     return SpecimenEntity(
         id = this.id,
         sessionId = sessionId,
+        sessionUnitId = this.sessionUnitId,
         remoteId = this.remoteId,
-        shouldProcessFurther = this.shouldProcessFurther
+        shouldProcessFurther = this.shouldProcessFurther,
     )
 }

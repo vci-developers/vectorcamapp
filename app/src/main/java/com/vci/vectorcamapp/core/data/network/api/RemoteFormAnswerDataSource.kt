@@ -22,7 +22,8 @@ class RemoteFormAnswerDataSource @Inject constructor(
     override suspend fun postFormAnswersForSession(
         sessionId: Int,
         formVersion: String,
-        answers: Map<Int, FormAnswer>
+        answers: Map<Int, FormAnswer>,
+        sessionUnitRemoteIdByLocalUnitId: Map<java.util.UUID, Int>,
     ): Result<PostFormAnswersResponseDto, NetworkError> {
         return safeCall<PostFormAnswersResponseDto> {
             httpClient.post(constructUrl("sessions/$sessionId/forms/answers")) {
@@ -32,7 +33,9 @@ class RemoteFormAnswerDataSource @Inject constructor(
                             frontendId = answer.localId,
                             questionId = questionId,
                             value = answer.value,
-                            dataType = answer.dataType
+                            dataType = answer.dataType,
+                            sessionUnitId = answer.sessionUnitId
+                                ?.let { sessionUnitRemoteIdByLocalUnitId[it] },
                         )
                     },
                     formVersion = formVersion,

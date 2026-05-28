@@ -35,7 +35,11 @@ import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
 import com.vci.vectorcamapp.imaging.domain.model.ColorCorrectionGains
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
+import androidx.lifecycle.SavedStateHandle
+import androidx.navigation.toRoute
+import com.vci.vectorcamapp.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -66,6 +70,7 @@ import org.opencv.core.Mat
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val currentSessionCache: CurrentSessionCache,
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
@@ -77,6 +82,11 @@ class ImagingViewModel @Inject constructor(
     private val validateSpecimenIdUseCase: ValidateSpecimenIdUseCase,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
+
+    private val navDestination = savedStateHandle.toRoute<Destination.Imaging>()
+    private val currentSessionUnitId: UUID? = navDestination.sessionUnitId?.let {
+        try { UUID.fromString(it) } catch (e: IllegalArgumentException) { null }
+    }
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
@@ -96,7 +106,7 @@ class ImagingViewModel @Inject constructor(
             }
         }
 
-    private val _state = MutableStateFlow(ImagingState())
+    private val _state = MutableStateFlow(ImagingState(isUnitScoped = currentSessionUnitId != null))
     val state: StateFlow<ImagingState> = combine(
         _specimensWithImagesAndInferenceResults, _state
     ) { specimensWithImagesAndInferenceResults, state ->
@@ -109,7 +119,7 @@ class ImagingViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000L),
-        initialValue = ImagingState(isLoading = true)
+        initialValue = ImagingState(isLoading = true, isUnitScoped = currentSessionUnitId != null)
     )
 
     private val _events = Channel<ImagingEvent>()
@@ -245,8 +255,12 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 ImagingAction.SaveSessionProgress -> {
-                    currentSessionCache.clearSession()
-                    _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                    if (currentSessionUnitId != null) {
+                        _events.send(ImagingEvent.NavigateBackToCollectionBatchList)
+                    } else {
+                        currentSessionCache.clearSession()
+                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                    }
                 }
 
                 ImagingAction.SubmitSession -> {
@@ -486,7 +500,8 @@ class ImagingViewModel @Inject constructor(
                         val specimen = Specimen(
                             id = specimenId,
                             remoteId = null,
-                            shouldProcessFurther = shouldProcessFurther
+                            shouldProcessFurther = shouldProcessFurther,
+                            sessionUnitId = currentSessionUnitId,
                         )
                     val specimenImage = SpecimenImage(
                             localId = calculateMd5(jpegBytes),

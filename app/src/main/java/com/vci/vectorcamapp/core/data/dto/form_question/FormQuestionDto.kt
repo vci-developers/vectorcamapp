@@ -13,5 +13,7 @@ data class FormQuestionDto(
     val prerequisite: FormQuestionPrerequisiteExpressionDto? = null,
     val options: List<String>? = null,
     val order: Int = -1,
-    val subQuestions: List<FormQuestionDto>? = null
+    val subQuestions: List<FormQuestionDto>? = null,
+    val answerScope: String = "SESSION",
+    val isUnitIdentityComponent: Boolean = false,
 )

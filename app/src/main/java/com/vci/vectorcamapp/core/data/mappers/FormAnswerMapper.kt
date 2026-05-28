@@ -10,18 +10,20 @@ fun FormAnswerEntity.toDomain(): FormAnswer {
         remoteId = this.remoteId,
         value = this.value,
         dataType = this.dataType,
-        submittedAt = this.submittedAt
+        submittedAt = this.submittedAt,
+        sessionUnitId = this.sessionUnitId,
     )
 }
 
-fun FormAnswer.toEntity(sessionId: UUID, questionId: Int): FormAnswerEntity {
+fun FormAnswer.toEntity(sessionId: UUID, questionId: Int, sessionUnitId: UUID? = null): FormAnswerEntity {
     return FormAnswerEntity(
         localId = this.localId,
         remoteId = this.remoteId,
         sessionId = sessionId,
+        sessionUnitId = sessionUnitId,
         questionId = questionId,
         value = this.value,
         dataType = this.dataType,
-        submittedAt = this.submittedAt
+        submittedAt = this.submittedAt,
     )
 }

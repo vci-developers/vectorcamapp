@@ -35,10 +35,13 @@ import com.vci.vectorcamapp.core.domain.network.api.SessionDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenImageDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SurveillanceFormDataSource
+import com.vci.vectorcamapp.core.domain.model.SessionUnit
+import com.vci.vectorcamapp.core.domain.network.api.SessionUnitDataSource
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
@@ -71,7 +74,9 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val specimenDataSource: SpecimenDataSource,
     private val specimenImageDataSource: SpecimenImageDataSource,
     private val formAnswerDataSource: FormAnswerDataSource,
-    private val formAnswerRepository: FormAnswerRepository
+    private val formAnswerRepository: FormAnswerRepository,
+    private val sessionUnitRepository: SessionUnitRepository,
+    private val sessionUnitDataSource: SessionUnitDataSource,
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -140,6 +145,25 @@ class MetadataUploadWorker @AssistedInject constructor(
                 return retryOrFailure("Session not found on the server.")
             }
 
+            // Sync collection batches / session units before form answers and specimens because
+            // both reference sessionUnitId via the unit's remoteId.
+            val syncedUnitsByLocalId: Map<UUID, SessionUnit> = run {
+                val localUnits = sessionUnitRepository.getSessionUnitsForSession(syncedSession.localId)
+                val result = mutableMapOf<UUID, SessionUnit>()
+                for (localUnit in localUnits) {
+                    when (val r = syncSessionUnitIfNeeded(localUnit, syncedSession.remoteId!!)) {
+                        is DomainResult.Success -> result[localUnit.localId] = r.data
+                        is DomainResult.Error -> return retryOrFailure(
+                            r.error.toString(context)
+                        )
+                    }
+                }
+                result
+            }
+            val unitRemoteIdByLocalId: Map<UUID, Int> = syncedUnitsByLocalId
+                .mapNotNull { (localId, unit) -> unit.remoteId?.let { localId to it } }
+                .toMap()
+
             if (localProgram.formVersion != null) {
                 val localFormAnswers =
                     formAnswerRepository.getFormAnswersBySessionId(syncedSession.localId)
@@ -148,7 +172,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                         localFormAnswers,
                         localProgram.formVersion,
                         syncedSession.localId,
-                        syncedSession.remoteId
+                        syncedSession.remoteId,
+                        unitRemoteIdByLocalId,
                     )) {
                         is DomainResult.Success -> syncFormAnswersResult.data
                         is DomainResult.Error -> return retryOrFailure(
@@ -175,11 +200,15 @@ class MetadataUploadWorker @AssistedInject constructor(
             localSpecimensWithImagesAndInferenceResults.forEachIndexed { specimenIndex, specimenWithImagesAndInferenceResults ->
                 val totalImagesForSpecimen =
                     specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
+                val specimen = specimenWithImagesAndInferenceResults.specimen
+                val specimenUnitRemoteId = specimen.sessionUnitId
+                    ?.let { unitRemoteIdByLocalId[it] }
                 val syncedSpecimen = when (val syncSpecimenResult = syncSpecimenIfNeeded(
-                    specimenWithImagesAndInferenceResults.specimen,
+                    specimen,
                     syncedSession.localId,
                     syncedSession.remoteId,
-                    totalImagesForSpecimen
+                    totalImagesForSpecimen,
+                    specimenUnitRemoteId,
                 )) {
                     is DomainResult.Success -> syncSpecimenResult.data
                     is DomainResult.Error -> {
@@ -479,7 +508,8 @@ class MetadataUploadWorker @AssistedInject constructor(
         localFormAnswers: Map<Int, FormAnswer>,
         formVersion: String,
         syncedLocalSessionId: UUID,
-        syncedRemoteSessionId: Int
+        syncedRemoteSessionId: Int,
+        unitRemoteIdByLocalId: Map<UUID, Int> = emptyMap(),
     ): DomainResult<Unit, NetworkError> {
         return try {
             val localFormAnswersDto = localFormAnswers.map { (questionId, answer) ->
@@ -487,6 +517,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                     id = answer.remoteId,
                     frontendId = answer.localId,
                     sessionId = syncedRemoteSessionId,
+                    sessionUnitId = answer.sessionUnitId?.let { unitRemoteIdByLocalId[it] },
                     questionId = questionId,
                     value = answer.value,
                     dataType = answer.dataType,
@@ -501,7 +532,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                     answers.ifEmpty {
                         val postFormAnswersResult =
                             formAnswerDataSource.postFormAnswersForSession(
-                                syncedRemoteSessionId, formVersion, localFormAnswers
+                                syncedRemoteSessionId, formVersion, localFormAnswers,
+                                unitRemoteIdByLocalId,
                             )
                         when (postFormAnswersResult) {
                             is DomainResult.Success -> postFormAnswersResult.data.answers
@@ -516,7 +548,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                         NetworkError.NOT_FOUND -> {
                             val postFormAnswersResult =
                                 formAnswerDataSource.postFormAnswersForSession(
-                                    syncedRemoteSessionId, formVersion, localFormAnswers
+                                    syncedRemoteSessionId, formVersion, localFormAnswers,
+                                    unitRemoteIdByLocalId,
                                 )
                             when (postFormAnswersResult) {
                                 is DomainResult.Success -> postFormAnswersResult.data.answers
@@ -565,17 +598,49 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
+    private suspend fun syncSessionUnitIfNeeded(
+        localUnit: SessionUnit,
+        syncedSessionRemoteId: Int,
+    ): DomainResult<SessionUnit, NetworkError> {
+        return try {
+            val remoteDto = when (val r = sessionUnitDataSource.getSessionUnitByFrontendId(
+                syncedSessionRemoteId, localUnit.localId
+            )) {
+                is DomainResult.Success -> r.data
+                is DomainResult.Error -> when (r.error) {
+                    NetworkError.NOT_FOUND -> {
+                        when (val post = sessionUnitDataSource.postSessionUnit(localUnit, syncedSessionRemoteId)) {
+                            is DomainResult.Success -> post.data.unit
+                            is DomainResult.Error -> return DomainResult.Error(post.error)
+                        }
+                    }
+                    else -> return DomainResult.Error(r.error)
+                }
+            }
+
+            val remoteUnit = localUnit.copy(remoteId = remoteDto.id)
+            sessionUnitRepository.upsertSessionUnit(remoteUnit)
+            DomainResult.Success(remoteUnit)
+        } catch (e: IOException) {
+            DomainResult.Error(NetworkError.NO_INTERNET)
+        } catch (e: Exception) {
+            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
+        }
+    }
+
     private suspend fun syncSpecimenIfNeeded(
         localSpecimen: Specimen,
         syncedLocalSessionId: UUID,
         syncedRemoteSessionId: Int,
-        expectedImages: Int
+        expectedImages: Int,
+        sessionUnitRemoteId: Int? = null,
     ): DomainResult<Specimen, NetworkError> {
         return try {
             val localSpecimenDto = SpecimenDto(
                 id = localSpecimen.remoteId,
                 specimenId = localSpecimen.id,
                 sessionId = syncedRemoteSessionId,
+                sessionUnitId = sessionUnitRemoteId,
                 expectedImages = expectedImages
             )
 
@@ -588,7 +653,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                         when (remoteSpecimenResult.error) {
                             NetworkError.NOT_FOUND -> {
                                 val postSpecimenResult = specimenDataSource.postSpecimen(
-                                    localSpecimen, syncedRemoteSessionId, expectedImages
+                                    localSpecimen, syncedRemoteSessionId, expectedImages,
+                                    sessionUnitRemoteId,
                                 )
                                 when (postSpecimenResult) {
                                     is DomainResult.Success -> postSpecimenResult.data.specimen

@@ -7,6 +7,7 @@ data class SpecimenDto(
     val id: Int? = null,
     val specimenId: String = "",
     val sessionId: Int = -1,
+    val sessionUnitId: Int? = null,
     val shouldProcessFurther: Boolean = false,
     val expectedImages: Int = 0,
 )

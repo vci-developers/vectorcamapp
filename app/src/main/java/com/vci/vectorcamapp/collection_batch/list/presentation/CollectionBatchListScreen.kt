@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.hour_log.presentation
+package com.vci.vectorcamapp.collection_batch.list.presentation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.items
@@ -13,46 +13,46 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.collection_batch.list.presentation.components.CollectionBatchCard
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
-import com.vci.vectorcamapp.hour_log.presentation.components.HourSessionCard
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
-fun HourLogScreen(
-    state: HourLogState,
-    onAction: (HourLogAction) -> Unit,
-    modifier: Modifier = Modifier
+fun CollectionBatchListScreen(
+    state: CollectionBatchListState,
+    onAction: (CollectionBatchListAction) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     ScreenHeader(
-        title = "Hour Log",
-        subtitle = "Click on session to resume",
+        title = "Collection Batches",
+        subtitle = "Tap a card to edit, the arrow to image, or + to add",
         leadingIcon = {
             Icon(
                 painter = painterResource(R.drawable.ic_add),
-                contentDescription = "Add Hour",
+                contentDescription = "Add batch",
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeLarge)
-                    .clickable { onAction(HourLogAction.NavigateToAddHour) }
+                    .clickable { onAction(CollectionBatchListAction.AddCollectionBatch) }
             )
         },
         trailingIcon = {
             Icon(
                 painter = painterResource(R.drawable.ic_cloud_upload),
-                contentDescription = "Upload",
+                contentDescription = "Upload session",
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeLarge)
-                    .clickable { onAction(HourLogAction.UploadSession) }
+                    .clickable { onAction(CollectionBatchListAction.UploadSession) }
             )
         },
-        modifier = modifier
+        modifier = modifier,
     ) {
-        if (state.hourSessions.isEmpty()) {
+        if (state.units.isEmpty()) {
             item {
                 Text(
-                    text = "No hour sessions yet.\nTap + to add one.",
+                    text = "No collection batches yet.\nTap + to add one.",
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colors.textSecondary,
                     textAlign = TextAlign.Center,
@@ -64,12 +64,13 @@ fun HourLogScreen(
         }
 
         items(
-            items = state.hourSessions,
-            key = { it.id }
-        ) { hourSession ->
-            HourSessionCard(
-                hourSession = hourSession,
-                onClick = { onAction(HourLogAction.ResumeHourSession(hourSession.id)) }
+            items = state.units,
+            key = { it.localId },
+        ) { cardData ->
+            CollectionBatchCard(
+                cardData = cardData,
+                onArrowClick = { onAction(CollectionBatchListAction.OpenCollectionBatchImaging(cardData.localId)) },
+                onClick = { onAction(CollectionBatchListAction.EditCollectionBatch(cardData.localId)) },
             )
         }
     }

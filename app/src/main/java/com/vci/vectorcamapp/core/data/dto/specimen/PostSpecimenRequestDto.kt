@@ -7,4 +7,5 @@ data class PostSpecimenRequestDto(
     val specimenId: String = "",
     val shouldProcessFurther: Boolean = false,
     val expectedImages: Int = 0,
+    val sessionUnitId: Int? = null,
 )

@@ -295,10 +295,17 @@ fun ImagingScreen(
                             }
                         },
                         text = {
-                            val dialogText = when (state.pendingAction) {
-                                null -> "Would you like to save this session for later or submit it now?"
-                                is ImagingAction.SaveSessionProgress -> "Are you sure you want to save the session and exit?"
-                                is ImagingAction.SubmitSession -> "Are you sure you want to submit the session?"
+                            val dialogText = when {
+                                state.isUnitScoped && state.pendingAction == null ->
+                                    "Would you like to return to collection batches?"
+                                state.isUnitScoped && state.pendingAction is ImagingAction.SaveSessionProgress ->
+                                    "Are you sure you want to return to collection batches?"
+                                state.pendingAction == null ->
+                                    "Would you like to save this session for later or submit it now?"
+                                state.pendingAction is ImagingAction.SaveSessionProgress ->
+                                    "Are you sure you want to save the session and exit?"
+                                state.pendingAction is ImagingAction.SubmitSession ->
+                                    "Are you sure you want to submit the session?"
                                 else -> ""
                             }
                             Column {
@@ -330,7 +337,7 @@ fun ImagingScreen(
                             }
                         },
                         confirmButton = {
-                            if (state.pendingAction == null) {
+                            if (state.pendingAction == null && !state.isUnitScoped) {
                                 OutlinedButton(
                                     onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SubmitSession)) },
                                     border = BorderStroke(

@@ -7,5 +7,6 @@ data class FormAnswer(
     val remoteId: Int?,
     val value: String,
     val dataType: String,
-    val submittedAt: Long
+    val submittedAt: Long,
+    val sessionUnitId: UUID? = null,
 )

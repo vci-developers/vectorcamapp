@@ -15,6 +15,7 @@ import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
@@ -23,8 +24,8 @@ import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
-import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions.CollectionMethodOption
 import com.vci.vectorcamapp.intake.domain.repository.LocationRepository
+import com.vci.vectorcamapp.intake.domain.strategy.CollectionMethodWorkflowFactory
 import com.vci.vectorcamapp.intake.domain.strategy.ProgramFormWorkflow
 import com.vci.vectorcamapp.intake.domain.strategy.ProgramFormWorkflowFactory
 import com.vci.vectorcamapp.intake.domain.use_cases.IntakeValidationUseCases
@@ -64,6 +65,7 @@ class IntakeViewModel @Inject constructor(
     private val collectorRepository: CollectorRepository,
     private val programRepository: ProgramRepository,
     private val formAnswerRepository: FormAnswerRepository,
+    private val sessionUnitRepository: SessionUnitRepository,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
 
@@ -77,6 +79,9 @@ class IntakeViewModel @Inject constructor(
     @Inject
     lateinit var programFormWorkflowFactory: ProgramFormWorkflowFactory
     private lateinit var programFormWorkflow: ProgramFormWorkflow
+
+    @Inject
+    lateinit var collectionMethodWorkflowFactory: CollectionMethodWorkflowFactory
 
     private val _allCollectors = collectorRepository.observeAllCollectors()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
@@ -306,12 +311,8 @@ class IntakeViewModel @Inject constructor(
                                 locationSelections = locationSelectionsToCache
                             )
 
-                            val isHlc = session.collectionMethod == CollectionMethodOption.HUMAN_LANDING_CATCH.label
-                            if (isHlc) {
-                                _events.send(IntakeEvent.NavigateToHourLogScreen(session.localId.toString()))
-                            } else {
-                                _events.send(IntakeEvent.NavigateToImagingScreen)
-                            }
+                            val workflow = collectionMethodWorkflowFactory.create(session.collectionMethod)
+                            _events.send(IntakeEvent.NavigateAfterIntake(workflow.postIntakeDestination(session.localId.toString())))
                         }
                     }
                 }
@@ -720,6 +721,8 @@ class IntakeViewModel @Inject constructor(
                 val isCollectorMissing =
                     sessionCollectorName.isNotBlank() && sessionCollectorTitle.isNotBlank() && !hasMatchingCollector
 
+                val unitCount = sessionUnitRepository.countSessionUnits(effectiveSession.localId)
+
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -744,7 +747,8 @@ class IntakeViewModel @Inject constructor(
                         selectedDistrict = validatedDistrict,
                         selectedVillageName = validatedVillageName,
                         selectedHouseNumber = validatedHouseNumber,
-                        isCurrentCollectorMissing = isCollectorMissing
+                        isCurrentCollectorMissing = isCollectorMissing,
+                        isCollectionMethodLocked = unitCount > 0,
                     )
                 }
             }.first()

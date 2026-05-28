@@ -13,4 +13,10 @@ interface FormAnswerDao {
 
     @Query("SELECT * FROM form_answer WHERE sessionId = :sessionId")
     suspend fun getFormAnswersBySessionId(sessionId: UUID): List<FormAnswerEntity>
+
+    @Query("SELECT * FROM form_answer WHERE sessionUnitId = :sessionUnitId")
+    suspend fun getFormAnswersBySessionUnitId(sessionUnitId: UUID): List<FormAnswerEntity>
+
+    @Query("DELETE FROM form_answer WHERE sessionUnitId = :sessionUnitId")
+    suspend fun deleteFormAnswersForSessionUnit(sessionUnitId: UUID): Int
 }

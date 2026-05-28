@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.data.network.api.RemoteSessionDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSiteDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSpecimenDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSpecimenImageDataSource
+import com.vci.vectorcamapp.core.data.network.api.RemoteSessionUnitDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSurveillanceFormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.DeviceDataSource
 import com.vci.vectorcamapp.core.domain.network.api.FormAnswerDataSource
@@ -19,6 +20,7 @@ import com.vci.vectorcamapp.core.domain.network.api.SessionDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenImageDataSource
+import com.vci.vectorcamapp.core.domain.network.api.SessionUnitDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SurveillanceFormDataSource
 import dagger.Binds
 import dagger.Module
@@ -89,4 +91,10 @@ abstract class DataSourceModule {
     abstract fun bindFormAnswerDataSource(
         remoteFormAnswerDataSource: RemoteFormAnswerDataSource
     ): FormAnswerDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindSessionUnitDataSource(
+        remoteSessionUnitDataSource: RemoteSessionUnitDataSource
+    ): SessionUnitDataSource
 }

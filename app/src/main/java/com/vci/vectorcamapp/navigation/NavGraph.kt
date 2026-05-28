@@ -30,12 +30,12 @@ import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import com.vci.vectorcamapp.registration.presentation.RegistrationEvent
 import com.vci.vectorcamapp.registration.presentation.RegistrationScreen
 import com.vci.vectorcamapp.registration.presentation.RegistrationViewModel
-import com.vci.vectorcamapp.add_hour.presentation.AddHourEvent
-import com.vci.vectorcamapp.add_hour.presentation.AddHourScreen
-import com.vci.vectorcamapp.add_hour.presentation.AddHourViewModel
-import com.vci.vectorcamapp.hour_log.presentation.HourLogEvent
-import com.vci.vectorcamapp.hour_log.presentation.HourLogScreen
-import com.vci.vectorcamapp.hour_log.presentation.HourLogViewModel
+import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFormEvent
+import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFormScreen
+import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFormViewModel
+import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListEvent
+import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListScreen
+import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListViewModel
 import com.vci.vectorcamapp.intake.presentation.IntakeEvent
 import com.vci.vectorcamapp.intake.presentation.IntakeScreen
 import com.vci.vectorcamapp.intake.presentation.IntakeViewModel
@@ -120,13 +120,7 @@ fun NavGraph(startDestination: Destination) {
 
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    IntakeEvent.NavigateToImagingScreen -> navController.navigate(
-                        Destination.Imaging
-                    )
-
-                    is IntakeEvent.NavigateToHourLogScreen -> navController.navigate(
-                        Destination.HourLog(event.sessionId)
-                    )
+                    is IntakeEvent.NavigateAfterIntake -> navController.navigate(event.destination)
 
                     IntakeEvent.NavigateBackToPreviousScreen -> navController.popBackStack()
 
@@ -154,9 +148,11 @@ fun NavGraph(startDestination: Destination) {
 
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    ImagingEvent.NavigateBackToLandingScreen -> {
+                    ImagingEvent.NavigateBackToLandingScreen ->
                         navController.popBackStack(Destination.Landing, false)
-                    }
+
+                    ImagingEvent.NavigateBackToCollectionBatchList ->
+                        navController.popBackStack(Destination.CollectionBatchList::class, false)
                 }
             }
 
@@ -257,50 +253,57 @@ fun NavGraph(startDestination: Destination) {
             }
         }
 
-        composable<Destination.HourLog> {
-            val viewModel = hiltViewModel<HourLogViewModel>()
+        composable<Destination.CollectionBatchList> {
+            val viewModel = hiltViewModel<CollectionBatchListViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    HourLogEvent.NavigateBackToPreviousScreen -> navController.popBackStack()
+                    CollectionBatchListEvent.NavigateBackToLandingScreen ->
+                        navController.popBackStack(Destination.Landing, false)
 
-                    is HourLogEvent.NavigateToAddHourScreen -> navController.navigate(
-                        Destination.AddHour(event.sessionId)
-                    )
+                    is CollectionBatchListEvent.NavigateToCollectionBatchForm ->
+                        navController.navigate(
+                            Destination.CollectionBatchForm(event.sessionId, event.unitId)
+                        )
 
-                    is HourLogEvent.NavigateToImagingScreen -> navController.navigate(
-                        Destination.Imaging
-                    )
+                    is CollectionBatchListEvent.NavigateToImaging ->
+                        navController.navigate(
+                            Destination.Imaging(sessionUnitId = event.sessionUnitId)
+                        )
                 }
             }
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
-                HourLogScreen(
+                CollectionBatchListScreen(
                     state = state,
-                    onAction = viewModel::onAction
+                    onAction = viewModel::onAction,
                 )
             }
         }
 
-        composable<Destination.AddHour> {
-            val viewModel = hiltViewModel<AddHourViewModel>()
+        composable<Destination.CollectionBatchForm> {
+            val viewModel = hiltViewModel<CollectionBatchFormViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    AddHourEvent.NavigateBackToPreviousScreen -> navController.popBackStack()
+                    CollectionBatchFormEvent.NavigateBackToPreviousScreen ->
+                        navController.popBackStack()
 
-                    AddHourEvent.NavigateToImagingScreen -> navController.navigate(
-                        Destination.Imaging
-                    )
+                    is CollectionBatchFormEvent.NavigateToImagingScreen ->
+                        navController.navigate(
+                            Destination.Imaging(sessionUnitId = event.sessionUnitId)
+                        ) {
+                            popUpTo(Destination.CollectionBatchForm::class) { inclusive = true }
+                        }
                 }
             }
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
-                AddHourScreen(
+                CollectionBatchFormScreen(
                     state = state,
-                    onAction = viewModel::onAction
+                    onAction = viewModel::onAction,
                 )
             }
         }

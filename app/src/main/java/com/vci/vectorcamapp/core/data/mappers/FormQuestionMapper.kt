@@ -20,7 +20,9 @@ fun FormQuestionEntity.toDomain(): FormQuestion {
         required = this.required,
         prerequisite = this.prerequisite,
         options = this.options,
-        order = this.order
+        order = this.order,
+        answerScope = this.answerScope,
+        isUnitIdentityComponent = this.isUnitIdentityComponent,
     )
 }
 
@@ -34,7 +36,9 @@ fun FormQuestion.toEntity(formId: Int, parentId: Int?): FormQuestionEntity {
         required = this.required,
         prerequisite = this.prerequisite,
         options = this.options,
-        order = this.order
+        order = this.order,
+        answerScope = this.answerScope,
+        isUnitIdentityComponent = this.isUnitIdentityComponent,
     )
 }
 
@@ -46,7 +50,9 @@ fun FormQuestionDto.toDomain(): FormQuestion {
         required = this.required,
         prerequisite = this.prerequisite?.toDomain(),
         options = this.options,
-        order = this.order
+        order = this.order,
+        answerScope = this.answerScope,
+        isUnitIdentityComponent = this.isUnitIdentityComponent,
     )
 }
 

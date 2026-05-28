@@ -9,5 +9,7 @@ data class FormQuestion(
     val required: Boolean,
     val prerequisite: FormQuestionPrerequisiteExpression?,
     val options: List<String>?,
-    val order: Int?
+    val order: Int?,
+    val answerScope: String = "SESSION",
+    val isUnitIdentityComponent: Boolean = false,
 )

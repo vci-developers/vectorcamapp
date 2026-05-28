@@ -17,5 +17,6 @@ data class FormAnswerRequestItemDto(
     val frontendId: UUID = UUID(0, 0),
     val questionId: Int = -1,
     val value: String = "",
-    val dataType: String = ""
+    val dataType: String = "",
+    val sessionUnitId: Int? = null,
 )

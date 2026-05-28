@@ -65,4 +65,5 @@ data class IntakeState(
         formAnswerErrors = emptyMap(),
     ),
     val isCollectionMethodTooltipVisible: Boolean = false,
+    val isCollectionMethodLocked: Boolean = false,
 )

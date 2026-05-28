@@ -259,12 +259,21 @@ fun IntakeScreen(
                     else IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
                     onOptionSelected = { onAction(IntakeAction.UpdateCollectionMethod(it.label)) },
                     error = state.intakeErrors.collectionMethod,
+                    enabled = !state.isCollectionMethodLocked,
                     modifier = Modifier.fillMaxWidth()
                 ) { collectionMethod ->
                     Text(
                         text = collectionMethod.label,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colors.textPrimary
+                    )
+                }
+
+                if (state.isCollectionMethodLocked) {
+                    Text(
+                        text = "Cannot change collection method — collection batches have already been created for this session.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.textSecondary
                     )
                 }
 

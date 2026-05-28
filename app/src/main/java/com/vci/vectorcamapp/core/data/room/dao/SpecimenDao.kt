@@ -49,4 +49,7 @@ interface SpecimenDao {
     suspend fun countSelectedSpecimensForFurtherProcessingBetweenSessionCollectionDates(
         startDate: Long, endDate: Long
     ): Int
+
+    @Query("SELECT COUNT(*) FROM specimen WHERE sessionUnitId = :sessionUnitId")
+    suspend fun countSpecimensForUnit(sessionUnitId: UUID): Int
 }

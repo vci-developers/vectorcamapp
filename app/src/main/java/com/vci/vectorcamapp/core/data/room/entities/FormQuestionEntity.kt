@@ -38,5 +38,7 @@ data class FormQuestionEntity(
     val required: Boolean = false,
     val prerequisite: FormQuestionPrerequisiteExpression? = null,
     val options: List<String>? = null,
-    val order: Int? = null
+    val order: Int? = null,
+    val answerScope: String = "SESSION",
+    val isUnitIdentityComponent: Boolean = false,
 )
