@@ -260,6 +260,70 @@ fun ImagingScreen(
 
             else -> {
                 if (state.showExitDialog) {
+                    if (state.isUnitScoped) {
+                        // ── Unit-scoped exit dialog: single-step, "Save" only ──────────────
+                        AlertDialog(
+                            onDismissRequest = { onAction(ImagingAction.DismissExitDialog) },
+                            title = {
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = MaterialTheme.dimensions.paddingSmall)
+                                ) {
+                                    Text(
+                                        text = "Exit The Sub-Session For This Hour?",
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        color = MaterialTheme.colors.textPrimary,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    IconButton(
+                                        onClick = { onAction(ImagingAction.DismissExitDialog) },
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_close),
+                                            contentDescription = "Close dialog",
+                                            tint = MaterialTheme.colors.icon,
+                                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
+                                        )
+                                    }
+                                }
+                            },
+                            text = {
+                                Text(
+                                    text = "Would you like to save your progress and exit the sub-session from this hour?",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textSecondary
+                                )
+                            },
+                            confirmButton = {},
+                            dismissButton = {
+                                OutlinedButton(
+                                    onClick = { onAction(ImagingAction.SaveSessionProgress) },
+                                    border = BorderStroke(
+                                        MaterialTheme.dimensions.borderThicknessThick,
+                                        MaterialTheme.colors.info
+                                    )
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_save),
+                                        contentDescription = "Save Icon",
+                                        tint = MaterialTheme.colors.info,
+                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                                    )
+                                    Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
+                                    Text(
+                                        text = "Save",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.info
+                                    )
+                                }
+                            }
+                        )
+                    } else {
+                    // ── Standard session exit dialog (two-step: choose action → confirm) ──
                     AlertDialog(
                         onDismissRequest = {
                             onAction(ImagingAction.DismissExitDialog)
@@ -295,17 +359,10 @@ fun ImagingScreen(
                             }
                         },
                         text = {
-                            val dialogText = when {
-                                state.isUnitScoped && state.pendingAction == null ->
-                                    "Would you like to return to collection batches?"
-                                state.isUnitScoped && state.pendingAction is ImagingAction.SaveSessionProgress ->
-                                    "Are you sure you want to return to collection batches?"
-                                state.pendingAction == null ->
-                                    "Would you like to save this session for later or submit it now?"
-                                state.pendingAction is ImagingAction.SaveSessionProgress ->
-                                    "Are you sure you want to save the session and exit?"
-                                state.pendingAction is ImagingAction.SubmitSession ->
-                                    "Are you sure you want to submit the session?"
+                            val dialogText = when (state.pendingAction) {
+                                null -> "Would you like to save this session for later or submit it now?"
+                                is ImagingAction.SaveSessionProgress -> "Are you sure you want to save the session and exit?"
+                                is ImagingAction.SubmitSession -> "Are you sure you want to submit the session?"
                                 else -> ""
                             }
                             Column {
@@ -337,7 +394,7 @@ fun ImagingScreen(
                             }
                         },
                         confirmButton = {
-                            if (state.pendingAction == null && !state.isUnitScoped) {
+                            if (state.pendingAction == null) {
                                 OutlinedButton(
                                     onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SubmitSession)) },
                                     border = BorderStroke(
@@ -360,9 +417,7 @@ fun ImagingScreen(
                                 }
                             } else {
                                 Button(
-                                    onClick = {
-                                        onAction(ImagingAction.ConfirmPendingAction)
-                                    },
+                                    onClick = { onAction(ImagingAction.ConfirmPendingAction) },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colors.error
                                     )
@@ -408,6 +463,7 @@ fun ImagingScreen(
                             }
                         }
                     )
+                    } // end else (standard session dialog)
                 }
 
                 if (state.currentSpecimen.shouldProcessFurther) {

@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.collection_batch.form.presentation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -43,28 +44,40 @@ fun CollectionBatchFormScreen(
     ) {
         // Identity questions rendered first
         items(state.identityQuestions, key = { it.id }) { q ->
-            DynamicFormField(
-                question = q,
-                value = state.answers[q.id].orEmpty(),
-                onValueChange = { onAction(CollectionBatchFormAction.EnterAnswer(q.id, it)) },
-                error = state.errorsByQuestionId[q.id],
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = MaterialTheme.dimensions.paddingMedium),
-            )
+                    .padding(
+                        horizontal = MaterialTheme.dimensions.paddingMedium,
+                        vertical = MaterialTheme.dimensions.paddingSmall,
+                    )
+            ) {
+                DynamicFormField(
+                    question = q,
+                    value = state.answers[q.id].orEmpty(),
+                    onValueChange = { onAction(CollectionBatchFormAction.EnterAnswer(q.id, it)) },
+                    error = state.errorsByQuestionId[q.id],
+                )
+            }
         }
 
         // Other unit questions
         items(state.otherUnitQuestions, key = { it.id }) { q ->
-            DynamicFormField(
-                question = q,
-                value = state.answers[q.id].orEmpty(),
-                onValueChange = { onAction(CollectionBatchFormAction.EnterAnswer(q.id, it)) },
-                error = state.errorsByQuestionId[q.id],
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = MaterialTheme.dimensions.paddingMedium),
-            )
+                    .padding(
+                        horizontal = MaterialTheme.dimensions.paddingMedium,
+                        vertical = MaterialTheme.dimensions.paddingSmall,
+                    )
+            ) {
+                DynamicFormField(
+                    question = q,
+                    value = state.answers[q.id].orEmpty(),
+                    onValueChange = { onAction(CollectionBatchFormAction.EnterAnswer(q.id, it)) },
+                    error = state.errorsByQuestionId[q.id],
+                )
+            }
         }
 
         // Duplicate identity error banner
