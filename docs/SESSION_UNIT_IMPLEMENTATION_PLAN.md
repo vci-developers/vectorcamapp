@@ -111,7 +111,6 @@ data class SessionUnitEntity(
     val remoteId: Int? = null,
     val unitOrder: Int = 0,
     val createdAt: Long = 0L,
-    val updatedAt: Long = 0L,
 )
 ```
 
@@ -236,7 +235,6 @@ val MIGRATION_30_31_ADD_SESSION_UNITS = object : Migration(30, 31) {
                 `remoteId` INTEGER,
                 `unitOrder` INTEGER NOT NULL DEFAULT 0,
                 `createdAt` INTEGER NOT NULL DEFAULT 0,
-                `updatedAt` INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY(`sessionId`) REFERENCES `session`(`localId`)
                     ON UPDATE CASCADE ON DELETE CASCADE
             )
@@ -413,7 +411,6 @@ data class SessionUnit(
     val remoteId: Int?,
     val unitOrder: Int,
     val createdAt: Long,
-    val updatedAt: Long,
 )
 ```
 
@@ -488,12 +485,12 @@ import com.vci.vectorcamapp.core.domain.model.SessionUnit
 
 fun SessionUnitEntity.toDomain() = SessionUnit(
     localId = localId, sessionId = sessionId, remoteId = remoteId,
-    unitOrder = unitOrder, createdAt = createdAt, updatedAt = updatedAt,
+    unitOrder = unitOrder, createdAt = createdAt,
 )
 
 fun SessionUnit.toEntity() = SessionUnitEntity(
     localId = localId, sessionId = sessionId, remoteId = remoteId,
-    unitOrder = unitOrder, createdAt = createdAt, updatedAt = updatedAt,
+    unitOrder = unitOrder, createdAt = createdAt,
 )
 ```
 
@@ -788,7 +785,6 @@ data class CollectionBatchCardData(
     val bucketName: String,          // derived; falls back to "Batch ${unitOrder}" when empty
     val specimenCount: Int,
     val createdAt: Long,
-    val updatedAt: Long,
     val canDelete: Boolean,          // specimenCount == 0
 )
 ```
@@ -894,8 +890,8 @@ data class CollectionBatchFormState(
    - Fetch other units' answers for this session: `dao.getSessionUnitsWithAnswersForSession(sessionId)` → map `unitId → answersByQuestionId`.
    - Call `CollectionBatchIdentityValidator.wouldDuplicate(questions, answers, existingAnswersMap, editingUnitId)`. If `true`, set `duplicateIdentityError = "A collection batch with this identity already exists. Please change one of the highlighted fields."` and return (do not save).
    - Inside `transactionHelper.runAsTransaction { ... }`:
-     - If create mode: build a `SessionUnit` with new `UUID.randomUUID()`, `unitOrder = repo.getNextUnitOrder(sessionId) + 1`, `createdAt = now`, `updatedAt = now`.
-     - If edit mode: load existing unit, copy with `updatedAt = now`.
+     - If create mode: build a `SessionUnit` with new `UUID.randomUUID()`, `unitOrder = repo.getNextUnitOrder(sessionId) + 1`, `createdAt = now`.
+     - If edit mode: load existing unit and reuse it as-is (the FormAnswer rows are what change in edit mode).
      - `repo.upsertSessionUnit(unit)`.
      - For each answered question, `formAnswerRepository.upsertFormAnswer(answer, sessionId, questionId, sessionUnitId = unit.localId)`. Answers for `SESSION_UNIT`-scoped questions only — `SESSION`-scoped answers are not edited here.
    - On success, `_events.send(CollectionBatchFormEvent.NavigateToImagingScreen(unit.localId.toString()))`.
@@ -1032,7 +1028,6 @@ data class SessionUnitDto(
     val sessionId: Int = -1,                          // backend session id
     val unitOrder: Int = 0,
     val createdAt: Long = 0L,
-    val updatedAt: Long = 0L,
 )
 ```
 
@@ -1045,7 +1040,6 @@ data class PostSessionUnitRequestDto(
     val frontendId: UUID,
     val unitOrder: Int,
     val createdAt: Long,
-    val updatedAt: Long,
 )
 ```
 
