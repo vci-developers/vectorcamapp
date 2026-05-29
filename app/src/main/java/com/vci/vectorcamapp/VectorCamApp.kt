@@ -27,24 +27,21 @@ class VectorCamApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
-        // if (!BuildConfig.DEBUG) {
-            // Crashlytics — release only, keeps prod dashboard clean
-            val cl = FirebaseCrashlytics.getInstance()
-            cl.setCrashlyticsCollectionEnabled(true)
-            Crashy.crashlytics = cl
+        VectorAnalytics.appContext = applicationContext
 
-            // Analytics — release only
-            val fa = FirebaseAnalytics.getInstance(this)
-            fa.setAnalyticsCollectionEnabled(true)
-            VectorAnalytics.analytics = fa
-            VectorAnalytics.setRegion(BuildConfig.REGION)
-            VectorAnalytics.debugLogging = BuildConfig.DEBUG
-        // } else {
-        //     Crashy.enabled = false
-        //     VectorAnalytics.enabled = false
-        //     // Events are still printed to Logcat in debug builds — filter by "VectorAnalytics"
-        //     VectorAnalytics.debugLogging = true
-        // }
+        val cl = FirebaseCrashlytics.getInstance()
+        cl.isCrashlyticsCollectionEnabled = true
+        Crashy.crashlytics = cl
+
+        // Analytics — release only
+        val fa = FirebaseAnalytics.getInstance(this)
+        fa.setAnalyticsCollectionEnabled(true)
+        VectorAnalytics.analytics = fa
+        VectorAnalytics.setRegion(BuildConfig.REGION)
+        VectorAnalytics.debugLogging = BuildConfig.DEBUG
+
+        // Snapshot battery + temperature at startup; refreshed again before key events
+        VectorAnalytics.updateDeviceCondition()
 
         Sentry.configureScope { scope ->
             scope.setTag("region", BuildConfig.REGION)
