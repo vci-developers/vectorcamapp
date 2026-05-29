@@ -3,13 +3,17 @@ package com.vci.vectorcamapp.navigation
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.vci.vectorcamapp.core.logging.VectorAnalytics
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsEvent
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsScreen
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsViewModel
@@ -38,9 +42,27 @@ import com.vci.vectorcamapp.settings.presentation.SettingsEvent
 import com.vci.vectorcamapp.settings.presentation.SettingsScreen
 import com.vci.vectorcamapp.settings.presentation.SettingsViewModel
 
+/** Maps a back-stack entry's route to a human-readable screen name for analytics. */
+private fun NavBackStackEntry.analyticsScreenName(): String {
+    val route = destination.route ?: return "Unknown"
+    // Type-safe nav routes are fully-qualified class names; take the last segment
+    val simpleName = route
+        .substringAfterLast(".")
+        .substringBefore("?")
+        .substringBefore("/")
+    // Insert spaces before each capital letter: "CompleteSessionList" → "Complete Session List"
+    return simpleName.replace(Regex("(?<=[a-z])(?=[A-Z])"), " ")
+}
+
 @Composable
 fun NavGraph(startDestination: Destination) {
     val navController = rememberNavController()
+
+    // ── Automatic screen view + time-on-screen tracking ──────────────────────
+    val currentEntry by navController.currentBackStackEntryAsState()
+    LaunchedEffect(currentEntry) {
+        currentEntry?.analyticsScreenName()?.let { VectorAnalytics.screenView(it) }
+    }
 
     NavHost(
         navController = navController, startDestination = startDestination
