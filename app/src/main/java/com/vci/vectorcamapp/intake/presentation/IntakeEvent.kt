@@ -1,8 +1,9 @@
 package com.vci.vectorcamapp.intake.presentation
 
+import com.vci.vectorcamapp.navigation.Destination
+
 sealed interface IntakeEvent {
-    data object NavigateToImagingScreen: IntakeEvent
-    data class NavigateToHourLogScreen(val sessionId: String) : IntakeEvent
+    data class NavigateAfterIntake(val destination: Destination) : IntakeEvent
     data object NavigateBackToRegistrationScreen : IntakeEvent
     data object NavigateBackToPreviousScreen : IntakeEvent
 }

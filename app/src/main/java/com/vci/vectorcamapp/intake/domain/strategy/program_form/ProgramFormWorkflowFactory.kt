@@ -1,12 +1,12 @@
-package com.vci.vectorcamapp.intake.domain.strategy
+package com.vci.vectorcamapp.intake.domain.strategy.program_form
 
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
-import com.vci.vectorcamapp.intake.domain.strategy.concrete.FormPresentWorkflow
-import com.vci.vectorcamapp.intake.domain.strategy.concrete.ProgramFormAbsentWorkflow
-import com.vci.vectorcamapp.intake.domain.strategy.concrete.SurveillanceFormPresentWorkflow
+import com.vci.vectorcamapp.intake.domain.strategy.program_form.concrete.FormPresentWorkflow
+import com.vci.vectorcamapp.intake.domain.strategy.program_form.concrete.ProgramFormAbsentWorkflow
+import com.vci.vectorcamapp.intake.domain.strategy.program_form.concrete.SurveillanceFormPresentWorkflow
 import javax.inject.Inject
 
 class ProgramFormWorkflowFactory @Inject constructor(

@@ -16,8 +16,8 @@ This section is the single source of truth for "where are we?". It is updated at
 | PR  | Description                                            | Status        |
 | --- | ------------------------------------------------------ | ------------- |
 | PR 1 | Schema & domain plumbing                              | ✅ Merged     |
-| PR 2 | `CollectionMethodWorkflow` strategy + `IntakeViewModel` refactor | ⏭️ Next up |
-| PR 3 | `collection_batch/` feature (UI + VMs) + nav + Imaging scoping | ⏳ Pending  |
+| PR 2 | `CollectionMethodWorkflow` strategy + `IntakeViewModel` refactor | ✅ Merged     |
+| PR 3 | `collection_batch/` feature (UI + VMs) + nav + Imaging scoping | ⏭️ Next up |
 | PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏳ Pending    |
 | PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
@@ -87,37 +87,102 @@ core/data/repository/SessionUnitRepositoryImplementation.kt
 - Running an upgrade from a populated v30 database to v31 preserves all `form_answer` and `specimen` rows with `sessionUnitId = NULL`.
 - `PRAGMA foreign_key_list('form_answer')` and `PRAGMA foreign_key_list('specimen')` after migration show the new FK to `session_unit(localId)`.
 
-### Next up — PR 2: `CollectionMethodWorkflow` strategy + `IntakeViewModel` refactor
+### PR 2 — `CollectionMethodWorkflow` strategy + `IntakeViewModel` refactor (✅ Merged)
 
-Pure refactor — no schema work, no new UI. Goal: replace the hardcoded HLC branch in `IntakeViewModel` with a strategy pattern that mirrors the existing `ProgramFormWorkflow` / `ProgramFormWorkflowFactory`. After this PR, HLC still navigates to `HourLog` (legacy screen) — wiring to the new `collection_batch/` destinations happens in PR 3.
+**What landed.** Pure refactor — no schema work, no new UI. The hardcoded HLC `if/else` in `IntakeViewModel.SubmitIntakeForm` is replaced by a new `CollectionMethodWorkflow` strategy resolved through `CollectionMethodWorkflowFactory`. End-to-end behavior is unchanged: HLC still navigates to `Destination.HourLog(sessionId)`, everything else still navigates to `Destination.Imaging`. PR 3 will swap those two destinations inside the concretes without touching the call site.
 
-**Scope.** Implement everything in §6 of this document, specifically §6.1–§6.4. Skip §6.5 (lock collection method when units exist) — that's PR 6.
-
-**Files to add.**
+**Files added** (all under `app/src/main/java/com/vci/vectorcamapp/`):
 
 ```
-intake/domain/strategy/CollectionMethodWorkflow.kt
-intake/domain/strategy/CollectionMethodWorkflowFactory.kt
-intake/domain/strategy/concrete/DirectImagingWorkflow.kt
-intake/domain/strategy/concrete/RepeatableUnitWorkflow.kt
+intake/domain/strategy/collection_method/CollectionMethodWorkflow.kt
+intake/domain/strategy/collection_method/CollectionMethodWorkflowFactory.kt
+intake/domain/strategy/collection_method/concrete/SingleBatchWorkflow.kt
+intake/domain/strategy/collection_method/concrete/MultipleBatchWorkflow.kt
 ```
 
-**Files to modify.**
+**Files moved** (sibling reorg, scope-creep cleanup):
 
-- `intake/presentation/IntakeViewModel.kt` — inject `CollectionMethodWorkflowFactory`, replace the HLC `if/else` at lines 309-314 with `workflow.postIntakeDestination(...)`. **Until PR 3 lands**, `RepeatableUnitWorkflow.postIntakeDestination(...)` should keep returning the existing `Destination.HourLog(sessionId)` so HLC still works.
-- `intake/presentation/IntakeEvent.kt` — replace `NavigateToHourLogScreen` + `NavigateToImagingScreen` with `data class NavigateAfterIntake(val destination: Destination) : IntakeEvent`.
-- `navigation/NavGraph.kt` — update the `composable<Destination.Intake>` `ObserveAsEvents` block to call `navController.navigate(event.destination)` for the new `NavigateAfterIntake` event.
+```
+intake/domain/strategy/ProgramFormWorkflow.kt
+  → intake/domain/strategy/program_form/ProgramFormWorkflow.kt
+intake/domain/strategy/ProgramFormWorkflowFactory.kt
+  → intake/domain/strategy/program_form/ProgramFormWorkflowFactory.kt
+intake/domain/strategy/concrete/FormPresentWorkflow.kt
+  → intake/domain/strategy/program_form/concrete/FormPresentWorkflow.kt
+intake/domain/strategy/concrete/ProgramFormAbsentWorkflow.kt
+  → intake/domain/strategy/program_form/concrete/ProgramFormAbsentWorkflow.kt
+intake/domain/strategy/concrete/SurveillanceFormPresentWorkflow.kt
+  → intake/domain/strategy/program_form/concrete/SurveillanceFormPresentWorkflow.kt
+```
 
-**Why this is mergeable on its own.** The strategy still resolves to today's destinations (`HourLog` for HLC, `Imaging` for everything else). No behavior change end-to-end. PR 3 will swap `Destination.HourLog` for `Destination.CollectionBatchList` inside `RepeatableUnitWorkflow` and flip `Destination.Imaging` to its `data class Imaging(val sessionUnitId: String? = null)` form.
+**Files modified.**
 
-**What NOT to change in PR 2.**
+- `intake/presentation/IntakeViewModel.kt` — added `@Inject lateinit var collectionMethodWorkflowFactory` + `private lateinit var collectionMethodWorkflow` fields alongside the existing `programFormWorkflow*` pair. Replaced the HLC `if/else` (previously lines 309-314) with `collectionMethodWorkflow = collectionMethodWorkflowFactory.create(session.localId, session.collectionMethod); _events.send(IntakeEvent.NavigateAfterIntake(collectionMethodWorkflow.postIntakeDestination))`. Removed the now-unused `CollectionMethodOption` import. Updated `ProgramFormWorkflow*` imports to point at the new `program_form/` subpackage.
+- `intake/presentation/IntakeEvent.kt` — removed `NavigateToHourLogScreen` and `NavigateToImagingScreen`; added `data class NavigateAfterIntake(val destination: Destination) : IntakeEvent`.
+- `navigation/NavGraph.kt` — collapsed the two-branch `composable<Destination.Intake>` event handler into a single `is IntakeEvent.NavigateAfterIntake -> navController.navigate(event.destination)` branch.
 
-- Don't touch `Destination.Imaging` yet (still `data object`).
-- Don't add `Destination.CollectionBatchList` / `Destination.CollectionBatchForm` yet.
-- Don't delete the `HourLog` / `AddHour` packages.
-- Don't introduce the `isCollectionMethodLocked` state — that's PR 6.
+**Deviations from the original plan** (intentional, all consistent with existing codebase conventions):
 
-When PR 2 is complete, update the Progress table above, fill in a "PR 2 — … (✅ Merged)" subsection mirroring the PR 1 one, and mark PR 3 as ⏭️ Next up.
+1. **Per-family folder layout under `strategy/`.** The plan put new files flat in `intake/domain/strategy/` (alongside the existing `ProgramFormWorkflow.kt`) and shared a single `concrete/` subfolder. We introduced `intake/domain/strategy/collection_method/` for the new family and moved `ProgramFormWorkflow` and friends into a sibling `intake/domain/strategy/program_form/` folder. Reason: a flat layout would mix two unrelated strategy families inside `concrete/`. Per-family subfolders are self-contained and scale to PR 6 / future strategies cleanly.
+2. **Property-style interface, not method-style.** The plan defined `interface CollectionMethodWorkflow { fun postIntakeDestination(sessionId: String): Destination }`. We changed it to `val postIntakeDestination: Destination`. Reason: the per-call input (`sessionId`) is bound at construction time by the factory — same pattern as `ProgramFormWorkflow` (which exposes `val form`, `val formQuestions` etc., all bound in `ProgramFormWorkflowFactory.create(...)`). This eliminates the "unused parameter" smell in `SingleBatchWorkflow`, which doesn't need a `sessionId` because `Destination.Imaging` is a `data object`.
+3. **Factory takes `UUID` for `sessionId`, not `String`.** The plan used `String` (matching `Destination.HourLog`'s `sessionId: String`). We took `UUID` — the canonical form everywhere except at the literal `Destination(...)` constructor call. This aligns with the `complete_session/` pattern (`CompleteSessionListEvent.NavigateToCompleteSessionDetails(val sessionId: UUID)`, `CompleteSessionDetailsViewModel` parsing back to `UUID` immediately) rather than the doomed `hour_log/` pattern (`sessionId: String` flowing through Action → Event → State). The `.toString()` is confined to one line inside `MultipleBatchWorkflow`.
+4. **Concrete class naming.** The plan named the non-HLC concrete `DirectImagingWorkflow` and the HLC concrete `RepeatableUnitWorkflow`. We renamed them `SingleBatchWorkflow` and `MultipleBatchWorkflow` respectively. Reason: the user-facing concept is "collection batch" (per the naming note at the top of this document). Framing the two concretes as "single batch" vs "multiple batches" keeps the strategy aligned with that vocabulary and reads symmetrically at the factory call site.
+5. **Event renamed `NavigateAfterIntake` (vs `IntakeEvent.NavigateAfterIntake` per plan).** Matches the plan's name; included here only because it's the one fully-new event shape replacing two old ones.
+
+**Known follow-ups baked into PR 2** (deliberately deferred, will be picked up by later PRs):
+
+- `MultipleBatchWorkflow.postIntakeDestination` still resolves to `Destination.HourLog(sessionId.toString())`. PR 3 will swap this for `Destination.CollectionBatchList(sessionId.toString())` — a one-line change inside the concrete.
+- `SingleBatchWorkflow.postIntakeDestination` still resolves to the parameterless `Destination.Imaging` (data object). PR 3 will flip `Destination.Imaging` to `data class Imaging(val sessionUnitId: String? = null)` and update this concrete to `Destination.Imaging()` (or `Destination.Imaging(sessionUnitId = null)`).
+- `IntakeState.isCollectionMethodLocked` is not introduced — that's PR 6.
+- The legacy `HourLog` / `AddHour` destinations and their `composable<...>` blocks in `NavGraph.kt` are untouched — retirement is PR 4.
+
+**How to verify PR 2 locally.**
+
+- App builds; Hilt graph resolves with no new module needed (`CollectionMethodWorkflowFactory` uses a plain `@Inject constructor()` like `ProgramFormWorkflowFactory`).
+- Grep across the project for `IntakeEvent.NavigateToHourLogScreen` and `IntakeEvent.NavigateToImagingScreen` returns zero hits.
+- **PSC / LTC / OTHER**: Intake → Save → lands on the existing `Imaging` screen. Identical to pre-PR behavior.
+- **HLC**: Intake → Save → lands on the existing `HourLog` screen. Identical to pre-PR behavior.
+
+### Next up — PR 3: `collection_batch/` feature (UI + VMs) + nav + Imaging scoping
+
+The heaviest slice. Generalizes `hour_log/` + `add_hour/` into a single form-driven `collection_batch/` feature, scopes `ImagingScreen` to a particular batch via a nav arg, and flips the two strategy concretes from PR 2 to target the new destinations.
+
+**Scope.** §5 (file migration), §7 (list screen), §8 (form screen), §9 (imaging scoping). Plus the two one-line concrete-strategy flips from PR 2:
+
+- `SingleBatchWorkflow.postIntakeDestination` → `Destination.Imaging()` (after `Imaging` becomes a `data class`).
+- `MultipleBatchWorkflow.postIntakeDestination` → `Destination.CollectionBatchList(sessionId.toString())`.
+
+**Files to add** (high level — see §5.3 for the full directory layout):
+
+```
+collection_batch/domain/util/
+  CollectionBatchIdentityResolver.kt
+  CollectionBatchIdentityValidator.kt
+collection_batch/list/presentation/
+  CollectionBatchListScreen.kt + ViewModel/State/Action/Event
+  components/CollectionBatchCard.kt
+collection_batch/form/presentation/
+  CollectionBatchFormScreen.kt + ViewModel/State/Action/Event
+```
+
+Plus the new `SessionUnitDao` queries deferred from PR 1 (`observeSessionUnitsForSession`, `getMaxUnitOrderForSession`, `countSpecimensForUnit`, `getSessionUnitsForSession`, etc. — see §3.8) and the matching `SessionUnitRepository` additions (`observeSessionUnitsForSession`, `getNextUnitOrder`, `countSpecimensForUnit`, `deleteSessionUnitIfNoSpecimens` — see §4.3).
+
+**Files to modify** (high level):
+
+- `navigation/Destination.kt` — add `CollectionBatchList(sessionId: String)` and `CollectionBatchForm(sessionId: String, unitId: String? = null)`; change `Imaging` from `data object` to `data class Imaging(val sessionUnitId: String? = null)`. ⚠️ Every existing `navController.navigate(Destination.Imaging)` call site updates to `Destination.Imaging()`.
+- `navigation/NavGraph.kt` — add `composable<Destination.CollectionBatchList>` and `composable<Destination.CollectionBatchForm>` blocks. Update the existing `composable<Destination.Imaging>` to branch back-navigation on `sessionUnitId != null`.
+- `imaging/presentation/ImagingViewModel.kt` + `ImagingState.kt` + `ImagingScreen.kt` — read `sessionUnitId` from `SavedStateHandle.toRoute<Destination.Imaging>()`, propagate it to `Specimen.sessionUnitId` on insert/update, add `isUnitScoped: Boolean = sessionUnitId != null` to state, hide submit/upload UI when `isUnitScoped`, and emit a new `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped.
+- `core/domain/repository/FormAnswerRepository.kt` — extend `upsertFormAnswer(...)` with a `sessionUnitId: UUID? = null` parameter (deferred from PR 1).
+
+**What NOT to change in PR 3.**
+
+- Don't delete the `hour_log/` or `add_hour/` packages yet — that's PR 4. The legacy `composable<Destination.HourLog>` / `composable<Destination.AddHour>` blocks stay in `NavGraph.kt` until PR 4.
+- Don't touch the upload worker — that's PR 5.
+- Don't introduce the `isCollectionMethodLocked` flag — that's PR 6.
+
+**Why this slice is the largest.** It introduces two new screens, two new viewmodels, two new domain utilities, a destination contract change with cross-cutting `Imaging` impact, and the FormAnswer-repository signature change deferred from PR 1. Worth landing as its own PR — and worth keeping the `hour_log/` + `add_hour/` packages alive in parallel until PR 4 cuts them, so this PR can be reviewed and bisected against the legacy flow.
+
+When PR 3 is complete, update the Progress table above, fill in a "PR 3 — … (✅ Merged)" subsection mirroring the PR 1 / PR 2 ones, and mark PR 4 as ⏭️ Next up.
 
 ---
 
@@ -1303,9 +1368,10 @@ To keep changes shippable in slices, recommended ordering:
    - No behavioral change yet; existing flows compile and pass.
    - See **Implementation Status** at the top of this document for the exact list of files touched and deviations from this plan.
 
-2. **PR 2 — Strategy + IntakeViewModel refactor**
-   - Add `CollectionMethodWorkflow` + factory.
-   - Replace HLC branch in `IntakeViewModel` (still navigates to `HourLog` for now — keep events temporarily).
+2. **PR 2 — Strategy + IntakeViewModel refactor** ✅ Merged
+   - Add `CollectionMethodWorkflow` + factory (`SingleBatchWorkflow` / `MultipleBatchWorkflow`).
+   - Replace HLC branch in `IntakeViewModel` with `NavigateAfterIntake(destination)`; HLC still navigates to `HourLog`, others to `Imaging`.
+   - See **Implementation Status** at the top of this document for the exact list of files touched and deviations from this plan.
 
 3. **PR 3 — collection_batch feature (UI + VMs)**
    - Add `collection_batch/list/` + `collection_batch/form/` packages, screens, viewmodels, utilities.

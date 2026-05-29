@@ -22,8 +22,8 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.intake.domain.repository.LocationRepository
-import com.vci.vectorcamapp.intake.domain.strategy.ProgramFormWorkflow
-import com.vci.vectorcamapp.intake.domain.strategy.ProgramFormWorkflowFactory
+import com.vci.vectorcamapp.intake.domain.strategy.program_form.ProgramFormWorkflow
+import com.vci.vectorcamapp.intake.domain.strategy.program_form.ProgramFormWorkflowFactory
 import com.vci.vectorcamapp.intake.domain.use_cases.IntakeValidationUseCases
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateCollectionDateUseCase
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateCollectionMethodUseCase

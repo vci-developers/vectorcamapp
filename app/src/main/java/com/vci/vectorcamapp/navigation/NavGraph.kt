@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -10,6 +9,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.vci.vectorcamapp.add_hour.presentation.AddHourEvent
+import com.vci.vectorcamapp.add_hour.presentation.AddHourScreen
+import com.vci.vectorcamapp.add_hour.presentation.AddHourViewModel
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsEvent
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsScreen
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsViewModel
@@ -18,28 +20,25 @@ import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionLi
 import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionListViewModel
 import com.vci.vectorcamapp.core.presentation.components.scaffold.BaseScaffold
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
+import com.vci.vectorcamapp.hour_log.presentation.HourLogEvent
+import com.vci.vectorcamapp.hour_log.presentation.HourLogScreen
+import com.vci.vectorcamapp.hour_log.presentation.HourLogViewModel
 import com.vci.vectorcamapp.imaging.presentation.ImagingEvent
 import com.vci.vectorcamapp.imaging.presentation.ImagingScreen
 import com.vci.vectorcamapp.imaging.presentation.ImagingViewModel
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionEvent
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionScreen
 import com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionViewModel
-import com.vci.vectorcamapp.landing.presentation.LandingEvent
-import com.vci.vectorcamapp.landing.presentation.LandingScreen
-import com.vci.vectorcamapp.landing.presentation.LandingViewModel
-import com.vci.vectorcamapp.registration.presentation.RegistrationEvent
-import com.vci.vectorcamapp.registration.presentation.RegistrationScreen
-import com.vci.vectorcamapp.registration.presentation.RegistrationViewModel
-import com.vci.vectorcamapp.add_hour.presentation.AddHourEvent
-import com.vci.vectorcamapp.add_hour.presentation.AddHourScreen
-import com.vci.vectorcamapp.add_hour.presentation.AddHourViewModel
-import com.vci.vectorcamapp.hour_log.presentation.HourLogEvent
-import com.vci.vectorcamapp.hour_log.presentation.HourLogScreen
-import com.vci.vectorcamapp.hour_log.presentation.HourLogViewModel
 import com.vci.vectorcamapp.intake.presentation.IntakeEvent
 import com.vci.vectorcamapp.intake.presentation.IntakeScreen
 import com.vci.vectorcamapp.intake.presentation.IntakeViewModel
+import com.vci.vectorcamapp.landing.presentation.LandingEvent
+import com.vci.vectorcamapp.landing.presentation.LandingScreen
+import com.vci.vectorcamapp.landing.presentation.LandingViewModel
 import com.vci.vectorcamapp.main.presentation.SplashScreen
+import com.vci.vectorcamapp.registration.presentation.RegistrationEvent
+import com.vci.vectorcamapp.registration.presentation.RegistrationScreen
+import com.vci.vectorcamapp.registration.presentation.RegistrationViewModel
 import com.vci.vectorcamapp.settings.presentation.SettingsEvent
 import com.vci.vectorcamapp.settings.presentation.SettingsScreen
 import com.vci.vectorcamapp.settings.presentation.SettingsViewModel
@@ -67,9 +66,7 @@ fun NavGraph(startDestination: Destination) {
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 RegistrationScreen(
-                    state = state,
-                    onAction = viewModel::onAction,
-                    modifier = Modifier
+                    state = state, onAction = viewModel::onAction, modifier = Modifier
                 )
             }
         }
@@ -107,8 +104,7 @@ fun NavGraph(startDestination: Destination) {
                     true -> SplashScreen(modifier = Modifier.fillMaxSize())
 
                     false -> LandingScreen(
-                        state = state,
-                        onAction = viewModel::onAction
+                        state = state, onAction = viewModel::onAction
                     )
                 }
             }
@@ -120,13 +116,7 @@ fun NavGraph(startDestination: Destination) {
 
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
-                    IntakeEvent.NavigateToImagingScreen -> navController.navigate(
-                        Destination.Imaging
-                    )
-
-                    is IntakeEvent.NavigateToHourLogScreen -> navController.navigate(
-                        Destination.HourLog(event.sessionId)
-                    )
+                    is IntakeEvent.NavigateAfterIntake -> navController.navigate(event.destination)
 
                     IntakeEvent.NavigateBackToPreviousScreen -> navController.popBackStack()
 
@@ -141,8 +131,7 @@ fun NavGraph(startDestination: Destination) {
                     true -> SplashScreen()
 
                     false -> IntakeScreen(
-                        state = state,
-                        onAction = viewModel::onAction
+                        state = state, onAction = viewModel::onAction
                     )
                 }
             }
@@ -163,10 +152,9 @@ fun NavGraph(startDestination: Destination) {
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 when (state.isLoading) {
                     true -> SplashScreen()
-                    
+
                     false -> ImagingScreen(
-                        state = state,
-                        onAction = viewModel::onAction
+                        state = state, onAction = viewModel::onAction
                     )
                 }
             }
@@ -180,15 +168,15 @@ fun NavGraph(startDestination: Destination) {
                 when (event) {
                     IncompleteSessionEvent.NavigateBackToLandingScreen -> navController.popBackStack()
 
-                    is IncompleteSessionEvent.NavigateToIntakeScreen ->
-                        navController.navigate(Destination.Intake(event.sessionType))
+                    is IncompleteSessionEvent.NavigateToIntakeScreen -> navController.navigate(
+                        Destination.Intake(event.sessionType)
+                    )
                 }
             }
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 IncompleteSessionScreen(
-                    state = state,
-                    onAction = viewModel::onAction
+                    state = state, onAction = viewModel::onAction
                 )
             }
         }
@@ -209,8 +197,7 @@ fun NavGraph(startDestination: Destination) {
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 CompleteSessionListScreen(
-                    state = state,
-                    onAction = viewModel::onAction
+                    state = state, onAction = viewModel::onAction
                 )
             }
         }
@@ -227,8 +214,7 @@ fun NavGraph(startDestination: Destination) {
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 CompleteSessionDetailsScreen(
-                    state = state,
-                    onAction = viewModel::onAction
+                    state = state, onAction = viewModel::onAction
                 )
             }
         }
@@ -251,8 +237,7 @@ fun NavGraph(startDestination: Destination) {
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 SettingsScreen(
-                    state = state,
-                    onAction = viewModel::onAction
+                    state = state, onAction = viewModel::onAction
                 )
             }
         }
@@ -277,8 +262,7 @@ fun NavGraph(startDestination: Destination) {
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 HourLogScreen(
-                    state = state,
-                    onAction = viewModel::onAction
+                    state = state, onAction = viewModel::onAction
                 )
             }
         }
@@ -299,8 +283,7 @@ fun NavGraph(startDestination: Destination) {
 
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
                 AddHourScreen(
-                    state = state,
-                    onAction = viewModel::onAction
+                    state = state, onAction = viewModel::onAction
                 )
             }
         }
