@@ -12,6 +12,7 @@ import com.vci.vectorcamapp.core.data.room.dao.InferenceResultDao
 import com.vci.vectorcamapp.core.data.room.dao.LocationTypeDao
 import com.vci.vectorcamapp.core.data.room.dao.ProgramDao
 import com.vci.vectorcamapp.core.data.room.dao.SessionDao
+import com.vci.vectorcamapp.core.data.room.dao.SessionUnitDao
 import com.vci.vectorcamapp.core.data.room.dao.SiteDao
 import com.vci.vectorcamapp.core.data.room.dao.SpecimenDao
 import com.vci.vectorcamapp.core.data.room.dao.SpecimenImageDao
@@ -47,6 +48,9 @@ object RoomDatabaseModule {
 
     @Provides
     fun provideSessionDao(db: VectorCamDatabase): SessionDao = db.sessionDao
+
+    @Provides
+    fun provideSessionUnitDao(db: VectorCamDatabase): SessionUnitDao = db.sessionUnitDao
 
     @Provides
     fun provideSpecimenDao(db: VectorCamDatabase): SpecimenDao = db.specimenDao

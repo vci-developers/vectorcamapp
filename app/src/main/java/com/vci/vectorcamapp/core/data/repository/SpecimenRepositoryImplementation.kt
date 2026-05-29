@@ -26,7 +26,7 @@ class SpecimenRepositoryImplementation @Inject constructor(
         specimen: Specimen, sessionId: UUID
     ): Result<Unit, RoomDbError> {
         return try {
-            specimenDao.insertSpecimen(specimen.toEntity(sessionId))
+            specimenDao.insertSpecimen(specimen.toEntity(sessionId, null))
             Result.Success(Unit)
         } catch (e: SQLiteConstraintException) {
             Result.Error(RoomDbError.CONSTRAINT_VIOLATION)
@@ -39,7 +39,7 @@ class SpecimenRepositoryImplementation @Inject constructor(
         specimen: Specimen, sessionId: UUID
     ): Result<Unit, RoomDbError> {
         return try {
-            val updatedRows = specimenDao.updateSpecimen(specimen.toEntity(sessionId))
+            val updatedRows = specimenDao.updateSpecimen(specimen.toEntity(sessionId, null))
             if (updatedRows == 0) {
                 Result.Error(RoomDbError.NO_ROWS_AFFECTED)
             }
@@ -58,7 +58,7 @@ class SpecimenRepositoryImplementation @Inject constructor(
     }
 
     override suspend fun deleteSpecimen(specimen: Specimen, sessionId: UUID): Boolean {
-        return specimenDao.deleteSpecimen(specimen.toEntity(sessionId)) > 0
+        return specimenDao.deleteSpecimen(specimen.toEntity(sessionId, null)) > 0
     }
 
     override suspend fun getSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): List<SpecimenWithSpecimenImagesAndInferenceResults> {

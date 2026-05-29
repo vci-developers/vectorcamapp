@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteExpression
 
 @Entity(
@@ -38,5 +39,7 @@ data class FormQuestionEntity(
     val required: Boolean = false,
     val prerequisite: FormQuestionPrerequisiteExpression? = null,
     val options: List<String>? = null,
-    val order: Int? = null
+    val order: Int? = null,
+    val answerScope: FormQuestionScope = FormQuestionScope.SESSION,
+    val isUnitIdentityComponent: Boolean = false,
 )

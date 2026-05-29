@@ -39,7 +39,9 @@ data class CompleteSessionDetailsState(
         villageName = "",
         houseNumber = "",
         healthCenter = "",
-        isActive = true
+        isActive = true,
+        name = "",
+        locationHierarchy = emptyMap()
     ),
     val surveillanceForm: SurveillanceForm? = null,
     val formWithFormAnswersAndQuestions: FormWithFormAnswersAndQuestions? = null,

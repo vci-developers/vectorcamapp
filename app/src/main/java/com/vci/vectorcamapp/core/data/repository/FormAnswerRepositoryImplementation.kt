@@ -21,7 +21,7 @@ class FormAnswerRepositoryImplementation @Inject constructor(
         questionId: Int
     ): Result<Unit, RoomDbError> {
         return try {
-            formAnswerDao.upsertFormAnswer(formAnswer.toEntity(sessionId, questionId))
+            formAnswerDao.upsertFormAnswer(formAnswer.toEntity(sessionId, null, questionId))
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(RoomDbError.UNKNOWN_ERROR)

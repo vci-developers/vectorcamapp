@@ -22,17 +22,26 @@ import java.util.UUID
             childColumns = ["sessionId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = SessionUnitEntity::class,
+            parentColumns = ["localId"],
+            childColumns = ["sessionUnitId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
         )
     ],
     indices = [
         Index("questionId"),
-        Index("sessionId")
+        Index("sessionId"),
+        Index("sessionUnitId")
     ]
 )
 data class FormAnswerEntity(
     @PrimaryKey val localId: UUID = UUID(0, 0),
     val remoteId: Int? = null,
     val sessionId: UUID = UUID(0, 0),
+    val sessionUnitId: UUID? = null,
     val questionId: Int = -1,
     val value: String = "",
     val dataType: String = "",

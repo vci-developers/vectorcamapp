@@ -4,6 +4,7 @@ import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto
 import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionPrerequisiteExpressionDto
 import com.vci.vectorcamapp.core.data.room.entities.FormQuestionEntity
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
+import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteExpression
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteValue
 import kotlinx.serialization.json.JsonArray
@@ -20,7 +21,9 @@ fun FormQuestionEntity.toDomain(): FormQuestion {
         required = this.required,
         prerequisite = this.prerequisite,
         options = this.options,
-        order = this.order
+        order = this.order,
+        answerScope = this.answerScope,
+        isUnitIdentityComponent = this.isUnitIdentityComponent
     )
 }
 
@@ -34,7 +37,9 @@ fun FormQuestion.toEntity(formId: Int, parentId: Int?): FormQuestionEntity {
         required = this.required,
         prerequisite = this.prerequisite,
         options = this.options,
-        order = this.order
+        order = this.order,
+        answerScope = this.answerScope,
+        isUnitIdentityComponent = this.isUnitIdentityComponent
     )
 }
 
@@ -46,7 +51,10 @@ fun FormQuestionDto.toDomain(): FormQuestion {
         required = this.required,
         prerequisite = this.prerequisite?.toDomain(),
         options = this.options,
-        order = this.order
+        order = this.order,
+        // TODO: CHANGE THIS WITH ACTUAL DYNAMIC VALUES
+        answerScope = FormQuestionScope.SESSION,
+        isUnitIdentityComponent = false
     )
 }
 
