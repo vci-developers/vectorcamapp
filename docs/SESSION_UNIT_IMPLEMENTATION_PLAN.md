@@ -3,7 +3,121 @@
 > **Naming note**: The user-facing feature is called **Collection Batch** throughout. The underlying Room entity, domain model, repository, DTO, mapper, and DAO retain the existing **`SessionUnit*`** names (matching the backend SRS and the table name `session_unit`). This is deliberate: presentation talks "batch", data layer stays "session unit". The two refer to the same thing.
 
 > Scope: Android mobile app only. No backend, no web. No conflict-resolution / discrepancy logic.
-> Status: design approved, ready for implementation.
+> Status: in progress — see Implementation Status below.
+
+---
+
+## Implementation Status (read this first)
+
+This section is the single source of truth for "where are we?". It is updated at the end of every PR. If you are picking this up cold, read this whole section, then jump straight to the **Next up** PR.
+
+### Progress
+
+| PR  | Description                                            | Status        |
+| --- | ------------------------------------------------------ | ------------- |
+| PR 1 | Schema & domain plumbing                              | ✅ Merged     |
+| PR 2 | `CollectionMethodWorkflow` strategy + `IntakeViewModel` refactor | ⏭️ Next up |
+| PR 3 | `collection_batch/` feature (UI + VMs) + nav + Imaging scoping | ⏳ Pending  |
+| PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏳ Pending    |
+| PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
+| PR 6 | Lock collection method when units exist               | ⏳ Pending    |
+
+### PR 1 — Schema & domain plumbing (✅ Merged)
+
+**What landed.** The data and domain layers can now represent collection batches (session units) and answers/specimens scoped to them. No UI or behavior changed; existing PSC/LTC/HLC flows compile and run identically.
+
+**Files added** (all under `app/src/main/java/com/vci/vectorcamapp/`):
+
+```
+core/data/room/entities/SessionUnitEntity.kt
+core/data/room/entities/relations/SessionUnitWithFormAnswersRelation.kt
+core/data/room/entities/relations/SessionUnitWithSpecimensRelation.kt
+core/data/room/dao/SessionUnitDao.kt
+core/data/room/migrations/versions/Migration_30_31_AddSessionUnitTable.kt
+core/data/room/converters/FormQuestionScopeConverter.kt
+core/data/mappers/SessionUnitMapper.kt
+core/domain/model/SessionUnit.kt
+core/domain/model/enums/FormQuestionScope.kt
+core/domain/model/composites/SessionUnitWithFormAnswers.kt
+core/domain/model/composites/SessionUnitWithSpecimens.kt
+core/domain/repository/SessionUnitRepository.kt
+core/data/repository/SessionUnitRepositoryImplementation.kt
+```
+
+**Files modified.**
+
+- `core/data/room/VectorCamDatabase.kt` — DB version `30 → 31`, added `SessionUnitEntity::class` to `@Database.entities`, added `FormQuestionScopeConverter::class` to `@TypeConverters`, added `abstract val sessionUnitDao: SessionUnitDao`.
+- `core/data/room/migrations/Migrations.kt` — imported and registered `MIGRATION_30_31_ADD_SESSION_UNIT_TABLE`.
+- `core/data/room/entities/FormQuestionEntity.kt` — added `answerScope: FormQuestionScope` (default `SESSION`) and `isUnitIdentityComponent: Boolean` (default `false`).
+- `core/data/room/entities/FormAnswerEntity.kt` — added nullable `sessionUnitId: UUID?` with FK to `session_unit.localId` and matching index.
+- `core/data/room/entities/SpecimenEntity.kt` — added nullable `sessionUnitId: UUID?` with FK to `session_unit.localId` and matching index.
+- `core/data/mappers/FormQuestionMapper.kt` — propagates `answerScope` + `isUnitIdentityComponent` in both directions; DTO→domain hard-codes `SESSION` / `false` with a `// TODO` (DTO plumbing lands in PR 5).
+- `core/data/mappers/FormAnswerMapper.kt` — `toEntity(sessionId, sessionUnitId, questionId)` (new arg in the middle).
+- `core/data/mappers/SpecimenMapper.kt` — `toEntity(sessionId, sessionUnitId)` (new arg appended).
+- `core/data/repository/FormAnswerRepositoryImplementation.kt` — passes `sessionUnitId = null` into the mapper. Interface `FormAnswerRepository.upsertFormAnswer(...)` is **unchanged**.
+- `core/data/repository/SpecimenRepositoryImplementation.kt` — passes `sessionUnitId = null` for all `insert/update/delete` calls.
+- `core/di/RoomDatabaseModule.kt` — added `provideSessionUnitDao`.
+- `core/di/CoreRepositoryModule.kt` — added `bindSessionUnitRepository`.
+
+**Deviations from the original plan** (intentional, all consistent with existing codebase conventions):
+
+1. **`answerScope` modeled as an enum, not a `String`.** The plan said keep it as `String` to match `FormQuestion.type`. We introduced `FormQuestionScope { SESSION, SESSION_UNIT }` plus a `FormQuestionScopeConverter`, mirroring the existing `SessionType` / `SessionTypeConverter` pattern. The migration column is still `TEXT NOT NULL DEFAULT 'SESSION'` because the converter writes `enum.name`. No `AnswerScopes` constants object was created.
+2. **Domain `SessionUnit` does not carry `sessionId`.** It carries only `localId`, `remoteId`, `unitOrder`, `createdAt`. The session FK is supplied at the mapper boundary via `SessionUnit.toEntity(sessionId: UUID)`. This matches the existing `Session` model (no `siteId`) and `Specimen` model. Callers that need to persist a unit must therefore have `sessionId` in scope (typically from `CurrentSessionCache`).
+3. **Domain `FormAnswer` and `Specimen` were NOT extended with `sessionUnitId`.** Same reasoning as above — FK columns are passed in at the mapper boundary, not stored on the domain model. `FormAnswerEntity.sessionUnitId` is still threaded through via `FormAnswer.toEntity(sessionId, sessionUnitId, questionId)`.
+4. **`FormAnswerRepository` interface signature unchanged.** The plan suggested adding a `sessionUnitId: UUID? = null` parameter to `upsertFormAnswer(...)`. We deferred this — for PR 1 the impl simply passes `null`. When PR 3 (`CollectionBatchFormViewModel`) needs to persist unit-scoped answers, we'll add the parameter then. Existing callers (`IntakeViewModel`, `MetadataUploadWorker.syncFormAnswersIfNeeded`) remain untouched.
+5. **`SessionUnitDao` is intentionally lean.** Only `upsertSessionUnit`, `deleteSessionUnit`, `getSessionUnitById`, `getSessionUnitWithFormAnswers`. The plan listed more methods (`observeSessionUnitsForSession`, `getMaxUnitOrderForSession`, `countSessionUnitsForSession`, `countSpecimensForUnit`, plural `getSessionUnitsForSession`, etc.). These will be added as needed in PR 3 when the list/form screens require them — see §3.8 / §4.3 for the full target shape.
+6. **`SessionUnitRepository` interface mirrors the lean DAO.** Currently just `upsertSessionUnit(sessionUnit, sessionId)`, `deleteSessionUnit(sessionUnit, sessionId)`, `getSessionUnitById`, `getSessionUnitWithFormAnswers`. The richer interface in §4.3 of this plan is the eventual target.
+7. **Relation file naming.** `SessionUnitWithAnswersRelation` → `SessionUnitWithFormAnswersRelation` and corresponding composite `SessionUnitWithFormAnswers`. The plan used "Answers"; we kept the full "FormAnswers" prefix for consistency with `FormAnswerEntity` / `FormAnswerDao` naming throughout the codebase.
+8. **Composite domain models.** Created under `core/domain/model/composites/` (`SessionUnitWithFormAnswers.kt`, `SessionUnitWithSpecimens.kt`) following the existing `SessionWithSpecimens` / `SessionAndSite` convention. The relation classes (Room layer) and composites (domain layer) are intentionally separate.
+9. **Migration filename.** `Migration_30_31_AddSessionUnitTable.kt` (singular, `Table`) instead of the plan's `AddSessionUnits.kt`. Constant: `MIGRATION_30_31_ADD_SESSION_UNIT_TABLE`. Inline-prose §3.6 has been updated to reflect this.
+10. **Migration uses the full table-rebuild for `form_answer` and `specimen`.** The plan flagged this as required but printed the shorter `ALTER TABLE ... ADD COLUMN ... REFERENCES` snippet for brevity. The shipped migration does the proper rename+create+copy+drop for both tables (so FKs are actually enforced), patterned after `Migration_19_20_MakeHardwareIdColumnNullable.kt`.
+
+**Known follow-ups baked into PR 1** (deliberately deferred, will be picked up by later PRs):
+
+- `FormAnswerRepository.upsertFormAnswer` does not yet accept a `sessionUnitId` argument — PR 3.
+- `SessionUnitDao` lacks `observe`, count, `getNext*`, and `getSessionUnitsForSession` queries — PR 3.
+- `SessionUnitRepository.deleteSessionUnitIfNoSpecimens` is not yet implemented — PR 3.
+- `FormQuestionMapper.toDomain(FormQuestionDto)` hard-codes `answerScope = SESSION` and `isUnitIdentityComponent = false` with a `// TODO: CHANGE THIS WITH ACTUAL DYNAMIC VALUES`. The DTO will gain these fields in PR 5.
+- `SpecimenRepositoryImplementation` hard-codes `sessionUnitId = null` in all three CRUD methods. `ImagingViewModel` will eventually pass the real value (PR 3).
+- `MetadataUploadWorker` has no awareness of session units yet — PR 5.
+
+**How to verify PR 1 locally.**
+
+- App builds and existing flows (intake → imaging → upload for PSC/LTC/HLC) work without regressions.
+- Running an upgrade from a populated v30 database to v31 preserves all `form_answer` and `specimen` rows with `sessionUnitId = NULL`.
+- `PRAGMA foreign_key_list('form_answer')` and `PRAGMA foreign_key_list('specimen')` after migration show the new FK to `session_unit(localId)`.
+
+### Next up — PR 2: `CollectionMethodWorkflow` strategy + `IntakeViewModel` refactor
+
+Pure refactor — no schema work, no new UI. Goal: replace the hardcoded HLC branch in `IntakeViewModel` with a strategy pattern that mirrors the existing `ProgramFormWorkflow` / `ProgramFormWorkflowFactory`. After this PR, HLC still navigates to `HourLog` (legacy screen) — wiring to the new `collection_batch/` destinations happens in PR 3.
+
+**Scope.** Implement everything in §6 of this document, specifically §6.1–§6.4. Skip §6.5 (lock collection method when units exist) — that's PR 6.
+
+**Files to add.**
+
+```
+intake/domain/strategy/CollectionMethodWorkflow.kt
+intake/domain/strategy/CollectionMethodWorkflowFactory.kt
+intake/domain/strategy/concrete/DirectImagingWorkflow.kt
+intake/domain/strategy/concrete/RepeatableUnitWorkflow.kt
+```
+
+**Files to modify.**
+
+- `intake/presentation/IntakeViewModel.kt` — inject `CollectionMethodWorkflowFactory`, replace the HLC `if/else` at lines 309-314 with `workflow.postIntakeDestination(...)`. **Until PR 3 lands**, `RepeatableUnitWorkflow.postIntakeDestination(...)` should keep returning the existing `Destination.HourLog(sessionId)` so HLC still works.
+- `intake/presentation/IntakeEvent.kt` — replace `NavigateToHourLogScreen` + `NavigateToImagingScreen` with `data class NavigateAfterIntake(val destination: Destination) : IntakeEvent`.
+- `navigation/NavGraph.kt` — update the `composable<Destination.Intake>` `ObserveAsEvents` block to call `navController.navigate(event.destination)` for the new `NavigateAfterIntake` event.
+
+**Why this is mergeable on its own.** The strategy still resolves to today's destinations (`HourLog` for HLC, `Imaging` for everything else). No behavior change end-to-end. PR 3 will swap `Destination.HourLog` for `Destination.CollectionBatchList` inside `RepeatableUnitWorkflow` and flip `Destination.Imaging` to its `data class Imaging(val sessionUnitId: String? = null)` form.
+
+**What NOT to change in PR 2.**
+
+- Don't touch `Destination.Imaging` yet (still `data object`).
+- Don't add `Destination.CollectionBatchList` / `Destination.CollectionBatchForm` yet.
+- Don't delete the `HourLog` / `AddHour` packages.
+- Don't introduce the `isCollectionMethodLocked` state — that's PR 6.
+
+When PR 2 is complete, update the Progress table above, fill in a "PR 2 — … (✅ Merged)" subsection mirroring the PR 1 one, and mark PR 3 as ⏭️ Next up.
 
 ---
 
@@ -1184,9 +1298,10 @@ Re-enqueue is safe because the worker is idempotent (`GET` then `POST`).
 
 To keep changes shippable in slices, recommended ordering:
 
-1. **PR 1 — Schema & domain plumbing**
+1. **PR 1 — Schema & domain plumbing** ✅ Merged
    - Entities, DAO, migration, DB version bump, mappers, domain model, repo + impl, Hilt bindings.
    - No behavioral change yet; existing flows compile and pass.
+   - See **Implementation Status** at the top of this document for the exact list of files touched and deviations from this plan.
 
 2. **PR 2 — Strategy + IntakeViewModel refactor**
    - Add `CollectionMethodWorkflow` + factory.
