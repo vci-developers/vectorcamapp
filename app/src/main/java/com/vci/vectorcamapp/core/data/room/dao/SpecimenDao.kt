@@ -24,9 +24,6 @@ interface SpecimenDao {
     @Update(onConflict = OnConflictStrategy.ABORT)
     suspend fun updateSpecimen(specimen: SpecimenEntity): Int
 
-    @Delete
-    suspend fun deleteSpecimen(specimen: SpecimenEntity): Int
-
     @Query("SELECT * FROM specimen WHERE sessionId = :sessionId")
     suspend fun getSpecimensBySession(sessionId: UUID): List<SpecimenEntity>
 

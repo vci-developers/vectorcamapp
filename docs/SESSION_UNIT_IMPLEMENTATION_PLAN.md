@@ -17,7 +17,8 @@ This section is the single source of truth for "where are we?". It is updated at
 | --- | ------------------------------------------------------ | ------------- |
 | PR 1 | Schema & domain plumbing                              | ✅ Merged     |
 | PR 2 | `CollectionMethodWorkflow` strategy + `IntakeViewModel` refactor | ✅ Merged     |
-| PR 3 | `collection_batch/` feature (UI + VMs) + nav + Imaging scoping | ⏭️ Next up |
+| Pre-PR 3 | Dead-code cleanup across core repos / DAOs / composites | ✅ Merged     |
+| PR 3 | `collection_batch/` feature (UI + VMs) + nav + Imaging scoping — **sliced into 3a–3d** | ⏭️ In progress |
 | PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏳ Pending    |
 | PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
@@ -143,46 +144,80 @@ intake/domain/strategy/concrete/SurveillanceFormPresentWorkflow.kt
 - **PSC / LTC / OTHER**: Intake → Save → lands on the existing `Imaging` screen. Identical to pre-PR behavior.
 - **HLC**: Intake → Save → lands on the existing `HourLog` screen. Identical to pre-PR behavior.
 
+### Pre-PR 3 — Dead-code cleanup (✅ Merged)
+
+**Purpose.** Before starting PR 3, the core data + domain layer was swept for unused functions, composites, and Room relations. The motivation is directly tied to PR 3: this feature is the first real consumer of `SessionUnit*` and related repository plumbing, and we did **not** want PR 3 starting from a layer that still carried speculative methods from prior PRs.
+
+**What was removed.** Repository / DAO / composite / relation members with zero call sites at the start of PR 3:
+
+- **Repository methods**: `FormRepository.observeFormsByProgramId`, `SessionRepository.getSessionWithSpecimensById`, `SessionRepository.observeSessionWithSpecimens`, every `SessionUnitRepository` method, `SiteRepository.getSiteById`, `SpecimenRepository.deleteSpecimen`, `SpecimenImageRepository.deleteSpecimenImage`.
+- **DAO methods (same names as above, plus)**: `SessionDao.getSessionWithSessionUnits`, every `SessionUnitDao` method.
+- **Composite domain models (entire files)**: `SessionWithSpecimens`, `SessionWithSessionUnits`, `SessionWithFormAnswers`, `SessionUnitWithFormAnswers`, `SessionUnitWithSpecimens`.
+- **Room relations (entire files)**: `SessionWithSpecimensRelation`, `SessionWithSessionUnitsRelation`, `SessionWithFormAnswersRelation`, `SessionUnitWithFormAnswersRelation`, `SessionUnitWithSpecimensRelation`.
+
+**What was kept (deliberately empty).** `SessionUnitRepository`, `SessionUnitRepositoryImplementation`, and `SessionUnitDao` files remain on disk as empty interfaces/classes, plus their Hilt + Room wiring. PR 3 will populate them one method at a time.
+
+**Implication for PR 3 (read this carefully).** The detailed function lists in §3.8 (`SessionUnitDao`) and §4.3 (`SessionUnitRepository`) of this plan are **stale**. Treat both contracts as empty at the start of PR 3 and **disregard those sections as a checklist**. They remain in the document only as background context.
+
+**Known pre-existing test breakage (not caused by this cleanup).** `testColombiaDebugUnitTest` (and the equivalent flavor variants) currently fail to compile due to PR 1 fixture drift — specifically references to `Site.name`, `Site.locationHierarchy`, `FormQuestion.answerScope`, and `FormQuestion.isUnitIdentityComponent` in test fixtures that no longer match the domain models. These failures exist on the branch prior to the Pre-PR 3 cleanup and were verified to be unrelated. They are not blockers for shipping the cleanup, but should be fixed before PR 3b/3c so VM-level tests in PR 3 land on a green baseline.
+
+**Tooling note for the agent.** Do **not** run any `git` commands (including `stash`, `commit`, `diff` against other refs, etc.) without explicit permission from the maintainer. Verification of the cleanup must rely on `./gradlew assembleDebug`, repo-wide grep, and `read_lints` — never on stashing or otherwise mutating the working tree.
+
 ### Next up — PR 3: `collection_batch/` feature (UI + VMs) + nav + Imaging scoping
 
-The heaviest slice. Generalizes `hour_log/` + `add_hour/` into a single form-driven `collection_batch/` feature, scopes `ImagingScreen` to a particular batch via a nav arg, and flips the two strategy concretes from PR 2 to target the new destinations.
+> ## ⚠️ Read this before writing any code in PR 3
+>
+> **DO NOT start PR 3 by dumping all the repository and DAO functions we will eventually need.** The Pre-PR 3 cleanup deliberately emptied `SessionUnitRepository`, `SessionUnitRepositoryImplementation`, and `SessionUnitDao` (and pruned other dead methods across the core layer) precisely so this feature can grow function-by-function on demand.
+>
+> The rules for PR 3:
+>
+> 1. **Add repository / DAO methods one at a time, and only when the call site that needs them exists in the same diff.** No speculative `observeX`, `getMaxX`, `countX`, etc. up front.
+> 2. **Disregard the function lists in §3.8 and §4.3 of this plan.** Those were drafted when the layer was assumed full. The empty contracts post-cleanup are the new starting point; §3.8 / §4.3 are reference material, not a checklist.
+> 3. **Match existing codebase conventions every time.** When you add a new repo method, mirror the shape of nearby `SessionRepository` / `SpecimenRepository` methods (e.g. `Result<Unit, RoomDbError>` returns, `observe*` for Flow, `get*ById` for suspend, `fun toEntity(sessionId: UUID)` mapper threading). Consistency over cleverness — this codebase has strong patterns and PR 3 should not introduce new ones.
+> 4. **Slice PR 3 into smaller PRs.** A single PR carrying two new screens, two new viewmodels, two domain utilities, an `Imaging` destination contract change, and a `FormAnswerRepository` signature change is too large to review well. The recommended slicing is below.
 
-**Scope.** §5 (file migration), §7 (list screen), §8 (form screen), §9 (imaging scoping). Plus the two one-line concrete-strategy flips from PR 2:
+**Scope.** §5 (file migration), §7 (list screen), §8 (form screen), §9 (imaging scoping), plus the two one-line concrete-strategy flips from PR 2:
 
 - `SingleBatchWorkflow.postIntakeDestination` → `Destination.Imaging()` (after `Imaging` becomes a `data class`).
 - `MultipleBatchWorkflow.postIntakeDestination` → `Destination.CollectionBatchList(sessionId.toString())`.
 
-**Files to add** (high level — see §5.3 for the full directory layout):
+**Recommended slicing of PR 3.** Land these as separate PRs in order — each is independently reviewable, leaves `master` in a working state, and surfaces a single concern:
+
+- **PR 3a — Destination contract + nav scaffold + strategy flip.** Change `Destination.Imaging` from `data object` to `data class Imaging(val sessionUnitId: String? = null)`. Add `Destination.CollectionBatchList(sessionId: String)` and `Destination.CollectionBatchForm(sessionId: String, unitId: String? = null)`. Flip `SingleBatchWorkflow` / `MultipleBatchWorkflow` to point at the new destinations. Add empty `composable<...>` stubs in `NavGraph.kt` that render a placeholder (or temporarily route back to legacy `HourLog` until 3b lands). No repo or DAO methods added in this slice. Update all existing `Destination.Imaging` call sites to `Destination.Imaging()`.
+- **PR 3b — `CollectionBatchList` screen + VM.** Add the list-side files under `collection_batch/list/presentation/`. **Add to `SessionUnitDao` / `SessionUnitRepository` only the methods the ViewModel actually calls in this diff** — most likely one observe-style query for units in a session, and whatever count is needed for the card. Do not pre-add edit/delete methods until the actions that consume them exist.
+- **PR 3c — `CollectionBatchForm` screen + VM + identity utilities.** Add `collection_batch/form/presentation/` and `collection_batch/domain/util/{CollectionBatchIdentityResolver,CollectionBatchIdentityValidator}.kt`. Add only the repo / DAO methods this VM actually invokes (e.g. upsert + the lookup needed for edit mode + the cross-unit duplicate check). Extend `FormAnswerRepository.upsertFormAnswer` with the `sessionUnitId` parameter here, since this is the first caller that needs it.
+- **PR 3d — Imaging scoping.** `ImagingViewModel` / `ImagingState` / `ImagingScreen` read `sessionUnitId`, gate submit/upload UI on `isUnitScoped`, propagate `Specimen.sessionUnitId`, and emit `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped. Add any final delete-guard repo method needed by 3b's card actions if it was deferred.
+
+**Files to add across 3a–3d** (high level — see §5.3 for the full directory layout):
 
 ```
 collection_batch/domain/util/
-  CollectionBatchIdentityResolver.kt
-  CollectionBatchIdentityValidator.kt
+  CollectionBatchIdentityResolver.kt          # PR 3c
+  CollectionBatchIdentityValidator.kt         # PR 3c
 collection_batch/list/presentation/
-  CollectionBatchListScreen.kt + ViewModel/State/Action/Event
-  components/CollectionBatchCard.kt
+  CollectionBatchListScreen.kt + ViewModel/State/Action/Event   # PR 3b
+  components/CollectionBatchCard.kt           # PR 3b
 collection_batch/form/presentation/
-  CollectionBatchFormScreen.kt + ViewModel/State/Action/Event
+  CollectionBatchFormScreen.kt + ViewModel/State/Action/Event   # PR 3c
 ```
 
-Plus the new `SessionUnitDao` queries deferred from PR 1 (`observeSessionUnitsForSession`, `getMaxUnitOrderForSession`, `countSpecimensForUnit`, `getSessionUnitsForSession`, etc. — see §3.8) and the matching `SessionUnitRepository` additions (`observeSessionUnitsForSession`, `getNextUnitOrder`, `countSpecimensForUnit`, `deleteSessionUnitIfNoSpecimens` — see §4.3).
+**Files to modify across 3a–3d** (high level):
 
-**Files to modify** (high level):
+- `navigation/Destination.kt` — PR 3a.
+- `navigation/NavGraph.kt` — PR 3a (stubs), 3b (list wiring), 3c (form wiring), 3d (imaging back-nav branch).
+- `imaging/presentation/ImagingViewModel.kt` + `ImagingState.kt` + `ImagingScreen.kt` + `ImagingEvent.kt` — PR 3d.
+- `core/domain/repository/FormAnswerRepository.kt` + impl — PR 3c (when the form VM first needs unit-scoped answers).
+- `core/data/room/dao/SessionUnitDao.kt` + `core/domain/repository/SessionUnitRepository.kt` + impl — grown method-by-method across 3b / 3c / 3d, only as call sites require.
 
-- `navigation/Destination.kt` — add `CollectionBatchList(sessionId: String)` and `CollectionBatchForm(sessionId: String, unitId: String? = null)`; change `Imaging` from `data object` to `data class Imaging(val sessionUnitId: String? = null)`. ⚠️ Every existing `navController.navigate(Destination.Imaging)` call site updates to `Destination.Imaging()`.
-- `navigation/NavGraph.kt` — add `composable<Destination.CollectionBatchList>` and `composable<Destination.CollectionBatchForm>` blocks. Update the existing `composable<Destination.Imaging>` to branch back-navigation on `sessionUnitId != null`.
-- `imaging/presentation/ImagingViewModel.kt` + `ImagingState.kt` + `ImagingScreen.kt` — read `sessionUnitId` from `SavedStateHandle.toRoute<Destination.Imaging>()`, propagate it to `Specimen.sessionUnitId` on insert/update, add `isUnitScoped: Boolean = sessionUnitId != null` to state, hide submit/upload UI when `isUnitScoped`, and emit a new `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped.
-- `core/domain/repository/FormAnswerRepository.kt` — extend `upsertFormAnswer(...)` with a `sessionUnitId: UUID? = null` parameter (deferred from PR 1).
-
-**What NOT to change in PR 3.**
+**What NOT to change in PR 3 (any slice).**
 
 - Don't delete the `hour_log/` or `add_hour/` packages yet — that's PR 4. The legacy `composable<Destination.HourLog>` / `composable<Destination.AddHour>` blocks stay in `NavGraph.kt` until PR 4.
 - Don't touch the upload worker — that's PR 5.
 - Don't introduce the `isCollectionMethodLocked` flag — that's PR 6.
 
-**Why this slice is the largest.** It introduces two new screens, two new viewmodels, two new domain utilities, a destination contract change with cross-cutting `Imaging` impact, and the FormAnswer-repository signature change deferred from PR 1. Worth landing as its own PR — and worth keeping the `hour_log/` + `add_hour/` packages alive in parallel until PR 4 cuts them, so this PR can be reviewed and bisected against the legacy flow.
+**Why slicing matters here.** PR 3 introduces two new screens, two new viewmodels, two new domain utilities, a destination contract change with cross-cutting `Imaging` impact, and the `FormAnswerRepository` signature change deferred from PR 1. Bundled together that's too much for a single review pass. Sliced as 3a–3d, each PR has a single conceptual change and a small, contained diff.
 
-When PR 3 is complete, update the Progress table above, fill in a "PR 3 — … (✅ Merged)" subsection mirroring the PR 1 / PR 2 ones, and mark PR 4 as ⏭️ Next up.
+When all of PR 3a–3d are merged, update the Progress table above, fill in a "PR 3 — … (✅ Merged)" subsection mirroring the PR 1 / PR 2 ones, and mark PR 4 as ⏭️ Next up.
 
 ---
 
@@ -488,6 +523,8 @@ data class SessionUnitWithSpecimensRelation(
 
 ### 3.8 New DAO
 
+> 🛑 **Out of date for PR 3.** Post Pre-PR 3 cleanup, `SessionUnitDao` is intentionally empty. The list below is reference material only — **do not** seed all of these in one go. Add each method in the PR 3 slice (3b / 3c / 3d) where its first call site lives. See the "Read this before writing any code in PR 3" callout in the Implementation Status section.
+
 Create `app/src/main/java/com/vci/vectorcamapp/core/data/room/dao/SessionUnitDao.kt`:
 
 ```kotlin
@@ -624,6 +661,8 @@ data class FormQuestion(
 > ```
 
 ### 4.3 Repository
+
+> 🛑 **Out of date for PR 3.** Post Pre-PR 3 cleanup, `SessionUnitRepository` is intentionally empty. The interface shown below is the eventual end-state, not a starting checklist. Add each method in the PR 3 slice (3b / 3c / 3d) where its first call site lives, mirroring the shape of the surrounding `SessionRepository` / `SpecimenRepository` methods.
 
 `core/domain/repository/SessionUnitRepository.kt`:
 
@@ -1373,12 +1412,11 @@ To keep changes shippable in slices, recommended ordering:
    - Replace HLC branch in `IntakeViewModel` with `NavigateAfterIntake(destination)`; HLC still navigates to `HourLog`, others to `Imaging`.
    - See **Implementation Status** at the top of this document for the exact list of files touched and deviations from this plan.
 
-3. **PR 3 — collection_batch feature (UI + VMs)**
-   - Add `collection_batch/list/` + `collection_batch/form/` packages, screens, viewmodels, utilities.
-   - Add `CollectionBatchList` / `CollectionBatchForm` destinations.
-   - Wire strategy to navigate to `CollectionBatchList`.
-   - Update `Imaging` destination to `data class Imaging(val sessionUnitId: String? = null)`.
-   - Update `ImagingViewModel` / `ImagingScreen` to honor `sessionUnitId` and hide submit when scoped.
+3. **PR 3 — collection_batch feature (UI + VMs)** — sliced into **3a / 3b / 3c / 3d**, see the "Next up — PR 3" section above. Build incrementally; do not pre-populate `SessionUnitRepository` / `SessionUnitDao` with the full method set from §3.8 / §4.3 — add functions only as their call sites land.
+   - **3a**: Destination contract (`Imaging` → `data class`, add `CollectionBatchList` / `CollectionBatchForm`), nav stubs, strategy concretes flipped.
+   - **3b**: `CollectionBatchList` screen + VM; grow `SessionUnitDao` / `SessionUnitRepository` with only the methods this VM needs.
+   - **3c**: `CollectionBatchForm` screen + VM + `CollectionBatchIdentityResolver` / `CollectionBatchIdentityValidator`; extend `FormAnswerRepository.upsertFormAnswer` with `sessionUnitId` here (first caller).
+   - **3d**: `ImagingViewModel` / `ImagingScreen` honor `sessionUnitId`, hide submit when scoped, propagate `Specimen.sessionUnitId`.
 
 4. **PR 4 — Retire legacy `hour_log/` + `add_hour/`**
    - Now that the generalized `collection_batch/` feature is in place and wired, remove the superseded packages, nav destinations, and event variants. See §5.2 for the exact list.

@@ -57,10 +57,6 @@ class SpecimenRepositoryImplementation @Inject constructor(
         return specimenDao.getSpecimenByIdAndSessionId(specimenId, sessionId)?.toDomain()
     }
 
-    override suspend fun deleteSpecimen(specimen: Specimen, sessionId: UUID): Boolean {
-        return specimenDao.deleteSpecimen(specimen.toEntity(sessionId, null)) > 0
-    }
-
     override suspend fun getSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): List<SpecimenWithSpecimenImagesAndInferenceResults> {
         val specimens = specimenDao.getSpecimensBySession(sessionId)
         return specimens.map { specimenEntity ->
