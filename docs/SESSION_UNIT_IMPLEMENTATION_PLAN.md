@@ -19,6 +19,10 @@ This section is the single source of truth for "where are we?". It is updated at
 | PR 2 | `CollectionMethodWorkflow` strategy + `IntakeViewModel` refactor | ✅ Merged     |
 | Pre-PR 3 | Dead-code cleanup across core repos / DAOs / composites | ✅ Merged     |
 | PR 3 | `collection_batch/` feature (UI + VMs) + nav + Imaging scoping — **sliced into 3a–3d** | ⏭️ In progress |
+| └ PR 3a | Destination contract + nav scaffold + strategy flip | ✅ Merged     |
+| └ PR 3b | `CollectionBatchList` screen + VM                   | ⏳ Pending    |
+| └ PR 3c | `CollectionBatchForm` screen + VM + identity utils  | ⏳ Pending    |
+| └ PR 3d | Imaging scoping (`sessionUnitId` plumbing)          | ⏳ Pending    |
 | PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏳ Pending    |
 | PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
@@ -163,7 +167,37 @@ intake/domain/strategy/concrete/SurveillanceFormPresentWorkflow.kt
 
 **Tooling note for the agent.** Do **not** run any `git` commands (including `stash`, `commit`, `diff` against other refs, etc.) without explicit permission from the maintainer. Verification of the cleanup must rely on `./gradlew assembleDebug`, repo-wide grep, and `read_lints` — never on stashing or otherwise mutating the working tree.
 
-### Next up — PR 3: `collection_batch/` feature (UI + VMs) + nav + Imaging scoping
+### PR 3a — Destination contract + nav scaffold + strategy flip (✅ Merged)
+
+**What landed.** The navigation surface area for the `collection_batch/` feature is in place — `Destination.Imaging` is now scoped by `sessionUnitId`, and the two new `CollectionBatchList` / `CollectionBatchForm` destinations exist with stub composables. The HLC strategy concrete now points at `CollectionBatchList` instead of the legacy `HourLog`. No repository, DAO, viewmodel, or screen code was touched — `SessionUnitRepository`, `SessionUnitRepositoryImplementation`, and `SessionUnitDao` remain empty post Pre-PR 3 cleanup, in line with the "Read this before writing any code in PR 3" rule.
+
+**Files modified** (all under `app/src/main/java/com/vci/vectorcamapp/`):
+
+- `navigation/Destination.kt` — `Imaging` flipped from `data object` to `data class Imaging(val sessionUnitId: String?)`. Added `data class CollectionBatchList(val sessionId: String)` and `data class CollectionBatchForm(val sessionId: String, val sessionUnitId: String?)`. `HourLog` / `AddHour` left in place (retired in PR 4).
+- `navigation/NavGraph.kt` — added empty `composable<Destination.CollectionBatchList>` and `composable<Destination.CollectionBatchForm>` stubs that render `BaseScaffold { SplashScreen() }`. Updated the two stray `Destination.Imaging` call sites inside the legacy `HourLog` / `AddHour` blocks to `Destination.Imaging(sessionUnitId = null)`. The `composable<Destination.Imaging>` block itself is unchanged (uses `Destination.Imaging` only as a type parameter).
+- `intake/domain/strategy/collection_method/concrete/SingleBatchWorkflow.kt` — `postIntakeDestination` → `Destination.Imaging(sessionUnitId = null)`.
+- `intake/domain/strategy/collection_method/concrete/MultipleBatchWorkflow.kt` — `postIntakeDestination` → `Destination.CollectionBatchList(sessionId = sessionId.toString())`. No longer references `Destination.HourLog`.
+
+**Deviations from the original plan** (intentional, all consistent with existing codebase conventions):
+
+1. **No default values on the new `Destination` constructor params.** The plan called for `Imaging(val sessionUnitId: String? = null)` and `CollectionBatchForm(val sessionId: String, val unitId: String? = null)`. We dropped the defaults so every call site is explicit about whether it's session-scoped or unit-scoped. This matches the rest of `Destination.kt` (`HourLog(sessionId: String)`, `AddHour(sessionId: String)`, `CompleteSessionDetails(sessionId: String)` — none of which use defaults) and forces the `sessionUnitId = null` channel to be visible at every legacy call site.
+2. **`CollectionBatchForm.sessionUnitId`, not `CollectionBatchForm.unitId`.** The plan's §9.1 used `unitId: String?`. We renamed it to `sessionUnitId` so the field name matches `Imaging.sessionUnitId` and the underlying `form_answer.sessionUnitId` / `specimen.sessionUnitId` columns. PR 3c will read it back via `savedStateHandle.toRoute<Destination.CollectionBatchForm>().sessionUnitId`; downstream events / state in 3b–3c should mirror this name (e.g. `CollectionBatchListEvent.NavigateToCollectionBatchForm(sessionId, sessionUnitId)`).
+3. **Stubs render a `SplashScreen` placeholder, not a redirect to legacy `HourLog`.** The plan offered both options. We picked the placeholder because (a) it makes the stubbed state visible during 3a-only smoke tests, (b) it doesn't bake a now-unreachable legacy code path into the nav graph, and (c) it matches the loading-branch shape (`BaseScaffold { SplashScreen() }`) already used inside the `Imaging` and `Intake` composables — reviewers immediately recognize it as scaffolding.
+
+**Known follow-ups baked into PR 3a** (deliberately deferred to later slices):
+
+- `composable<Destination.CollectionBatchList>` and `composable<Destination.CollectionBatchForm>` bodies are placeholders — PR 3b / 3c replace them with real `hiltViewModel<...>()` + `ObserveAsEvents` + screen wiring.
+- `ImagingViewModel` does not yet read `sessionUnitId` from the route — that's PR 3d. Until then, `Destination.Imaging(sessionUnitId = null)` is the only value flowing in (from `SingleBatchWorkflow` and the legacy `HourLog` / `AddHour` blocks), so behavior is identical to pre-3a.
+- Legacy `HourLog` / `AddHour` `composable<>` blocks and the `Destination.HourLog` / `Destination.AddHour` entries are still in place — retirement is PR 4.
+
+**How to verify PR 3a locally.**
+
+- App builds (`./gradlew assembleDebug`); no Hilt graph changes required.
+- Repo-wide grep for `Destination\.Imaging` in `app/src` returns only four hits: the type-position reference in `composable<Destination.Imaging>`, the two updated legacy call sites, and the `SingleBatchWorkflow` flip.
+- **PSC / LTC / OTHER**: Intake → Save → lands on the existing `ImagingScreen` (unchanged behavior, arriving via `Destination.Imaging(sessionUnitId = null)`).
+- **HLC**: Intake → Save → lands on the `CollectionBatchList` stub (a `SplashScreen`). This is the intentional 3a end-state; PR 3b fills the body.
+
+### Next up — PR 3b: `CollectionBatchList` screen + VM
 
 > ## ⚠️ Read this before writing any code in PR 3
 >
@@ -183,7 +217,7 @@ intake/domain/strategy/concrete/SurveillanceFormPresentWorkflow.kt
 
 **Recommended slicing of PR 3.** Land these as separate PRs in order — each is independently reviewable, leaves `master` in a working state, and surfaces a single concern:
 
-- **PR 3a — Destination contract + nav scaffold + strategy flip.** Change `Destination.Imaging` from `data object` to `data class Imaging(val sessionUnitId: String? = null)`. Add `Destination.CollectionBatchList(sessionId: String)` and `Destination.CollectionBatchForm(sessionId: String, unitId: String? = null)`. Flip `SingleBatchWorkflow` / `MultipleBatchWorkflow` to point at the new destinations. Add empty `composable<...>` stubs in `NavGraph.kt` that render a placeholder (or temporarily route back to legacy `HourLog` until 3b lands). No repo or DAO methods added in this slice. Update all existing `Destination.Imaging` call sites to `Destination.Imaging()`.
+- **PR 3a — Destination contract + nav scaffold + strategy flip.** ✅ Merged — see the dedicated PR 3a subsection above for the as-shipped contract. Shipped shape: `Imaging(val sessionUnitId: String?)`, `CollectionBatchList(val sessionId: String)`, `CollectionBatchForm(val sessionId: String, val sessionUnitId: String?)` — no defaults, and the form's unit field is named `sessionUnitId` (not `unitId` as this bullet originally read). Downstream slices must use the `sessionUnitId` name verbatim.
 - **PR 3b — `CollectionBatchList` screen + VM.** Add the list-side files under `collection_batch/list/presentation/`. **Add to `SessionUnitDao` / `SessionUnitRepository` only the methods the ViewModel actually calls in this diff** — most likely one observe-style query for units in a session, and whatever count is needed for the card. Do not pre-add edit/delete methods until the actions that consume them exist.
 - **PR 3c — `CollectionBatchForm` screen + VM + identity utilities.** Add `collection_batch/form/presentation/` and `collection_batch/domain/util/{CollectionBatchIdentityResolver,CollectionBatchIdentityValidator}.kt`. Add only the repo / DAO methods this VM actually invokes (e.g. upsert + the lookup needed for edit mode + the cross-unit duplicate check). Extend `FormAnswerRepository.upsertFormAnswer` with the `sessionUnitId` parameter here, since this is the first caller that needs it.
 - **PR 3d — Imaging scoping.** `ImagingViewModel` / `ImagingState` / `ImagingScreen` read `sessionUnitId`, gate submit/upload UI on `isUnitScoped`, propagate `Specimen.sessionUnitId`, and emit `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped. Add any final delete-guard repo method needed by 3b's card actions if it was deferred.

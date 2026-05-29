@@ -6,5 +6,5 @@ import java.util.UUID
 
 class MultipleBatchWorkflow(sessionId: UUID) : CollectionMethodWorkflow {
     override val postIntakeDestination: Destination =
-        Destination.HourLog(sessionId = sessionId.toString())
+        Destination.CollectionBatchList(sessionId = sessionId.toString())
 }

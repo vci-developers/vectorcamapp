@@ -160,6 +160,18 @@ fun NavGraph(startDestination: Destination) {
             }
         }
 
+        composable<Destination.CollectionBatchList> {
+            BaseScaffold(modifier = Modifier.fillMaxSize()) {
+                SplashScreen()
+            }
+        }
+
+        composable<Destination.CollectionBatchForm> {
+            BaseScaffold(modifier = Modifier.fillMaxSize()) {
+                SplashScreen()
+            }
+        }
+
         composable<Destination.IncompleteSession> {
             val viewModel = hiltViewModel<IncompleteSessionViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
@@ -255,7 +267,7 @@ fun NavGraph(startDestination: Destination) {
                     )
 
                     is HourLogEvent.NavigateToImagingScreen -> navController.navigate(
-                        Destination.Imaging
+                        Destination.Imaging(sessionUnitId = null)
                     )
                 }
             }
@@ -276,7 +288,7 @@ fun NavGraph(startDestination: Destination) {
                     AddHourEvent.NavigateBackToPreviousScreen -> navController.popBackStack()
 
                     AddHourEvent.NavigateToImagingScreen -> navController.navigate(
-                        Destination.Imaging
+                        Destination.Imaging(sessionUnitId = null)
                     )
                 }
             }

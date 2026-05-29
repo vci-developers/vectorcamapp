@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.navigation
 
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import kotlinx.serialization.Serializable
+import java.util.UUID
 
 sealed interface Destination {
     @Serializable
@@ -14,7 +15,13 @@ sealed interface Destination {
     data class Intake(val sessionType: SessionType) : Destination
 
     @Serializable
-    data object Imaging : Destination
+    data class Imaging(val sessionUnitId: String?) : Destination
+
+    @Serializable
+    data class CollectionBatchList(val sessionId: String) : Destination
+
+    @Serializable
+    data class CollectionBatchForm(val sessionId: String, val sessionUnitId: String?) : Destination
 
     @Serializable
     data object IncompleteSession : Destination

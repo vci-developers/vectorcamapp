@@ -4,5 +4,5 @@ import com.vci.vectorcamapp.intake.domain.strategy.collection_method.CollectionM
 import com.vci.vectorcamapp.navigation.Destination
 
 class SingleBatchWorkflow : CollectionMethodWorkflow {
-    override val postIntakeDestination: Destination = Destination.Imaging
+    override val postIntakeDestination: Destination = Destination.Imaging(sessionUnitId = null)
 }
