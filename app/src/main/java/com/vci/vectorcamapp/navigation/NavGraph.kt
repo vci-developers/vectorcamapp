@@ -12,6 +12,9 @@ import androidx.navigation.compose.rememberNavController
 import com.vci.vectorcamapp.add_hour.presentation.AddHourEvent
 import com.vci.vectorcamapp.add_hour.presentation.AddHourScreen
 import com.vci.vectorcamapp.add_hour.presentation.AddHourViewModel
+import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListEvent
+import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListScreen
+import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListViewModel
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsEvent
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsScreen
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsViewModel
@@ -161,8 +164,30 @@ fun NavGraph(startDestination: Destination) {
         }
 
         composable<Destination.CollectionBatchList> {
+            val viewModel = hiltViewModel<CollectionBatchListViewModel>()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+
+            ObserveAsEvents(events = viewModel.events) { event ->
+                when (event) {
+                    CollectionBatchListEvent.NavigateBackToLandingScreen -> navController.popBackStack(Destination.Landing, false)
+
+                    is CollectionBatchListEvent.NavigateToCollectionBatchForm -> navController.navigate(
+                        Destination.CollectionBatchForm(
+                            sessionId = event.sessionId.toString(),
+                            sessionUnitId = event.sessionUnitId?.toString()
+                        )
+                    )
+                }
+            }
+
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
-                SplashScreen()
+                when (state.isLoading) {
+                    true -> SplashScreen()
+
+                    false -> CollectionBatchListScreen(
+                        state = state, onAction = viewModel::onAction
+                    )
+                }
             }
         }
 

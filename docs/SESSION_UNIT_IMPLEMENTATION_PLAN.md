@@ -20,8 +20,8 @@ This section is the single source of truth for "where are we?". It is updated at
 | Pre-PR 3 | Dead-code cleanup across core repos / DAOs / composites | ✅ Merged     |
 | PR 3 | `collection_batch/` feature (UI + VMs) + nav + Imaging scoping — **sliced into 3a–3d** | ⏭️ In progress |
 | └ PR 3a | Destination contract + nav scaffold + strategy flip | ✅ Merged     |
-| └ PR 3b | `CollectionBatchList` screen + VM                   | ⏳ Pending    |
-| └ PR 3c | `CollectionBatchForm` screen + VM + identity utils  | ⏳ Pending    |
+| └ PR 3b | `CollectionBatchList` screen + VM                   | ✅ Merged     |
+| └ PR 3c | `CollectionBatchForm` screen + VM + identity utils  | ⏭️ Next up    |
 | └ PR 3d | Imaging scoping (`sessionUnitId` plumbing)          | ⏳ Pending    |
 | PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏳ Pending    |
 | PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
@@ -197,7 +197,59 @@ intake/domain/strategy/concrete/SurveillanceFormPresentWorkflow.kt
 - **PSC / LTC / OTHER**: Intake → Save → lands on the existing `ImagingScreen` (unchanged behavior, arriving via `Destination.Imaging(sessionUnitId = null)`).
 - **HLC**: Intake → Save → lands on the `CollectionBatchList` stub (a `SplashScreen`). This is the intentional 3a end-state; PR 3b fills the body.
 
-### Next up — PR 3b: `CollectionBatchList` screen + VM
+### PR 3b — `CollectionBatchList` screen + VM (✅ Merged)
+
+**What landed.** The HLC post-intake flow now lands on a real `CollectionBatchListScreen` instead of the PR 3a `SplashScreen` stub. The screen shows one card per `session_unit` row for the current session, with the specimen count per batch. A FAB navigates to the (still-stubbed) `CollectionBatchForm`; the cloud-upload icon submits the session via the existing worker chain. `SessionUnitRepository` / `SessionUnitDao` grew by exactly the two methods this VM consumes — nothing speculative.
+
+**Files added** (all under `app/src/main/java/com/vci/vectorcamapp/`):
+
+```
+collection_batch/list/presentation/CollectionBatchListScreen.kt
+collection_batch/list/presentation/CollectionBatchListViewModel.kt
+collection_batch/list/presentation/CollectionBatchListState.kt
+collection_batch/list/presentation/CollectionBatchListAction.kt
+collection_batch/list/presentation/CollectionBatchListEvent.kt
+collection_batch/list/presentation/components/CollectionBatchCard.kt
+```
+
+**Files modified.**
+
+- `core/data/room/dao/SessionUnitDao.kt` — added `observeSessionUnitsForSession(sessionId): Flow<List<SessionUnitEntity>>` (ordered by `unitOrder ASC`) and `countSpecimensForSessionUnit(sessionUnitId): Int`. Still the only two methods on the DAO — everything else stays empty until PR 3c needs it.
+- `core/domain/repository/SessionUnitRepository.kt` — mirrored: `observeSessionUnitsForSession(...)` and `countSpecimensForSessionUnit(...)`. No `Result<>` wrappers (these are reads, matching the existing `SpecimenRepository.observeSpecimensBySession` / `SessionRepository.getImageUrisBySessionId` shape).
+- `core/data/repository/SessionUnitRepositoryImplementation.kt` — entity→domain mapping done in impl via `it.toDomain()`, never in the DAO.
+- `navigation/NavGraph.kt` — replaced the `composable<Destination.CollectionBatchList>` `SplashScreen` stub with the real wire-up: `hiltViewModel<CollectionBatchListViewModel>()`, `ObserveAsEvents`, and `BaseScaffold { when (state.isLoading) { ... } }`. Imports for the new screen/event/VM added.
+
+**Deviations from the original plan** (intentional, all consistent with existing codebase conventions and the "Read this before…" callout):
+
+1. **Imaging is reachable ONLY through the form, not directly from the list.** The plan's §2 user flow showed two card affordances on the list — "tap arrow → imaging" and "tap body → form (edit mode)". We collapsed these into a single card click that always routes to the form. The form will end its happy path on `Destination.Imaging(sessionUnitId)`, so the form becomes the one and only door into imaging. Rationale: a single chokepoint into imaging keeps batch-identity validation in one place (the form) and avoids a "resume" path that would skip validation for an edited identity.
+2. **Single `OpenCollectionBatch` action, not separate `OpenCollectionBatchImaging` + `EditCollectionBatch`.** Direct consequence of #1. The plan listed three card actions; we ship one.
+3. **No `DeleteCollectionBatch` action / no `canDelete` flag on state / no `deleteSessionUnitIfNoSpecimens` repo method.** Per the slicing rule, delete has no UI dispatcher in this diff, so the action / event / repo method are all deferred. PR 3d revisits.
+4. **No intermediate `CollectionBatchCardData`.** State carries `units: List<SessionUnit>` (canonical domain model) plus `specimenCountsBySessionUnitId: Map<UUID, Int>` for the only piece of side-data that isn't on `SessionUnit`. Card composables consume `SessionUnit` directly. Mirrors `CompleteSessionListViewModel.Map<SessionAndSite, SessionUploadProgress>` rather than inventing a presentation-layer wrapper.
+5. **Bucket name is `"Batch ${unit.unitOrder}"` for now.** No identity resolver wired yet — that's PR 3c. The card title falls back cleanly when identity components don't exist, which is also what the plan's §7.3 prescribed as the fallback.
+6. **`UUID` everywhere except at the `Destination(...)` constructor.** `Action` / `Event` / VM internals all carry `UUID`. The single `String ↔ UUID` conversion lives on the `NavGraph` line that builds `Destination.CollectionBatchForm(event.sessionId.toString(), event.sessionUnitId?.toString())`. Matches PR 2 deviation #3 and the `CompleteSessionListEvent.NavigateToCompleteSessionDetails` precedent. Flipping `Destination` itself to typed `UUID` requires a `NavType<UUID>` + `typeMap` refactor across all 6 existing routes — deferred to a future "type-safe UUID nav" PR, not folded into 3b.
+7. **State pipeline shape matches `IntakeViewModel` / `IncompleteSessionViewModel` precisely.** Source flow → `stateIn(WhileSubscribed(), empty)` → `_state: MutableStateFlow` → `combine(...) { state.copy(...) }` → outer `stateIn(WhileSubscribed(5000L), initial)`. The `_state` MSF is kept (currently unused for mutation) so future UI-state additions in 3c/3d don't have to re-plumb the pipeline. The suspending `countSpecimensForSessionUnit` call lives inside the `combine` lambda — same pattern as `CompleteSessionListViewModel`'s `getTotalCountForSession`.
+8. **`SubmitSession` action, not `UploadSession`.** Renamed for naming parity with `ImagingAction.SubmitSession`. The body is a verbatim transliteration of `ImagingViewModel.SubmitSession` (null-guard on cache → `markSessionAsComplete` → `enqueueSessionUpload` → `clearSession` → pop to Landing). Same worker chain, same idempotency guarantees.
+9. **`+` is a `FloatingActionButton`, not a `ScreenHeader` leading icon.** Mirrors the `BottomEnd`-aligned FAB pattern in `CompleteSessionListScreen`. The cloud-upload submit stays as a `ScreenHeader` trailing icon — submit is a terminal/destructive action that belongs in chrome, not a primary CTA. Empty-state copy reads "Tap the + button below to add one."
+10. **No back-arrow `leadingIcon` and no `ReturnToLandingScreen` / `ReturnToIntakeScreen` action.** Android system back fires `popBackStack()` automatically, which returns the user to Intake (one frame up). The `SubmitSession` happy path covers the Landing exit. Adding a visible back-arrow would create a third entry point for already-covered transitions; revisit if UX feedback says otherwise.
+11. **`CollectionBatchCard` uses single `onClick` and only renders `createdAt`** (not "Last Updated"). `SessionUnit` doesn't model an updated timestamp; if PR 3c adds one, the card grows then. Visual structure otherwise carries 1:1 from `HourSessionCard`.
+
+**Known follow-ups baked into PR 3b** (deliberately deferred):
+
+- The `composable<Destination.CollectionBatchForm>` block in `NavGraph.kt` is still a `BaseScaffold { SplashScreen() }` stub — PR 3c.
+- `CollectionBatchListEvent.NavigateToCollectionBatchForm` is the only forward navigation; until 3c lands, tapping the FAB or any card sends the user to the form stub.
+- `SessionUnitDao` is still only the two methods listed above. The form-side methods (`getMaxUnitOrderForSession`, `getSessionUnitById`, `upsertSessionUnit`, plus any duplicate-identity lookup the form needs) come in 3c when their call sites exist.
+- `FormAnswerRepository.upsertFormAnswer` is still unchanged from PR 1 — the `sessionUnitId` parameter lands in 3c.
+- Delete affordance / `deleteSessionUnitIfNoSpecimens` / `canDelete` flag on the card — PR 3d.
+- Type-safe `UUID` nav arguments — separate future PR (likely after PR 4 so the refactor surface is half the size).
+
+**How to verify PR 3b locally.**
+
+- `./gradlew assembleDebug` is clean. No Hilt module changes — `SessionUnitRepository` / `SessionRepository` / `WorkManagerRepository` / `CurrentSessionCache` were all bound pre-PR-3.
+- **HLC**: Intake → Save → `CollectionBatchListScreen` with the empty-state message ("No collection batches yet. Tap the + button below to add one."). FAB navigates to the form stub (`SplashScreen` until 3c). Cloud-upload icon completes the session, enqueues `MetadataUploadWorker → ImageUploadWorker`, and pops to Landing. System back from the empty list returns to Intake.
+- **PSC / LTC / OTHER**: untouched — `SingleBatchWorkflow → Destination.Imaging(sessionUnitId = null)` still works exactly as before.
+- Repo-wide grep: `CollectionBatchListViewModel` → 2 hits (file + `NavGraph.kt`); `observeSessionUnitsForSession` → 3 hits (DAO + impl + VM); `countSpecimensForSessionUnit` → 3 hits (DAO + impl + VM).
+
+### Next up — PR 3c: `CollectionBatchForm` screen + VM + identity utils
 
 > ## ⚠️ Read this before writing any code in PR 3
 >
@@ -206,9 +258,10 @@ intake/domain/strategy/concrete/SurveillanceFormPresentWorkflow.kt
 > The rules for PR 3:
 >
 > 1. **Add repository / DAO methods one at a time, and only when the call site that needs them exists in the same diff.** No speculative `observeX`, `getMaxX`, `countX`, etc. up front.
-> 2. **Disregard the function lists in §3.8 and §4.3 of this plan.** Those were drafted when the layer was assumed full. The empty contracts post-cleanup are the new starting point; §3.8 / §4.3 are reference material, not a checklist.
-> 3. **Match existing codebase conventions every time.** When you add a new repo method, mirror the shape of nearby `SessionRepository` / `SpecimenRepository` methods (e.g. `Result<Unit, RoomDbError>` returns, `observe*` for Flow, `get*ById` for suspend, `fun toEntity(sessionId: UUID)` mapper threading). Consistency over cleverness — this codebase has strong patterns and PR 3 should not introduce new ones.
-> 4. **Slice PR 3 into smaller PRs.** A single PR carrying two new screens, two new viewmodels, two domain utilities, an `Imaging` destination contract change, and a `FormAnswerRepository` signature change is too large to review well. The recommended slicing is below.
+> 2. **Prefer extending an existing function over adding a sibling.** Before introducing a new DAO/repo/mapper/util function, check whether the existing function can be widened (typically with an optional/nullable parameter or a sensible default) to cover both the old and new call sites. The bar for "add a new function instead" is: the modified function's body would become materially harder to read, the old callers would need non-trivial updates, or the new behavior diverges in return shape / nullability / locking. If none of those apply, **modify, don't proliferate**. Concrete examples already in the codebase: `FormAnswer.toEntity(sessionId, questionId, sessionUnitId = null)` (PR 1 — added the third param with a default rather than creating `toEntityForSessionUnit`), and `FormAnswerRepository.upsertFormAnswer` slated to grow a `sessionUnitId: UUID? = null` param in PR 3c rather than getting a `upsertUnitScopedFormAnswer` sibling. When in doubt, mirror those moves.
+> 3. **Disregard the function lists in §3.8 and §4.3 of this plan.** Those were drafted when the layer was assumed full. The empty contracts post-cleanup are the new starting point; §3.8 / §4.3 are reference material, not a checklist.
+> 4. **Match existing codebase conventions every time.** When you add a new repo method, mirror the shape of nearby `SessionRepository` / `SpecimenRepository` methods (e.g. `Result<Unit, RoomDbError>` returns, `observe*` for Flow, `get*ById` for suspend, `fun toEntity(sessionId: UUID)` mapper threading). Consistency over cleverness — this codebase has strong patterns and PR 3 should not introduce new ones.
+> 5. **Slice PR 3 into smaller PRs.** A single PR carrying two new screens, two new viewmodels, two domain utilities, an `Imaging` destination contract change, and a `FormAnswerRepository` signature change is too large to review well. The recommended slicing is below.
 
 **Scope.** §5 (file migration), §7 (list screen), §8 (form screen), §9 (imaging scoping), plus the two one-line concrete-strategy flips from PR 2:
 
@@ -219,7 +272,7 @@ intake/domain/strategy/concrete/SurveillanceFormPresentWorkflow.kt
 
 - **PR 3a — Destination contract + nav scaffold + strategy flip.** ✅ Merged — see the dedicated PR 3a subsection above for the as-shipped contract. Shipped shape: `Imaging(val sessionUnitId: String?)`, `CollectionBatchList(val sessionId: String)`, `CollectionBatchForm(val sessionId: String, val sessionUnitId: String?)` — no defaults, and the form's unit field is named `sessionUnitId` (not `unitId` as this bullet originally read). Downstream slices must use the `sessionUnitId` name verbatim.
 - **PR 3b — `CollectionBatchList` screen + VM.** Add the list-side files under `collection_batch/list/presentation/`. **Add to `SessionUnitDao` / `SessionUnitRepository` only the methods the ViewModel actually calls in this diff** — most likely one observe-style query for units in a session, and whatever count is needed for the card. Do not pre-add edit/delete methods until the actions that consume them exist.
-- **PR 3c — `CollectionBatchForm` screen + VM + identity utilities.** Add `collection_batch/form/presentation/` and `collection_batch/domain/util/{CollectionBatchIdentityResolver,CollectionBatchIdentityValidator}.kt`. Add only the repo / DAO methods this VM actually invokes (e.g. upsert + the lookup needed for edit mode + the cross-unit duplicate check). Extend `FormAnswerRepository.upsertFormAnswer` with the `sessionUnitId` parameter here, since this is the first caller that needs it.
+- **PR 3c — `CollectionBatchForm` screen + VM + identity utilities.** Add `collection_batch/form/presentation/` and `collection_batch/domain/util/{CollectionBatchIdentityResolver,CollectionBatchIdentityValidator}.kt`. Add only the repo / DAO methods this VM actually invokes (e.g. upsert + the lookup needed for edit mode + the cross-unit duplicate check). Extend `FormAnswerRepository.upsertFormAnswer` with the `sessionUnitId` parameter here, since this is the first caller that needs it. **Also addresses two cross-cutting follow-ups carried over from PR 3b — see "Additional scope" below.**
 - **PR 3d — Imaging scoping.** `ImagingViewModel` / `ImagingState` / `ImagingScreen` read `sessionUnitId`, gate submit/upload UI on `isUnitScoped`, propagate `Specimen.sessionUnitId`, and emit `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped. Add any final delete-guard repo method needed by 3b's card actions if it was deferred.
 
 **Files to add across 3a–3d** (high level — see §5.3 for the full directory layout):
@@ -242,6 +295,41 @@ collection_batch/form/presentation/
 - `imaging/presentation/ImagingViewModel.kt` + `ImagingState.kt` + `ImagingScreen.kt` + `ImagingEvent.kt` — PR 3d.
 - `core/domain/repository/FormAnswerRepository.kt` + impl — PR 3c (when the form VM first needs unit-scoped answers).
 - `core/data/room/dao/SessionUnitDao.kt` + `core/domain/repository/SessionUnitRepository.kt` + impl — grown method-by-method across 3b / 3c / 3d, only as call sites require.
+
+**Additional scope decided after PR 3b** (folded into PR 3c — both items emerged once the list flow was wired end-to-end):
+
+1. **Submit-session confirmation dialog with "save as in-progress" branch.** Today `CollectionBatchListAction.SubmitSession` immediately calls `sessionRepository.markSessionAsComplete(...)` + `workManagerRepository.enqueueSessionUpload(...)` + `currentSessionCache.clearSession()` and pops to Landing — a single tap commits the user. PR 3c replaces this with a confirmation dialog that exposes two branches:
+   - **"Save as in-progress"** — leaves the session unchanged (no `markSessionAsComplete`, no `enqueueSessionUpload`), only `currentSessionCache.clearSession()` + pop to Landing. The session shows up in the incomplete-sessions list and can be resumed later. This is the new path.
+   - **"Confirm submission"** — the existing PR 3b body (verbatim transliteration of `ImagingViewModel.SubmitSession`). Marks complete, enqueues, clears cache, pops to Landing.
+
+   Implementation shape: split `CollectionBatchListAction.SubmitSession` into the user-tap action that just opens the dialog, plus two terminal actions `SaveSessionAsInProgress` and `ConfirmSubmitSession`. The dialog lives in state (`val isSubmitDialogVisible: Boolean = false`) and is rendered by `CollectionBatchListScreen` using whatever the codebase's house dialog primitive is (grep `AlertDialog` / `ConfirmationDialog` first; reuse rather than re-invent). The cloud-upload header icon dispatches the dialog-open action; the dialog's two buttons dispatch the terminal actions.
+
+   Open question for PR 3c implementation: **does this dialog pattern also belong on `ImagingScreen.SubmitSession`?** The current `ImagingViewModel.SubmitSession` is the source the PR 3b code copied verbatim, and it has the same single-tap commit behavior. If we accept the dialog UX as the standard for "ending a session", `ImagingViewModel.SubmitSession` should likely grow the same branching at the same time — at minimum, the legacy PSC/LTC/OTHER paths through `ImagingScreen` should not silently keep the old one-tap behavior. Decide before starting 3c whether the dialog change applies there too, or whether it stays scoped to the new collection-batch list for now.
+
+2. **Scope-filtered form questions: SESSION on intake, SESSION_UNIT on the batch form.** PR 1 added the `answerScope` column on `form_question` precisely to support this split, but it is not yet honored anywhere on the read path. `FormQuestionDao.getQuestionsByFormId(formId)` returns *all* questions for a form regardless of scope, and `ProgramFormWorkflow.formQuestions` (consumed by `IntakeViewModel`) inherits that. Effects today: the Intake screen would render `SESSION_UNIT` questions inside the SESSION form once any real form data ships, and `CollectionBatchFormViewModel` would have to client-side-filter the same list. PR 3c fixes both ends **by widening the existing function, not adding a sibling** (per Rule 2 of the "Read this before…" callout):
+   - **`FormQuestionDao.getQuestionsByFormId`** — extend the existing method to accept an optional scope filter:
+
+     ```kotlin
+     @Query("""
+         SELECT * FROM form_question
+         WHERE formId = :formId
+           AND (:answerScope IS NULL OR answerScope = :answerScope)
+         ORDER BY `order` ASC
+     """)
+     suspend fun getQuestionsByFormId(
+         formId: Int,
+         answerScope: FormQuestionScope? = null,
+     ): List<FormQuestionEntity>
+     ```
+
+     `null` preserves the existing scope-blind behavior, so callers that don't care about scope (sync workers, registration, settings) are completely untouched — they continue calling `getQuestionsByFormId(formId)` and get every row back.
+   - **`FormQuestionRepository.getQuestionsByFormId`** — mirror the signature change: `suspend fun getQuestionsByFormId(formId: Int, scope: FormQuestionScope? = null): List<FormQuestion>`. Impl forwards the scope argument to the DAO; mapping stays `entities.map { it.toDomain() }`.
+   - **Intake side**: `ProgramFormWorkflowFactory.create(...)` (line 22) currently calls `formQuestionRepository.getQuestionsByFormId(form.id)`. Change to `getQuestionsByFormId(form.id, FormQuestionScope.SESSION)`. `FormPresentWorkflow.formQuestions` then carries only SESSION-scoped questions, and `IntakeViewModel` / `IntakeScreen` automatically render only those — no VM change required.
+   - **CollectionBatchForm side**: when the new `CollectionBatchFormViewModel` lands in 3c, fetch its questions via `getQuestionsByFormId(form.id, FormQuestionScope.SESSION_UNIT)`. The plan's §8.2 step 1 ("Partition by `answerScope == SESSION_UNIT`") becomes redundant — the read path already returns only `SESSION_UNIT`-scoped questions, so the VM just partitions further by `isUnitIdentityComponent` to derive `identityQuestions` vs `otherUnitQuestions`.
+   - **Scope-blind callers stay unchanged.** `MetadataUploadWorker.syncFormAnswersIfNeeded` (sync), `SettingsViewModel.upsertFormQuestion` (admin), and `RegistrationViewModel.upsertFormQuestion` (admin) all continue calling `getQuestionsByFormId(formId)` with no scope argument — the default `null` preserves their existing behavior verbatim.
+   - **`FormQuestionScope` is already an enum** (PR 1 deviation #1 — `FormQuestionScope { SESSION, SESSION_UNIT }` with a `FormQuestionScopeConverter`). The DAO can take the enum directly — Room's converter handles persistence; no `String` round-trip needed at the call site.
+
+   **Why widening over a sibling.** A `getQuestionsByFormIdAndScope` sibling would duplicate the query shape, the mapper plumbing, and the repo contract for what is functionally a single read with an optional `WHERE` clause. The widened version reads as plain English at every call site (`getQuestionsByFormId(id)` = "all", `getQuestionsByFormId(id, SESSION)` = "session ones"), keeps a single unit of test surface, and matches the precedent set by `FormAnswer.toEntity(sessionId, questionId, sessionUnitId = null)` in PR 1.
 
 **What NOT to change in PR 3 (any slice).**
 

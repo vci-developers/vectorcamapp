@@ -1,13 +1,17 @@
 package com.vci.vectorcamapp.core.data.room.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Query
-import androidx.room.Transaction
-import androidx.room.Upsert
 import com.vci.vectorcamapp.core.data.room.entities.SessionUnitEntity
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 @Dao
 interface SessionUnitDao {
+
+    @Query("SELECT * FROM session_unit WHERE sessionId = :sessionId ORDER BY unitOrder ASC")
+    fun observeSessionUnitsForSession(sessionId: UUID): Flow<List<SessionUnitEntity>>
+
+    @Query("SELECT COUNT(*) FROM specimen WHERE sessionUnitId = :sessionUnitId")
+    suspend fun countSpecimensForSessionUnit(sessionUnitId: UUID): Int
 }
