@@ -7,5 +7,6 @@ data class CollectionBatchListState(
     val isLoading: Boolean = true,
     val sessionId: UUID = UUID(0, 0),
     val sessionUnits: List<SessionUnit> = emptyList(),
-    val specimenCountsBySessionUnitId: Map<UUID, Int> = emptyMap()
+    val specimenCountsBySessionUnitId: Map<UUID, Int> = emptyMap(),
+    val bucketNamesBySessionUnitId: Map<UUID, String> = emptyMap()
 )

@@ -304,13 +304,13 @@ collection_batch/list/presentation/components/CollectionBatchCard.kt
 
 1. ~~**Edit-mode answer hydration.** `loadFormDetails` is `sessionUnitId`-blind — tapping an existing card opens a blank form. Add `FormAnswerDao.getFormAnswersBySessionUnitId(sessionUnitId: UUID): List<FormAnswerEntity>` + matching `FormAnswerRepository.getFormAnswersBySessionUnitId(sessionUnitId): Map<Int, FormAnswer>` (same shape as the existing `getFormAnswersBySessionId`). Then in `loadFormDetails` branch on `sessionUnitId`: when non-null, fetch and merge into the seed map, preserving each `FormAnswer.localId` from the DB row. **Critical for `@Upsert` collapse** — generating fresh UUIDs at hydration breaks UPDATE-vs-INSERT and accumulates duplicate `form_answer` rows on every edit save. See Convention #12.~~ ✅ **Shipped in PR 3d, slice 1** — see the PR 3d in-progress subsection below.
 2. **Reactive duplicate-identity banner.** Currently only updates on `SubmitSessionUnitForm`. Derive via a `combine(identityDrafts, formQuestions, existingAnswersBySessionUnitId).launchIn(viewModelScope)` Flow that writes the validator's `errorOrNull()` back into `state.collectionBatchFormErrors.duplicateIdentity`. Snapshot the existing answers once in `loadFormDetails` (no concurrent unit-write path today — `MutableStateFlow<Map<UUID, Map<Int, FormAnswer>>>` field on the VM is sufficient). `SubmitSessionUnitForm` becomes read-only against the flow-derived value. Naturally side-steps the eager-validation UX problem because the validator returns `Success` for blank identities.
-3. **`CollectionBatchIdentityResolver` + list-card identity-label upgrade.** Pure display formatter (sort identity questions by `id`, join with `" · "`, fall back to `"Batch ${unit.unitOrder}"` when no identity questions exist). Wired into `CollectionBatchListViewModel`, consuming the same `FormAnswerRepository.getSessionUnitScopedFormAnswersBySessionId` snapshot the form VM uses. `CollectionBatchCard` renders the derived title.
+3. ~~**`CollectionBatchIdentityResolver` + list-card identity-label upgrade.** Pure display formatter (sort identity questions by `id`, join with `" · "`, fall back to `"Batch ${unit.unitOrder}"` when no identity questions exist). Wired into `CollectionBatchListViewModel`, consuming the same `FormAnswerRepository.getSessionUnitScopedFormAnswersBySessionId` snapshot the form VM uses. `CollectionBatchCard` renders the derived title.~~ ✅ **Shipped in PR 3d, slice 3** — see the PR 3d in-progress subsection. Naming, signature-shape, and silent-failure follow-ups rolled into the new "Audit & cleanup pass" subsection.
 4. **Submit-session confirmation dialog (deferred from 3c — Additional scope #1).** Split `CollectionBatchListAction.SubmitSession` into dialog-open + `SaveSessionAsInProgress` + `ConfirmSubmitSession`. Open question still: does the same dialog belong on `ImagingScreen.SubmitSession`? Decide at 3d kickoff.
 5. **Per-field error reactive clearing.** Same `combine` Flow pattern as the banner but for `formAnswerErrors`. Carries an additional UX subproblem — eager validation on form-open would show "required field" everywhere unless gated by a per-field "touched" tracker. Lower priority than the banner; consider only if QA flags inline-error timing as a usability issue.
 6. **Delete affordance** — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens` + matching DAO query, `DeleteCollectionBatch` action, `canDelete` flag on `CollectionBatchCard`. From original 3d scope. Once this lands, Deviation #12's defensive `?:` becomes reachable.
 7. **Imaging scoping** (original 3d scope) — `ImagingViewModel` / `ImagingState` / `ImagingScreen` read `sessionUnitId`, gate submit/upload UI on `isUnitScoped`, propagate `Specimen.sessionUnitId`, emit `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped.
 8. **`DuplicateIdentityWarningBanner` text consolidation.** Banner hardcodes a string (`"Another collection batch with these identity values already exists!"`) while the toast goes through `R.string.collection_batch_form_error_duplicate_identity` (`"A collection batch with this identity already exists. Please change one of the identity fields."`). Two strings for the same condition. Banner should consume the same string resource. Minor polish.
-9. **Silent failure handling in `loadFormDetails`.** `programId == null` / `program == null` / `form == null` still just drops `isLoading` to `false` and leaves an empty screen. Add `emitError(CollectionBatchFormError.UNKNOWN_ERROR)` + `NavigateBackToCollectionBatchListScreen` emission, mirroring `IntakeViewModel:636-650`.
+9. **Silent failure handling in `loadFormDetails`.** `programId == null` / `program == null` / `form == null` still just drops `isLoading` to `false` and leaves an empty screen. Add `emitError(CollectionBatchFormError.UNKNOWN_ERROR)` + `NavigateBackToCollectionBatchListScreen` emission, mirroring `IntakeViewModel:636-650`. **Note (post-slice-3):** the same swallow-and-return-empty pattern now also exists in `CollectionBatchListViewModel.loadSessionUnitFormQuestions`. Fix both VMs in the same diff during the "Audit & cleanup pass" subsection above.
 
 **Deferred to PR 5** (sync wiring):
 
@@ -378,7 +378,101 @@ Before: tapping an existing batch card on `CollectionBatchListScreen` routed to 
 
 **Deviations from plan.** None. The slice landed as specified in Deferred-to-3d #1 above.
 
-### Next up — PR 3d: form polish (reactive banner) + delete affordance + submit-session dialog + Imaging scoping
+**Slice 3 — Identity-string display on list cards (✅ Shipped).** Closes Deferred-to-3d #3.
+
+Before: every collection-batch card on `CollectionBatchListScreen` rendered `"Batch ${unit.unitOrder}"` regardless of identity values — a PR 3b placeholder. After: the card title is the joined identity string (e.g. `"18:00 · 19:00 · Indoor"`), falling back to `"Batch ${unit.unitOrder}"` only when no identity values exist.
+
+**Files added:**
+
+- `collection_batch/domain/util/CollectionBatchIdentityResolver.kt` — `object` with a single pure function `deriveBucketName(formQuestions, answersByQuestionId): String`. Filters by `answerScope == SESSION_UNIT && isUnitIdentityComponent`, sorts by `questionId` for stable output, trims values, joins non-blank ones with `" · "`. Returns `""` when nothing applies — callers own the fallback.
+
+**Files modified:**
+
+- `collection_batch/list/presentation/CollectionBatchListState.kt` — added `val bucketNameBySessionUnitId: Map<UUID, String> = emptyMap()`.
+- `collection_batch/list/presentation/CollectionBatchListViewModel.kt` — gained five Hilt injections (`deviceCache`, `programRepository`, `formRepository`, `formQuestionRepository`, `formAnswerRepository`) and a `loadSessionUnitFormQuestions()` suspend helper that mirrors `CollectionBatchFormViewModel.loadFormDetails`'s program→form→questions chain. The existing `combine(_sessionUnits, _state) { ... }` lambda was extended to fetch `formQuestions` + `existingAnswersBySessionUnitId` once per emission and derive `bucketNameBySessionUnitId` alongside the existing `specimenCountsBySessionUnitId`.
+- `collection_batch/list/presentation/components/CollectionBatchCard.kt` — gained a `title: String` parameter; the card applies the `.ifBlank { "Batch ${sessionUnit.unitOrder}" }` fallback locally.
+- `collection_batch/list/presentation/CollectionBatchListScreen.kt` — passes `title = state.bucketNameBySessionUnitId[sessionUnit.localId].orEmpty()`.
+
+**Design decisions worth recording:**
+
+1. **Resolver lives in `domain/util/`, not `presentation/`.** The VM is the consumer; the screen sees only the precomputed `Map<UUID, String>`. Mirrors the precedent set by `intake/domain/util/FormQuestionPrerequisiteEvaluator` (pure function `object`, no DI). Validation conventions (use case + Hilt) don't apply because this is display formatting, not validation.
+2. **Bucket name lives on state, not derived in the component.** Convention #1 ("derive in the screen") was evaluated against the alternative ("put both raw inputs on state and let the component derive"). The alternative grows state surface more than the chosen approach (one `Map<UUID, String>` field vs. a `List<FormQuestion>` + `Map<UUID, Map<Int, FormAnswer>>` pair). Convention #1's spirit is "minimize state surface", which the chosen approach honors even while deviating from the letter. Mirrors the `specimenCountsBySessionUnitId` shape as a precomputed per-unit attribute map.
+3. **Fallback `"Batch ${unit.unitOrder}"` lives in the card, not the resolver or the VM.** Keeps the resolver's contract clean ("derive identity, return empty if none") and lets future consumers (delete-confirmation dialog, submit dialog) distinguish "this unit has no identity values yet" from "this unit's name happens to be 'Batch 3'". Card has `unitOrder` in scope so the fallback is free at the consumer.
+4. **No `@Relation`-based fetch in this slice.** Deferred-to-PR-5 #12 (`SessionUnitWithFormAnswersRelation`-backed `@Transaction @Query` on `SessionUnitDao`) would let this VM consume `Flow<List<SessionUnitWithFormAnswers>>` and drop the separate `formAnswerRepository` lookup. The plan's threshold for landing it — "two consumers of the relation" — is now met (validator in 3c + resolver in 3d), so pulling it forward in PR 5 (or a dedicated cleanup PR) is the next obvious refactor. Slice 3 deliberately did not bundle it to keep this diff focused.
+
+**Deviations from plan worth recording.**
+
+1. **`CollectionBatchIdentityResolver` is a top-level `object`, not the Hilt-injectable class the plan described.** Plan §307 implied a use-case-like shape. Final implementation matches `FormQuestionPrerequisiteEvaluator`'s shape (display utility ≠ validator — Convention #11 only mandates classes for validation). No DI graph cost, no test setup cost.
+
+**Deferred / outstanding from this slice (rolled into the audit and follow-ups below).** Item-by-item nits surfaced during slice 3 review are tracked in the new "Audit & cleanup pass" subsection below — not refiled per-item under Deferred-to-3d to avoid double-bookkeeping.
+
+### PR 3d follow-up — Audit & cleanup pass (⏭️ Required before PR 3 closes)
+
+The slice-by-slice cadence of PR 3d has been productive but has accumulated micro-debt that should not bleed into PR 4. **Before declaring PR 3 done, run a dedicated cleanup pass across the entire `collection_batch/` feature surface.** Scope at minimum the following classes of issue — but treat the list as a starting point, not a ceiling. The goal is *no surprising surface left*.
+
+**1. Function signatures: pass the minimum the callee needs, not the maximum the caller has.**
+
+Example: `CollectionBatchIdentityResolver.deriveBucketName(formQuestions, answersByQuestionId)` takes the *full* `List<FormQuestion>` and filters internally. The VM call site already has access to this filter — passing pre-filtered `identityQuestions: List<FormQuestion>` would:
+
+- Make the function's contract self-documenting ("here are the identity questions, here are the answers")
+- Push the filter to the call site where caching across multiple cards is trivial (one filter pass vs. N)
+- Reduce coupling — the function no longer needs to know about `FormQuestionScope` or `isUnitIdentityComponent`
+
+`ValidateCollectionBatchIdentityUseCase` has the same shape and the same opportunity. Audit every `collection_batch/`-feature function for "could this callee accept narrower / pre-processed inputs?".
+
+**2. Variable names: be specific about what's in the map.**
+
+Examples surfaced in slice 3 review:
+
+- `answersBySessionUnitId: Map<UUID, Map<Int, FormAnswer>>` — the inner map is `questionId → FormAnswer`, not `FormAnswer`. Name should be `formAnswersByQuestionIdBySessionUnitId` (cumbersome) or restructured (see #3 below). At minimum the type and name should agree.
+- `bucketNameBySessionUnitId: Map<UUID, String>` (singular) vs. `specimenCountsBySessionUnitId: Map<UUID, Int>` (plural) — same shape, two conventions. Pick one and apply across the file.
+- `existingAnswersBySessionUnitId` (in `CollectionBatchFormViewModel`) vs. `answersBySessionUnitId` (in `CollectionBatchListViewModel`) — different names for the same shape returned by the same repo call. Pick one.
+
+General rule: **the name of a `Map<K, V>` field should answer "what V is, indexed by K", and both the K-name and the V-name should match the types.**
+
+**3. Nested map shapes: ask whether a `data class` or a domain model would be clearer.**
+
+`Map<UUID, Map<Int, FormAnswer>>` is functional but opaque at every call site. Candidates for cleanup:
+
+- Introduce a domain composite (e.g. `SessionUnitWithFormAnswers`) and consume it directly — connects to Deferred-to-PR-5 #12 (the `@Relation`-based fetch). Pulling the relation forward would replace nested maps with a flat `List<SessionUnitWithFormAnswers>` everywhere.
+- If the relation refactor is out of audit scope, at minimum use a `typealias` (e.g. `typealias FormAnswersByQuestionId = Map<Int, FormAnswer>` and `typealias FormAnswersBySessionUnitId = Map<UUID, FormAnswersByQuestionId>`) so the intent reads at the type signature.
+
+**4. Repository / DAO method names: audit for `*Scoped*` cruft now that `sessionUnitId` is a first-class column.**
+
+`getSessionUnitScopedFormAnswersBySessionId` made sense in PR 3c when the only filter was "WHERE sessionUnitId IS NOT NULL". Now that the form-answer table has multiple legitimate access patterns (session-scoped, unit-scoped, all-of-session), the name is descriptive but verbose. Audit whether `getUnitScopedFormAnswersBySessionId` reads cleaner, or whether a different parameterization (e.g. `getFormAnswersBySessionId(sessionId, scope: FormQuestionScope?)`) is more consistent with the `getQuestionsByFormIdAndScope` precedent from PR 3c.
+
+**5. Cross-VM duplication.**
+
+`CollectionBatchListViewModel.loadSessionUnitFormQuestions` and `CollectionBatchFormViewModel.loadFormDetails` both walk the same `deviceCache → programRepository → formRepository → formQuestionRepository` chain. Two consumers is the threshold the plan typically uses to justify a use case. Audit whether `GetSessionUnitFormQuestionsUseCase` (or a more general `GetFormQuestionsByScopeUseCase`) is overdue.
+
+**6. Silent failure handling.**
+
+Already tracked as Deferred-to-3d #9 — but the slice 3 helper inherits the same swallow-and-return-empty pattern, so the bug is now in *two* VMs, not one. Audit should fix both call sites in the same diff and standardize on the `emitError + log + navigate-away` shape from `IntakeViewModel:622–638`. May require introducing a `CollectionBatchListError` enum (mirror of `CollectionBatchFormError`) — fold the audit's `ErrorExtensions.kt` and `strings.xml` additions into the same diff.
+
+**7. Magic strings and constants.**
+
+`"Batch ${sessionUnit.unitOrder}"`, `" · "` separator, etc. should live in `strings.xml` (display) or a `const val` (formatting) — not in `.kt` literals. Audit every literal in `collection_batch/` for promotion.
+
+**8. Composable param names and ordering.**
+
+E.g. `CollectionBatchCard(title, sessionUnit, specimenCount, onClick, modifier)` — does `title` describe what the param is, or does `bucketName` (the conceptual identity) read better? Same for ordering — Compose convention places `modifier` last, lambdas after data, but the rest of `collection_batch/` may not be consistent. Audit feature-wide.
+
+**9. KDoc on display-only / convention-load-bearing functions.**
+
+`CollectionBatchIdentityResolver` deliberately must not be reused for identity validation (Convention #12). Its purpose-comment was dropped during slice 3 — the audit should re-add KDoc that flags the contract. Same audit for other `domain/util` functions in the feature.
+
+**10. Anything else.**
+
+The list above is the seeded set from slice 3 review. The audit should be approached as a *fresh read* of the feature — open every file and ask "would a new contributor understand this in one read, or does it need a comment / rename / refactor to be obvious?". Items found during the audit should be added here so future audits can see the cumulative cleanup history.
+
+**Recommended ordering:** run the audit *after* slice 6 (Imaging scoping) lands and *before* PR 3 is declared closed. Reasons:
+
+- The Imaging slice will touch shared types (`Specimen.sessionUnitId`, `FormAnswerRepository.upsertFormAnswer`-style widening for specimens) that may surface additional naming inconsistencies worth bundling.
+- Holding the audit until last lets it act as the "ship gate" for PR 3, rather than being interleaved with feature work.
+
+**What NOT to defer to PR 4 or beyond.** The point of this audit is that the feature surface should be reviewable, consistent, and convention-aligned the moment PR 3 closes. Item #6 (silent failures) is the only thing already on the deferred-to-3d list that should be folded in here; the rest is new debt surfaced during slice-by-slice review.
+
+### Next up — PR 3d: form polish (reactive banner) + delete affordance + submit-session dialog + Imaging scoping + feature-wide audit
 
 > Scope is summarized in the "Deferred to PR 3d" subsection under PR 3c above. The general PR-3 rules and slicing reference material below still apply.
 

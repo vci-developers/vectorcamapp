@@ -3,7 +3,15 @@ package com.vci.vectorcamapp.collection_batch.list.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vci.vectorcamapp.collection_batch.domain.util.CollectionBatchIdentityResolver
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.model.FormQuestion
+import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
+import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
+import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
+import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
@@ -24,9 +32,14 @@ import javax.inject.Inject
 @HiltViewModel
 class CollectionBatchListViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
     private val sessionRepository: SessionRepository,
     private val sessionUnitRepository: SessionUnitRepository,
+    private val programRepository: ProgramRepository,
+    private val formRepository: FormRepository,
+    private val formQuestionRepository: FormQuestionRepository,
+    private val formAnswerRepository: FormAnswerRepository,
     private val workManagerRepository: WorkManagerRepository,
     errorMessageEmitter: ErrorMessageEmitter
 ) : CoreViewModel(errorMessageEmitter) {
@@ -39,12 +52,22 @@ class CollectionBatchListViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(CollectionBatchListState(sessionId = sessionId))
     val state = combine(_sessionUnits, _state) { sessionUnits, state ->
+        val formQuestions = loadSessionUnitFormQuestions()
+        val answersBySessionUnitId =
+            formAnswerRepository.getSessionUnitScopedFormAnswersBySessionId(sessionId)
+
         state.copy(
             isLoading = false,
             sessionUnits = sessionUnits,
             specimenCountsBySessionUnitId = sessionUnits.associate { sessionUnit ->
                 sessionUnit.localId to sessionUnitRepository.countSpecimensForSessionUnit(sessionUnit.localId)
-            }
+            },
+            bucketNamesBySessionUnitId = sessionUnits.associate { sessionUnit ->
+                sessionUnit.localId to CollectionBatchIdentityResolver.deriveBucketName(
+                    formQuestions = formQuestions,
+                    answersByQuestionId = answersBySessionUnitId[sessionUnit.localId].orEmpty(),
+                )
+            },
         )
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000L), CollectionBatchListState(sessionId = sessionId)
@@ -94,5 +117,15 @@ class CollectionBatchListViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private suspend fun loadSessionUnitFormQuestions(): List<FormQuestion> {
+        val programId = deviceCache.getProgramId() ?: return emptyList()
+        val program = programRepository.getProgramById(programId) ?: return emptyList()
+        val form = program.formVersion?.let { formRepository.getFormByVersion(it) } ?: return emptyList()
+        return formQuestionRepository.getQuestionsByFormIdAndScope(
+            form.id,
+            FormQuestionScope.SESSION_UNIT,
+        )
     }
 }

@@ -62,6 +62,7 @@ fun CollectionBatchListScreen(
                 key = { it.localId }
             ) { sessionUnit ->
                 CollectionBatchCard(
+                    bucketName = state.bucketNamesBySessionUnitId[sessionUnit.localId].orEmpty(),
                     sessionUnit = sessionUnit,
                     specimenCount = state.specimenCountsBySessionUnitId[sessionUnit.localId] ?: 0,
                     onClick = { onAction(CollectionBatchListAction.EditCollectionBatch(sessionUnit.localId)) }

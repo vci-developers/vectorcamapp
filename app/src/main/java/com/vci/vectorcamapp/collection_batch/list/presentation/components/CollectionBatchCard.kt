@@ -29,6 +29,7 @@ import java.util.Locale
 
 @Composable
 fun CollectionBatchCard(
+    bucketName: String,
     sessionUnit: SessionUnit,
     specimenCount: Int,
     onClick: () -> Unit,
@@ -50,7 +51,7 @@ fun CollectionBatchCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Batch ${sessionUnit.unitOrder}",
+                        text = bucketName.ifBlank { "Batch ${sessionUnit.unitOrder}" },
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colors.textPrimary,
                         modifier = Modifier.weight(1f)
