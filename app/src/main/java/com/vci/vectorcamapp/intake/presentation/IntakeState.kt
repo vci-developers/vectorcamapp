@@ -46,7 +46,7 @@ data class IntakeState(
     val surveillanceForm: SurveillanceForm? = null,
     val form: Form? = null,
     val formQuestions: List<FormQuestion> = emptyList(),
-    val formAnswers: Map<Int, FormAnswer> = emptyMap(),
+    val formAnswersByQuestionId: Map<Int, FormAnswer> = emptyMap(),
     val intakeErrors: IntakeErrors = IntakeErrors(
         collector = null,
         district = null,

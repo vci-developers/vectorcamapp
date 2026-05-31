@@ -176,7 +176,7 @@ class IntakeViewModel @Inject constructor(
                         }
 
                     val formAnswersResult = intakeValidationUseCases.validateFormAnswersUseCase(
-                        _state.value.formQuestions, _state.value.formAnswers
+                        _state.value.formQuestions, _state.value.formAnswersByQuestionId
                     )
 
                     _state.update {
@@ -272,7 +272,7 @@ class IntakeViewModel @Inject constructor(
                                 return@runAsTransaction false
                             }
 
-                            val formAnswers = _state.value.formAnswers
+                            val formAnswers = _state.value.formAnswersByQuestionId
                             for ((questionId, answer) in formAnswers) {
                                 val updatedAnswer =
                                     answer.copy(submittedAt = System.currentTimeMillis())
@@ -291,7 +291,7 @@ class IntakeViewModel @Inject constructor(
                             currentSessionCache.saveSession(session, selectedSite.id)
 
                             val answersToCache =
-                                _state.value.formAnswers.mapValues { (_, formAnswer) ->
+                                _state.value.formAnswersByQuestionId.mapValues { (_, formAnswer) ->
                                     formAnswer.value
                                 }
 
@@ -533,7 +533,7 @@ class IntakeViewModel @Inject constructor(
 
                 is IntakeAction.UpdateFormAnswer -> {
                     _state.update {
-                        val updatedAnswers = it.formAnswers.toMutableMap().apply {
+                        val updatedAnswers = it.formAnswersByQuestionId.toMutableMap().apply {
                             val existingFormAnswer = get(action.questionId)
                             if (existingFormAnswer != null) {
                                 put(
@@ -564,7 +564,7 @@ class IntakeViewModel @Inject constructor(
                             }
                         }
 
-                        it.copy(formAnswers = updatedAnswers)
+                        it.copy(formAnswersByQuestionId = updatedAnswers)
                     }
                 }
 
@@ -744,7 +744,7 @@ class IntakeViewModel @Inject constructor(
                             ?: programFormWorkflow.surveillanceForm,
                         form = programFormWorkflow.form,
                         formQuestions = programFormWorkflow.formQuestions,
-                        formAnswers = programFormWorkflow.formQuestions.associate { question ->
+                        formAnswersByQuestionId = programFormWorkflow.formQuestions.associate { question ->
                             question.id to (savedFormAnswers[question.id] ?: FormAnswer(
                                 localId = UUID.randomUUID(),
                                 remoteId = null,
