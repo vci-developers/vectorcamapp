@@ -7,6 +7,8 @@ import com.vci.vectorcamapp.core.domain.model.FormAnswer
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.util.UUID
 import javax.inject.Inject
 
@@ -44,13 +46,19 @@ class FormAnswerRepositoryImplementation @Inject constructor(
             .associate { it.questionId to it.toDomain() }
     }
 
-    override suspend fun getSessionUnitScopedFormAnswersBySessionId(sessionId: UUID): Map<UUID, Map<Int, FormAnswer>> {
-        return formAnswerDao.getSessionUnitScopedFormAnswersBySessionId(sessionId)
-            .mapNotNull { formAnswerEntity -> formAnswerEntity.sessionUnitId?.let { it to formAnswerEntity } }
-            .groupBy(
-                keySelector = { (sessionUnitId, _) -> sessionUnitId },
-                valueTransform = { (_, formAnswerEntity) -> formAnswerEntity }
-            )
-            .mapValues { (_, formAnswerEntities) -> formAnswerEntities.associate { it.questionId to it.toDomain() } }
+    override fun observeSessionUnitScopedFormAnswersBySessionId(sessionId: UUID): Flow<Map<UUID, Map<Int, FormAnswer>>> {
+        return formAnswerDao.observeSessionUnitScopedFormAnswersBySessionId(sessionId)
+            .map { entities ->
+                entities.mapNotNull { formAnswerEntity ->
+                    formAnswerEntity.sessionUnitId?.let { it to formAnswerEntity }
+                }
+                    .groupBy(
+                        keySelector = { (sessionUnitId, _) -> sessionUnitId },
+                        valueTransform = { (_, formAnswerEntity) -> formAnswerEntity }
+                    )
+                    .mapValues { (_, formAnswerEntities) ->
+                        formAnswerEntities.associate { it.questionId to it.toDomain() }
+                    }
+            }
     }
 }

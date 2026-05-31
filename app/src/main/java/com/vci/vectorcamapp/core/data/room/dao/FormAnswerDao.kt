@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import com.vci.vectorcamapp.core.data.room.entities.FormAnswerEntity
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 @Dao
@@ -18,5 +19,5 @@ interface FormAnswerDao {
     suspend fun getFormAnswersBySessionUnitId(sessionUnitId: UUID): List<FormAnswerEntity>
 
     @Query("SELECT * FROM form_answer WHERE sessionId = :sessionId AND sessionUnitId IS NOT NULL")
-    suspend fun getSessionUnitScopedFormAnswersBySessionId(sessionId: UUID): List<FormAnswerEntity>
+    fun observeSessionUnitScopedFormAnswersBySessionId(sessionId: UUID): Flow<List<FormAnswerEntity>>
 }

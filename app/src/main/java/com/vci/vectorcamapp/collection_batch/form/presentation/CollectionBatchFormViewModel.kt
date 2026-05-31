@@ -27,6 +27,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -61,7 +62,26 @@ class CollectionBatchFormViewModel @Inject constructor(
             sessionUnitId = sessionUnitId
         )
     )
-    val state: StateFlow<CollectionBatchFormState> = _state.onStart {
+    private val _existingAnswersBySessionUnitId =
+        formAnswerRepository.observeSessionUnitScopedFormAnswersBySessionId(sessionId)
+
+    val state: StateFlow<CollectionBatchFormState> = combine(
+        _state,
+        _existingAnswersBySessionUnitId,
+    ) { state, existingAnswersBySessionUnitId ->
+        val duplicateIdentity = collectionBatchFormValidationUseCases
+            .validateCollectionBatchIdentity(
+                formQuestions = state.formQuestions,
+                draftAnswersByQuestionId = state.formAnswersByQuestionId,
+                existingAnswersBySessionUnitId = existingAnswersBySessionUnitId,
+                editingSessionUnitId = sessionUnitId,
+            ).errorOrNull()
+        state.copy(
+            collectionBatchFormErrors = state.collectionBatchFormErrors.copy(
+                duplicateIdentity = duplicateIdentity
+            )
+        )
+    }.onStart {
         loadFormDetails()
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), CollectionBatchFormState(
@@ -126,27 +146,17 @@ class CollectionBatchFormViewModel @Inject constructor(
                             formQuestions, formAnswersByQuestionId,
                         )
 
-                    val existingAnswersBySessionUnitId =
-                        formAnswerRepository.getSessionUnitScopedFormAnswersBySessionId(sessionId)
-                    val identityResult =
-                        collectionBatchFormValidationUseCases.validateCollectionBatchIdentity(
-                            formQuestions = formQuestions,
-                            draftAnswersByQuestionId = formAnswersByQuestionId,
-                            existingAnswersBySessionUnitId = existingAnswersBySessionUnitId,
-                            editingSessionUnitId = sessionUnitId
-                        )
-
                     _state.update {
                         it.copy(
                             collectionBatchFormErrors = it.collectionBatchFormErrors.copy(
-                                duplicateIdentity = identityResult.errorOrNull(),
                                 formAnswerErrors = formAnswersResult.mapValues { (_, result) -> result.errorOrNull() },
                             )
                         )
                     }
 
                     val hasFormAnswersError = formAnswersResult.values.any { it is Result.Error }
-                    val hasDuplicateIdentityError = identityResult is Result.Error
+                    val hasDuplicateIdentityError =
+                        state.value.collectionBatchFormErrors.duplicateIdentity != null
 
                     if (hasFormAnswersError) {
                         emitError(CollectionBatchFormError.FORM_INVALID)

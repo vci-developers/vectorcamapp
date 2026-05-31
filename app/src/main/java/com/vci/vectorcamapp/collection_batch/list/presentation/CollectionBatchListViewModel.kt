@@ -51,11 +51,16 @@ class CollectionBatchListViewModel @Inject constructor(
     private val _sessionUnits = sessionUnitRepository.observeSessionUnitsForSession(sessionId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
+    private val _existingAnswersBySessionUnitId =
+        formAnswerRepository.observeSessionUnitScopedFormAnswersBySessionId(sessionId)
+
     private val _state = MutableStateFlow(CollectionBatchListState(sessionId = sessionId))
-    val state = combine(_sessionUnits, _state) { sessionUnits, state ->
+    val state = combine(
+        _sessionUnits,
+        _existingAnswersBySessionUnitId,
+        _state,
+    ) { sessionUnits, existingAnswersBySessionUnitId, state ->
         val formQuestions = loadSessionUnitFormQuestions()
-        val answersBySessionUnitId =
-            formAnswerRepository.getSessionUnitScopedFormAnswersBySessionId(sessionId)
 
         state.copy(
             isLoading = false,
@@ -66,7 +71,7 @@ class CollectionBatchListViewModel @Inject constructor(
             bucketNamesBySessionUnitId = sessionUnits.associate { sessionUnit ->
                 sessionUnit.localId to CollectionBatchIdentityResolver.deriveBucketName(
                     formQuestions = formQuestions,
-                    answersByQuestionId = answersBySessionUnitId[sessionUnit.localId].orEmpty(),
+                    answersByQuestionId = existingAnswersBySessionUnitId[sessionUnit.localId].orEmpty(),
                 )
             },
         )
