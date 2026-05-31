@@ -3,12 +3,21 @@ package com.vci.vectorcamapp.collection_batch.form.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vci.vectorcamapp.collection_batch.domain.use_cases.CollectionBatchFormValidationUseCases
+import com.vci.vectorcamapp.collection_batch.domain.util.error.CollectionBatchFormError
+import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.SessionUnit
 import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
+import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
+import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.errorOrNull
+import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
@@ -30,11 +39,17 @@ import javax.inject.Inject
 class CollectionBatchFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val deviceCache: DeviceCache,
+    private val sessionUnitRepository: SessionUnitRepository,
     private val programRepository: ProgramRepository,
     private val formRepository: FormRepository,
     private val formQuestionRepository: FormQuestionRepository,
+    private val formAnswerRepository: FormAnswerRepository,
+    private val collectionBatchFormValidationUseCases: CollectionBatchFormValidationUseCases,
     errorMessageEmitter: ErrorMessageEmitter
 ) : CoreViewModel(errorMessageEmitter) {
+
+    @Inject
+    lateinit var transactionHelper: TransactionHelper
 
     private val destination = savedStateHandle.toRoute<Destination.CollectionBatchForm>()
     private val sessionId: UUID = UUID.fromString(destination.sessionId)
@@ -99,6 +114,80 @@ class CollectionBatchFormViewModel @Inject constructor(
                         }
 
                         it.copy(formAnswersByQuestionId = updatedAnswers)
+                    }
+                }
+
+                CollectionBatchFormAction.SubmitSessionUnitForm -> {
+                    val formQuestions = _state.value.formQuestions
+                    val formAnswersByQuestionId = _state.value.formAnswersByQuestionId
+
+                    val formAnswersResult =
+                        collectionBatchFormValidationUseCases.validateFormAnswers(
+                            formQuestions, formAnswersByQuestionId,
+                        )
+
+                    val existingAnswersBySessionUnitId =
+                        formAnswerRepository.getSessionUnitScopedFormAnswersBySessionId(sessionId)
+                    val identityResult = collectionBatchFormValidationUseCases.validateCollectionBatchIdentity(
+                        formQuestions = formQuestions,
+                        draftAnswersByQuestionId = formAnswersByQuestionId,
+                        existingAnswersBySessionUnitId = existingAnswersBySessionUnitId,
+                        editingSessionUnitId = sessionUnitId
+                    )
+
+                    _state.update {
+                        it.copy(
+                            collectionBatchFormErrors = it.collectionBatchFormErrors.copy(
+                                duplicateIdentity = identityResult.errorOrNull(),
+                                formAnswerErrors = formAnswersResult.mapValues { (_, result) -> result.errorOrNull() },
+                            )
+                        )
+                    }
+
+                    val hasFormAnswersError = formAnswersResult.values.any { it is Result.Error }
+                    val hasDuplicateIdentityError = identityResult is Result.Error
+
+                    if (hasFormAnswersError) {
+                        emitError(CollectionBatchFormError.FORM_INVALID)
+                        return@launch
+                    } else if (hasDuplicateIdentityError) {
+                        emitError(CollectionBatchFormError.DUPLICATE_IDENTITY)
+                        return@launch
+                    } else {
+                        val existingSessionUnit = sessionUnitId?.let {
+                            sessionUnitRepository.getSessionUnitById(it)
+                        }
+                        val effectiveSessionUnit = existingSessionUnit ?: SessionUnit(
+                            localId = sessionUnitId ?: UUID.randomUUID(),
+                            remoteId = null,
+                            unitOrder = sessionUnitRepository.getMaxSessionUnitOrderForSession(sessionId) + 1,
+                            createdAt = System.currentTimeMillis(),
+                        )
+
+                        val success = transactionHelper.runAsTransaction {
+                            val sessionUnitResult = sessionUnitRepository.upsertSessionUnit(effectiveSessionUnit, sessionId)
+                            sessionUnitResult.onError { error ->
+                                emitError(error)
+                                return@runAsTransaction false
+                            }
+
+                            for ((questionId, answer) in formAnswersByQuestionId) {
+                                formAnswerRepository.upsertFormAnswer(
+                                    answer, sessionId, effectiveSessionUnit.localId, questionId,
+                                ).onError { error ->
+                                    emitError(error)
+                                    return@runAsTransaction false
+                                }
+                            }
+
+                            true
+                        }
+
+                        if (success) {
+                            _events.send(
+                                CollectionBatchFormEvent.NavigateToImagingScreen(effectiveSessionUnit.localId)
+                            )
+                        }
                     }
                 }
             }

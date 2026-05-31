@@ -549,7 +549,7 @@ class MetadataUploadWorker @AssistedInject constructor(
 
                 if (localFormAnswerDto != remoteFormAnswerDto) {
                     val formAnswerUpdateResult = formAnswerRepository.upsertFormAnswer(
-                        remoteFormAnswer, syncedLocalSessionId, questionId
+                        remoteFormAnswer, syncedLocalSessionId, null, questionId
                     )
                     if (formAnswerUpdateResult is DomainResult.Error) {
                         return DomainResult.Error(NetworkError.CLIENT_ERROR)

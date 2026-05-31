@@ -202,6 +202,11 @@ fun NavGraph(startDestination: Destination) {
                 when (event) {
                     CollectionBatchFormEvent.NavigateBackToCollectionBatchListScreen ->
                         navController.popBackStack()
+
+                    is CollectionBatchFormEvent.NavigateToImagingScreen ->
+                        navController.navigate(
+                            Destination.Imaging(sessionUnitId = event.sessionUnitId.toString())
+                        )
                 }
             }
 

@@ -9,8 +9,10 @@ interface FormAnswerRepository {
     suspend fun upsertFormAnswer(
         formAnswer: FormAnswer,
         sessionId: UUID,
+        sessionUnitId: UUID?,
         questionId: Int
     ): Result<Unit, RoomDbError>
 
     suspend fun getFormAnswersBySessionId(sessionId: UUID): Map<Int, FormAnswer>
+    suspend fun getSessionUnitScopedFormAnswersBySessionId(sessionId: UUID): Map<UUID, Map<Int, FormAnswer>>
 }

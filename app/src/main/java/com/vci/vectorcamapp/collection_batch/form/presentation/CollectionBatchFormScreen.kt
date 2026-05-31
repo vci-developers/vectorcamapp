@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.collection_batch.form.presentation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -10,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.collection_batch.form.presentation.components.CollectionBatchFormTile
+import com.vci.vectorcamapp.collection_batch.form.presentation.components.DuplicateIdentityWarningBanner
+import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.intake.presentation.components.DynamicFormField
@@ -62,9 +65,14 @@ fun CollectionBatchFormScreen(
                                         CollectionBatchFormAction.UpdateFormAnswer(question.id, it)
                                     )
                                 },
+                                error = state.collectionBatchFormErrors.formAnswerErrors[question.id],
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
+                    }
+
+                    if (state.collectionBatchFormErrors.duplicateIdentity != null) {
+                        DuplicateIdentityWarningBanner(modifier = Modifier.fillMaxWidth())
                     }
                 }
             }
@@ -90,6 +98,7 @@ fun CollectionBatchFormScreen(
                                         CollectionBatchFormAction.UpdateFormAnswer(question.id, it)
                                     )
                                 },
+                                error = state.collectionBatchFormErrors.formAnswerErrors[question.id],
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
@@ -97,5 +106,17 @@ fun CollectionBatchFormScreen(
                 }
             }
         }
+
+        item {
+            ActionButton(
+                label = "Continue to Imaging",
+                onClick = { onAction(CollectionBatchFormAction.SubmitSessionUnitForm) },
+                modifier = Modifier.padding(
+                    horizontal = MaterialTheme.dimensions.paddingMedium,
+                    vertical = MaterialTheme.dimensions.paddingSmall,
+                ),
+            )
+        }
+
     }
 }

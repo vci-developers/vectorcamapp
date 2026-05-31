@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.core.presentation.util.error
 
 import android.content.Context
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.collection_batch.domain.util.error.CollectionBatchFormError
 import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError
 import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
@@ -115,6 +116,13 @@ fun Error.toString(context: Context): String {
             FormValidationError.INVALID_NUM_LLINS_AVAILABLE -> R.string.form_validation_error_invalid_num_llins_available
             FormValidationError.INVALID_MONTHS_SINCE_IRS -> R.string.form_validation_error_invalid_months_since_irs
             FormValidationError.INVALID_FORM_ANSWER -> R.string.form_validation_error_invalid_form_answer
+        }
+
+        is CollectionBatchFormError -> when (this) {
+            CollectionBatchFormError.FORM_INVALID -> R.string.collection_batch_form_error_form_invalid
+            CollectionBatchFormError.INVALID_FORM_ANSWER -> R.string.collection_batch_form_error_invalid_form_answer
+            CollectionBatchFormError.DUPLICATE_IDENTITY -> R.string.collection_batch_form_error_duplicate_identity
+            CollectionBatchFormError.UNKNOWN_ERROR -> R.string.collection_batch_form_error_unknown_error
         }
 
         is CollectorValidationError -> when (this) {

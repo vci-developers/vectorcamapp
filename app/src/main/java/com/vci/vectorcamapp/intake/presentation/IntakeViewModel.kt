@@ -274,10 +274,8 @@ class IntakeViewModel @Inject constructor(
 
                             val formAnswers = _state.value.formAnswersByQuestionId
                             for ((questionId, answer) in formAnswers) {
-                                val updatedAnswer =
-                                    answer.copy(submittedAt = System.currentTimeMillis())
                                 formAnswerRepository.upsertFormAnswer(
-                                    updatedAnswer, session.localId, questionId
+                                    answer, session.localId, null, questionId
                                 ).onError { error ->
                                     emitError(error)
                                     return@runAsTransaction false

@@ -175,6 +175,18 @@
     <!-- Intake error: Unknown error -->
     <string name="intake_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
+    <!-- Collection batch form error: Form invalid -->
+    <string name="collection_batch_form_error_form_invalid">One or more fields in this form are invalid.</string>
+
+    <!-- Collection batch form error: Invalid form answer -->
+    <string name="collection_batch_form_error_invalid_form_answer">This field is required. Please provide a valid answer.</string>
+
+    <!-- Collection batch form error: Duplicate identity -->
+    <string name="collection_batch_form_error_duplicate_identity">A collection batch with this identity already exists. Please change one of the identity fields.</string>
+
+    <!-- Collection batch form error: Unknown error -->
+    <string name="collection_batch_form_error_unknown_error">An unknown error occurred while saving this collection batch.</string>
+
     <!-- Registration error: Program not found -->
     <string name="registration_error_program_not_found">Program not found. Please contact support.</string>
 

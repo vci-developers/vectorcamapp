@@ -4,7 +4,6 @@ import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toEntity
 import com.vci.vectorcamapp.core.data.room.dao.FormAnswerDao
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
-import com.vci.vectorcamapp.core.domain.model.composites.FormAnswerAndQuestion
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
@@ -18,10 +17,17 @@ class FormAnswerRepositoryImplementation @Inject constructor(
     override suspend fun upsertFormAnswer(
         formAnswer: FormAnswer,
         sessionId: UUID,
+        sessionUnitId: UUID?,
         questionId: Int
     ): Result<Unit, RoomDbError> {
         return try {
-            formAnswerDao.upsertFormAnswer(formAnswer.toEntity(sessionId, null, questionId))
+            formAnswerDao.upsertFormAnswer(
+                formAnswer.toEntity(
+                    sessionId,
+                    sessionUnitId,
+                    questionId
+                )
+            )
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(RoomDbError.UNKNOWN_ERROR)
@@ -29,6 +35,17 @@ class FormAnswerRepositoryImplementation @Inject constructor(
     }
 
     override suspend fun getFormAnswersBySessionId(sessionId: UUID): Map<Int, FormAnswer> {
-        return formAnswerDao.getFormAnswersBySessionId(sessionId).associate { it.questionId to it.toDomain() }
+        return formAnswerDao.getFormAnswersBySessionId(sessionId)
+            .associate { it.questionId to it.toDomain() }
+    }
+
+    override suspend fun getSessionUnitScopedFormAnswersBySessionId(sessionId: UUID): Map<UUID, Map<Int, FormAnswer>> {
+        return formAnswerDao.getSessionUnitScopedFormAnswersBySessionId(sessionId)
+            .mapNotNull { formAnswerEntity -> formAnswerEntity.sessionUnitId?.let { it to formAnswerEntity } }
+            .groupBy(
+                keySelector = { (sessionUnitId, _) -> sessionUnitId },
+                valueTransform = { (_, formAnswerEntity) -> formAnswerEntity }
+            )
+            .mapValues { (_, formAnswerEntities) -> formAnswerEntities.associate { it.questionId to it.toDomain() } }
     }
 }
