@@ -106,7 +106,7 @@ class CollectionBatchListViewModel @Inject constructor(
                     _state.update { it.copy(isSubmitDialogVisible = false) }
                 }
 
-                CollectionBatchListAction.SaveSessionAsInProgress -> {
+                CollectionBatchListAction.SaveSessionProgress -> {
                     _state.update { it.copy(isSubmitDialogVisible = false) }
                     currentSessionCache.clearSession()
                     _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)

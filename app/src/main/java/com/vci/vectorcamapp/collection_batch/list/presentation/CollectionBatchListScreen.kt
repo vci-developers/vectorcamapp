@@ -152,7 +152,7 @@ fun CollectionBatchListScreen(
                 },
                 dismissButton = {
                     OutlinedButton(
-                        onClick = { onAction(CollectionBatchListAction.SaveSessionAsInProgress) },
+                        onClick = { onAction(CollectionBatchListAction.SaveSessionProgress) },
                         border = BorderStroke(
                             MaterialTheme.dimensions.borderThicknessThick,
                             MaterialTheme.colors.info

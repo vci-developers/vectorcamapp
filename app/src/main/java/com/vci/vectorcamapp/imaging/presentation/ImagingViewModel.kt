@@ -60,12 +60,17 @@ import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.random.Random
 import androidx.core.graphics.createBitmap
+import androidx.lifecycle.SavedStateHandle
+import androidx.navigation.toRoute
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.navigation.Destination
 import org.opencv.android.Utils.matToBitmap
 import org.opencv.core.Mat
+import java.util.UUID
 
 @HiltViewModel
 class ImagingViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val currentSessionCache: CurrentSessionCache,
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
@@ -77,6 +82,8 @@ class ImagingViewModel @Inject constructor(
     private val validateSpecimenIdUseCase: ValidateSpecimenIdUseCase,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
+    private val destination = savedStateHandle.toRoute<Destination.Imaging>()
+    private val sessionUnitId: UUID? = destination.sessionUnitId?.let(UUID::fromString)
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
@@ -506,7 +513,11 @@ class ImagingViewModel @Inject constructor(
                             val inferenceResult = _state.value.currentInferenceResult
 
                             val specimenInsertionResult = if (existingSpecimen == null) {
-                                specimenRepository.insertSpecimen(specimen, currentSession.localId)
+                                specimenRepository.insertSpecimen(
+                                    specimen = specimen,
+                                    sessionId = currentSession.localId,
+                                    sessionUnitId = _state.value.sessionUnitId,
+                                )
                             } else {
                                 Result.Success(Unit)
                             }
@@ -545,6 +556,17 @@ class ImagingViewModel @Inject constructor(
                     }.onError { error ->
                         emitError(error)
                     }
+                }
+
+                ImagingAction.ReturnToCollectionBatchList -> {
+                    val currentSession = currentSessionCache.getSession()
+                    if (currentSession == null) {
+                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        return@launch
+                    }
+                    _events.send(
+                        ImagingEvent.NavigateBackToCollectionBatchListScreen(currentSession.localId)
+                    )
                 }
             }
         }
@@ -619,7 +641,8 @@ class ImagingViewModel @Inject constructor(
                     it.copy(
                         allowModelInferenceToggle = allowModelInferenceToggle,
                         shouldRunInference = !allowModelInferenceToggle,
-                        sessionType = session.type
+                        sessionType = session.type,
+                        sessionUnitId = sessionUnitId,
                     )
                 }
             } else {

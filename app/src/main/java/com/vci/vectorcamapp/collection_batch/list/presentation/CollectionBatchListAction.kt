@@ -7,6 +7,6 @@ sealed interface CollectionBatchListAction {
     data class EditCollectionBatch(val sessionUnitId: UUID) : CollectionBatchListAction
     data object OpenSubmitDialog : CollectionBatchListAction
     data object DismissSubmitDialog : CollectionBatchListAction
-    data object SaveSessionAsInProgress : CollectionBatchListAction
+    data object SaveSessionProgress : CollectionBatchListAction
     data object ConfirmSubmitSession : CollectionBatchListAction
 }

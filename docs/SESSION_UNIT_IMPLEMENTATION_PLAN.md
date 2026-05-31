@@ -22,7 +22,7 @@ This section is the single source of truth for "where are we?". It is updated at
 | └ PR 3a | Destination contract + nav scaffold + strategy flip | ✅ Merged     |
 | └ PR 3b | `CollectionBatchList` screen + VM                   | ✅ Merged     |
 | └ PR 3c | `CollectionBatchForm` screen + VM + validation + saving | ✅ Merged     |
-| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping + audit | ⏭️ In progress (slices 1, 3, 5 shipped) |
+| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping + audit | ⏭️ In progress (slices 1, 3, 5, 6 shipped) |
 | PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏳ Pending    |
 | PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
@@ -308,7 +308,7 @@ collection_batch/list/presentation/components/CollectionBatchCard.kt
 4. ~~**Submit-session confirmation dialog (deferred from 3c — Additional scope #1).** Split `CollectionBatchListAction.SubmitSession` into dialog-open + `SaveSessionAsInProgress` + `ConfirmSubmitSession`. Open question still: does the same dialog belong on `ImagingScreen.SubmitSession`? Decide at 3d kickoff.~~ ✅ **Shipped in PR 3d, slice 5** — see the PR 3d in-progress subsection below. Kickoff question resolved: `ImagingScreen` already has its own equivalent dialog (lines 262–403), so no work was needed there — slice 5 only brought the list screen up to parity.
 5. **Per-field error reactive clearing.** Same `combine` Flow pattern as the banner but for `formAnswerErrors`. Carries an additional UX subproblem — eager validation on form-open would show "required field" everywhere unless gated by a per-field "touched" tracker. Lower priority than the banner; consider only if QA flags inline-error timing as a usability issue.
 6. ~~**Delete affordance** — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens` + matching DAO query, `DeleteCollectionBatch` action, `canDelete` flag on `CollectionBatchCard`. From original 3d scope. Once this lands, Deviation #12's defensive `?:` becomes reachable.~~ ❌ **Removed from scope (PR 3d).** Users will not be able to delete session units. See "Removed from PR 3d scope" subsection. Implication: Deviation #12's defensive `?:` becomes permanently unreachable and should be removed during the audit pass.
-7. **Imaging scoping** (original 3d scope) — `ImagingViewModel` / `ImagingState` / `ImagingScreen` read `sessionUnitId`, gate submit/upload UI on `isUnitScoped`, propagate `Specimen.sessionUnitId`, emit `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped.
+7. ~~**Imaging scoping** (original 3d scope) — `ImagingViewModel` / `ImagingState` / `ImagingScreen` read `sessionUnitId`, gate submit/upload UI on `isUnitScoped`, propagate `Specimen.sessionUnitId`, emit `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped.~~ ✅ **Shipped in PR 3d, slice 6** — see the PR 3d in-progress subsection. Final UX deviation: the dialog renders in *both* modes (not hidden when unit-scoped); button slots gate on `state.sessionUnitId` instead.
 8. **`DuplicateIdentityWarningBanner` text consolidation.** Banner hardcodes a string (`"Another collection batch with these identity values already exists!"`) while the toast goes through `R.string.collection_batch_form_error_duplicate_identity` (`"A collection batch with this identity already exists. Please change one of the identity fields."`). Two strings for the same condition. Banner should consume the same string resource. Minor polish.
 9. **Silent failure handling in `loadFormDetails`.** `programId == null` / `program == null` / `form == null` still just drops `isLoading` to `false` and leaves an empty screen. Add `emitError(CollectionBatchFormError.UNKNOWN_ERROR)` + `NavigateBackToCollectionBatchListScreen` emission, mirroring `IntakeViewModel:636-650`. **Note (post-slice-3):** the same swallow-and-return-empty pattern now also exists in `CollectionBatchListViewModel.loadSessionUnitFormQuestions`. Fix both VMs in the same diff during the "Audit & cleanup pass" subsection above.
 
@@ -421,6 +421,8 @@ Before: tapping the cloud-upload icon on `CollectionBatchListScreen` immediately
 
 **Why no second `pendingAction`-style confirmation step.** `ImagingScreen`'s dialog has a two-step flow: pick Save/Submit at step 1, then "Are you sure?" at step 2. Slice 5 deliberately collapsed this to a single step. Rationale: on the list screen the user explicitly tapped a cloud-upload icon to open the dialog, so the dialog itself *is* the confirmation. On the imaging screen the dialog appears as a side-effect of attempting to exit, so a second-step confirm guards against accidental exit-via-back-button. Different entry contexts justify different confirmation depths. Convention #1 (minimum mechanism that satisfies the UX) honored.
 
+**Update (post-slice-6):** this rationale was reversed during slice 6 review. After slice 6 *kept* the two-stage confirm on `ImagingScreen` (and extended it to unit-scoped mode for accidental-exit symmetry), the asymmetric confirmation depth between the two screens reads as oversight rather than deliberate UX. The slice-5 single-stage shape will be reverted to a two-stage mirror of `ImagingScreen`'s pendingAction pattern during the "Audit & cleanup pass" — see §10 (Confirmation-depth symmetry).
+
 **Why no `*Submit*` shared primitive in `core/presentation/components/dialog/`.** Per PR-3c Deviation #7's post-delete update (line 485): the submit-session dialog is the dialog's only consumer in the codebase now (delete was cut). Rule 1 / Rule 2 say wait for a second consumer before promoting. `ImagingScreen`'s dialog and slice 5's dialog are visually similar but live in different feature directories with different action sealed-interfaces — extracting a shared composable would require either a generic two-action API (where each consumer wires its own labels/icons/actions) or a hard fork on `ImagingAction` vs. `CollectionBatchListAction`. Both shapes are speculative until the third dialog lands. Logged in the "Audit & cleanup pass" §10 (anything else) as a candidate for slice 7.
 
 **Plan-compliance checklist.**
@@ -437,6 +439,50 @@ Before: tapping the cloud-upload icon on `CollectionBatchListScreen` immediately
 **Inherited bug worth logging (not fixed in this slice).** `ConfirmSubmitSession`'s body silently no-ops when `markSessionAsComplete` returns `false` — the dialog is already dismissed (line 116) but no error toast fires and no nav happens. This is the **same** silent-failure pattern as Deferred-to-3d #9 (`loadFormDetails`) and the slice-3 `loadSessionUnitFormQuestions`, now present in a third site. Pre-existed in the old `SubmitSession` body — slice 5 just propagated it. Audit-pass §6 (silent failure handling) should address all three sites together; do not patch individually before then.
 
 **Imaging unaffected.** `ImagingScreen.SubmitSession` already has its own dialog with the same conceptual flow (`pendingAction == null` step). Slice 5 does not touch `imaging/`. The plan's kickoff-time question ("does the same dialog belong on `ImagingScreen.SubmitSession`?") is resolved as "already there".
+
+**Slice 6 — Imaging scoping (✅ Shipped).** Closes Deferred-to-3d #7.
+
+Before: `ImagingScreen` was session-blind — every captured specimen was stored with `sessionUnitId = null`, and the only exit affordance was the existing Save/Submit dialog (which terminates the session). HLC users coming from `CollectionBatchFormScreen`'s happy-path navigation had no way to return to the batch list without ending the session entirely. After: when `ImagingScreen` is opened with a non-null route parameter, every captured specimen carries that `sessionUnitId`, and the exit dialog repurposes the Save slot into a "Return to collection batches" choice (Submit slot is hidden — submit happens from the list screen, not imaging).
+
+**Files modified:**
+
+- `core/domain/repository/SpecimenRepository.kt` — widened `insertSpecimen` with a defaulted `sessionUnitId: UUID? = null` parameter. Mirrors the PR-3c precedent set by `FormAnswerRepository.upsertFormAnswer` (Rule 2: widen, don't sibling).
+- `core/data/repository/SpecimenRepositoryImplementation.kt` — threads the new parameter into the existing `specimen.toEntity(sessionId, sessionUnitId)` mapper call. The mapper itself already accepted a nullable `sessionUnitId` from PR 1; this slice just stops hardcoding `null`.
+- `imaging/presentation/ImagingEvent.kt` — added `data class NavigateBackToCollectionBatchListScreen(val sessionId: UUID)`.
+- `imaging/presentation/ImagingAction.kt` — added `data object ReturnToCollectionBatchList`.
+- `imaging/presentation/ImagingState.kt` — added `val sessionUnitId: UUID? = null` field.
+- `imaging/presentation/ImagingViewModel.kt` — gained `SavedStateHandle` injection, parses `Destination.Imaging.sessionUnitId` into a `private val sessionUnitId: UUID?`, seeds it into state inside `loadImagingDetails`, threads it into `specimenRepository.insertSpecimen(...)` inside `SaveImageToSession`'s transaction, and handles the new `ReturnToCollectionBatchList` action with a `currentSession == null → NavigateBackToLandingScreen` safety fallback.
+- `imaging/presentation/ImagingScreen.kt` — exit-icon click handler stays as a single unconditional `ShowExitDialog` dispatch (no mode gating). Dialog title swaps `"Exit session?" → "Leave imaging?"` in Stage-1 when unit-scoped. Dialog body adds an `is ImagingAction.ReturnToCollectionBatchList` Stage-2 case plus a unit-scoped Stage-1 branch. Stage-1 `confirmButton` (Submit) is wrapped in `if (state.sessionUnitId == null)` — hidden entirely in unit-scoped mode. Stage-1 `dismissButton` swaps icon (`ic_save` ↔ `ic_arrow_left`), label ("Save" ↔ "Return"), and the `SelectPendingAction(...)` payload (`SaveSessionProgress` ↔ `ReturnToCollectionBatchList`) based on `state.sessionUnitId`.
+- `navigation/NavGraph.kt` — extended the `Destination.Imaging` event handler with `is ImagingEvent.NavigateBackToCollectionBatchListScreen -> navController.popBackStack(Destination.CollectionBatchList(sessionId = event.sessionId.toString()), inclusive = false)`. Mirrors the existing `popBackStack(Destination.Landing, false)` pattern at the same call site.
+
+**Why no `ImagingWorkflow` strategy entry for unit-scoping.** `ImagingWorkflow` is a `SessionType`-driven strategy (HLC, PSC, LTC, etc. each have a workflow). Unit-scoping is *route-driven*, not `SessionType`-driven — it's signaled by the presence of `sessionUnitId` in the route, which is correlated-but-not-identical with `SessionType.HLC` (the architecture from PR 1 deliberately decoupled the two: `sessionUnitId` is a nullable column on `specimen`, not a `SessionType` enum case). Folding unit-scoping into `ImagingWorkflow` would re-couple the concepts and lose flexibility for future cases (a non-HLC unit-scoped session, or an HLC session entered through a path that doesn't yet have unit-scoping wired). The branch surface is also tiny: one `if` in the screen and one `?:`-style read in the VM. Convention #1 / Rule 1 — abstraction earns its keep with two consumers and a stable axis; this has neither.
+
+**Why the exit dialog renders in both modes instead of being hidden when unit-scoped.** Plan §311 originally said "submit-session UI is hidden when unit-scoped — submit happens from the list screen, not imaging" and implied skipping the dialog entirely in unit-scoped mode (single-tap back-to-list). The slice 6 design deviated: the dialog renders in *both* modes, with the button slots gating on `state.sessionUnitId`. Rationale: the dialog's existing two-stage confirmation flow (Stage 1: pick a terminal action; Stage 2: "Are you sure?") is a deliberate guardrail against accidental imaging-context exit (long-pressed icons, bumped buttons in field conditions). Removing it for unit-scoped users would *reduce* safety for the more common HLC path. By keeping the dialog and re-purposing the Save slot into a "Return" action, the symmetry of the UX is preserved — every exit from `ImagingScreen` goes through the same two-stage confirmation regardless of mode.
+
+**Why no `isUnitScoped` derived `val` on `ImagingState`.** The plan mentioned a derived `isUnitScoped: Boolean` flag. Final implementation uses `state.sessionUnitId != null` directly at the screen-side consumer sites (six occurrences inside one composable). With a single consumer-cluster, the indirection costs more than it saves. Convention #1 ("derive in the screen") honored. If a future slice introduces a second consumer outside `ImagingScreen`, promote then.
+
+**Why the navigation pattern is `popBackStack`, not `navigate(...)`.** When the user reaches imaging from the form's happy path, the back stack is `Landing → Intake → CollectionBatchList → CollectionBatchForm → Imaging`. Returning to the list is a *pop* (the list is still in the back stack with its scroll state and observed sessionUnits flow intact), not a fresh `navigate`. Mirrors the existing `popBackStack(Destination.Landing, false)` shape used by `NavigateBackToLandingScreen`. Avoids rebuilding `CollectionBatchListViewModel` and re-running the `combine` lambda. Convention #4 (match precedent) honored.
+
+**Plan-compliance checklist.**
+
+- ✅ **Rule 2 (widen, don't sibling)** — `insertSpecimen` widened in place; default-null parameter means no existing call site outside the imaging VM needed to change (and the imaging VM is the only call site in practice today).
+- ✅ **Rule 4 (match conventions)** — `savedStateHandle.toRoute<Destination.Imaging>()` mirrors `CollectionBatchListViewModel:36` and `CollectionBatchFormViewModel`'s route parsing. `popBackStack(Destination.X, false)` mirrors the existing nav pattern at `NavGraph:155,178`.
+- ✅ **Convention #6** — `sessionUnitId` filter/scoping lives on `SpecimenRepository` (the entity being scoped), not on a side table.
+- ✅ **Convention #1** — no `isUnitScoped` state field; no `ImagingWorkflow` strategy entry; minimum state surface.
+
+**Deviations from plan worth recording.**
+
+1. **Exit dialog renders in both modes (button slots gated, not the dialog itself).** Plan §311 implied the dialog is hidden in unit-scoped mode. Final UX preserves the two-stage confirmation flow in both modes to keep accidental-exit safety symmetric. Documented above under "Why the exit dialog renders in both modes".
+2. **Action named `ReturnToCollectionBatchList`, not `NavigateBackToCollectionBatchList`.** Plan §311 used the latter. Codebase convention reserves `NavigateBack*` for `Event`s (which trigger nav) and uses imperative verbs for `Action`s (which express user intent). `ReturnTo*` reads correctly as "user intent → return to that screen". Strictly better than the plan's spec.
+3. **Dialog title swaps copy in unit-scoped mode** ("Leave imaging?" instead of "Exit session?"). Not specified by the plan; added at slice review to fix a cognitive mismatch — in unit-scoped mode the user is leaving the imaging screen, not ending the session.
+4. **No new `isUnitScoped: Boolean` derived state field.** Plan §311 named one. Inlined as `state.sessionUnitId != null` reads at the screen-side consumers since there is only one consumer-cluster today.
+5. **`updateSpecimen` deliberately NOT widened.** The flow is insert-only at imaging time; updates happen during inference re-runs and don't re-scope. Widen later if a future feature needs to change the scoping of an already-saved specimen.
+
+**Inherited bugs / outstanding items worth logging (not fixed in this slice).**
+
+1. **PR-5 hand-off.** The upload worker doesn't yet serialize `specimen.sessionUnitId`. As of this slice, the column is populated correctly in Room; the worker reading it (and the API payload accepting it) is PR 5's concern. Already parked in the plan as Deferred-to-PR-5.
+2. **"Yes, Confirm" button stays red** (`MaterialTheme.colors.error`) when confirming `ReturnToCollectionBatchList`. The destructive-style coloring reads slightly off for what is pure navigation, but it preserves visual consistency with the other two terminal actions inside the same dialog. Audit-pass §10 candidate.
+3. **Audit-pass §7 (magic-string promotion)** has a new candidate: the "Leave imaging?" / "Exit session?" copy added by this slice should move into `strings.xml` alongside all the other in-line dialog strings already flagged.
 
 ### PR 3d follow-up — Audit & cleanup pass (⏭️ Required before PR 3 closes)
 
@@ -493,9 +539,24 @@ E.g. `CollectionBatchCard(title, sessionUnit, specimenCount, onClick, modifier)`
 
 `CollectionBatchIdentityResolver` deliberately must not be reused for identity validation (Convention #12). Its purpose-comment was dropped during slice 3 — the audit should re-add KDoc that flags the contract. Same audit for other `domain/util` functions in the feature.
 
-**10. Anything else.**
+**10. Confirmation-depth symmetry across terminal-action dialogs.**
 
-The list above is the seeded set from slice 3 review. The audit should be approached as a *fresh read* of the feature — open every file and ask "would a new contributor understand this in one read, or does it need a comment / rename / refactor to be obvious?". Items found during the audit should be added here so future audits can see the cumulative cleanup history.
+`ImagingScreen`'s exit dialog uses a two-stage flow: Stage 1 picks a terminal action (Save / Submit / `ReturnToCollectionBatchList`), Stage 2 confirms with "Yes, Confirm" + "Back". `CollectionBatchListScreen`'s submit dialog (slice 5) is single-stage: tap Submit → `ConfirmSubmitSession` fires immediately (markComplete + enqueueUpload + clearSession); tap Save → `SaveSessionProgress` fires immediately (clearSession + popToLanding). Both screens commit to high-stakes terminal flows from a single dispatch; the asymmetric confirmation depth reads as oversight rather than deliberate UX once both dialogs sit in the same codebase. The slice-5 rationale ("the cloud-upload tap was the confirm") proves too much — by the same logic `ImagingScreen`'s exit-icon tap would also count, but we kept the two-stage there.
+
+**Audit fix:** mirror `ImagingScreen.kt`'s pendingAction pattern in `CollectionBatchListScreen.kt`. Specifically:
+
+- `CollectionBatchListAction.kt` — add `data class SelectPendingAction(val action: CollectionBatchListAction)`, `data object ClearPendingAction`, `data object ConfirmPendingAction`.
+- `CollectionBatchListState.kt` — add `val pendingAction: CollectionBatchListAction? = null`.
+- `CollectionBatchListViewModel.kt` — handle the three new actions. `ConfirmPendingAction` resets `pendingAction` to null AND `isSubmitDialogVisible` to false, then recursively dispatches the captured pending action (matches `ImagingViewModel`'s `ConfirmPendingAction:240–245` handler shape).
+- `CollectionBatchListScreen.kt` — split the dialog body / `confirmButton` / `dismissButton` slots on `state.pendingAction == null` (Stage 1: Save + Submit) vs. `pendingAction != null` (Stage 2: Yes-Confirm + Back). Per-action body copy ("Are you sure you want to save the session and exit?" / "Are you sure you want to submit the session?").
+
+**Shape decision (recorded for audit):** use `pendingAction: CollectionBatchListAction?` (Option A — sealed-interface payload), NOT a `SubmitDialogStage` enum (Option B — type-safe stages). Convention #4 wins decisively: identical structural mirror of `ImagingState.pendingAction` means reviewers and future contributors don't have to learn a new shape for the same UX problem.
+
+**Consider while in there:** Now that two screens will share this two-stage pendingAction dialog pattern (Imaging + list), the threshold for a shared `core/presentation/components/dialog/` primitive (PR-3c Deviation #7's "extract a shared primitive" follow-up) has been met. Evaluate during this audit slice — but Convention #4 still tips toward "keep duplicated until a third consumer lands" if the two existing dialogs diverge on action sealed-interfaces enough that the shared primitive would need a generic-callback shape with no real reuse savings. Document the call either way.
+
+**11. Anything else.**
+
+The list above is the seeded set from slice 3 review and the slice 5/6 review additions. The audit should be approached as a *fresh read* of the feature — open every file and ask "would a new contributor understand this in one read, or does it need a comment / rename / refactor to be obvious?". Items found during the audit should be added here so future audits can see the cumulative cleanup history.
 
 **Recommended ordering:** run the audit *after* slice 6 (Imaging scoping) lands and *before* PR 3 is declared closed. Reasons:
 
@@ -524,7 +585,7 @@ The delete affordance — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens`
 - `IncompleteSessionViewModel.ConfirmDeleteSession` (session-level delete) is unchanged — only the **per-unit** delete affordance has been cut.
 - Edit-mode hydration (slice 1) and identity-resolver display (slice 3) are unaffected — they don't depend on delete.
 
-### Next up — PR 3d: form polish (reactive banner) + Imaging scoping + feature-wide audit
+### Next up — PR 3d: form polish (reactive banner) + feature-wide audit
 
 > Scope is summarized in the "Deferred to PR 3d" subsection under PR 3c above. The general PR-3 rules and slicing reference material below still apply.
 
@@ -550,7 +611,7 @@ The delete affordance — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens`
 - **PR 3a — Destination contract + nav scaffold + strategy flip.** ✅ Merged — see the dedicated PR 3a subsection above for the as-shipped contract. Shipped shape: `Imaging(val sessionUnitId: String?)`, `CollectionBatchList(val sessionId: String)`, `CollectionBatchForm(val sessionId: String, val sessionUnitId: String?)` — no defaults, and the form's unit field is named `sessionUnitId` (not `unitId` as this bullet originally read). Downstream slices must use the `sessionUnitId` name verbatim.
 - **PR 3b — `CollectionBatchList` screen + VM.** Add the list-side files under `collection_batch/list/presentation/`. **Add to `SessionUnitDao` / `SessionUnitRepository` only the methods the ViewModel actually calls in this diff** — most likely one observe-style query for units in a session, and whatever count is needed for the card. Do not pre-add edit/delete methods until the actions that consume them exist.
 - **PR 3c — `CollectionBatchForm` screen + VM + identity utilities.** Add `collection_batch/form/presentation/` and `collection_batch/domain/util/{CollectionBatchIdentityResolver,CollectionBatchIdentityValidator}.kt`. Add only the repo / DAO methods this VM actually invokes (e.g. upsert + the lookup needed for edit mode + the cross-unit duplicate check). Extend `FormAnswerRepository.upsertFormAnswer` with the `sessionUnitId` parameter here, since this is the first caller that needs it. **Also addresses two cross-cutting follow-ups carried over from PR 3b — see "Additional scope" below.**
-- **PR 3d — Imaging scoping.** `ImagingViewModel` / `ImagingState` / `ImagingScreen` read `sessionUnitId`, gate submit/upload UI on `isUnitScoped`, propagate `Specimen.sessionUnitId`, and emit `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped. ~~Add any final delete-guard repo method needed by 3b's card actions if it was deferred.~~ (Delete affordance removed from scope — see "Removed from PR 3d scope" subsection.)
+- ~~**PR 3d — Imaging scoping.** `ImagingViewModel` / `ImagingState` / `ImagingScreen` read `sessionUnitId`, gate submit/upload UI on `isUnitScoped`, propagate `Specimen.sessionUnitId`, and emit `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped.~~ ✅ **Shipped in PR 3d, slice 6** — see the PR 3d in-progress subsection. Final UX deviation: dialog renders in *both* modes (button slots gate on `state.sessionUnitId`); action named `ReturnToCollectionBatchList` (not `NavigateBack…`); no `isUnitScoped` derived state field (inlined at consumers).
 
 **Files to add across 3a–3d** (high level — see §5.3 for the full directory layout):
 

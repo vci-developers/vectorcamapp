@@ -23,10 +23,10 @@ class SpecimenRepositoryImplementation @Inject constructor(
     private val specimenDao: SpecimenDao
 ) : SpecimenRepository {
     override suspend fun insertSpecimen(
-        specimen: Specimen, sessionId: UUID
+        specimen: Specimen, sessionId: UUID, sessionUnitId: UUID?
     ): Result<Unit, RoomDbError> {
         return try {
-            specimenDao.insertSpecimen(specimen.toEntity(sessionId, null))
+            specimenDao.insertSpecimen(specimen.toEntity(sessionId, sessionUnitId))
             Result.Success(Unit)
         } catch (e: SQLiteConstraintException) {
             Result.Error(RoomDbError.CONSTRAINT_VIOLATION)

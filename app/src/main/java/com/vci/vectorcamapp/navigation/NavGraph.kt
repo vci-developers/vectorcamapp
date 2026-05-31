@@ -152,6 +152,13 @@ fun NavGraph(startDestination: Destination) {
                     ImagingEvent.NavigateBackToLandingScreen -> {
                         navController.popBackStack(Destination.Landing, false)
                     }
+
+                    is ImagingEvent.NavigateBackToCollectionBatchListScreen -> {
+                        navController.popBackStack(
+                            Destination.CollectionBatchList(sessionId = event.sessionId.toString()),
+                            inclusive = false,
+                        )
+                    }
                 }
             }
 

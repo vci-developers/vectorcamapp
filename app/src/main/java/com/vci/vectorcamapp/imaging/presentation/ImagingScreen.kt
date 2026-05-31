@@ -201,7 +201,9 @@ fun ImagingScreen(
                     Column(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = modifier.fillMaxHeight().wrapContentWidth()
+                        modifier = modifier
+                            .fillMaxHeight()
+                            .wrapContentWidth()
                     ) {
                         Row(
                             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -238,7 +240,9 @@ fun ImagingScreen(
                         }
 
                         LazyColumn(
-                            modifier = Modifier.fillMaxHeight().wrapContentWidth(),
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .wrapContentWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             val imageList =
@@ -275,7 +279,11 @@ fun ImagingScreen(
                                     )
                             ) {
                                 Text(
-                                    text = if (state.pendingAction == null) "Exit session?" else "Confirm Action",
+                                    text = if (state.pendingAction == null) {
+                                        if (state.sessionUnitId != null) "Leave imaging?" else "Exit session?"
+                                    } else {
+                                        "Confirm Action"
+                                    },
                                     style = MaterialTheme.typography.headlineMedium,
                                     color = MaterialTheme.colors.textPrimary,
                                     modifier = Modifier.weight(1f)
@@ -296,9 +304,15 @@ fun ImagingScreen(
                         },
                         text = {
                             val dialogText = when (state.pendingAction) {
-                                null -> "Would you like to save this session for later or submit it now?"
+                                null -> if (state.sessionUnitId != null) {
+                                    "Would you like to return to your collection batches?"
+                                } else {
+                                    "Would you like to save this session for later or submit it now?"
+                                }
+
                                 is ImagingAction.SaveSessionProgress -> "Are you sure you want to save the session and exit?"
                                 is ImagingAction.SubmitSession -> "Are you sure you want to submit the session?"
+                                is ImagingAction.ReturnToCollectionBatchList -> "Are you sure you want to return to your collection batches?"
                                 else -> ""
                             }
                             Column {
@@ -331,25 +345,33 @@ fun ImagingScreen(
                         },
                         confirmButton = {
                             if (state.pendingAction == null) {
-                                OutlinedButton(
-                                    onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SubmitSession)) },
-                                    border = BorderStroke(
-                                        MaterialTheme.dimensions.borderThicknessThick,
-                                        MaterialTheme.colors.successConfirm
-                                    )
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_cloud_upload),
-                                        contentDescription = "Submit Icon",
-                                        tint = MaterialTheme.colors.successConfirm,
-                                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
-                                    )
-                                    Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
-                                    Text(
-                                        text = "Submit",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colors.successConfirm
-                                    )
+                                if (state.sessionUnitId == null) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            onAction(
+                                                ImagingAction.SelectPendingAction(
+                                                    ImagingAction.SubmitSession
+                                                )
+                                            )
+                                        },
+                                        border = BorderStroke(
+                                            MaterialTheme.dimensions.borderThicknessThick,
+                                            MaterialTheme.colors.successConfirm
+                                        )
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_cloud_upload),
+                                            contentDescription = "Submit Icon",
+                                            tint = MaterialTheme.colors.successConfirm,
+                                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                                        )
+                                        Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
+                                        Text(
+                                            text = "Submit",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colors.successConfirm
+                                        )
+                                    }
                                 }
                             } else {
                                 Button(
@@ -370,22 +392,40 @@ fun ImagingScreen(
                         },
                         dismissButton = {
                             if (state.pendingAction == null) {
+                                val saveTargetAction: ImagingAction =
+                                    if (state.sessionUnitId != null) {
+                                        ImagingAction.ReturnToCollectionBatchList
+                                    } else {
+                                        ImagingAction.SaveSessionProgress
+                                    }
                                 OutlinedButton(
-                                    onClick = { onAction(ImagingAction.SelectPendingAction(ImagingAction.SaveSessionProgress)) },
+                                    onClick = {
+                                        onAction(
+                                            ImagingAction.SelectPendingAction(
+                                                saveTargetAction
+                                            )
+                                        )
+                                    },
                                     border = BorderStroke(
                                         MaterialTheme.dimensions.borderThicknessThick,
                                         MaterialTheme.colors.info
                                     )
                                 ) {
                                     Icon(
-                                        painter = painterResource(id = R.drawable.ic_save),
-                                        contentDescription = "Save Icon",
+                                        painter = painterResource(
+                                            id = if (state.sessionUnitId != null) {
+                                                R.drawable.ic_arrow_left
+                                            } else {
+                                                R.drawable.ic_save
+                                            }
+                                        ),
+                                        contentDescription = if (state.sessionUnitId != null) "Return Icon" else "Save Icon",
                                         tint = MaterialTheme.colors.info,
                                         modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
                                     )
                                     Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
                                     Text(
-                                        "Save",
+                                        text = if (state.sessionUnitId != null) "Return" else "Save",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colors.info
                                     )
@@ -409,7 +449,7 @@ fun ImagingScreen(
                         title = {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
-                            ){
+                            ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_info),
                                     contentDescription = "Info Icon",
@@ -441,7 +481,13 @@ fun ImagingScreen(
                                 ) {
                                     Checkbox(
                                         checked = state.hasConfirmedPackaging,
-                                        onCheckedChange = { onAction(ImagingAction.TogglePackagingConfirmation(it)) },
+                                        onCheckedChange = {
+                                            onAction(
+                                                ImagingAction.TogglePackagingConfirmation(
+                                                    it
+                                                )
+                                            )
+                                        },
                                         colors = CheckboxDefaults.colors(
                                             checkedColor = MaterialTheme.colors.successConfirm
                                         )
@@ -565,7 +611,11 @@ fun ImagingScreen(
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.ic_exit),
-                                            contentDescription = "Exit",
+                                            contentDescription = if (state.sessionUnitId != null) {
+                                                "Back to collection batches"
+                                            } else {
+                                                "Exit"
+                                            },
                                             tint = MaterialTheme.colors.buttonText,
                                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                                         )
@@ -719,7 +769,9 @@ fun ImagingScreen(
                                         Row(
                                             modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium),
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                                            horizontalArrangement = Arrangement.spacedBy(
+                                                MaterialTheme.dimensions.spacingSmall
+                                            )
                                         ) {
                                             Icon(
                                                 painter = painterResource(R.drawable.ic_warning),
@@ -772,7 +824,12 @@ fun ImagingScreen(
                                             label = "Capture",
                                             onClick = {
                                                 imageCaptureUseCase?.let {
-                                                    onAction(ImagingAction.CaptureImage(it, metadataListener.latestMetadata))
+                                                    onAction(
+                                                        ImagingAction.CaptureImage(
+                                                            it,
+                                                            metadataListener.latestMetadata
+                                                        )
+                                                    )
                                                 }
                                             },
                                             iconPainter = painterResource(id = R.drawable.ic_camera),
