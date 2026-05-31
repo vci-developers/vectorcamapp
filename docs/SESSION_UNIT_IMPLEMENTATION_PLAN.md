@@ -22,7 +22,7 @@ This section is the single source of truth for "where are we?". It is updated at
 | └ PR 3a | Destination contract + nav scaffold + strategy flip | ✅ Merged     |
 | └ PR 3b | `CollectionBatchList` screen + VM                   | ✅ Merged     |
 | └ PR 3c | `CollectionBatchForm` screen + VM + validation + saving | ✅ Merged     |
-| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + delete + submit-dialog + Imaging scoping | ⏭️ In progress |
+| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping | ⏭️ In progress |
 | PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏳ Pending    |
 | PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
@@ -81,7 +81,7 @@ core/data/repository/SessionUnitRepositoryImplementation.kt
 
 - `FormAnswerRepository.upsertFormAnswer` does not yet accept a `sessionUnitId` argument — PR 3.
 - `SessionUnitDao` lacks `observe`, count, `getNext*`, and `getSessionUnitsForSession` queries — PR 3.
-- `SessionUnitRepository.deleteSessionUnitIfNoSpecimens` is not yet implemented — PR 3.
+- ~~`SessionUnitRepository.deleteSessionUnitIfNoSpecimens` is not yet implemented — PR 3.~~ ❌ **Removed from scope.** No delete affordance will ship — users cannot delete session units. See "Removed from PR 3d scope" subsection.
 - `FormQuestionMapper.toDomain(FormQuestionDto)` hard-codes `answerScope = SESSION` and `isUnitIdentityComponent = false` with a `// TODO: CHANGE THIS WITH ACTUAL DYNAMIC VALUES`. The DTO will gain these fields in PR 5.
 - `SpecimenRepositoryImplementation` hard-codes `sessionUnitId = null` in all three CRUD methods. `ImagingViewModel` will eventually pass the real value (PR 3).
 - `MetadataUploadWorker` has no awareness of session units yet — PR 5.
@@ -223,7 +223,7 @@ collection_batch/list/presentation/components/CollectionBatchCard.kt
 
 1. **Imaging is reachable ONLY through the form, not directly from the list.** The plan's §2 user flow showed two card affordances on the list — "tap arrow → imaging" and "tap body → form (edit mode)". We collapsed these into a single card click that always routes to the form. The form will end its happy path on `Destination.Imaging(sessionUnitId)`, so the form becomes the one and only door into imaging. Rationale: a single chokepoint into imaging keeps batch-identity validation in one place (the form) and avoids a "resume" path that would skip validation for an edited identity.
 2. **Single `OpenCollectionBatch` action, not separate `OpenCollectionBatchImaging` + `EditCollectionBatch`.** Direct consequence of #1. The plan listed three card actions; we ship one.
-3. **No `DeleteCollectionBatch` action / no `canDelete` flag on state / no `deleteSessionUnitIfNoSpecimens` repo method.** Per the slicing rule, delete has no UI dispatcher in this diff, so the action / event / repo method are all deferred. PR 3d revisits.
+3. **No `DeleteCollectionBatch` action / no `canDelete` flag on state / no `deleteSessionUnitIfNoSpecimens` repo method.** Per the slicing rule, delete has no UI dispatcher in this diff, so the action / event / repo method are all deferred. ~~PR 3d revisits.~~ **Update (PR 3d):** delete affordance has been permanently removed from scope — users cannot delete session units. See "Removed from PR 3d scope" subsection.
 4. **No intermediate `CollectionBatchCardData`.** State carries `units: List<SessionUnit>` (canonical domain model) plus `specimenCountsBySessionUnitId: Map<UUID, Int>` for the only piece of side-data that isn't on `SessionUnit`. Card composables consume `SessionUnit` directly. Mirrors `CompleteSessionListViewModel.Map<SessionAndSite, SessionUploadProgress>` rather than inventing a presentation-layer wrapper.
 5. **Bucket name is `"Batch ${unit.unitOrder}"` for now.** No identity resolver wired yet — that's PR 3c. The card title falls back cleanly when identity components don't exist, which is also what the plan's §7.3 prescribed as the fallback.
 6. **`UUID` everywhere except at the `Destination(...)` constructor.** `Action` / `Event` / VM internals all carry `UUID`. The single `String ↔ UUID` conversion lives on the `NavGraph` line that builds `Destination.CollectionBatchForm(event.sessionId.toString(), event.sessionUnitId?.toString())`. Matches PR 2 deviation #3 and the `CompleteSessionListEvent.NavigateToCompleteSessionDetails` precedent. Flipping `Destination` itself to typed `UUID` requires a `NavType<UUID>` + `typeMap` refactor across all 6 existing routes — deferred to a future "type-safe UUID nav" PR, not folded into 3b.
@@ -239,7 +239,7 @@ collection_batch/list/presentation/components/CollectionBatchCard.kt
 - `CollectionBatchListEvent.NavigateToCollectionBatchForm` is the only forward navigation; until 3c lands, tapping the FAB or any card sends the user to the form stub.
 - `SessionUnitDao` is still only the two methods listed above. The form-side methods (`getMaxUnitOrderForSession`, `getSessionUnitById`, `upsertSessionUnit`, plus any duplicate-identity lookup the form needs) come in 3c when their call sites exist.
 - `FormAnswerRepository.upsertFormAnswer` is still unchanged from PR 1 — the `sessionUnitId` parameter lands in 3c.
-- Delete affordance / `deleteSessionUnitIfNoSpecimens` / `canDelete` flag on the card — PR 3d.
+- ~~Delete affordance / `deleteSessionUnitIfNoSpecimens` / `canDelete` flag on the card — PR 3d.~~ ❌ **Removed from scope** — see "Removed from PR 3d scope" subsection below.
 - Type-safe `UUID` nav arguments — separate future PR (likely after PR 4 so the refactor surface is half the size).
 
 **How to verify PR 3b locally.**
@@ -291,23 +291,23 @@ collection_batch/list/presentation/components/CollectionBatchCard.kt
 4. **No `CollectionBatchIdentityResolver` / `CollectionBatchIdentityValidator` standalone util files.** Plan §PR-3c-files-to-add listed both under `collection_batch/domain/util/`. Final implementation models identity validation as the Hilt-injectable `ValidateCollectionBatchIdentityUseCase` instead (mirrors `ValidateFormAnswersUseCase`'s shape). The bucket-name "resolver" (display formatter) was dropped — its only intended consumer is the list-card identity-label upgrade, which is itself deferred to 3d (Option B from the in-PR design discussion: leave `"Batch ${unit.unitOrder}"` as the card title for now, add the resolver when the consumer lands).
 5. **Identity comparison is structured per-questionId equality, not bucket-name string match.** Plan §7.3 prescribed deriving a `" · "`-joined bucket name and comparing strings. Final implementation compares values per identity-questionId — eliminates separator/whitespace/ordering ambiguity. The bucket-name string remains a *display-only* concept (when it eventually lands in the list card).
 6. **`ValidateFormAnswersUseCase` is duplicated feature-locally rather than reused from `intake.domain.use_cases`.** Cross-feature reach was deemed worse than a small duplicate. Future cleanup (out of 3c's scope): relocate to `core/domain/use_case/` and have both features import from there.
-7. **Submit-session confirmation dialog (Additional scope #1) was NOT implemented in 3c.** Plan slated it for 3c, but it proved orthogonal to the form's validation+saving work. Punted to 3d alongside the delete affordance — the dialog primitive can be introduced once and used for both "end session" and "delete unit" confirmations.
+7. **Submit-session confirmation dialog (Additional scope #1) was NOT implemented in 3c.** Plan slated it for 3c, but it proved orthogonal to the form's validation+saving work. Punted to 3d. (Originally framed as shareable with a delete-unit confirmation dialog; the delete affordance was subsequently removed from scope, so the submit-session dialog is now the dialog's only consumer — defer the "extract a shared primitive" question until a second consumer appears.)
 8. **`CollectionBatchFormError` collapses both top-level and per-field errors into one enum.** Intake splits them across `IntakeError.FORM_INVALID` + `FormValidationError.INVALID_FORM_ANSWER`. Convention-enforced separation rather than type-enforced. Can split later if drift becomes a problem.
 9. **`FormAnswerRepository.upsertFormAnswer` widened with default-null `sessionUnitId`, but existing callers were updated to pass `null` explicitly.** The default exists for Rule-2 compliance; the explicit-null call-site update is a new convention — see Convention #3 below.
 10. **`getSessionUnitScopedFormAnswersBySessionId` lives on `FormAnswerRepository` / `FormAnswerDao`, not `SessionUnitRepository` / `SessionUnitDao`.** Earlier drafts placed it next to `countSpecimensForSessionUnit` on `SessionUnitDao`. After discussion, the new consistency principle ("filter-by-X belongs on the entity's own repo") moved it. Side effect: `countSpecimensForSessionUnit` on `SessionUnitDao` is now flagged as misplaced PR-3b expedient debt — should eventually live on a `SpecimenRepository` (which doesn't exist yet). Don't extend that precedent.
 11. **`FormAnswer.submittedAt` is never written from the VM.** Plan didn't explicitly call this out; pre-existing `IntakeViewModel:278` bug was overwriting it with `System.currentTimeMillis()` on local save. Discovered during 3c review, fixed in `IntakeViewModel` as a bonus (no longer overwrites). `submittedAt` is set only by `RemoteFormAnswerDataSource` when the upload DTO is constructed. See Convention #9.
-12. **Defensive `localId = sessionUnitId ?: UUID.randomUUID()` in the edit-mode persist fork** is unreachable today (no delete affordance exists), kept intentionally for PR 3d's planned delete-then-edit race. Soft-recovery semantics align with the planned `deleteSessionUnitIfNoSpecimens` invariant: the deleted unit had no specimens, so re-inserting under the same id is non-destructive. See Convention #7.
+12. **Defensive `localId = sessionUnitId ?: UUID.randomUUID()` in the edit-mode persist fork** is unreachable today (no delete affordance exists), ~~kept intentionally for PR 3d's planned delete-then-edit race. Soft-recovery semantics align with the planned `deleteSessionUnitIfNoSpecimens` invariant: the deleted unit had no specimens, so re-inserting under the same id is non-destructive.~~ **Update (PR 3d):** the delete affordance has been removed from scope, so this defensive branch is now permanently unreachable. Remove it during the "Audit & cleanup pass" — the persist fork should hard-require a non-null `sessionUnitId` in edit mode (it always is, by construction — the form only opens in edit mode when navigated with one). See Convention #7 and the updated Convention #13.
 13. **`DuplicateIdentityWarningBanner` renders inside the Batch Identity tile's content lambda**, alongside the `forEach` loop of identity `DynamicFormField`s — not between tiles. In-tile placement didn't require modifying `CollectionBatchFormTile`'s API and gave visual locality. See Convention #10.
 14. **Identity-component filter explicitly includes `isUnitIdentityComponent`.** Earlier drafts of `ValidateCollectionBatchIdentityUseCase` filtered only on `answerScope == SESSION_UNIT`, which would have silently widened identity to every unit-scoped question once a non-identity unit-scoped question was added. Caught and corrected during review. Filter is now `it.answerScope == FormQuestionScope.SESSION_UNIT && it.isUnitIdentityComponent`.
 
-**Deferred to PR 3d** (form polish + delete + submit-dialog + Imaging scoping):
+**Deferred to PR 3d** (form polish + submit-dialog + Imaging scoping):
 
 1. ~~**Edit-mode answer hydration.** `loadFormDetails` is `sessionUnitId`-blind — tapping an existing card opens a blank form. Add `FormAnswerDao.getFormAnswersBySessionUnitId(sessionUnitId: UUID): List<FormAnswerEntity>` + matching `FormAnswerRepository.getFormAnswersBySessionUnitId(sessionUnitId): Map<Int, FormAnswer>` (same shape as the existing `getFormAnswersBySessionId`). Then in `loadFormDetails` branch on `sessionUnitId`: when non-null, fetch and merge into the seed map, preserving each `FormAnswer.localId` from the DB row. **Critical for `@Upsert` collapse** — generating fresh UUIDs at hydration breaks UPDATE-vs-INSERT and accumulates duplicate `form_answer` rows on every edit save. See Convention #12.~~ ✅ **Shipped in PR 3d, slice 1** — see the PR 3d in-progress subsection below.
 2. **Reactive duplicate-identity banner.** Currently only updates on `SubmitSessionUnitForm`. Derive via a `combine(identityDrafts, formQuestions, existingAnswersBySessionUnitId).launchIn(viewModelScope)` Flow that writes the validator's `errorOrNull()` back into `state.collectionBatchFormErrors.duplicateIdentity`. Snapshot the existing answers once in `loadFormDetails` (no concurrent unit-write path today — `MutableStateFlow<Map<UUID, Map<Int, FormAnswer>>>` field on the VM is sufficient). `SubmitSessionUnitForm` becomes read-only against the flow-derived value. Naturally side-steps the eager-validation UX problem because the validator returns `Success` for blank identities.
 3. ~~**`CollectionBatchIdentityResolver` + list-card identity-label upgrade.** Pure display formatter (sort identity questions by `id`, join with `" · "`, fall back to `"Batch ${unit.unitOrder}"` when no identity questions exist). Wired into `CollectionBatchListViewModel`, consuming the same `FormAnswerRepository.getSessionUnitScopedFormAnswersBySessionId` snapshot the form VM uses. `CollectionBatchCard` renders the derived title.~~ ✅ **Shipped in PR 3d, slice 3** — see the PR 3d in-progress subsection. Naming, signature-shape, and silent-failure follow-ups rolled into the new "Audit & cleanup pass" subsection.
 4. **Submit-session confirmation dialog (deferred from 3c — Additional scope #1).** Split `CollectionBatchListAction.SubmitSession` into dialog-open + `SaveSessionAsInProgress` + `ConfirmSubmitSession`. Open question still: does the same dialog belong on `ImagingScreen.SubmitSession`? Decide at 3d kickoff.
 5. **Per-field error reactive clearing.** Same `combine` Flow pattern as the banner but for `formAnswerErrors`. Carries an additional UX subproblem — eager validation on form-open would show "required field" everywhere unless gated by a per-field "touched" tracker. Lower priority than the banner; consider only if QA flags inline-error timing as a usability issue.
-6. **Delete affordance** — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens` + matching DAO query, `DeleteCollectionBatch` action, `canDelete` flag on `CollectionBatchCard`. From original 3d scope. Once this lands, Deviation #12's defensive `?:` becomes reachable.
+6. ~~**Delete affordance** — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens` + matching DAO query, `DeleteCollectionBatch` action, `canDelete` flag on `CollectionBatchCard`. From original 3d scope. Once this lands, Deviation #12's defensive `?:` becomes reachable.~~ ❌ **Removed from scope (PR 3d).** Users will not be able to delete session units. See "Removed from PR 3d scope" subsection. Implication: Deviation #12's defensive `?:` becomes permanently unreachable and should be removed during the audit pass.
 7. **Imaging scoping** (original 3d scope) — `ImagingViewModel` / `ImagingState` / `ImagingScreen` read `sessionUnitId`, gate submit/upload UI on `isUnitScoped`, propagate `Specimen.sessionUnitId`, emit `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped.
 8. **`DuplicateIdentityWarningBanner` text consolidation.** Banner hardcodes a string (`"Another collection batch with these identity values already exists!"`) while the toast goes through `R.string.collection_batch_form_error_duplicate_identity` (`"A collection batch with this identity already exists. Please change one of the identity fields."`). Two strings for the same condition. Banner should consume the same string resource. Minor polish.
 9. **Silent failure handling in `loadFormDetails`.** `programId == null` / `program == null` / `form == null` still just drops `isLoading` to `false` and leaves an empty screen. Add `emitError(CollectionBatchFormError.UNKNOWN_ERROR)` + `NavigateBackToCollectionBatchListScreen` emission, mirroring `IntakeViewModel:636-650`. **Note (post-slice-3):** the same swallow-and-return-empty pattern now also exists in `CollectionBatchListViewModel.loadSessionUnitFormQuestions`. Fix both VMs in the same diff during the "Audit & cleanup pass" subsection above.
@@ -343,7 +343,7 @@ collection_batch/list/presentation/components/CollectionBatchCard.kt
 10. **Feature-local error enums with exhaustive `ErrorExtensions` branches.** Each feature defines its own `*Error` enum implementing `Error`, and `ErrorExtensions` resolves to feature-specific string resources via `is FeatureError -> when (this) { ... }`. Exhaustive `when` catches forgotten branches at compile time. Pattern: `IntakeError` / `FormValidationError` / `CollectionBatchFormError`.
 11. **Validation lives in `Validate*UseCase` classes, not `object` validators.** Hilt-injectable, testable, mirrors `ValidateFormAnswersUseCase`. Aggregator data class (`*ValidationUseCases`) bundles multiple validators — single VM constructor param, easy to grow. Don't use `object` for new validation (the earlier `CollectionBatchIdentityValidator` object proposal was explicitly rejected in favor of the use case shape).
 12. **Identity comparison is structured per-questionId equality, never a derived-string match.** `.trim()` only; no `.lowercase()` (matches `ValidateFormAnswersUseCase`'s `select` casing). Blank-identity drafts skip duplicate detection (let `required` field validation surface the missing field instead). Display-side string formatting (bucket-name resolver) is a separate concern, never reused for validation.
-13. **Defensive code earns its place by aligning with planned future semantics.** The `sessionUnitId ?: UUID.randomUUID()` in persist is "unreachable today" but its soft-recovery behavior matches the planned `deleteSessionUnitIfNoSpecimens` invariant. Keep defensive code only when (a) the case becomes reachable in a known-future PR AND (b) the recovery semantics are forward-compatible. Add a one-line comment explaining the planned reachability so a future reader doesn't simplify it away.
+13. **Defensive code earns its place by aligning with planned future semantics.** Keep defensive code only when (a) the case becomes reachable in a known-future PR AND (b) the recovery semantics are forward-compatible. Add a one-line comment explaining the planned reachability so a future reader doesn't simplify it away. **Corollary:** when the future PR that justified the defensive code is removed from scope, the defensive code should be removed too — leaving permanently-unreachable branches is a maintenance trap. (Concrete instance: the `sessionUnitId ?: UUID.randomUUID()` in 3c's persist fork was originally kept for a planned delete-then-edit race, but the delete affordance has been removed from scope and the defensive branch must be removed in the audit pass — see PR-3c Deviation #12.)
 14. **Persistence pipelines wrap multi-row writes in `transactionHelper.runAsTransaction { ... }`.** The pattern: each repo call returns `Result<Unit, RoomDbError>`; `.onError { emitError(it); return@runAsTransaction false }` short-circuits the transaction; the block returns `true` on success; the VM gates post-success side effects (event emit, cache write, navigation) on the boolean. Mirrors `IntakeViewModel.handleSaveIntake`.
 15. **In-tile error rendering is acceptable when scoped to the tile's content lambda.** Feature-local banners (e.g. `DuplicateIdentityWarningBanner`) render inside `*Tile`'s content slot alongside the `forEach` of `DynamicFormField`s. Does not modify the tile's API. Achieves visual locality without coupling cost. Mirror for future per-tile error/warning surfaces.
 16. **Banner copy and toast copy should share a single string resource.** Cuts the maintenance/translation surface; ensures consistency. (3c currently has a minor divergence — see Deferred-to-3d #8.)
@@ -397,7 +397,7 @@ Before: every collection-batch card on `CollectionBatchListScreen` rendered `"Ba
 
 1. **Resolver lives in `domain/util/`, not `presentation/`.** The VM is the consumer; the screen sees only the precomputed `Map<UUID, String>`. Mirrors the precedent set by `intake/domain/util/FormQuestionPrerequisiteEvaluator` (pure function `object`, no DI). Validation conventions (use case + Hilt) don't apply because this is display formatting, not validation.
 2. **Bucket name lives on state, not derived in the component.** Convention #1 ("derive in the screen") was evaluated against the alternative ("put both raw inputs on state and let the component derive"). The alternative grows state surface more than the chosen approach (one `Map<UUID, String>` field vs. a `List<FormQuestion>` + `Map<UUID, Map<Int, FormAnswer>>` pair). Convention #1's spirit is "minimize state surface", which the chosen approach honors even while deviating from the letter. Mirrors the `specimenCountsBySessionUnitId` shape as a precomputed per-unit attribute map.
-3. **Fallback `"Batch ${unit.unitOrder}"` lives in the card, not the resolver or the VM.** Keeps the resolver's contract clean ("derive identity, return empty if none") and lets future consumers (delete-confirmation dialog, submit dialog) distinguish "this unit has no identity values yet" from "this unit's name happens to be 'Batch 3'". Card has `unitOrder` in scope so the fallback is free at the consumer.
+3. **Fallback `"Batch ${unit.unitOrder}"` lives in the card, not the resolver or the VM.** Keeps the resolver's contract clean ("derive identity, return empty if none") and lets future consumers (e.g. the submit-session dialog) distinguish "this unit has no identity values yet" from "this unit's name happens to be 'Batch 3'". Card has `unitOrder` in scope so the fallback is free at the consumer.
 4. **No `@Relation`-based fetch in this slice.** Deferred-to-PR-5 #12 (`SessionUnitWithFormAnswersRelation`-backed `@Transaction @Query` on `SessionUnitDao`) would let this VM consume `Flow<List<SessionUnitWithFormAnswers>>` and drop the separate `formAnswerRepository` lookup. The plan's threshold for landing it — "two consumers of the relation" — is now met (validator in 3c + resolver in 3d), so pulling it forward in PR 5 (or a dedicated cleanup PR) is the next obvious refactor. Slice 3 deliberately did not bundle it to keep this diff focused.
 
 **Deviations from plan worth recording.**
@@ -472,7 +472,27 @@ The list above is the seeded set from slice 3 review. The audit should be approa
 
 **What NOT to defer to PR 4 or beyond.** The point of this audit is that the feature surface should be reviewable, consistent, and convention-aligned the moment PR 3 closes. Item #6 (silent failures) is the only thing already on the deferred-to-3d list that should be folded in here; the rest is new debt surfaced during slice-by-slice review.
 
-### Next up — PR 3d: form polish (reactive banner) + delete affordance + submit-session dialog + Imaging scoping + feature-wide audit
+### PR 3d follow-up — Removed from scope: delete affordance (❌ Cut by product decision)
+
+The delete affordance — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens` + DAO query + `DeleteCollectionBatch` action + `canDelete` flag + swipe/dialog UI — is **permanently out of scope**. Users will not be able to delete session units from the collection-batch list. Mistaken units will have to be ignored (left as zero-specimen rows in the session) or addressed by re-imaging into the correct unit; product accepts that surface.
+
+**Why this is recorded here rather than silently dropped.** The plan, the deferred-to-3d list, the conventions, and several aspirational reference sections all encode delete as a future-but-planned capability. Removing the bullet without leaving a trail would mislead a future contributor reading the historical record. Future contributors: if product reverses this decision, **start by re-reading the in-line annotations on the original planning entries** (PR-1 follow-ups, PR-3b Deviation #3, PR-3b follow-ups, PR-3c Deviation #12, Deferred-to-3d #6, Convention #13, and the §3.8/§4.3/§6/§7/§11 reference material) — every one of them has been struck through or annotated with a back-pointer to this subsection.
+
+**Implications already propagated into the plan:**
+
+1. **PR-3c Deviation #12** — the `localId = sessionUnitId ?: UUID.randomUUID()` defensive branch in `CollectionBatchFormViewModel`'s edit-mode persist fork is now permanently unreachable (it was justified by the planned delete-then-edit race). Marked for removal during the "Audit & cleanup pass" (slice 7). The persist fork should hard-require a non-null `sessionUnitId` in edit mode — which it always is by construction, since the form only opens in edit mode when navigated with one.
+2. **Convention #13** — updated to add a corollary: when the future PR that justified a piece of defensive code is removed from scope, the defensive code should be removed too.
+3. **PR-3c Deviation #7 / submit-session dialog (Slice 5)** — the original framing was "introduce a shared confirmation-dialog primitive once and use it for both submit-session and delete-unit". With delete gone, the submit-session dialog is the dialog's only consumer; defer the "extract a shared primitive" question until a second consumer appears (Rule 1 / Rule 2).
+4. **§4.3 (`SessionUnitRepository` / `SessionUnitDao` aspirational schemas)** — `deleteSessionUnit` / `deleteSessionUnitIfNoSpecimens` references in those sections are aspirational reference material only; the "Read this before writing any code in PR 3" callout already says these sections should not be treated as a checklist, but each delete-related line is also annotated with a back-pointer to this subsection so the cross-reference is explicit.
+5. **§11 manual QA scenarios** — the "image a unit, return to dashboard, delete it" scenario is annotated as no-longer-applicable.
+
+**What's NOT affected by this decision.**
+
+- Specimen-side `ForeignKey` `onDelete = CASCADE` configurations on `SessionUnitEntity` and `FormAnswerEntity` stay as-is. Those are correct schema regardless of whether a UI delete affordance exists — they protect any future programmatic delete path (e.g. session-level delete from `IncompleteSessionScreen`, which still cascades to units and their answers/specimens).
+- `IncompleteSessionViewModel.ConfirmDeleteSession` (session-level delete) is unchanged — only the **per-unit** delete affordance has been cut.
+- Edit-mode hydration (slice 1) and identity-resolver display (slice 3) are unaffected — they don't depend on delete.
+
+### Next up — PR 3d: form polish (reactive banner) + submit-session dialog + Imaging scoping + feature-wide audit
 
 > Scope is summarized in the "Deferred to PR 3d" subsection under PR 3c above. The general PR-3 rules and slicing reference material below still apply.
 
@@ -498,7 +518,7 @@ The list above is the seeded set from slice 3 review. The audit should be approa
 - **PR 3a — Destination contract + nav scaffold + strategy flip.** ✅ Merged — see the dedicated PR 3a subsection above for the as-shipped contract. Shipped shape: `Imaging(val sessionUnitId: String?)`, `CollectionBatchList(val sessionId: String)`, `CollectionBatchForm(val sessionId: String, val sessionUnitId: String?)` — no defaults, and the form's unit field is named `sessionUnitId` (not `unitId` as this bullet originally read). Downstream slices must use the `sessionUnitId` name verbatim.
 - **PR 3b — `CollectionBatchList` screen + VM.** Add the list-side files under `collection_batch/list/presentation/`. **Add to `SessionUnitDao` / `SessionUnitRepository` only the methods the ViewModel actually calls in this diff** — most likely one observe-style query for units in a session, and whatever count is needed for the card. Do not pre-add edit/delete methods until the actions that consume them exist.
 - **PR 3c — `CollectionBatchForm` screen + VM + identity utilities.** Add `collection_batch/form/presentation/` and `collection_batch/domain/util/{CollectionBatchIdentityResolver,CollectionBatchIdentityValidator}.kt`. Add only the repo / DAO methods this VM actually invokes (e.g. upsert + the lookup needed for edit mode + the cross-unit duplicate check). Extend `FormAnswerRepository.upsertFormAnswer` with the `sessionUnitId` parameter here, since this is the first caller that needs it. **Also addresses two cross-cutting follow-ups carried over from PR 3b — see "Additional scope" below.**
-- **PR 3d — Imaging scoping.** `ImagingViewModel` / `ImagingState` / `ImagingScreen` read `sessionUnitId`, gate submit/upload UI on `isUnitScoped`, propagate `Specimen.sessionUnitId`, and emit `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped. Add any final delete-guard repo method needed by 3b's card actions if it was deferred.
+- **PR 3d — Imaging scoping.** `ImagingViewModel` / `ImagingState` / `ImagingScreen` read `sessionUnitId`, gate submit/upload UI on `isUnitScoped`, propagate `Specimen.sessionUnitId`, and emit `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped. ~~Add any final delete-guard repo method needed by 3b's card actions if it was deferred.~~ (Delete affordance removed from scope — see "Removed from PR 3d scope" subsection.)
 
 **Files to add across 3a–3d** (high level — see §5.3 for the full directory layout):
 
@@ -620,8 +640,7 @@ Landing
         → ImagingScreen(sessionUnitId) for that unit
       [card] tap card body:
         → CollectionBatchFormScreen in edit mode (re-validates uniqueness)
-      [card] long-press / swipe / overflow delete:
-        → only if 0 specimens for the unit
+      [card] (no delete affordance — removed from scope; see "Removed from PR 3d scope")
       [cloud-upload] taps:
         → mark session complete + enqueue MetadataUploadWorker
 ```
@@ -894,8 +913,10 @@ interface SessionUnitDao {
     @Upsert
     suspend fun upsertSessionUnit(unit: SessionUnitEntity): Long
 
-    @Delete
-    suspend fun deleteSessionUnit(unit: SessionUnitEntity): Int
+    // ❌ Removed from scope (PR 3d) — no delete affordance will ship.
+    // See "Removed from PR 3d scope" subsection. Do NOT implement.
+    // @Delete
+    // suspend fun deleteSessionUnit(unit: SessionUnitEntity): Int
 
     @Query("SELECT * FROM session_unit WHERE localId = :unitId")
     suspend fun getSessionUnitById(unitId: UUID): SessionUnitEntity?
@@ -944,8 +965,11 @@ fun provideSessionUnitDao(db: VectorCamDatabase): SessionUnitDao = db.sessionUni
 @Query("SELECT * FROM form_answer WHERE sessionUnitId = :sessionUnitId")
 suspend fun getFormAnswersBySessionUnitId(sessionUnitId: UUID): List<FormAnswerEntity>
 
-@Query("DELETE FROM form_answer WHERE sessionUnitId = :sessionUnitId")
-suspend fun deleteFormAnswersForSessionUnit(sessionUnitId: UUID): Int
+// ❌ Removed from scope (PR 3d) — no per-unit delete affordance.
+// FormAnswer rows are cleaned up via FK CASCADE during session-level delete only.
+// See "Removed from PR 3d scope" subsection. Do NOT implement.
+// @Query("DELETE FROM form_answer WHERE sessionUnitId = :sessionUnitId")
+// suspend fun deleteFormAnswersForSessionUnit(sessionUnitId: UUID): Int
 ```
 
 `app/src/main/java/com/vci/vectorcamapp/core/data/room/dao/SpecimenDao.kt`: add
@@ -1031,8 +1055,10 @@ interface SessionUnitRepository {
     suspend fun countSessionUnits(sessionId: UUID): Int
     suspend fun countSpecimensForUnit(unitId: UUID): Int
 
-    /** Deletes the unit only if it has no specimens. Returns true on delete, false on guard. */
-    suspend fun deleteSessionUnitIfNoSpecimens(unit: SessionUnit): Boolean
+    // ❌ Removed from scope (PR 3d) — no delete affordance.
+    // See "Removed from PR 3d scope" subsection. Do NOT implement.
+    // /** Deletes the unit only if it has no specimens. Returns true on delete, false on guard. */
+    // suspend fun deleteSessionUnitIfNoSpecimens(unit: SessionUnit): Boolean
 }
 ```
 
@@ -1350,7 +1376,7 @@ data class CollectionBatchCardData(
     val bucketName: String,          // derived; falls back to "Batch ${unitOrder}" when empty
     val specimenCount: Int,
     val createdAt: Long,
-    val canDelete: Boolean,          // specimenCount == 0
+    // ❌ canDelete removed — no delete affordance (see "Removed from PR 3d scope" subsection).
 )
 ```
 
@@ -1363,7 +1389,7 @@ sealed interface CollectionBatchListAction {
     data object AddCollectionBatch : CollectionBatchListAction
     data class OpenCollectionBatchImaging(val unitId: UUID) : CollectionBatchListAction
     data class EditCollectionBatch(val unitId: UUID) : CollectionBatchListAction
-    data class DeleteCollectionBatch(val unitId: UUID) : CollectionBatchListAction
+    // ❌ DeleteCollectionBatch removed — no delete affordance (see "Removed from PR 3d scope" subsection).
     data object UploadSession : CollectionBatchListAction
 }
 
@@ -1388,12 +1414,12 @@ sealed interface CollectionBatchListEvent {
 - For each `SessionUnitEntity`, build a `CollectionBatchCardData`:
   - `bucketName = CollectionBatchIdentityResolver.deriveBucketName(formQuestions, answersByQuestionId).ifBlank { "Batch ${unit.unitOrder}" }`
   - `specimenCount = sessionUnitRepository.countSpecimensForUnit(unit.localId)`
-  - `canDelete = specimenCount == 0`
+  - ~~`canDelete = specimenCount == 0`~~ ❌ Removed — no delete affordance.
 - Actions:
   - `AddCollectionBatch` → `NavigateToCollectionBatchForm(sessionId, unitId = null)`.
   - `OpenCollectionBatchImaging(id)` → `NavigateToImaging(id.toString())`.
   - `EditCollectionBatch(id)` → `NavigateToCollectionBatchForm(sessionId, unitId = id.toString())`.
-  - `DeleteCollectionBatch(id)` → call `repo.deleteSessionUnitIfNoSpecimens(...)`; if false, `emitError(...)` "Cannot delete: this batch has specimens. Delete its images in Imaging first."
+  - ~~`DeleteCollectionBatch(id)` → call `repo.deleteSessionUnitIfNoSpecimens(...)`; if false, `emitError(...)` "Cannot delete: this batch has specimens. Delete its images in Imaging first."~~ ❌ Removed — no delete affordance.
   - `UploadSession` → mark session complete and enqueue the upload chain via the existing `WorkManagerRepository.enqueueSessionUpload(sessionId, siteId)` call (mirror the call site currently in `ImagingViewModel` around line 263; find it via grep `enqueueSessionUpload`). This worker chain runs `MetadataUploadWorker` then `ImageUploadWorker`.
   - `ReturnToPreviousScreen` → `NavigateBackToLandingScreen`.
 
@@ -1406,7 +1432,7 @@ sealed interface CollectionBatchListEvent {
 - Trailing arrow icon → `OpenCollectionBatchImaging`
 - Body click → `EditCollectionBatch`
 - Created / Last Updated timestamps in the lower section
-- Long-press or overflow menu → `DeleteCollectionBatch` (the visual decision can mirror existing patterns elsewhere in the codebase)
+- ~~Long-press or overflow menu → `DeleteCollectionBatch` (the visual decision can mirror existing patterns elsewhere in the codebase)~~ ❌ Removed — no delete affordance.
 
 Header:
 - Title: `"Collection Batches"` (subtitle `"Tap a card to edit, the arrow to image, or + to add"`)
@@ -1800,14 +1826,14 @@ Instrumented Room tests:
 
 - Migration `30 → 31` over a database snapshot containing PSC/LTC data: assert old rows have `sessionUnitId = null` and queries still work.
 - `SessionUnitDao` round-trip: insert unit, query by session, count specimens, max unit order.
-- Specimen FK cascade: deleting a unit deletes its specimens (and via existing FK chain, their images).
+- Specimen FK cascade: deleting a unit deletes its specimens (and via existing FK chain, their images). **Note (post-PR 3d scope cut):** there is no user-initiated per-unit delete affordance — this cascade is exercised today only via session-level delete (from `IncompleteSessionScreen`), which cascades session → units → specimens → images. Test it via that path.
 
 Manual QA:
 
 - PSC and LTC flows end-to-end (no regression).
 - HLC: create 2 units (Indoor + Outdoor at same hour) → accepted.
 - HLC: attempt to create 2 Indoor units at same hour → blocked with duplicate-identity banner.
-- HLC: image a unit, return to dashboard, delete it → blocked. Delete its specimens, then delete → succeeds.
+- ~~HLC: image a unit, return to dashboard, delete it → blocked. Delete its specimens, then delete → succeeds.~~ ❌ No longer applicable — delete affordance removed from scope.
 - HLC: tap upload → session syncs; verify on backend that session_units, form_answers (with sessionUnitId), and specimens (with sessionUnitId) all reference the correct remote ids.
 - Re-enter an in-progress HLC session via incomplete-sessions list → collection method dropdown is locked.
 

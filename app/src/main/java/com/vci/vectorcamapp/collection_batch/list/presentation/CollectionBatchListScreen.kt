@@ -1,15 +1,22 @@
 package com.vci.vectorcamapp.collection_batch.list.presentation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,7 +46,7 @@ fun CollectionBatchListScreen(
                     tint = MaterialTheme.colors.icon,
                     modifier = Modifier
                         .size(MaterialTheme.dimensions.iconSizeLarge)
-                        .clickable { onAction(CollectionBatchListAction.SubmitSession) }
+                        .clickable { onAction(CollectionBatchListAction.OpenSubmitDialog) }
                 )
             },
         ) {
@@ -83,6 +90,88 @@ fun CollectionBatchListScreen(
                 contentDescription = "Add Collection Batch",
                 tint = MaterialTheme.colors.buttonText,
                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+            )
+        }
+
+        if (state.isSubmitDialogVisible) {
+            AlertDialog(
+                onDismissRequest = { onAction(CollectionBatchListAction.DismissSubmitDialog) },
+                title = {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "End session?",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colors.textPrimary,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(
+                            onClick = { onAction(CollectionBatchListAction.DismissSubmitDialog) },
+                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_close),
+                                contentDescription = "Close dialog",
+                                tint = MaterialTheme.colors.icon,
+                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
+                            )
+                        }
+                    }
+                },
+                text = {
+                    Text(
+                        text = "Would you like to save this session for later, or submit it now?",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colors.textSecondary
+                    )
+                },
+                confirmButton = {
+                    OutlinedButton(
+                        onClick = { onAction(CollectionBatchListAction.ConfirmSubmitSession) },
+                        border = BorderStroke(
+                            MaterialTheme.dimensions.borderThicknessThick,
+                            MaterialTheme.colors.successConfirm
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_cloud_upload),
+                            contentDescription = "Submit Icon",
+                            tint = MaterialTheme.colors.successConfirm,
+                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                        )
+                        Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
+                        Text(
+                            text = "Submit",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.successConfirm
+                        )
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = { onAction(CollectionBatchListAction.SaveSessionAsInProgress) },
+                        border = BorderStroke(
+                            MaterialTheme.dimensions.borderThicknessThick,
+                            MaterialTheme.colors.info
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_save),
+                            contentDescription = "Save Icon",
+                            tint = MaterialTheme.colors.info,
+                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                        )
+                        Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
+                        Text(
+                            text = "Save",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.info
+                        )
+                    }
+                }
             )
         }
     }

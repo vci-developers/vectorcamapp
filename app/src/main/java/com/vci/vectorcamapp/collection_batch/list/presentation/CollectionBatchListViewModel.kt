@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -97,7 +98,22 @@ class CollectionBatchListViewModel @Inject constructor(
                     )
                 }
 
-                CollectionBatchListAction.SubmitSession -> {
+                CollectionBatchListAction.OpenSubmitDialog -> {
+                    _state.update { it.copy(isSubmitDialogVisible = true) }
+                }
+
+                CollectionBatchListAction.DismissSubmitDialog -> {
+                    _state.update { it.copy(isSubmitDialogVisible = false) }
+                }
+
+                CollectionBatchListAction.SaveSessionAsInProgress -> {
+                    _state.update { it.copy(isSubmitDialogVisible = false) }
+                    currentSessionCache.clearSession()
+                    _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
+                }
+
+                CollectionBatchListAction.ConfirmSubmitSession -> {
+                    _state.update { it.copy(isSubmitDialogVisible = false) }
                     val currentSession = currentSessionCache.getSession()
                     val currentSessionSiteId = currentSessionCache.getSiteId()
 
