@@ -290,11 +290,6 @@ class IntakeViewModel @Inject constructor(
                         if (success) {
                             currentSessionCache.saveSession(session, selectedSite.id)
 
-                            val answersToCache =
-                                _state.value.formAnswersByQuestionId.mapValues { (_, formAnswer) ->
-                                    formAnswer.value
-                                }
-
                             val allLocationTypes = _state.value.allLocationTypesInProgram
                             val locationSelectionsToCache = if (allLocationTypes.isNotEmpty()) {
                                 val lowestLevelId = allLocationTypes.last().id
@@ -310,13 +305,11 @@ class IntakeViewModel @Inject constructor(
                                 hardwareId = session.hardwareId,
                                 district = _state.value.selectedDistrict,
                                 villageName = _state.value.selectedVillageName,
-                                formAnswers = answersToCache,
                                 locationSelections = locationSelectionsToCache
                             )
 
                             collectionMethodWorkflow = collectionMethodWorkflowFactory.create(
-                                session.localId,
-                                session.collectionMethod
+                                session.localId, session.collectionMethod
                             )
                             _events.send(IntakeEvent.NavigateAfterIntake(collectionMethodWorkflow.postIntakeDestination))
                         }
@@ -537,8 +530,7 @@ class IntakeViewModel @Inject constructor(
                             val existingFormAnswer = get(action.questionId)
                             if (existingFormAnswer != null) {
                                 put(
-                                    action.questionId,
-                                    existingFormAnswer.copy(value = action.value)
+                                    action.questionId, existingFormAnswer.copy(value = action.value)
                                 )
                             }
                         }
@@ -547,10 +539,8 @@ class IntakeViewModel @Inject constructor(
                             updatedAnswers.mapValues { (_, answer) -> answer.value }.toMutableMap()
 
                         it.formQuestions.forEach { question ->
-                            if (question.id != action.questionId &&
-                                !FormQuestionPrerequisiteEvaluator.evaluate(
-                                    question.prerequisite,
-                                    answerMap
+                            if (question.id != action.questionId && !FormQuestionPrerequisiteEvaluator.evaluate(
+                                    question.prerequisite, answerMap
                                 )
                             ) {
                                 updatedAnswers[question.id]?.let { answer ->
@@ -663,7 +653,6 @@ class IntakeViewModel @Inject constructor(
             val cachedDefaultHardwareId = defaultFields?.hardwareId.orEmpty()
             val cachedDefaultDistrict = defaultFields?.district.orEmpty()
             val cachedDefaultVillageName = defaultFields?.villageName.orEmpty()
-            val cachedFormAnswers = defaultFields?.formAnswers ?: emptyMap()
             val cachedLocationSelection = defaultFields?.locationSelections ?: emptyMap()
 
             val effectiveSession = currentSession ?: _state.value.session.copy(
@@ -748,7 +737,7 @@ class IntakeViewModel @Inject constructor(
                             question.id to (savedFormAnswers[question.id] ?: FormAnswer(
                                 localId = UUID.randomUUID(),
                                 remoteId = null,
-                                value = cachedFormAnswers[question.id] ?: when (question.type) {
+                                value = when (question.type) {
                                     "boolean" -> "false"; else -> ""
                                 },
                                 dataType = question.type,

@@ -12,6 +12,9 @@ import androidx.navigation.compose.rememberNavController
 import com.vci.vectorcamapp.add_hour.presentation.AddHourEvent
 import com.vci.vectorcamapp.add_hour.presentation.AddHourScreen
 import com.vci.vectorcamapp.add_hour.presentation.AddHourViewModel
+import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFormEvent
+import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFormScreen
+import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFormViewModel
 import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListEvent
 import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListScreen
 import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListViewModel
@@ -192,8 +195,24 @@ fun NavGraph(startDestination: Destination) {
         }
 
         composable<Destination.CollectionBatchForm> {
+            val viewModel = hiltViewModel<CollectionBatchFormViewModel>()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+
+            ObserveAsEvents(events = viewModel.events) { event ->
+                when (event) {
+                    CollectionBatchFormEvent.NavigateBackToCollectionBatchListScreen ->
+                        navController.popBackStack()
+                }
+            }
+
             BaseScaffold(modifier = Modifier.fillMaxSize()) {
-                SplashScreen()
+                when (state.isLoading) {
+                    true -> SplashScreen()
+
+                    false -> CollectionBatchFormScreen(
+                        state = state, onAction = viewModel::onAction,
+                    )
+                }
             }
         }
 
