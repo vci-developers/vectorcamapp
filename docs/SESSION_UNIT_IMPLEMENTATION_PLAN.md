@@ -22,7 +22,7 @@ This section is the single source of truth for "where are we?". It is updated at
 | └ PR 3a | Destination contract + nav scaffold + strategy flip | ✅ Merged     |
 | └ PR 3b | `CollectionBatchList` screen + VM                   | ✅ Merged     |
 | └ PR 3c | `CollectionBatchForm` screen + VM + validation + saving | ✅ Merged     |
-| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping | ⏭️ In progress |
+| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping + audit | ⏭️ In progress (slices 1, 3, 5 shipped) |
 | PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏳ Pending    |
 | PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
@@ -305,7 +305,7 @@ collection_batch/list/presentation/components/CollectionBatchCard.kt
 1. ~~**Edit-mode answer hydration.** `loadFormDetails` is `sessionUnitId`-blind — tapping an existing card opens a blank form. Add `FormAnswerDao.getFormAnswersBySessionUnitId(sessionUnitId: UUID): List<FormAnswerEntity>` + matching `FormAnswerRepository.getFormAnswersBySessionUnitId(sessionUnitId): Map<Int, FormAnswer>` (same shape as the existing `getFormAnswersBySessionId`). Then in `loadFormDetails` branch on `sessionUnitId`: when non-null, fetch and merge into the seed map, preserving each `FormAnswer.localId` from the DB row. **Critical for `@Upsert` collapse** — generating fresh UUIDs at hydration breaks UPDATE-vs-INSERT and accumulates duplicate `form_answer` rows on every edit save. See Convention #12.~~ ✅ **Shipped in PR 3d, slice 1** — see the PR 3d in-progress subsection below.
 2. **Reactive duplicate-identity banner.** Currently only updates on `SubmitSessionUnitForm`. Derive via a `combine(identityDrafts, formQuestions, existingAnswersBySessionUnitId).launchIn(viewModelScope)` Flow that writes the validator's `errorOrNull()` back into `state.collectionBatchFormErrors.duplicateIdentity`. Snapshot the existing answers once in `loadFormDetails` (no concurrent unit-write path today — `MutableStateFlow<Map<UUID, Map<Int, FormAnswer>>>` field on the VM is sufficient). `SubmitSessionUnitForm` becomes read-only against the flow-derived value. Naturally side-steps the eager-validation UX problem because the validator returns `Success` for blank identities.
 3. ~~**`CollectionBatchIdentityResolver` + list-card identity-label upgrade.** Pure display formatter (sort identity questions by `id`, join with `" · "`, fall back to `"Batch ${unit.unitOrder}"` when no identity questions exist). Wired into `CollectionBatchListViewModel`, consuming the same `FormAnswerRepository.getSessionUnitScopedFormAnswersBySessionId` snapshot the form VM uses. `CollectionBatchCard` renders the derived title.~~ ✅ **Shipped in PR 3d, slice 3** — see the PR 3d in-progress subsection. Naming, signature-shape, and silent-failure follow-ups rolled into the new "Audit & cleanup pass" subsection.
-4. **Submit-session confirmation dialog (deferred from 3c — Additional scope #1).** Split `CollectionBatchListAction.SubmitSession` into dialog-open + `SaveSessionAsInProgress` + `ConfirmSubmitSession`. Open question still: does the same dialog belong on `ImagingScreen.SubmitSession`? Decide at 3d kickoff.
+4. ~~**Submit-session confirmation dialog (deferred from 3c — Additional scope #1).** Split `CollectionBatchListAction.SubmitSession` into dialog-open + `SaveSessionAsInProgress` + `ConfirmSubmitSession`. Open question still: does the same dialog belong on `ImagingScreen.SubmitSession`? Decide at 3d kickoff.~~ ✅ **Shipped in PR 3d, slice 5** — see the PR 3d in-progress subsection below. Kickoff question resolved: `ImagingScreen` already has its own equivalent dialog (lines 262–403), so no work was needed there — slice 5 only brought the list screen up to parity.
 5. **Per-field error reactive clearing.** Same `combine` Flow pattern as the banner but for `formAnswerErrors`. Carries an additional UX subproblem — eager validation on form-open would show "required field" everywhere unless gated by a per-field "touched" tracker. Lower priority than the banner; consider only if QA flags inline-error timing as a usability issue.
 6. ~~**Delete affordance** — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens` + matching DAO query, `DeleteCollectionBatch` action, `canDelete` flag on `CollectionBatchCard`. From original 3d scope. Once this lands, Deviation #12's defensive `?:` becomes reachable.~~ ❌ **Removed from scope (PR 3d).** Users will not be able to delete session units. See "Removed from PR 3d scope" subsection. Implication: Deviation #12's defensive `?:` becomes permanently unreachable and should be removed during the audit pass.
 7. **Imaging scoping** (original 3d scope) — `ImagingViewModel` / `ImagingState` / `ImagingScreen` read `sessionUnitId`, gate submit/upload UI on `isUnitScoped`, propagate `Specimen.sessionUnitId`, emit `ImagingEvent.NavigateBackToCollectionBatchList` when unit-scoped.
@@ -406,6 +406,38 @@ Before: every collection-batch card on `CollectionBatchListScreen` rendered `"Ba
 
 **Deferred / outstanding from this slice (rolled into the audit and follow-ups below).** Item-by-item nits surfaced during slice 3 review are tracked in the new "Audit & cleanup pass" subsection below — not refiled per-item under Deferred-to-3d to avoid double-bookkeeping.
 
+**Slice 5 — Submit-session confirmation dialog (✅ Shipped).** Closes Deferred-to-3d #4.
+
+Before: tapping the cloud-upload icon on `CollectionBatchListScreen` immediately ran `markSessionAsComplete + enqueueSessionUpload + clearSession + popToLanding` in one shot — a single tap committed the user with no undo. After: the cloud-upload icon opens an `AlertDialog` that offers two terminal choices — **Save** (clears the session cache and pops to Landing; session remains `isSubmitted = false` and reappears on the incomplete-sessions list, resumable later) or **Submit** (the verbatim previous commit path).
+
+**Files modified:**
+
+- `collection_batch/list/presentation/CollectionBatchListAction.kt` — removed `data object SubmitSession`; added `OpenSubmitDialog`, `DismissSubmitDialog`, `SaveSessionAsInProgress`, `ConfirmSubmitSession`. The plan's 3-action split (Deferred-to-3d #4) — a `Dismiss…` was added on top to support both the close-X affordance and tap-outside dismissal, matching the `ImagingScreen` dialog precedent.
+- `collection_batch/list/presentation/CollectionBatchListState.kt` — added `val isSubmitDialogVisible: Boolean = false`.
+- `collection_batch/list/presentation/CollectionBatchListViewModel.kt` — removed the old `SubmitSession` branch; added four new branches. `SaveSessionAsInProgress` mirrors `ImagingViewModel.SaveSessionProgress:247–250` line-for-line (`clearSession()` + `NavigateBackToLandingScreen`). `ConfirmSubmitSession` is the verbatim transliteration of the old `SubmitSession` body with an `_state.update { isSubmitDialogVisible = false }` prepended.
+- `collection_batch/list/presentation/CollectionBatchListScreen.kt` — cloud-upload icon `.clickable` now dispatches `OpenSubmitDialog` instead of `SubmitSession`. Added an `AlertDialog` block (gated on `state.isSubmitDialogVisible`) as a sibling of the FAB inside the outer `Box`. Dialog mirrors `ImagingScreen`'s exit dialog visually — close-X in title row, `OutlinedButton` with `ic_cloud_upload` + `successConfirm` color for Submit (`confirmButton`), `OutlinedButton` with `ic_save` + `info` color for Save (`dismissButton`).
+
+**Why mirror `ImagingScreen`'s dialog shape rather than `IncompleteSessionScreen`'s.** Two precedents exist for confirmation dialogs in the codebase. `IncompleteSessionScreen` uses a single-confirm `AlertDialog` (Yes-Delete / Cancel) — fine for a destructive single-choice action. `ImagingScreen` uses a two-button `AlertDialog` (Save / Submit) with a close-X in the title — fine for a non-destructive bifurcating choice. Slice 5's UX is the latter (a user picking one of two terminal flows for ending the session), so the visual and structural mirror is `ImagingScreen`. Convention #4 (match precedent) honored.
+
+**Why no second `pendingAction`-style confirmation step.** `ImagingScreen`'s dialog has a two-step flow: pick Save/Submit at step 1, then "Are you sure?" at step 2. Slice 5 deliberately collapsed this to a single step. Rationale: on the list screen the user explicitly tapped a cloud-upload icon to open the dialog, so the dialog itself *is* the confirmation. On the imaging screen the dialog appears as a side-effect of attempting to exit, so a second-step confirm guards against accidental exit-via-back-button. Different entry contexts justify different confirmation depths. Convention #1 (minimum mechanism that satisfies the UX) honored.
+
+**Why no `*Submit*` shared primitive in `core/presentation/components/dialog/`.** Per PR-3c Deviation #7's post-delete update (line 485): the submit-session dialog is the dialog's only consumer in the codebase now (delete was cut). Rule 1 / Rule 2 say wait for a second consumer before promoting. `ImagingScreen`'s dialog and slice 5's dialog are visually similar but live in different feature directories with different action sealed-interfaces — extracting a shared composable would require either a generic two-action API (where each consumer wires its own labels/icons/actions) or a hard fork on `ImagingAction` vs. `CollectionBatchListAction`. Both shapes are speculative until the third dialog lands. Logged in the "Audit & cleanup pass" §10 (anything else) as a candidate for slice 7.
+
+**Plan-compliance checklist.**
+
+- ✅ **Rule 1 / Rule 2** — no new DAO or repo methods; zero DI graph changes.
+- ✅ **Rule 4** — dialog shape mirrors `ImagingScreen` exit dialog; `SaveSessionAsInProgress` body mirrors `ImagingViewModel.SaveSessionProgress` verbatim; `ConfirmSubmitSession` body is the verbatim old `SubmitSession`.
+- ✅ **Convention #1** — minimum state surface (single `Boolean` flag, no `pendingAction`-style generic re-dispatch field).
+- ✅ **Convention #18 not applicable** — there's nothing reactively derived; dialog visibility is imperatively toggled by action handlers, which is correct for a single-input UI flag.
+
+**Deviations from plan worth recording.**
+
+1. **A fourth action (`DismissSubmitDialog`) on top of the planned three-way split.** Plan §308 specified `OpenSubmitDialog` + `SaveSessionAsInProgress` + `ConfirmSubmitSession`. Implementation added a separate `DismissSubmitDialog` for the close-X icon and `onDismissRequest` (tap-outside / system back). Could have been merged into one of the existing terminal actions, but separating the "cancel" path keeps the four cases mutually exclusive and matches the `ImagingAction.DismissExitDialog` precedent.
+
+**Inherited bug worth logging (not fixed in this slice).** `ConfirmSubmitSession`'s body silently no-ops when `markSessionAsComplete` returns `false` — the dialog is already dismissed (line 116) but no error toast fires and no nav happens. This is the **same** silent-failure pattern as Deferred-to-3d #9 (`loadFormDetails`) and the slice-3 `loadSessionUnitFormQuestions`, now present in a third site. Pre-existed in the old `SubmitSession` body — slice 5 just propagated it. Audit-pass §6 (silent failure handling) should address all three sites together; do not patch individually before then.
+
+**Imaging unaffected.** `ImagingScreen.SubmitSession` already has its own dialog with the same conceptual flow (`pendingAction == null` step). Slice 5 does not touch `imaging/`. The plan's kickoff-time question ("does the same dialog belong on `ImagingScreen.SubmitSession`?") is resolved as "already there".
+
 ### PR 3d follow-up — Audit & cleanup pass (⏭️ Required before PR 3 closes)
 
 The slice-by-slice cadence of PR 3d has been productive but has accumulated micro-debt that should not bleed into PR 4. **Before declaring PR 3 done, run a dedicated cleanup pass across the entire `collection_batch/` feature surface.** Scope at minimum the following classes of issue — but treat the list as a starting point, not a ceiling. The goal is *no surprising surface left*.
@@ -492,7 +524,7 @@ The delete affordance — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens`
 - `IncompleteSessionViewModel.ConfirmDeleteSession` (session-level delete) is unchanged — only the **per-unit** delete affordance has been cut.
 - Edit-mode hydration (slice 1) and identity-resolver display (slice 3) are unaffected — they don't depend on delete.
 
-### Next up — PR 3d: form polish (reactive banner) + submit-session dialog + Imaging scoping + feature-wide audit
+### Next up — PR 3d: form polish (reactive banner) + Imaging scoping + feature-wide audit
 
 > Scope is summarized in the "Deferred to PR 3d" subsection under PR 3c above. The general PR-3 rules and slicing reference material below still apply.
 
