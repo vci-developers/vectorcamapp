@@ -128,12 +128,13 @@ class CollectionBatchFormViewModel @Inject constructor(
 
                     val existingAnswersBySessionUnitId =
                         formAnswerRepository.getSessionUnitScopedFormAnswersBySessionId(sessionId)
-                    val identityResult = collectionBatchFormValidationUseCases.validateCollectionBatchIdentity(
-                        formQuestions = formQuestions,
-                        draftAnswersByQuestionId = formAnswersByQuestionId,
-                        existingAnswersBySessionUnitId = existingAnswersBySessionUnitId,
-                        editingSessionUnitId = sessionUnitId
-                    )
+                    val identityResult =
+                        collectionBatchFormValidationUseCases.validateCollectionBatchIdentity(
+                            formQuestions = formQuestions,
+                            draftAnswersByQuestionId = formAnswersByQuestionId,
+                            existingAnswersBySessionUnitId = existingAnswersBySessionUnitId,
+                            editingSessionUnitId = sessionUnitId
+                        )
 
                     _state.update {
                         it.copy(
@@ -160,12 +161,17 @@ class CollectionBatchFormViewModel @Inject constructor(
                         val effectiveSessionUnit = existingSessionUnit ?: SessionUnit(
                             localId = sessionUnitId ?: UUID.randomUUID(),
                             remoteId = null,
-                            unitOrder = sessionUnitRepository.getMaxSessionUnitOrderForSession(sessionId) + 1,
+                            unitOrder = sessionUnitRepository.getMaxSessionUnitOrderForSession(
+                                sessionId
+                            ) + 1,
                             createdAt = System.currentTimeMillis(),
                         )
 
                         val success = transactionHelper.runAsTransaction {
-                            val sessionUnitResult = sessionUnitRepository.upsertSessionUnit(effectiveSessionUnit, sessionId)
+                            val sessionUnitResult = sessionUnitRepository.upsertSessionUnit(
+                                effectiveSessionUnit,
+                                sessionId
+                            )
                             sessionUnitResult.onError { error ->
                                 emitError(error)
                                 return@runAsTransaction false
@@ -185,7 +191,9 @@ class CollectionBatchFormViewModel @Inject constructor(
 
                         if (success) {
                             _events.send(
-                                CollectionBatchFormEvent.NavigateToImagingScreen(effectiveSessionUnit.localId)
+                                CollectionBatchFormEvent.NavigateToImagingScreen(
+                                    effectiveSessionUnit.localId
+                                )
                             )
                         }
                     }
@@ -215,12 +223,16 @@ class CollectionBatchFormViewModel @Inject constructor(
                 )
             }.orEmpty()
 
+            val savedFormAnswers = sessionUnitId?.let {
+                formAnswerRepository.getFormAnswersBySessionUnitId(it)
+            } ?: emptyMap()
+
             _state.update {
                 it.copy(
                     isLoading = false,
                     formQuestions = formQuestions,
                     formAnswersByQuestionId = formQuestions.associate { question ->
-                        question.id to FormAnswer(
+                        question.id to (savedFormAnswers[question.id] ?: FormAnswer(
                             localId = UUID.randomUUID(),
                             remoteId = null,
                             value = when (question.type) {
@@ -228,7 +240,7 @@ class CollectionBatchFormViewModel @Inject constructor(
                             },
                             dataType = question.type,
                             submittedAt = 0L
-                        )
+                        ))
                     },
                 )
             }

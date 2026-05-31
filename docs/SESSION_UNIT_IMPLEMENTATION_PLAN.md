@@ -22,7 +22,7 @@ This section is the single source of truth for "where are we?". It is updated at
 | └ PR 3a | Destination contract + nav scaffold + strategy flip | ✅ Merged     |
 | └ PR 3b | `CollectionBatchList` screen + VM                   | ✅ Merged     |
 | └ PR 3c | `CollectionBatchForm` screen + VM + validation + saving | ✅ Merged     |
-| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + delete + submit-dialog + Imaging scoping | ⏭️ Next up |
+| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + delete + submit-dialog + Imaging scoping | ⏭️ In progress |
 | PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏳ Pending    |
 | PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
@@ -302,7 +302,7 @@ collection_batch/list/presentation/components/CollectionBatchCard.kt
 
 **Deferred to PR 3d** (form polish + delete + submit-dialog + Imaging scoping):
 
-1. **Edit-mode answer hydration.** `loadFormDetails` is `sessionUnitId`-blind — tapping an existing card opens a blank form. Add `FormAnswerDao.getFormAnswersBySessionUnitId(sessionUnitId: UUID): List<FormAnswerEntity>` + matching `FormAnswerRepository.getFormAnswersBySessionUnitId(sessionUnitId): Map<Int, FormAnswer>` (same shape as the existing `getFormAnswersBySessionId`). Then in `loadFormDetails` branch on `sessionUnitId`: when non-null, fetch and merge into the seed map, preserving each `FormAnswer.localId` from the DB row. **Critical for `@Upsert` collapse** — generating fresh UUIDs at hydration breaks UPDATE-vs-INSERT and accumulates duplicate `form_answer` rows on every edit save. See Convention #12.
+1. ~~**Edit-mode answer hydration.** `loadFormDetails` is `sessionUnitId`-blind — tapping an existing card opens a blank form. Add `FormAnswerDao.getFormAnswersBySessionUnitId(sessionUnitId: UUID): List<FormAnswerEntity>` + matching `FormAnswerRepository.getFormAnswersBySessionUnitId(sessionUnitId): Map<Int, FormAnswer>` (same shape as the existing `getFormAnswersBySessionId`). Then in `loadFormDetails` branch on `sessionUnitId`: when non-null, fetch and merge into the seed map, preserving each `FormAnswer.localId` from the DB row. **Critical for `@Upsert` collapse** — generating fresh UUIDs at hydration breaks UPDATE-vs-INSERT and accumulates duplicate `form_answer` rows on every edit save. See Convention #12.~~ ✅ **Shipped in PR 3d, slice 1** — see the PR 3d in-progress subsection below.
 2. **Reactive duplicate-identity banner.** Currently only updates on `SubmitSessionUnitForm`. Derive via a `combine(identityDrafts, formQuestions, existingAnswersBySessionUnitId).launchIn(viewModelScope)` Flow that writes the validator's `errorOrNull()` back into `state.collectionBatchFormErrors.duplicateIdentity`. Snapshot the existing answers once in `loadFormDetails` (no concurrent unit-write path today — `MutableStateFlow<Map<UUID, Map<Int, FormAnswer>>>` field on the VM is sufficient). `SubmitSessionUnitForm` becomes read-only against the flow-derived value. Naturally side-steps the eager-validation UX problem because the validator returns `Success` for blank identities.
 3. **`CollectionBatchIdentityResolver` + list-card identity-label upgrade.** Pure display formatter (sort identity questions by `id`, join with `" · "`, fall back to `"Batch ${unit.unitOrder}"` when no identity questions exist). Wired into `CollectionBatchListViewModel`, consuming the same `FormAnswerRepository.getSessionUnitScopedFormAnswersBySessionId` snapshot the form VM uses. `CollectionBatchCard` renders the derived title.
 4. **Submit-session confirmation dialog (deferred from 3c — Additional scope #1).** Split `CollectionBatchListAction.SubmitSession` into dialog-open + `SaveSessionAsInProgress` + `ConfirmSubmitSession`. Open question still: does the same dialog belong on `ImagingScreen.SubmitSession`? Decide at 3d kickoff.
@@ -350,7 +350,35 @@ collection_batch/list/presentation/components/CollectionBatchCard.kt
 17. **`@Upsert` semantics require stable `localId` on hydrated entities.** When loading existing rows into editable state, preserve the DB row's primary key on the in-memory model. Generating fresh UUIDs at hydration breaks the upsert collapse and accumulates duplicate rows on every save. Critical contract for 3d's edit-mode hydration — applies to `FormAnswer.localId` specifically when hydrating the form's seed map.
 18. **Reactive state derivation via `combine(...).launchIn(viewModelScope)` is preferred over imperative `_state.update { ... }` calls scattered across action handlers** when the derived field's inputs all live in flows the VM already exposes. Pattern: derive once at VM construction (or inside `onStart`), write the result back to `_state` via `.onEach`. Eliminates the "did you remember to clear this field" review burden — the field mirrors its inputs, full stop. Slated for 3d to retrofit `duplicateIdentity` (and optionally `formAnswerErrors`) onto this pattern.
 
-### Next up — PR 3d: form polish (edit-mode hydration, reactive banner) + delete affordance + submit-session dialog + Imaging scoping
+### PR 3d — In progress
+
+PR 3d is being landed as a sequence of small, independently-reviewable slices rather than a single diff. Each slice ticks off one item from the "Deferred to PR 3d" list under PR 3c. This subsection logs what has shipped so far; remaining work is summarized in the "Next up — PR 3d" section below.
+
+**Slice 1 — Edit-mode answer hydration (✅ Shipped).** Closes Deferred-to-3d #1.
+
+Before: tapping an existing batch card on `CollectionBatchListScreen` routed to `CollectionBatchForm` with a non-null `sessionUnitId`, but `loadFormDetails` ignored it and seeded `formAnswersByQuestionId` with fresh defaults — the user saw a blank form in edit mode. Saving from that blank form would also have generated brand-new `FormAnswer.localId`s, breaking `@Upsert` collapse and accumulating duplicate `form_answer` rows on every edit save (Convention #17).
+
+**Files modified:**
+
+- `core/data/room/dao/FormAnswerDao.kt` — added `getFormAnswersBySessionUnitId(sessionUnitId: UUID): List<FormAnswerEntity>`. Query mirrors `getFormAnswersBySessionId` line-for-line, just swapping the `WHERE` column.
+- `core/domain/repository/FormAnswerRepository.kt` + `core/data/repository/FormAnswerRepositoryImplementation.kt` — added `getFormAnswersBySessionUnitId(sessionUnitId: UUID): Map<Int, FormAnswer>`. Same `.associate { it.questionId to it.toDomain() }` mapper shape as `getFormAnswersBySessionId`.
+- `collection_batch/form/presentation/CollectionBatchFormViewModel.kt` — `loadFormDetails` now fetches `val savedFormAnswers = sessionUnitId?.let { formAnswerRepository.getFormAnswersBySessionUnitId(it) }.orEmpty()` and seeds `formAnswersByQuestionId` via the Elvis idiom `savedFormAnswers[question.id] ?: FormAnswer(...defaults...)`. When a saved answer exists it is passed through whole — preserving the DB row's `localId` so subsequent saves `UPDATE` instead of `INSERT`. Mirrors `IntakeViewModel:735–743` verbatim.
+
+**Why a sibling and not widening.** The two existing reads on `FormAnswerRepository` — `getFormAnswersBySessionId(sessionId): Map<Int, FormAnswer>` and `getSessionUnitScopedFormAnswersBySessionId(sessionId): Map<UUID, Map<Int, FormAnswer>>` — both take a `sessionId` and return either a flat session-scoped map or a unit-bucketed map. Edit-hydration needs the third combination: a `sessionUnitId` parameter returning the flat `questionId → FormAnswer` map for that one unit. Widening either existing function would change its return shape (forcing all current call sites to adapt) and invert the parameter from "session" to "unit". The new method sits at the same naming tier as `getFormAnswersBySessionId` — Rule 2 satisfied, Convention #6 honored.
+
+**Plan-compliance checklist.**
+
+- ✅ **Rule 1** (add methods only when the call site lands) — this diff is exactly the call site.
+- ✅ **Rule 2** (modify-don't-proliferate evaluated) — widening rejected for the reason above; sibling is the right shape.
+- ✅ **Rule 4** (match conventions) — DAO query, repo mapper, and VM hydration loop all mirror existing peers.
+- ✅ **Convention #6** (filter-by-X belongs on the entity being filtered) — lookup on `FormAnswerRepository`, not `SessionUnitRepository`.
+- ✅ **Convention #17** (`@Upsert` requires stable `localId`) — preserved by passing the saved `FormAnswer` whole.
+
+**No banner-path interaction.** `SubmitSessionUnitForm` already passes `editingSessionUnitId = sessionUnitId` to `validateCollectionBatchIdentity`, so a hydrated edit-mode form does not false-flag against its own persisted identity. Slice 1 leaves the banner path untouched — the eventual reactive-banner refactor (Deferred-to-3d #2) remains independently shippable.
+
+**Deviations from plan.** None. The slice landed as specified in Deferred-to-3d #1 above.
+
+### Next up — PR 3d: form polish (reactive banner) + delete affordance + submit-session dialog + Imaging scoping
 
 > Scope is summarized in the "Deferred to PR 3d" subsection under PR 3c above. The general PR-3 rules and slicing reference material below still apply.
 

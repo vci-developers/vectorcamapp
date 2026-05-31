@@ -14,6 +14,9 @@ interface FormAnswerDao {
     @Query("SELECT * FROM form_answer WHERE sessionId = :sessionId")
     suspend fun getFormAnswersBySessionId(sessionId: UUID): List<FormAnswerEntity>
 
+    @Query("SELECT * FROM form_answer WHERE sessionUnitId = :sessionUnitId")
+    suspend fun getFormAnswersBySessionUnitId(sessionUnitId: UUID): List<FormAnswerEntity>
+
     @Query("SELECT * FROM form_answer WHERE sessionId = :sessionId AND sessionUnitId IS NOT NULL")
     suspend fun getSessionUnitScopedFormAnswersBySessionId(sessionId: UUID): List<FormAnswerEntity>
 }

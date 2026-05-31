@@ -39,6 +39,11 @@ class FormAnswerRepositoryImplementation @Inject constructor(
             .associate { it.questionId to it.toDomain() }
     }
 
+    override suspend fun getFormAnswersBySessionUnitId(sessionUnitId: UUID): Map<Int, FormAnswer> {
+        return formAnswerDao.getFormAnswersBySessionUnitId(sessionUnitId)
+            .associate { it.questionId to it.toDomain() }
+    }
+
     override suspend fun getSessionUnitScopedFormAnswersBySessionId(sessionId: UUID): Map<UUID, Map<Int, FormAnswer>> {
         return formAnswerDao.getSessionUnitScopedFormAnswersBySessionId(sessionId)
             .mapNotNull { formAnswerEntity -> formAnswerEntity.sessionUnitId?.let { it to formAnswerEntity } }
