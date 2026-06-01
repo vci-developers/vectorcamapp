@@ -18,6 +18,7 @@ data class IntakeState(
     val isLoading: Boolean = false,
     val allCollectors: List<Collector> = emptyList(),
     val isCurrentCollectorMissing: Boolean = false,
+    val isCollectionMethodLocked: Boolean = false,
     val locationError: IntakeError? = null,
     val siteSelectionsByLocationTypeId: Map<Int, String> = emptyMap(),
     val allLocationTypesInProgram: List<LocationType> = emptyList(),

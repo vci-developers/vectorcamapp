@@ -22,6 +22,9 @@ interface SessionUnitDao {
     @Query("SELECT * FROM session_unit WHERE sessionId = :sessionId ORDER BY unitOrder ASC")
     fun observeSessionUnitsForSession(sessionId: UUID): Flow<List<SessionUnitEntity>>
 
+    @Query("SELECT COUNT(*) FROM session_unit WHERE sessionId = :sessionId")
+    suspend fun countSessionUnitsForSession(sessionId: UUID): Int
+
     @Query("SELECT COUNT(*) FROM specimen WHERE sessionUnitId = :sessionUnitId")
     suspend fun countSpecimensForSessionUnit(sessionUnitId: UUID): Int
 

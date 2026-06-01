@@ -51,6 +51,7 @@ fun <T> DropdownField(
     menuTestTag: String? = null,
     menuItemTestTagPrefix: String? = null,
     required: Boolean = false,
+    enabled: Boolean = true,
     itemContent: @Composable (T) -> Unit,
 ) {
     val context = LocalContext.current
@@ -81,7 +82,7 @@ fun <T> DropdownField(
                         shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
                     )
                     .heightIn(min = MaterialTheme.dimensions.componentHeightMedium)
-                    .clickable { expanded = true }
+                    .clickable(enabled = enabled) { expanded = true }
                     .testTag(menuTestTag ?: "dropdown-menu")) {
                 Row(
                     modifier = Modifier

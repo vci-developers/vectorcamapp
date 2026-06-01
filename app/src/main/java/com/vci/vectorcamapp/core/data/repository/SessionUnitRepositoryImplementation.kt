@@ -33,6 +33,10 @@ class SessionUnitRepositoryImplementation @Inject constructor(
         return sessionUnitDao.getSessionUnitsForSession(sessionId).map { it.toDomain() }
     }
 
+    override suspend fun countSessionUnitsForSession(sessionId: UUID): Int {
+        return sessionUnitDao.countSessionUnitsForSession(sessionId)
+    }
+
     override fun observeSessionUnitsForSession(sessionId: UUID): Flow<List<SessionUnit>> {
         return sessionUnitDao.observeSessionUnitsForSession(sessionId).map { entities ->
             entities.map { it.toDomain() }

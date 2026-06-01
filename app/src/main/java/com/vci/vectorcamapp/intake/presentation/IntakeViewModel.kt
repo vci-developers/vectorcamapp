@@ -15,6 +15,7 @@ import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
@@ -61,6 +62,7 @@ class IntakeViewModel @Inject constructor(
     private val locationTypeRepository: LocationTypeRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
     private val sessionRepository: SessionRepository,
+    private val sessionUnitRepository: SessionUnitRepository,
     private val locationRepository: LocationRepository,
     private val collectorRepository: CollectorRepository,
     private val programRepository: ProgramRepository,
@@ -503,6 +505,7 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.UpdateCollectionMethod -> {
+                    if (_state.value.isCollectionMethodLocked) return@launch
                     _state.update {
                         it.copy(
                             session = it.session.copy(
@@ -667,6 +670,10 @@ class IntakeViewModel @Inject constructor(
                 formAnswerRepository.getSessionScopedFormAnswers(it.localId)
             } ?: emptyMap()
 
+            val isCollectionMethodLocked = currentSession?.let {
+                sessionUnitRepository.countSessionUnitsForSession(it.localId) > 0
+            } ?: false
+
             combine(
                 siteRepository.observeAllSitesByProgramId(programId),
                 currentSession?.let {
@@ -749,7 +756,8 @@ class IntakeViewModel @Inject constructor(
                         selectedDistrict = validatedDistrict,
                         selectedVillageName = validatedVillageName,
                         selectedHouseNumber = validatedHouseNumber,
-                        isCurrentCollectorMissing = isCollectorMissing
+                        isCurrentCollectorMissing = isCollectorMissing,
+                        isCollectionMethodLocked = isCollectionMethodLocked,
                     )
                 }
             }.first()
