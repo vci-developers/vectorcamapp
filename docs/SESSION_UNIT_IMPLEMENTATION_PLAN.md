@@ -23,8 +23,8 @@ This section is the single source of truth for "where are we?". It is updated at
 | └ PR 3b | `CollectionBatchList` screen + VM                   | ✅ Merged     |
 | └ PR 3c | `CollectionBatchForm` screen + VM + validation + saving | ✅ Merged     |
 | └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping | ✅ Shipped (slices 1, 2, 3, 5, 6 shipped; Bug 1 fixed pre-slice-7; Bug 2 fixed in slice 7 via widened `…BySessionScope(sessionId, sessionUnitId)`. The feature-wide audit & cleanup pass originally scoped here — plus the cold-VM `SavedStateHandle` follow-up (audit §12) — has been split out into PR 7.) |
-| PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏭️ Next up    |
-| PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
+| PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ✅ Merged     |
+| PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏭️ Next up    |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
 | PR 7 | `collection_batch/` feature-wide audit & cleanup pass (split out from PR 3d) | ⏳ Pending    |
 
@@ -733,11 +733,37 @@ The delete affordance — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens`
 - `IncompleteSessionViewModel.ConfirmDeleteSession` (session-level delete) is unchanged — only the **per-unit** delete affordance has been cut.
 - Edit-mode hydration (slice 1) and identity-resolver display (slice 3) are unaffected — they don't depend on delete.
 
-### Next up — PR 4: retire legacy `hour_log/` + `add_hour/`
+### PR 4 — Retire legacy `hour_log/` + `add_hour/` (✅ Merged)
 
-PR 3 closes with PR 3d shipped (all six slices + Bug 1 + Bug 2). The feature-wide audit & cleanup pass originally scoped as PR 3d's slice 7 has been split out into PR 7 — see the "PR 7 — `collection_batch/` feature-wide audit & cleanup pass" subsection above for scope. PR 4 (legacy retirement) does not depend on PR 7 landing first.
+**What landed.** Pure deletion pass. With `collection_batch/list/` and `collection_batch/form/` shipped in PR 3b/3c and the HLC strategy concrete already pointing at `Destination.CollectionBatchList` (PR 3a), the legacy `hour_log/` and `add_hour/` packages had zero live callers and were removed wholesale along with their nav destinations and `composable<>` blocks. No new code, no behavioral change — the user-facing HLC flow is identical pre- and post-PR 4 because every entry point had already been re-pointed in PR 3a.
 
-> The general PR-3 rules and slicing reference material below still apply to PR 7 when it lands.
+**Files deleted.**
+
+- `app/src/main/java/com/vci/vectorcamapp/hour_log/` — entire directory (8 files: `HourLogScreen` / `ViewModel` / `State` / `Action` / `Event`, `components/HourSessionCard.kt`, `domain/model/HourSession.kt`, `domain/model/HourTimeSlots.kt`).
+- `app/src/main/java/com/vci/vectorcamapp/add_hour/` — entire directory (5 files: `AddHourScreen` / `ViewModel` / `State` / `Action` / `Event`).
+
+**Files modified.**
+
+- `navigation/Destination.kt` — removed `data class HourLog(val sessionId: String)` and `data class AddHour(val sessionId: String)`. Also dropped the now-orphaned `import java.util.UUID` (no remaining destination carries a `UUID` field — all nav args are `String` per the PR 3b deviation #6 rationale).
+- `navigation/NavGraph.kt` — removed the `composable<Destination.HourLog>` and `composable<Destination.AddHour>` blocks and their 6 associated imports (`HourLogEvent` / `Screen` / `ViewModel`, `AddHourEvent` / `Screen` / `ViewModel`).
+
+**No-ops (already retired in earlier PRs).**
+
+- `IntakeEvent.NavigateToHourLogScreen` — §5.2 listed this for removal, but PR 2 already replaced it with `IntakeEvent.NavigateAfterIntake(destination)`. `IntakeEvent.kt` was already legacy-free entering PR 4.
+
+**"Read this before…" rule check.** PR 4 introduces no new repository / DAO / mapper / util surface, so Rules 1–3 of the callout (no speculative methods, prefer widening over siblings, treat §3.8/§4.3 as reference only) don't bind. Rule 4 (match existing conventions) has no surface here either — the change is purely subtractive. The relevant gate was the *negative* one in PR 3's "What NOT to change" subsection ("Don't delete the `hour_log/` or `add_hour/` packages yet — that's PR 4"), which PR 4 finally lifts.
+
+**How to verify PR 4 locally.**
+
+1. Codebase grep for `hour_log|add_hour|HourLog|AddHour|HourSession|HourTimeSlot` returns matches only in `docs/SESSION_UNIT_IMPLEMENTATION_PLAN.md` (historical reference).
+2. Build compiles green; no unresolved-reference errors anywhere in `navigation/`.
+3. Manual smoke: HLC intake → Save still lands on `CollectionBatchListScreen` (unchanged from PR 3b). PSC/LTC/OTHER intake → still lands on `ImagingScreen` (unchanged from PR 3a).
+
+### Next up — PR 5: sync wiring
+
+PR 4 closed cleanly — `hour_log/` and `add_hour/` are gone and the navigation surface is `collection_batch/`-only. PR 5 picks up the backend sync side: `RemoteSessionUnitDataSource`, the `SessionUnitDto` family, extending `FormQuestionDto` / `FormAnswerDto` / `SpecimenDto` with the new scope/identity/`sessionUnitId` fields, and teaching `MetadataUploadWorker.doWork()` to sync session units before form answers and specimens. See §10 for the full contract. PR 7 (`collection_batch/` audit & cleanup) remains independent and can be picked up at any time when feature work is paused.
+
+> The general PR-3 rules and slicing reference material below still apply to PR 5 / PR 6 / PR 7 when they land.
 
 > ## ⚠️ Read this before writing any code in PR 3
 >
