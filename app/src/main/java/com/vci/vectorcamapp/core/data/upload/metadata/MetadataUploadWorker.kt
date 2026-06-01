@@ -121,7 +121,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
 
             val localSpecimensWithImagesAndInferenceResults =
-                specimenRepository.getSpecimenImagesAndInferenceResultsBySession(localSessionId)
+                specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(localSessionId, null)
             val totalSpecimensForSession = localSpecimensWithImagesAndInferenceResults.size
 
             val syncedSession = when (val syncSessionResult =
@@ -239,7 +239,7 @@ class MetadataUploadWorker @AssistedInject constructor(
 
     private suspend fun resetInProgressUploads(sessionId: UUID) {
         val specimensWithImagesAndInferenceResults =
-            specimenRepository.getSpecimenImagesAndInferenceResultsBySession(sessionId)
+            specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(sessionId, null)
         specimensWithImagesAndInferenceResults.forEach { specimenWithImagesAndInferenceResults ->
             specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
                 if (specimenImage.metadataUploadStatus == UploadStatus.IN_PROGRESS) {

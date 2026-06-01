@@ -46,7 +46,7 @@ class CompleteSessionDetailsViewModel @Inject constructor(
             if (sessionId == null) {
                 emit(emptyList())
             } else {
-                specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(sessionId)
+                specimenRepository.observeSpecimenImagesAndInferenceResultsBySessionScope(sessionId, null)
                     .collect { emit(it) }
             }
         }

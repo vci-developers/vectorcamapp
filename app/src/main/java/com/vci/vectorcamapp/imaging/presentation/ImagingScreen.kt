@@ -225,7 +225,7 @@ fun ImagingScreen(
                                 )
                             ) {
                                 Text(
-                                    text = "Specimen ${page + 1} of ${state.specimensWithImagesAndInferenceResults.size} in this Session",
+                                    text = "Specimen ${page + 1} of ${state.specimensWithImagesAndInferenceResults.size}",
                                     style = MaterialTheme.typography.titleLarge,
                                     color = MaterialTheme.colors.textPrimary,
                                     modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
@@ -582,7 +582,7 @@ fun ImagingScreen(
                                 )
                             ) {
                                 Text(
-                                    text = "Specimen ${page + 1} in this Session",
+                                    text = "Specimen ${page + 1}",
                                     style = MaterialTheme.typography.titleLarge,
                                     color = MaterialTheme.colors.textPrimary,
                                     modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)

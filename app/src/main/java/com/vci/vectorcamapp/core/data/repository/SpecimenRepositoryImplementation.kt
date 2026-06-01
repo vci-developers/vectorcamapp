@@ -57,8 +57,11 @@ class SpecimenRepositoryImplementation @Inject constructor(
         return specimenDao.getSpecimenByIdAndSessionId(specimenId, sessionId)?.toDomain()
     }
 
-    override suspend fun getSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): List<SpecimenWithSpecimenImagesAndInferenceResults> {
-        val specimens = specimenDao.getSpecimensBySession(sessionId)
+    override suspend fun getSpecimenImagesAndInferenceResultsBySessionScope(
+        sessionId: UUID,
+        sessionUnitId: UUID?
+    ): List<SpecimenWithSpecimenImagesAndInferenceResults> {
+        val specimens = specimenDao.getSpecimensBySessionScope(sessionId, sessionUnitId)
         return specimens.map { specimenEntity ->
             val specimenImagesAndResults =
                 specimenDao.getSpecimenImagesAndInferenceResultsBySpecimen(
@@ -77,36 +80,40 @@ class SpecimenRepositoryImplementation @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observeSpecimenImagesAndInferenceResultsBySession(
-        sessionId: UUID
+    override fun observeSpecimenImagesAndInferenceResultsBySessionScope(
+        sessionId: UUID, sessionUnitId: UUID?
     ): Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> {
-        return specimenDao.observeSpecimensBySession(sessionId).flatMapLatest { specimenEntities ->
-            if (specimenEntities.isEmpty()) {
-                flowOf(emptyList())
-            } else {
-                combine(
-                    specimenEntities.map { specimenEntity ->
-                        specimenDao.observeSpecimenImagesAndInferenceResultsBySpecimen(
-                            specimenEntity.id, sessionId
-                        ).map { specimenImagesAndResults ->
-                            SpecimenWithSpecimenImagesAndInferenceResults(
-                                specimen = specimenEntity.toDomain(),
-                                specimenImagesAndInferenceResults = specimenImagesAndResults.map { relation ->
-                                    SpecimenImageAndInferenceResult(
-                                        specimenImage = relation.specimenImageEntity.toDomain(),
-                                        inferenceResult = relation.inferenceResultEntity?.toDomain()
-                                    )
-                                })
-                        }
-                    }) { it.toList() }
+        return specimenDao.observeSpecimensBySessionScope(sessionId, sessionUnitId)
+            .flatMapLatest { specimenEntities ->
+                if (specimenEntities.isEmpty()) {
+                    flowOf(emptyList())
+                } else {
+                    combine(
+                        specimenEntities.map { specimenEntity ->
+                            specimenDao.observeSpecimenImagesAndInferenceResultsBySpecimen(
+                                specimenEntity.id, sessionId
+                            ).map { specimenImagesAndResults ->
+                                SpecimenWithSpecimenImagesAndInferenceResults(
+                                    specimen = specimenEntity.toDomain(),
+                                    specimenImagesAndInferenceResults = specimenImagesAndResults.map { relation ->
+                                        SpecimenImageAndInferenceResult(
+                                            specimenImage = relation.specimenImageEntity.toDomain(),
+                                            inferenceResult = relation.inferenceResultEntity?.toDomain()
+                                        )
+                                    })
+                            }
+                        }) { it.toList() }
+                }
             }
-        }
     }
 
     override suspend fun countSelectedForFurtherProcessingBetweenSessionCollectionDates(
         startDate: Long,
         endDate: Long
     ): Int {
-        return specimenDao.countSelectedSpecimensForFurtherProcessingBetweenSessionCollectionDates(startDate, endDate)
+        return specimenDao.countSelectedSpecimensForFurtherProcessingBetweenSessionCollectionDates(
+            startDate,
+            endDate
+        )
     }
 }

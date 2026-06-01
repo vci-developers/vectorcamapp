@@ -16,8 +16,16 @@ interface SpecimenRepository {
 
     suspend fun getSpecimenByIdAndSessionId(specimenId: String, sessionId: UUID): Specimen?
     suspend fun updateSpecimen(specimen: Specimen, sessionId: UUID): Result<Unit, RoomDbError>
-    suspend fun getSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): List<SpecimenWithSpecimenImagesAndInferenceResults>
-    fun observeSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>>
+    suspend fun getSpecimenImagesAndInferenceResultsBySessionScope(
+        sessionId: UUID,
+        sessionUnitId: UUID?
+    ): List<SpecimenWithSpecimenImagesAndInferenceResults>
+
+    fun observeSpecimenImagesAndInferenceResultsBySessionScope(
+        sessionId: UUID,
+        sessionUnitId: UUID?
+    ): Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>>
+
     suspend fun countSelectedForFurtherProcessingBetweenSessionCollectionDates(
         startDate: Long,
         endDate: Long

@@ -22,7 +22,7 @@ This section is the single source of truth for "where are we?". It is updated at
 | └ PR 3a | Destination contract + nav scaffold + strategy flip | ✅ Merged     |
 | └ PR 3b | `CollectionBatchList` screen + VM                   | ✅ Merged     |
 | └ PR 3c | `CollectionBatchForm` screen + VM + validation + saving | ✅ Merged     |
-| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping + audit | ⏭️ In progress (slices 1, 2, 3, 5 shipped; slice 6 partially shipped — read-path gap, see Bug 2; Bug 1 fixed pre-slice-7; slice 7 covers audit + Bug 2 + cold-VM SavedStateHandle fix (audit §12)) |
+| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping + audit | ⏭️ In progress (slices 1, 2, 3, 5, 6 shipped; Bug 1 fixed pre-slice-7; Bug 2 fixed in slice 7 via widened `…BySessionScope(sessionId, sessionUnitId)`; slice 7 still covers audit + cold-VM SavedStateHandle fix (audit §12)) |
 | PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏳ Pending    |
 | PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
@@ -215,7 +215,7 @@ collection_batch/list/presentation/components/CollectionBatchCard.kt
 **Files modified.**
 
 - `core/data/room/dao/SessionUnitDao.kt` — added `observeSessionUnitsForSession(sessionId): Flow<List<SessionUnitEntity>>` (ordered by `unitOrder ASC`) and `countSpecimensForSessionUnit(sessionUnitId): Int`. Still the only two methods on the DAO — everything else stays empty until PR 3c needs it.
-- `core/domain/repository/SessionUnitRepository.kt` — mirrored: `observeSessionUnitsForSession(...)` and `countSpecimensForSessionUnit(...)`. No `Result<>` wrappers (these are reads, matching the existing `SpecimenRepository.observeSpecimensBySession` / `SessionRepository.getImageUrisBySessionId` shape).
+- `core/domain/repository/SessionUnitRepository.kt` — mirrored: `observeSessionUnitsForSession(...)` and `countSpecimensForSessionUnit(...)`. No `Result<>` wrappers (these are reads, matching the existing `SessionRepository.getImageUrisBySessionId` shape and `SpecimenDao.observeSpecimensBySessionOrSessionUnit` (post-slice-7-widened) sibling pair).
 - `core/data/repository/SessionUnitRepositoryImplementation.kt` — entity→domain mapping done in impl via `it.toDomain()`, never in the DAO.
 - `navigation/NavGraph.kt` — replaced the `composable<Destination.CollectionBatchList>` `SplashScreen` stub with the real wire-up: `hiltViewModel<CollectionBatchListViewModel>()`, `ObserveAsEvents`, and `BaseScaffold { when (state.isLoading) { ... } }`. Imports for the new screen/event/VM added.
 
@@ -392,7 +392,7 @@ Before: `state.collectionBatchFormErrors.duplicateIdentity` only updated when th
 
 **Why an `observe*` sibling on the repo, not a hand-rolled `MutableStateFlow` on the VM.** First-pass design had the VM declare a second `MutableStateFlow<Map<UUID, Map<Int, FormAnswer>>>` that `loadFormDetails` would hand-assign from the existing `suspend get…` read. Grep confirmed **zero precedent** in the codebase: every VM has exactly one `MutableStateFlow` (`_state`), and the "extra flows" folded into the outer combine are always sourced from a `repository.observe*()` Room Flow. The hand-rolled-MSF version would have re-introduced the imperative-write-into-derived-pipeline smell that the slice was trying to eliminate; the `observe*` version matches `_sessionUnits = sessionUnitRepository.observeSessionUnitsForSession(sessionId)` and friends one-for-one. Convention #4 (match precedent) was the deciding vote.
 
-**Why a sibling and not widening the existing `suspend get…`.** Per "Read this before…" Rule 2's carve-out — "the new behavior diverges in return shape / nullability / locking" — `suspend fun get…(): Map<…>` and `fun observe…(): Flow<Map<…>>` have different return shapes and different invocation contracts (one-shot vs cold flow). The codebase already maintains `get*` ↔ `observe*` siblings throughout (e.g. `SessionUnitRepository.getSessionUnitById` vs. `observeSessionUnitsForSession`, `SpecimenRepository.observeSpecimensBySession`, etc.). Sibling is the right move.
+**Why a sibling and not widening the existing `suspend get…`.** Per "Read this before…" Rule 2's carve-out — "the new behavior diverges in return shape / nullability / locking" — `suspend fun get…(): Map<…>` and `fun observe…(): Flow<Map<…>>` have different return shapes and different invocation contracts (one-shot vs cold flow). The codebase already maintains `get*` ↔ `observe*` siblings throughout (e.g. `SessionUnitRepository.getSessionUnitById` vs. `observeSessionUnitsForSession`). Sibling is the right move.
 
 **Why derive in the outer combine, not in a separate `.launchIn(viewModelScope)` side loop.** The plan's Deferred-to-3d #2 wording (`combine(...).launchIn(viewModelScope)` writing back into state via `.onEach`) describes a structurally-different pattern that isn't used anywhere else in the file. The codebase's idiom for "Flow X → influences state" is to fold X into the outer `combine(_state, X) { … state.copy(…) }` pipeline that already builds the public `StateFlow`. That eliminates the side-coroutine, eliminates the `_state.update { copy(duplicateIdentity = …) }` write-back (which would also need to be removed from `SubmitSessionUnitForm`'s update block to avoid two write paths for the same field), and means the UI and `SubmitSessionUnitForm` both read the same derived value from the same `state.value` — no inter-flow race window.
 
@@ -575,7 +575,9 @@ Use this id consistently in three places previously inconsistent: (a) `editingSe
 
 ---
 
-**Bug 2 — `ImagingScreen` shows specimens across all units of the session, not just the unit it was opened for.**
+**Bug 2 — `ImagingScreen` shows specimens across all units of the session, not just the unit it was opened for.** ✅ **Resolved in slice 7.**
+
+*Resolution summary.* `SpecimenDao.observeSpecimensBySession` / `getSpecimensBySession` were widened in-place to `observeSpecimensBySessionOrSessionUnit(sessionId, sessionUnitId: UUID?)` / `getSpecimensBySessionOrSessionUnit(...)` using the canonical Room nullable-filter idiom (`(:sessionUnitId IS NULL OR sessionUnitId = :sessionUnitId)`); repo composite methods were renamed to `…BySessionScope(sessionId, sessionUnitId: UUID?)` and the impl threads `sessionUnitId` through to the DAO. `ImagingViewModel` now passes the route's `sessionUnitId` directly; the five non-Imaging call sites (`CompleteSessionDetailsViewModel`, `CompleteSessionListViewModel`, both upload workers' three sites) pass `sessionUnitId = null` per Convention #8. **Deviation from the original fix shape below**: the original spec prescribed a *sibling* `…BySessionUnit` method under Rule 2's filter-predicate carve-out. On re-derivation that carve-out doesn't apply — return shape, nullability, and locking are all identical; only the WHERE clause changes, which is exactly what `getQuestionsByFormIdAndScope` widened in PR 3c (plan deviation #1, lines 795–818). Widening was preferred for precedent-consistency and Convention #8 self-documentation at call sites. (`ImagingScreen.kt:228` copy promotion and the new `ImagingViewModelTest` unit-scoped assertion remain pending — to be folded into audit §7 / the audit pass test sweep.)
 
 *Repro:* Create unit A, image one specimen, return to list. Create unit B, navigate into imaging. Both A's and B's specimens are visible in the pager.
 
@@ -604,7 +606,7 @@ The session-scoped variant is preserved for legacy non-unit-scoped session types
 
 *Related copy bug.* `ImagingScreen.kt:228` hardcodes `"Specimen ${page + 1} of ${size} in this Session"`. In unit-scoped mode the copy reads incorrectly ("in this Session" suggests all specimens across the session). Audit-pass §7 (magic strings → `strings.xml`) covers the literal-promotion side; while we're in there, the unit-scoped variant should say something like `"in this batch"`. Fold into the slice 7 imaging-scoping fix.
 
-*Plan-historical correction.* The slice 6 writeup (§500-§525, currently marked "✅ Shipped — closes Deferred-to-3d #7") should be annotated to record that the read-path scoping was missed; the Deferred-to-3d #7 strike-through at §311 is misleading until both halves of imaging scoping (write *and* read) land.
+*Plan-historical correction.* The slice 6 writeup (§500-§525, currently marked "✅ Shipped — closes Deferred-to-3d #7") should be annotated to record that the read-path scoping was missed; the Deferred-to-3d #7 strike-through at §311 is misleading until both halves of imaging scoping (write *and* read) land. ✅ **Both halves now landed as of slice 7** — read-path widening above closes this gap.
 
 ---
 
