@@ -22,10 +22,11 @@ This section is the single source of truth for "where are we?". It is updated at
 | └ PR 3a | Destination contract + nav scaffold + strategy flip | ✅ Merged     |
 | └ PR 3b | `CollectionBatchList` screen + VM                   | ✅ Merged     |
 | └ PR 3c | `CollectionBatchForm` screen + VM + validation + saving | ✅ Merged     |
-| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping + audit | ⏭️ In progress (slices 1, 2, 3, 5, 6 shipped; Bug 1 fixed pre-slice-7; Bug 2 fixed in slice 7 via widened `…BySessionScope(sessionId, sessionUnitId)`; slice 7 still covers audit + cold-VM SavedStateHandle fix (audit §12)) |
-| PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏳ Pending    |
+| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping | ✅ Shipped (slices 1, 2, 3, 5, 6 shipped; Bug 1 fixed pre-slice-7; Bug 2 fixed in slice 7 via widened `…BySessionScope(sessionId, sessionUnitId)`. The feature-wide audit & cleanup pass originally scoped here — plus the cold-VM `SavedStateHandle` follow-up (audit §12) — has been split out into PR 7.) |
+| PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏭️ Next up    |
 | PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
+| PR 7 | `collection_batch/` feature-wide audit & cleanup pass (split out from PR 3d) | ⏳ Pending    |
 
 ### PR 1 — Schema & domain plumbing (✅ Merged)
 
@@ -541,9 +542,9 @@ Before: `ImagingScreen` was session-blind — every captured specimen was stored
 2. **"Yes, Confirm" button stays red** (`MaterialTheme.colors.error`) when confirming `ReturnToCollectionBatchList`. The destructive-style coloring reads slightly off for what is pure navigation, but it preserves visual consistency with the other two terminal actions inside the same dialog. Audit-pass §10 candidate.
 3. **Audit-pass §7 (magic-string promotion)** has a new candidate: the "Leave imaging?" / "Exit session?" copy added by this slice should move into `strings.xml` alongside all the other in-line dialog strings already flagged.
 
-### PR 3d follow-up — Bugs discovered post-slice-6 (⏭️ Fix before / during slice 7)
+### PR 3d follow-up — Bugs discovered post-slice-6 (✅ Both fixed)
 
-Two bugs surfaced during post-slice-6 manual testing. Recording here so slice 7 picks them up explicitly rather than relying on the audit pass to rediscover them.
+Two bugs surfaced during post-slice-6 manual testing. Both are now fixed — Bug 1 pre-slice-7 (warm-VM fix), Bug 2 in slice 7 (widened read path). Records below are kept for historical context.
 
 **Bug 1 — Duplicate batch / false-flag banner on device-back from imaging (create mode). ✅ Fixed pre-slice-7.**
 
@@ -610,9 +611,11 @@ The session-scoped variant is preserved for legacy non-unit-scoped session types
 
 ---
 
-### PR 3d follow-up — Audit & cleanup pass (⏭️ Required before PR 3 closes)
+### PR 7 — `collection_batch/` feature-wide audit & cleanup pass (⏭️ Split out from PR 3d)
 
-The slice-by-slice cadence of PR 3d has been productive but has accumulated micro-debt that should not bleed into PR 4. **Before declaring PR 3 done, run a dedicated cleanup pass across the entire `collection_batch/` feature surface.** Scope at minimum the following classes of issue — but treat the list as a starting point, not a ceiling. The goal is *no surprising surface left*.
+The slice-by-slice cadence of PR 3d was productive but accumulated micro-debt. Originally this audit was scoped as PR 3d's slice 7 "ship gate" — but holding PR 3 open for a multi-file feature-wide sweep was blocking forward progress on PR 4 (`hour_log/` retirement). The cleanup has been **split into its own PR (PR 7)** so PR 3 can close on functional completion and the audit can land as a clearly-scoped follow-up. Scope at minimum the following classes of issue — but treat the list as a starting point, not a ceiling. The goal is *no surprising surface left*.
+
+**Note on ordering.** PR 7 sits after PR 6 in numbering but is **not blocked by PR 4 / PR 5 / PR 6** — it touches only the `collection_batch/` feature surface and the small `imaging/` copy item flagged in §7. It can be picked up at any time when feature work is paused; the numbering reflects "do this last, when the rest of the planned PRs have shipped and the surface is stable" rather than a hard dependency.
 
 **1. Function signatures: pass the minimum the callee needs, not the maximum the caller has.**
 
@@ -708,12 +711,7 @@ Resolution order at VM construction: (a) edit-mode route arg wins; (b) else prev
 
 **Cost / benefit.** Three lines, one file, no new abstractions, no DI changes, no nav-graph changes. Closes Scenarios 2/3/4 from the Bug 1 reachability summary. Leaves Scenarios 5/6/8 untouched (correctly — those are intended fresh-draft paths, and `SavedStateHandle`'s auto-clear-on-pop preserves the right semantics there).
 
-**Recommended ordering:** run the audit *after* slice 6 (Imaging scoping) lands and *before* PR 3 is declared closed. Reasons:
-
-- The Imaging slice will touch shared types (`Specimen.sessionUnitId`, `FormAnswerRepository.upsertFormAnswer`-style widening for specimens) that may surface additional naming inconsistencies worth bundling.
-- Holding the audit until last lets it act as the "ship gate" for PR 3, rather than being interleaved with feature work.
-
-**What NOT to defer to PR 4 or beyond.** The point of this audit is that the feature surface should be reviewable, consistent, and convention-aligned the moment PR 3 closes. Item #6 (silent failures) is the only thing already on the deferred-to-3d list that should be folded in here; the rest is new debt surfaced during slice-by-slice review.
+**Recommended ordering:** PR 7 lands after PR 4 / PR 5 / PR 6 — by then `hour_log/` is gone (so the audit doesn't have to think about legacy compatibility), sync wiring has surfaced any DTO-side naming inconsistencies worth bundling, and the collection-method-lock work has flushed out any last `collection_batch/` surface that audits well together. The audit doesn't *block* those PRs, but landing after them lets PR 7 sweep a stabilized surface in one pass rather than re-touching files as later PRs land.
 
 ### PR 3d follow-up — Removed from scope: delete affordance (❌ Cut by product decision)
 
@@ -735,9 +733,11 @@ The delete affordance — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens`
 - `IncompleteSessionViewModel.ConfirmDeleteSession` (session-level delete) is unchanged — only the **per-unit** delete affordance has been cut.
 - Edit-mode hydration (slice 1) and identity-resolver display (slice 3) are unaffected — they don't depend on delete.
 
-### Next up — PR 3d: feature-wide audit & cleanup pass (slice 7 — ship gate for PR 3)
+### Next up — PR 4: retire legacy `hour_log/` + `add_hour/`
 
-> Scope is summarized in the "Deferred to PR 3d" subsection under PR 3c above. The general PR-3 rules and slicing reference material below still apply.
+PR 3 closes with PR 3d shipped (all six slices + Bug 1 + Bug 2). The feature-wide audit & cleanup pass originally scoped as PR 3d's slice 7 has been split out into PR 7 — see the "PR 7 — `collection_batch/` feature-wide audit & cleanup pass" subsection above for scope. PR 4 (legacy retirement) does not depend on PR 7 landing first.
+
+> The general PR-3 rules and slicing reference material below still apply to PR 7 when it lands.
 
 > ## ⚠️ Read this before writing any code in PR 3
 >
