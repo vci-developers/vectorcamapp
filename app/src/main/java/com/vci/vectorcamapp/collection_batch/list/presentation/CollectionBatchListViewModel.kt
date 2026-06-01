@@ -108,17 +108,31 @@ class CollectionBatchListViewModel @Inject constructor(
                 }
 
                 CollectionBatchListAction.DismissSubmitDialog -> {
-                    _state.update { it.copy(isSubmitDialogVisible = false) }
+                    _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
+                }
+
+                is CollectionBatchListAction.SelectPendingAction -> {
+                    _state.update { it.copy(submissionPendingAction = action.pendingAction) }
+                }
+
+                CollectionBatchListAction.ClearPendingAction -> {
+                    _state.update { it.copy(submissionPendingAction = null) }
+                }
+
+                CollectionBatchListAction.ConfirmPendingAction -> {
+                    val actionToConfirm = _state.value.submissionPendingAction
+                    _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
+                    actionToConfirm?.let { onAction(it) }
                 }
 
                 CollectionBatchListAction.SaveSessionProgress -> {
-                    _state.update { it.copy(isSubmitDialogVisible = false) }
+                    _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
                     currentSessionCache.clearSession()
                     _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
                 }
 
                 CollectionBatchListAction.ConfirmSubmitSession -> {
-                    _state.update { it.copy(isSubmitDialogVisible = false) }
+                    _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
                     val currentSession = currentSessionCache.getSession()
                     val currentSessionSiteId = currentSessionCache.getSiteId()
 

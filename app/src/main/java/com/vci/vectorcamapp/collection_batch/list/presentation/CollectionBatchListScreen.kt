@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,12 +13,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -103,7 +107,7 @@ fun CollectionBatchListScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "End session?",
+                            text = if (state.submissionPendingAction == null) "End session?" else "Confirm Action",
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colors.textPrimary,
                             modifier = Modifier.weight(1f)
@@ -122,54 +126,110 @@ fun CollectionBatchListScreen(
                     }
                 },
                 text = {
-                    Text(
-                        text = "Would you like to save this session for later, or submit it now?",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colors.textSecondary
-                    )
+                    val dialogText = when (state.submissionPendingAction) {
+                        null -> "Would you like to save this session for later, or submit it now?"
+                        is CollectionBatchListAction.SaveSessionProgress -> "Are you sure you want to save the session and exit?"
+                        is CollectionBatchListAction.ConfirmSubmitSession -> "Are you sure you want to submit the session?"
+                        else -> ""
+                    }
+                    Column {
+                        if (dialogText.isNotEmpty()) {
+                            Text(
+                                text = dialogText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colors.textSecondary
+                            )
+                        }
+
+                        if (state.sessionUnits.isEmpty() && state.submissionPendingAction is CollectionBatchListAction.ConfirmSubmitSession) {
+                            Text(
+                                text = "Warning: You are about to submit a session with zero collection batches.",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colors.error,
+                                modifier = Modifier.padding(top = MaterialTheme.dimensions.paddingMedium)
+                            )
+                        }
+                    }
                 },
                 confirmButton = {
-                    OutlinedButton(
-                        onClick = { onAction(CollectionBatchListAction.ConfirmSubmitSession) },
-                        border = BorderStroke(
-                            MaterialTheme.dimensions.borderThicknessThick,
-                            MaterialTheme.colors.successConfirm
-                        )
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_cloud_upload),
-                            contentDescription = "Submit Icon",
-                            tint = MaterialTheme.colors.successConfirm,
-                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
-                        )
-                        Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
-                        Text(
-                            text = "Submit",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colors.successConfirm
-                        )
+                    if (state.submissionPendingAction == null) {
+                        OutlinedButton(
+                            onClick = {
+                                onAction(
+                                    CollectionBatchListAction.SelectPendingAction(
+                                        CollectionBatchListAction.ConfirmSubmitSession
+                                    )
+                                )
+                            },
+                            border = BorderStroke(
+                                MaterialTheme.dimensions.borderThicknessThick,
+                                MaterialTheme.colors.successConfirm
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_cloud_upload),
+                                contentDescription = "Submit Icon",
+                                tint = MaterialTheme.colors.successConfirm,
+                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                            )
+                            Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
+                            Text(
+                                text = "Submit",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colors.successConfirm
+                            )
+                        }
+                    } else {
+                        Button(
+                            onClick = { onAction(CollectionBatchListAction.ConfirmPendingAction) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colors.error
+                            )
+                        ) {
+                            Text(
+                                text = "Yes, Confirm",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colors.buttonText
+                            )
+                        }
                     }
                 },
                 dismissButton = {
-                    OutlinedButton(
-                        onClick = { onAction(CollectionBatchListAction.SaveSessionProgress) },
-                        border = BorderStroke(
-                            MaterialTheme.dimensions.borderThicknessThick,
-                            MaterialTheme.colors.info
-                        )
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_save),
-                            contentDescription = "Save Icon",
-                            tint = MaterialTheme.colors.info,
-                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
-                        )
-                        Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
-                        Text(
-                            text = "Save",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colors.info
-                        )
+                    if (state.submissionPendingAction == null) {
+                        OutlinedButton(
+                            onClick = {
+                                onAction(
+                                    CollectionBatchListAction.SelectPendingAction(
+                                        CollectionBatchListAction.SaveSessionProgress
+                                    )
+                                )
+                            },
+                            border = BorderStroke(
+                                MaterialTheme.dimensions.borderThicknessThick,
+                                MaterialTheme.colors.info
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_save),
+                                contentDescription = "Save Icon",
+                                tint = MaterialTheme.colors.info,
+                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                            )
+                            Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
+                            Text(
+                                text = "Save",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colors.info
+                            )
+                        }
+                    } else {
+                        TextButton(onClick = { onAction(CollectionBatchListAction.ClearPendingAction) }) {
+                            Text(
+                                "Back",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colors.textPrimary
+                            )
+                        }
                     }
                 }
             )

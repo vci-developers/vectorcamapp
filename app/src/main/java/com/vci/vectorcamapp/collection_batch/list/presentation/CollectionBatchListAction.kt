@@ -9,4 +9,7 @@ sealed interface CollectionBatchListAction {
     data object DismissSubmitDialog : CollectionBatchListAction
     data object SaveSessionProgress : CollectionBatchListAction
     data object ConfirmSubmitSession : CollectionBatchListAction
+    data class SelectPendingAction(val pendingAction: CollectionBatchListAction) : CollectionBatchListAction
+    data object ClearPendingAction : CollectionBatchListAction
+    data object ConfirmPendingAction : CollectionBatchListAction
 }

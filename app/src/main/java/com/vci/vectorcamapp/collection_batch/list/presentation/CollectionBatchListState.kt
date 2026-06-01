@@ -10,4 +10,5 @@ data class CollectionBatchListState(
     val specimenCountsBySessionUnitId: Map<UUID, Int> = emptyMap(),
     val bucketNamesBySessionUnitId: Map<UUID, String> = emptyMap(),
     val isSubmitDialogVisible: Boolean = false,
+    val submissionPendingAction: CollectionBatchListAction? = null,
 )
