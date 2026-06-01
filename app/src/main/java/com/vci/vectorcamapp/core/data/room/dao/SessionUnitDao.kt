@@ -17,6 +17,9 @@ interface SessionUnitDao {
     suspend fun getSessionUnitById(sessionUnitId: UUID): SessionUnitEntity?
 
     @Query("SELECT * FROM session_unit WHERE sessionId = :sessionId ORDER BY unitOrder ASC")
+    suspend fun getSessionUnitsForSession(sessionId: UUID): List<SessionUnitEntity>
+
+    @Query("SELECT * FROM session_unit WHERE sessionId = :sessionId ORDER BY unitOrder ASC")
     fun observeSessionUnitsForSession(sessionId: UUID): Flow<List<SessionUnitEntity>>
 
     @Query("SELECT COUNT(*) FROM specimen WHERE sessionUnitId = :sessionUnitId")

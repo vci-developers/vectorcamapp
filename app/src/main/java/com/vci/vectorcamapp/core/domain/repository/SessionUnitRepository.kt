@@ -12,6 +12,7 @@ interface SessionUnitRepository {
         sessionId: UUID,
     ): Result<Unit, RoomDbError>
     suspend fun getSessionUnitById(sessionUnitId: UUID): SessionUnit?
+    suspend fun getSessionUnitsForSession(sessionId: UUID): List<SessionUnit>
     fun observeSessionUnitsForSession(sessionId: UUID): Flow<List<SessionUnit>>
     suspend fun countSpecimensForSessionUnit(sessionUnitId: UUID): Int
     suspend fun getMaxSessionUnitOrderForSession(sessionId: UUID): Int

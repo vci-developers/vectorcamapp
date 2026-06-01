@@ -14,6 +14,7 @@ import com.vci.vectorcamapp.core.data.dto.device.DeviceDto
 import com.vci.vectorcamapp.core.data.dto.form_answer.FormAnswerDto
 import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto
 import com.vci.vectorcamapp.core.data.dto.session.SessionDto
+import com.vci.vectorcamapp.core.data.dto.session_unit.SessionUnitDto
 import com.vci.vectorcamapp.core.data.dto.specimen.SpecimenDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.SpecimenImageDto
 import com.vci.vectorcamapp.core.data.dto.surveillance_form.SurveillanceFormDto
@@ -25,6 +26,7 @@ import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.SessionUnit
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
@@ -32,6 +34,7 @@ import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.network.api.DeviceDataSource
 import com.vci.vectorcamapp.core.domain.network.api.FormAnswerDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SessionDataSource
+import com.vci.vectorcamapp.core.domain.network.api.SessionUnitDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenImageDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SurveillanceFormDataSource
@@ -39,6 +42,7 @@ import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
@@ -61,12 +65,14 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val programRepository: ProgramRepository,
     private val transactionHelper: TransactionHelper,
     private val sessionRepository: SessionRepository,
+    private val sessionUnitRepository: SessionUnitRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
     private val specimenRepository: SpecimenRepository,
     private val specimenImageRepository: SpecimenImageRepository,
     private val inferenceResultRepository: InferenceResultRepository,
     private val deviceDataSource: DeviceDataSource,
     private val sessionDataSource: SessionDataSource,
+    private val sessionUnitDataSource: SessionUnitDataSource,
     private val surveillanceFormDataSource: SurveillanceFormDataSource,
     private val specimenDataSource: SpecimenDataSource,
     private val specimenImageDataSource: SpecimenImageDataSource,
@@ -121,7 +127,10 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
 
             val localSpecimensWithImagesAndInferenceResults =
-                specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(localSessionId, null)
+                specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(
+                    localSessionId,
+                    null
+                )
             val totalSpecimensForSession = localSpecimensWithImagesAndInferenceResults.size
 
             val syncedSession = when (val syncSessionResult =
@@ -138,6 +147,19 @@ class MetadataUploadWorker @AssistedInject constructor(
             }
             if (syncedSession.remoteId == null) {
                 return retryOrFailure("Session not found on the server.")
+            }
+
+            val localSessionUnits =
+                sessionUnitRepository.getSessionUnitsForSession(syncedSession.localId)
+            localSessionUnits.forEach { localSessionUnit ->
+                when (val syncSessionUnitResult = syncSessionUnitIfNeeded(
+                    localSessionUnit, syncedSession.localId, syncedSession.remoteId
+                )) {
+                    is DomainResult.Success -> syncSessionUnitResult.data
+                    is DomainResult.Error -> return retryOrFailure(
+                        syncSessionUnitResult.error.toString(context)
+                    )
+                }
             }
 
             if (localProgram.formVersion != null) {
@@ -405,6 +427,69 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
+    private suspend fun syncSessionUnitIfNeeded(
+        localSessionUnit: SessionUnit,
+        syncedLocalSessionId: UUID,
+        syncedRemoteSessionId: Int,
+    ): DomainResult<SessionUnit, NetworkError> {
+        return try {
+            val localSessionUnitDto = SessionUnitDto(
+                id = localSessionUnit.remoteId,
+                frontendId = localSessionUnit.localId,
+                sessionId = syncedRemoteSessionId,
+                unitOrder = localSessionUnit.unitOrder,
+                createdAt = localSessionUnit.createdAt,
+            )
+
+            val remoteSessionUnitDto = when (val remoteSessionUnitResult =
+                sessionUnitDataSource.getSessionUnitByFrontendId(
+                    syncedRemoteSessionId,
+                    localSessionUnit.localId
+                )) {
+                is DomainResult.Success -> remoteSessionUnitResult.data
+                is DomainResult.Error -> {
+                    when (remoteSessionUnitResult.error) {
+                        NetworkError.NOT_FOUND -> {
+                            val postSessionUnitResult = sessionUnitDataSource.postSessionUnit(
+                                localSessionUnit, syncedRemoteSessionId
+                            )
+                            when (postSessionUnitResult) {
+                                is DomainResult.Success -> postSessionUnitResult.data.sessionUnit
+                                is DomainResult.Error -> return DomainResult.Error(
+                                    postSessionUnitResult.error
+                                )
+                            }
+                        }
+
+                        else -> return DomainResult.Error(remoteSessionUnitResult.error)
+                    }
+                }
+            }
+
+            val remoteSessionUnit = SessionUnit(
+                localId = remoteSessionUnitDto.frontendId,
+                remoteId = remoteSessionUnitDto.id,
+                unitOrder = remoteSessionUnitDto.unitOrder,
+                createdAt = remoteSessionUnitDto.createdAt
+            )
+
+            if (localSessionUnitDto != remoteSessionUnitDto) {
+                val updateSessionUnitResult = sessionUnitRepository.upsertSessionUnit(
+                    remoteSessionUnit, syncedLocalSessionId
+                )
+                if (updateSessionUnitResult is DomainResult.Error) {
+                    return DomainResult.Error(NetworkError.CLIENT_ERROR)
+                }
+            }
+
+            DomainResult.Success(remoteSessionUnit)
+        } catch (e: IOException) {
+            DomainResult.Error(NetworkError.NO_INTERNET)
+        } catch (e: Exception) {
+            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
+        }
+    }
+
     private suspend fun syncSurveillanceFormIfNeeded(
         localSurveillanceForm: SurveillanceForm,
         syncedLocalSessionId: UUID,
@@ -511,6 +596,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                         }
                     }
                 }
+
                 is DomainResult.Error -> {
                     when (remoteFormAnswersResult.error) {
                         NetworkError.NOT_FOUND -> {
