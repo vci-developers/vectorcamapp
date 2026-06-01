@@ -68,7 +68,9 @@ class CompleteSessionDetailsViewModelTest {
         villageName = "Test Village",
         houseNumber = "123",
         healthCenter = "Test Center",
-        isActive = true
+        isActive = true,
+        name = null,
+        locationHierarchy = null
     )
 
     @Before
@@ -82,7 +84,7 @@ class CompleteSessionDetailsViewModelTest {
         formRepository = mockk(relaxed = true)
         coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
 
-        every { specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(any()) } returns
+        every { specimenRepository.observeSpecimenImagesAndInferenceResultsBySessionScope(any(), any()) } returns
             MutableStateFlow(emptyList())
     }
 

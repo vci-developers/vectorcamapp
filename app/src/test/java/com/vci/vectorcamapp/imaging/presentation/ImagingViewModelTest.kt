@@ -21,6 +21,11 @@ import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
 import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
+import androidx.navigation.toRoute
+import com.vci.vectorcamapp.navigation.Destination
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -81,6 +86,7 @@ class ImagingViewModelTest {
     fun tearDown() {
         // Restore Uri.EMPTY to null (its original stub value) so other test classes aren't affected.
         injectUriEmpty(null)
+        unmockkStatic("androidx.navigation.SavedStateHandleKt")
     }
 
     @Before
@@ -111,7 +117,7 @@ class ImagingViewModelTest {
         imagingWorkflowFactory = mockk()
         every { imagingWorkflowFactory.create(any()) } returns imagingWorkflow
 
-        every { specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(any()) } returns
+        every { specimenRepository.observeSpecimenImagesAndInferenceResultsBySessionScope(any(), any()) } returns
             MutableStateFlow(emptyList())
     }
 
@@ -139,7 +145,12 @@ class ImagingViewModelTest {
     private fun initViewModel(session: Session? = testSession) {
         coEvery { currentSessionCache.getSession() } returns session
 
+        val savedStateHandle = mockk<SavedStateHandle>(relaxed = true)
+        mockkStatic("androidx.navigation.SavedStateHandleKt")
+        every { savedStateHandle.toRoute<Destination.Imaging>() } returns Destination.Imaging(null)
+
         viewModel = ImagingViewModel(
+            savedStateHandle = savedStateHandle,
             currentSessionCache = currentSessionCache,
             sessionRepository = sessionRepository,
             specimenRepository = specimenRepository,
