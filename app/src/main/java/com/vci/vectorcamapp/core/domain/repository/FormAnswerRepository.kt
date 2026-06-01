@@ -14,7 +14,7 @@ interface FormAnswerRepository {
         questionId: Int
     ): Result<Unit, RoomDbError>
 
-    suspend fun getFormAnswersBySessionId(sessionId: UUID): Map<Int, FormAnswer>
-    suspend fun getFormAnswersBySessionUnitId(sessionUnitId: UUID): Map<Int, FormAnswer>
+    suspend fun getSessionScopedFormAnswers(sessionId: UUID): Map<Int, FormAnswer>
+    suspend fun getSessionUnitScopedFormAnswers(sessionUnitId: UUID): Map<Int, FormAnswer>
     fun observeSessionUnitScopedFormAnswersBySessionId(sessionId: UUID): Flow<Map<UUID, Map<Int, FormAnswer>>>
 }

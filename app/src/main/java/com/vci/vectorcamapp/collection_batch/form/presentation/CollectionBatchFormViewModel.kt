@@ -227,7 +227,7 @@ class CollectionBatchFormViewModel @Inject constructor(
             }.orEmpty()
 
             val savedFormAnswers =
-                formAnswerRepository.getFormAnswersBySessionUnitId(draftSessionUnitId)
+                formAnswerRepository.getSessionUnitScopedFormAnswers(draftSessionUnitId)
 
             _state.update {
                 it.copy(

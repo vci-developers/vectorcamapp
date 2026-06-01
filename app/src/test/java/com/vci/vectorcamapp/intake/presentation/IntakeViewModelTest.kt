@@ -127,7 +127,7 @@ class IntakeViewModelTest {
         coEvery { programRepository.getProgramById(testProgramId) } returns testProgram
         coEvery { currentSessionCache.getSession() } returns null
         coEvery { defaultIntakeFieldsCache.getDefaultIntakeFields() } returns null
-        coEvery { formAnswerRepository.getFormAnswersBySessionId(any()) } returns emptyMap()
+        coEvery { formAnswerRepository.getSessionScopedFormAnswers(any()) } returns emptyMap()
 
         every { siteRepository.observeAllSitesByProgramId(any()) } returns MutableStateFlow(listOf(testSite))
         every { surveillanceFormRepository.observeSurveillanceFormBySessionId(any()) } returns flowOf(null)

@@ -36,14 +36,15 @@ class SpecimenRepositoryImplementation @Inject constructor(
     }
 
     override suspend fun updateSpecimen(
-        specimen: Specimen, sessionId: UUID
+        specimen: Specimen, sessionId: UUID, sessionUnitId: UUID?
     ): Result<Unit, RoomDbError> {
         return try {
-            val updatedRows = specimenDao.updateSpecimen(specimen.toEntity(sessionId, null))
+            val updatedRows = specimenDao.updateSpecimen(specimen.toEntity(sessionId, sessionUnitId))
             if (updatedRows == 0) {
                 Result.Error(RoomDbError.NO_ROWS_AFFECTED)
+            } else {
+                Result.Success(Unit)
             }
-            Result.Success(Unit)
         } catch (e: SQLiteConstraintException) {
             Result.Error(RoomDbError.CONSTRAINT_VIOLATION)
         } catch (e: Exception) {
@@ -55,6 +56,13 @@ class SpecimenRepositoryImplementation @Inject constructor(
         specimenId: String, sessionId: UUID
     ): Specimen? {
         return specimenDao.getSpecimenByIdAndSessionId(specimenId, sessionId)?.toDomain()
+    }
+
+    override suspend fun getSessionUnitIdForSpecimen(
+        specimenId: String,
+        sessionId: UUID,
+    ): UUID? {
+        return specimenDao.getSessionUnitIdForSpecimen(specimenId, sessionId)
     }
 
     override suspend fun getSpecimenImagesAndInferenceResultsBySessionScope(

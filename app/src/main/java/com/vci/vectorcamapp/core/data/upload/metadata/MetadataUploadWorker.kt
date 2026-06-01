@@ -128,18 +128,13 @@ class MetadataUploadWorker @AssistedInject constructor(
 
             val localSpecimensWithImagesAndInferenceResults =
                 specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(
-                    localSessionId,
-                    null
+                    localSessionId, null
                 )
             val totalSpecimensForSession = localSpecimensWithImagesAndInferenceResults.size
 
-            val syncedSession = when (val syncSessionResult =
-                syncSessionIfNeeded(
-                    localSession,
-                    localSiteId,
-                    syncedDevice.id,
-                    totalSpecimensForSession
-                )) {
+            val syncedSession = when (val syncSessionResult = syncSessionIfNeeded(
+                localSession, localSiteId, syncedDevice.id, totalSpecimensForSession
+            )) {
                 is DomainResult.Success -> syncSessionResult.data
                 is DomainResult.Error -> return retryOrFailure(
                     syncSessionResult.error.toString(context)
@@ -149,28 +144,45 @@ class MetadataUploadWorker @AssistedInject constructor(
                 return retryOrFailure("Session not found on the server.")
             }
 
-            val localSessionUnits =
-                sessionUnitRepository.getSessionUnitsForSession(syncedSession.localId)
-            localSessionUnits.forEach { localSessionUnit ->
-                when (val syncSessionUnitResult = syncSessionUnitIfNeeded(
-                    localSessionUnit, syncedSession.localId, syncedSession.remoteId
-                )) {
-                    is DomainResult.Success -> syncSessionUnitResult.data
-                    is DomainResult.Error -> return retryOrFailure(
-                        syncSessionUnitResult.error.toString(context)
-                    )
+            val syncedSessionUnitsByLocalId: Map<UUID, SessionUnit> =
+                if (localProgram.formVersion != null) {
+                    val localSessionUnits =
+                        sessionUnitRepository.getSessionUnitsForSession(syncedSession.localId)
+                    buildMap {
+                        localSessionUnits.forEach { localSessionUnit ->
+                            when (val syncSessionUnitResult = syncSessionUnitIfNeeded(
+                                localSessionUnit, syncedSession.localId, syncedSession.remoteId
+                            )) {
+                                is DomainResult.Success -> put(
+                                    localSessionUnit.localId, syncSessionUnitResult.data
+                                )
+
+                                is DomainResult.Error -> return retryOrFailure(
+                                    syncSessionUnitResult.error.toString(context)
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    emptyMap()
                 }
-            }
 
             if (localProgram.formVersion != null) {
-                val localFormAnswers =
-                    formAnswerRepository.getFormAnswersBySessionId(syncedSession.localId)
-                if (localFormAnswers.isNotEmpty()) {
+                val sessionScopedFormAnswers =
+                    formAnswerRepository.getSessionScopedFormAnswers(syncedSession.localId)
+                val sessionUnitScopedFormAnswersBySessionUnit =
+                    syncedSessionUnitsByLocalId.keys.associateWith { localUnitId ->
+                        formAnswerRepository.getSessionUnitScopedFormAnswers(localUnitId)
+                    }.filterValues { it.isNotEmpty() }
+
+                if (sessionScopedFormAnswers.isNotEmpty() || sessionUnitScopedFormAnswersBySessionUnit.isNotEmpty()) {
                     when (val syncFormAnswersResult = syncFormAnswersIfNeeded(
-                        localFormAnswers,
+                        sessionScopedFormAnswers,
+                        sessionUnitScopedFormAnswersBySessionUnit,
+                        syncedSessionUnitsByLocalId,
                         localProgram.formVersion,
                         syncedSession.localId,
-                        syncedSession.remoteId
+                        syncedSession.remoteId,
                     )) {
                         is DomainResult.Success -> syncFormAnswersResult.data
                         is DomainResult.Error -> return retryOrFailure(
@@ -197,11 +209,22 @@ class MetadataUploadWorker @AssistedInject constructor(
             localSpecimensWithImagesAndInferenceResults.forEachIndexed { specimenIndex, specimenWithImagesAndInferenceResults ->
                 val totalImagesForSpecimen =
                     specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
+
+                val syncedLocalSessionUnitId = specimenRepository.getSessionUnitIdForSpecimen(
+                    specimenWithImagesAndInferenceResults.specimen.id,
+                    syncedSession.localId,
+                )
+                val syncedRemoteSessionUnitId = syncedLocalSessionUnitId?.let {
+                    syncedSessionUnitsByLocalId[it]?.remoteId
+                }
+
                 val syncedSpecimen = when (val syncSpecimenResult = syncSpecimenIfNeeded(
                     specimenWithImagesAndInferenceResults.specimen,
                     syncedSession.localId,
                     syncedSession.remoteId,
-                    totalImagesForSpecimen
+                    syncedLocalSessionUnitId,
+                    syncedRemoteSessionUnitId,
+                    totalImagesForSpecimen,
                 )) {
                     is DomainResult.Success -> syncSpecimenResult.data
                     is DomainResult.Error -> {
@@ -443,8 +466,7 @@ class MetadataUploadWorker @AssistedInject constructor(
 
             val remoteSessionUnitDto = when (val remoteSessionUnitResult =
                 sessionUnitDataSource.getSessionUnitByFrontendId(
-                    syncedRemoteSessionId,
-                    localSessionUnit.localId
+                    syncedRemoteSessionId, localSessionUnit.localId
                 )) {
                 is DomainResult.Success -> remoteSessionUnitResult.data
                 is DomainResult.Error -> {
@@ -561,85 +583,96 @@ class MetadataUploadWorker @AssistedInject constructor(
     }
 
     private suspend fun syncFormAnswersIfNeeded(
-        localFormAnswers: Map<Int, FormAnswer>,
+        sessionScopedAnswers: Map<Int, FormAnswer>,
+        sessionUnitScopedAnswersBySessionUnitLocalId: Map<UUID, Map<Int, FormAnswer>>,
+        syncedSessionUnitsByLocalId: Map<UUID, SessionUnit>,
         formVersion: String,
         syncedLocalSessionId: UUID,
-        syncedRemoteSessionId: Int
+        syncedRemoteSessionId: Int,
     ): DomainResult<Unit, NetworkError> {
         return try {
-            val localFormAnswersDto = localFormAnswers.map { (questionId, answer) ->
-                FormAnswerDto(
-                    id = answer.remoteId,
-                    frontendId = answer.localId,
-                    sessionId = syncedRemoteSessionId,
-                    questionId = questionId,
-                    value = answer.value,
-                    dataType = answer.dataType,
-                    submittedAt = answer.submittedAt
-                )
+            val sessionUnitScopedAnswersBySessionUnitRemoteId =
+                sessionUnitScopedAnswersBySessionUnitLocalId.mapNotNull { (localId, answers) ->
+                    syncedSessionUnitsByLocalId[localId]?.remoteId?.let { it to answers }
+                }.toMap()
+
+            val localFormAnswersDtoByKey: Map<Pair<Int, Int?>, FormAnswerDto> = buildMap {
+                sessionScopedAnswers.forEach { (questionId, answer) ->
+                    put(
+                        questionId to null, FormAnswerDto(
+                            id = answer.remoteId,
+                            frontendId = answer.localId,
+                            sessionId = syncedRemoteSessionId,
+                            sessionUnitId = null,
+                            questionId = questionId,
+                            value = answer.value,
+                            dataType = answer.dataType,
+                            submittedAt = answer.submittedAt
+                        )
+                    )
+                }
+                sessionUnitScopedAnswersBySessionUnitRemoteId.forEach { (remoteSessionUnitId, answers) ->
+                    answers.forEach { (questionId, answer) ->
+                        put(
+                            questionId to remoteSessionUnitId, FormAnswerDto(
+                                id = answer.remoteId,
+                                frontendId = answer.localId,
+                                sessionId = syncedRemoteSessionId,
+                                sessionUnitId = remoteSessionUnitId,
+                                questionId = questionId,
+                                value = answer.value,
+                                dataType = answer.dataType,
+                                submittedAt = answer.submittedAt
+                            )
+                        )
+                    }
+                }
             }
 
-            val remoteFormAnswersDto = when (val remoteFormAnswersResult =
+            val existingRemoteAnswers = when (val getResult =
                 formAnswerDataSource.getFormAnswersForSession(syncedRemoteSessionId)) {
-                is DomainResult.Success -> {
-                    val answers = remoteFormAnswersResult.data.answers
-                    answers.ifEmpty {
-                        val postFormAnswersResult =
-                            formAnswerDataSource.postFormAnswersForSession(
-                                syncedRemoteSessionId, formVersion, localFormAnswers
-                            )
-                        when (postFormAnswersResult) {
-                            is DomainResult.Success -> postFormAnswersResult.data.answers
-                            is DomainResult.Error -> return DomainResult.Error(
-                                postFormAnswersResult.error
-                            )
-                        }
-                    }
-                }
-
-                is DomainResult.Error -> {
-                    when (remoteFormAnswersResult.error) {
-                        NetworkError.NOT_FOUND -> {
-                            val postFormAnswersResult =
-                                formAnswerDataSource.postFormAnswersForSession(
-                                    syncedRemoteSessionId, formVersion, localFormAnswers
-                                )
-                            when (postFormAnswersResult) {
-                                is DomainResult.Success -> postFormAnswersResult.data.answers
-                                is DomainResult.Error -> return DomainResult.Error(
-                                    postFormAnswersResult.error
-                                )
-                            }
-                        }
-
-                        else -> return DomainResult.Error(remoteFormAnswersResult.error)
-                    }
+                is DomainResult.Success -> getResult.data.answers
+                is DomainResult.Error -> when (getResult.error) {
+                    NetworkError.NOT_FOUND -> emptyList()
+                    else -> return DomainResult.Error(getResult.error)
                 }
             }
 
-            val remoteFormAnswers = remoteFormAnswersDto.associate { remoteFormAnswerDto ->
-                remoteFormAnswerDto.questionId to FormAnswer(
+            val remoteFormAnswersDto = existingRemoteAnswers.ifEmpty {
+                when (val postResult = formAnswerDataSource.postFormAnswersForSession(
+                    syncedRemoteSessionId,
+                    formVersion,
+                    sessionScopedAnswers,
+                    sessionUnitScopedAnswersBySessionUnitRemoteId,
+                )) {
+                    is DomainResult.Success -> postResult.data.answers
+                    is DomainResult.Error -> return DomainResult.Error(postResult.error)
+                }
+            }
+
+            for (remoteFormAnswerDto in remoteFormAnswersDto) {
+                val localFormAnswerDto =
+                    localFormAnswersDtoByKey[remoteFormAnswerDto.questionId to remoteFormAnswerDto.sessionUnitId]
+                if (localFormAnswerDto == remoteFormAnswerDto) continue
+
+                val remoteFormAnswer = FormAnswer(
                     localId = remoteFormAnswerDto.frontendId,
                     remoteId = remoteFormAnswerDto.id,
                     value = remoteFormAnswerDto.value,
                     dataType = remoteFormAnswerDto.dataType,
-                    submittedAt = remoteFormAnswerDto.submittedAt
+                    submittedAt = remoteFormAnswerDto.submittedAt,
                 )
-            }
-
-            for ((questionId, remoteFormAnswer) in remoteFormAnswers) {
-                val localFormAnswerDto =
-                    localFormAnswersDto.firstOrNull { it.questionId == questionId }
-                val remoteFormAnswerDto =
-                    remoteFormAnswersDto.firstOrNull { it.questionId == questionId }
-
-                if (localFormAnswerDto != remoteFormAnswerDto) {
-                    val formAnswerUpdateResult = formAnswerRepository.upsertFormAnswer(
-                        remoteFormAnswer, syncedLocalSessionId, null, questionId
-                    )
-                    if (formAnswerUpdateResult is DomainResult.Error) {
-                        return DomainResult.Error(NetworkError.CLIENT_ERROR)
-                    }
+                val localSessionUnitId = remoteFormAnswerDto.sessionUnitId?.let { remoteUnitId ->
+                    syncedSessionUnitsByLocalId.entries.firstOrNull { it.value.remoteId == remoteUnitId }?.key
+                }
+                val formAnswerUpdateResult = formAnswerRepository.upsertFormAnswer(
+                    remoteFormAnswer,
+                    syncedLocalSessionId,
+                    localSessionUnitId,
+                    remoteFormAnswerDto.questionId,
+                )
+                if (formAnswerUpdateResult is DomainResult.Error) {
+                    return DomainResult.Error(NetworkError.CLIENT_ERROR)
                 }
             }
 
@@ -655,14 +688,17 @@ class MetadataUploadWorker @AssistedInject constructor(
         localSpecimen: Specimen,
         syncedLocalSessionId: UUID,
         syncedRemoteSessionId: Int,
-        expectedImages: Int
+        syncedLocalSessionUnitId: UUID?,
+        syncedRemoteSessionUnitId: Int?,
+        expectedImages: Int,
     ): DomainResult<Specimen, NetworkError> {
         return try {
             val localSpecimenDto = SpecimenDto(
                 id = localSpecimen.remoteId,
                 specimenId = localSpecimen.id,
                 sessionId = syncedRemoteSessionId,
-                expectedImages = expectedImages
+                sessionUnitId = syncedRemoteSessionUnitId,
+                expectedImages = expectedImages,
             )
 
             val remoteSpecimenDto =
@@ -674,7 +710,10 @@ class MetadataUploadWorker @AssistedInject constructor(
                         when (remoteSpecimenResult.error) {
                             NetworkError.NOT_FOUND -> {
                                 val postSpecimenResult = specimenDataSource.postSpecimen(
-                                    localSpecimen, syncedRemoteSessionId, expectedImages
+                                    localSpecimen,
+                                    syncedRemoteSessionId,
+                                    syncedRemoteSessionUnitId,
+                                    expectedImages,
                                 )
                                 when (postSpecimenResult) {
                                     is DomainResult.Success -> postSpecimenResult.data.specimen
@@ -692,12 +731,15 @@ class MetadataUploadWorker @AssistedInject constructor(
             val remoteSpecimen = Specimen(
                 id = remoteSpecimenDto.specimenId,
                 remoteId = remoteSpecimenDto.id,
-                shouldProcessFurther = remoteSpecimenDto.shouldProcessFurther
+                shouldProcessFurther = remoteSpecimenDto.shouldProcessFurther,
             )
 
             if (remoteSpecimenDto != localSpecimenDto) {
-                val specimenUpdateResult =
-                    specimenRepository.updateSpecimen(remoteSpecimen, syncedLocalSessionId)
+                val specimenUpdateResult = specimenRepository.updateSpecimen(
+                    remoteSpecimen,
+                    syncedLocalSessionId,
+                    syncedLocalSessionUnitId,
+                )
                 if (specimenUpdateResult is DomainResult.Error) {
                     return DomainResult.Error(NetworkError.CLIENT_ERROR)
                 }

@@ -37,6 +37,9 @@ interface SpecimenDao {
     """)
     fun observeSpecimensBySessionScope(sessionId: UUID, sessionUnitId: UUID?): Flow<List<SpecimenEntity>>
 
+    @Query("SELECT sessionUnitId FROM specimen WHERE id = :specimenId AND sessionId = :sessionId")
+    suspend fun getSessionUnitIdForSpecimen(specimenId: String, sessionId: UUID): UUID?
+
     @Transaction
     @Query("SELECT * FROM specimen_image WHERE specimenId = :specimenId AND sessionId = :sessionId")
     suspend fun getSpecimenImagesAndInferenceResultsBySpecimen(

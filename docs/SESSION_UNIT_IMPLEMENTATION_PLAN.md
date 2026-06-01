@@ -26,7 +26,7 @@ This section is the single source of truth for "where are we?". It is updated at
 | PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ✅ Merged     |
 | PR 5 | Sync wiring — **sliced into 5a / 5b** | ⏭️ In progress |
 | └ PR 5a | `SessionUnit` sync (DTOs, `RemoteSessionUnitDataSource`, worker `syncSessionUnitIfNeeded` + per-unit loop) | ✅ Merged     |
-| └ PR 5b | `sessionUnitId` plumbing through `FormQuestion` / `FormAnswer` / `Specimen` DTOs + domain + mappers + worker | ⏭️ Next up    |
+| └ PR 5b | `sessionUnitId` plumbing through `FormQuestion` / `FormAnswer` / `Specimen` DTOs + worker                  | ✅ Merged     |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
 | PR 7 | `collection_batch/` feature-wide audit & cleanup pass (split out from PR 3d) | ⏳ Pending    |
 
@@ -806,7 +806,83 @@ The delete affordance — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens`
 2. **PSC / LTC regression check.** Create a PSC session → image specimens → upload. `getSessionUnitsForSession` returns `[]`, the new `forEach` block is a no-op, every existing assertion on the form-answer/specimen flow still holds. Zero behavioral change.
 3. **Retry semantics.** Force a transient network failure mid-unit-sync → worker hits `retryOrFailure` with `MAX_RETRIES = 5` exactly as it does for `syncSessionIfNeeded`. On retry, the GET short-circuits the already-synced unit and resumes from the next pending one.
 
-### Next up — PR 5b: `sessionUnitId` plumbing (revised design — composite-driven)
+### PR 5b — `sessionUnitId` plumbing through form answers + specimens (✅ Merged)
+
+**What landed.** Closes the loop opened by PR 5a. `sessionUnitId` now threads end-to-end through `FormQuestionDto`, `FormAnswerDto`, `SpecimenDto`, the worker's `syncFormAnswersIfNeeded` / `syncSpecimenIfNeeded` helpers, and the local Room write-back paths. HLC sessions correctly POST per-row-discriminated form answers (single bulk `POST sessions/{remoteId}/forms/answers` with mixed `sessionUnitId` array) and per-specimen `POST sessions/{remoteId}/specimens` requests carrying each specimen's owning unit's `remoteId`. PSC/LTC sessions flow unchanged — every constructed `sessionUnitId` field resolves to `null` and the worker's hoisted `syncedSessionUnitsByLocalId` map is `emptyMap()`.
+
+**Deviations from the original §809 ("Next up — PR 5b") design.** The settled implementation diverges from the pre-flight plan in four places. All deviations were design-time decisions made during implementation; none are technical debt.
+
+1. **Data source signature: two domain maps, not `List<FormAnswerRequestItemDto>`.** Plan §870 prescribed `answers: List<FormAnswerRequestItemDto>` as the data-source input — built by the worker before the call. Shipped signature is:
+
+   ```kotlin
+   suspend fun postFormAnswersForSession(
+       sessionId: Int,
+       formVersion: String,
+       sessionScopedAnswers: Map<Int, FormAnswer>,
+       sessionUnitScopedAnswersBySessionUnitRemoteId: Map<Int, Map<Int, FormAnswer>>,
+   ): Result<PostFormAnswersResponseDto, NetworkError>
+   ```
+
+   Two `Map<Int, FormAnswer>` (domain-model) inputs, scope encoded structurally by which map an item is in. DTO construction stays inside the data source — matching the convention every other data source method follows (`postSession(session, …)`, `postSpecimen(specimen, …)`, `postSessionUnit(sessionUnit, …)`, `postSurveillanceForm(surveillanceForm, …)`: domain in, DTO out). **Rationale**: the plan's `List<FormAnswerRequestItemDto>` shape would have leaked DTOs across the worker→data-source boundary, breaking that convention. Outbound `FormAnswerRequestItemDto` construction now lives entirely inside `RemoteFormAnswerDataSource.postFormAnswersForSession`'s `buildList`.
+
+2. **No `SessionUnitWithFormAnswers` composite.** Plan §839 / §853 proposed introducing this composite + a `getSessionUnitsWithFormAnswersForSession` repo method to source the unit-scoped form answer buckets. Shipped design builds the equivalent map inline in `doWork()`:
+
+   ```kotlin
+   val sessionUnitScopedFormAnswersBySessionUnit =
+       syncedSessionUnitsByLocalId.keys.associateWith { localUnitId ->
+           formAnswerRepository.getSessionUnitScopedFormAnswers(localUnitId)
+       }.filterValues { it.isNotEmpty() }
+   ```
+
+   The existing `FormAnswerRepository.getSessionUnitScopedFormAnswers(sessionUnitId)` method (added during PR 3d for the collection batch hydration path) is reused. One fewer composite, one fewer repo method, equivalent semantics.
+
+3. **No widening of `SpecimenWithSpecimenImagesAndInferenceResults` with `sessionUnitId: UUID?`.** Plan §850 prescribed a one-field widening on the composite to carry the FK from the read layer into the worker. Shipped design instead adds a focused DAO/repo method `getSessionUnitIdForSpecimen(specimenId, sessionId): UUID?` called once per specimen in the worker's flat loop. **Tradeoff**: N extra primary-key Room reads per upload vs. zero blast radius across the 8 existing composite consumers (`ImagingState`, `CompleteSessionDetailsState`, etc.). The per-row Room reads are negligible relative to the per-row HTTP cost. PR 7 may later retire this read in favor of a `SessionUnitWithSpecimens` composite that groups specimens per unit at the repo layer.
+
+4. **Narrowed-in-place `getSessionScopedFormAnswers`, not sibling addition.** Plan §854 proposed adding `getSessionScopedFormAnswersBySessionId` *alongside* the existing `getFormAnswersBySessionId` (which would have returned all rows). Shipped design renamed and narrowed the existing method to `getSessionScopedFormAnswers(sessionId): Map<Int, FormAnswer>` with `WHERE sessionUnitId IS NULL` directly on the query. All three callers (`MetadataUploadWorker`, `IntakeViewModel`, `IntakeViewModelTest`) consumed the change. This had the bonus side-effect of correctly fixing intake hydration (`IntakeViewModel.kt:667`), which should never have been receiving unit-scoped rows.
+
+**Additional cleanup landed in PR 5b** (out of scope per the original plan, low-risk fixes discovered during review):
+
+5. **`NO_ROWS_AFFECTED` fall-through bug fixed in three repo methods.** `SpecimenRepositoryImplementation.updateSpecimen`, `SpecimenImageRepositoryImplementation.updateSpecimenImage`, and `InferenceResultRepositoryImplementation.updateInferenceResult` previously constructed `Result.Error(RoomDbError.NO_ROWS_AFFECTED)` as a discarded expression and then unconditionally returned `Result.Success(Unit)`. All three now use the `if/else` expression form so `NO_ROWS_AFFECTED` correctly propagates to callers. Safe because (a) `updateSpecimen` / `updateSpecimenImage` PKs come from upstream Room reads → row always exists, and (b) `updateInferenceResult` is gated by `remoteInferenceResult?.let { … }` plus the client-authored invariant (inference results can only originate from the mobile app), so the local row exists whenever the update fires.
+
+**Wire contract confirmed.**
+
+- `POST sessions/{remoteId}/forms/answers` request body: `{ answers: [ { frontendId, sessionUnitId: Int | null, questionId, value, dataType } ], formVersion, submittedAt }`. Heterogeneous batch, `sessionUnitId` per row.
+- `POST sessions/{remoteId}/specimens` request body: `{ specimenId, sessionUnitId: Int | null, shouldProcessFurther, expectedImages }`. `sessionUnitId` as a top-level field.
+- GET responses include `sessionUnitId` on both `FormAnswerDto` and `SpecimenDto`, allowing the worker's `localDto != remoteDto` comparison to discriminate correctly across scopes.
+
+**Files touched.**
+
+- `core/data/dto/form_answer/FormAnswerDto.kt` — `sessionUnitId: Int? = null` added
+- `core/data/dto/form_answer/PostFormAnswersRequestDto.kt` — `FormAnswerRequestItemDto.sessionUnitId: Int? = null` added
+- `core/data/dto/specimen/SpecimenDto.kt` — `sessionUnitId: Int? = null` added
+- `core/data/dto/specimen/PostSpecimenRequestDto.kt` — `sessionUnitId: Int? = null` added
+- `core/data/dto/form_question/FormQuestionDto.kt` — `answerScope` + `isUnitIdentityComponent` (consumes existing `FormQuestionScopeSerializer`)
+- `core/data/mappers/FormQuestionMapper.kt` — drops PR 1 TODO; propagates `answerScope` + `isUnitIdentityComponent`
+- `core/domain/network/api/FormAnswerDataSource.kt` + `core/data/network/api/RemoteFormAnswerDataSource.kt` — two-domain-map signature
+- `core/domain/network/api/SpecimenDataSource.kt` + `core/data/network/api/RemoteSpecimenDataSource.kt` — `sessionUnitId: Int?` added to `postSpecimen`
+- `core/domain/repository/SpecimenRepository.kt` + `core/data/repository/SpecimenRepositoryImplementation.kt` — `updateSpecimen` widened with `sessionUnitId: UUID?`; new `getSessionUnitIdForSpecimen` method; `NO_ROWS_AFFECTED` fall-through bug fixed
+- `core/data/room/dao/SpecimenDao.kt` — `getSessionUnitIdForSpecimen` query added
+- `core/data/repository/SpecimenImageRepositoryImplementation.kt` + `core/data/repository/InferenceResultRepositoryImplementation.kt` — `NO_ROWS_AFFECTED` fall-through bug fixed
+- `core/data/upload/metadata/MetadataUploadWorker.kt` — `syncedSessionUnitsByLocalId` hoist; new form-answer / specimen FK plumbing in `doWork`, `syncFormAnswersIfNeeded`, `syncSpecimenIfNeeded`
+
+**Verification done.**
+
+- Lint: clean across all touched files.
+- PSC/LTC regression: `syncedSessionUnitsByLocalId = emptyMap()`, `getSessionUnitIdForSpecimen` returns null per specimen, every outbound `sessionUnitId` field serializes to null. Zero behavioral change.
+- HLC happy path: outbound POST bodies carry correctly-discriminated `sessionUnitId` per row in both bulk form-answer POST and per-specimen POST. Backend round-trip echoes the field; local `updateSpecimen` write-back preserves the FK.
+- Idempotency: per-row drift check now keys on `(questionId, sessionUnitId)` for form answers and on `sessionUnitId`-inclusive DTO equality for specimens. No spurious cross-scope upserts.
+
+**Deferred to PR 7 (audit & cleanup).**
+
+- Introduce `SessionUnitWithSpecimens` composite (per the §883 hint) to replace the per-row `getSessionUnitIdForSpecimen` lookup in the worker. Not blocking; one-line worker change once the composite exists.
+- Revisit naming inconsistency between `observeSessionUnitScopedFormAnswersBySessionId` (kept `BySessionId` suffix) and the new `getSessionScopedFormAnswers` / `getSessionUnitScopedFormAnswers` (suffix dropped). Either restore suffixes on the new methods or drop from the `observe…` method for symmetry.
+- Audit any *other* repo methods that may use the same `Result.Error(...)` fall-through pattern beyond the three PR 5b fixed (none found in the PR 5b sweep, but worth a follow-up grep).
+
+PR 6 (lock collection method when units exist) and PR 7 (`collection_batch/` audit & cleanup) remain independent and unblocked by this PR.
+
+---
+
+### Original PR 5b design (superseded by ✅ Merged section above — kept for design-history context)
 
 PR 5a closed cleanly — `session_unit` rows now sync server-side and the worker is ready for downstream rows to reference them. PR 5b closes the loop: thread `sessionUnitId` end-to-end through `FormQuestionDto` (consuming the `FormQuestionScopeSerializer` already on disk, resolving the PR 1 TODO in `FormQuestionMapper`), `FormAnswerDto`, `SpecimenDto`, the worker's `syncFormAnswersIfNeeded` / `syncSpecimenIfNeeded` helpers, and a single new composite (`SessionUnitWithFormAnswers`) plus a one-field widening of the existing `SpecimenWithSpecimenImagesAndInferenceResults` composite.
 

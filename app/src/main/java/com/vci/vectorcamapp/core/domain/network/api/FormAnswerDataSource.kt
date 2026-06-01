@@ -8,7 +8,10 @@ import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 
 interface FormAnswerDataSource {
     suspend fun postFormAnswersForSession(
-        sessionId: Int, formVersion: String, answers: Map<Int, FormAnswer>
+        sessionId: Int,
+        formVersion: String,
+        sessionScopedAnswers: Map<Int, FormAnswer>,
+        sessionUnitScopedAnswersBySessionUnitRemoteId: Map<Int, Map<Int, FormAnswer>>,
     ): Result<PostFormAnswersResponseDto, NetworkError>
 
     suspend fun getFormAnswersForSession(sessionId: Int): Result<GetFormAnswersResponseDto, NetworkError>

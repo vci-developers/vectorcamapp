@@ -12,11 +12,11 @@ interface FormAnswerDao {
     @Upsert
     suspend fun upsertFormAnswer(formAnswer: FormAnswerEntity)
 
-    @Query("SELECT * FROM form_answer WHERE sessionId = :sessionId")
-    suspend fun getFormAnswersBySessionId(sessionId: UUID): List<FormAnswerEntity>
+    @Query("SELECT * FROM form_answer WHERE sessionId = :sessionId AND sessionUnitId IS NULL")
+    suspend fun getSessionScopedFormAnswers(sessionId: UUID): List<FormAnswerEntity>
 
     @Query("SELECT * FROM form_answer WHERE sessionUnitId = :sessionUnitId")
-    suspend fun getFormAnswersBySessionUnitId(sessionUnitId: UUID): List<FormAnswerEntity>
+    suspend fun getSessionUnitScopedFormAnswers(sessionUnitId: UUID): List<FormAnswerEntity>
 
     @Query("SELECT * FROM form_answer WHERE sessionId = :sessionId AND sessionUnitId IS NOT NULL")
     fun observeSessionUnitScopedFormAnswersBySessionId(sessionId: UUID): Flow<List<FormAnswerEntity>>

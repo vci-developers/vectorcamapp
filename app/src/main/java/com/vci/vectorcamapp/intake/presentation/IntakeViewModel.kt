@@ -664,7 +664,7 @@ class IntakeViewModel @Inject constructor(
             val currentSessionSiteId = currentSessionCache.getSiteId()
 
             val savedFormAnswers = currentSession?.let {
-                formAnswerRepository.getFormAnswersBySessionId(it.localId)
+                formAnswerRepository.getSessionScopedFormAnswers(it.localId)
             } ?: emptyMap()
 
             combine(

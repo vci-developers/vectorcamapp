@@ -4,7 +4,6 @@ import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto
 import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionPrerequisiteExpressionDto
 import com.vci.vectorcamapp.core.data.room.entities.FormQuestionEntity
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
-import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteExpression
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteValue
 import kotlinx.serialization.json.JsonArray
@@ -52,9 +51,8 @@ fun FormQuestionDto.toDomain(): FormQuestion {
         prerequisite = this.prerequisite?.toDomain(),
         options = this.options,
         order = this.order,
-        // TODO: CHANGE THIS WITH ACTUAL DYNAMIC VALUES
-        answerScope = FormQuestionScope.SESSION,
-        isUnitIdentityComponent = false
+        answerScope = this.answerScope,
+        isUnitIdentityComponent = this.isUnitIdentityComponent
     )
 }
 
@@ -97,4 +95,3 @@ private fun JsonElement.toPrerequisiteValue(): FormQuestionPrerequisiteValue {
         else -> FormQuestionPrerequisiteValue.StringValue(toString())
     }
 }
-
