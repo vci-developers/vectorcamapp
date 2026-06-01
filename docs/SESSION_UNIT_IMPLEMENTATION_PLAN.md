@@ -24,7 +24,9 @@ This section is the single source of truth for "where are we?". It is updated at
 | └ PR 3c | `CollectionBatchForm` screen + VM + validation + saving | ✅ Merged     |
 | └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping | ✅ Shipped (slices 1, 2, 3, 5, 6 shipped; Bug 1 fixed pre-slice-7; Bug 2 fixed in slice 7 via widened `…BySessionScope(sessionId, sessionUnitId)`. The feature-wide audit & cleanup pass originally scoped here — plus the cold-VM `SavedStateHandle` follow-up (audit §12) — has been split out into PR 7.) |
 | PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ✅ Merged     |
-| PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏭️ Next up    |
+| PR 5 | Sync wiring — **sliced into 5a / 5b** | ⏭️ In progress |
+| └ PR 5a | `SessionUnit` sync (DTOs, `RemoteSessionUnitDataSource`, worker `syncSessionUnitIfNeeded` + per-unit loop) | ✅ Merged     |
+| └ PR 5b | `sessionUnitId` plumbing through `FormQuestion` / `FormAnswer` / `Specimen` DTOs + domain + mappers + worker | ⏭️ Next up    |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
 | PR 7 | `collection_batch/` feature-wide audit & cleanup pass (split out from PR 3d) | ⏳ Pending    |
 
@@ -759,11 +761,69 @@ The delete affordance — `SessionUnitRepository.deleteSessionUnitIfNoSpecimens`
 2. Build compiles green; no unresolved-reference errors anywhere in `navigation/`.
 3. Manual smoke: HLC intake → Save still lands on `CollectionBatchListScreen` (unchanged from PR 3b). PSC/LTC/OTHER intake → still lands on `ImagingScreen` (unchanged from PR 3a).
 
-### Next up — PR 5: sync wiring
+### PR 5a — Session-unit sync (✅ Merged)
 
-PR 4 closed cleanly — `hour_log/` and `add_hour/` are gone and the navigation surface is `collection_batch/`-only. PR 5 picks up the backend sync side: `RemoteSessionUnitDataSource`, the `SessionUnitDto` family, extending `FormQuestionDto` / `FormAnswerDto` / `SpecimenDto` with the new scope/identity/`sessionUnitId` fields, and teaching `MetadataUploadWorker.doWork()` to sync session units before form answers and specimens. See §10 for the full contract. PR 7 (`collection_batch/` audit & cleanup) remains independent and can be picked up at any time when feature work is paused.
+**What landed.** The first half of §10. `MetadataUploadWorker` can now sync `session_unit` rows to the backend between session sync and form-answer / specimen sync. HLC sessions hit `POST sessions/{remoteId}/units` (or `GET` on retry) for every local unit and persist the backend-assigned `remoteId` back to Room. PSC/LTC sessions have zero local units, so the new per-unit loop is a no-op — zero behavioral change for the legacy flows. No `sessionUnitId` plumbing through `FormAnswer` / `Specimen` yet; that's PR 5b.
 
-> The general PR-3 rules and slicing reference material below still apply to PR 5 / PR 6 / PR 7 when they land.
+**Files added.**
+
+- `core/data/dto/session_unit/SessionUnitDto.kt` — `id: Int? = null`, `frontendId: UUID` (with `UuidSerializer`), `sessionId: Int = -1`, `unitOrder: Int = -1`, `createdAt: Long = 0L`.
+- `core/data/dto/session_unit/PostSessionUnitRequestDto.kt` — `frontendId`, `unitOrder`, `createdAt` (all with defaults, matching the convention used across the other request DTOs).
+- `core/data/dto/session_unit/PostSessionUnitResponseDto.kt` — `message: String = ""`, `sessionUnit: SessionUnitDto = SessionUnitDto()`.
+- `core/domain/network/api/SessionUnitDataSource.kt` — two methods: `postSessionUnit(sessionUnit, sessionId)` and `getSessionUnitByFrontendId(sessionId, localId)`.
+- `core/data/network/api/RemoteSessionUnitDataSource.kt` — 1:1 transliteration of `RemoteSessionDataSource`. Endpoints: `POST sessions/{sessionId}/units`, `GET sessions/{sessionId}/units/{localId}`.
+
+**Files modified.**
+
+- `core/di/DataSourceModule.kt` — `bindSessionUnitDataSource` `@Binds` slotted directly after `bindSessionDataSource`.
+- `core/data/room/dao/SessionUnitDao.kt` — added `suspend fun getSessionUnitsForSession(sessionId): List<SessionUnitEntity>` adjacent to its `observe*` sibling.
+- `core/domain/repository/SessionUnitRepository.kt` + `core/data/repository/SessionUnitRepositoryImplementation.kt` — corresponding `getSessionUnitsForSession(sessionId): List<SessionUnit>` method.
+- `core/data/upload/metadata/MetadataUploadWorker.kt` —
+  - Constructor: injected `sessionUnitRepository: SessionUnitRepository` and `sessionUnitDataSource: SessionUnitDataSource` (alphabetically next to their siblings).
+  - `doWork()`: after the `syncedSession.remoteId` null check (≈line 148–150), an inline `forEach` over `sessionUnitRepository.getSessionUnitsForSession(syncedSession.localId)` calls the new helper and aborts via `retryOrFailure` on any per-unit error.
+  - Added `syncSessionUnitIfNeeded(localSessionUnit, syncedLocalSessionId, syncedRemoteSessionId)` — verbatim transliteration of `syncSessionIfNeeded`: build local DTO → GET by frontendId → on `NOT_FOUND` POST → map response → `upsertSessionUnit(remoteSessionUnit, syncedLocalSessionId)` **only when `localDto != remoteDto`** (same divergence-gated upsert as `syncSessionIfNeeded`).
+
+**Deviations from §10 as written.**
+
+1. **`PostSessionUnitResponseDto` field name.** Plan §10.1 declared the nested object as `unit: SessionUnitDto`; the implementation uses **`sessionUnit: SessionUnitDto`** to match the backend SRS JSON key without renaming at the boundary. Worker reads it as `postSessionUnitResult.data.sessionUnit`.
+2. **DTO sentinel defaults.** Plan §10.1 used `unitOrder: Int = 0`; the implementation uses `unitOrder: Int = -1`, matching the existing sentinel-default convention in `SessionDto` (`sessionId = -1`, `siteId = -1`). Aligns with codebase precedent — `0` is a plausible legal value for an order field, `-1` is unambiguously "missing".
+3. **`PostSessionUnitRequestDto` has defaults on every field.** Plan §10.1 declared the request DTO with non-default fields; the implementation matches the rest of the request-DTO family (every field has a default) so kotlinx-serialization never throws on deserialization of an unexpected/empty response shape.
+4. **`SessionUnitDataSource` parameter names.** Plan §10.2 used `unit: SessionUnit` / `sessionRemoteId: Int`. Implementation uses `sessionUnit: SessionUnit` / `sessionId: Int` — matches `SessionDataSource.postSession`'s naming, which does not suffix `RemoteId` on its Int session-id param.
+5. **No `syncedUnitsByLocalId: Map<UUID, SessionUnit>` return value from the worker block.** Plan §10.4 wrapped the loop in `run { … } → Map<UUID, SessionUnit>` to forward an in-memory map of synced units into the form-answer / specimen helpers in the same diff. PR 5a instead uses a plain `forEach` with no return value, mirroring the per-specimen loop idiom already present in `doWork()`. PR 5b will resolve each unit's `remoteId` on demand via `sessionUnitRepository.getSessionUnitById(localAnswer.sessionUnitId)?.remoteId` — `syncSessionUnitIfNeeded` already writes `remoteId` back to Room via `upsertSessionUnit`, so the lookup is correct and avoids leaking 5a/5b coupling through a worker-local map. **Rationale (recorded mid-PR):** the in-memory map was the outlier in a file whose every other "iterate and sync each" block is a plain `forEach` over a `List`.
+6. **Helper signature gains the local session UUID.** Plan §10.4 sketched `syncSessionUnitIfNeeded(localUnit, syncedSessionRemoteId)`. Implementation is `syncSessionUnitIfNeeded(localSessionUnit, syncedLocalSessionId, syncedRemoteSessionId)` because `SessionUnitRepository.upsertSessionUnit` requires `(sessionUnit, sessionId: UUID)` — the local session UUID has to be threaded through to the local-write side. Same shape as `syncSessionIfNeeded`'s `(localSession, localSiteId, syncedDeviceId, expectedSpecimens)` — every downstream-needed value is a positional param, no shared mutable state.
+7. **Divergence-gated upsert.** Plan §10.4 wrote the helper with an *unconditional* `sessionUnitRepository.upsertSessionUnit(remoteUnit)` at the bottom. Implementation guards it with `if (localSessionUnitDto != remoteSessionUnitDto) { … }` exactly as `syncSessionIfNeeded` does at lines 414–420. This avoids writing identical rows back to Room on every re-run when the server state hasn't drifted from local.
+8. **§10.5 is already shipped.** The "CollectionBatchList Upload action" subsection still lives in §10 of the plan body, but the cloud-upload icon dispatcher + submit-confirmation dialog landed in PR 3b / PR 3d slice 5 (see the PR 3d "Additional scope" callout). PR 5a inherits a working caller and only had to make the worker chain it triggers correctly handle the new step. No PR 5b work is needed there either.
+
+**"Read this before…" rule check.**
+
+- **Rule 1 (no speculative methods)**: only one new method on each of `SessionUnitDao` / `SessionUnitRepository` — `getSessionUnitsForSession` — and it's called in the same diff by the new worker block. `getSessionUnitById` was already shipped in PR 3d and is reused unchanged.
+- **Rule 2 (widen, don't proliferate)**: `getSessionUnitsForSession` is the one case where a `get*` sibling to the existing `observe*` was justified — different return shape (`List` vs `Flow<List>`), different invocation contract (one-shot vs cold-stream), same canonical pair pattern already used elsewhere in the core data layer.
+- **Rule 4 (match existing conventions)**: `RemoteSessionUnitDataSource` is a byte-for-byte mirror of `RemoteSessionDataSource`; `syncSessionUnitIfNeeded` is a byte-for-byte mirror of `syncSessionIfNeeded`. No new patterns introduced.
+
+**How to verify PR 5a locally.**
+
+1. **HLC end-to-end.** Create an HLC session → create 2 collection batches → image one specimen in each → tap Upload from the list screen → observe `POST sessions/{frontendId}` → 2× `POST sessions/{remoteId}/units`. Local Room: each `session_unit.remoteId` is populated; second upload run on the same session re-hits `GET …/units/{localId}` and short-circuits (no second POST, no second upsert because `localDto == remoteDto`).
+2. **PSC / LTC regression check.** Create a PSC session → image specimens → upload. `getSessionUnitsForSession` returns `[]`, the new `forEach` block is a no-op, every existing assertion on the form-answer/specimen flow still holds. Zero behavioral change.
+3. **Retry semantics.** Force a transient network failure mid-unit-sync → worker hits `retryOrFailure` with `MAX_RETRIES = 5` exactly as it does for `syncSessionIfNeeded`. On retry, the GET short-circuits the already-synced unit and resumes from the next pending one.
+
+### Next up — PR 5b: `sessionUnitId` plumbing
+
+PR 5a closed cleanly — `session_unit` rows now sync server-side and the worker is ready for downstream rows to reference them. PR 5b closes the loop: thread `sessionUnitId` end-to-end through `FormQuestionDto` (consuming the `FormQuestionScopeSerializer` already on disk, resolving the PR 1 TODO in `FormQuestionMapper`), `FormAnswerDto`, `SpecimenDto`, their domain models, their mappers, and the worker's `syncFormAnswersIfNeeded` / `syncSpecimenIfNeeded` helpers. Per the deviation #5 above, the worker will resolve each unit's `remoteId` on demand via `sessionUnitRepository.getSessionUnitById(...)` rather than threading an in-memory map forward from 5a. See §10.3 and §10.4 for the contract; the as-shipped 5a worker shape (see this subsection's deviations) supersedes the §10.4 sketch.
+
+The remaining 5b checklist:
+
+1. **`FormQuestion` wire-up.** `FormQuestionDto` grows `answerScope: FormQuestionScope` (with `@Serializable(with = FormQuestionScopeSerializer::class)`) and `isUnitIdentityComponent: Boolean = false`. `FormQuestionMapper.toDomain(FormQuestionDto)` drops the hardcoded PR-1 TODO at lines 55–57.
+2. **DTO widening.** `FormAnswerDto`, `PostFormAnswersRequestDto.FormAnswerRequestItemDto`, `SpecimenDto`, `PostSpecimenRequestDto` each gain `sessionUnitId: Int? = null`.
+3. **Domain widening.** `FormAnswer` and `Specimen` each gain `sessionUnitId: UUID? = null`.
+4. **Mapper fix-ups.** `FormAnswerMapper` and `SpecimenMapper` propagate `sessionUnitId` both directions (entity ↔ domain). `SpecimenRepositoryImplementation.updateSpecimen` (line 42) replaces the hardcoded `specimen.toEntity(sessionId, null)` with `specimen.toEntity(sessionId, specimen.sessionUnitId)`.
+5. **Data source signatures.** `SpecimenDataSource.postSpecimen` and `RemoteSpecimenDataSource.postSpecimen` accept `sessionUnitId: Int?` and forward into `PostSpecimenRequestDto`. `RemoteFormAnswerDataSource.postFormAnswersForSession` forwards each answer's `sessionUnitId` into its request item.
+6. **Worker plumbing.** `syncFormAnswersIfNeeded` resolves each outbound answer's `sessionUnitId` via `sessionUnitRepository.getSessionUnitById(answer.sessionUnitId)?.remoteId`; on the upsert-back path passes the local UUID through (no inverse map needed — same shape as how the existing helper handles `sessionId`). `syncSpecimenIfNeeded` does the same with a single resolved `sessionUnitRemoteId: Int?` because it operates on one specimen at a time.
+7. **Call-site fix-ups (Convention #8).** `ImagingViewModel` / `ImagingState` / `CollectionBatchFormViewModel` / `IntakeViewModel` — every `FormAnswer(...)` and `Specimen(...)` constructor site passes `sessionUnitId` explicitly (`state.sessionUnitId` for HLC unit-scoped sites, `null` for PSC/LTC/SESSION-scoped sites).
+8. **Fixture cleanup.** The `testColombiaDebugUnitTest` form-question fixtures flagged in the Pre-PR-3 callout need `sessionUnitId = null` propagation onto their answer/specimen literals once the domain models widen.
+
+PR 7 (`collection_batch/` audit & cleanup) remains independent and can be picked up at any time when feature work is paused.
+
+> The general PR-3 rules and slicing reference material below still apply to PR 5b / PR 6 / PR 7 when they land.
 
 > ## ⚠️ Read this before writing any code in PR 3
 >
@@ -1964,6 +2024,8 @@ abstract fun bindSessionUnitDataSource(
 Adjust `RemoteFormAnswerDataSource` and `RemoteSpecimenDataSource` POST bodies to include `sessionUnitId` (the synced unit's `remoteId`) where appropriate. **Pass `null` for legacy PSC/LTC flows so they continue unchanged.**
 
 ### 10.4 `MetadataUploadWorker.doWork()` additions
+
+> **Status — PR 5a shipped the session-unit half of this section.** The as-shipped worker shape diverges from the sketch below in several places (no `run { … } → Map` return value; helper takes the local session UUID; divergence-gated upsert; response field is `sessionUnit` not `unit`). See the **PR 5a — Session-unit sync (✅ Merged)** subsection in *Implementation Status* for the authoritative deviations. The form-answer and specimen plumbing described at the bottom of this section is the PR 5b remit.
 
 `app/src/main/java/com/vci/vectorcamapp/core/data/upload/metadata/MetadataUploadWorker.kt`:
 
