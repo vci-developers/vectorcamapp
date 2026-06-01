@@ -22,7 +22,7 @@ This section is the single source of truth for "where are we?". It is updated at
 | └ PR 3a | Destination contract + nav scaffold + strategy flip | ✅ Merged     |
 | └ PR 3b | `CollectionBatchList` screen + VM                   | ✅ Merged     |
 | └ PR 3c | `CollectionBatchForm` screen + VM + validation + saving | ✅ Merged     |
-| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping + audit | ⏭️ In progress (slices 1, 2, 3, 5, 6 shipped) |
+| └ PR 3d | Edit-mode hydration + reactive banner + identity-resolver + submit-dialog + Imaging scoping + audit | ⏭️ In progress (slices 1, 2, 3, 5 shipped; slice 6 partially shipped — read-path gap, see Bug 2; Bug 1 fixed pre-slice-7; slice 7 covers audit + Bug 2 + cold-VM SavedStateHandle fix (audit §12)) |
 | PR 4 | Retire legacy `hour_log/` + `add_hour/`               | ⏳ Pending    |
 | PR 5 | Sync wiring (DTOs, RemoteSessionUnitDataSource, MetadataUploadWorker, `sessionUnitId` plumbing in FormAnswer/Specimen DTOs) | ⏳ Pending |
 | PR 6 | Lock collection method when units exist               | ⏳ Pending    |
@@ -435,7 +435,7 @@ Before: `state.collectionBatchFormErrors.duplicateIdentity` only updated when th
 
 **Naming drift resolved in this slice.** Audit-pass §2's third bullet (`existingAnswersBySessionUnitId` vs `answersBySessionUnitId` drift between the form and list VMs) is closed — the list VM's combine-lambda parameter and field were renamed to `existingAnswersBySessionUnitId` to match the form VM. Both VMs now use the same name for the same shape returned by the same repo call.
 
-
+**Slice 3 — `CollectionBatchIdentityResolver` + list-card identity-label upgrade (✅ Shipped).** Closes Deferred-to-3d #3.
 
 Before: every collection-batch card on `CollectionBatchListScreen` rendered `"Batch ${unit.unitOrder}"` regardless of identity values — a PR 3b placeholder. After: the card title is the joined identity string (e.g. `"18:00 · 19:00 · Indoor"`), falling back to `"Batch ${unit.unitOrder}"` only when no identity values exist.
 
@@ -541,6 +541,73 @@ Before: `ImagingScreen` was session-blind — every captured specimen was stored
 2. **"Yes, Confirm" button stays red** (`MaterialTheme.colors.error`) when confirming `ReturnToCollectionBatchList`. The destructive-style coloring reads slightly off for what is pure navigation, but it preserves visual consistency with the other two terminal actions inside the same dialog. Audit-pass §10 candidate.
 3. **Audit-pass §7 (magic-string promotion)** has a new candidate: the "Leave imaging?" / "Exit session?" copy added by this slice should move into `strings.xml` alongside all the other in-line dialog strings already flagged.
 
+### PR 3d follow-up — Bugs discovered post-slice-6 (⏭️ Fix before / during slice 7)
+
+Two bugs surfaced during post-slice-6 manual testing. Recording here so slice 7 picks them up explicitly rather than relying on the audit pass to rediscover them.
+
+**Bug 1 — Duplicate batch / false-flag banner on device-back from imaging (create mode). ✅ Fixed pre-slice-7.**
+
+*Repro:* (1) Tap "+" on `CollectionBatchListScreen`, land on `CollectionBatchFormScreen` in create mode (route `CollectionBatchForm(sessionId=…, sessionUnitId=null)`). (2) Fill identity + non-identity fields, tap "Continue to Imaging". Persist succeeds, navigates to imaging. (3) On `ImagingScreen`, press device back. (4) Form still on stack; user sees either a `DUPLICATE_IDENTITY` banner or (after process-death recovery) a cleared form. If the user re-submits, a **second** `SessionUnit` row gets inserted in DB with the same identity as the first.
+
+*Root cause — the actual root cause (not the navigation back-stack).* `SubmitSessionUnitForm` generated the `localId` at **submit time** via `localId = sessionUnitId ?: UUID.randomUUID()`. Each invocation in create mode produced a *fresh* UUID. Combined with `sessionUnitRepository.upsertSessionUnit(...)` being a true upsert keyed on `localId`, re-submission inserted a brand-new row each time. The reactive duplicate-identity validator then correctly observed the previously-persisted row through `observeSessionUnitScopedFormAnswersBySessionId` and flagged `DUPLICATE_IDENTITY` — because the validator's `editingSessionUnitId` argument was the **route's** `sessionUnitId` (still `null`), the validator had no way to recognize the existing row as the form's own previously-persisted output.
+
+*The intake parallel that gave away the root cause.* `IntakeState.session` is initialized as `Session(localId = UUID.randomUUID(), ...)` — **generated once at state construction** (`IntakeState.kt:28-45`). `IntakeViewModel.SubmitIntakeForm` then calls `sessionRepository.upsertSession(session, ...)` with that stable id. Re-submit on the same VM instance reuses the same `localId` → upsert overwrites the existing row → no duplicate. Intake had this right from PR 1; the collection-batch form's "fresh UUID at submit" pattern diverged from precedent.
+
+*Was the reactive `observe*` Flow in slice 2 responsible?* No — it surfaced the symptom (banner immediately visible on the stale form instead of a toast appearing on re-submit), but didn't introduce the duplicate-insert behaviour. Pre-slice-2 the same scenario would have inserted a duplicate row and then shown a `DUPLICATE_IDENTITY` toast on the *second* re-submit — quieter UX, identical correctness gap (duplicate already in DB before the toast fires).
+
+*Fix applied (in `CollectionBatchFormViewModel.kt`, post-slice-6, pre-slice-7):* mirror intake's pattern. Generate a stable `draftSessionUnitId` at VM construction:
+
+```kotlin
+private val draftSessionUnitId: UUID = sessionUnitId ?: UUID.randomUUID()
+```
+
+Use this id consistently in three places previously inconsistent: (a) `editingSessionUnitId = draftSessionUnitId` in the reactive validator call (so the form's own just-persisted row is self-excluded — no false-flag banner if the user comes back to the form); (b) the persist branch's `effectiveSessionUnit.localId = draftSessionUnitId` (instead of a fresh `UUID.randomUUID()`); (c) `formAnswerRepository.upsertFormAnswer(..., draftSessionUnitId, ...)` for the answers loop. Also collapsed `loadFormDetails`' `savedFormAnswers = sessionUnitId?.let { … } ?: emptyMap()` to a direct `formAnswerRepository.getFormAnswersBySessionUnitId(draftSessionUnitId)` — identical behaviour in both modes (in create mode the query returns empty since no row exists for the fresh UUID; in edit mode `draftSessionUnitId == sessionUnitId` so the query is unchanged).
+
+*Net result.* Re-submit in create mode now upserts the same row instead of inserting a duplicate, exactly like intake. Banner doesn't false-flag because the validator self-excludes via `editingSessionUnitId`. No navigation changes needed — the back-stack stays as-is, user returns to the form with their just-submitted answers preserved in memory (warm back-stack) or freshly re-loaded from DB (post-process-death within the same VM instance window).
+
+*Coverage note — process death across VM instances.* The warm-VM fix above does **not** close one residual scenario: OS-initiated process death (memory pressure, "Don't keep activities" dev option) while imaging is on top of the form. On recents-resume the back-stack is restored from `SavedStateHandle`; the form entry's stored route args are still `(sessionId, sessionUnitId=null)` (the route was never updated post-persist), so the reconstructed VM regenerates a fresh `draftSessionUnitId`. If the user then re-submits, the slice-2 reactive banner correctly identifies the previously-persisted row as a different unit (because `editingSessionUnitId` is the new fresh UUID) and gates `SubmitSessionUnitForm` on `hasDuplicateIdentityError`. **Data is therefore protected** (the duplicate never lands in `session_unit`), but the user lands on a banner-flagged form that refuses to submit — a recoverable-but-confusing UX. Diverges from intake's parity claim above: intake closes this scenario because `CurrentSessionCache` (DataStore-backed) resurrects the persisted `Session.localId` on cold-VM `loadFormDetails`, after which all the same idempotency mechanics kick in.
+
+*Why we don't mirror intake's cache approach.* The intake `CurrentSessionCache` works because intake has cardinality of one ("the active session") and the cache models app-wide persistent state for the active capture. A `CurrentSessionUnitDraftCache` would model semantics our feature does not have (an app-wide persistent "current draft batch") and would require explicit clearance hooks at every "this draft is no longer current" boundary (back-out from form to list, successful imaging exit, session completion, app swipe-kill recovery). `SavedStateHandle` is the natural fit instead — its lifetime is exactly "this back-stack entry exists", which is precisely the lifetime the draft has. See the SavedStateHandle follow-up item §12 below for the proposed fix.
+
+*Why this gap surfaced now and not pre-slice-2.* Slice 2's reactive `observe*` Flow made the symptom visible immediately on cold-VM re-entry (banner up before submit) rather than at submit-time (toast on second-submit). The latent gap pre-existed: pre-slice-2 the same scenario would have inserted a duplicate row at the cold-VM's *first* submit before the toast fired, because the imperative submit-time validator only ran once and used the route's null `editingSessionUnitId`. The banner is therefore protective in both the warm and cold cases — slice 2's reactivity strengthened the safety net, not weakened it.
+
+*Reachability summary (eight scenarios considered).* (1) Process death pre-submit → no duplicate possible (no prior row). (2) **Process death while imaging is on top → reachable, banner gates DB, UX confusing.** (3) Process death in the post-submit-pre-navigate sliver → theoretical, identical to (2). (4) Process death after imaging exited → depends on whether the form entry survived imaging's `popBackStack`; if not, no issue. (5) Back-out + re-enter → handled today (ViewModelStore clears with the popped entry). (6) App swipe-killed + relaunched → handled today (back-stack rebuilt fresh). (7) Configuration change → VM survives. (8) Multi-batch sequential creates → each is a fresh entry. Only (2) and (3) (and conditionally (4)) are open — all close with the same `SavedStateHandle` write at VM construction.
+
+---
+
+**Bug 2 — `ImagingScreen` shows specimens across all units of the session, not just the unit it was opened for.**
+
+*Repro:* Create unit A, image one specimen, return to list. Create unit B, navigate into imaging. Both A's and B's specimens are visible in the pager.
+
+*Root cause:* slice 6 scoped the **write path** (`ImagingViewModel:519` — `specimenRepository.insertSpecimen(specimen, sessionId, sessionUnitId)` correctly tags new specimens with the route's `sessionUnitId`) but did NOT scope the **read path**. `ImagingViewModel._specimensWithImagesAndInferenceResults` still calls `specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(session.localId)` (`ImagingViewModel:101`), which is session-scoped — no `sessionUnitId` filter. Storage is correct, observation is not.
+
+*Fix shape (slice 7 should apply this):* add an `observe*BySessionUnit(sessionUnitId)` sibling to `SpecimenRepository` + `SpecimenDao` (mirrors slice 2's `FormAnswerRepository.observe…BySessionUnit*` pattern). Then in `ImagingViewModel._specimensWithImagesAndInferenceResults`, fork on `sessionUnitId != null`:
+
+```kotlin
+private val _specimensWithImagesAndInferenceResults =
+    flow {
+        val session = currentSessionCache.getSession()
+        if (session == null) {
+            emit(emptyList())
+        } else {
+            val source = if (sessionUnitId != null) {
+                specimenRepository.observeSpecimenImagesAndInferenceResultsBySessionUnit(sessionUnitId)
+            } else {
+                specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(session.localId)
+            }
+            source.collect { emit(it) }
+        }
+    }
+```
+
+The session-scoped variant is preserved for legacy non-unit-scoped session types (where `Destination.Imaging.sessionUnitId == null`), matching how slice 6 already gates the dialog buttons on `state.sessionUnitId == null`.
+
+*Related copy bug.* `ImagingScreen.kt:228` hardcodes `"Specimen ${page + 1} of ${size} in this Session"`. In unit-scoped mode the copy reads incorrectly ("in this Session" suggests all specimens across the session). Audit-pass §7 (magic strings → `strings.xml`) covers the literal-promotion side; while we're in there, the unit-scoped variant should say something like `"in this batch"`. Fold into the slice 7 imaging-scoping fix.
+
+*Plan-historical correction.* The slice 6 writeup (§500-§525, currently marked "✅ Shipped — closes Deferred-to-3d #7") should be annotated to record that the read-path scoping was missed; the Deferred-to-3d #7 strike-through at §311 is misleading until both halves of imaging scoping (write *and* read) land.
+
+---
+
 ### PR 3d follow-up — Audit & cleanup pass (⏭️ Required before PR 3 closes)
 
 The slice-by-slice cadence of PR 3d has been productive but has accumulated micro-debt that should not bleed into PR 4. **Before declaring PR 3 done, run a dedicated cleanup pass across the entire `collection_batch/` feature surface.** Scope at minimum the following classes of issue — but treat the list as a starting point, not a ceiling. The goal is *no surprising surface left*.
@@ -616,6 +683,28 @@ E.g. `CollectionBatchCard(title, sessionUnit, specimenCount, onClick, modifier)`
 **11. Anything else.**
 
 The list above is the seeded set from slice 3 review and the slice 5/6 review additions. The audit should be approached as a *fresh read* of the feature — open every file and ask "would a new contributor understand this in one read, or does it need a comment / rename / refactor to be obvious?". Items found during the audit should be added here so future audits can see the cumulative cleanup history.
+
+**12. Persist `draftSessionUnitId` to `SavedStateHandle` (closes Bug 1 cold-VM coverage gap).**
+
+The Bug 1 fix (`private val draftSessionUnitId: UUID = sessionUnitId ?: UUID.randomUUID()`) makes re-submission idempotent within a warm VM, but a cold VM (OS-initiated process death + recents-resume while imaging is on top) regenerates a fresh UUID and triggers the banner false-flag described in Bug 1's "Coverage note — process death" subsection above. Close it in slice 7 with a three-line change in `CollectionBatchFormViewModel`:
+
+```kotlin
+private val draftSessionUnitId: UUID = sessionUnitId
+    ?: savedStateHandle.get<String>(KEY_DRAFT_SESSION_UNIT_ID)?.let(UUID::fromString)
+    ?: UUID.randomUUID().also {
+        savedStateHandle[KEY_DRAFT_SESSION_UNIT_ID] = it.toString()
+    }
+
+companion object {
+    private const val KEY_DRAFT_SESSION_UNIT_ID = "draftSessionUnitId"
+}
+```
+
+Resolution order at VM construction: (a) edit-mode route arg wins; (b) else previously-written `SavedStateHandle` value wins (this is the cold-VM cure — the prior VM wrote it before death); (c) else fresh UUID, immediately written so any future cold-VM reconstruction within this back-stack entry resurrects the same id.
+
+**Why `SavedStateHandle` and not a `CurrentDraftSessionUnitCache`.** The cache shape would model app-wide persistent draft semantics our feature doesn't have, and would require explicit clearance hooks at every "draft is no longer current" boundary (back-out from form, imaging exit, session completion, swipe-kill recovery). `SavedStateHandle`'s lifetime is exactly the back-stack entry's lifetime — pop the entry, the value dies, no manual clearance needed. Matches the route-arg family that already carries `sessionId` / `sessionUnitId` for the same reasons (synchronous availability at field-initializer time, process-death survival via the standard navigation mechanism). Full analysis in Bug 1's "Coverage note — process death" subsection above.
+
+**Cost / benefit.** Three lines, one file, no new abstractions, no DI changes, no nav-graph changes. Closes Scenarios 2/3/4 from the Bug 1 reachability summary. Leaves Scenarios 5/6/8 untouched (correctly — those are intended fresh-draft paths, and `SavedStateHandle`'s auto-clear-on-pop preserves the right semantics there).
 
 **Recommended ordering:** run the audit *after* slice 6 (Imaging scoping) lands and *before* PR 3 is declared closed. Reasons:
 

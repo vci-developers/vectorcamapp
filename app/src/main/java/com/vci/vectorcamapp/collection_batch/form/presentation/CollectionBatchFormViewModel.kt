@@ -56,12 +56,9 @@ class CollectionBatchFormViewModel @Inject constructor(
     private val sessionId: UUID = UUID.fromString(destination.sessionId)
     private val sessionUnitId: UUID? = destination.sessionUnitId?.let(UUID::fromString)
 
-    private val _state = MutableStateFlow(
-        CollectionBatchFormState(
-            sessionId = sessionId,
-            sessionUnitId = sessionUnitId
-        )
-    )
+    private val draftSessionUnitId: UUID = sessionUnitId ?: UUID.randomUUID()
+
+    private val _state = MutableStateFlow(CollectionBatchFormState())
     private val _existingAnswersBySessionUnitId =
         formAnswerRepository.observeSessionUnitScopedFormAnswersBySessionId(sessionId)
 
@@ -74,7 +71,7 @@ class CollectionBatchFormViewModel @Inject constructor(
                 formQuestions = state.formQuestions,
                 draftAnswersByQuestionId = state.formAnswersByQuestionId,
                 existingAnswersBySessionUnitId = existingAnswersBySessionUnitId,
-                editingSessionUnitId = sessionUnitId,
+                editingSessionUnitId = draftSessionUnitId,
             ).errorOrNull()
         state.copy(
             collectionBatchFormErrors = state.collectionBatchFormErrors.copy(
@@ -84,10 +81,7 @@ class CollectionBatchFormViewModel @Inject constructor(
     }.onStart {
         loadFormDetails()
     }.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), CollectionBatchFormState(
-            sessionId = sessionId,
-            sessionUnitId = sessionUnitId
-        )
+        viewModelScope, SharingStarted.WhileSubscribed(5000), CollectionBatchFormState()
     )
 
     private val _events = Channel<CollectionBatchFormEvent>()
@@ -165,11 +159,10 @@ class CollectionBatchFormViewModel @Inject constructor(
                         emitError(CollectionBatchFormError.DUPLICATE_IDENTITY)
                         return@launch
                     } else {
-                        val existingSessionUnit = sessionUnitId?.let {
-                            sessionUnitRepository.getSessionUnitById(it)
-                        }
+                        val existingSessionUnit =
+                            sessionUnitRepository.getSessionUnitById(draftSessionUnitId)
                         val effectiveSessionUnit = existingSessionUnit ?: SessionUnit(
-                            localId = sessionUnitId ?: UUID.randomUUID(),
+                            localId = draftSessionUnitId,
                             remoteId = null,
                             unitOrder = sessionUnitRepository.getMaxSessionUnitOrderForSession(
                                 sessionId
@@ -189,7 +182,7 @@ class CollectionBatchFormViewModel @Inject constructor(
 
                             for ((questionId, answer) in formAnswersByQuestionId) {
                                 formAnswerRepository.upsertFormAnswer(
-                                    answer, sessionId, effectiveSessionUnit.localId, questionId,
+                                    answer, sessionId, draftSessionUnitId, questionId,
                                 ).onError { error ->
                                     emitError(error)
                                     return@runAsTransaction false
@@ -202,7 +195,7 @@ class CollectionBatchFormViewModel @Inject constructor(
                         if (success) {
                             _events.send(
                                 CollectionBatchFormEvent.NavigateToImagingScreen(
-                                    effectiveSessionUnit.localId
+                                    draftSessionUnitId
                                 )
                             )
                         }
@@ -233,9 +226,8 @@ class CollectionBatchFormViewModel @Inject constructor(
                 )
             }.orEmpty()
 
-            val savedFormAnswers = sessionUnitId?.let {
-                formAnswerRepository.getFormAnswersBySessionUnitId(it)
-            } ?: emptyMap()
+            val savedFormAnswers =
+                formAnswerRepository.getFormAnswersBySessionUnitId(draftSessionUnitId)
 
             _state.update {
                 it.copy(
