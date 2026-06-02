@@ -464,28 +464,20 @@ class MetadataUploadWorker @AssistedInject constructor(
                 createdAt = localSessionUnit.createdAt,
             )
 
-            val remoteSessionUnitDto = when (val remoteSessionUnitResult =
-                sessionUnitDataSource.getSessionUnitByFrontendId(
-                    syncedRemoteSessionId, localSessionUnit.localId
-                )) {
-                is DomainResult.Success -> remoteSessionUnitResult.data
-                is DomainResult.Error -> {
-                    when (remoteSessionUnitResult.error) {
-                        NetworkError.NOT_FOUND -> {
-                            val postSessionUnitResult = sessionUnitDataSource.postSessionUnit(
-                                localSessionUnit, syncedRemoteSessionId
-                            )
-                            when (postSessionUnitResult) {
-                                is DomainResult.Success -> postSessionUnitResult.data.sessionUnit
-                                is DomainResult.Error -> return DomainResult.Error(
-                                    postSessionUnitResult.error
-                                )
-                            }
-                        }
+            val remoteSessionUnitsDto = when (val remoteSessionUnitResult =
+                sessionUnitDataSource.getSessionUnitForSession(syncedRemoteSessionId)) {
+                is DomainResult.Success -> remoteSessionUnitResult.data.units
+                is DomainResult.Error -> return DomainResult.Error(remoteSessionUnitResult.error)
+            }
 
-                        else -> return DomainResult.Error(remoteSessionUnitResult.error)
+            val remoteSessionUnitDto = when (val existingSessionUnit = remoteSessionUnitsDto.firstOrNull { it.frontendId == localSessionUnit.localId }) {
+                null -> {
+                    when (val postSessionUnitResult = sessionUnitDataSource.postSessionUnit(localSessionUnit, syncedRemoteSessionId)) {
+                        is DomainResult.Success -> postSessionUnitResult.data.sessionUnit
+                        is DomainResult.Error -> return DomainResult.Error(postSessionUnitResult.error)
                     }
                 }
+                else -> existingSessionUnit
             }
 
             val remoteSessionUnit = SessionUnit(

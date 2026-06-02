@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.data.network.api
 
+import com.vci.vectorcamapp.core.data.dto.session_unit.GetSessionUnitsResponseDto
 import com.vci.vectorcamapp.core.data.dto.session_unit.PostSessionUnitRequestDto
 import com.vci.vectorcamapp.core.data.dto.session_unit.PostSessionUnitResponseDto
 import com.vci.vectorcamapp.core.data.dto.session_unit.SessionUnitDto
@@ -37,13 +38,11 @@ class RemoteSessionUnitDataSource @Inject constructor(
         }
     }
 
-    override suspend fun getSessionUnitByFrontendId(
-        sessionId: Int,
-        localId: UUID
-    ): Result<SessionUnitDto, NetworkError> {
-        return safeCall<SessionUnitDto> {
-            httpClient.get(constructUrl("sessions/$sessionId/units/$localId"))
+    override suspend fun getSessionUnitForSession(
+        sessionId: Int
+    ): Result<GetSessionUnitsResponseDto, NetworkError> {
+        return safeCall<GetSessionUnitsResponseDto> {
+            httpClient.get(constructUrl("sessions/$sessionId/units"))
         }
     }
-
 }

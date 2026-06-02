@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.domain.network.api
 
+import com.vci.vectorcamapp.core.data.dto.session_unit.GetSessionUnitsResponseDto
 import com.vci.vectorcamapp.core.data.dto.session_unit.PostSessionUnitResponseDto
 import com.vci.vectorcamapp.core.data.dto.session_unit.SessionUnitDto
 import com.vci.vectorcamapp.core.domain.model.SessionUnit
@@ -12,7 +13,7 @@ interface SessionUnitDataSource {
         sessionUnit: SessionUnit, sessionId: Int
     ): Result<PostSessionUnitResponseDto, NetworkError>
 
-    suspend fun getSessionUnitByFrontendId(
-        sessionId: Int, localId: UUID
-    ): Result<SessionUnitDto, NetworkError>
+    suspend fun getSessionUnitForSession(
+        sessionId: Int
+    ): Result<GetSessionUnitsResponseDto, NetworkError>
 }
