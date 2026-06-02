@@ -121,6 +121,9 @@
     <!-- Imaging error: Specimen ID recognition failed -->
     <string name="imaging_error_specimen_id_recognition_failed">Could not read the specimen ID. Make sure the label is clear and well-lit.</string>
 
+    <!-- Imaging error: Specimen ID used in another collection batch -->
+    <string name="imaging_error_specimen_id_used_in_another_collection_batch">This specimen ID is already used in another collection batch in this session.</string>
+
     <!-- Imaging error: Specimen detection failed -->
     <string name="imaging_error_specimen_detection_failed">Could not detect a specimen in the image. Try taking a clearer photo.</string>
     

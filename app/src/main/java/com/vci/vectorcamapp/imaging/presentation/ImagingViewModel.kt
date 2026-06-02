@@ -508,6 +508,20 @@ class ImagingViewModel @Inject constructor(
                     val existingSpecimen = specimenRepository.getSpecimenByIdAndSessionId(
                         specimenId, currentSession.localId
                     )
+
+                    if (existingSpecimen != null) {
+                        val existingSessionUnitId = specimenRepository.getSessionUnitIdForSpecimen(
+                            specimenId, currentSession.localId
+                        )
+                        if (existingSessionUnitId != _state.value.sessionUnitId) {
+                            _state.update {
+                                it.copy(specimenIdError = ImagingError.SPECIMEN_ID_USED_IN_ANOTHER_COLLECTION_BATCH)
+                            }
+                            emitError(ImagingError.SPECIMEN_ID_USED_IN_ANOTHER_COLLECTION_BATCH)
+                            return@launch
+                        }
+                    }
+
                     val shouldProcessFurther = when {
                         existingSpecimen != null -> existingSpecimen.shouldProcessFurther
                         _state.value.currentSpecimen.shouldProcessFurther -> true
