@@ -15,9 +15,6 @@ interface SiteDao {
     @Query("SELECT * FROM site WHERE programId = :programId")
     fun observeAllSitesByProgramId(programId: Int): Flow<List<SiteEntity>>
 
-    @Query("SELECT * FROM site WHERE id = :id")
-    suspend fun getSiteById(id: Int): SiteEntity?
-
     @Query("UPDATE site SET isActive = 0 WHERE programId = :programId")
     suspend fun setAllSitesInactiveForProgram(programId: Int)
 }

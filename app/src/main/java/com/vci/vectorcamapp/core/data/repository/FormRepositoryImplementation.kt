@@ -27,10 +27,6 @@ class FormRepositoryImplementation @Inject constructor(
         }
     }
 
-    override fun observeFormsByProgramId(programId: Int): Flow<List<Form>> {
-        return formDao.observeFormsByProgramId(programId).map { entities -> entities.map { it.toDomain() } }
-    }
-
     override suspend fun getFormById(id: Int): Form? {
         return formDao.getFormById(id)?.toDomain()
     }

@@ -10,8 +10,13 @@ import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
+import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
+import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
@@ -38,8 +43,13 @@ class CompleteSessionDetailsViewModelTest {
     private lateinit var context: Context
     private lateinit var sessionRepository: SessionRepository
     private lateinit var specimenRepository: SpecimenRepository
-    private lateinit var errorMessageEmitter: ErrorMessageEmitter
+    private lateinit var sessionUnitRepository: SessionUnitRepository
+    private lateinit var formAnswerRepository: FormAnswerRepository
+    private lateinit var formQuestionRepository: FormQuestionRepository
     private lateinit var formRepository: FormRepository
+    private lateinit var programRepository: ProgramRepository
+    private lateinit var deviceCache: DeviceCache
+    private lateinit var errorMessageEmitter: ErrorMessageEmitter
 
     private val testSessionId = UUID.randomUUID()
     private val testSession = Session(
@@ -68,7 +78,9 @@ class CompleteSessionDetailsViewModelTest {
         villageName = "Test Village",
         houseNumber = "123",
         healthCenter = "Test Center",
-        isActive = true
+        isActive = true,
+        name = null,
+        locationHierarchy = null
     )
 
     @Before
@@ -78,11 +90,16 @@ class CompleteSessionDetailsViewModelTest {
 
         sessionRepository = mockk(relaxed = true)
         specimenRepository = mockk(relaxed = true)
-        errorMessageEmitter = mockk(relaxed = true)
+        sessionUnitRepository = mockk(relaxed = true)
+        formAnswerRepository = mockk(relaxed = true)
+        formQuestionRepository = mockk(relaxed = true)
         formRepository = mockk(relaxed = true)
+        programRepository = mockk(relaxed = true)
+        deviceCache = mockk(relaxed = true)
+        errorMessageEmitter = mockk(relaxed = true)
         coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
 
-        every { specimenRepository.observeSpecimenImagesAndInferenceResultsBySession(any()) } returns
+        every { specimenRepository.observeSpecimenImagesAndInferenceResultsBySessionScope(any(), any()) } returns
             MutableStateFlow(emptyList())
     }
 
@@ -102,8 +119,13 @@ class CompleteSessionDetailsViewModelTest {
             savedStateHandle = savedStateHandle,
             sessionRepository = sessionRepository,
             specimenRepository = specimenRepository,
+            sessionUnitRepository = sessionUnitRepository,
+            formAnswerRepository = formAnswerRepository,
+            formQuestionRepository = formQuestionRepository,
             formRepository = formRepository,
-            errorMessageEmitter = errorMessageEmitter
+            programRepository = programRepository,
+            deviceCache = deviceCache,
+            errorMessageEmitter = errorMessageEmitter,
         )
     }
 
@@ -150,7 +172,12 @@ class CompleteSessionDetailsViewModelTest {
             savedStateHandle = savedStateHandle,
             sessionRepository = sessionRepository,
             specimenRepository = specimenRepository,
+            sessionUnitRepository = sessionUnitRepository,
+            formAnswerRepository = formAnswerRepository,
+            formQuestionRepository = formQuestionRepository,
             formRepository = formRepository,
+            programRepository = programRepository,
+            deviceCache = deviceCache,
             errorMessageEmitter = errorMessageEmitter,
         )
 

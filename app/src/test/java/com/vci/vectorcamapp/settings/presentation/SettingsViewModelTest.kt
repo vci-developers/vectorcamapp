@@ -130,7 +130,6 @@ class SettingsViewModelTest {
         siteRepository = siteRepository,
         sessionRepository = sessionRepository,
         formRepository = formRepository,
-        formAnswerRepository = formAnswerRepository,
         formQuestionRepository = formQuestionRepository,
         defaultIntakeFieldsCache = defaultIntakeFieldsCache,
         currentSessionCache = currentSessionCache,

@@ -8,6 +8,7 @@ import com.vci.vectorcamapp.core.data.repository.InferenceResultRepositoryImplem
 import com.vci.vectorcamapp.core.data.repository.LocationTypeRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.ProgramRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SessionRepositoryImplementation
+import com.vci.vectorcamapp.core.data.repository.SessionUnitRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SiteRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SpecimenImageRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SpecimenRepositoryImplementation
@@ -21,6 +22,7 @@ import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
@@ -41,6 +43,12 @@ abstract class CoreRepositoryModule {
     abstract fun bindSessionRepository(
         sessionRepositoryImplementation: SessionRepositoryImplementation
     ): SessionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSessionUnitRepository(
+        sessionUnitRepositoryImplementation: SessionUnitRepositoryImplementation
+    ): SessionUnitRepository
 
     @Binds
     @Singleton

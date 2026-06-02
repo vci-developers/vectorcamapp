@@ -10,6 +10,5 @@ data class DefaultIntakeFieldsCacheDto(
     val hardwareId: String? = null,
     val district: String = "",
     val villageName: String = "",
-    val formAnswers: Map<Int, String> = emptyMap(),
     val locationSelections: Map<Int, String> = emptyMap()
 )

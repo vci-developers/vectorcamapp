@@ -52,18 +52,25 @@ fun CompleteSessionDetailsScreen(
             )
         }
 
+        /* TODO: CLEANUP */
         item {
             when (state.selectedTab) {
                 CompleteSessionDetailsTab.SESSION_FORM -> CompleteSessionForm(
                     session = state.session,
                     site = state.site,
                     surveillanceForm = state.surveillanceForm,
-                    formWithFormAnswersAndQuestions = state.formWithFormAnswersAndQuestions,
+                    form = state.form,
+                    sessionScopedFormAnswersAndQuestions = state.sessionScopedFormAnswersAndQuestions,
+                    sessionUnits = state.sessionUnits,
+                    sessionUnitAnswersAndQuestionsByUnitId = state.sessionUnitAnswersAndQuestionsByUnitId,
+                    bucketNameBySessionUnitId = state.bucketNameBySessionUnitId,
                     modifier = modifier
                 )
 
                 CompleteSessionDetailsTab.SESSION_SPECIMENS -> CompleteSessionSpecimens(
                     specimensWithImagesAndInferenceResults = state.specimensWithImagesAndInferenceResults,
+                    sessionUnitIdBySpecimenId = state.sessionUnitIdBySpecimenId,
+                    bucketNameBySessionUnitId = state.bucketNameBySessionUnitId,
                     searchQuery = state.searchQuery,
                     onUpdateSearchQuery = { searchQuery ->
                         onAction(CompleteSessionDetailsAction.UpdateSearchQuery(searchQuery))

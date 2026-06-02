@@ -16,14 +16,15 @@ import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.intake.domain.repository.LocationRepository
-import com.vci.vectorcamapp.intake.domain.strategy.ProgramFormWorkflow
-import com.vci.vectorcamapp.intake.domain.strategy.ProgramFormWorkflowFactory
+import com.vci.vectorcamapp.intake.domain.strategy.program_form.ProgramFormWorkflow
+import com.vci.vectorcamapp.intake.domain.strategy.program_form.ProgramFormWorkflowFactory
 import com.vci.vectorcamapp.intake.domain.use_cases.IntakeValidationUseCases
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateCollectionDateUseCase
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateCollectionMethodUseCase
@@ -68,6 +69,7 @@ class IntakeViewModelTest {
     private lateinit var locationTypeRepository: LocationTypeRepository
     private lateinit var surveillanceFormRepository: SurveillanceFormRepository
     private lateinit var sessionRepository: SessionRepository
+    private lateinit var sessionUnitRepository: SessionUnitRepository
     private lateinit var locationRepository: LocationRepository
     private lateinit var collectorRepository: CollectorRepository
     private lateinit var programRepository: ProgramRepository
@@ -91,7 +93,9 @@ class IntakeViewModelTest {
         villageName = "Village A",
         houseNumber = "101",
         healthCenter = "HC A",
-        isActive = true
+        isActive = true,
+        name = null,
+        locationHierarchy = null
     )
 
     @Before
@@ -106,6 +110,7 @@ class IntakeViewModelTest {
         locationTypeRepository = mockk(relaxed = true)
         surveillanceFormRepository = mockk(relaxed = true)
         sessionRepository = mockk(relaxed = true)
+        sessionUnitRepository = mockk(relaxed = true)
         locationRepository = mockk(relaxed = true)
         collectorRepository = mockk(relaxed = true)
         programRepository = mockk(relaxed = true)
@@ -127,7 +132,7 @@ class IntakeViewModelTest {
         coEvery { programRepository.getProgramById(testProgramId) } returns testProgram
         coEvery { currentSessionCache.getSession() } returns null
         coEvery { defaultIntakeFieldsCache.getDefaultIntakeFields() } returns null
-        coEvery { formAnswerRepository.getFormAnswersBySessionId(any()) } returns emptyMap()
+        coEvery { formAnswerRepository.getSessionScopedFormAnswers(any()) } returns emptyMap()
 
         every { siteRepository.observeAllSitesByProgramId(any()) } returns MutableStateFlow(listOf(testSite))
         every { surveillanceFormRepository.observeSurveillanceFormBySessionId(any()) } returns flowOf(null)
@@ -167,6 +172,7 @@ class IntakeViewModelTest {
             locationTypeRepository = locationTypeRepository,
             surveillanceFormRepository = surveillanceFormRepository,
             sessionRepository = sessionRepository,
+            sessionUnitRepository = sessionUnitRepository,
             locationRepository = locationRepository,
             collectorRepository = collectorRepository,
             programRepository = programRepository,

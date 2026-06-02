@@ -19,10 +19,14 @@ import com.vci.vectorcamapp.core.presentation.search.SearchTextField
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.screenWidthFraction
+import java.util.UUID
 
+/* TODO: CLEANUP */
 @Composable
 fun CompleteSessionSpecimens(
     specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults>,
+    sessionUnitIdBySpecimenId: Map<String, UUID?>,
+    bucketNameBySessionUnitId: Map<UUID, String>,
     searchQuery: String,
     onUpdateSearchQuery: (String) -> Unit,
     isSearchTooltipVisible: Boolean,
@@ -45,9 +49,7 @@ fun CompleteSessionSpecimens(
         ) {
             SearchTextField(
                 searchQuery = searchQuery,
-                onSearchQueryChange = { newSearchQueryText ->
-                    onUpdateSearchQuery(newSearchQueryText)
-                },
+                onSearchQueryChange = onUpdateSearchQuery,
                 placeholder = "Search by specimen ID, species, etc.",
                 modifier = Modifier.padding(
                     start = MaterialTheme.dimensions.spacingMedium,
@@ -79,11 +81,16 @@ fun CompleteSessionSpecimens(
                         val imageList =
                             specimenWithSpecimenImagesAndInferenceResults.specimenImagesAndInferenceResults
                         val totalImages = imageList.size
+
+                        val sessionUnitId = sessionUnitIdBySpecimenId[specimen.id]
+                        val batchName = sessionUnitId?.let { bucketNameBySessionUnitId[it] }
+
                         imageList.mapIndexed { index, (specimenImage, _) ->
                             CompleteSessionSpecimensTile(
                                 specimen = specimen,
                                 specimenImage = specimenImage,
                                 badgeText = "${index + 1} of $totalImages",
+                                batchName = batchName,
                                 modifier = Modifier.width(
                                     screenWidthFraction(0.9f)
                                 )

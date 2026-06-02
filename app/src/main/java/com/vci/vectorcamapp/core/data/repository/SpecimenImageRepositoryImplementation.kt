@@ -40,10 +40,6 @@ class SpecimenImageRepositoryImplementation @Inject constructor(
         }
     }
 
-    override suspend fun deleteSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID): Boolean {
-        return specimenImageDao.deleteSpecimenImage(specimenImage.toEntity(specimenId, sessionId)) > 0
-    }
-
     override fun observeUploadedMetadataCountForSession(sessionId: UUID): Flow<Int> {
         return specimenImageDao.observeUploadedMetadataCountForSession(sessionId)
     }

@@ -59,7 +59,6 @@ class SettingsViewModel @Inject constructor(
     private val siteRepository: SiteRepository,
     private val sessionRepository: SessionRepository,
     private val formRepository: FormRepository,
-    private val formAnswerRepository: FormAnswerRepository,
     private val formQuestionRepository: FormQuestionRepository,
     private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache,
     private val currentSessionCache: CurrentSessionCache,
@@ -320,7 +319,6 @@ class SettingsViewModel @Inject constructor(
                         hardwareId = defaultFields.hardwareId,
                         district = "",
                         villageName = "",
-                        formAnswers = emptyMap(),
                         locationSelections = emptyMap()
                     )
                 }
