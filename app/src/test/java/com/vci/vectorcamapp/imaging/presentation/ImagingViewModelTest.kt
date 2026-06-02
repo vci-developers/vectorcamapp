@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
@@ -23,6 +24,7 @@ import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.navigation.Destination
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
@@ -142,12 +144,16 @@ class ImagingViewModelTest {
             .invoke(unsafe, base, offset, value)
     }
 
-    private fun initViewModel(session: Session? = testSession) {
+    private fun initViewModel(
+        session: Session? = testSession,
+        destinationSessionUnitId: UUID? = null,
+    ) {
         coEvery { currentSessionCache.getSession() } returns session
 
         val savedStateHandle = mockk<SavedStateHandle>(relaxed = true)
         mockkStatic("androidx.navigation.SavedStateHandleKt")
-        every { savedStateHandle.toRoute<Destination.Imaging>() } returns Destination.Imaging(null)
+        every { savedStateHandle.toRoute<Destination.Imaging>() } returns
+            Destination.Imaging(destinationSessionUnitId?.toString())
 
         viewModel = ImagingViewModel(
             savedStateHandle = savedStateHandle,
@@ -557,6 +563,96 @@ class ImagingViewModelTest {
         coVerify(exactly = 1) { sessionRepository.markSessionAsComplete(testSessionId) }
         coVerify(exactly = 1) { workRepository.enqueueSessionUpload(testSessionId, 42) }
         coVerify(exactly = 1) { currentSessionCache.clearSession() }
+    }
+
+    // ========================================
+    // J. Save Image — Cross-Batch Specimen ID Guard
+    // ========================================
+
+    /**
+     * Seeds the ViewModel's private `_state` MutableStateFlow with the fields needed to drive
+     * `SaveImageToSession` past validation and the image-bytes check, without having to fire
+     * `CaptureImage` (which requires real camera infra).
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun seedImagingState(
+        specimenId: String,
+        imageBytes: ByteArray = byteArrayOf(1, 2, 3),
+    ) {
+        val field = ImagingViewModel::class.java.getDeclaredField("_state")
+        field.isAccessible = true
+        val stateFlow =
+            field.get(viewModel) as MutableStateFlow<ImagingState>
+        stateFlow.value = stateFlow.value.copy(
+            currentSpecimen = stateFlow.value.currentSpecimen.copy(id = specimenId),
+            currentImageBytes = imageBytes,
+        )
+    }
+
+    @Test
+    fun imagingVm_j01_saveImage_specimenIdReusedInOtherBatch_setsErrorAndDoesNotSave() = runTest {
+        val currentBatchId = UUID.randomUUID()
+        val otherBatchId = UUID.randomUUID()
+        val reusedSpecimenId = "ABC123"
+
+        coEvery {
+            specimenRepository.getSpecimenByIdAndSessionId(reusedSpecimenId, testSessionId)
+        } returns Specimen(id = reusedSpecimenId, remoteId = null, shouldProcessFurther = false)
+        coEvery {
+            specimenRepository.getSessionUnitIdForSpecimen(reusedSpecimenId, testSessionId)
+        } returns otherBatchId
+
+        initViewModel(session = testSession, destinationSessionUnitId = currentBatchId)
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+
+        seedImagingState(specimenId = reusedSpecimenId)
+
+        viewModel.onAction(ImagingAction.SaveImageToSession)
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.specimenIdError)
+            .isEqualTo(ImagingError.SPECIMEN_ID_USED_IN_ANOTHER_COLLECTION_BATCH)
+        coVerify(atLeast = 1) {
+            errorMessageEmitter.emit(
+                ImagingError.SPECIMEN_ID_USED_IN_ANOTHER_COLLECTION_BATCH, any()
+            )
+        }
+        coVerify(exactly = 0) { cameraRepository.saveImage(any(), any(), any()) }
+    }
+
+    @Test
+    fun imagingVm_j02_saveImage_specimenIdReusedInSameBatch_doesNotSetError() = runTest {
+        val currentBatchId = UUID.randomUUID()
+        val reusedSpecimenId = "ABC123"
+
+        coEvery {
+            specimenRepository.getSpecimenByIdAndSessionId(reusedSpecimenId, testSessionId)
+        } returns Specimen(id = reusedSpecimenId, remoteId = null, shouldProcessFurther = false)
+        coEvery {
+            specimenRepository.getSessionUnitIdForSpecimen(reusedSpecimenId, testSessionId)
+        } returns currentBatchId
+        // Stub the post-guard path with a typed result so mockk's relaxed default doesn't yield
+        // a non-ImagingError that triggers an unrelated ClassCastException in onError.
+        coEvery {
+            cameraRepository.saveImage(any(), any(), any())
+        } returns Result.Error(ImagingError.SAVE_ERROR)
+
+        initViewModel(session = testSession, destinationSessionUnitId = currentBatchId)
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+
+        seedImagingState(specimenId = reusedSpecimenId)
+
+        viewModel.onAction(ImagingAction.SaveImageToSession)
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.specimenIdError).isNull()
+        coVerify(exactly = 0) {
+            errorMessageEmitter.emit(
+                ImagingError.SPECIMEN_ID_USED_IN_ANOTHER_COLLECTION_BATCH, any()
+            )
+        }
     }
 
     @Test
