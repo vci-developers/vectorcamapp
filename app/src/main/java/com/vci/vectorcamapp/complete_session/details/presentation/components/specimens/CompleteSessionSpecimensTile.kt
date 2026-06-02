@@ -37,6 +37,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
+import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
 import com.vci.vectorcamapp.ui.extensions.color
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -46,12 +47,14 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import com.vci.vectorcamapp.ui.extensions.zoomPanGesture
 
+/* TODO: CLEANUP */
 @Composable
 fun CompleteSessionSpecimensTile(
     specimen: Specimen,
     specimenImage: SpecimenImage,
     modifier: Modifier = Modifier,
     badgeText: String? = null,
+    batchName: String? = null,
 ) {
 
     val context = LocalContext.current
@@ -134,6 +137,13 @@ fun CompleteSessionSpecimensTile(
                     text = "Specimen ID: ${specimen.id}",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colors.textPrimary
+                )
+            }
+
+            batchName?.let {
+                InfoPill(
+                    text = "Batch: $it",
+                    color = MaterialTheme.colors.info,
                 )
             }
 

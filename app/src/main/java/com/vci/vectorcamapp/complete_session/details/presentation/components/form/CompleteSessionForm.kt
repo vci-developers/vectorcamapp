@@ -10,21 +10,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.SessionUnit
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
-import com.vci.vectorcamapp.core.domain.model.composites.FormWithFormAnswersAndQuestions
+import com.vci.vectorcamapp.core.domain.model.composites.FormAnswerAndQuestion
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.ui.extensions.colors
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.UUID
 
+/* TODO: CLEANUP */
 @Composable
 fun CompleteSessionForm(
-    session: Session, site: Site,
+    session: Session,
+    site: Site,
     surveillanceForm: SurveillanceForm?,
-    formWithFormAnswersAndQuestions: FormWithFormAnswersAndQuestions?,
+    form: Form?,
+    sessionScopedFormAnswersAndQuestions: List<FormAnswerAndQuestion>,
+    sessionUnits: List<SessionUnit>,
+    sessionUnitAnswersAndQuestionsByUnitId: Map<UUID, List<FormAnswerAndQuestion>>,
+    bucketNameBySessionUnitId: Map<UUID, String>,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -155,34 +164,33 @@ fun CompleteSessionForm(
                     }
             }
 
-            formWithFormAnswersAndQuestions?.let { formWithAnswersAndQuestions ->
+            form?.let { resolvedForm ->
                 CompleteSessionFormTile(
-                    title = formWithAnswersAndQuestions.form.name,
+                    title = resolvedForm.name,
                     iconPainter = painterResource(R.drawable.ic_clipboard),
-                    iconDescription = "Clipboard"
+                    iconDescription = "Clipboard",
                 ) {
-                    if (formWithAnswersAndQuestions.formAnswersAndQuestions.isNotEmpty()) {
-                        formWithAnswersAndQuestions.formAnswersAndQuestions
-                            .filter { (answer, _) -> answer.value.isNotBlank() }
-                            .forEach { (answer, question) ->
-                                val displayValue = when (question.type) {
-                                    "date" -> {
-                                        answer.value.toLongOrNull()?.let { millis -> dateFormatter.format(millis) } ?: answer.value
-                                    }
-                                    else -> answer.value
-                                }
+                    val visibleFormAnswersAndQuestions = sessionScopedFormAnswersAndQuestions
+                        .filter { (formAnswer, _) -> formAnswer.value.isNotBlank() }
 
-                                Text(
-                                    text = "${question.label}: $displayValue",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colors.textPrimary
-                                )
+                    if (visibleFormAnswersAndQuestions.isNotEmpty()) {
+                        visibleFormAnswersAndQuestions.forEach { (formAnswer, formQuestion) ->
+                            val displayValue = when (formQuestion.type) {
+                                "date" -> formAnswer.value.toLongOrNull()
+                                    ?.let { dateFormatter.format(it) } ?: formAnswer.value
+                                else -> formAnswer.value
                             }
+                            Text(
+                                text = "${formQuestion.label}: $displayValue",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colors.textPrimary,
+                            )
+                        }
                     } else {
                         Text(
                             text = "No responses recorded.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colors.textSecondary
+                            color = MaterialTheme.colors.textSecondary,
                         )
                     }
                 }
@@ -263,6 +271,42 @@ fun CompleteSessionForm(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
+                }
+            }
+
+            sessionUnits.forEach { sessionUnit ->
+                val title = bucketNameBySessionUnitId[sessionUnit.localId] ?: "Batch ${sessionUnit.unitOrder}"
+
+                val visibleFormAnswersAndQuestions =
+                    sessionUnitAnswersAndQuestionsByUnitId[sessionUnit.localId]
+                        .orEmpty()
+                        .filter { (formAnswer, _) -> formAnswer.value.isNotBlank() }
+
+                CompleteSessionFormTile(
+                    title = title,
+                    iconPainter = painterResource(R.drawable.ic_clipboard),
+                    iconDescription = "Collection Batch",
+                ) {
+                    if (visibleFormAnswersAndQuestions.isEmpty()) {
+                        Text(
+                            text = "No responses recorded for this batch.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colors.textSecondary,
+                        )
+                    } else {
+                        visibleFormAnswersAndQuestions.forEach { (formAnswer, formQuestion) ->
+                            val displayValue = when (formQuestion.type) {
+                                "date" -> formAnswer.value.toLongOrNull()
+                                    ?.let { dateFormatter.format(it) } ?: formAnswer.value
+                                else -> formAnswer.value
+                            }
+                            Text(
+                                text = "${formQuestion.label}: $displayValue",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colors.textPrimary,
+                            )
+                        }
+                    }
                 }
             }
         }

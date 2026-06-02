@@ -12,10 +12,11 @@ fun SpecimenEntity.toDomain(): Specimen {
     )
 }
 
-fun Specimen.toEntity(sessionId: UUID): SpecimenEntity {
+fun Specimen.toEntity(sessionId: UUID, sessionUnitId: UUID?): SpecimenEntity {
     return SpecimenEntity(
         id = this.id,
         sessionId = sessionId,
+        sessionUnitId = sessionUnitId,
         remoteId = this.remoteId,
         shouldProcessFurther = this.shouldProcessFurther
     )

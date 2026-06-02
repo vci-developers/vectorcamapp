@@ -19,9 +19,6 @@ interface SpecimenImageDao {
     @Update(onConflict = OnConflictStrategy.ABORT)
     suspend fun updateSpecimenImage(specimenImage: SpecimenImageEntity): Int
 
-    @Delete
-    suspend fun deleteSpecimenImage(specimenImage: SpecimenImageEntity): Int
-
     @Query("SELECT COUNT(*) FROM specimen_image WHERE sessionId = :sessionId AND metadataUploadStatus = 'COMPLETED'")
     fun observeUploadedMetadataCountForSession(sessionId: UUID): Flow<Int>
 

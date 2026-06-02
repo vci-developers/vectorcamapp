@@ -23,10 +23,10 @@ class SpecimenRepositoryImplementation @Inject constructor(
     private val specimenDao: SpecimenDao
 ) : SpecimenRepository {
     override suspend fun insertSpecimen(
-        specimen: Specimen, sessionId: UUID
+        specimen: Specimen, sessionId: UUID, sessionUnitId: UUID?
     ): Result<Unit, RoomDbError> {
         return try {
-            specimenDao.insertSpecimen(specimen.toEntity(sessionId))
+            specimenDao.insertSpecimen(specimen.toEntity(sessionId, sessionUnitId))
             Result.Success(Unit)
         } catch (e: SQLiteConstraintException) {
             Result.Error(RoomDbError.CONSTRAINT_VIOLATION)
@@ -36,14 +36,15 @@ class SpecimenRepositoryImplementation @Inject constructor(
     }
 
     override suspend fun updateSpecimen(
-        specimen: Specimen, sessionId: UUID
+        specimen: Specimen, sessionId: UUID, sessionUnitId: UUID?
     ): Result<Unit, RoomDbError> {
         return try {
-            val updatedRows = specimenDao.updateSpecimen(specimen.toEntity(sessionId))
+            val updatedRows = specimenDao.updateSpecimen(specimen.toEntity(sessionId, sessionUnitId))
             if (updatedRows == 0) {
                 Result.Error(RoomDbError.NO_ROWS_AFFECTED)
+            } else {
+                Result.Success(Unit)
             }
-            Result.Success(Unit)
         } catch (e: SQLiteConstraintException) {
             Result.Error(RoomDbError.CONSTRAINT_VIOLATION)
         } catch (e: Exception) {
@@ -57,12 +58,18 @@ class SpecimenRepositoryImplementation @Inject constructor(
         return specimenDao.getSpecimenByIdAndSessionId(specimenId, sessionId)?.toDomain()
     }
 
-    override suspend fun deleteSpecimen(specimen: Specimen, sessionId: UUID): Boolean {
-        return specimenDao.deleteSpecimen(specimen.toEntity(sessionId)) > 0
+    override suspend fun getSessionUnitIdForSpecimen(
+        specimenId: String,
+        sessionId: UUID,
+    ): UUID? {
+        return specimenDao.getSessionUnitIdForSpecimen(specimenId, sessionId)
     }
 
-    override suspend fun getSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): List<SpecimenWithSpecimenImagesAndInferenceResults> {
-        val specimens = specimenDao.getSpecimensBySession(sessionId)
+    override suspend fun getSpecimenImagesAndInferenceResultsBySessionScope(
+        sessionId: UUID,
+        sessionUnitId: UUID?
+    ): List<SpecimenWithSpecimenImagesAndInferenceResults> {
+        val specimens = specimenDao.getSpecimensBySessionScope(sessionId, sessionUnitId)
         return specimens.map { specimenEntity ->
             val specimenImagesAndResults =
                 specimenDao.getSpecimenImagesAndInferenceResultsBySpecimen(
@@ -81,36 +88,40 @@ class SpecimenRepositoryImplementation @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observeSpecimenImagesAndInferenceResultsBySession(
-        sessionId: UUID
+    override fun observeSpecimenImagesAndInferenceResultsBySessionScope(
+        sessionId: UUID, sessionUnitId: UUID?
     ): Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> {
-        return specimenDao.observeSpecimensBySession(sessionId).flatMapLatest { specimenEntities ->
-            if (specimenEntities.isEmpty()) {
-                flowOf(emptyList())
-            } else {
-                combine(
-                    specimenEntities.map { specimenEntity ->
-                        specimenDao.observeSpecimenImagesAndInferenceResultsBySpecimen(
-                            specimenEntity.id, sessionId
-                        ).map { specimenImagesAndResults ->
-                            SpecimenWithSpecimenImagesAndInferenceResults(
-                                specimen = specimenEntity.toDomain(),
-                                specimenImagesAndInferenceResults = specimenImagesAndResults.map { relation ->
-                                    SpecimenImageAndInferenceResult(
-                                        specimenImage = relation.specimenImageEntity.toDomain(),
-                                        inferenceResult = relation.inferenceResultEntity?.toDomain()
-                                    )
-                                })
-                        }
-                    }) { it.toList() }
+        return specimenDao.observeSpecimensBySessionScope(sessionId, sessionUnitId)
+            .flatMapLatest { specimenEntities ->
+                if (specimenEntities.isEmpty()) {
+                    flowOf(emptyList())
+                } else {
+                    combine(
+                        specimenEntities.map { specimenEntity ->
+                            specimenDao.observeSpecimenImagesAndInferenceResultsBySpecimen(
+                                specimenEntity.id, sessionId
+                            ).map { specimenImagesAndResults ->
+                                SpecimenWithSpecimenImagesAndInferenceResults(
+                                    specimen = specimenEntity.toDomain(),
+                                    specimenImagesAndInferenceResults = specimenImagesAndResults.map { relation ->
+                                        SpecimenImageAndInferenceResult(
+                                            specimenImage = relation.specimenImageEntity.toDomain(),
+                                            inferenceResult = relation.inferenceResultEntity?.toDomain()
+                                        )
+                                    })
+                            }
+                        }) { it.toList() }
+                }
             }
-        }
     }
 
     override suspend fun countSelectedForFurtherProcessingBetweenSessionCollectionDates(
         startDate: Long,
         endDate: Long
     ): Int {
-        return specimenDao.countSelectedSpecimensForFurtherProcessingBetweenSessionCollectionDates(startDate, endDate)
+        return specimenDao.countSelectedSpecimensForFurtherProcessingBetweenSessionCollectionDates(
+            startDate,
+            endDate
+        )
     }
 }

@@ -16,7 +16,6 @@
             hardwareId: String?,
             district: String,
             villageName: String,
-            formAnswers: Map<Int, String>,
             locationSelections: Map<Int, String>
         ) {
             dataStore.updateData {
@@ -27,7 +26,6 @@
                     hardwareId = hardwareId,
                     district = district,
                     villageName = villageName,
-                    formAnswers = formAnswers,
                     locationSelections = locationSelections
                 )
             }

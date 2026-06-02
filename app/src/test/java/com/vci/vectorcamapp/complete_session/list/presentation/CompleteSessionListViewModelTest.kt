@@ -71,7 +71,9 @@ class CompleteSessionListViewModelTest {
         villageName = "Test Village",
         houseNumber = "123",
         healthCenter = "Test Center",
-        isActive = true
+        isActive = true,
+        name = null,
+        locationHierarchy = null
     )
 
     @Before
@@ -222,7 +224,7 @@ class CompleteSessionListViewModelTest {
     fun listVm_d02_uploadAllPendingSessions_withAlreadySubmittedSessions_skipsThose() = runTest {
         val submittedSession = testSession.copy(submittedAt = 9_999_999L)
         completeSessionsFlow.value = listOf(SessionAndSite(submittedSession, testSite))
-        coEvery { specimenRepository.getSpecimenImagesAndInferenceResultsBySession(any()) } returns
+        coEvery { specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(any(), any()) } returns
             emptyList<SpecimenWithSpecimenImagesAndInferenceResults>()
 
         val vm = makeViewModel()
@@ -238,7 +240,7 @@ class CompleteSessionListViewModelTest {
     fun listVm_d03_uploadAllPendingSessions_withPendingSession_enqueuesUpload() = runTest {
         val pendingSession = testSession.copy(submittedAt = null)
         completeSessionsFlow.value = listOf(SessionAndSite(pendingSession, testSite))
-        coEvery { specimenRepository.getSpecimenImagesAndInferenceResultsBySession(any()) } returns
+        coEvery { specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(any(), any()) } returns
             emptyList<SpecimenWithSpecimenImagesAndInferenceResults>()
 
         val vm = makeViewModel()

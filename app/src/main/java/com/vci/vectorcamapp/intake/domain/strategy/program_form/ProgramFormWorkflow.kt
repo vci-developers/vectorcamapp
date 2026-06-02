@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.intake.domain.strategy
+package com.vci.vectorcamapp.intake.domain.strategy.program_form
 
 import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.FormQuestion

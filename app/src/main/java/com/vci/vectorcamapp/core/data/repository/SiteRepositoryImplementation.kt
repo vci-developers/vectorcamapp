@@ -28,10 +28,6 @@ class SiteRepositoryImplementation @Inject constructor(
         return siteDao.observeAllSitesByProgramId(programId).map { siteEntities -> siteEntities.map { it.toDomain() } }
     }
 
-    override suspend fun getSiteById(id: Int): Site? {
-        return siteDao.getSiteById(id)?.toDomain()
-    }
-
     override suspend fun setAllSitesInactiveForProgram(programId: Int) {
         siteDao.setAllSitesInactiveForProgram(programId)
     }

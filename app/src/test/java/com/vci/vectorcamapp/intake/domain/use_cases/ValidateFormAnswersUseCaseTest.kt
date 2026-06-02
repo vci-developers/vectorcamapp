@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.intake.domain.use_cases
 
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
+import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteExpression
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteValue
@@ -31,7 +32,9 @@ class ValidateFormAnswersUseCaseTest {
         required = required,
         prerequisite = prerequisite,
         options = options,
-        order = id
+        order = id,
+        answerScope = FormQuestionScope.SESSION,
+        isUnitIdentityComponent = false,
     )
 
     private fun answer(questionId: Int, value: String): Pair<Int, FormAnswer> =

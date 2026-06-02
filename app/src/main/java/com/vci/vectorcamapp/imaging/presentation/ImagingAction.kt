@@ -25,4 +25,5 @@ sealed interface ImagingAction {
     data class SelectPendingAction(val pendingAction: ImagingAction) : ImagingAction
     data object ClearPendingAction : ImagingAction
     data object ConfirmPendingAction : ImagingAction
+    data object ReturnToCollectionBatchList : ImagingAction
 }

@@ -1,9 +1,9 @@
-package com.vci.vectorcamapp.intake.domain.strategy.concrete
+package com.vci.vectorcamapp.intake.domain.strategy.program_form.concrete
 
 import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
-import com.vci.vectorcamapp.intake.domain.strategy.ProgramFormWorkflow
+import com.vci.vectorcamapp.intake.domain.strategy.program_form.ProgramFormWorkflow
 
 class ProgramFormAbsentWorkflow : ProgramFormWorkflow {
     override val surveillanceForm: SurveillanceForm?

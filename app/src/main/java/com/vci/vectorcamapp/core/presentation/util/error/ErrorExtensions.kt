@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.core.presentation.util.error
 
 import android.content.Context
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.collection_batch.domain.util.error.CollectionBatchFormError
 import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError
 import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
@@ -43,7 +44,8 @@ fun Error.toString(context: Context): String {
             CompleteSessionDetailsError.SESSION_NOT_FOUND -> R.string.complete_session_error_session_not_found
             CompleteSessionDetailsError.SITE_NOT_FOUND -> R.string.complete_session_error_site_not_found
             CompleteSessionDetailsError.SPECIMENS_NOT_FOUND -> R.string.complete_session_error_specimens_not_found
-            CompleteSessionDetailsError.FORM_DATA_INCONSISTENT -> R.string.complete_session_error_form_data_inconsistent
+            CompleteSessionDetailsError.PROGRAM_NOT_FOUND -> R.string.complete_session_error_program_not_found
+            CompleteSessionDetailsError.FORM_NOT_FOUND -> R.string.complete_session_error_form_not_found
             CompleteSessionDetailsError.UNKNOWN_ERROR -> R.string.complete_session_error_unknown_error
         }
 
@@ -61,6 +63,7 @@ fun Error.toString(context: Context): String {
             ImagingError.INVALID_INPUT_SHAPE -> R.string.imaging_error_invalid_input_shape
             ImagingError.SPECIMEN_ID_RECOGNITION_FAILED -> R.string.imaging_error_specimen_id_recognition_failed
             ImagingError.SPECIMEN_DETECTION_FAILED -> R.string.imaging_error_specimen_detection_failed
+            ImagingError.SPECIMEN_ID_USED_IN_ANOTHER_COLLECTION_BATCH -> R.string.imaging_error_specimen_id_used_in_another_collection_batch
             ImagingError.UNKNOWN_INFERENCE_ERROR -> R.string.imaging_error_unknown_inference_error
             ImagingError.UNKNOWN_ERROR -> R.string.imaging_error_unknown_error
         }
@@ -115,6 +118,13 @@ fun Error.toString(context: Context): String {
             FormValidationError.INVALID_NUM_LLINS_AVAILABLE -> R.string.form_validation_error_invalid_num_llins_available
             FormValidationError.INVALID_MONTHS_SINCE_IRS -> R.string.form_validation_error_invalid_months_since_irs
             FormValidationError.INVALID_FORM_ANSWER -> R.string.form_validation_error_invalid_form_answer
+        }
+
+        is CollectionBatchFormError -> when (this) {
+            CollectionBatchFormError.FORM_INVALID -> R.string.collection_batch_form_error_form_invalid
+            CollectionBatchFormError.INVALID_FORM_ANSWER -> R.string.collection_batch_form_error_invalid_form_answer
+            CollectionBatchFormError.DUPLICATE_IDENTITY -> R.string.collection_batch_form_error_duplicate_identity
+            CollectionBatchFormError.UNKNOWN_ERROR -> R.string.collection_batch_form_error_unknown_error
         }
 
         is CollectorValidationError -> when (this) {

@@ -109,7 +109,7 @@ class ImageUploadWorker @AssistedInject constructor(
         }
 
         val specimensWithImages =
-            specimenRepository.getSpecimenImagesAndInferenceResultsBySession(sessionId)
+            specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(sessionId, null)
 
         val imagesToUpload = specimensWithImages.flatMap { specimenWithData ->
             specimenWithData.specimenImagesAndInferenceResults.map { imageAndResult ->

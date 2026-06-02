@@ -1,9 +1,9 @@
 package com.vci.vectorcamapp.core.domain.repository
 
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
+import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
-import kotlinx.coroutines.flow.Flow
 
 interface FormQuestionRepository {
     suspend fun upsertFormQuestion(
@@ -12,5 +12,8 @@ interface FormQuestionRepository {
         parentId: Int?
     ): Result<Unit, RoomDbError>
 
-    suspend fun getQuestionsByFormId(formId: Int): List<FormQuestion>
+    suspend fun getQuestionsByFormIdAndScope(
+        formId: Int,
+        answerScope: FormQuestionScope?
+    ): List<FormQuestion>
 }

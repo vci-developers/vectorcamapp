@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.domain.model
 
+import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteExpression
 
 data class FormQuestion(
@@ -9,5 +10,7 @@ data class FormQuestion(
     val required: Boolean,
     val prerequisite: FormQuestionPrerequisiteExpression?,
     val options: List<String>?,
-    val order: Int?
+    val order: Int?,
+    val answerScope: FormQuestionScope,
+    val isUnitIdentityComponent: Boolean,
 )

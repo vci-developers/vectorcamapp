@@ -14,11 +14,12 @@ fun FormAnswerEntity.toDomain(): FormAnswer {
     )
 }
 
-fun FormAnswer.toEntity(sessionId: UUID, questionId: Int): FormAnswerEntity {
+fun FormAnswer.toEntity(sessionId: UUID, sessionUnitId: UUID?, questionId: Int): FormAnswerEntity {
     return FormAnswerEntity(
         localId = this.localId,
         remoteId = this.remoteId,
         sessionId = sessionId,
+        sessionUnitId = sessionUnitId,
         questionId = questionId,
         value = this.value,
         dataType = this.dataType,

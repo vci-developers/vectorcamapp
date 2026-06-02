@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PostSpecimenRequestDto(
     val specimenId: String = "",
+    val sessionUnitId: Int? = null,
     val shouldProcessFurther: Boolean = false,
     val expectedImages: Int = 0,
 )

@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.core.data.room.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -24,14 +23,22 @@ interface SpecimenDao {
     @Update(onConflict = OnConflictStrategy.ABORT)
     suspend fun updateSpecimen(specimen: SpecimenEntity): Int
 
-    @Delete
-    suspend fun deleteSpecimen(specimen: SpecimenEntity): Int
+    @Query("""
+        SELECT * FROM specimen 
+        WHERE sessionId = :sessionId 
+          AND (:sessionUnitId IS NULL OR sessionUnitId = :sessionUnitId)
+    """)
+    suspend fun getSpecimensBySessionScope(sessionId: UUID, sessionUnitId: UUID?): List<SpecimenEntity>
 
-    @Query("SELECT * FROM specimen WHERE sessionId = :sessionId")
-    suspend fun getSpecimensBySession(sessionId: UUID): List<SpecimenEntity>
+    @Query("""
+        SELECT * FROM specimen 
+        WHERE sessionId = :sessionId 
+          AND (:sessionUnitId IS NULL OR sessionUnitId = :sessionUnitId)
+    """)
+    fun observeSpecimensBySessionScope(sessionId: UUID, sessionUnitId: UUID?): Flow<List<SpecimenEntity>>
 
-    @Query("SELECT * FROM specimen WHERE sessionId = :sessionId")
-    fun observeSpecimensBySession(sessionId: UUID): Flow<List<SpecimenEntity>>
+    @Query("SELECT sessionUnitId FROM specimen WHERE id = :specimenId AND sessionId = :sessionId")
+    suspend fun getSessionUnitIdForSpecimen(specimenId: String, sessionId: UUID): UUID?
 
     @Transaction
     @Query("SELECT * FROM specimen_image WHERE specimenId = :specimenId AND sessionId = :sessionId")
