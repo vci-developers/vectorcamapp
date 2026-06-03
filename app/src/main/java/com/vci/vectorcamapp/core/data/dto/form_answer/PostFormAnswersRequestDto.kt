@@ -16,6 +16,7 @@ data class FormAnswerRequestItemDto(
     @Serializable(with = UuidSerializer::class)
     val frontendId: UUID = UUID(0, 0),
     val questionId: Int = -1,
+    val sessionUnitId: Int? = null,
     val value: String = "",
     val dataType: String = ""
 )

@@ -7,7 +7,6 @@ import com.vci.vectorcamapp.core.data.room.dao.SessionDao
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
-import com.vci.vectorcamapp.core.domain.model.composites.SessionWithSpecimens
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
@@ -38,16 +37,6 @@ class SessionRepositoryImplementation @Inject constructor(
 
     override suspend fun markSessionAsComplete(sessionId: UUID): Boolean {
         return sessionDao.markSessionAsComplete(sessionId, System.currentTimeMillis()) > 0
-    }
-
-    override suspend fun getSessionWithSpecimensById(sessionId: UUID): SessionWithSpecimens? {
-        val relation = sessionDao.getSessionWithSpecimens(sessionId)
-        return relation?.let {
-            SessionWithSpecimens(
-                session = it.sessionEntity.toDomain(),
-                specimens = it.specimenEntities.map { specimenEntity -> specimenEntity.toDomain() }
-            )
-        }
     }
 
     override suspend fun getSessionAndSurveillanceFormById(sessionId: UUID): SessionAndSurveillanceForm? {
@@ -91,17 +80,6 @@ class SessionRepositoryImplementation @Inject constructor(
                 SessionAndSite(
                     session = sessionAndSiteRelation.session.toDomain(),
                     site = sessionAndSiteRelation.site.toDomain()
-                )
-            }
-        }
-    }
-
-    override fun observeSessionWithSpecimens(sessionId: UUID): Flow<SessionWithSpecimens?> {
-        return sessionDao.observeSessionWithSpecimens(sessionId).map { sessionWithSpecimensRelation ->
-            sessionWithSpecimensRelation?.let {
-                SessionWithSpecimens(
-                    session = it.sessionEntity.toDomain(),
-                    specimens = it.specimenEntities.map { specimenEntity -> specimenEntity.toDomain() }
                 )
             }
         }

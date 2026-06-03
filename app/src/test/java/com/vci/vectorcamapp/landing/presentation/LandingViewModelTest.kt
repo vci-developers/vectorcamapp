@@ -93,7 +93,9 @@ class LandingViewModelTest {
         villageName = "Test Village",
         houseNumber = "123",
         healthCenter = "Test Center",
-        isActive = true
+        isActive = true,
+        name = null,
+        locationHierarchy = null
     )
 
     private fun initViewModel(

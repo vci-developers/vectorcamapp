@@ -128,8 +128,8 @@ class CompleteSessionListViewModel @Inject constructor(
                         val isSessionUploaded = (session.submittedAt != null)
 
                         val specimens =
-                            specimenRepository.getSpecimenImagesAndInferenceResultsBySession(
-                                session.localId
+                            specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(
+                                session.localId, null
                             )
                         val areSpecimensUploaded = !specimens.any { specimen ->
                             specimen.specimenImagesAndInferenceResults.any { (image, _) ->

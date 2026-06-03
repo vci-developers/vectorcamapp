@@ -10,7 +10,6 @@ interface DefaultIntakeFieldsCache {
         hardwareId: String?,
         district: String,
         villageName: String,
-        formAnswers: Map<Int, String>,
         locationSelections: Map<Int, String>
     )
 

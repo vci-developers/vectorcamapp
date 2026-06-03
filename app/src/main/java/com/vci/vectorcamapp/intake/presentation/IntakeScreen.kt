@@ -254,6 +254,7 @@ fun IntakeScreen(
                 DropdownField(
                     label = "Collection Method",
                     required = true,
+                    enabled = !state.isCollectionMethodLocked,
                     options = IntakeDropdownOptions.CollectionMethodOption.entries,
                     selectedOption = if (isOtherCollectionMethod) IntakeDropdownOptions.CollectionMethodOption.OTHER
                     else IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
@@ -265,6 +266,15 @@ fun IntakeScreen(
                         text = collectionMethod.label,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colors.textPrimary
+                    )
+                }
+
+                if (state.isCollectionMethodLocked) {
+                    Text(
+                        text = "Cannot change collection method — collection batches have already been created for this session.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colors.warning,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
@@ -527,7 +537,7 @@ fun IntakeScreen(
                     iconPainter = painterResource(id = R.drawable.ic_clipboard),
                     iconDescription = "Surveillance Form Icon"
                 ) {
-                    val answerMap = state.formAnswers.mapValues { (_, answer) -> answer.value }
+                    val answerMap = state.formAnswersByQuestionId.mapValues { (_, answer) -> answer.value }
 
                     state.formQuestions.forEach { question ->
                         if (FormQuestionPrerequisiteEvaluator.evaluate(
@@ -536,7 +546,7 @@ fun IntakeScreen(
                         ) {
                             DynamicFormField(
                                 question = question,
-                                value = state.formAnswers[question.id]?.value.orEmpty(),
+                                value = state.formAnswersByQuestionId[question.id]?.value.orEmpty(),
                                 error = state.intakeErrors.formAnswerErrors[question.id],
                                 onValueChange = {
                                     onAction(IntakeAction.UpdateFormAnswer(question.id, it))

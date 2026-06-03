@@ -8,11 +8,32 @@ import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 interface SpecimenRepository {
-    suspend fun insertSpecimen(specimen: Specimen, sessionId: UUID): Result<Unit, RoomDbError>
+    suspend fun insertSpecimen(
+        specimen: Specimen,
+        sessionId: UUID,
+        sessionUnitId: UUID?
+    ): Result<Unit, RoomDbError>
+
     suspend fun getSpecimenByIdAndSessionId(specimenId: String, sessionId: UUID): Specimen?
-    suspend fun updateSpecimen(specimen: Specimen, sessionId: UUID): Result<Unit, RoomDbError>
-    suspend fun deleteSpecimen(specimen: Specimen, sessionId: UUID): Boolean
-    suspend fun getSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): List<SpecimenWithSpecimenImagesAndInferenceResults>
-    fun observeSpecimenImagesAndInferenceResultsBySession(sessionId: UUID): Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>>
-    suspend fun countSelectedForFurtherProcessingBetweenSessionCollectionDates(startDate: Long, endDate: Long): Int
+    suspend fun getSessionUnitIdForSpecimen(specimenId: String, sessionId: UUID): UUID?
+    suspend fun updateSpecimen(
+        specimen: Specimen,
+        sessionId: UUID,
+        sessionUnitId: UUID?
+    ): Result<Unit, RoomDbError>
+
+    suspend fun getSpecimenImagesAndInferenceResultsBySessionScope(
+        sessionId: UUID,
+        sessionUnitId: UUID?
+    ): List<SpecimenWithSpecimenImagesAndInferenceResults>
+
+    fun observeSpecimenImagesAndInferenceResultsBySessionScope(
+        sessionId: UUID,
+        sessionUnitId: UUID?
+    ): Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>>
+
+    suspend fun countSelectedForFurtherProcessingBetweenSessionCollectionDates(
+        startDate: Long,
+        endDate: Long
+    ): Int
 }

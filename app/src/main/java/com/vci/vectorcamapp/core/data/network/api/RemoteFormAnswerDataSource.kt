@@ -18,26 +18,47 @@ import javax.inject.Inject
 
 class RemoteFormAnswerDataSource @Inject constructor(
     private val httpClient: HttpClient
-): FormAnswerDataSource {
+) : FormAnswerDataSource {
     override suspend fun postFormAnswersForSession(
         sessionId: Int,
         formVersion: String,
-        answers: Map<Int, FormAnswer>
+        sessionScopedAnswers: Map<Int, FormAnswer>,
+        sessionUnitScopedAnswersBySessionUnitRemoteId: Map<Int, Map<Int, FormAnswer>>,
     ): Result<PostFormAnswersResponseDto, NetworkError> {
         return safeCall<PostFormAnswersResponseDto> {
             httpClient.post(constructUrl("sessions/$sessionId/forms/answers")) {
-                setBody(PostFormAnswersRequestDto(
-                    answers = answers.map { (questionId, answer) ->
-                        FormAnswerRequestItemDto(
-                            frontendId = answer.localId,
-                            questionId = questionId,
-                            value = answer.value,
-                            dataType = answer.dataType
-                        )
-                    },
-                    formVersion = formVersion,
-                    submittedAt = System.currentTimeMillis()
-                ))
+                setBody(
+                    PostFormAnswersRequestDto(
+                        answers = buildList {
+                            sessionScopedAnswers.forEach { (questionId, answer) ->
+                                add(
+                                    FormAnswerRequestItemDto(
+                                        frontendId = answer.localId,
+                                        questionId = questionId,
+                                        sessionUnitId = null,
+                                        value = answer.value,
+                                        dataType = answer.dataType
+                                    )
+                                )
+                            }
+                            sessionUnitScopedAnswersBySessionUnitRemoteId.forEach { (remoteSessionUnitId, answers) ->
+                                answers.forEach { (questionId, answer) ->
+                                    add(
+                                        FormAnswerRequestItemDto(
+                                            frontendId = answer.localId,
+                                            questionId = questionId,
+                                            sessionUnitId = remoteSessionUnitId,
+                                            value = answer.value,
+                                            dataType = answer.dataType
+                                        )
+                                    )
+                                }
+                            }
+                        },
+                        formVersion = formVersion,
+                        submittedAt = System.currentTimeMillis()
+                    )
+                )
             }
         }
     }

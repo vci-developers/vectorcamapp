@@ -20,13 +20,14 @@ class RemoteSpecimenDataSource @Inject constructor(
 ) : SpecimenDataSource {
 
     override suspend fun postSpecimen(
-        specimen: Specimen, sessionId: Int, expectedImages: Int
+        specimen: Specimen, sessionId: Int, sessionUnitId: Int?, expectedImages: Int
     ): Result<PostSpecimenResponseDto, NetworkError> {
         return safeCall<PostSpecimenResponseDto> {
             httpClient.post(constructUrl("sessions/$sessionId/specimens")) {
                 setBody(
                     PostSpecimenRequestDto(
                         specimenId = specimen.id,
+                        sessionUnitId = sessionUnitId,
                         shouldProcessFurther = specimen.shouldProcessFurther,
                         expectedImages = expectedImages
                     )

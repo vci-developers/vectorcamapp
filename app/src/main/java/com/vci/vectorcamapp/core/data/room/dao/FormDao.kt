@@ -14,9 +14,6 @@ interface FormDao {
     @Upsert
     suspend fun upsertForm(form: FormEntity)
 
-    @Query("SELECT * FROM form WHERE programId = :programId")
-    fun observeFormsByProgramId(programId: Int): Flow<List<FormEntity>>
-
     @Query("SELECT * FROM form WHERE id = :id")
     suspend fun getFormById(id: Int): FormEntity?
 
