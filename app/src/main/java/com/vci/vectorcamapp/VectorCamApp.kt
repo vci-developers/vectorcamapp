@@ -7,7 +7,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.vci.vectorcamapp.core.logging.Crashy
 import com.vci.vectorcamapp.core.logging.CrashyContext
-import com.vci.vectorcamapp.core.logging.VectorAnalytics
+import com.vci.vectorcamapp.core.logging.VectorCamAnalytics
 import io.sentry.Sentry
 import dagger.hilt.android.HiltAndroidApp
 import org.opencv.android.OpenCVLoader
@@ -27,21 +27,19 @@ class VectorCamApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
-        VectorAnalytics.appContext = applicationContext
+        VectorCamAnalytics.appContext = applicationContext
 
         val cl = FirebaseCrashlytics.getInstance()
         cl.isCrashlyticsCollectionEnabled = true
         Crashy.crashlytics = cl
 
-        // Analytics — release only
         val fa = FirebaseAnalytics.getInstance(this)
         fa.setAnalyticsCollectionEnabled(true)
-        VectorAnalytics.analytics = fa
-        VectorAnalytics.setRegion(BuildConfig.REGION)
-        VectorAnalytics.debugLogging = BuildConfig.DEBUG
+        VectorCamAnalytics.analytics = fa
+        VectorCamAnalytics.setRegion(BuildConfig.REGION)
+        VectorCamAnalytics.debugLogging = BuildConfig.DEBUG
 
-        // Snapshot battery + temperature at startup; refreshed again before key events
-        VectorAnalytics.updateDeviceCondition()
+        VectorCamAnalytics.updateDeviceCondition()
 
         Sentry.configureScope { scope ->
             scope.setTag("region", BuildConfig.REGION)

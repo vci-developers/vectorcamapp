@@ -23,9 +23,9 @@ import java.io.File
  * Device condition (battery + temperature) is tracked as user properties so every event
  * in GA4 carries the device state at the time it was fired.
  */
-object VectorAnalytics {
+object VectorCamAnalytics {
 
-    private const val TAG = "VectorAnalytics"
+    private const val TAG = "VectorCamAnalytics"
 
     @Volatile
     var analytics: FirebaseAnalytics? = null
@@ -53,11 +53,8 @@ object VectorAnalytics {
     // ── Device condition snapshot ─────────────────────────────────────────────
 
     data class DeviceCondition(
-        /** 0–100 % */
         val batteryLevelPct: Int,
-        /** Battery temperature in °C. Normal < 40°C. Overheating > 45°C. */
         val batteryTempC: Float,
-        /** CPU/board temperature in °C read from thermal zone 0. Null when unavailable. */
         val cpuTempC: Float?,
         val isCharging: Boolean,
     )
@@ -88,7 +85,6 @@ object VectorAnalytics {
 
         if (!enabled) return
 
-        // Firebase user property name limit: 24 chars. Value limit: 36 chars.
         analytics?.setUserProperty("battery_level", condition.batteryLevelPct.toString())
         analytics?.setUserProperty("battery_temp_c", "%.1f".format(condition.batteryTempC))
         analytics?.setUserProperty("is_charging", condition.isCharging.toString())
@@ -98,8 +94,8 @@ object VectorAnalytics {
     }
 
     private fun readDeviceCondition(): DeviceCondition? {
-        val ctx = appContext ?: return null
-        val intent = ctx.registerReceiver(
+        val context = appContext ?: return null
+        val intent = context.registerReceiver(
             null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         ) ?: return null
 
@@ -123,27 +119,20 @@ object VectorAnalytics {
         )
     }
 
-    /**
-     * Reads CPU temperature from the thermal subsystem (thermal_zone0).
-     * Available on most Android devices; returns null if the file is missing or unreadable.
-     * The file stores the value in millidegrees Celsius on most SoCs.
-     */
     private fun readCpuTemperatureC(): Float? = try {
         val raw = File("/sys/class/thermal/thermal_zone0/temp").readText().trim().toLong()
-        // Values > 1000 are in millidegrees; ≤ 1000 are already in degrees
         if (raw > 1_000) raw / 1_000.0f else raw.toFloat()
     } catch (_: Exception) {
         null
     }
 
-    /** Returns the last-read condition as a flat map suitable for event parameters. */
     private fun conditionParams(): Map<String, Any?> {
-        val c = lastCondition ?: return emptyMap()
+        val condition = lastCondition ?: return emptyMap()
         return buildMap {
-            put("battery_level", c.batteryLevelPct)
-            put("battery_temp_c", "%.1f".format(c.batteryTempC))
-            put("is_charging", c.isCharging.toString())
-            c.cpuTempC?.let { put("cpu_temp_c", "%.1f".format(it)) }
+            put("battery_level", condition.batteryLevelPct)
+            put("battery_temp_c", "%.1f".format(condition.batteryTempC))
+            put("is_charging", condition.isCharging.toString())
+            condition.cpuTempC?.let { put("cpu_temp_c", "%.1f".format(it)) }
         }
     }
 
@@ -248,7 +237,6 @@ object VectorAnalytics {
     }
 
     // ── Domain-specific helpers ───────────────────────────────────────────────
-    // Device condition is automatically included in events where thermal state matters.
 
     fun sessionStarted(sessionId: String, collectionMethod: String) {
         updateDeviceCondition()
