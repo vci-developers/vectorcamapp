@@ -38,7 +38,7 @@ class VectorCamApp : Application(), Configuration.Provider {
         VectorCamAnalytics.analytics = fa
         VectorCamAnalytics.setRegion(BuildConfig.REGION)
         VectorCamAnalytics.debugLogging = BuildConfig.DEBUG
-
+        VectorCamAnalytics.setStaticProperties()
         VectorCamAnalytics.updateDeviceCondition()
 
         Sentry.configureScope { scope ->

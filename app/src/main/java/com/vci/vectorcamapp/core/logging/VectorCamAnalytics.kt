@@ -3,10 +3,16 @@ package com.vci.vectorcamapp.core.logging
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.os.StatFs
 import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.domain.model.Device
 import java.io.File
 
@@ -57,6 +63,8 @@ object VectorCamAnalytics {
         val batteryTempC: Float,
         val cpuTempC: Float?,
         val isCharging: Boolean,
+        val networkType: String,
+        val availableStorageMb: Long,
     )
 
     @Volatile
@@ -80,6 +88,8 @@ object VectorCamAnalytics {
                 append(" batt_temp=${condition.batteryTempC}°C")
                 condition.cpuTempC?.let { append(" cpu_temp=${it}°C") }
                 append(" charging=${condition.isCharging}")
+                append(" network=${condition.networkType}")
+                append(" storage=${condition.availableStorageMb}MB")
             })
         }
 
@@ -90,6 +100,23 @@ object VectorCamAnalytics {
         analytics?.setUserProperty("is_charging", condition.isCharging.toString())
         condition.cpuTempC?.let {
             analytics?.setUserProperty("cpu_temp_c", "%.1f".format(it))
+        }
+        analytics?.setUserProperty("network_type", condition.networkType)
+        analytics?.setUserProperty("storage_available_mb", condition.availableStorageMb.toString())
+    }
+
+    /**
+     * Sets static device properties that don't change at runtime.
+     * Call once from VectorCamApp.onCreate() after [analytics] is assigned.
+     */
+    fun setStaticProperties() {
+        if (!enabled) return
+        analytics?.setUserProperty("app_version", BuildConfig.VERSION_NAME)
+        analytics?.setUserProperty("app_build", BuildConfig.VERSION_CODE.toString())
+        analytics?.setUserProperty("android_version", Build.VERSION.RELEASE)
+        analytics?.setUserProperty("android_sdk", Build.VERSION.SDK_INT.toString())
+        if (debugLogging) {
+            Log.d(TAG, "STATIC_PROPS → app=${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) android=${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})")
         }
     }
 
@@ -116,7 +143,27 @@ object VectorCamAnalytics {
             batteryTempC = batteryTempC,
             cpuTempC = readCpuTemperatureC(),
             isCharging = isCharging,
+            networkType = readNetworkType(context),
+            availableStorageMb = readAvailableStorageMb(),
         )
+    }
+
+    private fun readNetworkType(context: Context): String {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return "none"
+        return when {
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "wifi"
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "mobile"
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "ethernet"
+            else -> "other"
+        }
+    }
+
+    private fun readAvailableStorageMb(): Long = try {
+        val stat = StatFs(Environment.getDataDirectory().path)
+        stat.availableBlocksLong * stat.blockSizeLong / (1024 * 1024)
+    } catch (_: Exception) {
+        -1L
     }
 
     private fun readCpuTemperatureC(): Float? = try {
@@ -133,6 +180,8 @@ object VectorCamAnalytics {
             put("battery_temp_c", "%.1f".format(condition.batteryTempC))
             put("is_charging", condition.isCharging.toString())
             condition.cpuTempC?.let { put("cpu_temp_c", "%.1f".format(it)) }
+            put("network_type", condition.networkType)
+            put("storage_available_mb", condition.availableStorageMb)
         }
     }
 
