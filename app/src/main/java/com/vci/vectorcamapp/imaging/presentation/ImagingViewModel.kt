@@ -9,12 +9,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
+import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
+import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
@@ -75,6 +78,9 @@ class ImagingViewModel @Inject constructor(
     private val inferenceRepository: InferenceRepository,
     private val workRepository: WorkManagerRepository,
     private val validateSpecimenIdUseCase: ValidateSpecimenIdUseCase,
+    private val deviceCache: DeviceCache,
+    private val programRepository: ProgramRepository,
+    private val formDataSource: FormDataSource,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
     private val destination = savedStateHandle.toRoute<Destination.Imaging>()
@@ -279,8 +285,18 @@ class ImagingViewModel @Inject constructor(
                             currentSession.localId, currentSessionSiteId
                         )
                         currentSessionCache.clearSession()
-                        _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                        checkFormVersionAndNavigate()
                     }
+                }
+
+                ImagingAction.DismissFormObsoleteDialog -> {
+                    _state.update { it.copy(showFormObsoleteDialog = false) }
+                    _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                }
+
+                ImagingAction.GoToSettingsFromFormObsolete -> {
+                    _state.update { it.copy(showFormObsoleteDialog = false) }
+                    _events.send(ImagingEvent.NavigateToSettingsScreen)
                 }
 
                 is ImagingAction.ToggleModelInference -> {
@@ -653,6 +669,26 @@ class ImagingViewModel @Inject constructor(
                 currentCameraMetadata = null
             )
         }
+    }
+
+    private suspend fun checkFormVersionAndNavigate() {
+        val programId = deviceCache.getProgramId()
+        if (programId != null) {
+            val program = programRepository.getProgramById(programId)
+            val localFormVersion = program?.formVersion
+            if (localFormVersion != null) {
+                when (val result = formDataSource.getCurrentFormByProgramId(programId)) {
+                    is Result.Success -> {
+                        if (result.data.version != localFormVersion) {
+                            _state.update { it.copy(showFormObsoleteDialog = true) }
+                            return
+                        }
+                    }
+                    is Result.Error -> { /* network error — proceed normally */ }
+                }
+            }
+        }
+        _events.send(ImagingEvent.NavigateBackToLandingScreen)
     }
 
     private suspend fun determineSelectionForFurtherProcessing(selectionProbability: Float): Boolean {

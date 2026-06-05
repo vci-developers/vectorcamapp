@@ -12,4 +12,6 @@ sealed interface CollectionBatchListAction {
     data class SelectPendingAction(val pendingAction: CollectionBatchListAction) : CollectionBatchListAction
     data object ClearPendingAction : CollectionBatchListAction
     data object ConfirmPendingAction : CollectionBatchListAction
+    data object DismissFormObsoleteDialog : CollectionBatchListAction
+    data object GoToSettingsFromFormObsolete : CollectionBatchListAction
 }

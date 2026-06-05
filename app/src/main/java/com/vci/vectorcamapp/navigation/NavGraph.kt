@@ -162,6 +162,11 @@ fun NavGraph(startDestination: Destination) {
                             inclusive = false,
                         )
                     }
+
+                    ImagingEvent.NavigateToSettingsScreen -> {
+                        navController.popBackStack(Destination.Landing, false)
+                        navController.navigate(Destination.Settings)
+                    }
                 }
             }
 
@@ -190,6 +195,11 @@ fun NavGraph(startDestination: Destination) {
                             sessionUnitId = event.sessionUnitId?.toString()
                         )
                     )
+
+                    CollectionBatchListEvent.NavigateToSettingsScreen -> {
+                        navController.popBackStack(Destination.Landing, false)
+                        navController.navigate(Destination.Settings)
+                    }
                 }
             }
 

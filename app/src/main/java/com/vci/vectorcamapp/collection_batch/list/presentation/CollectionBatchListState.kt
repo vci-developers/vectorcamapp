@@ -11,4 +11,5 @@ data class CollectionBatchListState(
     val bucketNamesBySessionUnitId: Map<UUID, String> = emptyMap(),
     val isSubmitDialogVisible: Boolean = false,
     val submissionPendingAction: CollectionBatchListAction? = null,
+    val showFormObsoleteDialog: Boolean = false
 )

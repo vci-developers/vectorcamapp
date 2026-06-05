@@ -18,6 +18,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -230,6 +231,48 @@ fun CollectionBatchListScreen(
                                 color = MaterialTheme.colors.textPrimary
                             )
                         }
+                    }
+                }
+            )
+        }
+
+        if (state.showFormObsoleteDialog) {
+            AlertDialog(
+                onDismissRequest = { onAction(CollectionBatchListAction.DismissFormObsoleteDialog) },
+                title = {
+                    Text(
+                        text = "Form Update Required",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colors.textPrimary
+                    )
+                },
+                text = {
+                    Text(
+                        text = "The form version on your device is out of date. Please sync to get the latest form before starting a new session.\n\nWould you like to go to Settings to sync now?",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colors.textSecondary
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { onAction(CollectionBatchListAction.GoToSettingsFromFormObsolete) }
+                    ) {
+                        Text(
+                            text = "Go to Settings",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.buttonText
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { onAction(CollectionBatchListAction.DismissFormObsoleteDialog) }
+                    ) {
+                        Text(
+                            text = "Later",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.textPrimary
+                        )
                     }
                 }
             )
