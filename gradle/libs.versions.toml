@@ -32,6 +32,7 @@ turbine = "1.2.1"
 uiTextGoogleFonts = "1.10.0"
 window = "1.5.1"
 workRuntimeKtx = "2.11.0"
+timber = "5.0.1"
 tusAndroidClient = "0.1.12"
 tusJavaClient = "0.5.1"
 
@@ -97,6 +98,7 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 tus-android-client = { module = "io.tus.android.client:tus-android-client", version.ref = "tusAndroidClient" }
 tus-java-client = { module = "io.tus.java.client:tus-java-client", version.ref = "tusJavaClient" }
 litert = { module = "com.google.ai.edge.litert:litert", version.ref = "litert" }

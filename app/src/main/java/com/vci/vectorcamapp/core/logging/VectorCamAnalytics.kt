@@ -10,8 +10,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.StatFs
-import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
+import timber.log.Timber
 import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.domain.model.Device
 import java.io.File
@@ -31,8 +31,6 @@ import java.io.File
  */
 object VectorCamAnalytics {
 
-    private const val TAG = "VectorCamAnalytics"
-
     @Volatile
     var analytics: FirebaseAnalytics? = null
 
@@ -43,13 +41,6 @@ object VectorCamAnalytics {
     /** Set to false to suppress sending events to Firebase (e.g. in debug builds). */
     @Volatile
     var enabled = true
-
-    /**
-     * When true, every event and screen view is printed to Logcat regardless of [enabled].
-     * Enable this in debug builds to verify tracking without sending real data.
-     */
-    @Volatile
-    var debugLogging = false
 
     // ── Screen time bookkeeping ───────────────────────────────────────────────
 
@@ -81,17 +72,15 @@ object VectorCamAnalytics {
         val condition = readDeviceCondition() ?: return
         lastCondition = condition
 
-        if (debugLogging) {
-            Log.d(TAG, buildString {
-                append("DEVICE_CONDITION →")
-                append(" battery=${condition.batteryLevelPct}%")
-                append(" batt_temp=${condition.batteryTempC}°C")
-                condition.cpuTempC?.let { append(" cpu_temp=${it}°C") }
-                append(" charging=${condition.isCharging}")
-                append(" network=${condition.networkType}")
-                append(" storage=${condition.availableStorageMb}MB")
-            })
-        }
+        Timber.d(buildString {
+            append("DEVICE_CONDITION →")
+            append(" battery=${condition.batteryLevelPct}%")
+            append(" batt_temp=${condition.batteryTempC}°C")
+            condition.cpuTempC?.let { append(" cpu_temp=${it}°C") }
+            append(" charging=${condition.isCharging}")
+            append(" network=${condition.networkType}")
+            append(" storage=${condition.availableStorageMb}MB")
+        })
 
         if (!enabled) return
 
@@ -110,14 +99,12 @@ object VectorCamAnalytics {
      * Call once from VectorCamApp.onCreate() after [analytics] is assigned.
      */
     fun setStaticProperties() {
+        Timber.d("STATIC_PROPS → app=${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) android=${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})")
         if (!enabled) return
         analytics?.setUserProperty("app_version", BuildConfig.VERSION_NAME)
         analytics?.setUserProperty("app_build", BuildConfig.VERSION_CODE.toString())
         analytics?.setUserProperty("android_version", Build.VERSION.RELEASE)
         analytics?.setUserProperty("android_sdk", Build.VERSION.SDK_INT.toString())
-        if (debugLogging) {
-            Log.d(TAG, "STATIC_PROPS → app=${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) android=${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})")
-        }
     }
 
     private fun readDeviceCondition(): DeviceCondition? {
@@ -214,10 +201,8 @@ object VectorCamAnalytics {
 
         val condition = conditionParams()
 
-        if (debugLogging) {
-            val condStr = if (condition.isEmpty()) "" else " | ${condition.entries.joinToString { "${it.key}=${it.value}" }}"
-            Log.d(TAG, "SCREEN_VIEW → $screenName$condStr")
-        }
+        val condStr = if (condition.isEmpty()) "" else " | ${condition.entries.joinToString { "${it.key}=${it.value}" }}"
+        Timber.d("SCREEN_VIEW → $screenName$condStr")
 
         if (!enabled) return
 
@@ -239,10 +224,8 @@ object VectorCamAnalytics {
     // ── Generic event logging ─────────────────────────────────────────────────
 
     fun logEvent(name: String, params: Map<String, Any?> = emptyMap()) {
-        if (debugLogging) {
-            val paramsStr = if (params.isEmpty()) "" else " | ${params.entries.joinToString { "${it.key}=${it.value}" }}"
-            Log.d(TAG, "EVENT → $name$paramsStr")
-        }
+        val paramsStr = if (params.isEmpty()) "" else " | ${params.entries.joinToString { "${it.key}=${it.value}" }}"
+        Timber.d("EVENT → $name$paramsStr")
         if (!enabled) return
         val bundle = Bundle()
         params.forEach { (key, value) ->

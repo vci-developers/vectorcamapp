@@ -6,8 +6,10 @@ import androidx.work.Configuration
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.vci.vectorcamapp.core.logging.Crashy
+import com.vci.vectorcamapp.core.logging.CrashlyticsTree
 import com.vci.vectorcamapp.core.logging.CrashyContext
 import com.vci.vectorcamapp.core.logging.VectorCamAnalytics
+import timber.log.Timber
 import io.sentry.Sentry
 import dagger.hilt.android.HiltAndroidApp
 import org.opencv.android.OpenCVLoader
@@ -27,6 +29,12 @@ class VectorCamApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        } else {
+            Timber.plant(CrashlyticsTree())
+        }
+
         VectorCamAnalytics.appContext = applicationContext
 
         val cl = FirebaseCrashlytics.getInstance()
@@ -37,7 +45,6 @@ class VectorCamApp : Application(), Configuration.Provider {
         fa.setAnalyticsCollectionEnabled(true)
         VectorCamAnalytics.analytics = fa
         VectorCamAnalytics.setRegion(BuildConfig.REGION)
-        VectorCamAnalytics.debugLogging = BuildConfig.DEBUG
         VectorCamAnalytics.setStaticProperties()
         VectorCamAnalytics.updateDeviceCondition()
 
