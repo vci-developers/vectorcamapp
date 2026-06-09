@@ -5,10 +5,13 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
-import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
+import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
@@ -57,6 +60,9 @@ class ImagingViewModelTest {
     private lateinit var cameraRepository: CameraRepository
     private lateinit var inferenceRepository: InferenceRepository
     private lateinit var workRepository: WorkManagerRepository
+    private lateinit var deviceCache: DeviceCache
+    private lateinit var programRepository: ProgramRepository
+    private lateinit var formDataSource: FormDataSource
     private lateinit var errorMessageEmitter: ErrorMessageEmitter
     private lateinit var transactionHelper: TransactionHelper
     private lateinit var imagingWorkflowFactory: ImagingWorkflowFactory
@@ -110,6 +116,9 @@ class ImagingViewModelTest {
         cameraRepository = mockk(relaxed = true)
         inferenceRepository = mockk(relaxed = true)
         workRepository = mockk(relaxed = true)
+        deviceCache = mockk(relaxed = true)
+        programRepository = mockk(relaxed = true)
+        formDataSource = mockk(relaxed = true)
         transactionHelper = mockk(relaxed = true)
 
         imagingWorkflow = mockk(relaxed = true)
@@ -166,6 +175,9 @@ class ImagingViewModelTest {
             inferenceRepository = inferenceRepository,
             workRepository = workRepository,
             validateSpecimenIdUseCase = ValidateSpecimenIdUseCase(),
+            deviceCache = deviceCache,
+            programRepository = programRepository,
+            formDataSource = formDataSource,
             errorMessageEmitter = errorMessageEmitter,
         ).also { vm ->
             vm.transactionHelper = transactionHelper
