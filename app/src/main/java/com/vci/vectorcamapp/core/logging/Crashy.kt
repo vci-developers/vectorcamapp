@@ -2,175 +2,90 @@ package com.vci.vectorcamapp.core.logging
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.vci.vectorcamapp.core.domain.model.Device
-import io.sentry.Attachment
-import io.sentry.Breadcrumb
-import io.sentry.IScope
-import io.sentry.Sentry
-import io.sentry.SentryLevel
-import io.sentry.protocol.SentryId
-import io.sentry.protocol.User
 
 object Crashy {
 
-    @Volatile
-    var enabled = true
+    @Volatile var enabled: Boolean = true
+    @Volatile var crashlytics: FirebaseCrashlytics? = null
 
-    @Volatile
-    var crashlytics: FirebaseCrashlytics? = null
+    // ---- Breadcrumbs / diagnostic logs -------------------------------------
 
-    fun globalBreadcrumb(
+    fun log(
         message: String,
         category: String = "app",
-        level: SentryLevel = SentryLevel.INFO,
+        severity: Severity = Severity.INFO,
         data: Map<String, Any?> = emptyMap(),
-        context: CrashyContext? = null
+        context: CrashyContext? = null,
     ) {
         if (!enabled) return
-        val breadcrumb = Breadcrumb().apply {
-            this.message = message
-            this.category = category
-            this.level = level
-            data.forEach { (key, value) -> setData(key, value.toString()) }
-            context?.let { applyContextToBreadcrumb(this, it) }
+        val cl = crashlytics ?: return
+        val parts = buildList {
+            add("[${severity.name}][$category] $message")
+            context?.screen?.let     { add("screen=$it") }
+            context?.feature?.let    { add("feature=$it") }
+            context?.action?.let     { add("action=$it") }
+            context?.sessionId?.let  { add("session_id=$it") }
+            context?.programId?.let  { add("program_id=$it") }
+            context?.siteId?.let     { add("site_id=$it") }
+            context?.specimenId?.let { add("specimen_id=$it") }
+            data.forEach { (k, v) -> add("$k=$v") }
         }
-        Sentry.addBreadcrumb(breadcrumb)
-        logBreadcrumbToFirebase(message, category, level, data, context)
+        cl.log(parts.joinToString(" | ").take(1024))
     }
 
-    fun scopedBreadcrumb(
-        message: String,
-        category: String = "app",
-        level: SentryLevel = SentryLevel.INFO,
-        data: Map<String, Any?> = emptyMap(),
-        context: CrashyContext? = null
-    ) {
-        if (!enabled) return
-        Sentry.pushScope().use {
-            Sentry.configureScope { scope ->
-                val breadcrumb = Breadcrumb().apply {
-                    this.message = message
-                    this.category = category
-                    this.level = level
-                    data.forEach { (key, value) -> setData(key, value.toString()) }
-                    context?.let { applyContextToBreadcrumb(this, it) }
-                }
-                scope.addBreadcrumb(breadcrumb)
-            }
-        }
-        logBreadcrumbToFirebase(message, category, level, data, context)
-    }
+    // ---- Non-fatal exceptions ----------------------------------------------
 
     fun exception(
         throwable: Throwable,
-        level: SentryLevel = SentryLevel.ERROR,
+        severity: Severity = Severity.ERROR,
         context: CrashyContext? = null,
         tags: Map<String, String> = emptyMap(),
         extras: Map<String, Any?> = emptyMap(),
-        attachments: List<Attachment> = emptyList()
-    ): SentryId? {
-        if (!enabled) return null
-        var id: SentryId? = null
-        Sentry.pushScope().use {
-            Sentry.configureScope { scope ->
-                scope.level = level
-                context?.let { applyContextToScope(scope, it) }
-                tags.forEach(scope::setTag)
-                extras.forEach { (key, value) -> scope.setExtra(key, value.toString()) }
-                attachments.forEach(scope::addAttachment)
-                id = Sentry.captureException(throwable)
-            }
-        }
-        crashlytics?.let { cl ->
-            context?.let { ctx ->
-                ctx.screen?.let { cl.setCustomKey("screen", it) }
-                ctx.feature?.let { cl.setCustomKey("feature", it) }
-                ctx.action?.let { cl.setCustomKey("action", it) }
-                ctx.sessionId?.let { cl.setCustomKey("session_id", it) }
-                ctx.programId?.let { cl.setCustomKey("program_id", it) }
-                ctx.siteId?.let { cl.setCustomKey("site_id", it) }
-                ctx.specimenId?.let { cl.setCustomKey("specimen_id", it) }
-            }
-            tags.forEach { (key, value) -> cl.setCustomKey(key, value) }
-            cl.recordException(throwable)
-        }
-        return id
+    ) {
+        if (!enabled) return
+        val cl = crashlytics ?: return
+
+        // Standard 7 — always set/refresh on every exception call
+        cl.setCustomKey("severity", severity.name)
+        cl.setCustomKey("screen",      context?.screen.orEmpty())
+        cl.setCustomKey("feature",     context?.feature.orEmpty())
+        cl.setCustomKey("action",      context?.action.orEmpty())
+        cl.setCustomKey("session_id",  context?.sessionId.orEmpty())
+        cl.setCustomKey("program_id",  context?.programId.orEmpty())
+        cl.setCustomKey("site_id",     context?.siteId.orEmpty())
+        cl.setCustomKey("specimen_id", context?.specimenId.orEmpty())
+
+        // Caller-supplied
+        tags.forEach   { (k, v) -> cl.setCustomKey(k.take(64), v.take(1024)) }
+        extras.forEach { (k, v) -> cl.setCustomKey(k.take(64), v.toString().take(1024)) }
+
+        cl.recordException(throwable)
     }
+
+    // ---- User identity ------------------------------------------------------
 
     fun setDevice(device: Device?) {
         if (!enabled) return
+        val cl = crashlytics ?: return
         if (device == null) {
-            Sentry.setUser(null)
-            crashlytics?.setUserId("")
+            cl.setUserId("")
             return
         }
         val userId = "${device.id}_${device.registeredAt}"
-        val user = User().apply {
-            this.id = userId
-            this.username = device.model
-        }
-        Sentry.setUser(user)
-        crashlytics?.setUserId(userId)
-        crashlytics?.setCustomKey("device_model", device.model)
-        globalBreadcrumb(
+        cl.setUserId(userId)
+        cl.setCustomKey("device_model", device.model)
+        log(
             message = "User context set",
             category = "user",
-            level = SentryLevel.INFO,
-            data = mapOf(
-                "user_id" to userId,
-                "username" to device.model,
-            )
+            severity = Severity.INFO,
+            data = mapOf("user_id" to userId, "username" to device.model),
         )
     }
 
     fun clearDevice() {
         if (!enabled) return
-        Sentry.setUser(null)
-        crashlytics?.setUserId("")
-        globalBreadcrumb(
-            message = "Device context cleared",
-            category = "user",
-            level = SentryLevel.INFO
-        )
-    }
-
-    private fun logBreadcrumbToFirebase(
-        message: String,
-        category: String,
-        level: SentryLevel,
-        data: Map<String, Any?>,
-        context: CrashyContext?
-    ) {
-        val parts = buildList {
-            add("[${level.name}][$category] $message")
-            context?.screen?.let { add("screen=$it") }
-            context?.feature?.let { add("feature=$it") }
-            context?.action?.let { add("action=$it") }
-            context?.sessionId?.let { add("session_id=$it") }
-            context?.programId?.let { add("program_id=$it") }
-            context?.siteId?.let { add("site_id=$it") }
-            context?.specimenId?.let { add("specimen_id=$it") }
-            data.forEach { (key, value) -> add("$key=$value") }
-        }
-        crashlytics?.log(parts.joinToString(" | "))
-    }
-
-    private fun applyContextToScope(scope: IScope, context: CrashyContext) {
-        context.screen?.let { scope.setTag("screen", it) }
-        context.feature?.let { scope.setTag("feature", it) }
-        context.action?.let { scope.setTag("action", it) }
-        context.sessionId?.let { scope.setTag("session_id", it) }
-        context.programId?.let { scope.setTag("program_id", it) }
-        context.siteId?.let { scope.setTag("site_id", it) }
-        context.specimenId?.let { scope.setTag("specimen_id", it) }
-    }
-
-    private fun applyContextToBreadcrumb(breadcrumb: Breadcrumb, context: CrashyContext) {
-        context.screen?.let { breadcrumb.setData("screen", it) }
-        context.feature?.let { breadcrumb.setData("feature", it) }
-        context.action?.let { breadcrumb.setData("action", it) }
-        context.sessionId?.let { breadcrumb.setData("session_id", it) }
-        context.programId?.let { breadcrumb.setData("program_id", it) }
-        context.siteId?.let { breadcrumb.setData("site_id", it) }
-        context.specimenId?.let { breadcrumb.setData("specimen_id", it) }
+        val cl = crashlytics ?: return
+        cl.setUserId("")
+        log("Device context cleared", category = "user")
     }
 }

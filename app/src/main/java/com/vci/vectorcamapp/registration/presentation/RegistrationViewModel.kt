@@ -26,10 +26,12 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
+import com.vci.vectorcamapp.core.logging.Crashy
+import com.vci.vectorcamapp.core.logging.VectorCamAnalytics
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
-import com.vci.vectorcamapp.registration.logging.RegistrationSentryLogger
+import com.vci.vectorcamapp.registration.logging.RegistrationErrorLogger
 import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -91,6 +93,13 @@ class RegistrationViewModel @Inject constructor(
         viewModelScope.launch {
             when (action) {
                 is RegistrationAction.SelectProgram -> {
+                    VectorCamAnalytics.logEvent(
+                        "registration_program_selected",
+                        mapOf(
+                            "program_id" to action.program.id,
+                            "program_name" to action.program.name
+                        )
+                    )
                     _state.update { it.copy(selectedProgram = action.program) }
                 }
 
@@ -135,6 +144,7 @@ class RegistrationViewModel @Inject constructor(
                 }
 
                 RegistrationAction.DismissProgramAccessCodeDialog -> {
+                    VectorCamAnalytics.logEvent("registration_access_code_dialog_dismissed")
                     _state.update {
                         it.copy(
                             isProgramAccessCodeDialogVisible = false,
@@ -145,15 +155,26 @@ class RegistrationViewModel @Inject constructor(
                 }
 
                 RegistrationAction.RefreshPrograms -> {
+                    VectorCamAnalytics.logEvent("registration_programs_refresh_clicked")
                     fetchAndSeedAllPrograms()
                 }
 
                 RegistrationAction.ConfirmRegistration -> {
                     val selectedProgram = _state.value.selectedProgram
+                    val collector = _state.value.collector
+                    VectorCamAnalytics.logEvent(
+                        "registration_confirm_clicked",
+                        mapOf(
+                            "has_selected_program" to (selectedProgram != null),
+                            "collector_name_present" to collector.name.isNotBlank(),
+                            "collector_title_present" to collector.title.isNotBlank(),
+                            "collector_last_trained_on_present" to (collector.lastTrainedOn != null)
+                        )
+                    )
 
                     if (selectedProgram == null) {
                         emitError(RegistrationError.PROGRAM_NOT_FOUND)
-                        RegistrationSentryLogger.logProgramNotFound(IllegalStateException("Program not found during registration"))
+                        RegistrationErrorLogger.logProgramNotFound(IllegalStateException("Program not found during registration"))
                         return@launch
                     }
 
@@ -174,11 +195,18 @@ class RegistrationViewModel @Inject constructor(
                     val selectedProgram = _state.value.selectedProgram
                     if (selectedProgram == null) {
                         emitError(RegistrationError.PROGRAM_NOT_FOUND)
-                        RegistrationSentryLogger.logProgramNotFound(
+                        RegistrationErrorLogger.logProgramNotFound(
                             IllegalStateException("Program not found during access code submission")
                         )
                         return@launch
                     }
+                    VectorCamAnalytics.logEvent(
+                        "registration_access_code_submitted",
+                        mapOf(
+                            "program_id" to selectedProgram.id,
+                            "code_length" to _state.value.programAccessCodeInput.length
+                        )
+                    )
 
                     if (!_isConnectedToInternet.value) {
                         emitError(NetworkError.NO_INTERNET)
@@ -193,9 +221,18 @@ class RegistrationViewModel @Inject constructor(
                         )
                     }
 
+                    val verifyStartMs = System.currentTimeMillis()
                     when (val result = programDataSource.verifyAccessCode(selectedProgram.id, programAccessCode)) {
                         is Result.Success -> {
+                            val verifyDurationMs = System.currentTimeMillis() - verifyStartMs
                             if (result.data.valid) {
+                                VectorCamAnalytics.logEvent(
+                                    "registration_access_code_validated",
+                                    mapOf(
+                                        "program_id" to selectedProgram.id,
+                                        "duration_ms" to verifyDurationMs
+                                    )
+                                )
                                 _state.update {
                                     it.copy(
                                         isProgramAccessCodeDialogVisible = false,
@@ -205,6 +242,10 @@ class RegistrationViewModel @Inject constructor(
                                 }
                                 registerCollectorAndProceed(selectedProgram)
                             } else {
+                                VectorCamAnalytics.logEvent(
+                                    "registration_access_code_rejected",
+                                    mapOf("program_id" to selectedProgram.id)
+                                )
                                 _state.update {
                                     it.copy(
                                         programAccessCodeError = RegistrationError.INVALID_PROGRAM_ACCESS_CODE,
@@ -255,6 +296,12 @@ class RegistrationViewModel @Inject constructor(
             return
         }
 
+        val seedingStartMs = System.currentTimeMillis()
+        VectorCamAnalytics.logEvent(
+            "registration_seeding_started",
+            mapOf("program_id" to selectedProgram.id)
+        )
+
         try {
             _state.update { it.copy(isLoading = true) }
             transactionHelper.runAsTransaction {
@@ -272,10 +319,37 @@ class RegistrationViewModel @Inject constructor(
             deviceCache.saveDevice(device, selectedProgram.id)
             currentSessionCache.clearSession()
             collectorRepository.upsertCollector(_state.value.collector)
+
+            // Wire user identity for Crashlytics + GA4 cohort analysis
+            VectorCamAnalytics.setDevice(device, selectedProgram.id)
+            Crashy.setDevice(device)
+
+            val seedingDurationMs = System.currentTimeMillis() - seedingStartMs
+            VectorCamAnalytics.logEvent(
+                "registration_seeding_succeeded",
+                mapOf("program_id" to selectedProgram.id, "duration_ms" to seedingDurationMs)
+            )
+            VectorCamAnalytics.logEvent(
+                "registration_completed",
+                mapOf("program_id" to selectedProgram.id)
+            )
+            VectorCamAnalytics.logEvent(
+                "device_registered",
+                mapOf("program_id" to selectedProgram.id)
+            )
+
             _events.send(RegistrationEvent.NavigateToLandingScreen)
         } catch (e: Exception) {
             emitError(RegistrationError.UNKNOWN_ERROR)
-            RegistrationSentryLogger.logDeviceRegistrationFailure(e, selectedProgram.id)
+            RegistrationErrorLogger.logDeviceRegistrationFailure(e, selectedProgram.id)
+            VectorCamAnalytics.logEvent(
+                "registration_seeding_failed",
+                mapOf(
+                    "program_id" to selectedProgram.id,
+                    "error_class" to "REGISTRATION_SEEDING",
+                    "error_message" to (e.message?.take(100) ?: "unknown")
+                )
+            )
         } finally {
             _state.update { it.copy(isLoading = false) }
         }
@@ -289,6 +363,7 @@ class RegistrationViewModel @Inject constructor(
 
     private suspend fun fetchAndSeedAllPrograms() {
         _state.update { it.copy(isLoadingPrograms = true) }
+        val fetchStartMs = System.currentTimeMillis()
         try {
             when (val result = programDataSource.getAllPrograms()) {
                 is Result.Success -> {
@@ -297,9 +372,23 @@ class RegistrationViewModel @Inject constructor(
                             programRepository.upsertProgram(programDto.toDomain())
                         }
                     }
+                    VectorCamAnalytics.logEvent(
+                        "registration_programs_fetched",
+                        mapOf(
+                            "program_count" to result.data.programs.size,
+                            "duration_ms" to (System.currentTimeMillis() - fetchStartMs)
+                        )
+                    )
                 }
 
                 is Result.Error -> {
+                    VectorCamAnalytics.logEvent(
+                        "registration_programs_fetch_failed",
+                        mapOf(
+                            "error_class" to (result.error as? Enum<*>)?.name,
+                            "duration_ms" to (System.currentTimeMillis() - fetchStartMs)
+                        )
+                    )
                     emitError(result.error)
                 }
             }

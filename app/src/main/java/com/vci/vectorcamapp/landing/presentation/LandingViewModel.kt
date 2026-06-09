@@ -9,7 +9,7 @@ import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.landing.domain.util.LandingError
-import com.vci.vectorcamapp.landing.logging.LandingSentryLogger
+import com.vci.vectorcamapp.landing.logging.LandingErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -77,7 +77,7 @@ class LandingViewModel @Inject constructor(
                     val session = currentSessionCache.getSession()
                     if (session == null) {
                         emitError(LandingError.SESSION_NOT_FOUND)
-                        LandingSentryLogger.logSessionNotFound(Exception(LandingError.SESSION_NOT_FOUND.name))
+                        LandingErrorLogger.logSessionNotFound(Exception(LandingError.SESSION_NOT_FOUND.name))
                         return@launch
                     }
 
@@ -102,7 +102,7 @@ class LandingViewModel @Inject constructor(
                 emitError(LandingError.PROGRAM_NOT_FOUND)
                 _events.send(LandingEvent.NavigateBackToRegistrationScreen)
                 _state.update { it.copy(isLoading = false) }
-                LandingSentryLogger.logProgramIdNotFound(Exception(LandingError.PROGRAM_NOT_FOUND.name))
+                LandingErrorLogger.logProgramIdNotFound(Exception(LandingError.PROGRAM_NOT_FOUND.name))
                 return@launch
             }
 
@@ -111,7 +111,7 @@ class LandingViewModel @Inject constructor(
                 emitError(LandingError.PROGRAM_NOT_FOUND)
                 _events.send(LandingEvent.NavigateBackToRegistrationScreen)
                 _state.update { it.copy(isLoading = false) }
-                LandingSentryLogger.logProgramNotFound(
+                LandingErrorLogger.logProgramNotFound(
                     Exception(LandingError.PROGRAM_NOT_FOUND.name),
                     programId
                 )

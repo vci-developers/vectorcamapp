@@ -5,7 +5,7 @@ import com.vci.vectorcamapp.core.logging.Crashy
 import com.vci.vectorcamapp.core.logging.CrashyContext
 import java.util.UUID
 
-object IntakeSentryLogger {
+object IntakeErrorLogger {
 
     fun logProgramNotFound(e: Exception) {
         Crashy.exception(

@@ -22,6 +22,10 @@ import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
+import com.vci.vectorcamapp.core.logging.Crashy
+import com.vci.vectorcamapp.core.logging.CrashyContext
+import com.vci.vectorcamapp.core.logging.Severity
+import com.vci.vectorcamapp.core.logging.VectorCamAnalytics
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
@@ -87,6 +91,15 @@ class ImagingViewModel @Inject constructor(
     lateinit var imagingWorkflowFactory: ImagingWorkflowFactory
     private lateinit var imagingWorkflow: ImagingWorkflow
 
+    // ── Analytics timing fields ───────────────────────────────────────────────
+    private var sessionStartedAt: Long = 0L
+    private var captureStartedAt: Long = 0L
+    private var inferenceStartedAt: Long = 0L
+    private var firstFrameLogged: Boolean = false
+    private var lastFocusLogMs: Long = 0L
+    private var lastFrameErrorMs: Long = 0L
+    private val frameErrorRateLimiter = FrameErrorRateLimiter()
+
     private val _specimensWithImagesAndInferenceResults: Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> =
         flow {
             val session = currentSessionCache.getSession()
@@ -123,10 +136,12 @@ class ImagingViewModel @Inject constructor(
         viewModelScope.launch {
             when (action) {
                 ImagingAction.ShowExitDialog -> {
+                    VectorCamAnalytics.logEvent("imaging_exit_dialog_opened")
                     _state.update { it.copy(showExitDialog = true) }
                 }
 
                 ImagingAction.DismissExitDialog -> {
+                    VectorCamAnalytics.logEvent("imaging_exit_dialog_dismissed")
                     _state.update { it.copy(showExitDialog = false, pendingAction = null) }
                 }
 
@@ -140,19 +155,39 @@ class ImagingViewModel @Inject constructor(
 
                 ImagingAction.ConfirmPendingAction -> {
                     val actionToConfirm = _state.value.pendingAction
+                    VectorCamAnalytics.logEvent(
+                        "imaging_pending_action_confirmed",
+                        mapOf("pending_action_class" to (actionToConfirm?.let { it::class.simpleName } ?: "null"))
+                    )
                     _state.update { it.copy(showExitDialog = false, pendingAction = null) }
                     actionToConfirm?.let { onAction(it) }
                 }
 
                 is ImagingAction.FocusAt -> {
+                    val now = System.currentTimeMillis()
+                    if (now - lastFocusLogMs >= 2_000) {
+                        lastFocusLogMs = now
+                        VectorCamAnalytics.logEvent(
+                            "imaging_manual_focus_set",
+                            mapOf("x_norm" to action.offset.x, "y_norm" to action.offset.y)
+                        )
+                    }
                     _state.update { it.copy(focusPoint = action.offset, isManualFocusing = true) }
                 }
 
                 ImagingAction.CancelFocus -> {
+                    VectorCamAnalytics.logEvent("imaging_focus_cancelled")
                     _state.update { it.copy(focusPoint = null, isManualFocusing = false) }
                 }
 
                 is ImagingAction.CorrectSpecimenId -> {
+                    VectorCamAnalytics.logEvent(
+                        "imaging_specimen_id_corrected",
+                        mapOf(
+                            "length" to action.specimenId.length,
+                            "had_previous_error" to (_state.value.specimenIdError != null)
+                        )
+                    )
                     _state.update {
                         it.copy(
                             currentSpecimen = it.currentSpecimen.copy(id = action.specimenId),
@@ -165,6 +200,16 @@ class ImagingViewModel @Inject constructor(
                     try {
                         if (!_state.value.isCameraReady) {
                             _state.update { it.copy(isCameraReady = true) }
+                            if (!firstFrameLogged) {
+                                firstFrameLogged = true
+                                VectorCamAnalytics.logEvent(
+                                    "imaging_camera_opened",
+                                    mapOf(
+                                        "latency_ms_since_session_started" to
+                                                (System.currentTimeMillis() - sessionStartedAt)
+                                    )
+                                )
+                            }
                         }
 
                         if (!_state.value.isProcessing) {
@@ -253,6 +298,14 @@ class ImagingViewModel @Inject constructor(
                             }
                         }
                     } catch (e: Exception) {
+                        val now = System.currentTimeMillis()
+                        if (now - lastFrameErrorMs >= 5_000) {
+                            lastFrameErrorMs = now
+                            VectorCamAnalytics.logEvent(
+                                "imaging_frame_processing_failed",
+                                mapOf("error_class" to ImagingError.PROCESSING_ERROR.name)
+                            )
+                        }
                         emitError(ImagingError.PROCESSING_ERROR)
                     } finally {
                         action.frame.close()
@@ -260,6 +313,16 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 ImagingAction.SaveSessionProgress -> {
+                    val sessionId = currentSessionCache.getSession()?.localId?.toString() ?: ""
+                    val specimenCount = _state.value.specimensWithImagesAndInferenceResults.size
+                    VectorCamAnalytics.logEvent(
+                        "imaging_session_progress_saved",
+                        mapOf(
+                            "session_id" to sessionId,
+                            "total_specimens" to specimenCount,
+                            "total_duration_ms" to (System.currentTimeMillis() - sessionStartedAt)
+                        )
+                    )
                     currentSessionCache.clearSession()
                     _events.send(ImagingEvent.NavigateBackToLandingScreen)
                 }
@@ -275,6 +338,16 @@ class ImagingViewModel @Inject constructor(
 
                     val success = sessionRepository.markSessionAsComplete(currentSession.localId)
                     if (success) {
+                        val specimenCount = _state.value.specimensWithImagesAndInferenceResults.size
+                        VectorCamAnalytics.logEvent(
+                            "imaging_session_submitted",
+                            mapOf(
+                                "session_id" to currentSession.localId.toString(),
+                                "session_type" to _state.value.sessionType.name,
+                                "total_specimens" to specimenCount,
+                                "total_duration_ms" to (System.currentTimeMillis() - sessionStartedAt)
+                            )
+                        )
                         workRepository.enqueueSessionUpload(
                             currentSession.localId, currentSessionSiteId
                         )
@@ -284,6 +357,10 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 is ImagingAction.ToggleModelInference -> {
+                    VectorCamAnalytics.logEvent(
+                        "imaging_inference_toggled",
+                        mapOf("is_enabled" to action.isChecked)
+                    )
                     val shouldRunInference = action.isChecked
                     _state.update {
                         it.copy(
@@ -298,6 +375,17 @@ class ImagingViewModel @Inject constructor(
                 is ImagingAction.CaptureImage -> {
                     if (!_state.value.isCameraReady) return@launch
 
+                    captureStartedAt = System.currentTimeMillis()
+                    VectorCamAnalytics.logEvent(
+                        "imaging_capture_shutter_pressed",
+                        mapOf(
+                            "session_id" to (currentSessionCache.getSession()?.localId?.toString() ?: ""),
+                            "inference_enabled" to _state.value.shouldRunInference,
+                            "manual_focus" to _state.value.isManualFocusing,
+                            "current_specimen_count" to _state.value.specimensWithImagesAndInferenceResults.size
+                        )
+                    )
+
                     _state.update { it.copy(isProcessing = true) }
 
                     val captureResult = cameraRepository.captureImage(action.imageCapture)
@@ -306,6 +394,17 @@ class ImagingViewModel @Inject constructor(
                         captureResult.onSuccess { image ->
                             val bitmap = image.toUprightBitmap()
                             image.close()
+
+                            val captureDurationMs = System.currentTimeMillis() - captureStartedAt
+                            VectorCamAnalytics.logEvent(
+                                "imaging_specimen_image_captured",
+                                mapOf(
+                                    "capture_duration_ms" to captureDurationMs,
+                                    "image_width" to bitmap.width,
+                                    "image_height" to bitmap.height,
+                                    "had_focus_point" to (_state.value.focusPoint != null)
+                                )
+                            )
 
                             val capturedMetadata = action.cameraMetadata?.copy(
                                 imageWidth = bitmap.width,
@@ -332,8 +431,25 @@ class ImagingViewModel @Inject constructor(
                             rgbaMatrix.release()
 
                             if (_state.value.shouldRunInference) {
+                                val detectionStartMs = System.currentTimeMillis()
                                 val captureDetectorResults =
                                     inferenceRepository.detectSpecimen(jpegBitmap)
+                                val detectionDurationMs = System.currentTimeMillis() - detectionStartMs
+
+                                val outcome = when (captureDetectorResults.size) {
+                                    0 -> "none"
+                                    1 -> "found_one"
+                                    else -> "multiple"
+                                }
+                                VectorCamAnalytics.logEvent(
+                                    "imaging_specimen_detection_completed",
+                                    mapOf(
+                                        "detection_count" to captureDetectorResults.size,
+                                        "top_confidence" to (captureDetectorResults.maxByOrNull { it.bboxConfidence }?.bboxConfidence),
+                                        "duration_ms" to detectionDurationMs,
+                                        "outcome" to outcome
+                                    )
+                                )
 
                                 when (captureDetectorResults.size) {
                                     0 -> emitError(
@@ -383,9 +499,11 @@ class ImagingViewModel @Inject constructor(
                                                 clampedHeight
                                             )
 
+                                            inferenceStartedAt = System.currentTimeMillis()
                                             var (speciesResult, sexResult, abdomenStatusResult) = inferenceRepository.classifySpecimen(
                                                 croppedBitmap
                                             )
+                                            val totalInferenceDurationMs = System.currentTimeMillis() - inferenceStartedAt
 
                                             val speciesIndex =
                                                 speciesResult?.logits?.let { logits ->
@@ -408,12 +526,30 @@ class ImagingViewModel @Inject constructor(
                                                 abdomenStatusIndex = null
                                             }
 
+                                            val speciesLabel = speciesIndex?.let { SpeciesLabel.entries[it].label }
+                                            val sexLabel = sexIndex?.let { SexLabel.entries[it].label }
+                                            val abdomenLabel = abdomenStatusIndex?.let { AbdomenStatusLabel.entries[it].label }
+
+                                            VectorCamAnalytics.logEvent(
+                                                "imaging_specimen_inference_completed",
+                                                mapOf(
+                                                    "species_label" to speciesLabel,
+                                                    "sex_label" to sexLabel,
+                                                    "abdomen_status_label" to abdomenLabel,
+                                                    "bbox_confidence" to captureDetectorResult.bboxConfidence,
+                                                    "species_inference_duration_ms" to speciesResult?.inferenceDuration,
+                                                    "sex_inference_duration_ms" to sexResult?.inferenceDuration,
+                                                    "abdomen_status_inference_duration_ms" to abdomenStatusResult?.inferenceDuration,
+                                                    "total_inference_duration_ms" to totalInferenceDurationMs
+                                                )
+                                            )
+
                                             _state.update {
                                                 it.copy(
                                                     currentSpecimenImage = it.currentSpecimenImage.copy(
-                                                        species = speciesIndex?.let { index -> SpeciesLabel.entries[index].label },
-                                                        sex = sexIndex?.let { index -> SexLabel.entries[index].label },
-                                                        abdomenStatus = abdomenStatusIndex?.let { index -> AbdomenStatusLabel.entries[index].label },
+                                                        species = speciesLabel,
+                                                        sex = sexLabel,
+                                                        abdomenStatus = abdomenLabel,
                                                     ),
                                                     currentImageBytes = jpegByteArray,
                                                     currentInferenceResult = InferenceResult(
@@ -452,6 +588,15 @@ class ImagingViewModel @Inject constructor(
                         }.onError { error ->
                             withContext(Dispatchers.Main) {
                                 if (error == ImagingError.NO_ACTIVE_SESSION) {
+                                    Crashy.exception(
+                                        throwable = IllegalStateException("No active session during capture"),
+                                        severity = Severity.ERROR,
+                                        context = CrashyContext(screen = "Imaging", feature = "CaptureImage", action = "capture"),
+                                    )
+                                    VectorCamAnalytics.logEvent(
+                                        "imaging_no_active_session",
+                                        mapOf("error_class" to ImagingError.NO_ACTIVE_SESSION.name)
+                                    )
                                     _events.send(ImagingEvent.NavigateBackToLandingScreen)
                                 }
                                 emitError(error)
@@ -462,10 +607,18 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 ImagingAction.RetakeImage -> {
+                    VectorCamAnalytics.logEvent(
+                        "imaging_image_retake_clicked",
+                        mapOf("had_inference_result" to (_state.value.currentInferenceResult != null))
+                    )
                     clearStateFields()
                 }
 
                 is ImagingAction.TogglePackagingConfirmation -> {
+                    VectorCamAnalytics.logEvent(
+                        "imaging_packaging_confirmation_toggled",
+                        mapOf("is_checked" to action.isChecked)
+                    )
                     val hasConfirmedPackaging = action.isChecked
                     _state.update {
                         it.copy(
@@ -600,6 +753,19 @@ class ImagingViewModel @Inject constructor(
                         }
 
                         if (success) {
+                            val totalSpecimens = _state.value.specimensWithImagesAndInferenceResults.size + 1
+                            VectorCamAnalytics.logEvent(
+                                "imaging_specimen_image_saved",
+                                mapOf(
+                                    "session_id" to currentSession.localId.toString(),
+                                    "session_unit_id" to (_state.value.sessionUnitId?.toString()),
+                                    "specimen_id" to specimenId,
+                                    "is_new_specimen" to (existingSpecimen == null),
+                                    "should_process_further" to shouldProcessFurther,
+                                    "image_size_bytes" to jpegBytes.size.toLong(),
+                                    "total_specimens_so_far" to totalSpecimens
+                                )
+                            )
                             clearStateFields()
                         } else {
                             emitError(ImagingError.SAVE_ERROR)
@@ -611,6 +777,7 @@ class ImagingViewModel @Inject constructor(
                 }
 
                 ImagingAction.ReturnToCollectionBatchList -> {
+                    VectorCamAnalytics.logEvent("imaging_return_to_collection_batch_clicked")
                     val currentSession = currentSessionCache.getSession()
                     if (currentSession == null) {
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
@@ -653,6 +820,7 @@ class ImagingViewModel @Inject constructor(
                 currentCameraMetadata = null
             )
         }
+        firstFrameLogged = false
     }
 
     private suspend fun determineSelectionForFurtherProcessing(selectionProbability: Float): Boolean {
@@ -687,8 +855,11 @@ class ImagingViewModel @Inject constructor(
         viewModelScope.launch {
             val session = currentSessionCache.getSession()
             if (session != null) {
+                VectorCamAnalytics.updateDeviceCondition()
                 imagingWorkflow = imagingWorkflowFactory.create(session.type)
                 val allowModelInferenceToggle = imagingWorkflow.allowModelInferenceToggle
+                sessionStartedAt = System.currentTimeMillis()
+                firstFrameLogged = false
                 _state.update {
                     it.copy(
                         allowModelInferenceToggle = allowModelInferenceToggle,
@@ -697,6 +868,16 @@ class ImagingViewModel @Inject constructor(
                         sessionUnitId = sessionUnitId,
                     )
                 }
+                VectorCamAnalytics.logEvent(
+                    "imaging_session_started",
+                    mapOf(
+                        "session_id" to session.localId.toString(),
+                        "session_unit_id" to sessionUnitId?.toString(),
+                        "session_type" to session.type.name,
+                        "allow_inference_toggle" to allowModelInferenceToggle,
+                        "inference_enabled" to !allowModelInferenceToggle
+                    )
+                )
             } else {
                 _events.send(ImagingEvent.NavigateBackToLandingScreen)
                 emitError(ImagingError.NO_ACTIVE_SESSION)
@@ -711,5 +892,13 @@ class ImagingViewModel @Inject constructor(
 
     private companion object {
         private const val MONTHLY_FURTHER_PROCESSING_CAP = 20
+    }
+}
+
+private class FrameErrorRateLimiter(private val every: Int = 50) {
+    private var count = 0
+    fun shouldRecord(): Boolean {
+        val n = ++count
+        return n == 1 || n % every == 0
     }
 }
