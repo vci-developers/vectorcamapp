@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Upload Status -->
+    <string name="upload_status_completed">Completed</string>
+    <string name="upload_status_in_progress">In Progress</string>
+    <string name="upload_status_not_started">Not Started</string>
+    <string name="upload_status_retry">Retry</string>
+
+    <!-- Session Type -->
+    <string name="session_type_surveillance">Surveillance</string>
+    <string name="session_type_data_collection">Data Collection</string>
+    <string name="session_type_practice">Practice</string>
+
+    <!-- Language -->
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_spanish" translatable="false">Español</string>
+
+    <!-- Search Help -->
+    <string name="search_title_help">How Search Works</string>
+    <string name="search_body_space_rule">• Put a SPACE between words when you want results that include all the words.</string>
+    <string name="search_body_comma_rule">• Put a COMMA between groups when any one group is okay.</string>
+    <string name="search_label_examples">Examples:</string>
+    <string name="search_body_example_1">• Anopheles Male → must include Anopheles and Male.</string>
+    <string name="search_body_example_2">• Anopheles Male, Mansonia Female → either (Anopheles and Male) or (Mansonia and Female).</string>
+    <string name="search_action_learn_more">Tap to learn more about searching</string>
+
+    <!-- Shared Component Content Descriptions -->
+    <string name="core_content_description_calendar">Calendar</string>
+    <string name="core_content_description_collapse_dropdown">Collapse dropdown</string>
+    <string name="core_content_description_expand_dropdown">Expand dropdown</string>
+    <string name="core_content_description_tooltip">Tooltip Icon</string>
+    <string name="core_content_description_pill">Pill Icon</string>
+    <string name="core_content_description_error">Error</string>
+    <string name="core_content_description_dismiss">Dismiss Icon</string>
+
+    <!-- Capture Animation -->
+    <string name="capture_animation_label_capturing">Capturing… Hold Still</string>
+
+    <!-- Upload Notifications -->
+    <string name="upload_notification_session_title">Session from %1$s</string>
+    <string name="upload_notification_preparing">Preparing to upload %1$d images…</string>
+    <string name="upload_notification_verifying">Verifying...</string>
+    <string name="upload_notification_uploading_image">Uploading image %1$d of %2$d</string>
+    <string name="upload_notification_complete">Upload complete</string>
+    <string name="upload_notification_error">Upload error</string>
+    <string name="upload_notification_summary">%1$s: %2$d of %3$d images uploaded.</string>
+    <string name="upload_notification_registering">Registering device and session...</string>
+    <string name="upload_notification_uploading_metadata">Uploading metadata for specimen %1$s</string>
+    <string name="upload_notification_specimen_progress">Specimen %1$d of %2$d</string>
+    <string name="upload_notification_specimen_image_progress">Specimen %1$d of %2$d\nImage %3$d of %4$d</string>
+    <string name="upload_notification_retrying">Retrying upload...</string>
+    <string name="upload_notification_failed">Upload failed</string>
+
+</resources>

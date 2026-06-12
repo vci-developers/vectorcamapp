@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -110,7 +111,7 @@ fun CapturedSpecimenTile(
 
                     if (specimen.shouldProcessFurther) {
                         InfoPill(
-                            text = "Pack this specimen for further processing",
+                            text = stringResource(R.string.imaging_label_pack_for_processing),
                             color = MaterialTheme.colors.warning,
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
@@ -148,32 +149,32 @@ fun CapturedSpecimenTile(
 
                         Icon(
                             painter = painterResource(R.drawable.ic_specimen),
-                            contentDescription = "Mosquito",
+                            contentDescription = stringResource(R.string.imaging_content_description_mosquito),
                             tint = MaterialTheme.colors.icon,
                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                         )
 
                         Text(
-                            text = "Specimen ID: ${specimen.id}",
+                            text = stringResource(R.string.imaging_label_specimen_id_value, specimen.id),
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colors.textPrimary
                         )
                     }
 
                     Text(
-                        text = if (specimenImage.species != null) "Species: ${specimenImage.species}" else "",
+                        text = if (specimenImage.species != null) stringResource(R.string.imaging_label_species, specimenImage.species) else "",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colors.textPrimary
                     )
 
                     Text(
-                        text = if (specimenImage.sex != null) "Sex: ${specimenImage.sex}" else "",
+                        text = if (specimenImage.sex != null) stringResource(R.string.imaging_label_sex, specimenImage.sex) else "",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colors.textPrimary
                     )
 
                     Text(
-                        text = if (specimenImage.abdomenStatus != null) "Abdomen Status: ${specimenImage.abdomenStatus}" else "",
+                        text = if (specimenImage.abdomenStatus != null) stringResource(R.string.imaging_label_abdomen_status, specimenImage.abdomenStatus) else "",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colors.textPrimary
                     )
@@ -189,7 +190,7 @@ fun CapturedSpecimenTile(
                 Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
 
                 Text(
-                    text = "Captured At: ${dateTimeFormatter.format(specimenImage.capturedAt)}",
+                    text = stringResource(R.string.imaging_label_captured_at, dateTimeFormatter.format(specimenImage.capturedAt)),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colors.textPrimary,
                     modifier = Modifier.padding(

@@ -1,5 +1,6 @@
 [versions]
 agp = "8.9.3"
+appcompat = "1.7.0"
 cameraCoreVersion = "1.5.2"
 coilCompose = "3.1.0"
 datastore = "1.2.0"
@@ -36,6 +37,7 @@ tusAndroidClient = "0.1.12"
 tusJavaClient = "0.5.1"
 
 [libraries]
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCoreVersion" }
 androidx-camera-extensions = { module = "androidx.camera:camera-extensions", version.ref = "cameraCoreVersion" }
 androidx-camera-compose = { module = "androidx.camera:camera-compose", version.ref = "cameraCoreVersion" }

@@ -12,7 +12,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent
 import com.vci.vectorcamapp.core.presentation.search.SearchTextField
@@ -36,7 +38,7 @@ fun CompleteSessionSpecimens(
 ) {
     if (specimensWithImagesAndInferenceResults.isEmpty() && searchQuery.isBlank()) {
         Text(
-            "No specimens were captured during this session.",
+            stringResource(R.string.complete_session_body_no_specimens),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colors.textSecondary,
             textAlign = TextAlign.Center,
@@ -50,7 +52,7 @@ fun CompleteSessionSpecimens(
             SearchTextField(
                 searchQuery = searchQuery,
                 onSearchQueryChange = onUpdateSearchQuery,
-                placeholder = "Search by specimen ID, species, etc.",
+                placeholder = stringResource(R.string.complete_session_placeholder_search_specimens),
                 modifier = Modifier.padding(
                     start = MaterialTheme.dimensions.spacingMedium,
                     end = MaterialTheme.dimensions.spacingMedium,
@@ -65,7 +67,7 @@ fun CompleteSessionSpecimens(
 
             if (specimensWithImagesAndInferenceResults.isEmpty()) {
                 Text(
-                    text = "No matching specimens found.",
+                    text = stringResource(R.string.complete_session_body_no_matching_specimens),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colors.textSecondary,
                     textAlign = TextAlign.Center,
@@ -89,7 +91,7 @@ fun CompleteSessionSpecimens(
                             CompleteSessionSpecimensTile(
                                 specimen = specimen,
                                 specimenImage = specimenImage,
-                                badgeText = "${index + 1} of $totalImages",
+                                badgeText = stringResource(R.string.complete_session_label_image_badge, index + 1, totalImages),
                                 batchName = batchName,
                                 modifier = Modifier.width(
                                     screenWidthFraction(0.9f)

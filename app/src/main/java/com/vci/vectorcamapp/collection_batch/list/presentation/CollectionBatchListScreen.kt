@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.collection_batch.list.presentation.components.CollectionBatchCard
@@ -41,12 +42,12 @@ fun CollectionBatchListScreen(
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         ScreenHeader(
-            title = "Collection Batches",
-            subtitle = "Create and edit collection batches here",
+            title = stringResource(R.string.collection_batch_title_screen),
+            subtitle = stringResource(R.string.collection_batch_body_subtitle),
             trailingIcon = {
                 Icon(
                     painter = painterResource(R.drawable.ic_cloud_upload),
-                    contentDescription = "Submit Session",
+                    contentDescription = stringResource(R.string.collection_batch_content_description_submit_session),
                     tint = MaterialTheme.colors.icon,
                     modifier = Modifier
                         .size(MaterialTheme.dimensions.iconSizeLarge)
@@ -57,7 +58,7 @@ fun CollectionBatchListScreen(
             if (state.sessionUnits.isEmpty()) {
                 item {
                     Text(
-                        text = "No collection batches yet.\nTap the + button below to add one.",
+                        text = stringResource(R.string.collection_batch_body_empty),
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colors.textSecondary,
                         textAlign = TextAlign.Center,
@@ -91,7 +92,7 @@ fun CollectionBatchListScreen(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_add),
-                contentDescription = "Add Collection Batch",
+                contentDescription = stringResource(R.string.collection_batch_content_description_add),
                 tint = MaterialTheme.colors.buttonText,
                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
             )
@@ -107,7 +108,7 @@ fun CollectionBatchListScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = if (state.submissionPendingAction == null) "End session?" else "Confirm Action",
+                            text = if (state.submissionPendingAction == null) stringResource(R.string.collection_batch_title_end_session) else stringResource(R.string.collection_batch_title_confirm_action),
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colors.textPrimary,
                             modifier = Modifier.weight(1f)
@@ -118,7 +119,7 @@ fun CollectionBatchListScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_close),
-                                contentDescription = "Close dialog",
+                                contentDescription = stringResource(R.string.collection_batch_content_description_close_dialog),
                                 tint = MaterialTheme.colors.icon,
                                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
                             )
@@ -127,9 +128,9 @@ fun CollectionBatchListScreen(
                 },
                 text = {
                     val dialogText = when (state.submissionPendingAction) {
-                        null -> "Would you like to save this session for later, or submit it now?"
-                        is CollectionBatchListAction.SaveSessionProgress -> "Are you sure you want to save the session and exit?"
-                        is CollectionBatchListAction.ConfirmSubmitSession -> "Are you sure you want to submit the session?"
+                        null -> stringResource(R.string.collection_batch_body_save_or_submit)
+                        is CollectionBatchListAction.SaveSessionProgress -> stringResource(R.string.collection_batch_body_confirm_save)
+                        is CollectionBatchListAction.ConfirmSubmitSession -> stringResource(R.string.collection_batch_body_confirm_submit)
                         else -> ""
                     }
                     Column {
@@ -143,7 +144,7 @@ fun CollectionBatchListScreen(
 
                         if (state.sessionUnits.isEmpty() && state.submissionPendingAction is CollectionBatchListAction.ConfirmSubmitSession) {
                             Text(
-                                text = "Warning: You are about to submit a session with zero collection batches.",
+                                text = stringResource(R.string.collection_batch_body_warning_zero),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colors.error,
                                 modifier = Modifier.padding(top = MaterialTheme.dimensions.paddingMedium)
@@ -168,13 +169,13 @@ fun CollectionBatchListScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_cloud_upload),
-                                contentDescription = "Submit Icon",
+                                contentDescription = stringResource(R.string.collection_batch_content_description_submit_icon),
                                 tint = MaterialTheme.colors.successConfirm,
                                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
                             )
                             Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
                             Text(
-                                text = "Submit",
+                                text = stringResource(R.string.collection_batch_action_exit_dialog_submit),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colors.successConfirm
                             )
@@ -187,7 +188,7 @@ fun CollectionBatchListScreen(
                             )
                         ) {
                             Text(
-                                text = "Yes, Confirm",
+                                text = stringResource(R.string.collection_batch_action_exit_dialog_confirm),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colors.buttonText
                             )
@@ -211,13 +212,13 @@ fun CollectionBatchListScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_save),
-                                contentDescription = "Save Icon",
+                                contentDescription = stringResource(R.string.collection_batch_content_description_save_icon),
                                 tint = MaterialTheme.colors.info,
                                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
                             )
                             Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
                             Text(
-                                text = "Save",
+                                text = stringResource(R.string.collection_batch_action_exit_dialog_save),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colors.info
                             )
@@ -225,7 +226,7 @@ fun CollectionBatchListScreen(
                     } else {
                         TextButton(onClick = { onAction(CollectionBatchListAction.ClearPendingAction) }) {
                             Text(
-                                "Back",
+                                stringResource(R.string.collection_batch_action_exit_dialog_back),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colors.textPrimary
                             )

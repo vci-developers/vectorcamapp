@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
@@ -63,12 +64,12 @@ fun IntakeScreen(
     }
 
     ScreenHeader(
-        title = "${state.session.type.displayText(context)} Intake",
-        subtitle = "Please fill out the information below",
+        title = stringResource(R.string.intake_title_screen, state.session.type.displayText(context)),
+        subtitle = stringResource(R.string.intake_body_subtitle),
         leadingIcon = {
             Icon(
                 painter = painterResource(R.drawable.ic_arrow_left),
-                contentDescription = "Back Button",
+                contentDescription = stringResource(R.string.intake_content_description_back),
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeLarge)
@@ -91,9 +92,9 @@ fun IntakeScreen(
 
         item {
             IntakeTile(
-                title = "General Information",
+                title = stringResource(R.string.intake_title_general_info),
                 iconPainter = painterResource(R.drawable.ic_info),
-                iconDescription = "General Information Icon"
+                iconDescription = stringResource(R.string.intake_content_description_general_info)
             ) {
                 val selectedCollector = if (state.isCurrentCollectorMissing) {
                     Collector(
@@ -109,7 +110,7 @@ fun IntakeScreen(
                 }
 
                 DropdownField(
-                    label = "Collector",
+                    label = stringResource(R.string.intake_label_collector),
                     required = true,
                     options = state.allCollectors,
                     selectedOption = selectedCollector,
@@ -155,19 +156,19 @@ fun IntakeScreen(
                                     ) {
                                         Icon(
                                             painter = painterResource(R.drawable.ic_warning),
-                                            contentDescription = "Missing collector",
+                                            contentDescription = stringResource(R.string.intake_content_description_missing_collector),
                                             tint = MaterialTheme.colors.error,
                                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
                                         )
                                         Text(
-                                            text = "Collector not found",
+                                            text = stringResource(R.string.intake_title_collector_not_found),
                                             style = MaterialTheme.typography.titleLarge,
                                             color = MaterialTheme.colors.error
                                         )
                                     }
 
                                     Text(
-                                        text = "The collector associated with this session isn’t in your current list. You can select an existing collector or register this one.",
+                                        text = stringResource(R.string.intake_body_collector_not_found),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colors.textPrimary.copy(alpha = 0.8f)
                                     )
@@ -180,7 +181,7 @@ fun IntakeScreen(
                                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
                                     ) {
                                         Text(
-                                            text = "Name",
+                                            text = stringResource(R.string.intake_label_name),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colors.textSecondary
                                         )
@@ -195,7 +196,7 @@ fun IntakeScreen(
                                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
                                     ) {
                                         Text(
-                                            text = "Title",
+                                            text = stringResource(R.string.intake_label_title),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colors.textSecondary
                                         )
@@ -224,7 +225,7 @@ fun IntakeScreen(
                                         contentColor = MaterialTheme.colors.buttonText
                                     )
                                 ) {
-                                    Text(text = "Register Missing Collector")
+                                    Text(text = stringResource(R.string.intake_action_register_collector))
                                 }
                             }
                         }
@@ -232,14 +233,14 @@ fun IntakeScreen(
                 }
 
                 TextEntryField(
-                    label = "Hardware ID",
+                    label = stringResource(R.string.intake_label_hardware_id),
                     value = state.session.hardwareId.orEmpty(),
                     onValueChange = { onAction(IntakeAction.EnterHardwareId(it)) },
                     singleLine = true,
                 )
 
                 DatePickerField(
-                    label = "Collection Date",
+                    label = stringResource(R.string.intake_label_collection_date),
                     required = true,
                     selectedDateInMillis = state.session.collectionDate,
                     onDateSelected = { onAction(IntakeAction.PickCollectionDate(it)) },
@@ -252,7 +253,7 @@ fun IntakeScreen(
                 )
 
                 DropdownField(
-                    label = "Collection Method",
+                    label = stringResource(R.string.intake_label_collection_method),
                     required = true,
                     enabled = !state.isCollectionMethodLocked,
                     options = IntakeDropdownOptions.CollectionMethodOption.entries,
@@ -271,7 +272,7 @@ fun IntakeScreen(
 
                 if (state.isCollectionMethodLocked) {
                     Text(
-                        text = "Cannot change collection method — collection batches have already been created for this session.",
+                        text = stringResource(R.string.intake_body_method_locked),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.warning,
                         modifier = Modifier.fillMaxWidth()
@@ -282,42 +283,42 @@ fun IntakeScreen(
                     isVisible = state.isCollectionMethodTooltipVisible,
                     onClick = { onAction(IntakeAction.ShowCollectionMethodTooltipDialog) },
                     onDismiss = { onAction(IntakeAction.HideCollectionMethodTooltipDialog) },
-                    buttonText = "Tap to learn more about collection methods"
+                    buttonText = stringResource(R.string.intake_action_learn_more_methods)
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
                     ) {
                         Text(
-                            text = "Collection Methods",
+                            text = stringResource(R.string.intake_title_collection_methods),
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colors.textPrimary,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = MaterialTheme.dimensions.paddingSmall)
                         )
                         CollectionMethodTooltipRow(
-                            title = "CDC Light Trap",
-                            description = "A battery powered trap that uses a light to attract and collect mosquitoes at night.",
+                            title = stringResource(R.string.intake_title_cdc_light_trap),
+                            description = stringResource(R.string.intake_body_cdc_light_trap),
                             iconPainter = painterResource(id = R.drawable.ic_light_trap),
-                            iconDescription = "CDC Light Trap Icon",
+                            iconDescription = stringResource(R.string.intake_content_description_cdc_light_trap),
                         )
                         CollectionMethodTooltipRow(
-                            title = "Human Landing Catch",
-                            description = "A person exposes part of their body and collects mosquitoes that land on the skin.",
+                            title = stringResource(R.string.intake_title_human_landing_catch),
+                            description = stringResource(R.string.intake_body_human_landing_catch),
                             iconPainter = painterResource(id = R.drawable.ic_human),
-                            iconDescription = "Human Landing Catch Icon"
+                            iconDescription = stringResource(R.string.intake_content_description_human_landing_catch)
                         )
                         CollectionMethodTooltipRow(
-                            title = "Pyrethrum Spray Catch",
-                            description = "An indoor collection method that uses insecticide spray to knock down resting mosquitoes onto a sheet.",
+                            title = stringResource(R.string.intake_title_pyrethrum_spray_catch),
+                            description = stringResource(R.string.intake_body_pyrethrum_spray_catch),
                             iconPainter = painterResource(id = R.drawable.ic_spray),
-                            iconDescription = "Pyrethrum Spray Catch"
+                            iconDescription = stringResource(R.string.intake_content_description_pyrethrum_spray_catch)
                         )
                     }
                 }
 
                 if (isOtherCollectionMethod) {
                     TextEntryField(
-                        label = "Other Collection Method",
+                        label = stringResource(R.string.intake_label_other_collection_method),
                         required = true,
                         value = state.session.collectionMethod.removePrefix(IntakeDropdownOptions.CollectionMethodOption.OTHER.label)
                             .trimStart(),
@@ -332,7 +333,7 @@ fun IntakeScreen(
                 )
 
                 DropdownField(
-                    label = "Specimen Condition",
+                    label = stringResource(R.string.intake_label_specimen_condition),
                     required = true,
                     options = IntakeDropdownOptions.SpecimenConditionOption.entries,
                     selectedOption = if (isOtherSpecimenCondition) IntakeDropdownOptions.SpecimenConditionOption.OTHER
@@ -350,7 +351,7 @@ fun IntakeScreen(
 
                 if (isOtherSpecimenCondition) {
                     TextEntryField(
-                        label = "Other Specimen Condition",
+                        label = stringResource(R.string.intake_label_other_specimen_condition),
                         required = true,
                         value = state.session.specimenCondition.removePrefix(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label)
                             .trimStart(),
@@ -364,13 +365,13 @@ fun IntakeScreen(
 
         item {
             IntakeTile(
-                title = "Geographical Information",
+                title = stringResource(R.string.intake_title_geographical_info),
                 iconPainter = painterResource(id = R.drawable.ic_pin),
-                iconDescription = "Geographical Information Icon"
+                iconDescription = stringResource(R.string.intake_content_description_geographical_info)
             ) {
                 if (state.allSitesInProgram.any { !it.district.isNullOrBlank() }) {
                     DropdownField(
-                        label = "District",
+                        label = stringResource(R.string.intake_label_district),
                         required = true,
                         options = state.allSitesInProgram.mapNotNull { it.district }.distinct(),
                         selectedOption = state.selectedDistrict,
@@ -387,7 +388,7 @@ fun IntakeScreen(
 
                     if (state.selectedDistrict.isNotBlank()) {
                         DropdownField(
-                            label = "Village Name",
+                            label = stringResource(R.string.intake_label_village_name),
                             required = true,
                             options = state.allSitesInProgram.filter { it.district == state.selectedDistrict }
                                 .mapNotNull { it.villageName }.distinct(),
@@ -407,7 +408,7 @@ fun IntakeScreen(
 
                     if (state.selectedVillageName.isNotBlank()) {
                         DropdownField(
-                            label = "House Number",
+                            label = stringResource(R.string.intake_label_house_number),
                             required = true,
                             options = state.allSitesInProgram.filter { it.district == state.selectedDistrict && it.villageName == state.selectedVillageName }
                                 .mapNotNull { it.houseNumber }.distinct(),
@@ -475,12 +476,12 @@ fun IntakeScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             InfoPill(
-                                text = "Latitude: ${state.session.latitude}",
+                                text = stringResource(R.string.intake_label_latitude, state.session.latitude),
                                 color = MaterialTheme.colors.info,
                                 modifier = Modifier.weight(1f)
                             )
                             InfoPill(
-                                text = "Longitude: ${state.session.longitude}",
+                                text = stringResource(R.string.intake_label_longitude, state.session.longitude),
                                 color = MaterialTheme.colors.info,
                                 modifier = Modifier.weight(1f)
                             )
@@ -490,18 +491,14 @@ fun IntakeScreen(
                     state.locationError != null -> {
                         Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)) {
                             Text(
-                                text = "Could not get location: ${
-                                    state.locationError.toString(
-                                        context
-                                    )
-                                }",
+                                text = stringResource(R.string.intake_body_location_error, state.locationError.toString(context)),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colors.error
                             )
 
                             if (state.locationError == IntakeError.LOCATION_GPS_TIMEOUT) {
                                 ActionButton(
-                                    label = "Retry Location",
+                                    label = stringResource(R.string.intake_action_retry_location),
                                     onClick = { onAction(IntakeAction.RetryLocation) },
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -520,7 +517,7 @@ fun IntakeScreen(
                                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                             )
                             Text(
-                                "Getting location…",
+                                stringResource(R.string.intake_body_getting_location),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colors.textPrimary
                             )
@@ -535,7 +532,7 @@ fun IntakeScreen(
                 IntakeTile(
                     title = state.form.name,
                     iconPainter = painterResource(id = R.drawable.ic_clipboard),
-                    iconDescription = "Surveillance Form Icon"
+                    iconDescription = stringResource(R.string.intake_content_description_surveillance_form)
                 ) {
                     val answerMap = state.formAnswersByQuestionId.mapValues { (_, answer) -> answer.value }
 
@@ -559,12 +556,12 @@ fun IntakeScreen(
             state.surveillanceForm?.let { surveillanceForm ->
                 item {
                     IntakeTile(
-                        title = "Surveillance Form",
+                        title = stringResource(R.string.intake_title_surveillance_form),
                         iconPainter = painterResource(id = R.drawable.ic_clipboard),
-                        iconDescription = "Surveillance Form Icon"
+                        iconDescription = stringResource(R.string.intake_content_description_surveillance_form)
                     ) {
                         TextEntryField(
-                            label = "Number of People Living in the House",
+                            label = stringResource(R.string.intake_label_num_people_house),
                             required = true,
                             value = if (surveillanceForm.numPeopleSleptInHouse < 0) ""
                             else surveillanceForm.numPeopleSleptInHouse.toString(),
@@ -574,7 +571,7 @@ fun IntakeScreen(
                         )
 
                         ToggleField(
-                            label = "Was IRS conducted in this household?",
+                            label = stringResource(R.string.intake_label_irs_conducted),
                             checked = surveillanceForm.wasIrsConducted,
                             onCheckedChange = {
                                 onAction(
@@ -586,7 +583,7 @@ fun IntakeScreen(
 
                         surveillanceForm.monthsSinceIrs?.let { monthsSinceIrs ->
                             TextEntryField(
-                                label = "Months Since IRS",
+                                label = stringResource(R.string.intake_label_months_since_irs),
                                 required = true,
                                 value = if (monthsSinceIrs < 0) ""
                                 else monthsSinceIrs.toString(),
@@ -597,7 +594,7 @@ fun IntakeScreen(
                         }
 
                         TextEntryField(
-                            label = "Number of LLINs Available",
+                            label = stringResource(R.string.intake_label_num_llins),
                             required = true,
                             value = if (surveillanceForm.numLlinsAvailable < 0) ""
                             else surveillanceForm.numLlinsAvailable.toString(),
@@ -608,7 +605,7 @@ fun IntakeScreen(
 
                         surveillanceForm.llinType?.let { current ->
                             DropdownField(
-                                label = "LLIN Type",
+                                label = stringResource(R.string.intake_label_llin_type),
                                 required = true,
                                 options = IntakeDropdownOptions.LlinTypeOption.entries,
                                 selectedOption = IntakeDropdownOptions.LlinTypeOption.entries.firstOrNull { it.label == current },
@@ -627,7 +624,7 @@ fun IntakeScreen(
 
                         surveillanceForm.llinBrand?.let { current ->
                             DropdownField(
-                                label = "LLIN Brand",
+                                label = stringResource(R.string.intake_label_llin_brand),
                                 required = true,
                                 options = IntakeDropdownOptions.LlinBrandOption.entries.filter { it.type?.label == surveillanceForm.llinType || it.type == null },
                                 selectedOption = IntakeDropdownOptions.LlinBrandOption.entries.firstOrNull { it.label == current },
@@ -646,7 +643,7 @@ fun IntakeScreen(
 
                         surveillanceForm.numPeopleSleptUnderLlin?.let { numPeopleSleptUnderLlin ->
                             TextEntryField(
-                                label = "Number of People who Slept Under LLIN",
+                                label = stringResource(R.string.intake_label_num_people_llin),
                                 required = true,
                                 value = if (numPeopleSleptUnderLlin < 0) ""
                                 else numPeopleSleptUnderLlin.toString(),
@@ -668,15 +665,15 @@ fun IntakeScreen(
 
         item {
             IntakeTile(
-                title = "Additional Notes",
+                title = stringResource(R.string.intake_title_additional_notes),
                 iconPainter = painterResource(id = R.drawable.ic_notes),
-                iconDescription = "Additional Notes Icon"
+                iconDescription = stringResource(R.string.intake_content_description_additional_notes)
             ) {
                 TextEntryField(
-                    label = "Notes",
+                    label = stringResource(R.string.intake_label_notes),
                     value = state.session.notes,
                     onValueChange = { onAction(IntakeAction.EnterNotes(it)) },
-                    placeholder = "1000 character limit...",
+                    placeholder = stringResource(R.string.intake_placeholder_notes),
                     maxCharacters = 1000,
                 )
             }
@@ -695,7 +692,7 @@ fun IntakeScreen(
 
         item {
             ActionButton(
-                label = "Begin ${state.session.type.displayText(context)} Imaging",
+                label = stringResource(R.string.intake_action_begin_imaging, state.session.type.displayText(context)),
                 onClick = { onAction(IntakeAction.SubmitIntakeForm) },
                 modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
             )

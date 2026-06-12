@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="incomplete_session_title_screen">Sessions in Progress</string>
+    <string name="incomplete_session_title_delete_dialog">Delete Session?</string>
+    <string name="incomplete_session_title_card">Session in Progress from\n%1$s</string>
+
+    <!-- Body -->
+    <string name="incomplete_session_body_subtitle">Click on a session to resume</string>
+    <string name="incomplete_session_body_empty">No sessions currently in progress.</string>
+    <string name="incomplete_session_body_no_results">No matching sessions found.</string>
+    <string name="incomplete_session_body_delete_dialog">This will permanently delete the session and all associated images from your device. This action cannot be undone.</string>
+
+    <!-- Actions -->
+    <string name="incomplete_session_action_delete_dialog_confirm">Yes, Delete</string>
+    <string name="incomplete_session_action_delete_dialog_cancel">Cancel</string>
+
+    <!-- Placeholders -->
+    <string name="incomplete_session_placeholder_search">Search by collector, district, session type, etc.</string>
+
+    <!-- Labels -->
+    <string name="incomplete_session_label_session_type">Session Type: %1$s</string>
+    <string name="incomplete_session_label_collector">Collector: %1$s, %2$s</string>
+    <string name="incomplete_session_label_district">District: %1$s</string>
+    <string name="incomplete_session_label_sub_county">Sub-County: %1$s</string>
+    <string name="incomplete_session_label_parish">Parish: %1$s</string>
+    <string name="incomplete_session_label_village_name">Village Name: %1$s</string>
+    <string name="incomplete_session_label_house_number">House Number: %1$s</string>
+    <string name="incomplete_session_label_health_center">Nearest Health Center: %1$s</string>
+    <string name="incomplete_session_label_detail">%1$s: %2$s</string>
+    <string name="incomplete_session_label_created_at">Created At: %1$s</string>
+
+    <!-- Content Descriptions -->
+    <string name="incomplete_session_content_description_back">Back Button</string>
+    <string name="incomplete_session_content_description_resume">Resume</string>
+    <string name="incomplete_session_content_description_person">Person</string>
+    <string name="incomplete_session_content_description_pin">Pin</string>
+    <string name="incomplete_session_content_description_map">Map</string>
+    <string name="incomplete_session_content_description_navigation">Navigation</string>
+    <string name="incomplete_session_content_description_clipboard">Clipboard</string>
+    <string name="incomplete_session_content_description_house">House</string>
+    <string name="incomplete_session_content_description_hospital">Hospital</string>
+    <string name="incomplete_session_content_description_location">Location</string>
+    <string name="incomplete_session_content_description_delete">Delete</string>
+
+</resources>

@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.Session
@@ -45,69 +46,69 @@ fun CompleteSessionForm(
     session.completedAt?.let {
         Column(modifier = modifier.fillMaxSize()) {
             CompleteSessionFormTile(
-                title = "Session Status",
+                title = stringResource(R.string.complete_session_title_session_status),
                 iconPainter = painterResource(R.drawable.ic_cloud_upload),
-                iconDescription = "Cloud Upload"
+                iconDescription = stringResource(R.string.complete_session_content_description_cloud_upload)
             ) {
                 Text(
-                    text = "Created At: ${dateTimeFormatter.format(session.createdAt)}",
+                    text = stringResource(R.string.complete_session_label_created_at, dateTimeFormatter.format(session.createdAt)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
                 Text(
-                    text = "Completed At: ${dateTimeFormatter.format(session.completedAt)}",
+                    text = stringResource(R.string.complete_session_label_completed_at, dateTimeFormatter.format(session.completedAt)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
-                InfoPill(text = "Session Type: ${session.type.displayText(context)}", color = MaterialTheme.colors.info)
+                InfoPill(text = stringResource(R.string.complete_session_label_session_type, session.type.displayText(context)), color = MaterialTheme.colors.info)
             }
 
             CompleteSessionFormTile(
-                title = "General Information",
+                title = stringResource(R.string.complete_session_title_general_info),
                 iconPainter = painterResource(R.drawable.ic_info),
-                iconDescription = "Information"
+                iconDescription = stringResource(R.string.complete_session_content_description_information)
             ) {
                 Text(
-                    text = "Collector: ${session.collectorName}, ${session.collectorTitle}",
+                    text = stringResource(R.string.complete_session_label_collector, session.collectorName, session.collectorTitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
                 Text(
-                    text = "Hardware ID: ${session.hardwareId ?: "Not Provided"}",
+                    text = stringResource(R.string.complete_session_label_hardware_id, session.hardwareId ?: stringResource(R.string.complete_session_label_not_provided)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
                 Text(
-                    text = "Collection Date: ${dateFormatter.format(session.collectionDate)}",
+                    text = stringResource(R.string.complete_session_label_collection_date, dateFormatter.format(session.collectionDate)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
                 Text(
-                    text = "Collection Method: ${session.collectionMethod}",
+                    text = stringResource(R.string.complete_session_label_collection_method, session.collectionMethod),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
                 Text(
-                    text = "Specimen Condition: ${session.specimenCondition}",
+                    text = stringResource(R.string.complete_session_label_specimen_condition, session.specimenCondition),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
             }
 
             CompleteSessionFormTile(
-                title = "Geographical Information",
+                title = stringResource(R.string.complete_session_title_geographical_info),
                 iconPainter = painterResource(R.drawable.ic_pin),
-                iconDescription = "Pin"
+                iconDescription = stringResource(R.string.complete_session_content_description_pin)
             ) {
                 site.district?.let { district ->
                     Text(
-                        text = "District: $district",
+                        text = stringResource(R.string.complete_session_label_district, district),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
@@ -115,7 +116,7 @@ fun CompleteSessionForm(
 
                 site.subCounty?.let { subCounty ->
                     Text(
-                        text = "Sub-County: $subCounty",
+                        text = stringResource(R.string.complete_session_label_sub_county, subCounty),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
@@ -123,7 +124,7 @@ fun CompleteSessionForm(
 
                 site.parish?.let { parish ->
                     Text(
-                        text = "Parish: $parish",
+                        text = stringResource(R.string.complete_session_label_parish, parish),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
@@ -131,7 +132,7 @@ fun CompleteSessionForm(
 
                 site.villageName?.let { villageName ->
                     Text(
-                        text = "Village Name: $villageName",
+                        text = stringResource(R.string.complete_session_label_village_name, villageName),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
@@ -139,7 +140,7 @@ fun CompleteSessionForm(
 
                 site.houseNumber?.let { houseNumber ->
                     Text(
-                        text = "House Number: $houseNumber",
+                        text = stringResource(R.string.complete_session_label_house_number, houseNumber),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
@@ -147,7 +148,7 @@ fun CompleteSessionForm(
 
                 site.healthCenter?.let { healthCenter ->
                     Text(
-                        text = "Nearest Health Center: $healthCenter",
+                        text = stringResource(R.string.complete_session_label_health_center, healthCenter),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
@@ -157,7 +158,7 @@ fun CompleteSessionForm(
                     ?.filterValues { it.isNotBlank() }
                     ?.forEach { (key, value) ->
                         Text(
-                            text = "$key: $value",
+                            text = stringResource(R.string.complete_session_label_detail, key, value),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textPrimary
                         )
@@ -168,7 +169,7 @@ fun CompleteSessionForm(
                 CompleteSessionFormTile(
                     title = resolvedForm.name,
                     iconPainter = painterResource(R.drawable.ic_clipboard),
-                    iconDescription = "Clipboard",
+                    iconDescription = stringResource(R.string.complete_session_content_description_clipboard),
                 ) {
                     val visibleFormAnswersAndQuestions = sessionScopedFormAnswersAndQuestions
                         .filter { (formAnswer, _) -> formAnswer.value.isNotBlank() }
@@ -181,14 +182,14 @@ fun CompleteSessionForm(
                                 else -> formAnswer.value
                             }
                             Text(
-                                text = "${formQuestion.label}: $displayValue",
+                                text = stringResource(R.string.complete_session_label_detail, formQuestion.label, displayValue),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colors.textPrimary,
                             )
                         }
                     } else {
                         Text(
-                            text = "No responses recorded.",
+                            text = stringResource(R.string.complete_session_body_no_responses),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textSecondary,
                         )
@@ -198,39 +199,39 @@ fun CompleteSessionForm(
 
             surveillanceForm?.let {
                 CompleteSessionFormTile(
-                    title = "Surveillance Form",
+                    title = stringResource(R.string.complete_session_title_surveillance_form),
                     iconPainter = painterResource(R.drawable.ic_clipboard),
-                    iconDescription = "Clipboard"
+                    iconDescription = stringResource(R.string.complete_session_content_description_clipboard)
                 ) {
                     Text(
-                        text = "Number of People who Slept in the House: ${it.numPeopleSleptInHouse}",
+                        text = stringResource(R.string.complete_session_label_num_people_house, it.numPeopleSleptInHouse),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
 
                     Text(
-                        text = "Was Indoor Residual Spray (IRS) Conducted: ${if (it.wasIrsConducted) "Yes" else "No"}",
+                        text = stringResource(R.string.complete_session_label_irs_conducted, if (it.wasIrsConducted) stringResource(R.string.complete_session_label_yes) else stringResource(R.string.complete_session_label_no)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
 
                     it.monthsSinceIrs?.let { monthsSinceIrs ->
                         Text(
-                            text = "Months Since IRS: $monthsSinceIrs",
+                            text = stringResource(R.string.complete_session_label_months_since_irs, monthsSinceIrs),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textPrimary
                         )
                     }
 
                     Text(
-                        text = "Number of Long Lasting Insecticide-coated Nets (LLINs) Available: ${it.numLlinsAvailable}",
+                        text = stringResource(R.string.complete_session_label_num_llins, it.numLlinsAvailable),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
 
                     it.llinType?.let { llinType ->
                         Text(
-                            text = "LLIN Type: $llinType",
+                            text = stringResource(R.string.complete_session_label_llin_type, llinType),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textPrimary
                         )
@@ -238,7 +239,7 @@ fun CompleteSessionForm(
 
                     it.llinBrand?.let { llinBrand ->
                         Text(
-                            text = "LLIN Brand: $llinBrand",
+                            text = stringResource(R.string.complete_session_label_llin_brand, llinBrand),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textPrimary
                         )
@@ -246,7 +247,7 @@ fun CompleteSessionForm(
 
                     it.numPeopleSleptUnderLlin?.let { numPeopleSleptUnderLlin ->
                         Text(
-                            text = "Number of People who Slept Under LLIN: $numPeopleSleptUnderLlin",
+                            text = stringResource(R.string.complete_session_label_num_people_llin, numPeopleSleptUnderLlin),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textPrimary
                         )
@@ -256,12 +257,12 @@ fun CompleteSessionForm(
 
             if (session.notes.isNotEmpty()) {
                 CompleteSessionFormTile(
-                    title = "Additional Notes",
+                    title = stringResource(R.string.complete_session_title_additional_notes),
                     iconPainter = painterResource(R.drawable.ic_notes),
-                    iconDescription = "Notes"
+                    iconDescription = stringResource(R.string.complete_session_content_description_notes)
                 ) {
                     Text(
-                        text = "Notes:",
+                        text = stringResource(R.string.complete_session_label_notes),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
@@ -275,7 +276,7 @@ fun CompleteSessionForm(
             }
 
             sessionUnits.forEach { sessionUnit ->
-                val title = bucketNameBySessionUnitId[sessionUnit.localId] ?: "Batch ${sessionUnit.unitOrder}"
+                val title = bucketNameBySessionUnitId[sessionUnit.localId] ?: stringResource(R.string.complete_session_label_batch, sessionUnit.unitOrder)
 
                 val visibleFormAnswersAndQuestions =
                     sessionUnitAnswersAndQuestionsByUnitId[sessionUnit.localId]
@@ -285,11 +286,11 @@ fun CompleteSessionForm(
                 CompleteSessionFormTile(
                     title = title,
                     iconPainter = painterResource(R.drawable.ic_clipboard),
-                    iconDescription = "Collection Batch",
+                    iconDescription = stringResource(R.string.complete_session_content_description_collection_batch),
                 ) {
                     if (visibleFormAnswersAndQuestions.isEmpty()) {
                         Text(
-                            text = "No responses recorded for this batch.",
+                            text = stringResource(R.string.complete_session_body_no_responses_batch),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textSecondary,
                         )
@@ -301,7 +302,7 @@ fun CompleteSessionForm(
                                 else -> formAnswer.value
                             }
                             Text(
-                                text = "${formQuestion.label}: $displayValue",
+                                text = stringResource(R.string.complete_session_label_detail, formQuestion.label, displayValue),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colors.textPrimary,
                             )

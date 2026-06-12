@@ -34,6 +34,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
@@ -59,7 +60,7 @@ fun RegistrationScreen(
     ) {
         Image(
             painter = painterResource(R.drawable.registration_background),
-            contentDescription = "Mosquito background",
+            contentDescription = stringResource(R.string.registration_content_description_background),
             contentScale = ContentScale.Crop,
             modifier = modifier
                 .align(Alignment.TopCenter)
@@ -92,13 +93,13 @@ fun RegistrationScreen(
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                 ) {
                     Text(
-                        text = "Register",
+                        text = stringResource(R.string.registration_title_register),
                         style = MaterialTheme.typography.displayMedium,
                         color = MaterialTheme.colors.textPrimary
                     )
 
                     Text(
-                        text = "Select your affiliated program",
+                        text = stringResource(R.string.registration_body_select_program),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colors.textPrimary
                     )
@@ -108,7 +109,7 @@ fun RegistrationScreen(
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
                 ) {
                     DropdownField(
-                        label = "Program",
+                        label = stringResource(R.string.registration_label_program),
                         options = state.programs,
                         selectedOption = state.selectedProgram,
                         onOptionSelected = { onAction(RegistrationAction.SelectProgram(it)) },
@@ -142,7 +143,7 @@ fun RegistrationScreen(
                     }
 
                     TextEntryField(
-                        label = "Collector Name",
+                        label = stringResource(R.string.registration_label_collector_name),
                         value = state.collector.name,
                         onValueChange = { onAction(RegistrationAction.EnterCollectorName(it)) },
                         singleLine = true,
@@ -150,7 +151,7 @@ fun RegistrationScreen(
                     )
 
                     DropdownField(
-                        label = "Collector Title",
+                        label = stringResource(R.string.registration_label_collector_title),
                         options = RegistrationDropdownOptions.CollectorTitleOption.entries,
                         selectedOption = RegistrationDropdownOptions.CollectorTitleOption.entries.firstOrNull { it.label == state.collector.title },
                         onOptionSelected = { option ->
@@ -168,7 +169,7 @@ fun RegistrationScreen(
                     }
 
                     DatePickerField(
-                        label = "When were you last trained?",
+                        label = stringResource(R.string.registration_label_last_trained),
                         selectedDateInMillis = state.collector.lastTrainedOn,
                         onDateSelected = { onAction(RegistrationAction.EnterCollectorLastTrainedOn(it)) },
                         error = state.registrationErrors.collectorLastTrainedOn,
@@ -177,7 +178,7 @@ fun RegistrationScreen(
                 }
 
                 ActionButton(
-                    label = "Confirm",
+                    label = stringResource(R.string.registration_action_confirm),
                     onClick = { onAction(RegistrationAction.ConfirmRegistration) },
                     enabled = state.selectedProgram != null &&
                             state.collector.name.isNotBlank() &&
@@ -195,7 +196,7 @@ fun RegistrationScreen(
             AlertDialog(
                 onDismissRequest = { onAction(RegistrationAction.DismissProgramAccessCodeDialog) },
                 title = {
-                    Text(text = "Enter Program Access Code")
+                    Text(text = stringResource(R.string.registration_title_access_code_dialog))
                 },
                 text = {
                     Column(
@@ -204,7 +205,7 @@ fun RegistrationScreen(
                         TextEntryField(
                             value = state.programAccessCodeInput,
                             onValueChange = { onAction(RegistrationAction.EnterProgramAccessCode(it)) },
-                            label = "Access Code",
+                            label = stringResource(R.string.registration_label_access_code),
                             singleLine = true,
                             error = state.programAccessCodeError,
                             visualTransformation = if (isProgramAccessCodeVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -216,7 +217,7 @@ fun RegistrationScreen(
                                             if (isProgramAccessCodeVisible) R.drawable.ic_visibility_off
                                             else R.drawable.ic_visibility
                                         ),
-                                        contentDescription = if (isProgramAccessCodeVisible) "Hide access code" else "Show access code"
+                                        contentDescription = if (isProgramAccessCodeVisible) stringResource(R.string.registration_content_description_hide_access_code) else stringResource(R.string.registration_content_description_show_access_code)
                                     )
                                 }
                             },
@@ -234,7 +235,7 @@ fun RegistrationScreen(
                         )
                     ) {
                         Text(
-                            text = "Confirm",
+                            text = stringResource(R.string.registration_action_access_code_dialog_confirm),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -244,7 +245,7 @@ fun RegistrationScreen(
                         onClick = { onAction(RegistrationAction.DismissProgramAccessCodeDialog) }
                     ) {
                         Text(
-                            text = "Cancel",
+                            text = stringResource(R.string.registration_action_access_code_dialog_cancel),
                             color = MaterialTheme.colors.textSecondary,
                             fontSize = MaterialTheme.typography.bodyMedium.fontSize
                         )

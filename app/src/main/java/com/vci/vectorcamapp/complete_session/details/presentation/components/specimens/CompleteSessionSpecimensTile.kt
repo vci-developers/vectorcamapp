@@ -27,6 +27,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -82,7 +83,7 @@ fun CompleteSessionSpecimensTile(
 
             AsyncImage(
                 model = ImageRequest.Builder(context).data(specimenImage.imageUri).build(),
-                contentDescription = "Specimen Image: ${specimen.id}",
+                contentDescription = stringResource(R.string.complete_session_content_description_specimen_image, specimen.id),
                 error = fallbackPainter,
                 fallback = fallbackPainter,
                 contentScale = ContentScale.Fit,
@@ -128,13 +129,13 @@ fun CompleteSessionSpecimensTile(
 
                 Icon(
                     painter = painterResource(R.drawable.ic_specimen),
-                    contentDescription = "Mosquito",
+                    contentDescription = stringResource(R.string.complete_session_content_description_mosquito),
                     tint = MaterialTheme.colors.icon,
                     modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                 )
 
                 Text(
-                    text = "Specimen ID: ${specimen.id}",
+                    text = stringResource(R.string.complete_session_label_specimen_id, specimen.id),
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colors.textPrimary
                 )
@@ -142,14 +143,14 @@ fun CompleteSessionSpecimensTile(
 
             batchName?.let {
                 InfoPill(
-                    text = "Batch: $it",
+                    text = stringResource(R.string.complete_session_label_batch_name, it),
                     color = MaterialTheme.colors.info,
                 )
             }
 
             Text(
                 text = buildAnnotatedString {
-                    append("Metadata Upload Status: ")
+                    append(stringResource(R.string.complete_session_label_metadata_upload_status))
                     withStyle(SpanStyle(color = specimenImage.metadataUploadStatus.color())) {
                         append(specimenImage.metadataUploadStatus.displayText(context))
                     }
@@ -159,7 +160,7 @@ fun CompleteSessionSpecimensTile(
 
             Text(
                 text = buildAnnotatedString {
-                    append("Image Upload Status: ")
+                    append(stringResource(R.string.complete_session_label_image_upload_status))
                     withStyle(SpanStyle(color = specimenImage.imageUploadStatus.color())) {
                         append(specimenImage.imageUploadStatus.displayText(context))
                     }
@@ -168,25 +169,25 @@ fun CompleteSessionSpecimensTile(
             )
 
             Text(
-                text = if (specimenImage.species != null) "Species: ${specimenImage.species}" else "",
+                text = if (specimenImage.species != null) stringResource(R.string.complete_session_label_species, specimenImage.species) else "",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.textPrimary
             )
 
             Text(
-                text = if (specimenImage.sex != null) "Sex: ${specimenImage.sex}" else "",
+                text = if (specimenImage.sex != null) stringResource(R.string.complete_session_label_sex, specimenImage.sex) else "",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.textPrimary
             )
 
             Text(
-                text = if (specimenImage.abdomenStatus != null) "Abdomen Status: ${specimenImage.abdomenStatus}" else "",
+                text = if (specimenImage.abdomenStatus != null) stringResource(R.string.complete_session_label_abdomen_status, specimenImage.abdomenStatus) else "",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.textPrimary
             )
 
             Text(
-                text = "Captured On: ${dateTimeFormatter.format(specimenImage.capturedAt)}",
+                text = stringResource(R.string.complete_session_label_captured_on, dateTimeFormatter.format(specimenImage.capturedAt)),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.textPrimary
             )

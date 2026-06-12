@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -73,7 +74,7 @@ fun SettingsInfoTile(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_arrow_down),
-                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        contentDescription = if (isExpanded) stringResource(R.string.settings_content_description_collapse) else stringResource(R.string.settings_content_description_expand),
                         tint = MaterialTheme.colors.icon,
                         modifier = Modifier
                             .size(MaterialTheme.dimensions.iconSizeLarge)

@@ -56,7 +56,7 @@ class CameraRepositoryImplementation @Inject constructor(
         val sessionTimestamp = dateFormat.format(Date(currentSession.createdAt))
 
         return withContext(Dispatchers.IO) {
-            val appName = context.getString(R.string.app_name)
+            val appName = context.getString(R.string.media_directory_name)
             val directory = "${Environment.DIRECTORY_DCIM}/$appName/$sessionTimestamp"
 
             val contentValues = ContentValues().apply {
