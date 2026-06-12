@@ -42,7 +42,7 @@ class VectorCamApp : Application(), Configuration.Provider {
         VectorCamAnalytics.appContext = applicationContext
 
         val cl = FirebaseCrashlytics.getInstance()
-        cl.isCrashlyticsCollectionEnabled = !BuildConfig.DEBUG
+        cl.isCrashlyticsCollectionEnabled = true
         Crashy.crashlytics = cl
 
         // Set region / build flavor context keys (replaces Sentry.configureScope block)
