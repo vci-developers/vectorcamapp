@@ -232,6 +232,9 @@ object VectorCamAnalytics {
         }
 
         if (!enabled) return
+        // Bail out before touching Bundle when no Firebase instance is attached
+        // (also keeps plain-JVM unit tests off unmocked android.os.Bundle APIs).
+        val fa = analytics ?: return
 
         val bundle = Bundle().apply {
             putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
@@ -245,7 +248,7 @@ object VectorCamAnalytics {
                 }
             }
         }
-        analytics?.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle)
+        fa.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle)
     }
 
     // ── Generic event logging ─────────────────────────────────────────────────
@@ -256,6 +259,9 @@ object VectorCamAnalytics {
             Log.d(TAG, "EVENT → $name$paramsStr")
         }
         if (!enabled) return
+        // Bail out before touching Bundle when no Firebase instance is attached
+        // (also keeps plain-JVM unit tests off unmocked android.os.Bundle APIs).
+        val fa = analytics ?: return
         val bundle = Bundle()
         params.forEach { (key, value) ->
             when (value) {
@@ -269,7 +275,7 @@ object VectorCamAnalytics {
                 else -> bundle.putString(key, value.toString())
             }
         }
-        analytics?.logEvent(name, bundle)
+        fa.logEvent(name, bundle)
     }
 
     // ── User / device identity ────────────────────────────────────────────────
