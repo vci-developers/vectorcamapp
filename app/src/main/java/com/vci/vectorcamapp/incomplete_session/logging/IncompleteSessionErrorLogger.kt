@@ -1,14 +1,14 @@
 package com.vci.vectorcamapp.incomplete_session.logging
 
 import android.net.Uri
-import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
 import java.util.UUID
 
 object IncompleteSessionErrorLogger {
 
     fun logSessionNotFound(e: Throwable, failedSessionId: UUID) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
             context = CrashyContext(
                 screen = "InProgressSession",
@@ -30,7 +30,7 @@ object IncompleteSessionErrorLogger {
     }
 
     fun logSessionRetrievalFailure(e: Throwable, failedSessionId: UUID) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
             context = CrashyContext(
                 screen = "InProgressSession",
@@ -54,7 +54,7 @@ object IncompleteSessionErrorLogger {
     }
 
     fun logSessionDeletionFailure(e: Throwable, failedSessionId: UUID) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
             context = CrashyContext(
                 screen = "InProgressSession",
@@ -75,7 +75,7 @@ object IncompleteSessionErrorLogger {
     }
 
     fun logImageDeletionFailure(e: Throwable, failedSessionId: UUID, failedImageUri: Uri) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
             context = CrashyContext(
                 screen = "InProgressSession",

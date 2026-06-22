@@ -22,7 +22,7 @@ import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
-import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
 import com.vci.vectorcamapp.core.logging.crashlytics.Severity
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
@@ -587,7 +587,7 @@ class ImagingViewModel @Inject constructor(
                         }.onError { error ->
                             withContext(Dispatchers.Main) {
                                 if (error == ImagingError.NO_ACTIVE_SESSION) {
-                                    Crashy.exception(
+                                    VectorCamCrashlytics.exception(
                                         throwable = IllegalStateException("No active session during capture"),
                                         severity = Severity.ERROR,
                                         context = CrashyContext(screen = "Imaging", feature = "CaptureImage", action = "capture"),

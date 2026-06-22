@@ -3,7 +3,7 @@ package com.vci.vectorcamapp.core.logging.crashlytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.vci.vectorcamapp.core.domain.model.Device
 
-object Crashy {
+object VectorCamCrashlytics {
 
     @Volatile var enabled: Boolean = true
     @Volatile var crashlytics: FirebaseCrashlytics? = null

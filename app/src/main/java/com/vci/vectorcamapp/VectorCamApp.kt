@@ -9,7 +9,7 @@ import androidx.work.Configuration
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import dagger.hilt.android.HiltAndroidApp
@@ -45,7 +45,7 @@ class VectorCamApp : Application(), Configuration.Provider {
 
         val crashlytics = FirebaseCrashlytics.getInstance()
         crashlytics.isCrashlyticsCollectionEnabled = true
-        Crashy.crashlytics = crashlytics
+        VectorCamCrashlytics.crashlytics = crashlytics
 
         // Set region / build flavor context keys
         crashlytics.setCustomKey("region", BuildConfig.REGION)
@@ -67,7 +67,7 @@ class VectorCamApp : Application(), Configuration.Provider {
             deviceCache.getDevice()?.let { device ->
                 val programId = deviceCache.getProgramId()
                 VectorCamAnalytics.setDevice(device, programId)
-                Crashy.setDevice(device)
+                VectorCamCrashlytics.setDevice(device)
             }
         }
 
@@ -94,7 +94,7 @@ class VectorCamApp : Application(), Configuration.Provider {
         try {
             OpenCVLoader.initLocal()
         } catch (e: Exception) {
-            Crashy.exception(
+            VectorCamCrashlytics.exception(
                 throwable = e,
                 context = CrashyContext(
                     screen = "AppStart", feature = "OpenCV Initialization", action = "initLocal()"

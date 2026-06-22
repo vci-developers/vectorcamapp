@@ -1,14 +1,14 @@
 package com.vci.vectorcamapp.intake.logging
 
 import android.os.Build
-import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
 import java.util.UUID
 
 object IntakeErrorLogger {
 
     fun logProgramNotFound(e: Exception) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
             context = CrashyContext(
                 screen = "Intake",
@@ -29,7 +29,7 @@ object IntakeErrorLogger {
     }
 
     fun logSiteNotFound(e: Exception) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
             context = CrashyContext(
                 screen = "Intake",
@@ -50,7 +50,7 @@ object IntakeErrorLogger {
     }
 
     fun logSessionUpsertFailed(e: Exception, failedSessionId: UUID, failedSiteId: Int) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
             context = CrashyContext(
                 screen = "Intake",
@@ -75,7 +75,7 @@ object IntakeErrorLogger {
     }
 
     fun logSurveillanceFormUpsertFailed(e: Exception, failedSessionId: UUID) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
             context = CrashyContext(
                 screen = "Intake",
@@ -98,7 +98,7 @@ object IntakeErrorLogger {
     }
 
     fun logLocationFetchFailed(e: Exception) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
             context = CrashyContext(
                 screen = "Intake",

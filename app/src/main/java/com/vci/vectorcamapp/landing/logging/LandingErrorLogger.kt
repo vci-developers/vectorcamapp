@@ -1,14 +1,14 @@
 package com.vci.vectorcamapp.landing.logging
 
 import android.os.Build
-import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
 import com.vci.vectorcamapp.core.logging.crashlytics.Severity
 
 object LandingErrorLogger {
 
     fun logSessionNotFound(e: Throwable) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
             severity = Severity.WARNING,
             context = CrashyContext(
@@ -33,7 +33,7 @@ object LandingErrorLogger {
     }
 
     fun logProgramIdNotFound(e: Throwable) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
             context = CrashyContext(
                 screen = "LandingScreen",
@@ -56,7 +56,7 @@ object LandingErrorLogger {
     }
 
     fun logProgramNotFound(e: Throwable, failedProgramId: Int) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
             context = CrashyContext(
                 screen = "LandingScreen",

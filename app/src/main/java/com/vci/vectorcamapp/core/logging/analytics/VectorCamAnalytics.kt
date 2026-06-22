@@ -18,7 +18,7 @@ import java.io.File
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.temporal.WeekFields
-import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 
 /**
  * App-wide analytics wrapper around FirebaseAnalytics.
@@ -219,7 +219,7 @@ object VectorCamAnalytics {
         screenEnteredAt = System.currentTimeMillis()
 
         // Crashlytics breadcrumb — navigation trail in crash reports
-        Crashy.log(
+        VectorCamCrashlytics.log(
             message = "screen_view",
             category = "nav",
             data = mapOf("screen" to screenName, "class" to screenClass),

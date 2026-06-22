@@ -2,7 +2,7 @@ package com.vci.vectorcamapp.main.presentation
 
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
@@ -77,7 +77,7 @@ class MainViewModel @Inject constructor(
                 .catch { throwable ->
                     emitError(MainError.DEVICE_FETCH_FAILED)
                     _state.update { it.copy(startDestination = Destination.Registration) }
-                    Crashy.exception(
+                    VectorCamCrashlytics.exception(
                         throwable = Exception(MainError.DEVICE_FETCH_FAILED.name, throwable),
                         context = CrashyContext(
                             screen = "Main", feature = "DeviceCache", action = "observe_program_id"
