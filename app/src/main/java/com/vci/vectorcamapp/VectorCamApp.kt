@@ -9,9 +9,9 @@ import androidx.work.Configuration
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.logging.Crashy
-import com.vci.vectorcamapp.core.logging.CrashyContext
-import com.vci.vectorcamapp.core.logging.VectorCamAnalytics
+import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
+import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +26,8 @@ class VectorCamApp : Application(), Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    // Field injection is required for Application subclasses — Hilt does not support
+    // constructor injection for Android framework entry-point classes.
     @Inject
     lateinit var deviceCache: DeviceCache
 
@@ -41,20 +43,20 @@ class VectorCamApp : Application(), Configuration.Provider {
 
         VectorCamAnalytics.appContext = applicationContext
 
-        val cl = FirebaseCrashlytics.getInstance()
-        cl.isCrashlyticsCollectionEnabled = true
-        Crashy.crashlytics = cl
+        val crashlytics = FirebaseCrashlytics.getInstance()
+        crashlytics.isCrashlyticsCollectionEnabled = true
+        Crashy.crashlytics = crashlytics
 
-        // Set region / build flavor context keys (replaces Sentry.configureScope block)
-        cl.setCustomKey("region", BuildConfig.REGION)
-        cl.setCustomKey("region_code", BuildConfig.REGION_CODE)
-        cl.setCustomKey("build_flavor", BuildConfig.FLAVOR)
-        cl.setCustomKey("version_code", BuildConfig.VERSION_CODE)
-        cl.setCustomKey("version_name", BuildConfig.VERSION_NAME)
+        // Set region / build flavor context keys
+        crashlytics.setCustomKey("region", BuildConfig.REGION)
+        crashlytics.setCustomKey("region_code", BuildConfig.REGION_CODE)
+        crashlytics.setCustomKey("build_flavor", BuildConfig.FLAVOR)
+        crashlytics.setCustomKey("version_code", BuildConfig.VERSION_CODE)
+        crashlytics.setCustomKey("version_name", BuildConfig.VERSION_NAME)
 
-        val fa = FirebaseAnalytics.getInstance(this)
-        fa.setAnalyticsCollectionEnabled(true)
-        VectorCamAnalytics.analytics = fa
+        val firebaseAnalytics = FirebaseAnalytics.getInstance(this)
+        firebaseAnalytics.setAnalyticsCollectionEnabled(true)
+        VectorCamAnalytics.analytics = firebaseAnalytics
         VectorCamAnalytics.setRegion(BuildConfig.REGION)
         VectorCamAnalytics.debugLogging = BuildConfig.DEBUG
         VectorCamAnalytics.setStaticProperties()

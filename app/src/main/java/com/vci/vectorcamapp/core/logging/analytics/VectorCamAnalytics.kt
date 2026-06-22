@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.core.logging
+package com.vci.vectorcamapp.core.logging.analytics
 
 import android.content.Context
 import android.content.Intent
@@ -18,6 +18,7 @@ import java.io.File
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.temporal.WeekFields
+import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
 
 /**
  * App-wide analytics wrapper around FirebaseAnalytics.
@@ -234,7 +235,7 @@ object VectorCamAnalytics {
         if (!enabled) return
         // Bail out before touching Bundle when no Firebase instance is attached
         // (also keeps plain-JVM unit tests off unmocked android.os.Bundle APIs).
-        val fa = analytics ?: return
+        val firebaseAnalytics = analytics ?: return
 
         val bundle = Bundle().apply {
             putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
@@ -248,7 +249,7 @@ object VectorCamAnalytics {
                 }
             }
         }
-        fa.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle)
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle)
     }
 
     // ── Generic event logging ─────────────────────────────────────────────────
@@ -261,7 +262,7 @@ object VectorCamAnalytics {
         if (!enabled) return
         // Bail out before touching Bundle when no Firebase instance is attached
         // (also keeps plain-JVM unit tests off unmocked android.os.Bundle APIs).
-        val fa = analytics ?: return
+        val firebaseAnalytics = analytics ?: return
         val bundle = Bundle()
         params.forEach { (key, value) ->
             when (value) {
@@ -275,7 +276,7 @@ object VectorCamAnalytics {
                 else -> bundle.putString(key, value.toString())
             }
         }
-        fa.logEvent(name, bundle)
+        firebaseAnalytics.logEvent(name, bundle)
     }
 
     // ── User / device identity ────────────────────────────────────────────────

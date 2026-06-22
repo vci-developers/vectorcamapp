@@ -1,8 +1,8 @@
 package com.vci.vectorcamapp.intake.logging
 
 import android.os.Build
-import com.vci.vectorcamapp.core.logging.Crashy
-import com.vci.vectorcamapp.core.logging.CrashyContext
+import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
 import java.util.UUID
 
 object IntakeErrorLogger {

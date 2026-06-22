@@ -22,10 +22,10 @@ import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
-import com.vci.vectorcamapp.core.logging.Crashy
-import com.vci.vectorcamapp.core.logging.CrashyContext
-import com.vci.vectorcamapp.core.logging.Severity
-import com.vci.vectorcamapp.core.logging.VectorCamAnalytics
+import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
+import com.vci.vectorcamapp.core.logging.crashlytics.Severity
+import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
@@ -98,7 +98,6 @@ class ImagingViewModel @Inject constructor(
     private var firstFrameLogged: Boolean = false
     private var lastFocusLogMs: Long = 0L
     private var lastFrameErrorMs: Long = 0L
-    private val frameErrorRateLimiter = FrameErrorRateLimiter()
 
     private val _specimensWithImagesAndInferenceResults: Flow<List<SpecimenWithSpecimenImagesAndInferenceResults>> =
         flow {
@@ -895,10 +894,3 @@ class ImagingViewModel @Inject constructor(
     }
 }
 
-private class FrameErrorRateLimiter(private val every: Int = 50) {
-    private var count = 0
-    fun shouldRecord(): Boolean {
-        val n = ++count
-        return n == 1 || n % every == 0
-    }
-}

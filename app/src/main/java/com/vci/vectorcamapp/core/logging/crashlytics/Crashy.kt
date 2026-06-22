@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.core.logging
+package com.vci.vectorcamapp.core.logging.crashlytics
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.vci.vectorcamapp.core.domain.model.Device
@@ -18,7 +18,7 @@ object Crashy {
         context: CrashyContext? = null,
     ) {
         if (!enabled) return
-        val cl = crashlytics ?: return
+        val crashlyticsInstance = crashlytics ?: return
         val parts = buildList {
             add("[${severity.name}][$category] $message")
             context?.screen?.let     { add("screen=$it") }
@@ -28,9 +28,9 @@ object Crashy {
             context?.programId?.let  { add("program_id=$it") }
             context?.siteId?.let     { add("site_id=$it") }
             context?.specimenId?.let { add("specimen_id=$it") }
-            data.forEach { (k, v) -> add("$k=$v") }
+            data.forEach { (key, value) -> add("$key=$value") }
         }
-        cl.log(parts.joinToString(" | ").take(1024))
+        crashlyticsInstance.log(parts.joinToString(" | ").take(1024))
     }
 
     // ---- Non-fatal exceptions ----------------------------------------------
@@ -43,37 +43,37 @@ object Crashy {
         extras: Map<String, Any?> = emptyMap(),
     ) {
         if (!enabled) return
-        val cl = crashlytics ?: return
+        val crashlyticsInstance = crashlytics ?: return
 
         // Standard 7 — always set/refresh on every exception call
-        cl.setCustomKey("severity", severity.name)
-        cl.setCustomKey("screen",      context?.screen.orEmpty())
-        cl.setCustomKey("feature",     context?.feature.orEmpty())
-        cl.setCustomKey("action",      context?.action.orEmpty())
-        cl.setCustomKey("session_id",  context?.sessionId.orEmpty())
-        cl.setCustomKey("program_id",  context?.programId.orEmpty())
-        cl.setCustomKey("site_id",     context?.siteId.orEmpty())
-        cl.setCustomKey("specimen_id", context?.specimenId.orEmpty())
+        crashlyticsInstance.setCustomKey("severity",    severity.name)
+        crashlyticsInstance.setCustomKey("screen",      context?.screen.orEmpty())
+        crashlyticsInstance.setCustomKey("feature",     context?.feature.orEmpty())
+        crashlyticsInstance.setCustomKey("action",      context?.action.orEmpty())
+        crashlyticsInstance.setCustomKey("session_id",  context?.sessionId.orEmpty())
+        crashlyticsInstance.setCustomKey("program_id",  context?.programId.orEmpty())
+        crashlyticsInstance.setCustomKey("site_id",     context?.siteId.orEmpty())
+        crashlyticsInstance.setCustomKey("specimen_id", context?.specimenId.orEmpty())
 
         // Caller-supplied
-        tags.forEach   { (k, v) -> cl.setCustomKey(k.take(64), v.take(1024)) }
-        extras.forEach { (k, v) -> cl.setCustomKey(k.take(64), v.toString().take(1024)) }
+        tags.forEach   { (key, value) -> crashlyticsInstance.setCustomKey(key.take(64), value.take(1024)) }
+        extras.forEach { (key, value) -> crashlyticsInstance.setCustomKey(key.take(64), value.toString().take(1024)) }
 
-        cl.recordException(throwable)
+        crashlyticsInstance.recordException(throwable)
     }
 
     // ---- User identity ------------------------------------------------------
 
     fun setDevice(device: Device?) {
         if (!enabled) return
-        val cl = crashlytics ?: return
+        val crashlyticsInstance = crashlytics ?: return
         if (device == null) {
-            cl.setUserId("")
+            crashlyticsInstance.setUserId("")
             return
         }
         val userId = "${device.id}_${device.registeredAt}"
-        cl.setUserId(userId)
-        cl.setCustomKey("device_model", device.model)
+        crashlyticsInstance.setUserId(userId)
+        crashlyticsInstance.setCustomKey("device_model", device.model)
         log(
             message = "User context set",
             category = "user",
@@ -84,8 +84,8 @@ object Crashy {
 
     fun clearDevice() {
         if (!enabled) return
-        val cl = crashlytics ?: return
-        cl.setUserId("")
+        val crashlyticsInstance = crashlytics ?: return
+        crashlyticsInstance.setUserId("")
         log("Device context cleared", category = "user")
     }
 }

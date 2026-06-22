@@ -2,8 +2,8 @@ package com.vci.vectorcamapp.main.presentation
 
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.logging.Crashy
-import com.vci.vectorcamapp.core.logging.CrashyContext
+import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.main.domain.util.MainError

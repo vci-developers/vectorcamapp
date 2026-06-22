@@ -1,8 +1,8 @@
 package com.vci.vectorcamapp.incomplete_session.logging
 
 import android.net.Uri
-import com.vci.vectorcamapp.core.logging.Crashy
-import com.vci.vectorcamapp.core.logging.CrashyContext
+import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
 import java.util.UUID
 
 object IncompleteSessionErrorLogger {

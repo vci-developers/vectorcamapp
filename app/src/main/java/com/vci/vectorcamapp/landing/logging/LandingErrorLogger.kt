@@ -1,9 +1,9 @@
 package com.vci.vectorcamapp.landing.logging
 
 import android.os.Build
-import com.vci.vectorcamapp.core.logging.Crashy
-import com.vci.vectorcamapp.core.logging.CrashyContext
-import com.vci.vectorcamapp.core.logging.Severity
+import com.vci.vectorcamapp.core.logging.crashlytics.Crashy
+import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
+import com.vci.vectorcamapp.core.logging.crashlytics.Severity
 
 object LandingErrorLogger {
 
