@@ -201,8 +201,8 @@ object VectorCamAnalytics {
 
         val condition = conditionParams()
 
-        val condStr = if (condition.isEmpty()) "" else " | ${condition.entries.joinToString { "${it.key}=${it.value}" }}"
-        Timber.d("SCREEN_VIEW → $screenName$condStr")
+        val conditionString = if (condition.isEmpty()) "" else " | ${condition.entries.joinToString { "${it.key}=${it.value}" }}"
+        Timber.d("SCREEN_VIEW → $screenName$conditionString")
 
         if (!enabled) return
 
