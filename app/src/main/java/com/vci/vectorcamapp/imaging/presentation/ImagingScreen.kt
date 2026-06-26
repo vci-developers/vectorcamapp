@@ -70,7 +70,9 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.tutorial.TutorialStep
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
+import com.vci.vectorcamapp.core.presentation.components.tutorial.TutorialHighlightBox
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
@@ -787,6 +789,12 @@ fun ImagingScreen(
                                         }
                                     }
                                 }
+                                TutorialHighlightBox(
+                                    step = TutorialStep.CAPTURE_AND_SAVE,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                                ) {
                                 InfoTile {
                                     Column(
                                         verticalArrangement = Arrangement.Center,
@@ -837,6 +845,7 @@ fun ImagingScreen(
                                             modifier = Modifier.fillMaxWidth()
                                         )
                                     }
+                                }
                                 }
                             }
                         }

@@ -31,6 +31,7 @@ import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
+import com.vci.vectorcamapp.core.presentation.tutorial.LocalTutorialManager
 import com.vci.vectorcamapp.settings.presentation.components.CollectorDialog
 import com.vci.vectorcamapp.settings.presentation.components.CollectorWarningDialog
 import com.vci.vectorcamapp.settings.presentation.components.SettingsActionTile
@@ -50,6 +51,7 @@ fun SettingsScreen(
 ) {
     val dateTimeFormatter =
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
+    val tutorialManager = LocalTutorialManager.current
 
     ScreenHeader(
         title = "Settings",
@@ -140,6 +142,14 @@ fun SettingsScreen(
                         }
                     }
                 }
+            }
+
+            SettingsSection(title = "Help & Tutorial") {
+                SettingsActionTile(
+                    title = "Restart Tutorial",
+                    onClick = { tutorialManager.resetTutorial() },
+                    modifier = modifier
+                )
             }
 
             SettingsSection("About") {
