@@ -147,7 +147,10 @@ fun SettingsScreen(
             SettingsSection(title = "Help & Tutorial") {
                 SettingsActionTile(
                     title = "Restart Tutorial",
-                    onClick = { tutorialManager.resetTutorial() },
+                    onClick = {
+                        tutorialManager.restartTutorial()
+                        onAction(SettingsAction.ReturnToLandingScreen)
+                    },
                     modifier = modifier
                 )
             }

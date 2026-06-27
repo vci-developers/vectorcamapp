@@ -15,11 +15,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.core.domain.tutorial.TutorialStep
+import com.vci.vectorcamapp.core.presentation.tutorial.LocalSpotlightBounds
 import com.vci.vectorcamapp.core.presentation.tutorial.LocalTutorialManager
 
 private val TutorialHighlightColor = Color(0xFF4CAF50)
+
+private val spotlightSteps = setOf(
+    TutorialStep.NEW_SURVEILLANCE_SESSION,
+    TutorialStep.IN_PROGRESS_SESSIONS,
+    TutorialStep.COMPLETE_SESSIONS
+)
 
 @Composable
 fun TutorialHighlightBox(
@@ -31,6 +40,19 @@ fun TutorialHighlightBox(
     val tutorialManager = LocalTutorialManager.current
     val currentStep by tutorialManager.currentStep.collectAsState()
     val isActive = currentStep == step
+    val isSpotlight = step in spotlightSteps
+
+    if (isActive && isSpotlight) {
+        val spotlightBounds = LocalSpotlightBounds.current
+        Box(
+            modifier = modifier.onGloballyPositioned { coords ->
+                spotlightBounds.value = coords.boundsInWindow()
+            }
+        ) {
+            content()
+        }
+        return
+    }
 
     val infiniteTransition = rememberInfiniteTransition(label = "tutorial_pulse_$step")
     val alpha by infiniteTransition.animateFloat(

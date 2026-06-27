@@ -30,4 +30,9 @@ class TutorialManager @Inject constructor(
         _currentStep.value = TutorialStep.REGISTRATION_FORM
         repository.saveStep(TutorialStep.REGISTRATION_FORM)
     }
+
+    fun restartTutorial() {
+        _currentStep.value = TutorialStep.NEW_SURVEILLANCE_SESSION
+        repository.saveStep(TutorialStep.NEW_SURVEILLANCE_SESSION)
+    }
 }
