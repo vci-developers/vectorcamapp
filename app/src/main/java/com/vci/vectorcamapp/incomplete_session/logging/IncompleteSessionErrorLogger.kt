@@ -2,7 +2,7 @@ package com.vci.vectorcamapp.incomplete_session.logging
 
 import android.net.Uri
 import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
-import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext
 import java.util.UUID
 
 object IncompleteSessionErrorLogger {
@@ -10,7 +10,7 @@ object IncompleteSessionErrorLogger {
     fun logSessionNotFound(e: Throwable, failedSessionId: UUID) {
         VectorCamCrashlytics.exception(
             throwable = e,
-            context = CrashyContext(
+            context = VectorCamCrashlyticsContext(
                 screen = "InProgressSession",
                 feature = "SessionResume",
                 action = "session_not_found",
@@ -32,7 +32,7 @@ object IncompleteSessionErrorLogger {
     fun logSessionRetrievalFailure(e: Throwable, failedSessionId: UUID) {
         VectorCamCrashlytics.exception(
             throwable = e,
-            context = CrashyContext(
+            context = VectorCamCrashlyticsContext(
                 screen = "InProgressSession",
                 feature = "SessionResume",
                 action = "session_retrieval",
@@ -56,7 +56,7 @@ object IncompleteSessionErrorLogger {
     fun logSessionDeletionFailure(e: Throwable, failedSessionId: UUID) {
         VectorCamCrashlytics.exception(
             throwable = e,
-            context = CrashyContext(
+            context = VectorCamCrashlyticsContext(
                 screen = "InProgressSession",
                 feature = "InProgressSessionDeletion",
                 action = "in_progress_session_deletion",
@@ -77,7 +77,7 @@ object IncompleteSessionErrorLogger {
     fun logImageDeletionFailure(e: Throwable, failedSessionId: UUID, failedImageUri: Uri) {
         VectorCamCrashlytics.exception(
             throwable = e,
-            context = CrashyContext(
+            context = VectorCamCrashlyticsContext(
                 screen = "InProgressSession",
                 feature = "InProgressSessionImageDeletion",
                 action = "in_progress_session_image_deletion",

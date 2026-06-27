@@ -2,7 +2,7 @@ package com.vci.vectorcamapp.intake.logging
 
 import android.os.Build
 import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
-import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext
 import java.util.UUID
 
 object IntakeErrorLogger {
@@ -10,7 +10,7 @@ object IntakeErrorLogger {
     fun logProgramNotFound(e: Exception) {
         VectorCamCrashlytics.exception(
             throwable = e,
-            context = CrashyContext(
+            context = VectorCamCrashlyticsContext(
                 screen = "Intake",
                 feature = "ProgramDisplay",
                 action = "program_not_found"
@@ -31,7 +31,7 @@ object IntakeErrorLogger {
     fun logSiteNotFound(e: Exception) {
         VectorCamCrashlytics.exception(
             throwable = e,
-            context = CrashyContext(
+            context = VectorCamCrashlyticsContext(
                 screen = "Intake",
                 feature = "SiteSelection",
                 action = "site_not_found"
@@ -52,7 +52,7 @@ object IntakeErrorLogger {
     fun logSessionUpsertFailed(e: Exception, failedSessionId: UUID, failedSiteId: Int) {
         VectorCamCrashlytics.exception(
             throwable = e,
-            context = CrashyContext(
+            context = VectorCamCrashlyticsContext(
                 screen = "Intake",
                 feature = "SessionUpsert",
                 action = "session_upsert_failed",
@@ -77,7 +77,7 @@ object IntakeErrorLogger {
     fun logSurveillanceFormUpsertFailed(e: Exception, failedSessionId: UUID) {
         VectorCamCrashlytics.exception(
             throwable = e,
-            context = CrashyContext(
+            context = VectorCamCrashlyticsContext(
                 screen = "Intake",
                 feature = "SurveillanceFormUpsert",
                 action = "surveillance_form_upsert_failed",
@@ -100,7 +100,7 @@ object IntakeErrorLogger {
     fun logLocationFetchFailed(e: Exception) {
         VectorCamCrashlytics.exception(
             throwable = e,
-            context = CrashyContext(
+            context = VectorCamCrashlyticsContext(
                 screen = "Intake",
                 action = "LocationFetch"
             ),

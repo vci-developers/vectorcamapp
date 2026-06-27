@@ -15,7 +15,7 @@ object VectorCamCrashlytics {
         category: String = "app",
         severity: Severity = Severity.INFO,
         data: Map<String, Any?> = emptyMap(),
-        context: CrashyContext? = null,
+        context: VectorCamCrashlyticsContext? = null,
     ) {
         if (!enabled) return
         val crashlyticsInstance = crashlytics ?: return
@@ -38,7 +38,7 @@ object VectorCamCrashlytics {
     fun exception(
         throwable: Throwable,
         severity: Severity = Severity.ERROR,
-        context: CrashyContext? = null,
+        context: VectorCamCrashlyticsContext? = null,
         tags: Map<String, String> = emptyMap(),
         extras: Map<String, Any?> = emptyMap(),
     ) {

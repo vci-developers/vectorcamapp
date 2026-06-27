@@ -10,7 +10,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
-import com.vci.vectorcamapp.core.logging.crashlytics.CrashyContext
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -96,7 +96,7 @@ class VectorCamApp : Application(), Configuration.Provider {
         } catch (e: Exception) {
             VectorCamCrashlytics.exception(
                 throwable = e,
-                context = CrashyContext(
+                context = VectorCamCrashlyticsContext(
                     screen = "AppStart", feature = "OpenCV Initialization", action = "initLocal()"
                 ),
                 tags = mapOf(
