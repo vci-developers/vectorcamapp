@@ -175,7 +175,7 @@ fun ImagingScreen(
             camera = boundCamera
 
         } catch (e: Exception) {
-            e.printStackTrace()
+            onAction(ImagingAction.CameraBindFailed(e))
         }
     }
 

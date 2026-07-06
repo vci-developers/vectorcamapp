@@ -17,6 +17,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import com.vci.vectorcamapp.core.presentation.components.scaffold.BaseScaffold
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -93,7 +94,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     else -> {
-                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        BaseScaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                             PermissionScreen(
                                 state = state,
                                 onAction = viewModel::onAction,

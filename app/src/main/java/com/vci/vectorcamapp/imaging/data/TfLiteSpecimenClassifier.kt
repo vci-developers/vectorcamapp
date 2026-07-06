@@ -6,6 +6,8 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import com.vci.vectorcamapp.core.domain.model.results.ClassifierResult
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
 import org.opencv.android.Utils
 import org.opencv.core.Core
@@ -69,6 +71,15 @@ class TfLiteSpecimenClassifier(
                 Log.d(TAG, "TFLite interpreter initialized")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
+                VectorCamCrashlytics.exception(
+                    throwable = e,
+                    context = VectorCamCrashlyticsContext(
+                        screen = "Imaging",
+                        feature = "TfLiteSpecimenClassifier",
+                        action = "initializeInterpreter"
+                    ),
+                    tags = mapOf("model_file" to "classify.tflite")
+                )
             }
         }
     }
@@ -134,6 +145,14 @@ class TfLiteSpecimenClassifier(
                     ))
                 } catch (e: Exception) {
                     Log.e(TAG, "Inference failed: ${e.message}")
+                    VectorCamCrashlytics.exception(
+                        throwable = e,
+                        context = VectorCamCrashlyticsContext(
+                            screen = "Imaging",
+                            feature = "TfLiteSpecimenClassifier",
+                            action = "classify"
+                        )
+                    )
                     continuation.resume(null)
                 }
             }

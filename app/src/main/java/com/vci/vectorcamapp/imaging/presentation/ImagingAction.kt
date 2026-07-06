@@ -26,4 +26,5 @@ sealed interface ImagingAction {
     data object ClearPendingAction : ImagingAction
     data object ConfirmPendingAction : ImagingAction
     data object ReturnToCollectionBatchList : ImagingAction
+    data class CameraBindFailed(val throwable: Throwable) : ImagingAction
 }
