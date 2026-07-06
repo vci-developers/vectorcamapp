@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.core.logging
+package com.vci.vectorcamapp.core.logging.analytics
 
 import androidx.navigation.NavBackStackEntry
 

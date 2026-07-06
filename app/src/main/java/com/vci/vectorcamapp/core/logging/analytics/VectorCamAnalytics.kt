@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.core.logging
+package com.vci.vectorcamapp.core.logging.analytics
 
 import android.content.Context
 import android.content.Intent
@@ -15,6 +15,10 @@ import timber.log.Timber
 import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.domain.model.Device
 import java.io.File
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.temporal.WeekFields
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 
 /**
  * App-wide analytics wrapper around FirebaseAnalytics.
@@ -180,6 +184,8 @@ object VectorCamAnalytics {
      * Logs a [FirebaseAnalytics.Event.SCREEN_VIEW] for the new screen and, if a previous
      * screen was active, immediately logs a `screen_time` event with how long the user
      * spent on it (in ms and seconds for convenience).
+     *
+     * Also appends a Crashlytics breadcrumb so crash reports carry a navigation trail.
      */
     fun screenView(screenName: String, screenClass: String = screenName) {
         val previous = currentScreen
@@ -199,12 +205,22 @@ object VectorCamAnalytics {
         currentScreen = screenName
         screenEnteredAt = System.currentTimeMillis()
 
+        // Crashlytics breadcrumb — navigation trail in crash reports
+        VectorCamCrashlytics.log(
+            message = "screen_view",
+            category = "nav",
+            data = mapOf("screen" to screenName, "class" to screenClass),
+        )
+
         val condition = conditionParams()
 
         val conditionString = if (condition.isEmpty()) "" else " | ${condition.entries.joinToString { "${it.key}=${it.value}" }}"
         Timber.d("SCREEN_VIEW → $screenName$conditionString")
 
         if (!enabled) return
+        // Bail out before touching Bundle when no Firebase instance is attached
+        // (also keeps plain-JVM unit tests off unmocked android.os.Bundle APIs).
+        val firebaseAnalytics = analytics ?: return
 
         val bundle = Bundle().apply {
             putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
@@ -218,7 +234,7 @@ object VectorCamAnalytics {
                 }
             }
         }
-        analytics?.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle)
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle)
     }
 
     // ── Generic event logging ─────────────────────────────────────────────────
@@ -227,6 +243,9 @@ object VectorCamAnalytics {
         val paramsStr = if (params.isEmpty()) "" else " | ${params.entries.joinToString { "${it.key}=${it.value}" }}"
         Timber.d("EVENT → $name$paramsStr")
         if (!enabled) return
+        // Bail out before touching Bundle when no Firebase instance is attached
+        // (also keeps plain-JVM unit tests off unmocked android.os.Bundle APIs).
+        val firebaseAnalytics = analytics ?: return
         val bundle = Bundle()
         params.forEach { (key, value) ->
             when (value) {
@@ -240,22 +259,56 @@ object VectorCamAnalytics {
                 else -> bundle.putString(key, value.toString())
             }
         }
-        analytics?.logEvent(name, bundle)
+        firebaseAnalytics.logEvent(name, bundle)
     }
 
     // ── User / device identity ────────────────────────────────────────────────
 
-    fun setDevice(device: Device?) {
+    /**
+     * Sets the GA4 user id and all cohort-defining user properties required for retention analysis.
+     *
+     * Call after successful registration and on every cold start (re-hydration from cache).
+     * [programId] is stored separately from [Device] in [DeviceCache]; pass it alongside the device.
+     */
+    fun setDevice(device: Device?, programId: Int? = null) {
         if (!enabled) return
         if (device == null) {
             analytics?.setUserId(null)
-            analytics?.setUserProperty("device_model", null)
-            analytics?.setUserProperty("region", null)
+            listOf(
+                "device_model", "registration_cohort_week", "registered_at_date",
+                "program_id", "site_id"
+            ).forEach { analytics?.setUserProperty(it, null) }
             return
         }
         val userId = "${device.id}_${device.registeredAt}"
         analytics?.setUserId(userId)
         analytics?.setUserProperty("device_model", device.model)
+
+        // Cohort dimensions for GA4 retention analysis
+        val date = Instant.ofEpochMilli(device.registeredAt)
+            .atZone(ZoneOffset.UTC)
+            .toLocalDate()
+        val weekFields = WeekFields.ISO
+        val cohortWeek = "%d-W%02d".format(
+            date.get(weekFields.weekBasedYear()),
+            date.get(weekFields.weekOfWeekBasedYear()),
+        )
+        analytics?.setUserProperty("registration_cohort_week", cohortWeek)
+        analytics?.setUserProperty("registered_at_date", date.toString())
+        programId?.let { analytics?.setUserProperty("program_id", it.toString()) }
+
+        if (debugLogging) {
+            Log.d(TAG, "SET_DEVICE → user_id=$userId cohort_week=$cohortWeek program_id=$programId")
+        }
+    }
+
+    /**
+     * Updates the `site_id` user property. Call after a successful intake form submission so
+     * GA4 cohort retention reports can be faceted by site.
+     */
+    fun setSiteContext(siteId: Int) {
+        if (!enabled) return
+        analytics?.setUserProperty("site_id", siteId.toString())
     }
 
     fun setRegion(region: String) {

@@ -13,7 +13,6 @@ plugins {
     alias(libs.plugins.google.dagger.hilt.android)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.androidx.room)
-    alias(libs.plugins.sentry.android.gradle)
     alias(libs.plugins.google.firebase.crashlytics)
     kotlin("plugin.serialization") version "2.0.21"
 }
@@ -196,7 +195,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose) // Jetpack Compose navigation
     implementation(libs.androidx.navigation.fragment) // Navigation for Fragments
     implementation(libs.androidx.navigation.ui) // Navigation UI helpers
-    implementation(libs.androidx.navigation.dynamic.features.fragment) // Feature module support for Fragments
+    implementation(libs.androidx.navigation.dynamic.features.fragment)
+    implementation(libs.androidx.lifecycle.process) // Feature module support for Fragments
     androidTestImplementation(libs.androidx.navigation.testing) // Testing navigation
 
     // CameraX Dependencies
@@ -288,12 +288,3 @@ dependencies {
 
 apply(from = "jacoco.gradle.kts")
 
-sentry {
-    org.set("vectorcam")
-    projectName.set("android")
-    includeSourceContext.set(true)
-    includeProguardMapping.set(true)
-    autoUploadProguardMapping.set(true)
-
-    ignoredBuildTypes.set(setOf("debug"))
-}
