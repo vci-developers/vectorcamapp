@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.core.logging
 
 import android.util.Log
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import timber.log.Timber
 
 /**
@@ -16,7 +17,7 @@ class CrashlyticsTree : Timber.Tree() {
         priority >= Log.INFO
 
     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-        val crashlytics = Crashy.crashlytics ?: return
+        val crashlytics = VectorCamCrashlytics.crashlytics ?: return
 
         val label = when (priority) {
             Log.INFO -> "I"

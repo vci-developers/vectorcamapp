@@ -297,9 +297,7 @@ object VectorCamAnalytics {
         analytics?.setUserProperty("registered_at_date", date.toString())
         programId?.let { analytics?.setUserProperty("program_id", it.toString()) }
 
-        if (debugLogging) {
-            Log.d(TAG, "SET_DEVICE → user_id=$userId cohort_week=$cohortWeek program_id=$programId")
-        }
+        Timber.d("SET_DEVICE → user_id=$userId cohort_week=$cohortWeek program_id=$programId")
     }
 
     /**
