@@ -14,7 +14,9 @@ import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
+import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
+import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.navigation.Destination
@@ -37,6 +39,7 @@ class CollectionBatchListViewModel @Inject constructor(
     private val currentSessionCache: CurrentSessionCache,
     private val sessionRepository: SessionRepository,
     private val sessionUnitRepository: SessionUnitRepository,
+    private val specimenImageRepository: SpecimenImageRepository,
     private val programRepository: ProgramRepository,
     private val formRepository: FormRepository,
     private val formQuestionRepository: FormQuestionRepository,
@@ -86,6 +89,10 @@ class CollectionBatchListViewModel @Inject constructor(
         viewModelScope.launch {
             when (action) {
                 CollectionBatchListAction.AddCollectionBatch -> {
+                    VectorCamAnalytics.logEvent(
+                        "collection_batch_list_add_clicked",
+                        mapOf("existing_unit_count" to _state.value.sessionUnits.size)
+                    )
                     _events.send(
                         CollectionBatchListEvent.NavigateToCollectionBatchForm(
                             sessionId = sessionId,
@@ -95,6 +102,10 @@ class CollectionBatchListViewModel @Inject constructor(
                 }
 
                 is CollectionBatchListAction.EditCollectionBatch -> {
+                    VectorCamAnalytics.logEvent(
+                        "collection_batch_list_edit_clicked",
+                        mapOf("session_unit_id" to action.sessionUnitId.toString())
+                    )
                     _events.send(
                         CollectionBatchListEvent.NavigateToCollectionBatchForm(
                             sessionId = sessionId,
@@ -104,10 +115,15 @@ class CollectionBatchListViewModel @Inject constructor(
                 }
 
                 CollectionBatchListAction.OpenSubmitDialog -> {
+                    VectorCamAnalytics.logEvent(
+                        "collection_batch_list_submit_dialog_opened",
+                        mapOf("unit_count" to _state.value.sessionUnits.size)
+                    )
                     _state.update { it.copy(isSubmitDialogVisible = true) }
                 }
 
                 CollectionBatchListAction.DismissSubmitDialog -> {
+                    VectorCamAnalytics.logEvent("collection_batch_list_submit_dialog_dismissed")
                     _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
                 }
 
@@ -121,17 +137,41 @@ class CollectionBatchListViewModel @Inject constructor(
 
                 CollectionBatchListAction.ConfirmPendingAction -> {
                     val actionToConfirm = _state.value.submissionPendingAction
+                    VectorCamAnalytics.logEvent(
+                        "collection_batch_list_pending_action_confirmed",
+                        mapOf("pending_action_class" to (actionToConfirm?.let { it::class.simpleName } ?: "null"))
+                    )
                     _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
                     actionToConfirm?.let { onAction(it) }
                 }
 
                 CollectionBatchListAction.SaveSessionProgress -> {
+                    val stateSnapshot = _state.value
+                    VectorCamAnalytics.logEvent(
+                        "collection_batch_list_save_progress_clicked",
+                        mapOf(
+                            "session_id" to sessionId.toString(),
+                            "unit_count" to stateSnapshot.sessionUnits.size,
+                            "specimen_count" to stateSnapshot.specimenCountsBySessionUnitId.values.sum(),
+                            "image_count" to specimenImageRepository.getTotalCountForSession(sessionId)
+                        )
+                    )
                     _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
                     currentSessionCache.clearSession()
                     _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
                 }
 
                 CollectionBatchListAction.ConfirmSubmitSession -> {
+                    val stateSnapshot = _state.value
+                    VectorCamAnalytics.logEvent(
+                        "collection_batch_list_submit_confirmed",
+                        mapOf(
+                            "session_id" to sessionId.toString(),
+                            "unit_count" to stateSnapshot.sessionUnits.size,
+                            "specimen_count" to stateSnapshot.specimenCountsBySessionUnitId.values.sum(),
+                            "image_count" to specimenImageRepository.getTotalCountForSession(sessionId)
+                        )
+                    )
                     _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
                     val currentSession = currentSessionCache.getSession()
                     val currentSessionSiteId = currentSessionCache.getSiteId()
