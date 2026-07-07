@@ -25,6 +25,7 @@ import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
+import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
@@ -397,9 +398,9 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun settingsVm_d05_saveCollector_onException_emitsError() = runTest {
+    fun settingsVm_d05_saveCollector_onError_emitsError() = runTest {
         collectorsFlow.value = emptyList()
-        coEvery { collectorRepository.upsertCollector(any()) } throws RuntimeException("DB write failed")
+        coEvery { collectorRepository.upsertCollector(any()) } returns Result.Error(RoomDbError.UNKNOWN_ERROR)
 
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
