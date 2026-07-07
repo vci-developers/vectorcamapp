@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import javax.inject.Inject
 
 class CollectorRepositoryImplementation @Inject constructor(
@@ -19,7 +20,7 @@ class CollectorRepositoryImplementation @Inject constructor(
             collectorDao.upsertCollector(collector.toEntity())
             Result.Success(Unit)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "CollectorRepository: upsertCollector failed")
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }

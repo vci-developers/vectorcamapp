@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import javax.inject.Inject
 
 class SiteRepositoryImplementation @Inject constructor(
@@ -20,6 +21,7 @@ class SiteRepositoryImplementation @Inject constructor(
             siteDao.upsertSite(site.toEntity(programId, locationTypeId, parentId))
             Result.Success(Unit)
         } catch (e: Exception) {
+            Timber.e(e, "SiteRepository: upsertSite failed")
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }

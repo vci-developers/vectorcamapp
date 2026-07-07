@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.imaging.data.repository
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognizer
@@ -21,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import org.opencv.android.Utils
+import timber.log.Timber
 import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
@@ -45,12 +45,12 @@ class InferenceRepositoryImplementation @Inject constructor(
                     val id = visionText.text.lineSequence().firstOrNull()?.trim().orEmpty()
                     continuation.resume(id)
                 }.addOnFailureListener { exception ->
-                    Log.e("Repository", "Text recognition failed: ${exception.message}")
+                    Timber.e(exception, "InferenceRepository: ML Kit text recognition failed")
                     continuation.resume("")
                 }
             }
         } catch (e: Exception) {
-            Log.e("Repository", "Specimen ID analysis exception: ${e.message}", e)
+            Timber.e(e, "InferenceRepository: readSpecimenId exception")
             ""
         }
     }
@@ -131,7 +131,7 @@ class InferenceRepositoryImplementation @Inject constructor(
         val normalizedFocusX = absolutePixelX.toFloat() / bitmap.width
         val normalizedFocusY = absolutePixelY.toFloat() / bitmap.height
 
-        Log.d("Repository", "AF centroid (norm)=($normalizedFocusX,$normalizedFocusY)")
+        Timber.d("AF centroid (norm)=($normalizedFocusX,$normalizedFocusY)")
         Offset(normalizedFocusX, normalizedFocusY)
     }
 

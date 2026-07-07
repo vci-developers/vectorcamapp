@@ -5,6 +5,7 @@ import com.vci.vectorcamapp.core.data.dto.cache.CurrentSessionCacheDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -25,7 +26,7 @@ object CurrentSessionCacheDtoSerializer : Serializer<CurrentSessionCacheDto> {
                 string = input.readBytes().decodeToString()
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "CurrentSessionCache: deserialization failed, resetting to default")
             defaultValue
         }
     }
