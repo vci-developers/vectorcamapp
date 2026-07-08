@@ -89,7 +89,9 @@ class MainActivity : ComponentActivity() {
                     }
                     state.allGranted && state.isGpsEnabled -> {
                         when (val startDestination = state.startDestination) {
-                            null -> SplashScreen(modifier = Modifier.fillMaxSize())
+                            null -> BaseScaffold(modifier = Modifier.fillMaxSize()) {
+                                SplashScreen(modifier = Modifier.fillMaxSize())
+                            }
                             else -> NavGraph(startDestination = startDestination)
                         }
                     }

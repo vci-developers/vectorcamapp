@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.complete_session.list.presentation
 import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
+import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
@@ -25,7 +26,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -108,7 +108,7 @@ class CompleteSessionListViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     fun onAction(action: CompleteSessionListAction) {
-        viewModelScope.launch {
+        safeLaunch(screen = "CompleteSessionList") {
             when (action) {
                 CompleteSessionListAction.ReturnToLandingScreen -> {
                     _events.send(CompleteSessionListEvent.NavigateBackToLandingScreen)
@@ -119,27 +119,31 @@ class CompleteSessionListViewModel @Inject constructor(
                 }
 
                 is CompleteSessionListAction.UploadAllPendingSessions -> {
-                    val completeSessionsAndSites =
-                        sessionRepository.observeCompleteSessionsAndSites().first()
-                    for (sessionAndSite in completeSessionsAndSites) {
-                        val session = sessionAndSite.session
-                        val site = sessionAndSite.site
+                    runCatching {
+                        val completeSessionsAndSites =
+                            sessionRepository.observeCompleteSessionsAndSites().first()
+                        for (sessionAndSite in completeSessionsAndSites) {
+                            val session = sessionAndSite.session
+                            val site = sessionAndSite.site
 
-                        val isSessionUploaded = (session.submittedAt != null)
+                            val isSessionUploaded = (session.submittedAt != null)
 
-                        val specimens =
-                            specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(
-                                session.localId, null
-                            )
-                        val areSpecimensUploaded = !specimens.any { specimen ->
-                            specimen.specimenImagesAndInferenceResults.any { (image, _) ->
-                                image.metadataUploadStatus != UploadStatus.COMPLETED || image.imageUploadStatus != UploadStatus.COMPLETED
+                            val specimens =
+                                specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(
+                                    session.localId, null
+                                )
+                            val areSpecimensUploaded = !specimens.any { specimen ->
+                                specimen.specimenImagesAndInferenceResults.any { (image, _) ->
+                                    image.metadataUploadStatus != UploadStatus.COMPLETED || image.imageUploadStatus != UploadStatus.COMPLETED
+                                }
                             }
+
+                            if (isSessionUploaded && areSpecimensUploaded) continue
+
+                            workManagerRepository.enqueueSessionUpload(session.localId, site.id)
                         }
-
-                        if (isSessionUploaded && areSpecimensUploaded) continue
-
-                        workManagerRepository.enqueueSessionUpload(session.localId, site.id)
+                    }.onFailure {
+                        emitError(RoomDbError.UNKNOWN_ERROR)
                     }
                 }
 
