@@ -24,6 +24,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private enum class UploadState { WAITING, UPLOADING, IDLE }
+
 /**
  * Sticky foreground service (START_STICKY) that anchors the app process during active uploads.
  *
@@ -43,6 +45,9 @@ class UploadForegroundService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var observerJob: Job? = null
+    private val notificationManager by lazy {
+        getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+    }
 
     companion object {
         const val UPLOAD_WORK_TAG = "session_upload_work"
@@ -65,13 +70,14 @@ class UploadForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIFICATION_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        startForeground(NOTIFICATION_ID, buildNotification("Preparing upload\u2026"), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         startObservingWork()
         return START_STICKY
     }
 
     /**
-     * Observes WorkManager upload tags and stops the service once all upload work is settled.
+     * Observes WorkManager upload tags, updates the notification text to reflect the current
+     * state, and stops the service once all upload work is settled.
      *
      * Uses a `seenActiveWork` flag so we do not stop prematurely if the initial observation
      * happens before WorkManager has registered the enqueued tasks, and to correctly handle
@@ -82,20 +88,36 @@ class UploadForegroundService : Service() {
         observerJob = serviceScope.launch {
             var seenActiveWork = false
             workManager.getWorkInfosByTagFlow(UPLOAD_WORK_TAG).collect { workInfos ->
-                val hasActiveWork = workInfos.any {
-                    it.state == WorkInfo.State.RUNNING ||
-                    it.state == WorkInfo.State.ENQUEUED ||
-                    it.state == WorkInfo.State.BLOCKED
+                val isRunning = workInfos.any { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.BLOCKED }
+                val isEnqueued = workInfos.any { it.state == WorkInfo.State.ENQUEUED }
+                val hasActiveWork = isRunning || isEnqueued
+
+                val state = when {
+                    isRunning -> UploadState.UPLOADING
+                    isEnqueued -> UploadState.WAITING
+                    else -> UploadState.IDLE
                 }
 
-                when {
-                    hasActiveWork -> seenActiveWork = true
-                    seenActiveWork -> stopSelf() // active → idle transition: all done
-                    workInfos.isNotEmpty() -> stopSelf() // all work already completed/failed/cancelled
-                    // workInfos.isEmpty() → work not yet enqueued, keep waiting
+                if (hasActiveWork) {
+                    seenActiveWork = true
+                    updateNotification(state)
+                } else if (seenActiveWork) {
+                    stopSelf() // active → idle transition: all done
+                } else if (workInfos.isNotEmpty()) {
+                    stopSelf() // all work already completed/failed/cancelled
                 }
+                // workInfos.isEmpty() → work not yet enqueued, keep waiting
             }
         }
+    }
+
+    private fun updateNotification(state: UploadState) {
+        val text = when (state) {
+            UploadState.WAITING -> "Waiting for network connection\u2026"
+            UploadState.UPLOADING -> "Upload is running in the background\u2026"
+            UploadState.IDLE -> return
+        }
+        notificationManager.notify(NOTIFICATION_ID, buildNotification(text))
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -105,7 +127,7 @@ class UploadForegroundService : Service() {
         serviceScope.cancel()
     }
 
-    private fun buildNotification(): Notification {
+    private fun buildNotification(text: String): Notification {
         val pendingIntent = PendingIntent.getActivity(
             this,
             0,
@@ -116,7 +138,7 @@ class UploadForegroundService : Service() {
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Uploading session data")
-            .setContentText("Upload is running in the background\u2026")
+            .setContentText(text)
             .setSmallIcon(R.drawable.ic_cloud_upload)
             .setOngoing(true)
             .setContentIntent(pendingIntent)
@@ -132,6 +154,6 @@ class UploadForegroundService : Service() {
             description = "Keeps data and image upload running in the background"
             setShowBadge(false)
         }
-        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
+        notificationManager.createNotificationChannel(channel)
     }
 }
