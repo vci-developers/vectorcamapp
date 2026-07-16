@@ -5,6 +5,9 @@ import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
+import com.google.ai.edge.litert.Accelerator
+import com.google.ai.edge.litert.CompiledModel
+import com.google.ai.edge.litert.TensorBuffer
 import com.vci.vectorcamapp.core.domain.model.results.ClassifierResult
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
 import org.opencv.android.Utils
@@ -14,10 +17,6 @@ import org.opencv.core.Mat
 import org.opencv.core.Scalar
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
-import org.tensorflow.lite.DataType
-import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.common.FileUtil
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
@@ -28,10 +27,13 @@ class TfLiteSpecimenClassifier(
     threadName: String,
 ) : SpecimenClassifier {
 
-    private var classifier: Interpreter? = null
+    private var model: CompiledModel? = null
+    private var inputBuffers: List<TensorBuffer> = emptyList()
+    private var outputBuffers: List<TensorBuffer> = emptyList()
 
     private val classifierLock = Any()
     private var isClosed = false
+    private var usingGpu = false
 
     private val handlerThread = HandlerThread(threadName).apply { start() }
     private val handler = Handler(handlerThread.looper)
@@ -42,39 +44,76 @@ class TfLiteSpecimenClassifier(
     private var outputNumClasses = DEFAULT_NUM_CLASSES
 
     init {
-        handler.post { initializeInterpreter() }
+        handler.post { initializeModel() }
     }
 
-    private fun initializeInterpreter() {
+    private fun initializeModel() {
         synchronized(classifierLock) {
-            if (classifier != null || isClosed) return
+            if (model != null || isClosed) return
 
             try {
-                val model = FileUtil.loadMappedFile(context, filePath)
-                val options = Interpreter.Options().apply {
-                    useNNAPI = false
-                    useXNNPACK = false
-                    numThreads = Runtime.getRuntime().availableProcessors()
-                }
+                model = createModelPreferringGpu(filePath)
+                inputBuffers = model!!.createInputBuffers()
+                outputBuffers = model!!.createOutputBuffers()
 
-                classifier = Interpreter(model, options)
+                resolveTensorShapes()
+                warmModel()
 
-                classifier?.let {
-                    inputTensorHeight = it.getInputTensor(0).shape()[2]
-                    inputTensorWidth = it.getInputTensor(0).shape()[3]
-
-                    outputNumClasses = it.getOutputTensor(0).shape()[1]
-                }
-
-                Log.d(TAG, "TFLite interpreter initialized")
+                Log.d(
+                    TAG,
+                    "LiteRT CompiledModel initialized ($filePath, accelerator=${if (usingGpu) "GPU" else "CPU"})"
+                )
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
+                Log.e(TAG, "Failed to initialize LiteRT CompiledModel ($filePath): ${e.message}", e)
+                releaseModelLocked()
             }
         }
     }
 
+    private fun createModelPreferringGpu(assetName: String): CompiledModel {
+        return try {
+            CompiledModel.create(
+                context.assets,
+                assetName,
+                CompiledModel.Options(Accelerator.GPU),
+            ).also {
+                usingGpu = true
+                Log.d(TAG, "CompiledModel created with GPU accelerator ($assetName)")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "GPU CompiledModel failed for $assetName (${e.message}); falling back to CPU")
+            usingGpu = false
+            CompiledModel.create(
+                context.assets,
+                assetName,
+                CompiledModel.Options(Accelerator.CPU),
+            )
+        }
+    }
+
+    private fun resolveTensorShapes() {
+        try {
+            val inputType = model?.getInputTensorType(INPUT_TENSOR_NAME, SIGNATURE)
+            val inputDims = inputType?.layout?.dimensions
+            if (inputDims != null && inputDims.size >= 4) {
+                // NCHW: [1, C, H, W]
+                inputTensorHeight = inputDims[2]
+                inputTensorWidth = inputDims[3]
+            }
+
+            val outputType = model?.getOutputTensorType(OUTPUT_TENSOR_NAME, SIGNATURE)
+            val outputDims = outputType?.layout?.dimensions
+            if (outputDims != null && outputDims.size >= 2) {
+                // [1, numClasses]
+                outputNumClasses = outputDims[1]
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Using default tensor shapes for $filePath: ${e.message}")
+        }
+    }
+
     private fun isReady(): Boolean = synchronized(classifierLock) {
-        !isClosed && classifier != null
+        !isClosed && model != null && inputBuffers.isNotEmpty() && outputBuffers.isNotEmpty()
     }
 
     override fun getInputTensorShape(): Pair<Int, Int> = inputTensorHeight to inputTensorWidth
@@ -95,14 +134,6 @@ class TfLiteSpecimenClassifier(
                     val preprocessedMatrixWidth = preprocessedMatrix.width()
                     val preprocessedMatrixChannels = preprocessedMatrix.channels()
 
-                    val inputTensor = TensorBuffer.createFixedSize(
-                        intArrayOf(
-                            1,
-                            preprocessedMatrixChannels,
-                            preprocessedMatrixHeight,
-                            preprocessedMatrixWidth
-                        ), DataType.FLOAT32
-                    )
                     val inputFloatBuffer =
                         FloatArray(preprocessedMatrixHeight * preprocessedMatrixWidth * preprocessedMatrixChannels)
                     preprocessedMatrix.get(0, 0, inputFloatBuffer)
@@ -115,23 +146,22 @@ class TfLiteSpecimenClassifier(
                                 inputFloatBuffer[i * preprocessedMatrixChannels + channel]
                         }
                     }
-                    inputTensor.loadArray(chwArray)
-
-                    val outputTensor = TensorBuffer.createFixedSize(
-                        intArrayOf(1, outputNumClasses), DataType.FLOAT32
-                    )
 
                     val logits = synchronized(classifierLock) {
                         if (!isReady()) return@post continuation.resume(null)
-                        classifier?.run(inputTensor.buffer, outputTensor.buffer)
-                        outputTensor.floatArray.toList()
+
+                        inputBuffers[0].writeFloat(chwArray)
+                        model!!.run(inputBuffers, outputBuffers)
+                        outputBuffers[0].readFloat().toList()
                     }
 
                     Log.d(TAG, "Inference result: $logits")
-                    continuation.resume(ClassifierResult(
-                        logits = logits,
-                        inferenceDuration = System.currentTimeMillis() - startTime
-                    ))
+                    continuation.resume(
+                        ClassifierResult(
+                            logits = logits,
+                            inferenceDuration = System.currentTimeMillis() - startTime
+                        )
+                    )
                 } catch (e: Exception) {
                     Log.e(TAG, "Inference failed: ${e.message}")
                     continuation.resume(null)
@@ -176,6 +206,40 @@ class TfLiteSpecimenClassifier(
         return resizedMatrix
     }
 
+    private fun warmModel() {
+        val inputSize = INPUT_CHANNELS * inputTensorHeight * inputTensorWidth
+        inputBuffers[0].writeFloat(FloatArray(inputSize))
+        model?.run(inputBuffers, outputBuffers)
+        val output = outputBuffers[0].readFloat()
+        if (output.isNotEmpty()) {
+            outputNumClasses = output.size
+        }
+        Log.d(TAG, "Classifier warmed up ($filePath, gpu=$usingGpu, classes=$outputNumClasses)")
+    }
+
+    private fun releaseModelLocked() {
+        inputBuffers.forEach { buffer ->
+            try {
+                buffer.close()
+            } catch (_: Exception) {
+            }
+        }
+        outputBuffers.forEach { buffer ->
+            try {
+                buffer.close()
+            } catch (_: Exception) {
+            }
+        }
+        inputBuffers = emptyList()
+        outputBuffers = emptyList()
+        try {
+            model?.close()
+        } catch (_: Exception) {
+        }
+        model = null
+        usingGpu = false
+    }
+
     override fun close() {
         synchronized(classifierLock) {
             if (isClosed) return
@@ -183,8 +247,9 @@ class TfLiteSpecimenClassifier(
 
             handler.post {
                 try {
-                    classifier?.close()
-                    classifier = null
+                    synchronized(classifierLock) {
+                        releaseModelLocked()
+                    }
                     handlerThread.quitSafely()
                     Log.d(TAG, "Classifier closed")
                 } catch (e: Exception) {
@@ -196,6 +261,11 @@ class TfLiteSpecimenClassifier(
 
     companion object {
         private const val TAG = "TfLiteSpeciesClassifier"
+        private const val SIGNATURE = "serving_default"
+        private const val INPUT_TENSOR_NAME = "serving_default_args_0:0"
+        private const val OUTPUT_TENSOR_NAME = "output_0"
+        private const val INPUT_CHANNELS = 3
+
         private const val DEFAULT_TENSOR_HEIGHT = 512
         private const val DEFAULT_TENSOR_WIDTH = 512
         private const val DEFAULT_NUM_CLASSES = 1

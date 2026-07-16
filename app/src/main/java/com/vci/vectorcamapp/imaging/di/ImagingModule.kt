@@ -37,14 +37,14 @@ object ImagingModule {
     @ViewModelScoped
     @SpeciesClassifier
     fun provideSpeciesClassifier(@ApplicationContext context: Context): SpecimenClassifier {
-        return TfLiteSpecimenClassifier(context, "species.tflite", "TFLiteSpeciesClassifierThread")
+        return TfLiteSpecimenClassifier(context, "species.tflite", "LiteRTSpeciesClassifierThread")
     }
 
     @Provides
     @ViewModelScoped
     @SexClassifier
     fun provideSexClassifier(@ApplicationContext context: Context): SpecimenClassifier {
-        return TfLiteSpecimenClassifier(context, "sex.tflite", "TFLiteSexClassifierThread")
+        return TfLiteSpecimenClassifier(context, "sex.tflite", "LiteRTSexClassifierThread")
     }
 
     @Provides
@@ -52,7 +52,7 @@ object ImagingModule {
     @AbdomenStatusClassifier
     fun provideAbdomenStatusClassifier(@ApplicationContext context: Context): SpecimenClassifier {
         return TfLiteSpecimenClassifier(
-            context, "abdomen_status.tflite", "TFLiteAbdomenStatusClassifierThread"
+            context, "abdomen_status.tflite", "LiteRTAbdomenStatusClassifierThread"
         )
     }
 }
