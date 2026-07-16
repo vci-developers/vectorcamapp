@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
-import android.util.Log
+import timber.log.Timber
 import com.google.ai.edge.litert.Accelerator
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.TensorBuffer
@@ -59,12 +59,11 @@ class TfLiteSpecimenClassifier(
                 resolveTensorShapes()
                 warmModel()
 
-                Log.d(
-                    TAG,
+                Timber.d(
                     "LiteRT CompiledModel initialized ($filePath, accelerator=${if (usingGpu) "GPU" else "CPU"})"
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to initialize LiteRT CompiledModel ($filePath): ${e.message}", e)
+                Timber.e(e, "Failed to initialize LiteRT CompiledModel ($filePath): ${e.message}")
                 releaseModelLocked()
             }
         }
@@ -78,10 +77,10 @@ class TfLiteSpecimenClassifier(
                 CompiledModel.Options(Accelerator.GPU),
             ).also {
                 usingGpu = true
-                Log.d(TAG, "CompiledModel created with GPU accelerator ($assetName)")
+                Timber.d("CompiledModel created with GPU accelerator ($assetName)")
             }
         } catch (e: Exception) {
-            Log.w(TAG, "GPU CompiledModel failed for $assetName (${e.message}); falling back to CPU")
+            Timber.w("GPU CompiledModel failed for $assetName (${e.message}); falling back to CPU")
             usingGpu = false
             CompiledModel.create(
                 context.assets,
@@ -92,23 +91,47 @@ class TfLiteSpecimenClassifier(
     }
 
     private fun resolveTensorShapes() {
+        val compiled = model ?: return
+
         try {
-            val inputType = model?.getInputTensorType(INPUT_TENSOR_NAME, SIGNATURE)
-            val inputDims = inputType?.layout?.dimensions
+            val inputDims = compiled.getInputTensorType(INPUT_TENSOR_NAME, SIGNATURE).layout?.dimensions
             if (inputDims != null && inputDims.size >= 4) {
                 // NCHW: [1, C, H, W]
                 inputTensorHeight = inputDims[2]
                 inputTensorWidth = inputDims[3]
+                Timber.d("Input tensor type for $filePath: $inputDims")
             }
+        } catch (e: Exception) {
+            Timber.w("getInputTensorType failed for $filePath: ${e.message}")
+        }
 
-            val outputType = model?.getOutputTensorType(OUTPUT_TENSOR_NAME, SIGNATURE)
-            val outputDims = outputType?.layout?.dimensions
+        // Buffer requirements are authoritative for writeFloat sizing.
+        try {
+            val floatCount =
+                compiled.getInputBufferRequirements(INPUT_TENSOR_NAME, SIGNATURE).bufferSize /
+                    Float.SIZE_BYTES
+            val spatial = floatCount / INPUT_CHANNELS
+            val side = kotlin.math.sqrt(spatial.toDouble()).toInt()
+            if (side > 0 && side * side * INPUT_CHANNELS == floatCount) {
+                inputTensorHeight = side
+                inputTensorWidth = side
+            }
+            Timber.d(
+                "Resolved input ${inputTensorWidth}x${inputTensorHeight} for $filePath " +
+                    "(buffer floats=$floatCount)"
+            )
+        } catch (e: Exception) {
+            Timber.w("getInputBufferRequirements failed for $filePath: ${e.message}")
+        }
+
+        try {
+            val outputDims =
+                compiled.getOutputTensorType(OUTPUT_TENSOR_NAME, SIGNATURE).layout?.dimensions
             if (outputDims != null && outputDims.size >= 2) {
-                // [1, numClasses]
                 outputNumClasses = outputDims[1]
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Using default tensor shapes for $filePath: ${e.message}")
+            Timber.w("getOutputTensorType failed for $filePath: ${e.message}")
         }
     }
 
@@ -155,7 +178,7 @@ class TfLiteSpecimenClassifier(
                         outputBuffers[0].readFloat().toList()
                     }
 
-                    Log.d(TAG, "Inference result: $logits")
+                    Timber.d("Inference result: $logits")
                     continuation.resume(
                         ClassifierResult(
                             logits = logits,
@@ -163,7 +186,7 @@ class TfLiteSpecimenClassifier(
                         )
                     )
                 } catch (e: Exception) {
-                    Log.e(TAG, "Inference failed: ${e.message}")
+                    Timber.e("Inference failed: ${e.message}")
                     continuation.resume(null)
                 }
             }
@@ -214,7 +237,10 @@ class TfLiteSpecimenClassifier(
         if (output.isNotEmpty()) {
             outputNumClasses = output.size
         }
-        Log.d(TAG, "Classifier warmed up ($filePath, gpu=$usingGpu, classes=$outputNumClasses)")
+        Timber.d(
+            "Classifier warmed up ($filePath, gpu=$usingGpu, " +
+                "input=${inputTensorWidth}x${inputTensorHeight}, classes=$outputNumClasses)"
+        )
     }
 
     private fun releaseModelLocked() {
@@ -251,23 +277,24 @@ class TfLiteSpecimenClassifier(
                         releaseModelLocked()
                     }
                     handlerThread.quitSafely()
-                    Log.d(TAG, "Classifier closed")
+                    Timber.d("Classifier closed")
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error during classifier close: ${e.message}")
+                    Timber.e("Error during classifier close: ${e.message}")
                 }
             }
         }
     }
 
     companion object {
-        private const val TAG = "TfLiteSpeciesClassifier"
         private const val SIGNATURE = "serving_default"
         private const val INPUT_TENSOR_NAME = "serving_default_args_0:0"
-        private const val OUTPUT_TENSOR_NAME = "output_0"
+        private const val OUTPUT_TENSOR_NAME = "StatefulPartitionedCall:0"
         private const val INPUT_CHANNELS = 3
 
-        private const val DEFAULT_TENSOR_HEIGHT = 512
-        private const val DEFAULT_TENSOR_WIDTH = 512
+        // Defaults only used until shapes are resolved from the model.
+        // sex/abdomen_status are 300x300; species is 512x512.
+        private const val DEFAULT_TENSOR_HEIGHT = 300
+        private const val DEFAULT_TENSOR_WIDTH = 300
         private const val DEFAULT_NUM_CLASSES = 1
 
         private const val PIXEL_NORMALIZATION_SCALE = 1f / 255f
