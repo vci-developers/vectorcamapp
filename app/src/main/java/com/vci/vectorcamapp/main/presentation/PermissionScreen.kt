@@ -69,7 +69,12 @@ fun PermissionScreen(
             Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingLarge))
 
             Text(
-                text = if (!state.allGranted) "Permissions Required" else "GPS Required",
+                text = when {
+                    !state.allGranted -> "Permissions Required"
+                    !state.isGpsEnabled -> "GPS Required"
+                    !state.isAutoTimeEnabled -> "Automatic Date & Time Required"
+                    else -> "Permissions Required"
+                },
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colors.textPrimary,
@@ -80,7 +85,16 @@ fun PermissionScreen(
             Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
             Text(
-                text = "To work properly, this app needs access to your camera, location, and notifications. One or more of these permissions are currently disabled. Please enable them in settings to continue.",
+                text = when {
+                    !state.allGranted ->
+                        "To work properly, this app needs access to your camera, location, and notifications. One or more of these permissions are currently disabled. Please enable them in settings to continue."
+                    !state.isGpsEnabled ->
+                        "To work properly, this app needs GPS location services enabled. Please enable GPS in settings to continue."
+                    !state.isAutoTimeEnabled ->
+                        "To keep timestamps accurate, this app requires automatic date and time (internet time). Please enable it in your device settings to continue."
+                    else ->
+                        "To work properly, this app needs access to your camera, location, and notifications. One or more of these permissions are currently disabled. Please enable them in settings to continue."
+                },
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colors.textSecondary,
                 textAlign = TextAlign.Left,
@@ -151,6 +165,13 @@ fun PermissionScreen(
                         onClick = { onAction(MainAction.OpenLocationSettings) },
                         label = "Enable GPS",
                         modifier = Modifier.testTag(PermissionTestTags.ENABLE_GPS_BUTTON)
+                    )
+                }
+                if (!state.isAutoTimeEnabled) {
+                    ActionButton(
+                        onClick = { onAction(MainAction.OpenDateSettings) },
+                        label = "Enable Automatic Date & Time",
+                        modifier = Modifier.testTag(PermissionTestTags.ENABLE_AUTO_TIME_BUTTON)
                     )
                 }
             }
