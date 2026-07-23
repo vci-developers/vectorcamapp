@@ -1,16 +1,29 @@
 package com.vci.vectorcamapp.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import com.vci.vectorcamapp.core.domain.tutorial.TutorialStep
+import com.vci.vectorcamapp.core.presentation.components.tutorial.SpotlightOverlay
+import com.vci.vectorcamapp.core.presentation.components.tutorial.TutorialStepCard
+import com.vci.vectorcamapp.core.presentation.tutorial.LocalSpotlightBounds
+import com.vci.vectorcamapp.core.presentation.tutorial.LocalTutorialManager
 import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFormEvent
 import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFormScreen
 import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFormViewModel
@@ -47,18 +60,49 @@ import com.vci.vectorcamapp.settings.presentation.SettingsEvent
 import com.vci.vectorcamapp.settings.presentation.SettingsScreen
 import com.vci.vectorcamapp.settings.presentation.SettingsViewModel
 
+private val spotlightSteps = setOf(
+    TutorialStep.NEW_SURVEILLANCE_SESSION,
+    TutorialStep.IN_PROGRESS_SESSIONS,
+    TutorialStep.COMPLETE_SESSIONS
+)
+
 @Composable
 fun NavGraph(startDestination: Destination) {
     val navController = rememberNavController()
+    val tutorialManager = LocalTutorialManager.current
+    val currentTutorialStep by tutorialManager.currentStep.collectAsState()
+    val spotlightBounds = remember { mutableStateOf<Rect?>(null) }
 
     val currentEntry by navController.currentBackStackEntryAsState()
     LaunchedEffect(currentEntry) {
         currentEntry?.analyticsScreenName()?.let { VectorCamAnalytics.screenView(it) }
     }
 
-    NavHost(
-        navController = navController, startDestination = startDestination
-    ) {
+    LaunchedEffect(currentTutorialStep) {
+        spotlightBounds.value = null
+    }
+
+    val currentRoute = currentEntry?.destination?.route ?: ""
+    val showTutorialCard = !currentTutorialStep.isCompleted && when (currentTutorialStep) {
+        TutorialStep.REGISTRATION_FORM ->
+            currentRoute.contains("Registration")
+        TutorialStep.NEW_SURVEILLANCE_SESSION,
+        TutorialStep.IN_PROGRESS_SESSIONS,
+        TutorialStep.COMPLETE_SESSIONS ->
+            currentRoute.contains("Landing")
+        TutorialStep.INTAKE_FORM ->
+            currentRoute.contains("Intake")
+        TutorialStep.CAPTURE_AND_SAVE ->
+            currentRoute.contains("Imaging")
+        TutorialStep.COMPLETED -> false
+    }
+    val showSpotlight = showTutorialCard && currentTutorialStep in spotlightSteps
+
+    CompositionLocalProvider(LocalSpotlightBounds provides spotlightBounds) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        NavHost(
+            navController = navController, startDestination = startDestination
+        ) {
         composable<Destination.Registration> {
             val viewModel = hiltViewModel<RegistrationViewModel>()
             val state by viewModel.state.collectAsStateWithLifecycle()
@@ -312,5 +356,20 @@ fun NavGraph(startDestination: Destination) {
                 )
             }
         }
+    }
+
+        if (showSpotlight) {
+            SpotlightOverlay(
+                spotlightBounds = spotlightBounds.value,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        if (showTutorialCard) {
+            TutorialStepCard(
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+    }
     }
 }

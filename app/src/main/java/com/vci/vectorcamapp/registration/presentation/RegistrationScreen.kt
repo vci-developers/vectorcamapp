@@ -36,7 +36,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.domain.tutorial.TutorialStep
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
+import com.vci.vectorcamapp.core.presentation.components.tutorial.TutorialHighlightBox
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
@@ -66,6 +68,13 @@ fun RegistrationScreen(
                 .fillMaxWidth()
         )
 
+        TutorialHighlightBox(
+            step = TutorialStep.REGISTRATION_FORM,
+            cornerRadius = 16,
+            modifier = modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        ) {
         Card(
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colors.cardBackground
@@ -75,7 +84,6 @@ fun RegistrationScreen(
                 topEnd = MaterialTheme.dimensions.cornerRadiusMedium
             ),
             modifier = modifier
-                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
         ) {
@@ -188,6 +196,7 @@ fun RegistrationScreen(
                     modifier = modifier.height(MaterialTheme.dimensions.componentHeightMedium)
                 )
             }
+        }
         }
 
         if (state.isProgramAccessCodeDialogVisible) {

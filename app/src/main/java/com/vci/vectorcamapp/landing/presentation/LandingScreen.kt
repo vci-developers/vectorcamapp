@@ -20,7 +20,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.domain.tutorial.TutorialStep
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
+import com.vci.vectorcamapp.core.presentation.components.tutorial.TutorialHighlightBox
 import com.vci.vectorcamapp.landing.presentation.components.LandingActionTile
 import com.vci.vectorcamapp.landing.presentation.components.LandingSection
 import com.vci.vectorcamapp.landing.presentation.util.LandingTestTags
@@ -58,35 +60,41 @@ fun LandingScreen(
                     title = "Imaging",
                     testTag = LandingTestTags.SECTION_IMAGING
                 ) {
-                    LandingActionTile(
-                        title = "New Surveillance Session",
-                        description = "Begin a new household visit and capture mosquito images.",
-                        icon = painterResource(R.drawable.ic_specimen),
-                        onClick = { onAction(LandingAction.StartNewSurveillanceSession) },
-                        testTag = LandingTestTags.TILE_NEW_SURVEILLANCE
-                    )
+                    TutorialHighlightBox(step = TutorialStep.NEW_SURVEILLANCE_SESSION) {
+                        LandingActionTile(
+                            title = "New Surveillance Session",
+                            description = "Begin a new household visit and capture mosquito images.",
+                            icon = painterResource(R.drawable.ic_specimen),
+                            onClick = { onAction(LandingAction.StartNewSurveillanceSession) },
+                            testTag = LandingTestTags.TILE_NEW_SURVEILLANCE
+                        )
+                    }
                 }
 
                 LandingSection(
                     title = "Library",
                     testTag = LandingTestTags.SECTION_LIBRARY
                 ) {
-                    LandingActionTile(
-                        title = "View Sessions in Progress",
-                        description = "Resume and complete any unfinished sessions.",
-                        icon = painterResource(R.drawable.ic_minus_circle),
-                        onClick = { onAction(LandingAction.ViewIncompleteSessions) },
-                        badgeCount = state.incompleteSessionsCount,
-                        testTag = LandingTestTags.TILE_INCOMPLETE,
-                    )
+                    TutorialHighlightBox(step = TutorialStep.IN_PROGRESS_SESSIONS) {
+                        LandingActionTile(
+                            title = "View Sessions in Progress",
+                            description = "Resume and complete any unfinished sessions.",
+                            icon = painterResource(R.drawable.ic_minus_circle),
+                            onClick = { onAction(LandingAction.ViewIncompleteSessions) },
+                            badgeCount = state.incompleteSessionsCount,
+                            testTag = LandingTestTags.TILE_INCOMPLETE,
+                        )
+                    }
 
-                    LandingActionTile(
-                        title = "View Complete Sessions",
-                        description = "Review fully completed sessions and uploaded data.",
-                        icon = painterResource(R.drawable.ic_complete),
-                        onClick = { onAction(LandingAction.ViewCompleteSessions) },
-                        testTag = LandingTestTags.TILE_COMPLETE
-                    )
+                    TutorialHighlightBox(step = TutorialStep.COMPLETE_SESSIONS) {
+                        LandingActionTile(
+                            title = "View Complete Sessions",
+                            description = "Review fully completed sessions and uploaded data.",
+                            icon = painterResource(R.drawable.ic_complete),
+                            onClick = { onAction(LandingAction.ViewCompleteSessions) },
+                            testTag = LandingTestTags.TILE_COMPLETE
+                        )
+                    }
                 }
             }
         }

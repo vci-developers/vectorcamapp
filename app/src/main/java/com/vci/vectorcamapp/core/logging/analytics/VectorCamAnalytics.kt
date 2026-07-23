@@ -39,7 +39,7 @@ object VectorCamAnalytics {
     var analytics: FirebaseAnalytics? = null
 
     /** Application context — set once from VectorCamApp.onCreate(). */
-    @Volatile
+    @Volatile   
     var appContext: Context? = null
 
     /** Set to false to suppress sending events to Firebase (e.g. in debug builds). */
