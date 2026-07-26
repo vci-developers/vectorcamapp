@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -41,6 +42,7 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlin.math.roundToInt
 
 @Composable
 fun SettingsScreen(
@@ -119,7 +121,11 @@ fun SettingsScreen(
                                     .alpha(if (state.isConnectedToInternet) 1f else 0.5f)
                             ) {
                                 ActionButton(
-                                    label = if (state.isSyncingData) "Syncing Data..." else "Resync Data",
+                                    label = when {
+                                        state.modelDownloadProgress != null -> "Downloading Model..."
+                                        state.isSyncingData -> "Syncing Data..."
+                                        else -> "Resync Data"
+                                    },
                                     onClick = {
                                         if (state.isConnectedToInternet && !state.isSyncingData) {
                                             onAction(SettingsAction.ResyncProgramData)
@@ -129,7 +135,7 @@ fun SettingsScreen(
                                 )
                             }
 
-                            if (state.isSyncingData) {
+                            if (state.isSyncingData && state.modelDownloadProgress == null) {
                                 CircularProgressIndicator(
                                     modifier = Modifier
                                         .padding(start = MaterialTheme.dimensions.paddingMedium)
@@ -138,6 +144,41 @@ fun SettingsScreen(
                                 )
                             }
                         }
+
+                        val downloadProgress = state.modelDownloadProgress
+                        if (downloadProgress != null) {
+                            val percent = (downloadProgress * 100).roundToInt().coerceIn(0, 100)
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                LinearProgressIndicator(
+                                    progress = { downloadProgress.coerceIn(0f, 1f) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = MaterialTheme.colors.primary,
+                                    trackColor = MaterialTheme.colors.primary.copy(alpha = 0.2f),
+                                )
+                                Text(
+                                    text = if (state.modelDownloadTotalBytes > 0L) {
+                                        "Downloading ML model… $percent% " +
+                                            "(${formatModelBytes(state.modelDownloadBytes)} / " +
+                                            "${formatModelBytes(state.modelDownloadTotalBytes)})"
+                                    } else {
+                                        "Downloading ML model… $percent%"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colors.textSecondary
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = state.localModelVersion?.let { version ->
+                                "ML model downloaded: v$version"
+                            } ?: "ML model: using bundled assets",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colors.textSecondary
+                        )
                     }
                 }
             }
@@ -321,6 +362,14 @@ fun SettingsScreen(
             onDismiss = { onAction(SettingsAction.DismissCollectorWarningDialog) }
         )
     }
+}
+
+private fun formatModelBytes(bytes: Long): String {
+    if (bytes < 1024L) return "$bytes B"
+    val kb = bytes / 1024.0
+    if (kb < 1024.0) return String.format("%.1f KB", kb)
+    val mb = kb / 1024.0
+    return String.format("%.1f MB", mb)
 }
 
 @PreviewLightDark

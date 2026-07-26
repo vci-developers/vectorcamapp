@@ -13,6 +13,7 @@ import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
@@ -34,6 +35,7 @@ object NetworkModule {
 
     private const val CONNECT_TIMEOUT_MS = 15_000
     private const val READ_TIMEOUT_MS = 30_000
+    private const val MODEL_DOWNLOAD_TIMEOUT_MS = 10 * 60 * 1000L
 
     @Provides
     @Named("ConnectTimeout")
@@ -51,6 +53,11 @@ object NetworkModule {
                 connectTimeout = CONNECT_TIMEOUT_MS
                 socketTimeout = READ_TIMEOUT_MS
             }
+            install(HttpTimeout) {
+                requestTimeoutMillis = READ_TIMEOUT_MS.toLong()
+                connectTimeoutMillis = CONNECT_TIMEOUT_MS.toLong()
+                socketTimeoutMillis = READ_TIMEOUT_MS.toLong()
+            }
             install(Logging) {
                 level = LogLevel.ALL
                 logger = Logger.ANDROID
@@ -66,6 +73,34 @@ object NetworkModule {
             install(DefaultRequest) {
                 bearerAuth(BuildConfig.VECTORCAM_API_KEY)
                 contentType(ContentType.Application.Json)
+            }
+        }
+    }
+
+    /**
+     * Separate client for program-model downloads:
+     * - does not auto-follow redirects (need 302 Location for the presigned S3 URL)
+     * - no default JSON Content-Type / Bearer auth (S3 uses the presigned query string)
+     */
+    @Provides
+    @Singleton
+    @Named("ModelDownloadHttpClient")
+    fun provideModelDownloadHttpClient(): HttpClient {
+        return HttpClient(Android) {
+            followRedirects = false
+            expectSuccess = false
+            engine {
+                connectTimeout = CONNECT_TIMEOUT_MS
+                socketTimeout = MODEL_DOWNLOAD_TIMEOUT_MS.toInt().coerceAtMost(Int.MAX_VALUE)
+            }
+            install(HttpTimeout) {
+                requestTimeoutMillis = MODEL_DOWNLOAD_TIMEOUT_MS
+                connectTimeoutMillis = CONNECT_TIMEOUT_MS.toLong()
+                socketTimeoutMillis = MODEL_DOWNLOAD_TIMEOUT_MS
+            }
+            install(Logging) {
+                level = LogLevel.HEADERS
+                logger = Logger.ANDROID
             }
         }
     }

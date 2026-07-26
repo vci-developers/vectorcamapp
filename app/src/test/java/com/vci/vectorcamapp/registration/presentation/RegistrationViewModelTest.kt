@@ -19,6 +19,7 @@ import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
+import com.vci.vectorcamapp.core.domain.repository.ProgramModelRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
@@ -57,6 +58,7 @@ class RegistrationViewModelTest {
     private lateinit var formDataSource: FormDataSource
     private lateinit var formRepository: FormRepository
     private lateinit var formQuestionRepository: FormQuestionRepository
+    private lateinit var programModelRepository: ProgramModelRepository
     private lateinit var transactionHelper: TransactionHelper
     private lateinit var connectivityObserver: ConnectivityObserver
 
@@ -99,6 +101,8 @@ class RegistrationViewModelTest {
         formDataSource = mockk()
         formRepository = mockk()
         formQuestionRepository = mockk()
+        programModelRepository = mockk(relaxed = true)
+        coEvery { programModelRepository.syncCurrentModel(any(), any()) } returns Result.Success(null)
         transactionHelper = mockk(relaxed = true)
         connectivityObserver = mockk()
         every { connectivityObserver.isConnected } returns flowOf(true)
@@ -129,6 +133,7 @@ class RegistrationViewModelTest {
             formDataSource = formDataSource,
             formRepository = formRepository,
             formQuestionRepository = formQuestionRepository,
+            programModelRepository = programModelRepository,
             connectivityObserver = connectivityObserver,
             errorMessageEmitter = errorMessageEmitter,
         )
@@ -436,6 +441,7 @@ class RegistrationViewModelTest {
             formDataSource = formDataSource,
             formRepository = formRepository,
             formQuestionRepository = formQuestionRepository,
+            programModelRepository = programModelRepository,
             connectivityObserver = connectivityObserver,
             errorMessageEmitter = errorMessageEmitter,
         )

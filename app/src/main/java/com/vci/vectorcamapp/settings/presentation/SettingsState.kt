@@ -29,5 +29,11 @@ data class SettingsState (
     val isEditCollectorDialogVisible: Boolean = false,
     val isDeleteCollectorDialogVisible: Boolean = false,
     val isSyncingData: Boolean = false,
+    /** 0f–1f while downloading the program model; null when not in the download phase. */
+    val modelDownloadProgress: Float? = null,
+    val modelDownloadBytes: Long = 0L,
+    val modelDownloadTotalBytes: Long = 0L,
+    /** Local cached program model version, or null when using bundled assets. */
+    val localModelVersion: String? = null,
     val isConnectedToInternet: Boolean = false
 )

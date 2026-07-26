@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.settings.presentation
 
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto
 import com.vci.vectorcamapp.core.data.mappers.toDomain
@@ -20,6 +19,7 @@ import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
+import com.vci.vectorcamapp.core.domain.repository.ProgramModelRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
@@ -28,6 +28,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
+import com.vci.vectorcamapp.core.logging.ProgramModelLog
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
@@ -60,6 +61,7 @@ class SettingsViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val formRepository: FormRepository,
     private val formQuestionRepository: FormQuestionRepository,
+    private val programModelRepository: ProgramModelRepository,
     private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache,
     private val currentSessionCache: CurrentSessionCache,
     connectivityObserver: ConnectivityObserver,
@@ -283,7 +285,14 @@ class SettingsViewModel @Inject constructor(
     }
 
     private suspend fun resyncData() {
-        _state.update { it.copy(isSyncingData = true) }
+        _state.update {
+            it.copy(
+                isSyncingData = true,
+                modelDownloadProgress = 0f,
+                modelDownloadBytes = 0L,
+                modelDownloadTotalBytes = 0L,
+            )
+        }
         try {
             val program = _state.value.program
             val programId = program.id
@@ -293,11 +302,20 @@ class SettingsViewModel @Inject constructor(
 
             if (incompleteSessions.isNotEmpty() || currentSession != null) {
                 emitError(SettingsError.DATA_SYNC_IN_PROGRESS_SESSION_EXIST)
-                _state.update { it.copy(isSyncingData = false) }
+                _state.update {
+                    it.copy(
+                        isSyncingData = false,
+                        modelDownloadProgress = null,
+                        modelDownloadBytes = 0L,
+                        modelDownloadTotalBytes = 0L,
+                    )
+                }
                 return
             }
 
             val defaultFields = defaultIntakeFieldsCache.getDefaultIntakeFields()
+
+            fetchAndSeedModelForProgram(programId)
 
             val success = transactionHelper.runAsTransaction {
                 fetchAndSeedAllLocationTypesForProgram(programId)
@@ -328,7 +346,67 @@ class SettingsViewModel @Inject constructor(
         } catch (e: Exception) {
             emitError(SettingsError.DATA_SYNC_FAILED)
         } finally {
-            _state.update { it.copy(isSyncingData = false) }
+            _state.update {
+                it.copy(
+                    isSyncingData = false,
+                    modelDownloadProgress = null,
+                    modelDownloadBytes = 0L,
+                    modelDownloadTotalBytes = 0L,
+                )
+            }
+        }
+    }
+
+    private suspend fun fetchAndSeedModelForProgram(programId: Int) {
+        when (
+            val result = programModelRepository.syncCurrentModel(programId) { bytesDownloaded, totalBytes ->
+                val progress = if (totalBytes > 0L) {
+                    (bytesDownloaded.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
+                } else {
+                    0f
+                }
+                _state.update {
+                    it.copy(
+                        modelDownloadProgress = progress,
+                        modelDownloadBytes = bytesDownloaded,
+                        modelDownloadTotalBytes = totalBytes,
+                    )
+                }
+            }
+        ) {
+            is Result.Success -> {
+                ProgramModelLog.i(
+                    "Settings model sync SUCCESS programId=%d version=%s path=%s fallback=%s",
+                    programId,
+                    result.data?.version ?: "none",
+                    result.data?.localFilePath ?: "bundled_assets",
+                    result.data == null
+                )
+                _state.update {
+                    it.copy(
+                        modelDownloadProgress = null,
+                        modelDownloadBytes = 0L,
+                        modelDownloadTotalBytes = 0L,
+                        localModelVersion = result.data?.version,
+                    )
+                }
+            }
+
+            is Result.Error -> {
+                // Keep going with bundled asset models when download fails.
+                ProgramModelLog.w(
+                    "Settings model sync FAIL programId=%d error=%s — using bundled assets",
+                    programId,
+                    result.error
+                )
+                _state.update {
+                    it.copy(
+                        modelDownloadProgress = null,
+                        modelDownloadBytes = 0L,
+                        modelDownloadTotalBytes = 0L,
+                    )
+                }
+            }
         }
     }
 
@@ -422,11 +500,13 @@ class SettingsViewModel @Inject constructor(
             val device = deviceCache.getDevice() ?: return@launch
             val programId = deviceCache.getProgramId() ?: return@launch
             val program = programRepository.getProgramById(programId) ?: return@launch
+            val localModel = programModelRepository.getLocalModel(programId)
 
             _state.update {
                 it.copy(
                     device = device,
                     program = program,
+                    localModelVersion = localModel?.version,
                 )
             }
         }
