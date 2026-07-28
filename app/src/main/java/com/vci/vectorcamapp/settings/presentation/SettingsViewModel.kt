@@ -359,7 +359,7 @@ class SettingsViewModel @Inject constructor(
 
     private suspend fun fetchAndSeedModelForProgram(programId: Int) {
         when (
-            val result = programModelRepository.syncCurrentModel(programId) { bytesDownloaded, totalBytes ->
+            val result = programModelRepository.syncConfiguredModels(programId) { bytesDownloaded, totalBytes ->
                 val progress = if (totalBytes > 0L) {
                     (bytesDownloaded.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
                 } else {
@@ -376,18 +376,20 @@ class SettingsViewModel @Inject constructor(
         ) {
             is Result.Success -> {
                 ProgramModelLog.i(
-                    "Settings model sync SUCCESS programId=%d version=%s path=%s fallback=%s",
+                    "Settings model sync SUCCESS programId=%d count=%d modelIds=%s fallback=%s",
                     programId,
-                    result.data?.version ?: "none",
-                    result.data?.localFilePath ?: "bundled_assets",
-                    result.data == null
+                    result.data.size,
+                    result.data.joinToString { it.modelId }.ifEmpty { "none" },
+                    result.data.isEmpty()
                 )
                 _state.update {
                     it.copy(
                         modelDownloadProgress = null,
                         modelDownloadBytes = 0L,
                         modelDownloadTotalBytes = 0L,
-                        localModelVersion = result.data?.version,
+                        localModelIds = result.data
+                            .joinToString(", ") { it.modelId }
+                            .ifBlank { null },
                     )
                 }
             }
@@ -500,13 +502,14 @@ class SettingsViewModel @Inject constructor(
             val device = deviceCache.getDevice() ?: return@launch
             val programId = deviceCache.getProgramId() ?: return@launch
             val program = programRepository.getProgramById(programId) ?: return@launch
-            val localModel = programModelRepository.getLocalModel(programId)
+            val localConfig = programModelRepository.getLocalModelsConfig(programId)
+            val localModelIds = localConfig?.modelIds()?.joinToString(", ").orEmpty().ifBlank { null }
 
             _state.update {
                 it.copy(
                     device = device,
                     program = program,
-                    localModelVersion = localModel?.version,
+                    localModelIds = localModelIds,
                 )
             }
         }

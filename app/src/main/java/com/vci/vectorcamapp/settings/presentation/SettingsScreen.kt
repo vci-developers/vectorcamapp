@@ -173,8 +173,8 @@ fun SettingsScreen(
                         }
 
                         Text(
-                            text = state.localModelVersion?.let { version ->
-                                "ML model downloaded: v$version"
+                            text = state.localModelIds?.let { ids ->
+                                "ML models downloaded: $ids"
                             } ?: "ML model: using bundled assets",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textSecondary

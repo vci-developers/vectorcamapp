@@ -1,12 +1,15 @@
 package com.vci.vectorcamapp.core.domain.network.api
 
+import com.vci.vectorcamapp.core.data.dto.program_model.GetProgramModelsResponseDto
 import com.vci.vectorcamapp.core.data.dto.program_model.ProgramModelDto
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import java.io.File
 
 interface ProgramModelDataSource {
-    suspend fun getCurrentModel(programId: Int): Result<ProgramModelDto, NetworkError>
+    suspend fun getModels(programId: Int): Result<GetProgramModelsResponseDto, NetworkError>
+
+    suspend fun getModel(programId: Int, modelId: String): Result<ProgramModelDto, NetworkError>
 
     /**
      * Resolves a presigned S3 URL via the API download endpoint (302 Location),

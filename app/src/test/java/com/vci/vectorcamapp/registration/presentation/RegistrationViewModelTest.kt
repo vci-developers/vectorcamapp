@@ -102,7 +102,7 @@ class RegistrationViewModelTest {
         formRepository = mockk()
         formQuestionRepository = mockk()
         programModelRepository = mockk(relaxed = true)
-        coEvery { programModelRepository.syncCurrentModel(any(), any()) } returns Result.Success(null)
+        coEvery { programModelRepository.syncConfiguredModels(any(), any()) } returns Result.Success(emptyList())
         transactionHelper = mockk(relaxed = true)
         connectivityObserver = mockk()
         every { connectivityObserver.isConnected } returns flowOf(true)

@@ -16,7 +16,6 @@ import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -50,7 +49,7 @@ class TfLiteSpecimenClassifier(
             if (classifier != null || isClosed) return
 
             try {
-                val model = FileUtil.loadMappedFile(context, filePath)
+                val model = TfLiteModelLoader.load(context, filePath)
                 val options = Interpreter.Options().apply {
                     useNNAPI = false
                     useXNNPACK = false
@@ -66,9 +65,9 @@ class TfLiteSpecimenClassifier(
                     outputNumClasses = it.getOutputTensor(0).shape()[1]
                 }
 
-                Log.d(TAG, "TFLite interpreter initialized")
+                Log.d(TAG, "TFLite interpreter initialized from $filePath")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
+                Log.e(TAG, "Failed to initialize TFLite interpreter ($filePath): ${e.message}")
             }
         }
     }

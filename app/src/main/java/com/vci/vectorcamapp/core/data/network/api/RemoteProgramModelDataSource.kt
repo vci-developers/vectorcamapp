@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.core.data.network.api
 
 import com.vci.vectorcamapp.BuildConfig
+import com.vci.vectorcamapp.core.data.dto.program_model.GetProgramModelsResponseDto
 import com.vci.vectorcamapp.core.data.dto.program_model.ProgramModelDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.responseToResult
@@ -37,14 +38,58 @@ class RemoteProgramModelDataSource @Inject constructor(
     @Named("ModelDownloadHttpClient") private val downloadHttpClient: HttpClient,
 ) : ProgramModelDataSource {
 
-    override suspend fun getCurrentModel(programId: Int): Result<ProgramModelDto, NetworkError> {
-        val url = constructUrl("/programs/$programId/models/current")
-        ProgramModelLog.i("API GET metadata → %s", url)
+    override suspend fun getModels(programId: Int): Result<GetProgramModelsResponseDto, NetworkError> {
+        val url = constructUrl("/programs/$programId/models")
+        ProgramModelLog.i("API GET models list → %s", url)
 
         return try {
             val response = httpClient.get(url)
             ProgramModelLog.i(
-                "API GET metadata ← status=%d url=%s contentType=%s",
+                "API GET models list ← status=%d url=%s",
+                response.status.value,
+                response.request.url
+            )
+            val result = responseToResult<GetProgramModelsResponseDto>(response)
+            when (result) {
+                is Result.Success -> {
+                    ProgramModelLog.i(
+                        "API GET models list SUCCESS count=%d modelIds=%s",
+                        result.data.models.size,
+                        result.data.models.joinToString { it.modelId }
+                    )
+                }
+
+                is Result.Error -> {
+                    ProgramModelLog.w(
+                        "API GET models list FAIL status=%d error=%s url=%s",
+                        response.status.value,
+                        result.error,
+                        url
+                    )
+                }
+            }
+            result
+        } catch (e: UnresolvedAddressException) {
+            ProgramModelLog.e(e, "API GET models list FAIL NO_INTERNET url=%s", url)
+            Result.Error(NetworkError.NO_INTERNET)
+        } catch (e: UnknownHostException) {
+            ProgramModelLog.e(e, "API GET models list FAIL NO_INTERNET url=%s", url)
+            Result.Error(NetworkError.NO_INTERNET)
+        } catch (e: Exception) {
+            coroutineContext.ensureActive()
+            ProgramModelLog.e(e, "API GET models list FAIL UNKNOWN url=%s", url)
+            Result.Error(NetworkError.UNKNOWN_ERROR)
+        }
+    }
+
+    override suspend fun getModel(programId: Int, modelId: String): Result<ProgramModelDto, NetworkError> {
+        val url = constructUrl("/programs/$programId/models/$modelId")
+        ProgramModelLog.i("API GET model metadata → %s", url)
+
+        return try {
+            val response = httpClient.get(url)
+            ProgramModelLog.i(
+                "API GET model metadata ← status=%d url=%s contentType=%s",
                 response.status.value,
                 response.request.url,
                 response.headers[HttpHeaders.ContentType] ?: "n/a"
@@ -55,10 +100,10 @@ class RemoteProgramModelDataSource @Inject constructor(
                 is Result.Success -> {
                     val model = result.data
                     ProgramModelLog.i(
-                        "API GET metadata SUCCESS id=%d programId=%d version=%s fileSize=%d fileMd5=%s downloadUrl=%s classes=%s",
+                        "API GET model metadata SUCCESS id=%d programId=%d modelId=%s fileSize=%d fileMd5=%s downloadUrl=%s classes=%s",
                         model.id,
                         model.programId,
-                        model.version,
+                        model.modelId,
                         model.fileSize,
                         model.fileMd5,
                         model.downloadUrl,
@@ -68,7 +113,7 @@ class RemoteProgramModelDataSource @Inject constructor(
 
                 is Result.Error -> {
                     ProgramModelLog.w(
-                        "API GET metadata FAIL status=%d error=%s url=%s",
+                        "API GET model metadata FAIL status=%d error=%s url=%s",
                         response.status.value,
                         result.error,
                         url
@@ -77,14 +122,14 @@ class RemoteProgramModelDataSource @Inject constructor(
             }
             result
         } catch (e: UnresolvedAddressException) {
-            ProgramModelLog.e(e, "API GET metadata FAIL NO_INTERNET url=%s", url)
+            ProgramModelLog.e(e, "API GET model metadata FAIL NO_INTERNET url=%s", url)
             Result.Error(NetworkError.NO_INTERNET)
         } catch (e: UnknownHostException) {
-            ProgramModelLog.e(e, "API GET metadata FAIL NO_INTERNET url=%s", url)
+            ProgramModelLog.e(e, "API GET model metadata FAIL NO_INTERNET url=%s", url)
             Result.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
             coroutineContext.ensureActive()
-            ProgramModelLog.e(e, "API GET metadata FAIL UNKNOWN url=%s", url)
+            ProgramModelLog.e(e, "API GET model metadata FAIL UNKNOWN url=%s", url)
             Result.Error(NetworkError.UNKNOWN_ERROR)
         }
     }

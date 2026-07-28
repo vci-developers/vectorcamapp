@@ -101,7 +101,8 @@ class SettingsViewModelTest {
         formAnswerRepository = mockk(relaxed = true)
         formQuestionRepository = mockk(relaxed = true)
         programModelRepository = mockk(relaxed = true)
-        coEvery { programModelRepository.syncCurrentModel(any(), any()) } returns Result.Success(null)
+        coEvery { programModelRepository.syncConfiguredModels(any(), any()) } returns Result.Success(emptyList())
+        coEvery { programModelRepository.getLocalModelsConfig(any()) } returns null
         defaultIntakeFieldsCache = mockk(relaxed = true)
         currentSessionCache = mockk(relaxed = true)
         connectivityObserver = mockk(relaxed = true)

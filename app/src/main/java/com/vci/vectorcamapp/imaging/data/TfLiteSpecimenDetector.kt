@@ -21,7 +21,6 @@ import org.opencv.dnn.Dnn
 import org.opencv.imgproc.Imgproc
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -29,7 +28,8 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 class TfLiteSpecimenDetector(
-    private val context: Context
+    private val context: Context,
+    private val modelPath: String = "detect.tflite",
 ) : SpecimenDetector {
 
     private var detector: Interpreter? = null
@@ -57,7 +57,7 @@ class TfLiteSpecimenDetector(
             if (detector != null || isClosed) return
 
             try {
-                val model = FileUtil.loadMappedFile(context, "detect.tflite")
+                val model = TfLiteModelLoader.load(context, modelPath)
                 val options = Interpreter.Options().apply {
                     useNNAPI = false
                     useXNNPACK = false

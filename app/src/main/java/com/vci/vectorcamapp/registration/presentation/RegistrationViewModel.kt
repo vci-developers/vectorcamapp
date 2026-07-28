@@ -399,7 +399,7 @@ class RegistrationViewModel @Inject constructor(
             )
         }
         when (
-            val result = programModelRepository.syncCurrentModel(programId) { bytesDownloaded, totalBytes ->
+            val result = programModelRepository.syncConfiguredModels(programId) { bytesDownloaded, totalBytes ->
                 val progress = if (totalBytes > 0L) {
                     (bytesDownloaded.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
                 } else {
@@ -417,21 +417,22 @@ class RegistrationViewModel @Inject constructor(
             }
         ) {
             is Result.Success -> {
-                val model = result.data
+                val models = result.data
                 ProgramModelLog.i(
-                    "Registration model sync SUCCESS programId=%d version=%s path=%s fallback=%s",
+                    "Registration model sync SUCCESS programId=%d count=%d modelIds=%s fallback=%s",
                     programId,
-                    model?.version ?: "none",
-                    model?.localFilePath ?: "bundled_assets",
-                    model == null
+                    models.size,
+                    models.joinToString { it.modelId }.ifEmpty { "none" },
+                    models.isEmpty()
                 )
                 VectorCamAnalytics.logEvent(
                     "program_model_sync_succeeded",
                     mapOf(
                         "program_id" to programId,
-                        "model_version" to (model?.version ?: "none"),
-                        "downloaded" to (model != null),
-                        "fallback" to (model == null),
+                        "model_count" to models.size,
+                        "model_ids" to models.joinToString(",") { it.modelId },
+                        "downloaded" to models.isNotEmpty(),
+                        "fallback" to models.isEmpty(),
                     )
                 )
             }

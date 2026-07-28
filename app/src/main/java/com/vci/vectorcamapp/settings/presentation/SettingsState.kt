@@ -33,7 +33,7 @@ data class SettingsState (
     val modelDownloadProgress: Float? = null,
     val modelDownloadBytes: Long = 0L,
     val modelDownloadTotalBytes: Long = 0L,
-    /** Local cached program model version, or null when using bundled assets. */
-    val localModelVersion: String? = null,
+    /** Local cached program modelIds, or null when using bundled assets. */
+    val localModelIds: String? = null,
     val isConnectedToInternet: Boolean = false
 )
