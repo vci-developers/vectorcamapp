@@ -16,7 +16,6 @@ import com.vci.vectorcamapp.core.logging.ProgramModelLog
 import javax.inject.Inject
 
 class ProgramModelRepositoryImplementation @Inject constructor(
-    private val programDataSource: ProgramDataSource,
     private val programModelDataSource: ProgramModelDataSource,
     private val localProgramModelStore: LocalProgramModelStore,
 ) : ProgramModelRepository {
@@ -27,39 +26,6 @@ class ProgramModelRepositoryImplementation @Inject constructor(
     ): Result<List<ProgramModel>, NetworkError> {
         ProgramModelLog.i("SYNC start programId=%d", programId)
 
-//        val config = when (val programResult = programDataSource.getProgramById(programId)) {
-//            is Result.Error -> {
-//                ProgramModelLog.w(
-//                    "SYNC FAIL get program error=%s programId=%d",
-//                    programResult.error,
-//                    programId
-//                )
-//                return Result.Error(programResult.error)
-//            }
-//
-//            is Result.Success -> {
-//                val modelsConfig = programResult.data.config?.toModelsConfig()
-//                ProgramModelLog.i(
-//                    "SYNC program config programId=%d models=%s",
-//                    programId,
-//                    modelsConfig?.modelIds()?.joinToString().orEmpty().ifEmpty { "(none)" }
-//                )
-//                modelsConfig
-//            }
-//        }
-//
-//        if (config == null || config.isEmpty()) {
-//            ProgramModelLog.i(
-//                "SYNC success no models configured programId=%d — using bundled assets",
-//                programId
-//            )
-//            onProgress(0L, 0L)
-//            return Result.Success(emptyList())
-//        }
-//
-//        localProgramModelStore.saveConfig(programId, config)
-
-//        val configuredModelIds = config.modelIds().toSet()
         val listedModels = when (val listResult = programModelDataSource.getModels(programId)) {
             is Result.Error -> {
                 if (listResult.error == NetworkError.NOT_FOUND) {
@@ -91,27 +57,8 @@ class ProgramModelRepositoryImplementation @Inject constructor(
 
         val metadataById = linkedMapOf<String, com.vci.vectorcamapp.core.data.dto.program_model.ProgramModelDto>()
         for (model in listedModels) {
-//            val metadata = listedModels.firstOrNull { it.modelId == modelId }
-//            if (metadata == null) {
-//                ProgramModelLog.w(
-//                    "SYNC modelId=%s missing from GET /models list — skipping (bundled fallback)",
-//                    modelId
-//                )
-//                continue
-//            }
             metadataById[model.modelId] = model
         }
-
-//        val unusedListed = listedModels
-//            .map { it.modelId }
-//            .filter { it !in configuredModelIds }
-//        if (unusedListed.isNotEmpty()) {
-//            ProgramModelLog.d(
-//                "SYNC ignoring unconfigured listed models programId=%d modelIds=%s",
-//                programId,
-//                unusedListed.joinToString()
-//            )
-//        }
 
         if (metadataById.isEmpty()) {
             ProgramModelLog.i(
