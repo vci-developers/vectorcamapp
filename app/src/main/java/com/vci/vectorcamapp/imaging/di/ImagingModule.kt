@@ -105,9 +105,35 @@ object ImagingModule {
         roleModelId: (ProgramModelsConfig) -> String?,
         assetFallback: String,
     ): String {
-        val programId = runBlocking { deviceCache.getProgramId() } ?: return assetFallback
-        val config = localProgramModelStore.getCachedConfigSync(programId) ?: return assetFallback
-        val modelId = roleModelId(config)?.trim()?.takeIf { it.isNotEmpty() } ?: return assetFallback
+        val programId = runBlocking { deviceCache.getProgramId() }
+        if (programId == null || programId <= 0) {
+            ProgramModelLog.i(
+                "Imaging using bundled asset=%s (no programId registered)",
+                assetFallback
+            )
+            return assetFallback
+        }
+
+        val config = localProgramModelStore.getCachedConfigSync(programId)
+        if (config == null) {
+            ProgramModelLog.i(
+                "Imaging using bundled asset=%s (no local config.json for programId=%d)",
+                assetFallback,
+                programId
+            )
+            return assetFallback
+        }
+
+        val modelId = roleModelId(config)?.trim()?.takeIf { it.isNotEmpty() }
+        if (modelId == null) {
+            ProgramModelLog.i(
+                "Imaging using bundled asset=%s (role not configured in config.json for programId=%d)",
+                assetFallback,
+                programId
+            )
+            return assetFallback
+        }
+
         val localPath = localProgramModelStore.modelPathIfExists(programId, modelId)
         return if (localPath != null) {
             ProgramModelLog.i(
@@ -119,9 +145,10 @@ object ImagingModule {
             localPath
         } else {
             ProgramModelLog.i(
-                "Imaging using bundled asset=%s (no local file for modelId=%s)",
+                "Imaging using bundled asset=%s (no local file for modelId=%s programId=%d)",
                 assetFallback,
-                modelId
+                modelId,
+                programId
             )
             assetFallback
         }

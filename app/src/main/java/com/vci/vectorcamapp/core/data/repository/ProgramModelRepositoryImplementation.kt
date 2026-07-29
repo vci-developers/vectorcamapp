@@ -1,6 +1,6 @@
 package com.vci.vectorcamapp.core.data.repository
 
-import com.google.android.datatransport.runtime.scheduling.SchedulingConfigModule_ConfigFactory.config
+import com.vci.vectorcamapp.core.data.dto.program_model.ProgramModelDto
 import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toModelsConfig
 import com.vci.vectorcamapp.core.data.program_model.LocalProgramModelStore
@@ -16,6 +16,7 @@ import com.vci.vectorcamapp.core.logging.ProgramModelLog
 import javax.inject.Inject
 
 class ProgramModelRepositoryImplementation @Inject constructor(
+    private val programDataSource: ProgramDataSource,
     private val programModelDataSource: ProgramModelDataSource,
     private val localProgramModelStore: LocalProgramModelStore,
 ) : ProgramModelRepository {
@@ -25,6 +26,29 @@ class ProgramModelRepositoryImplementation @Inject constructor(
         onProgress: (bytesDownloaded: Long, totalBytes: Long) -> Unit,
     ): Result<List<ProgramModel>, NetworkError> {
         ProgramModelLog.i("SYNC start programId=%d", programId)
+
+        // Program config is optional (maps roles -> modelId). Never let it block downloading
+        // the models the list endpoint actually returns.
+        val apiConfig = when (val programResult = programDataSource.getProgramById(programId)) {
+            is Result.Error -> {
+                ProgramModelLog.w(
+                    "SYNC WARN get program error=%s programId=%d — continuing without API config",
+                    programResult.error,
+                    programId
+                )
+                null
+            }
+
+            is Result.Success -> {
+                val modelsConfig = programResult.data.config?.toModelsConfig()
+                ProgramModelLog.i(
+                    "SYNC program config programId=%d models=%s",
+                    programId,
+                    modelsConfig?.modelIds()?.joinToString().orEmpty().ifEmpty { "(none)" }
+                )
+                modelsConfig
+            }
+        }
 
         val listedModels = when (val listResult = programModelDataSource.getModels(programId)) {
             is Result.Error -> {
@@ -55,7 +79,7 @@ class ProgramModelRepositoryImplementation @Inject constructor(
             }
         }
 
-        val metadataById = linkedMapOf<String, com.vci.vectorcamapp.core.data.dto.program_model.ProgramModelDto>()
+        val metadataById = linkedMapOf<String, ProgramModelDto>()
         for (model in listedModels) {
             metadataById[model.modelId] = model
         }
@@ -179,6 +203,29 @@ class ProgramModelRepositoryImplementation @Inject constructor(
             synced.size,
             synced.joinToString { it.modelId }
         )
+
+        // Persist role -> modelId mapping to disk (config.json) so Imaging can find downloaded
+        // models later without re-syncing. Prefer the API-provided config; fall back to
+        // inferring roles from conventional modelId names among the models actually downloaded.
+        val effectiveConfig = apiConfig?.takeUnless { it.isEmpty() }
+            ?: ProgramModelsConfig.inferFromModelIds(synced.map { it.modelId })
+
+        if (!effectiveConfig.isEmpty()) {
+            localProgramModelStore.saveConfig(programId, effectiveConfig)
+            ProgramModelLog.i(
+                "SYNC saved config.json programId=%d source=%s models=%s",
+                programId,
+                if (apiConfig?.isEmpty() == false) "api" else "inferred",
+                effectiveConfig.modelIds().joinToString()
+            )
+        } else {
+            ProgramModelLog.w(
+                "SYNC no role mapping resolved programId=%d (no API config, no conventional modelIds among %s) — Imaging will use bundled assets",
+                programId,
+                synced.joinToString { it.modelId }.ifEmpty { "none" }
+            )
+        }
+
         return Result.Success(synced)
     }
 

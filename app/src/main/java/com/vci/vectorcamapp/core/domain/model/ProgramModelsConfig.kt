@@ -18,4 +18,24 @@ data class ProgramModelsConfig(
     }
 
     fun isEmpty(): Boolean = modelIds().isEmpty()
+
+    companion object {
+        /**
+         * Fallback when program `config.models` is unset: map roles from conventional
+         * modelIds (e.g. uploaded as `species`, `sex`, `abdomen_status`, `detect`).
+         */
+        fun inferFromModelIds(modelIds: Collection<String>): ProgramModelsConfig {
+            val ids = modelIds.map { it.trim() }.filter { it.isNotEmpty() }
+
+            fun pick(vararg candidates: String): String? =
+                ids.firstOrNull { id -> candidates.any { id.equals(it, ignoreCase = true) } }
+
+            return ProgramModelsConfig(
+                species = pick("species"),
+                sex = pick("sex"),
+                abdomenStatus = pick("abdomen_status", "abdomenStatus"),
+                detect = pick("detect"),
+            )
+        }
+    }
 }
