@@ -590,11 +590,16 @@ class MetadataUploadWorker @AssistedInject constructor(
                     syncedSessionUnitsByLocalId[localId]?.remoteId?.let { it to answers }
                 }.toMap()
 
-            val formId = formQuestionRepository.getFormIdByQuestionId(
-                sessionScopedAnswers.keys.firstOrNull()
-                    ?: sessionUnitScopedAnswersBySessionUnitRemoteId.values.flatMap { it.keys }.firstOrNull()
-                    ?: return DomainResult.Success(Unit)
-            ) ?: return DomainResult.Error(NetworkError.CLIENT_ERROR)
+            val questionIds = (sessionScopedAnswers.keys + sessionUnitScopedAnswersBySessionUnitRemoteId.values.flatMap { it.keys })
+                .distinct()
+            if (questionIds.isEmpty()) return DomainResult.Success(Unit)
+
+            val formId = questionIds
+                .map { formQuestionRepository.getFormIdByQuestionId(it) }
+                .distinct()
+                .singleOrNull()
+                ?: return DomainResult.Error(NetworkError.CLIENT_ERROR)
+
             val formVersion = formRepository.getFormById(formId)?.version
                 ?: return DomainResult.Error(NetworkError.CLIENT_ERROR)
 
