@@ -45,7 +45,6 @@ fun Error.toString(context: Context): String {
             CompleteSessionDetailsError.SITE_NOT_FOUND -> R.string.complete_session_error_site_not_found
             CompleteSessionDetailsError.SPECIMENS_NOT_FOUND -> R.string.complete_session_error_specimens_not_found
             CompleteSessionDetailsError.PROGRAM_NOT_FOUND -> R.string.complete_session_error_program_not_found
-            CompleteSessionDetailsError.FORM_NOT_FOUND -> R.string.complete_session_error_form_not_found
             CompleteSessionDetailsError.UNKNOWN_ERROR -> R.string.complete_session_error_unknown_error
         }
 

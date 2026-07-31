@@ -232,9 +232,6 @@
     <!-- Complete session error: Program not found -->
     <string name="complete_session_error_program_not_found">Could not load program details. Please try again or contact support if the issue persists.</string>
 
-    <!-- Complete session error: Form not found -->
-    <string name="complete_session_error_form_not_found">Could not load form details. Please try again or contact support if the issue persists.</string>
-
     <!-- Complete session error: Unknown error -->
     <string name="complete_session_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
 
