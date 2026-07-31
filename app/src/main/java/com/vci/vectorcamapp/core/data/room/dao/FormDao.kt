@@ -20,6 +20,15 @@ interface FormDao {
     @Query("SELECT * FROM form WHERE version = :version")
     suspend fun getFormByVersion(version: String): FormEntity?
 
+    @Query(
+        """
+        SELECT form.version FROM form
+        INNER JOIN form_question ON form_question.formId = form.id
+        WHERE form_question.id = :questionId
+        """
+    )
+    suspend fun getFormVersionByQuestionId(questionId: Int): String?
+
     @Transaction
     @Query("SELECT * FROM form_answer WHERE sessionId = :sessionId")
     suspend fun getFormAnswersAndQuestionsBySessionId(sessionId: UUID): List<FormAnswerAndQuestionRelation>
