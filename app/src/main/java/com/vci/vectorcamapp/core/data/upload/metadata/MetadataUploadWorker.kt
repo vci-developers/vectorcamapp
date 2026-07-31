@@ -39,6 +39,7 @@ import com.vci.vectorcamapp.core.domain.network.api.SpecimenDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenImageDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SurveillanceFormDataSource
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
+import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
@@ -79,7 +80,8 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val specimenImageDataSource: SpecimenImageDataSource,
     private val formAnswerDataSource: FormAnswerDataSource,
     private val formAnswerRepository: FormAnswerRepository,
-    private val formRepository: FormRepository
+    private val formRepository: FormRepository,
+    private val formQuestionRepository: FormQuestionRepository
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -588,11 +590,13 @@ class MetadataUploadWorker @AssistedInject constructor(
                     syncedSessionUnitsByLocalId[localId]?.remoteId?.let { it to answers }
                 }.toMap()
 
-            val formVersion = formRepository.getFormVersionByQuestionId(
+            val formId = formQuestionRepository.getFormIdByQuestionId(
                 sessionScopedAnswers.keys.firstOrNull()
                     ?: sessionUnitScopedAnswersBySessionUnitRemoteId.values.flatMap { it.keys }.firstOrNull()
                     ?: return DomainResult.Success(Unit)
             ) ?: return DomainResult.Error(NetworkError.CLIENT_ERROR)
+            val formVersion = formRepository.getFormById(formId)?.version
+                ?: return DomainResult.Error(NetworkError.CLIENT_ERROR)
 
             val localFormAnswersDtoByKey: Map<Pair<Int, Int?>, FormAnswerDto> = buildMap {
                 sessionScopedAnswers.forEach { (questionId, answer) ->

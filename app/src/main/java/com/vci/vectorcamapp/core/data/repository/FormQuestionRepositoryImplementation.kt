@@ -32,4 +32,8 @@ class FormQuestionRepositoryImplementation @Inject constructor(
         return formQuestionDao.getQuestionsByFormIdAndScope(formId, answerScope)
             .map { it.toDomain() }
     }
+
+    override suspend fun getFormIdByQuestionId(questionId: Int): Int? {
+        return formQuestionDao.getFormIdByQuestionId(questionId)
+    }
 }

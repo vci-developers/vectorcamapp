@@ -35,10 +35,6 @@ class FormRepositoryImplementation @Inject constructor(
         return formDao.getFormByVersion(version)?.toDomain()
     }
 
-    override suspend fun getFormVersionByQuestionId(questionId: Int): String? {
-        return formDao.getFormVersionByQuestionId(questionId)
-    }
-
     override suspend fun getFormsWithFormAnswersAndQuestionsBySessionId(sessionId: UUID): List<FormWithFormAnswersAndQuestions> {
         val relations = formDao.getFormAnswersAndQuestionsBySessionId(sessionId)
         val groupedRelations = relations.groupBy { it.question.formId }
