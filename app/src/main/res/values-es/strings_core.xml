@@ -48,4 +48,12 @@
     <string name="upload_notification_retrying">Reintentando la subida...</string>
     <string name="upload_notification_failed">Subida fallida</string>
 
+    <!-- Upload Service -->
+    <string name="upload_service_channel_name">Servicio de subida</string>
+    <string name="upload_service_channel_description">Mantiene la subida de datos e imágenes en segundo plano</string>
+    <string name="upload_service_title">Subiendo datos de la sesión</string>
+    <string name="upload_service_preparing">Preparando la subida…</string>
+    <string name="upload_service_waiting">Esperando conexión de red…</string>
+    <string name="upload_service_running">La subida se está ejecutando en segundo plano…</string>
+
 </resources>

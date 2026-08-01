@@ -52,4 +52,12 @@
     <string name="upload_notification_retrying">Retrying upload...</string>
     <string name="upload_notification_failed">Upload failed</string>
 
+    <!-- Upload Service -->
+    <string name="upload_service_channel_name">Upload Service</string>
+    <string name="upload_service_channel_description">Keeps data and image upload running in the background</string>
+    <string name="upload_service_title">Uploading session data</string>
+    <string name="upload_service_preparing">Preparing upload…</string>
+    <string name="upload_service_waiting">Waiting for network connection…</string>
+    <string name="upload_service_running">Upload is running in the background…</string>
+
 </resources>
