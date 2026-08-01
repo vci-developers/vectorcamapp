@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="registration_title_register">Registrarse</string>
+    <string name="registration_title_access_code_dialog">Ingresa el código de acceso del programa</string>
+
+    <!-- Body -->
+    <string name="registration_body_select_program">Selecciona tu programa afiliado</string>
+
+    <!-- Labels -->
+    <string name="registration_label_program">Programa</string>
+    <string name="registration_label_collector_name">Nombre del recolector</string>
+    <string name="registration_label_collector_title">Cargo del recolector</string>
+    <string name="registration_label_last_trained">¿Cuándo te capacitaste por última vez?</string>
+    <string name="registration_label_access_code">Código de acceso</string>
+
+    <!-- Actions -->
+    <string name="registration_action_confirm">Confirmar</string>
+    <string name="registration_action_access_code_dialog_confirm">Confirmar</string>
+    <string name="registration_action_access_code_dialog_cancel">Cancelar</string>
+
+    <!-- Content Descriptions -->
+    <string name="registration_content_description_background">Fondo de mosquito</string>
+    <string name="registration_content_description_hide_access_code">Ocultar código de acceso</string>
+    <string name="registration_content_description_show_access_code">Mostrar código de acceso</string>
+
+</resources>

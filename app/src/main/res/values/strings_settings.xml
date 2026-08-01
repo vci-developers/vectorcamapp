@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="settings_title_screen">Settings</string>
+    <string name="settings_title_actions">Actions</string>
+    <string name="settings_title_start_data_collection">Start Data Collection</string>
+    <string name="settings_title_start_practice">Start Practice Session</string>
+    <string name="settings_title_update_data">Update Data from Server</string>
+    <string name="settings_title_cloud_sync">Cloud Sync</string>
+    <string name="settings_title_about">About</string>
+    <string name="settings_title_language">Language</string>
+    <string name="settings_title_preferences">Preferences</string>
+    <string name="settings_title_registered_collectors">Registered Collectors</string>
+    <string name="settings_title_device_info">Device Information</string>
+    <string name="settings_title_program_info">Program Information</string>
+    <string name="settings_title_app_info">App Information</string>
+    <string name="settings_title_delete_profile">Delete Profile?</string>
+    <string name="settings_title_edit_profile">Edit Profile</string>
+    <string name="settings_title_add_profile">Add Profile</string>
+    <string name="settings_title_typo_warning">Possible Typo Detected</string>
+
+    <!-- Body -->
+    <string name="settings_body_subtitle">Configure app preferences</string>
+    <string name="settings_body_connected">Connected to Internet</string>
+    <string name="settings_body_no_internet">No Internet Connection - Resync Unavailable</string>
+    <string name="settings_body_delete_collector">This will permanently delete this collector profile. This action cannot be undone.</string>
+    <string name="settings_body_typo_warning">The name \'%1$s\' is very similar to an existing collector \'%2$s\'.\n\nTitle: %3$s\nLast Trained On: %4$s\n\nAre you sure you want to add this profile?</string>
+
+    <!-- Labels -->
+    <string name="settings_label_collector_name">Collector Name</string>
+    <string name="settings_label_collector_title">Collector Title</string>
+    <string name="settings_label_last_trained">When were you last trained?</string>
+    <string name="settings_label_device_id">Device ID: %1$s</string>
+    <string name="settings_label_device_model">Device Model: %1$s</string>
+    <string name="settings_label_registered_at">Registered At: %1$s</string>
+    <string name="settings_label_program_id">Program ID: %1$s</string>
+    <string name="settings_label_program_name">Program Name: %1$s</string>
+    <string name="settings_label_country">Country: %1$s</string>
+    <string name="settings_label_version">Version: %1$s</string>
+    <string name="settings_label_build_code">Build Code: %1$d</string>
+    <string name="settings_label_build_type">Build Type: %1$s</string>
+
+    <!-- Actions -->
+    <string name="settings_action_syncing">Syncing Data...</string>
+    <string name="settings_action_resync">Resync Data</string>
+    <string name="settings_action_edit">Edit</string>
+    <string name="settings_action_add_profile">Add Profile</string>
+    <string name="settings_action_collector_dialog_confirm_delete">Yes, Delete</string>
+    <string name="settings_action_collector_dialog_submit">Submit</string>
+    <string name="settings_action_collector_dialog_delete">Delete</string>
+    <string name="settings_action_collector_dialog_cancel">Cancel</string>
+    <string name="settings_action_typo_warning_save">Save Anyway</string>
+    <string name="settings_action_typo_warning_edit">Edit Name</string>
+
+    <!-- Content Descriptions -->
+    <string name="settings_content_description_back">Back Button</string>
+    <string name="settings_content_description_profile">Profile Icon</string>
+    <string name="settings_content_description_navigate">Navigate</string>
+    <string name="settings_content_description_collapse">Collapse</string>
+    <string name="settings_content_description_expand">Expand</string>
+
+</resources>

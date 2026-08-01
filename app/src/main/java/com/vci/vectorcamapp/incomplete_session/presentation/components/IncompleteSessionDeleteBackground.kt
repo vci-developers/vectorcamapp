@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -45,7 +46,7 @@ fun IncompleteSessionDeleteBackground(
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_delete),
-                contentDescription = "Delete",
+                contentDescription = stringResource(R.string.incomplete_session_content_description_delete),
                 tint = MaterialTheme.colors.buttonText,
                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
             )

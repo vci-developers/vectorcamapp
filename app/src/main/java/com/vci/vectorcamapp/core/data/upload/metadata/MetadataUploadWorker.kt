@@ -98,24 +98,24 @@ class MetadataUploadWorker @AssistedInject constructor(
         val localSessionIdString = inputData.getString("session_id")
         val localSiteId = inputData.getInt("site_id", -1)
         if (localSessionIdString == null || localSiteId == -1) {
-            return retryOrFailure("Invalid upload request. Check session ID and site ID.")
+            return retryOrFailure(context.getString(R.string.upload_error_invalid_request))
         }
 
         val localSessionId = try {
             UUID.fromString(localSessionIdString)
         } catch (e: IllegalArgumentException) {
-            return retryOrFailure("Invalid session ID format.")
+            return retryOrFailure(context.getString(R.string.upload_error_invalid_session_id))
         }
 
         val localSession = sessionRepository.getSessionById(localSessionId)
         val localDevice = deviceCache.getDevice()
         val localProgramId = deviceCache.getProgramId()
         if (localSession == null || localDevice == null || localProgramId == null) {
-            return retryOrFailure("Device or session not found.")
+            return retryOrFailure(context.getString(R.string.upload_error_device_session_not_found))
         }
 
         val localProgram = programRepository.getProgramById(localProgramId)
-            ?: return retryOrFailure("Program not found.")
+            ?: return retryOrFailure(context.getString(R.string.upload_error_program_not_found))
 
         createNotificationChannel()
         notificationId = localSessionId.hashCode()
@@ -145,7 +145,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 )
             }
             if (syncedSession.remoteId == null) {
-                return retryOrFailure("Session not found on the server.")
+                return retryOrFailure(context.getString(R.string.upload_error_session_not_found_server))
             }
 
             val syncedSessionUnitsByLocalId: Map<UUID, SessionUnit> =
@@ -275,9 +275,9 @@ class MetadataUploadWorker @AssistedInject constructor(
                 WorkerResult.success()
             }
         } catch (e: IOException) {
-            return retryOrFailure("Lost internet connection while uploading.")
+            return retryOrFailure(context.getString(R.string.upload_error_lost_connection))
         } catch (e: Exception) {
-            return retryOrFailure("An unknown error occurred during upload.")
+            return retryOrFailure(context.getString(R.string.upload_error_unknown))
         } finally {
             if (isStopped) {
                 resetInProgressUploads(localSession.localId)
@@ -302,7 +302,7 @@ class MetadataUploadWorker @AssistedInject constructor(
     }
 
     private fun retryOrComplete(): WorkerResult {
-        showUploadRetryNotification("Upload failed for one or more images.")
+        showUploadRetryNotification(context.getString(R.string.upload_error_images_failed))
         return if (runAttemptCount < MAX_RETRIES) {
             WorkerResult.retry()
         } else {
@@ -914,7 +914,7 @@ class MetadataUploadWorker @AssistedInject constructor(
 
     private fun showInitialMetadataNotification(): ForegroundInfo {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setContentTitle("Registering device and session...")
+            .setContentTitle(context.getString(R.string.upload_notification_registering))
             .setSmallIcon(R.drawable.ic_cloud_upload).setOngoing(true).build()
 
         return ForegroundInfo(
@@ -930,13 +930,10 @@ class MetadataUploadWorker @AssistedInject constructor(
         totalImagesForSpecimen: Int
     ) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setContentTitle("Uploading metadata for specimen $specimenId")
-            .setContentText("Specimen ${currentSpecimenIndex + 1} of $totalSpecimens").setStyle(
+            .setContentTitle(context.getString(R.string.upload_notification_uploading_metadata, specimenId))
+            .setContentText(context.getString(R.string.upload_notification_specimen_progress, currentSpecimenIndex + 1, totalSpecimens)).setStyle(
                 NotificationCompat.BigTextStyle().bigText(
-                    """
-                        Specimen ${currentSpecimenIndex + 1} of $totalSpecimens
-                        Image ${currentImageIndex + 1} of $totalImagesForSpecimen
-                    """.trimIndent()
+                    context.getString(R.string.upload_notification_specimen_image_progress, currentSpecimenIndex + 1, totalSpecimens, currentImageIndex + 1, totalImagesForSpecimen)
                 )
             ).setSmallIcon(R.drawable.ic_cloud_upload)
             .setProgress(totalSpecimens, currentSpecimenIndex + 1, false).setOngoing(true).build()
@@ -946,7 +943,7 @@ class MetadataUploadWorker @AssistedInject constructor(
 
     private fun showUploadRetryNotification(message: String) {
         val notification =
-            NotificationCompat.Builder(context, CHANNEL_ID).setContentTitle("Retrying upload...")
+            NotificationCompat.Builder(context, CHANNEL_ID).setContentTitle(context.getString(R.string.upload_notification_retrying))
                 .setContentText(message).setSmallIcon(R.drawable.ic_error).build()
 
         notificationManager.notify(notificationId, notification)
@@ -954,7 +951,7 @@ class MetadataUploadWorker @AssistedInject constructor(
 
     private fun showUploadErrorNotification(message: String) {
         val notification =
-            NotificationCompat.Builder(context, CHANNEL_ID).setContentTitle("Upload failed")
+            NotificationCompat.Builder(context, CHANNEL_ID).setContentTitle(context.getString(R.string.upload_notification_failed))
                 .setContentText(message).setSmallIcon(R.drawable.ic_error).build()
 
         notificationManager.notify(notificationId, notification)

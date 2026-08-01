@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="settings_title_screen">Configuración</string>
+    <string name="settings_title_actions">Acciones</string>
+    <string name="settings_title_start_data_collection">Iniciar recolección de datos</string>
+    <string name="settings_title_start_practice">Iniciar sesión de práctica</string>
+    <string name="settings_title_update_data">Actualizar datos del servidor</string>
+    <string name="settings_title_cloud_sync">Sincronización en la nube</string>
+    <string name="settings_title_about">Acerca de</string>
+    <string name="settings_title_registered_collectors">Recolectores registrados</string>
+    <string name="settings_title_device_info">Información del dispositivo</string>
+    <string name="settings_title_program_info">Información del programa</string>
+    <string name="settings_title_app_info">Información de la aplicación</string>
+    <string name="settings_title_delete_profile">¿Eliminar perfil?</string>
+    <string name="settings_title_edit_profile">Editar perfil</string>
+    <string name="settings_title_add_profile">Agregar perfil</string>
+    <string name="settings_title_typo_warning">Posible error de escritura detectado</string>
+    <string name="settings_title_language">Idioma</string>
+    <string name="settings_title_preferences">Preferencias</string>
+
+    <!-- Body -->
+    <string name="settings_body_subtitle">Configura las preferencias de la aplicación</string>
+    <string name="settings_body_connected">Conectado a internet</string>
+    <string name="settings_body_no_internet">Sin conexión a internet: resincronización no disponible</string>
+    <string name="settings_body_delete_collector">Esto eliminará permanentemente este perfil de recolector. Esta acción no se puede deshacer.</string>
+    <string name="settings_body_typo_warning">El nombre \'%1$s\' es muy similar al de un recolector existente \'%2$s\'.\n\nCargo: %3$s\nÚltima capacitación: %4$s\n\n¿Seguro que deseas agregar este perfil?</string>
+
+    <!-- Labels -->
+    <string name="settings_label_collector_name">Nombre del recolector</string>
+    <string name="settings_label_collector_title">Cargo del recolector</string>
+    <string name="settings_label_last_trained">¿Cuándo te capacitaste por última vez?</string>
+    <string name="settings_label_device_id">ID del dispositivo: %1$s</string>
+    <string name="settings_label_device_model">Modelo del dispositivo: %1$s</string>
+    <string name="settings_label_registered_at">Registrado el: %1$s</string>
+    <string name="settings_label_program_id">ID del programa: %1$s</string>
+    <string name="settings_label_program_name">Nombre del programa: %1$s</string>
+    <string name="settings_label_country">País: %1$s</string>
+    <string name="settings_label_version">Versión: %1$s</string>
+    <string name="settings_label_build_code">Código de compilación: %1$d</string>
+    <string name="settings_label_build_type">Tipo de compilación: %1$s</string>
+
+    <!-- Actions -->
+    <string name="settings_action_syncing">Sincronizando datos...</string>
+    <string name="settings_action_resync">Resincronizar datos</string>
+    <string name="settings_action_edit">Editar</string>
+    <string name="settings_action_add_profile">Agregar perfil</string>
+    <string name="settings_action_collector_dialog_confirm_delete">Sí, eliminar</string>
+    <string name="settings_action_collector_dialog_submit">Enviar</string>
+    <string name="settings_action_collector_dialog_delete">Eliminar</string>
+    <string name="settings_action_collector_dialog_cancel">Cancelar</string>
+    <string name="settings_action_typo_warning_save">Guardar de todos modos</string>
+    <string name="settings_action_typo_warning_edit">Editar nombre</string>
+
+    <!-- Content Descriptions -->
+    <string name="settings_content_description_back">Botón de retroceso</string>
+    <string name="settings_content_description_profile">Ícono de perfil</string>
+    <string name="settings_content_description_navigate">Navegar</string>
+    <string name="settings_content_description_collapse">Contraer</string>
+    <string name="settings_content_description_expand">Expandir</string>
+
+</resources>

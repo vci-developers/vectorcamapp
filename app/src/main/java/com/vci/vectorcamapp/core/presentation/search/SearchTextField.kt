@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.res.stringResource
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -47,7 +49,7 @@ fun SearchTextField(
             isVisible = isTooltipVisible,
             onClick = onShowSearchTooltip,
             onDismiss = onDismissSearchTooltip,
-            buttonText = "Tap to learn more about searching",
+            buttonText = stringResource(R.string.search_action_learn_more),
             modifier = modifier.padding(bottom = MaterialTheme.dimensions.spacingExtraSmall)
         ) {
             tooltipContent()

@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.stringResource
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
@@ -40,7 +42,7 @@ fun InfoPill(
             iconPainter?.let { painter ->
                 Icon(
                     painter = painter,
-                    contentDescription = "Pill Icon",
+                    contentDescription = stringResource(R.string.core_content_description_pill),
                     tint = color,
                     modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
                 )
