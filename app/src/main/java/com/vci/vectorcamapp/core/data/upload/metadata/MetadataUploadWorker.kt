@@ -39,6 +39,8 @@ import com.vci.vectorcamapp.core.domain.network.api.SpecimenDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenImageDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SurveillanceFormDataSource
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
+import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
+import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
@@ -77,7 +79,9 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val specimenDataSource: SpecimenDataSource,
     private val specimenImageDataSource: SpecimenImageDataSource,
     private val formAnswerDataSource: FormAnswerDataSource,
-    private val formAnswerRepository: FormAnswerRepository
+    private val formAnswerRepository: FormAnswerRepository,
+    private val formRepository: FormRepository,
+    private val formQuestionRepository: FormQuestionRepository
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -180,7 +184,6 @@ class MetadataUploadWorker @AssistedInject constructor(
                         sessionScopedFormAnswers,
                         sessionUnitScopedFormAnswersBySessionUnit,
                         syncedSessionUnitsByLocalId,
-                        localProgram.formVersion,
                         syncedSession.localId,
                         syncedSession.remoteId,
                     )) {
@@ -578,7 +581,6 @@ class MetadataUploadWorker @AssistedInject constructor(
         sessionScopedAnswers: Map<Int, FormAnswer>,
         sessionUnitScopedAnswersBySessionUnitLocalId: Map<UUID, Map<Int, FormAnswer>>,
         syncedSessionUnitsByLocalId: Map<UUID, SessionUnit>,
-        formVersion: String,
         syncedLocalSessionId: UUID,
         syncedRemoteSessionId: Int,
     ): DomainResult<Unit, NetworkError> {
@@ -587,6 +589,19 @@ class MetadataUploadWorker @AssistedInject constructor(
                 sessionUnitScopedAnswersBySessionUnitLocalId.mapNotNull { (localId, answers) ->
                     syncedSessionUnitsByLocalId[localId]?.remoteId?.let { it to answers }
                 }.toMap()
+
+            val questionIds = (sessionScopedAnswers.keys + sessionUnitScopedAnswersBySessionUnitRemoteId.values.flatMap { it.keys })
+                .distinct()
+            if (questionIds.isEmpty()) return DomainResult.Success(Unit)
+
+            val formId = questionIds
+                .map { formQuestionRepository.getFormIdByQuestionId(it) }
+                .distinct()
+                .singleOrNull()
+                ?: return DomainResult.Error(NetworkError.CLIENT_ERROR)
+
+            val formVersion = formRepository.getFormById(formId)?.version
+                ?: return DomainResult.Error(NetworkError.CLIENT_ERROR)
 
             val localFormAnswersDtoByKey: Map<Pair<Int, Int?>, FormAnswerDto> = buildMap {
                 sessionScopedAnswers.forEach { (questionId, answer) ->
