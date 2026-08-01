@@ -1,6 +1,6 @@
-package com.vci.vectorcamapp.core.logging
+package com.vci.vectorcamapp.core.logging.crashlytics
 
-data class CrashyContext(
+data class VectorCamCrashlyticsContext(
     val screen: String? = null,
     val feature: String? = null,
     val action: String? = null,
