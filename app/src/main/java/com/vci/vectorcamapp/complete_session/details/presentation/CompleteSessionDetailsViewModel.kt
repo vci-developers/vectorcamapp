@@ -186,7 +186,8 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                 emitError(CompleteSessionDetailsError.PROGRAM_NOT_FOUND)
                 return@launch
             }
-            val form = program.formVersion?.let { formRepository.getFormByVersion(it) }
+            val form = formRepository.getFormsWithFormAnswersAndQuestionsBySessionId(sessionId)
+                .firstOrNull()?.form
 
             val allFormQuestions = form?.let {
                 formQuestionRepository.getQuestionsByFormIdAndScope(it.id, answerScope = null)
