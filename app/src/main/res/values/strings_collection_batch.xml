@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="collection_batch_title_screen">Collection Batches</string>
+    <string name="collection_batch_title_form">Collection Batch Form</string>
+    <string name="collection_batch_title_identity">Batch Identity</string>
+    <string name="collection_batch_title_information">Batch Information</string>
+    <string name="collection_batch_title_end_session">End session?</string>
+    <string name="collection_batch_title_confirm_action">Confirm Action</string>
+
+    <!-- Body -->
+    <string name="collection_batch_body_subtitle">Create and edit collection batches here</string>
+    <string name="collection_batch_body_form_subtitle">Fill out the information below</string>
+    <string name="collection_batch_body_empty">No collection batches yet.\nTap the + button below to add one.</string>
+    <string name="collection_batch_body_save_or_submit">Would you like to save this session for later, or submit it now?</string>
+    <string name="collection_batch_body_confirm_save">Are you sure you want to save the session and exit?</string>
+    <string name="collection_batch_body_confirm_submit">Are you sure you want to submit the session?</string>
+    <string name="collection_batch_body_warning_zero">Warning: You are about to submit a session with zero collection batches.</string>
+
+    <!-- Labels -->
+    <string name="collection_batch_label_batch">Batch %1$s</string>
+    <string name="collection_batch_label_specimen_count">Specimen Count: %1$d</string>
+    <string name="collection_batch_label_created">Created: %1$s</string>
+
+    <!-- Actions -->
+    <string name="collection_batch_action_continue">Continue to Imaging</string>
+    <string name="collection_batch_action_exit_dialog_submit">Submit</string>
+    <string name="collection_batch_action_exit_dialog_confirm">Yes, Confirm</string>
+    <string name="collection_batch_action_exit_dialog_save">Save</string>
+    <string name="collection_batch_action_exit_dialog_back">Back</string>
+
+    <!-- Content Descriptions -->
+    <string name="collection_batch_content_description_back">Back Button</string>
+    <string name="collection_batch_content_description_submit_session">Submit Session</string>
+    <string name="collection_batch_content_description_add">Add Collection Batch</string>
+    <string name="collection_batch_content_description_close_dialog">Close dialog</string>
+    <string name="collection_batch_content_description_submit_icon">Submit Icon</string>
+    <string name="collection_batch_content_description_save_icon">Save Icon</string>
+    <string name="collection_batch_content_description_identity">Batch Identity Icon</string>
+    <string name="collection_batch_content_description_information">Batch Information Icon</string>
+    <string name="collection_batch_content_description_open">Open collection batch</string>
+
+</resources>

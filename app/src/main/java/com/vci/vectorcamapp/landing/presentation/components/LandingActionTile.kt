@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
 import com.vci.vectorcamapp.landing.presentation.util.LandingTestTags
@@ -57,7 +58,7 @@ fun LandingActionTile(
             ) {
                 Icon(
                     painter = icon,
-                    contentDescription = "Action Icon",
+                    contentDescription = stringResource(R.string.landing_content_description_action_icon),
                     tint = MaterialTheme.colors.icon,
                     modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
                 )
@@ -112,7 +113,7 @@ fun LandingActionTile(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_arrow_right),
-                    contentDescription = "Arrow Right",
+                    contentDescription = stringResource(R.string.landing_content_description_arrow),
                     tint = MaterialTheme.colors.icon,
                     modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                 )

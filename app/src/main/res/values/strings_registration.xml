@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="registration_title_register">Register</string>
+    <string name="registration_title_access_code_dialog">Enter Program Access Code</string>
+
+    <!-- Body -->
+    <string name="registration_body_select_program">Select your affiliated program</string>
+
+    <!-- Labels -->
+    <string name="registration_label_program">Program</string>
+    <string name="registration_label_collector_name">Collector Name</string>
+    <string name="registration_label_collector_title">Collector Title</string>
+    <string name="registration_label_last_trained">When were you last trained?</string>
+    <string name="registration_label_access_code">Access Code</string>
+
+    <!-- Actions -->
+    <string name="registration_action_confirm">Confirm</string>
+    <string name="registration_action_access_code_dialog_confirm">Confirm</string>
+    <string name="registration_action_access_code_dialog_cancel">Cancel</string>
+
+    <!-- Content Descriptions -->
+    <string name="registration_content_description_background">Mosquito background</string>
+    <string name="registration_content_description_hide_access_code">Hide access code</string>
+    <string name="registration_content_description_show_access_code">Show access code</string>
+
+</resources>

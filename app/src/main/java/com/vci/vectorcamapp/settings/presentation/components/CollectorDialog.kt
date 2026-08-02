@@ -13,6 +13,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
@@ -45,15 +47,15 @@ fun CollectorDialog(
         onDismissRequest = if (isDeleteDialogVisible) onDismissDeleteDialog else onDismiss,
         title = {
             Text(
-                text = if (isDeleteDialogVisible) "Delete Profile?"
-                else if (isEditDialogVisible) "Edit Profile"
-                else "Add Profile"
+                text = if (isDeleteDialogVisible) stringResource(R.string.settings_title_delete_profile)
+                else if (isEditDialogVisible) stringResource(R.string.settings_title_edit_profile)
+                else stringResource(R.string.settings_title_add_profile)
             )
         },
         text = {
             if (isDeleteDialogVisible) {
                 Text(
-                    text = "This will permanently delete this collector profile. This action cannot be undone.",
+                    text = stringResource(R.string.settings_body_delete_collector),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colors.textSecondary
                 )
@@ -61,7 +63,7 @@ fun CollectorDialog(
             else {
                 Column {
                     TextEntryField(
-                        label = "Collector Name",
+                        label = stringResource(R.string.settings_label_collector_name),
                         value = collector.name,
                         onValueChange = onNameChange,
                         singleLine = true,
@@ -71,7 +73,7 @@ fun CollectorDialog(
                     Spacer(modifier = Modifier.size(MaterialTheme.dimensions.spacingSmall))
 
                     DropdownField(
-                        label = "Collector Title",
+                        label = stringResource(R.string.settings_label_collector_title),
                         options = SettingsDropdownOptions.CollectorTitleOption.entries,
                         selectedOption = SettingsDropdownOptions.CollectorTitleOption.entries.firstOrNull { it.label == collector.title },
                         onOptionSelected = { option ->
@@ -92,7 +94,7 @@ fun CollectorDialog(
                     Spacer(modifier = Modifier.size(MaterialTheme.dimensions.spacingSmall))
 
                     DatePickerField(
-                        label = "When were you last trained?",
+                        label = stringResource(R.string.settings_label_last_trained),
                         selectedDateInMillis = collector.lastTrainedOn,
                         onDateSelected = onLastTrainedOnChange,
                         error = collectorLastTrainedOnError,
@@ -110,14 +112,14 @@ fun CollectorDialog(
                     contentColor = MaterialTheme.colors.buttonText
                 )
             ) {
-                Text(text = if (isDeleteDialogVisible) "Yes, Delete" else "Submit", style = MaterialTheme.typography.bodyMedium)
+                Text(text = if (isDeleteDialogVisible) stringResource(R.string.settings_action_collector_dialog_confirm_delete) else stringResource(R.string.settings_action_collector_dialog_submit), style = MaterialTheme.typography.bodyMedium)
             }
         },
         dismissButton = {
             if (isEditDialogVisible && !isDeleteDialogVisible) {
                 TextButton(onClick = onDelete) {
                     Text(
-                        text = "Delete",
+                        text = stringResource(R.string.settings_action_collector_dialog_delete),
                         color = MaterialTheme.colors.error,
                         fontSize = MaterialTheme.typography.bodyMedium.fontSize
                     )
@@ -125,7 +127,7 @@ fun CollectorDialog(
             } else {
                 TextButton(onClick = if (isDeleteDialogVisible) onDismissDeleteDialog else onDismiss) {
                     Text(
-                        text = "Cancel",
+                        text = stringResource(R.string.settings_action_collector_dialog_cancel),
                         color = MaterialTheme.colors.textSecondary,
                         fontSize = MaterialTheme.typography.bodyMedium.fontSize
                     )

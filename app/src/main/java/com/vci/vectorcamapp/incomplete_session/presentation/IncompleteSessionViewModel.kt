@@ -9,7 +9,7 @@ import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
-import com.vci.vectorcamapp.incomplete_session.logging.IncompleteSessionSentryLogger
+import com.vci.vectorcamapp.incomplete_session.logging.IncompleteSessionErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,11 +75,11 @@ class IncompleteSessionViewModel @Inject constructor(
                             _events.send(IncompleteSessionEvent.NavigateToIntakeScreen(sessionAndSite.session.type))
                         } else {
                             emitError(IncompleteSessionError.SESSION_NOT_FOUND)
-                            IncompleteSessionSentryLogger.logSessionNotFound(Exception(IncompleteSessionError.SESSION_NOT_FOUND.name), action.sessionId)
+                            IncompleteSessionErrorLogger.logSessionNotFound(Exception(IncompleteSessionError.SESSION_NOT_FOUND.name), action.sessionId)
                         }
                     } catch (e: Exception) {
                         emitError(IncompleteSessionError.SESSION_RETRIEVAL_FAILED)
-                        IncompleteSessionSentryLogger.logSessionRetrievalFailure(Exception(IncompleteSessionError.SESSION_RETRIEVAL_FAILED.name, e), action.sessionId)
+                        IncompleteSessionErrorLogger.logSessionRetrievalFailure(Exception(IncompleteSessionError.SESSION_RETRIEVAL_FAILED.name, e), action.sessionId)
                     }
                 }
 
@@ -96,7 +96,7 @@ class IncompleteSessionViewModel @Inject constructor(
                                 try {
                                     cameraRepository.deleteSavedImage(uri)
                                 } catch (e: Exception) {
-                                    IncompleteSessionSentryLogger.logImageDeletionFailure(e, action.sessionId, uri)
+                                    IncompleteSessionErrorLogger.logImageDeletionFailure(e, action.sessionId, uri)
                                 }
                             }
 
@@ -105,15 +105,15 @@ class IncompleteSessionViewModel @Inject constructor(
                                 Log.d("IncompleteSessionViewModel", "Successfully deleted session and images for ID: ${action.sessionId}")
                             } else {
                                 emitError(IncompleteSessionError.SESSION_DELETION_FAILED)
-                                IncompleteSessionSentryLogger.logSessionDeletionFailure(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name), action.sessionId)
+                                IncompleteSessionErrorLogger.logSessionDeletionFailure(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name), action.sessionId)
                             }
                         } else {
                             emitError(IncompleteSessionError.SESSION_NOT_FOUND)
-                            IncompleteSessionSentryLogger.logSessionNotFound(Exception(IncompleteSessionError.SESSION_NOT_FOUND.name), action.sessionId)
+                            IncompleteSessionErrorLogger.logSessionNotFound(Exception(IncompleteSessionError.SESSION_NOT_FOUND.name), action.sessionId)
                         }
                     } catch (e: Exception) {
                         emitError(IncompleteSessionError.SESSION_DELETION_FAILED)
-                        IncompleteSessionSentryLogger.logSessionDeletionFailure(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name, e), action.sessionId)
+                        IncompleteSessionErrorLogger.logSessionDeletionFailure(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name, e), action.sessionId)
                     } finally {
                         _state.value = _state.value.copy(deleteDialogSessionId = null)
                     }

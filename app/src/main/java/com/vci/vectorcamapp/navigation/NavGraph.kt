@@ -2,12 +2,14 @@ package com.vci.vectorcamapp.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFormEvent
 import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFormScreen
@@ -15,6 +17,8 @@ import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFo
 import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListEvent
 import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListScreen
 import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListViewModel
+import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
+import com.vci.vectorcamapp.core.logging.analytics.analyticsScreenName
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsEvent
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsScreen
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsViewModel
@@ -46,6 +50,11 @@ import com.vci.vectorcamapp.settings.presentation.SettingsViewModel
 @Composable
 fun NavGraph(startDestination: Destination) {
     val navController = rememberNavController()
+
+    val currentEntry by navController.currentBackStackEntryAsState()
+    LaunchedEffect(currentEntry) {
+        currentEntry?.analyticsScreenName()?.let { VectorCamAnalytics.screenView(it) }
+    }
 
     NavHost(
         navController = navController, startDestination = startDestination

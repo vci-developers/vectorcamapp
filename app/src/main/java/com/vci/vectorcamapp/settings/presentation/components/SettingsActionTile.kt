@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -59,7 +60,7 @@ fun SettingsActionTile(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_arrow_right),
-                        contentDescription = "Navigate",
+                        contentDescription = stringResource(R.string.settings_content_description_navigate),
                         tint = MaterialTheme.colors.icon,
                         modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                     )

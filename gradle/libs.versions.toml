@@ -1,5 +1,6 @@
 [versions]
 agp = "8.9.3"
+appcompat = "1.7.0"
 cameraCoreVersion = "1.5.2"
 coilCompose = "3.1.0"
 datastore = "1.2.0"
@@ -24,7 +25,6 @@ navigationCompose = "2.9.6"
 opencv = "4.9.0"
 playServicesLocation = "21.3.0"
 room = "2.7.1"
-sentry = "5.7.0"
 litert = "1.4.0"
 textRecognition = "16.0.1"
 truth = "1.4.4"
@@ -32,10 +32,13 @@ turbine = "1.2.1"
 uiTextGoogleFonts = "1.10.0"
 window = "1.5.1"
 workRuntimeKtx = "2.11.0"
+timber = "5.0.1"
 tusAndroidClient = "0.1.12"
 tusJavaClient = "0.5.1"
+lifecycleProcess = "2.10.0"
 
 [libraries]
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCoreVersion" }
 androidx-camera-extensions = { module = "androidx.camera:camera-extensions", version.ref = "cameraCoreVersion" }
 androidx-camera-compose = { module = "androidx.camera:camera-compose", version.ref = "cameraCoreVersion" }
@@ -97,12 +100,14 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 tus-android-client = { module = "io.tus.android.client:tus-android-client", version.ref = "tusAndroidClient" }
 tus-java-client = { module = "io.tus.java.client:tus-java-client", version.ref = "tusJavaClient" }
 litert = { module = "com.google.ai.edge.litert:litert", version.ref = "litert" }
 litert-gpu = { module = "com.google.ai.edge.litert:litert-gpu", version.ref = "litert" }
 litert-gpu-api = { module = "com.google.ai.edge.litert:litert-gpu-api", version.ref = "litert" }
 litert-support = { group = "com.google.ai.edge.litert", name = "litert-support", version.ref = "litert" }
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -113,4 +118,4 @@ google-gms-google-services = { id = "com.google.gms.google-services", version = 
 google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "3.0.6" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-sentry-android-gradle = { id = "io.sentry.android.gradle", version.ref = "sentry" }
+

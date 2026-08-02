@@ -1,15 +1,15 @@
 package com.vci.vectorcamapp.registration.logging
 
 import android.os.Build
-import com.vci.vectorcamapp.core.logging.Crashy
-import com.vci.vectorcamapp.core.logging.CrashyContext
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext
 
-object RegistrationSentryLogger {
+object RegistrationErrorLogger {
 
     fun logProgramNotFound(e: Exception) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
-            context = CrashyContext(
+            context = VectorCamCrashlyticsContext(
                 screen = "Registration",
                 feature = "ProgramSelection",
                 action = "program_not_found"
@@ -28,9 +28,9 @@ object RegistrationSentryLogger {
     }
 
     fun logDeviceRegistrationFailure(e: Exception, failedProgramId: Int) {
-        Crashy.exception(
+        VectorCamCrashlytics.exception(
             throwable = e,
-            context = CrashyContext(
+            context = VectorCamCrashlyticsContext(
                 screen = "Registration",
                 feature = "DeviceRegistration",
                 action = "device_registration_failure",
