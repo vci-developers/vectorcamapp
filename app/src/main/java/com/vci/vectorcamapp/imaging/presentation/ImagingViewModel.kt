@@ -42,6 +42,7 @@ import com.vci.vectorcamapp.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -490,44 +491,25 @@ class ImagingViewModel @Inject constructor(
                                             )
 
                                         if (clampedWidth > 0 && clampedHeight > 0) {
-                                            val croppedBitmap = Bitmap.createBitmap(
-                                                jpegBitmap,
-                                                clampedTopLeftX,
-                                                clampedTopLeftY,
-                                                clampedWidth,
-                                                clampedHeight
-                                            )
-
+                                            // Usability-study mode: bypass classifier. Simulate
+                                            // inference latency with a 3–5s delay, then derive a
+                                            // deterministic species label from the current
+                                            // specimenId so multiple images of the same specimen
+                                            // always yield the same species output.
                                             inferenceStartedAt = System.currentTimeMillis()
-                                            var (speciesResult, sexResult, abdomenStatusResult) = inferenceRepository.classifySpecimen(
-                                                croppedBitmap
-                                            )
+                                            val fakeInferenceDelayMs = Random.nextLong(3_000L, 5_001L)
+                                            delay(fakeInferenceDelayMs)
                                             val totalInferenceDurationMs = System.currentTimeMillis() - inferenceStartedAt
 
-                                            val speciesIndex =
-                                                speciesResult?.logits?.let { logits ->
-                                                    logits.indexOf(logits.max())
-                                                }
-                                            var sexIndex = sexResult?.logits?.let { logits ->
-                                                logits.indexOf(logits.max())
+                                            val specimenIdForSpecies = _state.value.currentSpecimen.id
+                                            val speciesRng = if (specimenIdForSpecies.isNotBlank()) {
+                                                Random(specimenIdForSpecies.hashCode())
+                                            } else {
+                                                Random
                                             }
-                                            var abdomenStatusIndex =
-                                                abdomenStatusResult?.logits?.let { logits ->
-                                                    logits.indexOf(logits.max())
-                                                }
-
-                                            if (speciesResult?.logits == null || speciesIndex == SpeciesLabel.NON_MOSQUITO.ordinal) {
-                                                sexResult = null
-                                                sexIndex = null
-                                            }
-                                            if (sexResult?.logits == null || sexIndex == SexLabel.MALE.ordinal) {
-                                                abdomenStatusResult = null
-                                                abdomenStatusIndex = null
-                                            }
-
-                                            val speciesLabel = speciesIndex?.let { SpeciesLabel.entries[it].label }
-                                            val sexLabel = sexIndex?.let { SexLabel.entries[it].label }
-                                            val abdomenLabel = abdomenStatusIndex?.let { AbdomenStatusLabel.entries[it].label }
+                                            val speciesLabel = SpeciesLabel.entries.random(speciesRng).label
+                                            val sexLabel: String? = null
+                                            val abdomenLabel: String? = null
 
                                             VectorCamAnalytics.logEvent(
                                                 "imaging_specimen_inference_completed",
@@ -536,10 +518,12 @@ class ImagingViewModel @Inject constructor(
                                                     "sex_label" to sexLabel,
                                                     "abdomen_status_label" to abdomenLabel,
                                                     "bbox_confidence" to captureDetectorResult.bboxConfidence,
-                                                    "species_inference_duration_ms" to speciesResult?.inferenceDuration,
-                                                    "sex_inference_duration_ms" to sexResult?.inferenceDuration,
-                                                    "abdomen_status_inference_duration_ms" to abdomenStatusResult?.inferenceDuration,
-                                                    "total_inference_duration_ms" to totalInferenceDurationMs
+                                                    "species_inference_duration_ms" to null,
+                                                    "sex_inference_duration_ms" to null,
+                                                    "abdomen_status_inference_duration_ms" to null,
+                                                    "total_inference_duration_ms" to totalInferenceDurationMs,
+                                                    "usability_study_mode" to true,
+                                                    "specimen_id_for_species" to specimenIdForSpecies
                                                 )
                                             )
 
@@ -558,13 +542,13 @@ class ImagingViewModel @Inject constructor(
                                                         bboxHeight = captureDetectorResult.bboxHeight,
                                                         bboxConfidence = captureDetectorResult.bboxConfidence,
                                                         bboxClassId = captureDetectorResult.bboxClassId,
-                                                        speciesLogits = speciesResult?.logits,
-                                                        sexLogits = sexResult?.logits,
-                                                        abdomenStatusLogits = abdomenStatusResult?.logits,
+                                                        speciesLogits = null,
+                                                        sexLogits = null,
+                                                        abdomenStatusLogits = null,
                                                         bboxDetectionDuration = captureDetectorResult.bboxDetectionDuration,
-                                                        speciesInferenceDuration = speciesResult?.inferenceDuration,
-                                                        sexInferenceDuration = sexResult?.inferenceDuration,
-                                                        abdomenStatusInferenceDuration = abdomenStatusResult?.inferenceDuration,
+                                                        speciesInferenceDuration = null,
+                                                        sexInferenceDuration = null,
+                                                        abdomenStatusInferenceDuration = null,
                                                     ),
                                                     previewInferenceResults = emptyList()
                                                 )
