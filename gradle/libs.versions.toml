@@ -119,6 +119,5 @@ google-gms-google-services = { id = "com.google.gms.google-services", version = 
 google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "3.0.6" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-sentry-android-gradle = { id = "io.sentry.android.gradle", version.ref = "sentry" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 
