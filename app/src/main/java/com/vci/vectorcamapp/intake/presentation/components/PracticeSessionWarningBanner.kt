@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -35,7 +36,7 @@ fun PracticeSessionWarningBanner(modifier: Modifier = Modifier) {
                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
             )
             Text(
-                text = "This is a practice session. Submitted data will not be considered routine surveillance data.",
+                text = stringResource(R.string.intake_body_practice_warning),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )

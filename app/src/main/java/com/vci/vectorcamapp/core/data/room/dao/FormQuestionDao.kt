@@ -23,4 +23,7 @@ interface FormQuestionDao {
         formId: Int,
         answerScope: FormQuestionScope?
     ): List<FormQuestionEntity>
+
+    @Query("SELECT formId FROM form_question WHERE id = :questionId")
+    suspend fun getFormIdByQuestionId(questionId: Int): Int?
 }

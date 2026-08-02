@@ -16,4 +16,6 @@ interface FormQuestionRepository {
         formId: Int,
         answerScope: FormQuestionScope?
     ): List<FormQuestion>
+
+    suspend fun getFormIdByQuestionId(questionId: Int): Int?
 }

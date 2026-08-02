@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Error Fallback -->
+    <string name="error_fallback">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Network Errors -->
+    <string name="network_error_request_timeout">The request timed out. Please check your connection and try again.</string>
+    <string name="network_error_too_many_requests">You have made too many requests in a short period. Please wait and try again later.</string>
+    <string name="network_error_no_internet">No internet connection. Please check your network settings and try again.</string>
+    <string name="network_error_server_error">An error occurred on the server. Please try again later.</string>
+    <string name="network_error_serialization_error">There was an issue processing the response. Please contact support if this continues.</string>
+    <string name="network_error_session_not_completed">This session hasn\'t been marked as complete yet.</string>
+    <string name="network_error_not_found">The requested item could not be found.</string>
+    <string name="network_error_conflict">There’s already an existing item with the same ID.</string>
+    <string name="network_error_client_error">The request was invalid. Please check your input and try again.</string>
+    <string name="network_error_tus_transient_error">tus Uploader transient error. Retry Pending.</string>
+    <string name="network_error_tus_permanent_error">tus Uploader permanent error. Please contact support if the issue persists.</string>
+    <string name="network_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Database Errors -->
+    <string name="roomdb_error_constraint_violation">Some of the information you entered was invalid or already exists. Please check and try again.</string>
+    <string name="roomdb_error_no_rows_affected">Could not save information. Please try again.</string>
+    <string name="roomdb_error_unknown_error">An unknown error occurred while saving data. Please contact support if this issue persists.</string>
+
+    <!-- Form Validation Errors -->
+    <string name="form_validation_error_blank_collector">Collector is required.</string>
+    <string name="form_validation_error_blank_district">District is required.</string>
+    <string name="form_validation_error_blank_village_name">Village name is required.</string>
+    <string name="form_validation_error_blank_house_number">House number is required.</string>
+    <string name="form_validation_error_blank_location_type_selection">A site selection for this location type is required.</string>
+    <string name="form_validation_error_blank_llin_type">This field is required when LLINs are available.</string>
+    <string name="form_validation_error_blank_llin_brand">This field is required when LLINs are available.</string>
+    <string name="form_validation_error_future_collection_date">Collection date cannot be in the future.</string>
+    <string name="form_validation_error_blank_collection_method">Collection method is required.</string>
+    <string name="form_validation_error_blank_specimen_condition">Specimen condition is required.</string>
+    <string name="form_validation_error_invalid_num_people_slept_under_llin_condition">This field is required when LLINs are available.</string>
+    <string name="form_validation_error_invalid_num_people_slept_in_house_condition">Number of people who live in this house is required.</string>
+    <string name="form_validation_error_invalid_num_llins_available">Number of LLINs available is required.</string>
+    <string name="form_validation_error_invalid_months_since_irs">This field is required when IRS is conducted.</string>
+    <string name="form_validation_error_invalid_form_answer">This field is required. Please provide a valid answer.</string>
+
+    <!-- Imaging Errors -->
+    <string name="imaging_error_capture_error">Could not take the photo. Please try again.</string>
+    <string name="imaging_error_save_error">Could not save the photo. Please try again.</string>
+    <string name="imaging_error_processing_error">Could not process the photo. Please try again.</string>
+    <string name="imaging_error_invalid_specimen_id">Specimen ID must be 3 letters followed by 3 numbers (e.g., ABC123).</string>
+    <string name="imaging_error_no_specimen_found">No specimen found in the photo. Please try again with a clearer image.</string>
+    <string name="imaging_error_multiple_specimens_found">Multiple specimens detected. Please make sure exactly one specimen is in frame.</string>
+    <string name="imaging_error_no_active_session">No active session found. Please start a new session before capturing images.</string>
+    <string name="imaging_error_model_initialization_failed">App could not load its brain. Try restarting the app.</string>
+    <string name="imaging_error_gpu_delegate_initialization_failed">Your device may not support faster image analysis. The app will still work, but may be slower.</string>
+    <string name="imaging_error_unknown_initialization_error">Something went wrong while preparing the session. Please restart or contact support.</string>
+    <string name="imaging_error_invalid_input_shape">The app ran into a problem analyzing the image. Please retake the photo.</string>
+    <string name="imaging_error_specimen_id_recognition_failed">Could not read the specimen ID. Make sure the label is clear and well-lit.</string>
+    <string name="imaging_error_specimen_id_used_in_another_collection_batch">This specimen ID is already used in another collection batch in this session.</string>
+    <string name="imaging_error_specimen_detection_failed">Could not detect a specimen in the image. Try taking a clearer photo.</string>
+    <string name="imaging_error_unknown_inference_error">An unknown error occurred during analysis. Please try again.</string>
+    <string name="imaging_error_unknown_error">An unknown error occurred. Please contact support if this issue persists.</string>
+
+    <!-- Main Errors -->
+    <string name="main_error_device_fetch_failed">Unable to load device information. Please try again.</string>
+    <string name="main_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Landing Errors -->
+    <string name="landing_error_program_not_found">Unable to find a valid program for this device.</string>
+    <string name="landing_error_session_not_found">Unable to find a saved session. Please start a new one.</string>
+
+    <!-- Intake Errors -->
+    <string name="intake_error_site_not_found">Site not found for selected district and sentinel site.</string>
+    <string name="intake_error_missing_program_id">Program ID is missing. Please contact support.</string>
+    <string name="intake_error_location_permission_denied">Permission error. Please enable location access in settings.</string>
+    <string name="intake_error_location_gps_timeout">GPS Timeout. Please move to a different location and try again.</string>
+    <string name="intake_error_missing_collector">Please select a registered collector.</string>
+    <string name="intake_error_collector_save_failed">Could not save collector. Please try again.</string>
+    <string name="intake_error_form_invalid">One or more fields in this form are invalid.</string>
+    <string name="intake_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Collection Batch Errors -->
+    <string name="collection_batch_form_error_form_invalid">One or more fields in this form are invalid.</string>
+    <string name="collection_batch_form_error_invalid_form_answer">This field is required. Please provide a valid answer.</string>
+    <string name="collection_batch_form_error_duplicate_identity">A collection batch with this identity already exists. Please change one of the identity fields.</string>
+    <string name="collection_batch_form_error_unknown_error">An unknown error occurred while saving this collection batch.</string>
+
+    <!-- Registration Errors -->
+    <string name="registration_error_program_not_found">Program not found. Please contact support.</string>
+    <string name="registration_error_invalid_program_access_code">Invalid access code. Please try again.</string>
+    <string name="registration_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Collector Validation Errors -->
+    <string name="collector_validation_error_blank_collector_title">Collector title is required.</string>
+    <string name="collector_validation_error_blank_collector_name">Collector name is required.</string>
+    <string name="collector_validation_error_invalid_collector_last_trained_on">Collector last trained on date is invalid.</string>
+
+    <!-- Incomplete Session Errors -->
+    <string name="incomplete_session_error_session_not_found">Session not found. Please try again.</string>
+    <string name="incomplete_session_error_session_retrieval_failed">Unable to retrieve session. Please try again.</string>
+    <string name="incomplete_session_error_session_deletion_failed">Unable to delete session.</string>
+    <string name="incomplete_session_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Complete Session Errors -->
+    <string name="complete_session_error_session_not_found">Could not load session details. Please try again.</string>
+    <string name="complete_session_error_site_not_found">Could not load site details. Please try again.</string>
+    <string name="complete_session_error_specimens_not_found">Could not load specimens. Please try again.</string>
+    <string name="complete_session_error_program_not_found">Could not load program details. Please try again or contact support if the issue persists.</string>
+    <string name="complete_session_error_form_not_found">Could not load form details. Please try again or contact support if the issue persists.</string>
+    <string name="complete_session_error_unknown_error">An unknown error occurred. Please try again or contact support if the issue persists.</string>
+
+    <!-- Settings Errors -->
+    <string name="settings_error_collector_save_failed">Could not save collector. Please try again.</string>
+    <string name="settings_error_collector_deletion_failed">Could not delete collector. Please try again.</string>
+    <string name="settings_error_data_sync_failed">Could not sync data. Please try again.</string>
+    <string name="settings_error_data_sync_in_progress_session_exist">Please complete all in progress sessions and try again.</string>
+
+    <!-- Upload Errors -->
+    <string name="upload_error_invalid_request">Invalid upload request. Check session ID and site ID.</string>
+    <string name="upload_error_invalid_session_id">Invalid session ID format.</string>
+    <string name="upload_error_device_session_not_found">Device or session not found.</string>
+    <string name="upload_error_program_not_found">Program not found.</string>
+    <string name="upload_error_session_not_found_server">Session not found on the server.</string>
+    <string name="upload_error_lost_connection">Lost internet connection while uploading.</string>
+    <string name="upload_error_unknown">An unknown error occurred during upload.</string>
+    <string name="upload_error_images_failed">Upload failed for one or more images.</string>
+
+</resources>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="collection_batch_title_screen">Lotes de recolección</string>
+    <string name="collection_batch_title_form">Formulario de lote de recolección</string>
+    <string name="collection_batch_title_identity">Identidad del lote</string>
+    <string name="collection_batch_title_information">Información del lote</string>
+    <string name="collection_batch_title_end_session">¿Finalizar sesión?</string>
+    <string name="collection_batch_title_confirm_action">Confirmar acción</string>
+
+    <!-- Body -->
+    <string name="collection_batch_body_subtitle">Crea y edita los lotes de recolección aquí</string>
+    <string name="collection_batch_body_form_subtitle">Completa la información a continuación</string>
+    <string name="collection_batch_body_empty">Aún no hay lotes de recolección.\nToca el botón + de abajo para agregar uno.</string>
+    <string name="collection_batch_body_save_or_submit">¿Deseas guardar esta sesión para más tarde o enviarla ahora?</string>
+    <string name="collection_batch_body_confirm_save">¿Seguro que deseas guardar la sesión y salir?</string>
+    <string name="collection_batch_body_confirm_submit">¿Seguro que deseas enviar la sesión?</string>
+    <string name="collection_batch_body_warning_zero">Advertencia: Estás a punto de enviar una sesión con cero lotes de recolección.</string>
+
+    <!-- Labels -->
+    <string name="collection_batch_label_batch">Lote %1$s</string>
+    <string name="collection_batch_label_specimen_count">Cantidad de especímenes: %1$d</string>
+    <string name="collection_batch_label_created">Creado: %1$s</string>
+
+    <!-- Actions -->
+    <string name="collection_batch_action_continue">Continuar a la captura de imágenes</string>
+    <string name="collection_batch_action_exit_dialog_submit">Enviar</string>
+    <string name="collection_batch_action_exit_dialog_confirm">Sí, confirmar</string>
+    <string name="collection_batch_action_exit_dialog_save">Guardar</string>
+    <string name="collection_batch_action_exit_dialog_back">Atrás</string>
+
+    <!-- Content Descriptions -->
+    <string name="collection_batch_content_description_back">Botón de retroceso</string>
+    <string name="collection_batch_content_description_submit_session">Enviar sesión</string>
+    <string name="collection_batch_content_description_add">Agregar lote de recolección</string>
+    <string name="collection_batch_content_description_close_dialog">Cerrar diálogo</string>
+    <string name="collection_batch_content_description_submit_icon">Ícono de enviar</string>
+    <string name="collection_batch_content_description_save_icon">Ícono de guardar</string>
+    <string name="collection_batch_content_description_identity">Ícono de identidad del lote</string>
+    <string name="collection_batch_content_description_information">Ícono de información del lote</string>
+    <string name="collection_batch_content_description_open">Abrir lote de recolección</string>
+
+</resources>

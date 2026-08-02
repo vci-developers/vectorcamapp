@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.collection_batch.form.presentation.components.CollectionBatchFormTile
 import com.vci.vectorcamapp.collection_batch.form.presentation.components.DuplicateIdentityWarningBanner
@@ -31,12 +32,12 @@ fun CollectionBatchFormScreen(
     val answerMap = state.formAnswersByQuestionId.mapValues { (_, answer) -> answer.value }
 
     ScreenHeader(
-        title = "Collection Batch Form",
-        subtitle = "Fill out the information below",
+        title = stringResource(R.string.collection_batch_title_form),
+        subtitle = stringResource(R.string.collection_batch_body_form_subtitle),
         leadingIcon = {
             Icon(
                 painter = painterResource(R.drawable.ic_arrow_left),
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.collection_batch_content_description_back),
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeLarge)
@@ -48,9 +49,9 @@ fun CollectionBatchFormScreen(
         if (identityQuestions.isNotEmpty()) {
             item {
                 CollectionBatchFormTile(
-                    title = "Batch Identity",
+                    title = stringResource(R.string.collection_batch_title_identity),
                     iconPainter = painterResource(R.drawable.ic_info),
-                    iconDescription = "Batch Identity Icon",
+                    iconDescription = stringResource(R.string.collection_batch_content_description_identity),
                 ) {
                     identityQuestions.forEach { question ->
                         if (FormQuestionPrerequisiteEvaluator.evaluate(
@@ -81,9 +82,9 @@ fun CollectionBatchFormScreen(
         if (otherQuestions.isNotEmpty()) {
             item {
                 CollectionBatchFormTile(
-                    title = "Batch Information",
+                    title = stringResource(R.string.collection_batch_title_information),
                     iconPainter = painterResource(R.drawable.ic_clipboard),
-                    iconDescription = "Batch Information Icon",
+                    iconDescription = stringResource(R.string.collection_batch_content_description_information),
                 ) {
                     otherQuestions.forEach { question ->
                         if (FormQuestionPrerequisiteEvaluator.evaluate(
@@ -109,7 +110,7 @@ fun CollectionBatchFormScreen(
 
         item {
             ActionButton(
-                label = "Continue to Imaging",
+                label = stringResource(R.string.collection_batch_action_continue),
                 onClick = { onAction(CollectionBatchFormAction.SubmitSessionUnitForm) },
                 modifier = Modifier.padding(
                     horizontal = MaterialTheme.dimensions.paddingMedium,

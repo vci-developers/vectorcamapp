@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="imaging_title_leave">¿Salir de la captura de imágenes?</string>
+    <string name="imaging_title_exit">¿Salir de la sesión?</string>
+    <string name="imaging_title_confirm_action">Confirmar acción</string>
+    <string name="imaging_title_further_processing">Espécimen seleccionado para procesamiento adicional</string>
+
+    <!-- Body -->
+    <string name="imaging_body_return_prompt">¿Deseas volver a tus lotes de recolección?</string>
+    <string name="imaging_body_save_or_submit_prompt">¿Deseas guardar esta sesión para más tarde o enviarla ahora?</string>
+    <string name="imaging_body_confirm_save">¿Seguro que deseas guardar la sesión y salir?</string>
+    <string name="imaging_body_confirm_submit">¿Seguro que deseas enviar la sesión?</string>
+    <string name="imaging_body_confirm_return">¿Seguro que deseas volver a tus lotes de recolección?</string>
+    <string name="imaging_body_warning_zero_specimens">Advertencia: Estás a punto de enviar una sesión con cero especímenes.</string>
+    <string name="imaging_body_warning_practice">Advertencia: Esta es una sesión de práctica. Los datos enviados no se considerarán datos de vigilancia de rutina.</string>
+    <string name="imaging_body_further_processing">Empaqueta el espécimen por separado para su procesamiento adicional en el laboratorio antes de continuar.</string>
+    <string name="imaging_body_practice_warning">Sesión de práctica: Los datos no se registrarán.</string>
+
+    <!-- Labels -->
+    <string name="imaging_label_specimen_of_total">Espécimen %1$d de %2$d</string>
+    <string name="imaging_label_image_badge">%1$d de %2$d</string>
+    <string name="imaging_label_specimen_number">Espécimen %1$d</string>
+    <string name="imaging_label_specimen_id">ID del espécimen</string>
+    <string name="imaging_label_specimen_id_value">ID del espécimen: %1$s</string>
+    <string name="imaging_label_species">Especie: %1$s</string>
+    <string name="imaging_label_sex">Sexo: %1$s</string>
+    <string name="imaging_label_abdomen_status">Estado del abdomen: %1$s</string>
+    <string name="imaging_label_captured_at">Capturado el: %1$s</string>
+    <string name="imaging_label_packaging_confirmation">He empaquetado este espécimen para su procesamiento adicional</string>
+    <string name="imaging_label_run_inference">Ejecutar inferencia del modelo</string>
+    <string name="imaging_label_specimen_id_placeholder">El ID del espécimen aparecerá aquí</string>
+    <string name="imaging_label_pack_for_processing">Empaqueta este espécimen para su procesamiento adicional</string>
+    <string name="imaging_label_bounding_box">espécimen %1$s</string>
+
+    <!-- Actions -->
+    <string name="imaging_action_exit_dialog_submit">Enviar</string>
+    <string name="imaging_action_exit_dialog_confirm">Sí, confirmar</string>
+    <string name="imaging_action_exit_dialog_return">Volver</string>
+    <string name="imaging_action_exit_dialog_save">Guardar</string>
+    <string name="imaging_action_exit_dialog_back">Atrás</string>
+    <string name="imaging_action_further_processing_continue">Continuar</string>
+    <string name="imaging_action_save">Guardar</string>
+    <string name="imaging_action_capture">Capturar</string>
+
+    <!-- Content Descriptions -->
+    <string name="imaging_content_description_close_dialog">Cerrar diálogo</string>
+    <string name="imaging_content_description_submit">Ícono de enviar</string>
+    <string name="imaging_content_description_return">Ícono de volver</string>
+    <string name="imaging_content_description_save">Ícono de guardar</string>
+    <string name="imaging_content_description_info">Ícono de información</string>
+    <string name="imaging_content_description_delete">Eliminar</string>
+    <string name="imaging_content_description_back_to_batches">Volver a los lotes de recolección</string>
+    <string name="imaging_content_description_exit">Salir</string>
+    <string name="imaging_content_description_mosquito">Mosquito</string>
+    <string name="imaging_content_description_previous">Ícono de anterior</string>
+    <string name="imaging_content_description_next">Ícono de siguiente</string>
+
+</resources>

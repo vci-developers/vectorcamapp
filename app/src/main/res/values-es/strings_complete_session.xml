@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="complete_session_title_screen">Sesiones completadas</string>
+    <string name="complete_session_title_details_screen">Información de la sesión</string>
+    <string name="complete_session_title_session_status">Estado de la sesión</string>
+    <string name="complete_session_title_general_info">Información general</string>
+    <string name="complete_session_title_geographical_info">Información geográfica</string>
+    <string name="complete_session_title_surveillance_form">Formulario de vigilancia</string>
+    <string name="complete_session_title_additional_notes">Notas adicionales</string>
+    <string name="complete_session_title_card">Sesión completada el\n%1$s</string>
+
+    <!-- Body -->
+    <string name="complete_session_body_subtitle">Toca una sesión para ver más detalles</string>
+    <string name="complete_session_body_empty">No se encontraron sesiones completadas.</string>
+    <string name="complete_session_body_no_results">No se encontraron sesiones coincidentes.</string>
+    <string name="complete_session_body_no_specimens">No se capturaron especímenes durante esta sesión.</string>
+    <string name="complete_session_body_no_matching_specimens">No se encontraron especímenes coincidentes.</string>
+    <string name="complete_session_body_no_responses">No se registraron respuestas.</string>
+    <string name="complete_session_body_no_responses_batch">No se registraron respuestas para este lote.</string>
+
+    <!-- Labels -->
+    <string name="complete_session_label_id">ID: %1$s</string>
+    <string name="complete_session_label_created_at">Creado el: %1$s</string>
+    <string name="complete_session_label_completed_at">Completado el: %1$s</string>
+    <string name="complete_session_label_session_type">Tipo de sesión: %1$s</string>
+    <string name="complete_session_label_collector">Recolector: %1$s, %2$s</string>
+    <string name="complete_session_label_hardware_id">ID de hardware: %1$s</string>
+    <string name="complete_session_label_not_provided">No proporcionado</string>
+    <string name="complete_session_label_collection_date">Fecha de recolección: %1$s</string>
+    <string name="complete_session_label_collection_method">Método de recolección: %1$s</string>
+    <string name="complete_session_label_specimen_condition">Condición del espécimen: %1$s</string>
+    <string name="complete_session_label_district">Distrito: %1$s</string>
+    <string name="complete_session_label_sub_county">Subcondado: %1$s</string>
+    <string name="complete_session_label_parish">Parroquia: %1$s</string>
+    <string name="complete_session_label_village_name">Nombre de la aldea: %1$s</string>
+    <string name="complete_session_label_house_number">Número de casa: %1$s</string>
+    <string name="complete_session_label_health_center">Centro de salud más cercano: %1$s</string>
+    <string name="complete_session_label_detail">%1$s: %2$s</string>
+    <string name="complete_session_label_num_people_house">Número de personas que durmieron en la casa: %1$s</string>
+    <string name="complete_session_label_irs_conducted">¿Se realizó rociado residual intradomiciliario (IRS)?: %1$s</string>
+    <string name="complete_session_label_yes">Sí</string>
+    <string name="complete_session_label_no">No</string>
+    <string name="complete_session_label_months_since_irs">Meses desde el IRS: %1$s</string>
+    <string name="complete_session_label_num_llins">Número de mosquiteros tratados con insecticida de larga duración (LLIN) disponibles: %1$s</string>
+    <string name="complete_session_label_llin_type">Tipo de LLIN: %1$s</string>
+    <string name="complete_session_label_llin_brand">Marca de LLIN: %1$s</string>
+    <string name="complete_session_label_num_people_llin">Número de personas que durmieron bajo un LLIN: %1$s</string>
+    <string name="complete_session_label_notes">Notas:</string>
+    <string name="complete_session_label_batch">Lote %1$s</string>
+    <string name="complete_session_label_batch_name">Lote: %1$s</string>
+    <string name="complete_session_label_specimen_id">ID del espécimen: %1$s</string>
+    <string name="complete_session_label_species">Especie: %1$s</string>
+    <string name="complete_session_label_sex">Sexo: %1$s</string>
+    <string name="complete_session_label_abdomen_status">Estado del abdomen: %1$s</string>
+    <string name="complete_session_label_captured_on">Capturado el: %1$s</string>
+    <string name="complete_session_label_upload_progress">Progreso de la subida</string>
+    <string name="complete_session_label_metadata_upload_status">"Estado de subida de metadatos: "</string>
+    <string name="complete_session_label_image_upload_status">"Estado de subida de imágenes: "</string>
+    <string name="complete_session_label_image_badge">%1$d de %2$d</string>
+
+    <!-- Status -->
+    <string name="complete_session_status_completed">Completado</string>
+    <string name="complete_session_status_not_started">No iniciado</string>
+    <string name="complete_session_status_metadata_progress">%1$d / %2$d metadatos</string>
+    <string name="complete_session_status_image_progress">%1$d / %2$d imágenes</string>
+
+    <!-- Placeholders -->
+    <string name="complete_session_placeholder_search">Busca por recolector, distrito, tipo de sesión, etc.</string>
+    <string name="complete_session_placeholder_search_specimens">Busca por ID de espécimen, especie, etc.</string>
+
+    <!-- Content Descriptions -->
+    <string name="complete_session_content_description_back">Botón de retroceso</string>
+    <string name="complete_session_content_description_cloud_upload">Subir a la nube</string>
+    <string name="complete_session_content_description_information">Información</string>
+    <string name="complete_session_content_description_pin">Marcador</string>
+    <string name="complete_session_content_description_clipboard">Portapapeles</string>
+    <string name="complete_session_content_description_notes">Notas</string>
+    <string name="complete_session_content_description_collection_batch">Lote de recolección</string>
+    <string name="complete_session_content_description_arrow">Flecha derecha</string>
+    <string name="complete_session_content_description_person">Persona</string>
+    <string name="complete_session_content_description_map">Mapa</string>
+    <string name="complete_session_content_description_navigation">Navegación</string>
+    <string name="complete_session_content_description_house">Casa</string>
+    <string name="complete_session_content_description_hospital">Hospital</string>
+    <string name="complete_session_content_description_location">Ubicación</string>
+    <string name="complete_session_content_description_uploading">Subiendo actualmente</string>
+    <string name="complete_session_content_description_refresh">Actualizar</string>
+    <string name="complete_session_content_description_upload">Subir</string>
+    <string name="complete_session_content_description_specimen_image">Imagen del espécimen: %1$s</string>
+    <string name="complete_session_content_description_mosquito">Mosquito</string>
+
+</resources>

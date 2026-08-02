@@ -17,8 +17,8 @@ import com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFo
 import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListEvent
 import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListScreen
 import com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListViewModel
-import com.vci.vectorcamapp.core.logging.VectorCamAnalytics
-import com.vci.vectorcamapp.core.logging.analyticsScreenName
+import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
+import com.vci.vectorcamapp.core.logging.analytics.analyticsScreenName
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsEvent
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsScreen
 import com.vci.vectorcamapp.complete_session.details.presentation.CompleteSessionDetailsViewModel

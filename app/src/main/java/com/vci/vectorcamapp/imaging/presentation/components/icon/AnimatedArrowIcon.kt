@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import com.vci.vectorcamapp.R
@@ -55,7 +56,7 @@ fun AnimatedArrowIcon(
         painter = painterResource(
             id = if (isLeft) R.drawable.ic_arrow_left else R.drawable.ic_arrow_right
         ),
-        contentDescription = if (isLeft) "Previous Icon" else "Next Icon",
+        contentDescription = if (isLeft) stringResource(R.string.imaging_content_description_previous) else stringResource(R.string.imaging_content_description_next),
         tint = MaterialTheme.colors.icon,
         modifier = modifier
             .offset { IntOffset((if (isLeft) -arrowOffsetX else arrowOffsetX).toInt(), 0) }

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="intake_title_screen">%1$s Intake</string>
+    <string name="intake_title_general_info">General Information</string>
+    <string name="intake_title_collector_not_found">Collector not found</string>
+    <string name="intake_title_collection_methods">Collection Methods</string>
+    <string name="intake_title_cdc_light_trap">CDC Light Trap</string>
+    <string name="intake_title_human_landing_catch">Human Landing Catch</string>
+    <string name="intake_title_pyrethrum_spray_catch">Pyrethrum Spray Catch</string>
+    <string name="intake_title_geographical_info">Geographical Information</string>
+    <string name="intake_title_surveillance_form">Surveillance Form</string>
+    <string name="intake_title_additional_notes">Additional Notes</string>
+
+    <!-- Body -->
+    <string name="intake_body_subtitle">Please fill out the information below</string>
+    <string name="intake_body_collector_not_found">The collector associated with this session isn’t in your current list. You can select an existing collector or register this one.</string>
+    <string name="intake_body_method_locked">Cannot change collection method — collection batches have already been created for this session.</string>
+    <string name="intake_body_cdc_light_trap">A battery powered trap that uses a light to attract and collect mosquitoes at night.</string>
+    <string name="intake_body_human_landing_catch">A person exposes part of their body and collects mosquitoes that land on the skin.</string>
+    <string name="intake_body_pyrethrum_spray_catch">An indoor collection method that uses insecticide spray to knock down resting mosquitoes onto a sheet.</string>
+    <string name="intake_body_location_error">Could not get location: %1$s</string>
+    <string name="intake_body_getting_location">Getting location…</string>
+    <string name="intake_body_practice_warning">This is a practice session. Submitted data will not be considered routine surveillance data.</string>
+
+    <!-- Labels -->
+    <string name="intake_label_collector">Collector</string>
+    <string name="intake_label_name">Name</string>
+    <string name="intake_label_title">Title</string>
+    <string name="intake_label_hardware_id">Hardware ID</string>
+    <string name="intake_label_collection_date">Collection Date</string>
+    <string name="intake_label_collection_method">Collection Method</string>
+    <string name="intake_label_other_collection_method">Other Collection Method</string>
+    <string name="intake_label_specimen_condition">Specimen Condition</string>
+    <string name="intake_label_other_specimen_condition">Other Specimen Condition</string>
+    <string name="intake_label_district">District</string>
+    <string name="intake_label_village_name">Village Name</string>
+    <string name="intake_label_house_number">House Number</string>
+    <string name="intake_label_latitude">Latitude: %1$s</string>
+    <string name="intake_label_longitude">Longitude: %1$s</string>
+    <string name="intake_label_num_people_house">Number of People Living in the House</string>
+    <string name="intake_label_irs_conducted">Was IRS conducted in this household?</string>
+    <string name="intake_label_months_since_irs">Months Since IRS</string>
+    <string name="intake_label_num_llins">Number of LLINs Available</string>
+    <string name="intake_label_llin_type">LLIN Type</string>
+    <string name="intake_label_llin_brand">LLIN Brand</string>
+    <string name="intake_label_num_people_llin">Number of People who Slept Under LLIN</string>
+    <string name="intake_label_notes">Notes</string>
+
+    <!-- Placeholders -->
+    <string name="intake_placeholder_notes">1000 character limit...</string>
+
+    <!-- Actions -->
+    <string name="intake_action_register_collector">Register Missing Collector</string>
+    <string name="intake_action_learn_more_methods">Tap to learn more about collection methods</string>
+    <string name="intake_action_retry_location">Retry Location</string>
+    <string name="intake_action_begin_imaging">Begin %1$s Imaging</string>
+
+    <!-- Content Descriptions -->
+    <string name="intake_content_description_back">Back Button</string>
+    <string name="intake_content_description_general_info">General Information Icon</string>
+    <string name="intake_content_description_missing_collector">Missing collector</string>
+    <string name="intake_content_description_cdc_light_trap">CDC Light Trap Icon</string>
+    <string name="intake_content_description_human_landing_catch">Human Landing Catch Icon</string>
+    <string name="intake_content_description_pyrethrum_spray_catch">Pyrethrum Spray Catch</string>
+    <string name="intake_content_description_geographical_info">Geographical Information Icon</string>
+    <string name="intake_content_description_surveillance_form">Surveillance Form Icon</string>
+    <string name="intake_content_description_additional_notes">Additional Notes Icon</string>
+
+</resources>
