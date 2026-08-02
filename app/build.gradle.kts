@@ -97,8 +97,8 @@ android {
         create("kenya") {
             dimension = "region"
             applicationIdSuffix = ".kenya"
-            versionCode = 4005
-            versionName = "1.0.5"
+            versionCode = 4006
+            versionName = "1.0.6"
             
             buildConfigField("String", "REGION", "\"kenya\"")
             buildConfigField("String", "REGION_CODE", "\"KE\"")
@@ -110,8 +110,8 @@ android {
         create("ghana") {
             dimension = "region"
             applicationIdSuffix = ".ghana"
-            versionCode = 5003
-            versionName = "1.0.3"
+            versionCode = 5004
+            versionName = "1.0.4"
             
             buildConfigField("String", "REGION", "\"ghana\"")
             buildConfigField("String", "REGION_CODE", "\"GH\"")
