@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
@@ -46,13 +47,13 @@ fun SplashScreen(
         ) {
             Image(
                 painter = painterResource(R.drawable.splash_logo),
-                contentDescription = "Splash logo",
+                contentDescription = stringResource(R.string.splash_content_description_logo),
                 modifier = Modifier
                     .width(screenWidthFraction(0.8f))
                     .wrapContentHeight()
             )
             Text(
-                text = "Democratizing Vector Surveillance",
+                text = stringResource(R.string.splash_body_tagline),
                 style = TextStyle(
                     fontSize = MaterialTheme.typography.headlineSmall.fontSize,
                     color = MaterialTheme.colors.textPrimary,

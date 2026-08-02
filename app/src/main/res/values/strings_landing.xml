@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="landing_title_welcome">Welcome to VectorCam!</string>
+    <string name="landing_title_section_imaging">Imaging</string>
+    <string name="landing_title_section_library">Library</string>
+    <string name="landing_title_new_surveillance">New Surveillance Session</string>
+    <string name="landing_title_incomplete_sessions">View Sessions in Progress</string>
+    <string name="landing_title_complete_sessions">View Complete Sessions</string>
+    <string name="landing_title_resume_dialog">Resume unfinished session?</string>
+
+    <!-- Body -->
+    <string name="landing_body_new_surveillance">Begin a new household visit and capture mosquito images.</string>
+    <string name="landing_body_incomplete_sessions">Resume and complete any unfinished sessions.</string>
+    <string name="landing_body_complete_sessions">Review fully completed sessions and uploaded data.</string>
+    <string name="landing_body_resume_dialog">You have a surveillance session in progress. Resume where you left off?</string>
+
+    <!-- Actions -->
+    <string name="landing_action_resume_dialog_confirm">Yes, resume</string>
+    <string name="landing_action_resume_dialog_dismiss">No, start new</string>
+
+    <!-- Labels -->
+    <string name="landing_label_program">Program: %1$s</string>
+
+    <!-- Content Descriptions -->
+    <string name="landing_content_description_settings">Settings Icon</string>
+    <string name="landing_content_description_action_icon">Action Icon</string>
+    <string name="landing_content_description_arrow">Arrow Right</string>
+
+</resources>

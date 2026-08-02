@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Upload Status -->
+    <string name="upload_status_completed">Completado</string>
+    <string name="upload_status_in_progress">En curso</string>
+    <string name="upload_status_not_started">No iniciado</string>
+    <string name="upload_status_retry">Reintentar</string>
+
+    <!-- Session Type -->
+    <string name="session_type_surveillance">Vigilancia</string>
+    <string name="session_type_data_collection">Recolección de datos</string>
+    <string name="session_type_practice">Práctica</string>
+
+    <!-- Search Help -->
+    <string name="search_title_help">Cómo funciona la búsqueda</string>
+    <string name="search_body_space_rule">• Pon un ESPACIO entre palabras cuando quieras resultados que incluyan todas las palabras.</string>
+    <string name="search_body_comma_rule">• Pon una COMA entre grupos cuando cualquiera de los grupos sea válido.</string>
+    <string name="search_label_examples">Ejemplos:</string>
+    <string name="search_body_example_1">• Anopheles Male → debe incluir Anopheles y Male.</string>
+    <string name="search_body_example_2">• Anopheles Male, Mansonia Female → ya sea (Anopheles y Male) o (Mansonia y Female).</string>
+    <string name="search_action_learn_more">Toca para obtener más información sobre la búsqueda</string>
+
+    <!-- Shared Component Content Descriptions -->
+    <string name="core_content_description_calendar">Calendario</string>
+    <string name="core_content_description_collapse_dropdown">Contraer menú desplegable</string>
+    <string name="core_content_description_expand_dropdown">Expandir menú desplegable</string>
+    <string name="core_content_description_tooltip">Ícono de ayuda</string>
+    <string name="core_content_description_pill">Ícono de etiqueta</string>
+    <string name="core_content_description_error">Error</string>
+    <string name="core_content_description_dismiss">Ícono para descartar</string>
+
+    <!-- Capture Animation -->
+    <string name="capture_animation_label_capturing">Capturando… No te muevas</string>
+
+    <!-- Upload Notifications -->
+    <string name="upload_notification_session_title">Sesión del %1$s</string>
+    <string name="upload_notification_preparing">Preparando la subida de %1$d imágenes…</string>
+    <string name="upload_notification_verifying">Verificando...</string>
+    <string name="upload_notification_uploading_image">Subiendo imagen %1$d de %2$d</string>
+    <string name="upload_notification_complete">Subida completada</string>
+    <string name="upload_notification_error">Error de subida</string>
+    <string name="upload_notification_summary">%1$s: %2$d de %3$d imágenes subidas.</string>
+    <string name="upload_notification_registering">Registrando dispositivo y sesión...</string>
+    <string name="upload_notification_uploading_metadata">Subiendo metadatos del espécimen %1$s</string>
+    <string name="upload_notification_specimen_progress">Espécimen %1$d de %2$d</string>
+    <string name="upload_notification_specimen_image_progress">Espécimen %1$d de %2$d\nImagen %3$d de %4$d</string>
+    <string name="upload_notification_retrying">Reintentando la subida...</string>
+    <string name="upload_notification_failed">Subida fallida</string>
+
+    <!-- Upload Service -->
+    <string name="upload_service_channel_name">Servicio de subida</string>
+    <string name="upload_service_channel_description">Mantiene la subida de datos e imágenes en segundo plano</string>
+    <string name="upload_service_title">Subiendo datos de la sesión</string>
+    <string name="upload_service_preparing">Preparando la subida…</string>
+    <string name="upload_service_waiting">Esperando conexión de red…</string>
+    <string name="upload_service_running">La subida se está ejecutando en segundo plano…</string>
+
+</resources>

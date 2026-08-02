@@ -176,6 +176,7 @@ android {
 dependencies {
     // Core Android Libraries
     implementation(libs.androidx.core.ktx) // Kotlin extensions for Android core libraries
+    implementation(libs.androidx.appcompat) // AppCompat for language support
     implementation(libs.androidx.lifecycle.runtime.ktx) // Lifecycle-aware components
     implementation(libs.androidx.activity.compose) // Compose integration with activities
 

@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
@@ -58,7 +59,7 @@ fun PermissionScreen(
         ) {
             Image(
                 painter = painterResource(R.drawable.permission_background),
-                contentDescription = "Mosquito background",
+                contentDescription = stringResource(R.string.permission_content_description_background),
                 contentScale = ContentScale.Fit,
                 modifier = modifier
                     .padding(horizontal = MaterialTheme.dimensions.paddingLarge)
@@ -70,10 +71,10 @@ fun PermissionScreen(
 
             Text(
                 text = when {
-                    !state.allGranted -> "Permissions Required"
-                    !state.isGpsEnabled -> "GPS Required"
-                    !state.isAutoTimeEnabled -> "Automatic Date & Time Required"
-                    else -> "Permissions Required"
+                    !state.allGranted -> stringResource(R.string.permission_title_permissions_required)
+                    !state.isGpsEnabled -> stringResource(R.string.permission_title_gps_required)
+                    !state.isAutoTimeEnabled -> stringResource(R.string.permission_title_auto_time_required)
+                    else -> stringResource(R.string.permission_title_permissions_required)
                 },
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
@@ -86,14 +87,10 @@ fun PermissionScreen(
 
             Text(
                 text = when {
-                    !state.allGranted ->
-                        "To work properly, this app needs access to your camera, location, and notifications. One or more of these permissions are currently disabled. Please enable them in settings to continue."
-                    !state.isGpsEnabled ->
-                        "To work properly, this app needs GPS location services enabled. Please enable GPS in settings to continue."
-                    !state.isAutoTimeEnabled ->
-                        "To keep timestamps accurate, this app requires automatic date and time (internet time). Please enable it in your device settings to continue."
-                    else ->
-                        "To work properly, this app needs access to your camera, location, and notifications. One or more of these permissions are currently disabled. Please enable them in settings to continue."
+                    !state.allGranted -> stringResource(R.string.permission_body_required)
+                    !state.isGpsEnabled -> stringResource(R.string.permission_body_gps_required)
+                    !state.isAutoTimeEnabled -> stringResource(R.string.permission_body_auto_time_required)
+                    else -> stringResource(R.string.permission_body_required)
                 },
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colors.textSecondary,
@@ -113,36 +110,36 @@ fun PermissionScreen(
                 isVisible = state.isPermissionTooltipVisible,
                 onClick = { onAction(MainAction.ShowPermissionTooltipDialog) },
                 onDismiss = { onAction(MainAction.HidePermissionTooltipDialog) },
-                buttonText = "Tap to learn more about app permissions"
+                buttonText = stringResource(R.string.permission_action_learn_more)
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
                     modifier = Modifier.testTag(PermissionTestTags.PERMISSION_TOOLTIP_CONTENT)
                 ) {
                     Text(
-                        text = "App Permissions",
+                        text = stringResource(R.string.permission_title_tooltip),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colors.textPrimary,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = MaterialTheme.dimensions.paddingSmall)
                     )
                     PermissionTooltipRow(
-                        title = "Camera Permission",
-                        description = "Required to capture detailed images of mosquito specimens for accurate identification and analysis.",
+                        title = stringResource(R.string.permission_title_camera),
+                        description = stringResource(R.string.permission_body_camera),
                         iconPainter = painterResource(id = R.drawable.ic_camera),
-                        iconDescription = "Camera",
+                        iconDescription = stringResource(R.string.permission_content_description_camera),
                     )
                     PermissionTooltipRow(
-                        title = "Location Permission",
-                        description = "Needed to log exact collection sites and associate each specimen with its geographic origin for field tracking.",
+                        title = stringResource(R.string.permission_title_location),
+                        description = stringResource(R.string.permission_body_location),
                         iconPainter = painterResource(id = R.drawable.ic_pin),
-                        iconDescription = "Location"
+                        iconDescription = stringResource(R.string.permission_content_description_location)
                     )
                     PermissionTooltipRow(
-                        title = "Notification Permission",
-                        description = "Allows the app to show upload progress, completion alerts, and other key background status updates.",
+                        title = stringResource(R.string.permission_title_notification),
+                        description = stringResource(R.string.permission_body_notification),
                         iconPainter = painterResource(id = R.drawable.ic_notification),
-                        iconDescription = "Notification"
+                        iconDescription = stringResource(R.string.permission_content_description_notification)
                     )
                 }
             }
@@ -156,21 +153,21 @@ fun PermissionScreen(
                 if (!state.allGranted) {
                     ActionButton(
                         onClick = { onAction(MainAction.OpenAppSettings) },
-                        label = "Grant Permissions",
+                        label = stringResource(R.string.permission_action_grant),
                         modifier = Modifier.testTag(PermissionTestTags.GRANT_PERMISSIONS_BUTTON)
                     )
                 }
                 if (!state.isGpsEnabled) {
                     ActionButton(
                         onClick = { onAction(MainAction.OpenLocationSettings) },
-                        label = "Enable GPS",
+                        label = stringResource(R.string.permission_action_enable_gps),
                         modifier = Modifier.testTag(PermissionTestTags.ENABLE_GPS_BUTTON)
                     )
                 }
                 if (!state.isAutoTimeEnabled) {
                     ActionButton(
                         onClick = { onAction(MainAction.OpenDateSettings) },
-                        label = "Enable Automatic Date & Time",
+                        label = stringResource(R.string.permission_action_enable_auto_time),
                         modifier = Modifier.testTag(PermissionTestTags.ENABLE_AUTO_TIME_BUTTON)
                     )
                 }

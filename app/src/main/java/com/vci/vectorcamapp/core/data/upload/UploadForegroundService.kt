@@ -54,7 +54,6 @@ class UploadForegroundService : Service() {
 
         private const val NOTIFICATION_ID = 9001
         private const val CHANNEL_ID = "upload_foreground_service_channel"
-        private const val CHANNEL_NAME = "Upload Service"
 
         fun start(context: Context) {
             ContextCompat.startForegroundService(
@@ -70,7 +69,7 @@ class UploadForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIFICATION_ID, buildNotification("Preparing upload\u2026"), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        startForeground(NOTIFICATION_ID, buildNotification(getString(R.string.upload_service_preparing)), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         startObservingWork()
         return START_STICKY
     }
@@ -113,8 +112,8 @@ class UploadForegroundService : Service() {
 
     private fun updateNotification(state: UploadState) {
         val text = when (state) {
-            UploadState.WAITING -> "Waiting for network connection\u2026"
-            UploadState.UPLOADING -> "Upload is running in the background\u2026"
+            UploadState.WAITING -> getString(R.string.upload_service_waiting)
+            UploadState.UPLOADING -> getString(R.string.upload_service_running)
             UploadState.IDLE -> return
         }
         notificationManager.notify(NOTIFICATION_ID, buildNotification(text))
@@ -137,7 +136,7 @@ class UploadForegroundService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Uploading session data")
+            .setContentTitle(getString(R.string.upload_service_title))
             .setContentText(text)
             .setSmallIcon(R.drawable.ic_cloud_upload)
             .setOngoing(true)
@@ -148,10 +147,10 @@ class UploadForegroundService : Service() {
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            CHANNEL_NAME,
+            getString(R.string.upload_service_channel_name),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Keeps data and image upload running in the background"
+            description = getString(R.string.upload_service_channel_description)
             setShowBadge(false)
         }
         notificationManager.createNotificationChannel(channel)

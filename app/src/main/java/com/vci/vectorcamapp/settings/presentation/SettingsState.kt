@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.settings.presentation
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
+import com.vci.vectorcamapp.core.presentation.util.locale.SupportedLanguage
 import com.vci.vectorcamapp.settings.presentation.model.SettingsErrors
 
 data class SettingsState (
@@ -29,5 +30,6 @@ data class SettingsState (
     val isEditCollectorDialogVisible: Boolean = false,
     val isDeleteCollectorDialogVisible: Boolean = false,
     val isSyncingData: Boolean = false,
-    val isConnectedToInternet: Boolean = false
+    val isConnectedToInternet: Boolean = false,
+    val selectedLanguage: SupportedLanguage = SupportedLanguage.DEFAULT
 )

@@ -126,7 +126,7 @@ class ImageUploadWorker @AssistedInject constructor(
 
         createNotificationChannel()
         val sessionDateStr = dateFormatter.format(Date(session.createdAt))
-        notificationSessionTitle = "Session from $sessionDateStr"
+        notificationSessionTitle = context.getString(R.string.upload_notification_session_title, sessionDateStr)
         notificationId = sessionId.hashCode()
         setForeground(showInitialSessionNotification(imagesToUpload.size))
 
@@ -153,7 +153,7 @@ class ImageUploadWorker @AssistedInject constructor(
 
             when (val result = uploadSingleImage(task, sessionId)) {
                 is DomainResult.Success -> {
-                    updateProgressNotification("Verifying...")
+                    updateProgressNotification(context.getString(R.string.upload_notification_verifying))
                     successfulUploads++
                 }
 
@@ -541,7 +541,7 @@ class ImageUploadWorker @AssistedInject constructor(
     private fun showInitialSessionNotification(total: Int): ForegroundInfo {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(notificationSessionTitle)
-            .setContentText("Preparing to upload $total images…")
+            .setContentText(context.getString(R.string.upload_notification_preparing, total))
             .setSmallIcon(R.drawable.ic_cloud_upload)
             .setProgress(total, 0, true)
             .setOngoing(true)
@@ -558,7 +558,7 @@ class ImageUploadWorker @AssistedInject constructor(
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(notificationSessionTitle)
-            .setContentText("Uploading image $notificationCurrentImageIndex of $notificationTotalImages")
+            .setContentText(context.getString(R.string.upload_notification_uploading_image, notificationCurrentImageIndex, notificationTotalImages))
             .setSubText(progressText)
             .setSmallIcon(R.drawable.ic_cloud_upload)
             .setProgress(notificationTotalImages, filesCompleted, false)
@@ -568,8 +568,8 @@ class ImageUploadWorker @AssistedInject constructor(
     }
 
     private fun showFinalStatusNotification(successful: Int, total: Int) {
-        val title = if (successful == total) "Upload complete" else "Upload error"
-        val message = "$notificationSessionTitle: $successful of $total images uploaded."
+        val title = if (successful == total) context.getString(R.string.upload_notification_complete) else context.getString(R.string.upload_notification_error)
+        val message = context.getString(R.string.upload_notification_summary, notificationSessionTitle, successful, total)
         val icon = if (successful == total) R.drawable.ic_cloud_upload else R.drawable.ic_info
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)

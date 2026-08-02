@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="landing_title_welcome">¡Bienvenido a VectorCam!</string>
+    <string name="landing_title_section_imaging">Captura de imágenes</string>
+    <string name="landing_title_section_library">Biblioteca</string>
+    <string name="landing_title_new_surveillance">Nueva sesión de vigilancia</string>
+    <string name="landing_title_incomplete_sessions">Ver sesiones en curso</string>
+    <string name="landing_title_complete_sessions">Ver sesiones completadas</string>
+    <string name="landing_title_resume_dialog">¿Reanudar la sesión sin terminar?</string>
+
+    <!-- Body -->
+    <string name="landing_body_new_surveillance">Comienza una nueva visita domiciliaria y captura imágenes de mosquitos.</string>
+    <string name="landing_body_incomplete_sessions">Reanuda y completa cualquier sesión sin terminar.</string>
+    <string name="landing_body_complete_sessions">Revisa las sesiones completadas y los datos subidos.</string>
+    <string name="landing_body_resume_dialog">Tienes una sesión de vigilancia en curso. ¿Deseas continuar donde la dejaste?</string>
+
+    <!-- Actions -->
+    <string name="landing_action_resume_dialog_confirm">Sí, reanudar</string>
+    <string name="landing_action_resume_dialog_dismiss">No, empezar de nuevo</string>
+
+    <!-- Labels -->
+    <string name="landing_label_program">Programa: %1$s</string>
+
+    <!-- Content Descriptions -->
+    <string name="landing_content_description_settings">Ícono de configuración</string>
+    <string name="landing_content_description_action_icon">Ícono de acción</string>
+    <string name="landing_content_description_arrow">Flecha derecha</string>
+
+</resources>

@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.presentation.util.error.toString
@@ -116,7 +117,7 @@ fun DatePickerField(
 
                 Icon(
                     painter = painterResource(R.drawable.ic_calendar),
-                    contentDescription = "Calendar",
+                    contentDescription = stringResource(R.string.core_content_description_calendar),
                     tint = MaterialTheme.colors.icon,
                     modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
                 )

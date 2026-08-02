@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
@@ -88,7 +89,7 @@ fun CompleteSessionListTile(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Completed Session on\n${dateFormatter.format(completedAt)}",
+                            text = stringResource(R.string.complete_session_title_card, dateFormatter.format(completedAt)),
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colors.textPrimary
                         )
@@ -104,14 +105,14 @@ fun CompleteSessionListTile(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrow_right),
-                                contentDescription = "Arrow Right",
+                                contentDescription = stringResource(R.string.complete_session_content_description_arrow),
                                 tint = MaterialTheme.colors.icon,
                                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                             )
                         }
                     }
                     InfoPill(
-                        text = "Session Type: ${session.type.displayText(context)}",
+                        text = stringResource(R.string.complete_session_label_session_type, session.type.displayText(context)),
                         color = MaterialTheme.colors.info
                     )
                 }
@@ -122,55 +123,55 @@ fun CompleteSessionListTile(
                 ) {
                     CompleteSessionListDetailRow(
                         iconPainter = painterResource(R.drawable.ic_person),
-                        iconDescription = "Person",
-                        text = "Collector: ${session.collectorName}, ${session.collectorTitle}",
+                        iconDescription = stringResource(R.string.complete_session_content_description_person),
+                        text = stringResource(R.string.complete_session_label_collector, session.collectorName, session.collectorTitle),
                     )
 
                     site.district?.let { district ->
                         CompleteSessionListDetailRow(
                             iconPainter = painterResource(R.drawable.ic_pin),
-                            iconDescription = "Pin",
-                            text = "District: $district",
+                            iconDescription = stringResource(R.string.complete_session_content_description_pin),
+                            text = stringResource(R.string.complete_session_label_district, district),
                         )
                     }
 
                     site.subCounty?.let { subCounty ->
                         CompleteSessionListDetailRow(
                             iconPainter = painterResource(R.drawable.ic_map),
-                            iconDescription = "Map",
-                            text = "Sub-County: $subCounty",
+                            iconDescription = stringResource(R.string.complete_session_content_description_map),
+                            text = stringResource(R.string.complete_session_label_sub_county, subCounty),
                         )
                     }
 
                     site.parish?.let { parish ->
                         CompleteSessionListDetailRow(
                             iconPainter = painterResource(R.drawable.ic_navigation),
-                            iconDescription = "Navigation",
-                            text = "Parish: $parish",
+                            iconDescription = stringResource(R.string.complete_session_content_description_navigation),
+                            text = stringResource(R.string.complete_session_label_parish, parish),
                         )
                     }
 
                     site.villageName?.let { villageName ->
                         CompleteSessionListDetailRow(
                             iconPainter = painterResource(R.drawable.ic_clipboard),
-                            iconDescription = "Clipboard",
-                            text = "Village Name: $villageName",
+                            iconDescription = stringResource(R.string.complete_session_content_description_clipboard),
+                            text = stringResource(R.string.complete_session_label_village_name, villageName),
                         )
                     }
 
                     site.houseNumber?.let { houseNumber ->
                         CompleteSessionListDetailRow(
                             iconPainter = painterResource(R.drawable.ic_house),
-                            iconDescription = "House",
-                            text = "House Number: $houseNumber",
+                            iconDescription = stringResource(R.string.complete_session_content_description_house),
+                            text = stringResource(R.string.complete_session_label_house_number, houseNumber),
                         )
                     }
 
                     site.healthCenter?.let { healthCenter ->
                         CompleteSessionListDetailRow(
                             iconPainter = painterResource(R.drawable.ic_hospital),
-                            iconDescription = "Hospital",
-                            text = "Nearest Health Center: $healthCenter",
+                            iconDescription = stringResource(R.string.complete_session_content_description_hospital),
+                            text = stringResource(R.string.complete_session_label_health_center, healthCenter),
                         )
                     }
 
@@ -184,7 +185,7 @@ fun CompleteSessionListTile(
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_pin),
-                                    contentDescription = "Location",
+                                    contentDescription = stringResource(R.string.complete_session_content_description_location),
                                     tint = MaterialTheme.colors.icon,
                                     modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
                                 )
@@ -196,7 +197,7 @@ fun CompleteSessionListTile(
                                 ) {
                                     locationHierarchy.forEach { (key, value) ->
                                         Text(
-                                            text = "$key: $value",
+                                            text = stringResource(R.string.complete_session_label_detail, key, value),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colors.textPrimary
                                         )
@@ -215,13 +216,13 @@ fun CompleteSessionListTile(
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
                 ) {
                     Text(
-                        text = "Created At: ${dateTimeFormatter.format(session.createdAt)}",
+                        text = stringResource(R.string.complete_session_label_created_at, dateTimeFormatter.format(session.createdAt)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textSecondary
                     )
 
                     Text(
-                        text = "Completed At: ${dateTimeFormatter.format(session.completedAt)}",
+                        text = stringResource(R.string.complete_session_label_completed_at, dateTimeFormatter.format(session.completedAt)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textSecondary
                     )
@@ -237,7 +238,7 @@ fun CompleteSessionListTile(
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
                         ) {
                             Text(
-                                text = "Upload Progress",
+                                text = stringResource(R.string.complete_session_label_upload_progress),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colors.textSecondary
                             )
@@ -259,7 +260,7 @@ fun CompleteSessionListTile(
 
                                 Icon(
                                     painter = painterResource(R.drawable.ic_cloud_upload),
-                                    contentDescription = "Currently uploading",
+                                    contentDescription = stringResource(R.string.complete_session_content_description_uploading),
                                     tint = MaterialTheme.colors.textSecondary,
                                     modifier = Modifier
                                         .padding(horizontal = MaterialTheme.dimensions.paddingExtraSmall)
@@ -270,10 +271,10 @@ fun CompleteSessionListTile(
                         }
                         Text(
                             text = when {
-                                sessionMetadataUploaded && sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount && sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount -> "Completed"
-                                !sessionMetadataUploaded -> "Not started"
-                                sessionUploadProgress.uploadedMetadataCount != sessionUploadProgress.totalCount -> "${sessionUploadProgress.uploadedMetadataCount} / ${sessionUploadProgress.totalCount} metadata"
-                                else -> "${sessionUploadProgress.uploadedImageCount} / ${sessionUploadProgress.totalCount} images"
+                                sessionMetadataUploaded && sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount && sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount -> stringResource(R.string.complete_session_status_completed)
+                                !sessionMetadataUploaded -> stringResource(R.string.complete_session_status_not_started)
+                                sessionUploadProgress.uploadedMetadataCount != sessionUploadProgress.totalCount -> stringResource(R.string.complete_session_status_metadata_progress, sessionUploadProgress.uploadedMetadataCount, sessionUploadProgress.totalCount)
+                                else -> stringResource(R.string.complete_session_status_image_progress, sessionUploadProgress.uploadedImageCount, sessionUploadProgress.totalCount)
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textSecondary

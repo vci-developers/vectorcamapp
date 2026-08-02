@@ -9,6 +9,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.ui.extensions.colors
 import java.text.SimpleDateFormat
@@ -29,13 +31,20 @@ fun CollectorWarningDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Possible Typo Detected",
+                text = stringResource(R.string.settings_title_typo_warning),
                 style = MaterialTheme.typography.titleLarge
             )
         },
         text = {
             Text(
-                text = "The name '${selectedCollector.name}' is very similar to an existing collector '${similarCollector.name}'.\n\nTitle: ${selectedCollector.title}\nLast Trained On: $formattedDate\n\nAre you sure you want to add this profile?",                style = MaterialTheme.typography.bodyMedium,
+                text = stringResource(
+                    R.string.settings_body_typo_warning,
+                    selectedCollector.name,
+                    similarCollector.name,
+                    selectedCollector.title,
+                    formattedDate
+                ),
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colors.textSecondary
             )
         },
@@ -48,7 +57,7 @@ fun CollectorWarningDialog(
                 )
             ) {
                 Text(
-                    text = "Save Anyway",
+                    text = stringResource(R.string.settings_action_typo_warning_save),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -56,7 +65,7 @@ fun CollectorWarningDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(
-                    text = "Edit Name",
+                    text = stringResource(R.string.settings_action_typo_warning_edit),
                     color = MaterialTheme.colors.textSecondary,
                     fontSize = MaterialTheme.typography.bodyMedium.fontSize
                 )
