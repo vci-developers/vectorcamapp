@@ -491,13 +491,8 @@ class ImagingViewModel @Inject constructor(
                                             )
 
                                         if (clampedWidth > 0 && clampedHeight > 0) {
-                                            // Usability-study mode: bypass classifier. Simulate
-                                            // inference latency with a 3–5s delay, then derive a
-                                            // deterministic species label from the current
-                                            // specimenId so multiple images of the same specimen
-                                            // always yield the same species output.
                                             inferenceStartedAt = System.currentTimeMillis()
-                                            val fakeInferenceDelayMs = Random.nextLong(3_000L, 5_001L)
+                                            val fakeInferenceDelayMs = Random.nextLong(1_000L, 2_001L)
                                             delay(fakeInferenceDelayMs)
                                             val totalInferenceDurationMs = System.currentTimeMillis() - inferenceStartedAt
 
