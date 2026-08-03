@@ -9,6 +9,7 @@ import com.google.ai.edge.litert.Accelerator
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.TensorBuffer
 import com.vci.vectorcamapp.core.domain.model.results.DetectorResult
+import com.vci.vectorcamapp.imaging.data.util.GpuAccelerationPolicy
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import org.opencv.android.Utils
 import org.opencv.core.CvType
@@ -75,6 +76,18 @@ class TfLiteSpecimenDetector(
     }
 
     private fun createModelPreferringGpu(assetName: String): CompiledModel {
+        if (GpuAccelerationPolicy.shouldForceCpu()) {
+            Timber.w(
+                "GPU accelerator disabled on this device (${android.os.Build.MODEL}); using CPU"
+            )
+            usingGpu = false
+            return CompiledModel.create(
+                context.assets,
+                assetName,
+                CompiledModel.Options(Accelerator.CPU),
+            )
+        }
+
         return try {
             CompiledModel.create(
                 context.assets,
