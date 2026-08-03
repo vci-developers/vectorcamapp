@@ -58,12 +58,31 @@ class TfLiteSpecimenDetector(
             if (model != null || isClosed) return
 
             try {
+                val startTime = System.currentTimeMillis()
                 model = createModelPreferringGpu(MODEL_ASSET)
                 inputBuffers = model!!.createInputBuffers()
                 outputBuffers = model!!.createOutputBuffers()
 
                 resolveTensorShapes()
                 warmModel()
+
+                if (usingGpu) {
+                    val elapsedMs = System.currentTimeMillis() - startTime
+                    GpuAccelerationPolicy.recordGpuWarmup(context, elapsedMs, succeeded = true)
+
+                    if (!GpuAccelerationPolicy.shouldAttemptGpu(context)) {
+                        Timber.w(
+                            "GPU warm-up too slow (${elapsedMs}ms) on this device; " +
+                                "rebuilding detector on CPU"
+                        )
+                        releaseModelLocked()
+                        model = createModelCpuOnly(MODEL_ASSET)
+                        inputBuffers = model!!.createInputBuffers()
+                        outputBuffers = model!!.createOutputBuffers()
+                        resolveTensorShapes()
+                        warmModel()
+                    }
+                }
 
                 Timber.d(
                     "LiteRT CompiledModel initialized (accelerator=${if (usingGpu) "GPU" else "CPU"})"
@@ -76,18 +95,12 @@ class TfLiteSpecimenDetector(
     }
 
     private fun createModelPreferringGpu(assetName: String): CompiledModel {
-        if (GpuAccelerationPolicy.shouldForceCpu()) {
-            Timber.w(
-                "GPU accelerator disabled on this device (${android.os.Build.MODEL}); using CPU"
-            )
-            usingGpu = false
-            return CompiledModel.create(
-                context.assets,
-                assetName,
-                CompiledModel.Options(Accelerator.CPU),
-            )
+        if (!GpuAccelerationPolicy.shouldAttemptGpu(context)) {
+            Timber.w("GPU accelerator skipped on this device tier; using CPU")
+            return createModelCpuOnly(assetName)
         }
 
+        val startTime = System.currentTimeMillis()
         return try {
             CompiledModel.create(
                 context.assets,
@@ -99,13 +112,20 @@ class TfLiteSpecimenDetector(
             }
         } catch (e: Exception) {
             Timber.w("GPU CompiledModel failed (${e.message}); falling back to CPU")
-            usingGpu = false
-            CompiledModel.create(
-                context.assets,
-                assetName,
-                CompiledModel.Options(Accelerator.CPU),
+            GpuAccelerationPolicy.recordGpuWarmup(
+                context, System.currentTimeMillis() - startTime, succeeded = false
             )
+            createModelCpuOnly(assetName)
         }
+    }
+
+    private fun createModelCpuOnly(assetName: String): CompiledModel {
+        usingGpu = false
+        return CompiledModel.create(
+            context.assets,
+            assetName,
+            CompiledModel.Options(Accelerator.CPU),
+        )
     }
 
     private fun resolveTensorShapes() {
