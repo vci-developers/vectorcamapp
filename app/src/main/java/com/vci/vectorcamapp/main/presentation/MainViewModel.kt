@@ -41,6 +41,7 @@ class MainViewModel @Inject constructor(
                 MainAction.RequestPermissions -> _events.send(MainEvent.LaunchPermissionRequest)
                 MainAction.OpenAppSettings -> _events.send(MainEvent.NavigateToAppSettings)
                 MainAction.OpenLocationSettings -> _events.send(MainEvent.NavigateToLocationSettings)
+                MainAction.OpenDateSettings -> _events.send(MainEvent.NavigateToDateSettings)
 
                 is MainAction.UpdatePermissionStatus -> {
                     _state.update {
@@ -56,6 +57,15 @@ class MainViewModel @Inject constructor(
                         it.copy(
                             isGpsEnabled = action.isGpsEnabled,
                             gpsChecked = true
+                        )
+                    }
+                }
+
+                is MainAction.UpdateAutoTimeStatus -> {
+                    _state.update {
+                        it.copy(
+                            isAutoTimeEnabled = action.isAutoTimeEnabled,
+                            autoTimeChecked = true
                         )
                     }
                 }

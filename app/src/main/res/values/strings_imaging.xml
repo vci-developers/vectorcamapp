@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="imaging_title_leave">Leave imaging?</string>
+    <string name="imaging_title_exit">Exit session?</string>
+    <string name="imaging_title_confirm_action">Confirm Action</string>
+    <string name="imaging_title_further_processing">Specimen Selected for Further Processing</string>
+
+    <!-- Body -->
+    <string name="imaging_body_return_prompt">Would you like to return to your collection batches?</string>
+    <string name="imaging_body_save_or_submit_prompt">Would you like to save this session for later or submit it now?</string>
+    <string name="imaging_body_confirm_save">Are you sure you want to save the session and exit?</string>
+    <string name="imaging_body_confirm_submit">Are you sure you want to submit the session?</string>
+    <string name="imaging_body_confirm_return">Are you sure you want to return to your collection batches?</string>
+    <string name="imaging_body_warning_zero_specimens">Warning: You are about to submit a session with zero specimens.</string>
+    <string name="imaging_body_warning_practice">Warning: This is a practice session. Submitted data will not be considered routine surveillance data.</string>
+    <string name="imaging_body_further_processing">Please package the specimen separately for further laboratory processing before continuing.</string>
+    <string name="imaging_body_practice_warning">Practice Session: Data will not be tracked.</string>
+
+    <!-- Labels -->
+    <string name="imaging_label_specimen_of_total">Specimen %1$d of %2$d</string>
+    <string name="imaging_label_image_badge">%1$d of %2$d</string>
+    <string name="imaging_label_specimen_number">Specimen %1$d</string>
+    <string name="imaging_label_specimen_id">Specimen ID</string>
+    <string name="imaging_label_specimen_id_value">Specimen ID: %1$s</string>
+    <string name="imaging_label_species">Species: %1$s</string>
+    <string name="imaging_label_sex">Sex: %1$s</string>
+    <string name="imaging_label_abdomen_status">Abdomen Status: %1$s</string>
+    <string name="imaging_label_captured_at">Captured At: %1$s</string>
+    <string name="imaging_label_packaging_confirmation">I have packaged this specimen for further processing</string>
+    <string name="imaging_label_run_inference">Run Model Inference</string>
+    <string name="imaging_label_specimen_id_placeholder">Specimen ID will appear here</string>
+    <string name="imaging_label_pack_for_processing">Pack this specimen for further processing</string>
+    <string name="imaging_label_bounding_box">specimen %1$s</string>
+
+    <!-- Actions -->
+    <string name="imaging_action_exit_dialog_submit">Submit</string>
+    <string name="imaging_action_exit_dialog_confirm">Yes, Confirm</string>
+    <string name="imaging_action_exit_dialog_return">Return</string>
+    <string name="imaging_action_exit_dialog_save">Save</string>
+    <string name="imaging_action_exit_dialog_back">Back</string>
+    <string name="imaging_action_further_processing_continue">Continue</string>
+    <string name="imaging_action_save">Save</string>
+    <string name="imaging_action_capture">Capture</string>
+
+    <!-- Content Descriptions -->
+    <string name="imaging_content_description_close_dialog">Close dialog</string>
+    <string name="imaging_content_description_submit">Submit Icon</string>
+    <string name="imaging_content_description_return">Return Icon</string>
+    <string name="imaging_content_description_save">Save Icon</string>
+    <string name="imaging_content_description_info">Info Icon</string>
+    <string name="imaging_content_description_delete">Delete</string>
+    <string name="imaging_content_description_back_to_batches">Back to collection batches</string>
+    <string name="imaging_content_description_exit">Exit</string>
+    <string name="imaging_content_description_mosquito">Mosquito</string>
+    <string name="imaging_content_description_previous">Previous Icon</string>
+    <string name="imaging_content_description_next">Next Icon</string>
+
+</resources>

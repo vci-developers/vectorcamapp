@@ -9,7 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,7 +36,7 @@ import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var errorMessageEmitter: ErrorMessageEmitter
@@ -72,13 +72,15 @@ class MainActivity : ComponentActivity() {
             
                 val state by viewModel.state.collectAsState()
 
-                val isReady = state.permissionChecked && state.gpsChecked
+                val isReady =
+                    state.permissionChecked && state.gpsChecked && state.autoTimeChecked
 
                 ObserveAsEvents(events = viewModel.events) { event ->
                     when (event) {
                         MainEvent.LaunchPermissionRequest -> permissionLauncher.launch(permissionsRequired)
                         MainEvent.NavigateToAppSettings -> openAppSettings()
                         MainEvent.NavigateToLocationSettings -> openLocationSettings()
+                        MainEvent.NavigateToDateSettings -> openDateSettings()
                     }
                 }
 
@@ -86,7 +88,7 @@ class MainActivity : ComponentActivity() {
                     !isReady ->{
                         SplashScreen(modifier = Modifier.fillMaxSize())
                     }
-                    state.allGranted && state.isGpsEnabled -> {
+                    state.allGranted && state.isGpsEnabled && state.isAutoTimeEnabled -> {
                         when (val startDestination = state.startDestination) {
                             null -> SplashScreen(modifier = Modifier.fillMaxSize())
                             else -> NavGraph(startDestination = startDestination)
@@ -113,6 +115,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         checkAndUpdatePermissionStatus()
         checkAndUpdateGpsStatus()
+        checkAndUpdateAutoTimeStatus()
     }
 
     private fun checkAndUpdatePermissionStatus() {
@@ -134,6 +137,16 @@ class MainActivity : ComponentActivity() {
         viewModel.onAction(MainAction.UpdateGpsStatus(isGpsEnabled))
     }
 
+    private fun checkAndUpdateAutoTimeStatus() {
+        val isAutoTimeEnabled = Settings.Global.getInt(
+            contentResolver,
+            Settings.Global.AUTO_TIME,
+            0
+        ) == 1
+
+        viewModel.onAction(MainAction.UpdateAutoTimeStatus(isAutoTimeEnabled))
+    }
+
     private fun openAppSettings() {
         Intent(
             Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
@@ -145,5 +158,9 @@ class MainActivity : ComponentActivity() {
         Intent(
             Settings.ACTION_LOCATION_SOURCE_SETTINGS
         ).also(::startActivity)
+    }
+
+    private fun openDateSettings() {
+        Intent(Settings.ACTION_DATE_SETTINGS).also(::startActivity)
     }
 }

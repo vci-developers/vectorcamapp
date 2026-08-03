@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.presentation.components.gestures.SwipeToReveal
@@ -68,7 +69,7 @@ fun IncompleteSessionCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Session in Progress from\n${titleFormatter.format(sessionAndSite.session.createdAt)}",
+                            text = stringResource(R.string.incomplete_session_title_card, titleFormatter.format(sessionAndSite.session.createdAt)),
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colors.textPrimary,
                             modifier = Modifier.testTag(IncompleteSessionTestTags.CARD_TITLE)
@@ -85,7 +86,7 @@ fun IncompleteSessionCard(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrow_right),
-                                contentDescription = "Resume",
+                                contentDescription = stringResource(R.string.incomplete_session_content_description_resume),
                                 tint = MaterialTheme.colors.icon,
                                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
                                 .testTag(IncompleteSessionTestTags.CARD_RESUME_ICON)
@@ -93,7 +94,7 @@ fun IncompleteSessionCard(
                         }
                     }
 
-                    InfoPill(text = "Session Type: ${sessionAndSite.session.type.displayText(context)}", color = MaterialTheme.colors.info, modifier = Modifier.testTag(IncompleteSessionTestTags.CARD_TYPE_PILL))
+                    InfoPill(text = stringResource(R.string.incomplete_session_label_session_type, sessionAndSite.session.type.displayText(context)), color = MaterialTheme.colors.info, modifier = Modifier.testTag(IncompleteSessionTestTags.CARD_TYPE_PILL))
                 }
 
                 Column(
@@ -102,84 +103,87 @@ fun IncompleteSessionCard(
                 ) {
                     IncompleteSessionListDetailRow(
                         iconPainter = painterResource(R.drawable.ic_person),
-                        iconDescription = "Person",
-                        text = "Collector: ${sessionAndSite.session.collectorName}, ${sessionAndSite.session.collectorTitle}",
+                        iconDescription = stringResource(R.string.incomplete_session_content_description_person),
+                        text = stringResource(R.string.incomplete_session_label_collector, sessionAndSite.session.collectorName, sessionAndSite.session.collectorTitle),
                     )
 
                     sessionAndSite.site.district?.let { district ->
                         IncompleteSessionListDetailRow(
                             iconPainter = painterResource(R.drawable.ic_pin),
-                            iconDescription = "Pin",
-                            text = "District: $district",
+                            iconDescription = stringResource(R.string.incomplete_session_content_description_pin),
+                            text = stringResource(R.string.incomplete_session_label_district, district),
                         )
                     }
 
                     sessionAndSite.site.subCounty?.let { subCounty ->
                         IncompleteSessionListDetailRow(
                             iconPainter = painterResource(R.drawable.ic_map),
-                            iconDescription = "Map",
-                            text = "Sub-County: $subCounty",
+                            iconDescription = stringResource(R.string.incomplete_session_content_description_map),
+                            text = stringResource(R.string.incomplete_session_label_sub_county, subCounty),
                         )
                     }
 
                     sessionAndSite.site.parish?.let { parish ->
                         IncompleteSessionListDetailRow(
                             iconPainter = painterResource(R.drawable.ic_navigation),
-                            iconDescription = "Navigation",
-                            text = "Parish: $parish",
+                            iconDescription = stringResource(R.string.incomplete_session_content_description_navigation),
+                            text = stringResource(R.string.incomplete_session_label_parish, parish),
                         )
                     }
 
                     sessionAndSite.site.villageName?.let { villageName ->
                         IncompleteSessionListDetailRow(
                             iconPainter = painterResource(R.drawable.ic_clipboard),
-                            iconDescription = "Clipboard",
-                            text = "Village Name: $villageName",
+                            iconDescription = stringResource(R.string.incomplete_session_content_description_clipboard),
+                            text = stringResource(R.string.incomplete_session_label_village_name, villageName),
                         )
                     }
 
                     sessionAndSite.site.houseNumber?.let { houseNumber ->
                         IncompleteSessionListDetailRow(
                             iconPainter = painterResource(R.drawable.ic_house),
-                            iconDescription = "House",
-                            text = "House Number: $houseNumber",
+                            iconDescription = stringResource(R.string.incomplete_session_content_description_house),
+                            text = stringResource(R.string.incomplete_session_label_house_number, houseNumber),
                         )
                     }
 
                     sessionAndSite.site.healthCenter?.let { healthCenter ->
                         IncompleteSessionListDetailRow(
                             iconPainter = painterResource(R.drawable.ic_hospital),
-                            iconDescription = "Hospital",
-                            text = "Nearest Health Center: $healthCenter",
+                            iconDescription = stringResource(R.string.incomplete_session_content_description_hospital),
+                            text = stringResource(R.string.incomplete_session_label_health_center, healthCenter),
                         )
                     }
 
-                    sessionAndSite.site.locationHierarchy?.let { locationHierarchy ->
-                        Row(
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_pin),
-                                contentDescription = "Location",
-                                tint = MaterialTheme.colors.icon,
-                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
-                            )
-
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(
-                                    MaterialTheme.dimensions.spacingExtraSmall
-                                )
+                    sessionAndSite.site.locationHierarchy
+                        ?.filterValues { it.isNotBlank() }
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { locationHierarchy ->
+                            Row(
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                             ) {
-                                locationHierarchy.forEach { (key, value) ->
-                                    Text(
-                                        text = "$key: $value",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colors.textPrimary
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_pin),
+                                    contentDescription = stringResource(R.string.incomplete_session_content_description_location),
+                                    tint = MaterialTheme.colors.icon,
+                                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
+                                )
+
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(
+                                        MaterialTheme.dimensions.spacingExtraSmall
                                     )
+                                ) {
+                                    locationHierarchy.forEach { (key, value) ->
+                                        Text(
+                                            text = stringResource(R.string.incomplete_session_label_detail, key, value),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colors.textPrimary
+                                        )
+                                    }
                                 }
                             }
-                        }
                     }
                 }
 
@@ -192,7 +196,7 @@ fun IncompleteSessionCard(
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                 ) {
                     Text(
-                        text = "Created At: ${detailFormatter.format(sessionAndSite.session.createdAt)}",
+                        text = stringResource(R.string.incomplete_session_label_created_at, detailFormatter.format(sessionAndSite.session.createdAt)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textSecondary,
                         modifier = Modifier.testTag(IncompleteSessionTestTags.CARD_CREATED_TEXT)
