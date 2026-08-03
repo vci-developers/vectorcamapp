@@ -70,7 +70,12 @@ fun PermissionScreen(
             Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingLarge))
 
             Text(
-                text = if (!state.allGranted) stringResource(R.string.permission_title_permissions_required) else stringResource(R.string.permission_title_gps_required),
+                text = when {
+                    !state.allGranted -> stringResource(R.string.permission_title_permissions_required)
+                    !state.isGpsEnabled -> stringResource(R.string.permission_title_gps_required)
+                    !state.isAutoTimeEnabled -> stringResource(R.string.permission_title_auto_time_required)
+                    else -> stringResource(R.string.permission_title_permissions_required)
+                },
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colors.textPrimary,
@@ -81,7 +86,12 @@ fun PermissionScreen(
             Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingSmall))
 
             Text(
-                text = stringResource(R.string.permission_body_required),
+                text = when {
+                    !state.allGranted -> stringResource(R.string.permission_body_required)
+                    !state.isGpsEnabled -> stringResource(R.string.permission_body_gps_required)
+                    !state.isAutoTimeEnabled -> stringResource(R.string.permission_body_auto_time_required)
+                    else -> stringResource(R.string.permission_body_required)
+                },
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colors.textSecondary,
                 textAlign = TextAlign.Left,
@@ -152,6 +162,13 @@ fun PermissionScreen(
                         onClick = { onAction(MainAction.OpenLocationSettings) },
                         label = stringResource(R.string.permission_action_enable_gps),
                         modifier = Modifier.testTag(PermissionTestTags.ENABLE_GPS_BUTTON)
+                    )
+                }
+                if (!state.isAutoTimeEnabled) {
+                    ActionButton(
+                        onClick = { onAction(MainAction.OpenDateSettings) },
+                        label = stringResource(R.string.permission_action_enable_auto_time),
+                        modifier = Modifier.testTag(PermissionTestTags.ENABLE_AUTO_TIME_BUTTON)
                     )
                 }
             }
