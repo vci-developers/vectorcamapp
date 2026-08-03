@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
-import timber.log.Timber
 import com.google.ai.edge.litert.Accelerator
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.TensorBuffer
@@ -23,6 +22,7 @@ import org.opencv.core.Scalar
 import org.opencv.core.Size
 import org.opencv.dnn.Dnn
 import org.opencv.imgproc.Imgproc
+import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
@@ -113,7 +113,9 @@ class TfLiteSpecimenDetector(
         } catch (e: Exception) {
             Timber.w("GPU CompiledModel failed (${e.message}); falling back to CPU")
             GpuAccelerationPolicy.recordGpuWarmup(
-                context, System.currentTimeMillis() - startTime, succeeded = false
+                context,
+                System.currentTimeMillis() - startTime,
+                succeeded = false
             )
             createModelCpuOnly(assetName)
         }
@@ -154,7 +156,7 @@ class TfLiteSpecimenDetector(
                 inputTensorWidth = side
             }
             Timber.d(
-                "Resolved input ${inputTensorWidth}x${inputTensorHeight} (buffer floats=$floatCount)"
+                "Resolved input ${inputTensorWidth}x$inputTensorHeight (buffer floats=$floatCount)"
             )
         } catch (e: Exception) {
             Timber.w("getInputBufferRequirements failed: ${e.message}")

@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
-import timber.log.Timber
 import com.google.ai.edge.litert.Accelerator
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.TensorBuffer
@@ -18,6 +17,7 @@ import org.opencv.core.Mat
 import org.opencv.core.Scalar
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
+import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
@@ -108,7 +108,9 @@ class TfLiteSpecimenClassifier(
         } catch (e: Exception) {
             Timber.w("GPU CompiledModel failed for $assetName (${e.message}); falling back to CPU")
             GpuAccelerationPolicy.recordGpuWarmup(
-                context, System.currentTimeMillis() - startTime, succeeded = false
+                context,
+                System.currentTimeMillis() - startTime,
+                succeeded = false
             )
             createModelCpuOnly(assetName)
         }
@@ -150,7 +152,7 @@ class TfLiteSpecimenClassifier(
                 inputTensorWidth = side
             }
             Timber.d(
-                "Resolved input ${inputTensorWidth}x${inputTensorHeight} for $filePath " +
+                "Resolved input ${inputTensorWidth}x$inputTensorHeight for $filePath " +
                     "(buffer floats=$floatCount)"
             )
         } catch (e: Exception) {
@@ -272,7 +274,7 @@ class TfLiteSpecimenClassifier(
         }
         Timber.d(
             "Classifier warmed up ($filePath, gpu=$usingGpu, " +
-                "input=${inputTensorWidth}x${inputTensorHeight}, classes=$outputNumClasses)"
+                "input=${inputTensorWidth}x$inputTensorHeight, classes=$outputNumClasses)"
         )
     }
 
