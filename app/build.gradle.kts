@@ -97,8 +97,8 @@ android {
         create("kenya") {
             dimension = "region"
             applicationIdSuffix = ".kenya"
-            versionCode = 4003
-            versionName = "1.0.3"
+            versionCode = 4006
+            versionName = "1.0.6"
             
             buildConfigField("String", "REGION", "\"kenya\"")
             buildConfigField("String", "REGION_CODE", "\"KE\"")
@@ -110,8 +110,8 @@ android {
         create("ghana") {
             dimension = "region"
             applicationIdSuffix = ".ghana"
-            versionCode = 5002
-            versionName = "1.0.2"
+            versionCode = 5004
+            versionName = "1.0.4"
             
             buildConfigField("String", "REGION", "\"ghana\"")
             buildConfigField("String", "REGION_CODE", "\"GH\"")
@@ -176,6 +176,7 @@ android {
 dependencies {
     // Core Android Libraries
     implementation(libs.androidx.core.ktx) // Kotlin extensions for Android core libraries
+    implementation(libs.androidx.appcompat) // AppCompat for language support
     implementation(libs.androidx.lifecycle.runtime.ktx) // Lifecycle-aware components
     implementation(libs.androidx.activity.compose) // Compose integration with activities
 

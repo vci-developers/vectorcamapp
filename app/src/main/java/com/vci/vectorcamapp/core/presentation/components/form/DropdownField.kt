@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.presentation.util.error.toString
@@ -109,7 +110,7 @@ fun <T> DropdownField(
                     Box(modifier = Modifier.padding(start = MaterialTheme.dimensions.paddingSmall)) {
                         Icon(
                             painter = painterResource(if (expanded) R.drawable.ic_arrow_up else R.drawable.ic_arrow_down),
-                            contentDescription = if (expanded) "Collapse dropdown" else "Expand dropdown",
+                            contentDescription = if (expanded) stringResource(R.string.core_content_description_collapse_dropdown) else stringResource(R.string.core_content_description_expand_dropdown),
                             tint = if (selectedOption == null) MaterialTheme.colors.textSecondary else MaterialTheme.colors.textPrimary,
                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
                         )

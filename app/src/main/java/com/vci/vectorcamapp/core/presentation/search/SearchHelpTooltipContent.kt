@@ -8,6 +8,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
@@ -15,7 +17,7 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 fun SearchHelpTooltipContent() {
     Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)) {
         Text(
-            text = "How Search Works",
+            text = stringResource(R.string.search_title_help),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colors.textPrimary,
             fontWeight = FontWeight.Bold,
@@ -23,29 +25,29 @@ fun SearchHelpTooltipContent() {
         )
         Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)) {
             Text(
-                text = "• Put a SPACE between words when you want results that include all the words.",
+                text = stringResource(R.string.search_body_space_rule),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colors.textPrimary
             )
             Text(
-                text = "• Put a COMMA between groups when any one group is okay.",
+                text = stringResource(R.string.search_body_comma_rule),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colors.textPrimary
             )
         }
         Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)) {
             Text(
-                text = "Examples:",
+                text = stringResource(R.string.search_label_examples),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colors.textSecondary,
             )
             Text(
-                text = "• Anopheles Male → must include Anopheles and Male.",
+                text = stringResource(R.string.search_body_example_1),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colors.textSecondary
             )
             Text(
-                text = "• Anopheles Male, Mansonia Female → either (Anopheles and Male) or (Mansonia and Female).",
+                text = stringResource(R.string.search_body_example_2),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colors.textSecondary
             )

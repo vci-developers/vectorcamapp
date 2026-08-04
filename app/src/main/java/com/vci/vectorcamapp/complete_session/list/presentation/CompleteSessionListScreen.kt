@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
@@ -57,12 +58,12 @@ fun CompleteSessionListScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         ScreenHeader(
-            title = "Complete Sessions",
-            subtitle = "Click on a session to view more details",
+            title = stringResource(R.string.complete_session_title_screen),
+            subtitle = stringResource(R.string.complete_session_body_subtitle),
             leadingIcon = {
                 Icon(
                     painter = painterResource(R.drawable.ic_arrow_left),
-                    contentDescription = "Back Button",
+                    contentDescription = stringResource(R.string.complete_session_content_description_back),
                     tint = MaterialTheme.colors.icon,
                     modifier = Modifier
                         .size(MaterialTheme.dimensions.iconSizeLarge)
@@ -78,7 +79,7 @@ fun CompleteSessionListScreen(
                     onSearchQueryChange = { newSearchQueryText ->
                         onAction(CompleteSessionListAction.UpdateSearchQuery(newSearchQueryText))
                     },
-                    placeholder = "Search by collector, district, session type, etc.",
+                    placeholder = stringResource(R.string.complete_session_placeholder_search),
                     modifier = Modifier.padding(
                         start = MaterialTheme.dimensions.spacingMedium,
                         end = MaterialTheme.dimensions.spacingMedium,
@@ -96,9 +97,9 @@ fun CompleteSessionListScreen(
                 item {
                     Text(
                         text = if (state.searchQuery.isBlank())
-                            "No completed sessions found."
+                            stringResource(R.string.complete_session_body_empty)
                         else
-                            "No matching sessions found.",
+                            stringResource(R.string.complete_session_body_no_results),
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colors.textSecondary,
                         textAlign = TextAlign.Center,
@@ -139,7 +140,7 @@ fun CompleteSessionListScreen(
                 painter = if (hasActiveUploads) painterResource(id = R.drawable.ic_refresh) else painterResource(
                     id = R.drawable.ic_cloud_upload
                 ),
-                contentDescription = if (hasActiveUploads) "Refresh" else "Upload",
+                contentDescription = if (hasActiveUploads) stringResource(R.string.complete_session_content_description_refresh) else stringResource(R.string.complete_session_content_description_upload),
                 tint = MaterialTheme.colors.buttonText,
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeLarge)

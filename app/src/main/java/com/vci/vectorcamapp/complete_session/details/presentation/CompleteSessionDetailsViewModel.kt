@@ -186,30 +186,23 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                 emitError(CompleteSessionDetailsError.PROGRAM_NOT_FOUND)
                 return@launch
             }
-            val formVersion = program.formVersion
-            if (formVersion == null) {
-                emitError(CompleteSessionDetailsError.FORM_NOT_FOUND)
-                return@launch
-            }
-            val form = formRepository.getFormByVersion(formVersion)
-            if (form == null) {
-                emitError(CompleteSessionDetailsError.FORM_NOT_FOUND)
-                return@launch
-            }
+            val form = formRepository.getFormsWithFormAnswersAndQuestionsBySessionId(sessionId)
+                .firstOrNull()?.form
 
-            val allFormQuestions =
-                formQuestionRepository.getQuestionsByFormIdAndScope(form.id, answerScope = null)
+            val allFormQuestions = form?.let {
+                formQuestionRepository.getQuestionsByFormIdAndScope(it.id, answerScope = null)
+            } ?: emptyList()
             val formQuestionsById = allFormQuestions.associateBy { it.id }
 
-            val sessionScopedAnswersByQuestionId =
+            val sessionScopedFormAnswersAndQuestions = form?.let {
                 formAnswerRepository.getSessionScopedFormAnswers(sessionId)
-            val sessionScopedFormAnswersAndQuestions = sessionScopedAnswersByQuestionId
-                .mapNotNull { (questionId, formAnswer) ->
-                    formQuestionsById[questionId]?.let { formQuestion ->
-                        FormAnswerAndQuestion(answer = formAnswer, question = formQuestion)
+                    .mapNotNull { (questionId, formAnswer) ->
+                        formQuestionsById[questionId]?.let { formQuestion ->
+                            FormAnswerAndQuestion(answer = formAnswer, question = formQuestion)
+                        }
                     }
-                }
-                .sortedBy { it.question.order }
+                    .sortedBy { it.question.order }
+            } ?: emptyList()
 
             val sessionUnits = sessionUnitRepository
                 .getSessionUnitsForSession(sessionId)
@@ -220,8 +213,9 @@ class CompleteSessionDetailsViewModel @Inject constructor(
             val bucketNameBySessionUnitId = mutableMapOf<UUID, String>()
 
             sessionUnits.forEach { sessionUnit ->
-                val answersByQuestionId =
+                val answersByQuestionId = form?.let {
                     formAnswerRepository.getSessionUnitScopedFormAnswers(sessionUnit.localId)
+                } ?: emptyMap()
 
                 sessionUnitAnswersAndQuestionsByUnitId[sessionUnit.localId] = answersByQuestionId
                     .mapNotNull { (questionId, formAnswer) ->

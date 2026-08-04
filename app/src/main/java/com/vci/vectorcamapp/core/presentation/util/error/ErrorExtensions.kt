@@ -29,7 +29,7 @@ fun Error.toString(context: Context): String {
             NetworkError.NOT_FOUND -> R.string.network_error_not_found
             NetworkError.CONFLICT -> R.string.network_error_conflict
             NetworkError.CLIENT_ERROR -> R.string.network_error_client_error
-            NetworkError.UNKNOWN_ERROR -> R.string.roomdb_error_unknown_error
+            NetworkError.UNKNOWN_ERROR -> R.string.network_error_unknown_error
             NetworkError.TUS_TRANSIENT_ERROR -> R.string.network_error_tus_transient_error
             NetworkError.TUS_PERMANENT_ERROR -> R.string.network_error_tus_permanent_error
         }
@@ -45,7 +45,6 @@ fun Error.toString(context: Context): String {
             CompleteSessionDetailsError.SITE_NOT_FOUND -> R.string.complete_session_error_site_not_found
             CompleteSessionDetailsError.SPECIMENS_NOT_FOUND -> R.string.complete_session_error_specimens_not_found
             CompleteSessionDetailsError.PROGRAM_NOT_FOUND -> R.string.complete_session_error_program_not_found
-            CompleteSessionDetailsError.FORM_NOT_FOUND -> R.string.complete_session_error_form_not_found
             CompleteSessionDetailsError.UNKNOWN_ERROR -> R.string.complete_session_error_unknown_error
         }
 

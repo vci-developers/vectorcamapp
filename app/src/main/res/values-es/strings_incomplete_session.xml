@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="incomplete_session_title_screen">Sesiones en curso</string>
+    <string name="incomplete_session_title_delete_dialog">¿Eliminar sesión?</string>
+    <string name="incomplete_session_title_card">Sesión en curso del\n%1$s</string>
+
+    <!-- Body -->
+    <string name="incomplete_session_body_subtitle">Toca una sesión para reanudarla</string>
+    <string name="incomplete_session_body_empty">No hay sesiones en curso actualmente.</string>
+    <string name="incomplete_session_body_no_results">No se encontraron sesiones coincidentes.</string>
+    <string name="incomplete_session_body_delete_dialog">Esto eliminará permanentemente la sesión y todas las imágenes asociadas de tu dispositivo. Esta acción no se puede deshacer.</string>
+
+    <!-- Actions -->
+    <string name="incomplete_session_action_delete_dialog_confirm">Sí, eliminar</string>
+    <string name="incomplete_session_action_delete_dialog_cancel">Cancelar</string>
+
+    <!-- Placeholders -->
+    <string name="incomplete_session_placeholder_search">Busca por recolector, distrito, tipo de sesión, etc.</string>
+
+    <!-- Labels -->
+    <string name="incomplete_session_label_session_type">Tipo de sesión: %1$s</string>
+    <string name="incomplete_session_label_collector">Recolector: %1$s, %2$s</string>
+    <string name="incomplete_session_label_district">Distrito: %1$s</string>
+    <string name="incomplete_session_label_sub_county">Subcondado: %1$s</string>
+    <string name="incomplete_session_label_parish">Parroquia: %1$s</string>
+    <string name="incomplete_session_label_village_name">Nombre de la aldea: %1$s</string>
+    <string name="incomplete_session_label_house_number">Número de casa: %1$s</string>
+    <string name="incomplete_session_label_health_center">Centro de salud más cercano: %1$s</string>
+    <string name="incomplete_session_label_detail">%1$s: %2$s</string>
+    <string name="incomplete_session_label_created_at">Creado el: %1$s</string>
+
+    <!-- Content Descriptions -->
+    <string name="incomplete_session_content_description_back">Botón de retroceso</string>
+    <string name="incomplete_session_content_description_resume">Reanudar</string>
+    <string name="incomplete_session_content_description_person">Persona</string>
+    <string name="incomplete_session_content_description_pin">Marcador</string>
+    <string name="incomplete_session_content_description_map">Mapa</string>
+    <string name="incomplete_session_content_description_navigation">Navegación</string>
+    <string name="incomplete_session_content_description_clipboard">Portapapeles</string>
+    <string name="incomplete_session_content_description_house">Casa</string>
+    <string name="incomplete_session_content_description_hospital">Hospital</string>
+    <string name="incomplete_session_content_description_location">Ubicación</string>
+    <string name="incomplete_session_content_description_delete">Eliminar</string>
+
+</resources>

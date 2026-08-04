@@ -62,6 +62,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -225,7 +226,7 @@ fun ImagingScreen(
                                 )
                             ) {
                                 Text(
-                                    text = "Specimen ${page + 1} of ${state.specimensWithImagesAndInferenceResults.size}",
+                                    text = stringResource(R.string.imaging_label_specimen_of_total, page + 1, state.specimensWithImagesAndInferenceResults.size),
                                     style = MaterialTheme.typography.titleLarge,
                                     color = MaterialTheme.colors.textPrimary,
                                     modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
@@ -252,7 +253,7 @@ fun ImagingScreen(
                                     specimen = state.specimensWithImagesAndInferenceResults[page].specimen,
                                     specimenImage = specimenImage,
                                     inferenceResult = inferenceResult,
-                                    badgeText = "${index + 1} of ${imageList.size}",
+                                    badgeText = stringResource(R.string.imaging_label_image_badge, index + 1, imageList.size),
                                     modifier = Modifier
                                         .fillParentMaxHeight()
                                 )
@@ -280,9 +281,9 @@ fun ImagingScreen(
                             ) {
                                 Text(
                                     text = if (state.pendingAction == null) {
-                                        if (state.sessionUnitId != null) "Leave imaging?" else "Exit session?"
+                                        if (state.sessionUnitId != null) stringResource(R.string.imaging_title_leave) else stringResource(R.string.imaging_title_exit)
                                     } else {
-                                        "Confirm Action"
+                                        stringResource(R.string.imaging_title_confirm_action)
                                     },
                                     style = MaterialTheme.typography.headlineMedium,
                                     color = MaterialTheme.colors.textPrimary,
@@ -295,7 +296,7 @@ fun ImagingScreen(
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_close),
-                                        contentDescription = "Close dialog",
+                                        contentDescription = stringResource(R.string.imaging_content_description_close_dialog),
                                         tint = MaterialTheme.colors.icon,
                                         modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraLarge)
                                     )
@@ -305,14 +306,14 @@ fun ImagingScreen(
                         text = {
                             val dialogText = when (state.pendingAction) {
                                 null -> if (state.sessionUnitId != null) {
-                                    "Would you like to return to your collection batches?"
+                                    stringResource(R.string.imaging_body_return_prompt)
                                 } else {
-                                    "Would you like to save this session for later or submit it now?"
+                                    stringResource(R.string.imaging_body_save_or_submit_prompt)
                                 }
 
-                                is ImagingAction.SaveSessionProgress -> "Are you sure you want to save the session and exit?"
-                                is ImagingAction.SubmitSession -> "Are you sure you want to submit the session?"
-                                is ImagingAction.ReturnToCollectionBatchList -> "Are you sure you want to return to your collection batches?"
+                                is ImagingAction.SaveSessionProgress -> stringResource(R.string.imaging_body_confirm_save)
+                                is ImagingAction.SubmitSession -> stringResource(R.string.imaging_body_confirm_submit)
+                                is ImagingAction.ReturnToCollectionBatchList -> stringResource(R.string.imaging_body_confirm_return)
                                 else -> ""
                             }
                             Column {
@@ -326,7 +327,7 @@ fun ImagingScreen(
 
                                 if (state.specimensWithImagesAndInferenceResults.isEmpty() && state.pendingAction is ImagingAction.SubmitSession) {
                                     Text(
-                                        text = "Warning: You are about to submit a session with zero specimens.",
+                                        text = stringResource(R.string.imaging_body_warning_zero_specimens),
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colors.error,
                                         modifier = Modifier.padding(top = MaterialTheme.dimensions.paddingMedium)
@@ -335,7 +336,7 @@ fun ImagingScreen(
 
                                 if (state.sessionType == SessionType.PRACTICE && state.pendingAction is ImagingAction.SubmitSession) {
                                     Text(
-                                        text = "Warning: This is a practice session. Submitted data will not be considered routine surveillance data.",
+                                        text = stringResource(R.string.imaging_body_warning_practice),
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colors.error,
                                         modifier = Modifier.padding(top = MaterialTheme.dimensions.paddingMedium)
@@ -361,13 +362,13 @@ fun ImagingScreen(
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.ic_cloud_upload),
-                                            contentDescription = "Submit Icon",
+                                            contentDescription = stringResource(R.string.imaging_content_description_submit),
                                             tint = MaterialTheme.colors.successConfirm,
                                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
                                         )
                                         Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
                                         Text(
-                                            text = "Submit",
+                                            text = stringResource(R.string.imaging_action_exit_dialog_submit),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colors.successConfirm
                                         )
@@ -383,7 +384,7 @@ fun ImagingScreen(
                                     )
                                 ) {
                                     Text(
-                                        text = "Yes, Confirm",
+                                        text = stringResource(R.string.imaging_action_exit_dialog_confirm),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colors.buttonText
                                     )
@@ -419,13 +420,13 @@ fun ImagingScreen(
                                                 R.drawable.ic_save
                                             }
                                         ),
-                                        contentDescription = if (state.sessionUnitId != null) "Return Icon" else "Save Icon",
+                                        contentDescription = if (state.sessionUnitId != null) stringResource(R.string.imaging_content_description_return) else stringResource(R.string.imaging_content_description_save),
                                         tint = MaterialTheme.colors.info,
                                         modifier = Modifier.size(MaterialTheme.dimensions.iconSizeSmall)
                                     )
                                     Spacer(Modifier.size(MaterialTheme.dimensions.paddingSmall))
                                     Text(
-                                        text = if (state.sessionUnitId != null) "Return" else "Save",
+                                        text = if (state.sessionUnitId != null) stringResource(R.string.imaging_action_exit_dialog_return) else stringResource(R.string.imaging_action_exit_dialog_save),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colors.info
                                     )
@@ -433,7 +434,7 @@ fun ImagingScreen(
                             } else {
                                 TextButton(onClick = { onAction(ImagingAction.ClearPendingAction) }) {
                                     Text(
-                                        "Back",
+                                        stringResource(R.string.imaging_action_exit_dialog_back),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colors.textPrimary
                                     )
@@ -452,14 +453,14 @@ fun ImagingScreen(
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_info),
-                                    contentDescription = "Info Icon",
+                                    contentDescription = stringResource(R.string.imaging_content_description_info),
                                     tint = MaterialTheme.colors.icon,
                                     modifier = Modifier
                                         .size(MaterialTheme.dimensions.iconSizeLarge)
                                 )
                                 Spacer(modifier.size(MaterialTheme.dimensions.spacingMedium))
                                 Text(
-                                    text = "Specimen Selected for Further Processing",
+                                    text = stringResource(R.string.imaging_title_further_processing),
                                     color = MaterialTheme.colors.icon
                                 )
                             }
@@ -467,7 +468,7 @@ fun ImagingScreen(
                         text = {
                             Column {
                                 Text(
-                                    text = "Please package the specimen separately for further laboratory processing before continuing.",
+                                    text = stringResource(R.string.imaging_body_further_processing),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colors.textSecondary
                                 )
@@ -493,7 +494,7 @@ fun ImagingScreen(
                                         )
                                     )
                                     Text(
-                                        text = "I have packaged this specimen for further processing",
+                                        text = stringResource(R.string.imaging_label_packaging_confirmation),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colors.textPrimary,
                                         modifier = Modifier.padding(start = MaterialTheme.dimensions.paddingSmall)
@@ -511,7 +512,7 @@ fun ImagingScreen(
                                 )
                             ) {
                                 Text(
-                                    text = "Continue",
+                                    text = stringResource(R.string.imaging_action_further_processing_continue),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colors.buttonText
                                 )
@@ -558,7 +559,7 @@ fun ImagingScreen(
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.ic_cancel),
-                                            contentDescription = "Delete",
+                                            contentDescription = stringResource(R.string.imaging_content_description_delete),
                                             tint = MaterialTheme.colors.buttonText,
                                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
                                         )
@@ -582,7 +583,7 @@ fun ImagingScreen(
                                 )
                             ) {
                                 Text(
-                                    text = "Specimen ${page + 1}",
+                                    text = stringResource(R.string.imaging_label_specimen_number, page + 1),
                                     style = MaterialTheme.typography.titleLarge,
                                     color = MaterialTheme.colors.textPrimary,
                                     modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
@@ -612,9 +613,9 @@ fun ImagingScreen(
                                         Icon(
                                             painter = painterResource(id = R.drawable.ic_exit),
                                             contentDescription = if (state.sessionUnitId != null) {
-                                                "Back to collection batches"
+                                                stringResource(R.string.imaging_content_description_back_to_batches)
                                             } else {
-                                                "Exit"
+                                                stringResource(R.string.imaging_content_description_exit)
                                             },
                                             tint = MaterialTheme.colors.buttonText,
                                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
@@ -668,7 +669,7 @@ fun ImagingScreen(
                                         )
                                 ) {
                                     TextEntryField(
-                                        label = "Specimen ID",
+                                        label = stringResource(R.string.imaging_label_specimen_id),
                                         value = state.currentSpecimen.id,
                                         onValueChange = {
                                             onAction(ImagingAction.CorrectSpecimenId(it))
@@ -690,7 +691,7 @@ fun ImagingScreen(
                                         ) {
                                             if (state.currentSpecimenImage.species != null) {
                                                 Text(
-                                                    text = "Species: ${state.currentSpecimenImage.species}",
+                                                    text = stringResource(R.string.imaging_label_species, state.currentSpecimenImage.species),
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     color = MaterialTheme.colors.textPrimary
                                                 )
@@ -698,7 +699,7 @@ fun ImagingScreen(
 
                                             if (state.currentSpecimenImage.sex != null) {
                                                 Text(
-                                                    text = "Sex: ${state.currentSpecimenImage.sex}",
+                                                    text = stringResource(R.string.imaging_label_sex, state.currentSpecimenImage.sex),
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     color = MaterialTheme.colors.textPrimary
                                                 )
@@ -706,7 +707,7 @@ fun ImagingScreen(
 
                                             if (state.currentSpecimenImage.abdomenStatus != null) {
                                                 Text(
-                                                    text = "Abdomen Status: ${state.currentSpecimenImage.abdomenStatus}",
+                                                    text = stringResource(R.string.imaging_label_abdomen_status, state.currentSpecimenImage.abdomenStatus),
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     color = MaterialTheme.colors.textPrimary
                                                 )
@@ -721,7 +722,7 @@ fun ImagingScreen(
                                             shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)
                                         ) {
                                             Text(
-                                                text = "Save",
+                                                text = stringResource(R.string.imaging_action_save),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = MaterialTheme.colors.buttonText
                                             )
@@ -780,7 +781,7 @@ fun ImagingScreen(
                                                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
                                             )
                                             Text(
-                                                text = "Practice Session: Data will not be tracked.",
+                                                text = stringResource(R.string.imaging_body_practice_warning),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colors.textPrimary
                                             )
@@ -799,7 +800,7 @@ fun ImagingScreen(
                                     ) {
                                         if (state.allowModelInferenceToggle) {
                                             ToggleField(
-                                                label = "Run Model Inference",
+                                                label = stringResource(R.string.imaging_label_run_inference),
                                                 checked = state.shouldRunInference,
                                                 onCheckedChange = {
                                                     onAction(
@@ -813,7 +814,7 @@ fun ImagingScreen(
                                         }
 
                                         Text(
-                                            text = if (state.currentSpecimen.id == "") "Specimen ID will appear here" else state.currentSpecimen.id,
+                                            text = if (state.currentSpecimen.id == "") stringResource(R.string.imaging_label_specimen_id_placeholder) else state.currentSpecimen.id,
                                             style = MaterialTheme.typography.headlineMedium,
                                             color = if (state.currentSpecimen.id == "") MaterialTheme.colors.textSecondary else MaterialTheme.colors.textPrimary,
                                         )
@@ -821,7 +822,7 @@ fun ImagingScreen(
                                         Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
 
                                         ActionButton(
-                                            label = "Capture",
+                                            label = stringResource(R.string.imaging_action_capture),
                                             onClick = {
                                                 imageCaptureUseCase?.let {
                                                     onAction(
