@@ -11,7 +11,6 @@ object IntakeDropdownOptions {
 
     enum class SpecimenConditionOption(val label: String) {
         FRESH("Fresh"),
-        DESSICATED("Dessicated"),
         OTHER("Other")
     }
 

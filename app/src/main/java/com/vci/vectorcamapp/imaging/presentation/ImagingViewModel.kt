@@ -451,14 +451,15 @@ class ImagingViewModel @Inject constructor(
                                     )
                                 )
 
-                                when (captureDetectorResults.size) {
-                                    0 -> emitError(
+                                when {
+                                    captureDetectorResults.isEmpty() -> emitError(
                                         ImagingError.NO_SPECIMEN_FOUND,
                                         SnackbarDuration.Short
                                     )
 
-                                    1 -> {
-                                        val captureDetectorResult = captureDetectorResults.first()
+                                    else -> {
+                                        val captureDetectorResult =
+                                            captureDetectorResults.maxByOrNull { it.bboxConfidence }!!
                                         val topLeftXFloat =
                                             captureDetectorResult.bboxTopLeftX * jpegBitmap.width
                                         val topLeftYFloat =
@@ -551,10 +552,6 @@ class ImagingViewModel @Inject constructor(
                                         }
                                     }
 
-                                    else -> emitError(
-                                        ImagingError.MULTIPLE_SPECIMENS_FOUND,
-                                        SnackbarDuration.Short
-                                    )
                                 }
                             } else {
                                 _state.update {
