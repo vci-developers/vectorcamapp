@@ -69,8 +69,8 @@ android {
         create("colombia") {
             dimension = "region"
             applicationIdSuffix = ".colombia"
-            versionCode = 1007
-            versionName = "1.0.7"
+            versionCode = 1008
+            versionName = "1.0.8-larvae-usability-study"
 
             // Region-specific build config fields
             buildConfigField("String", "REGION", "\"colombia\"")
