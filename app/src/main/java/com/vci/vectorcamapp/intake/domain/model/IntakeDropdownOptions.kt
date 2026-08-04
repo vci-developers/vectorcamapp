@@ -3,9 +3,9 @@ package com.vci.vectorcamapp.intake.domain.model
 object IntakeDropdownOptions {
 
     enum class CollectionMethodOption(val label: String) {
-        CDC_LIGHT_TRAP("CDC Light Trap (LTC)"),
-        PYRETHRUM_SPRAY_CATCH("Pyrethrum Spray Catch (PSC)"),
-        HUMAN_LANDING_CATCH("Human Landing Catch (HLC)"),
+        OVITRAP("Ovitrap"),
+        MANUAL_COLLECTION("Manual collection"),
+        INSECTARY("Insectary"),
         OTHER("Other")
     }
 
@@ -13,11 +13,6 @@ object IntakeDropdownOptions {
         FRESH("Fresh"),
         DESSICATED("Dessicated"),
         OTHER("Other")
-    }
-
-    enum class CollectionPlaceOption(val label: String) {
-        INDOOR("Indoor"),
-        OUTDOOR("Outdoor")
     }
 
     enum class LlinTypeOption(val label: String) {

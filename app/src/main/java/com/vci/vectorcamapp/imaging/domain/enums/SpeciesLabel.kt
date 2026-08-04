@@ -1,11 +1,7 @@
 package com.vci.vectorcamapp.imaging.domain.enums
 
 enum class SpeciesLabel(val label: String) {
-    ANOPHELES_FUNESTUS("Anopheles funestus"),
-    ANOPHELES_GAMBIAE("Anopheles gambiae"),
-    ANOPHELES_OTHER("Anopheles other"),
-    CULEX("Culex"),
-    AEDES("Aedes"),
-    MANSONIA("Mansonia"),
-    NON_MOSQUITO("Non-Mosquito")
+    ANOPHELES_ALBIMANUS("Anopheles albimanus"),
+    AEDES_AEGYPTI("Aedes aegypti"),
+    AEDES_ALBOPICTUS("Aedes albopictus"),
 }
