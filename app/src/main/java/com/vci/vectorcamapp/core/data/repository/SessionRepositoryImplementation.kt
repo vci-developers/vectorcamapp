@@ -12,6 +12,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import java.util.UUID
 import javax.inject.Inject
 
@@ -23,6 +24,7 @@ class SessionRepositoryImplementation @Inject constructor(
             sessionDao.upsertSession(session.toEntity(siteId))
             Result.Success(Unit)
         } catch (e: Exception) {
+            Timber.e(e, "SessionRepository: upsertSession failed")
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }

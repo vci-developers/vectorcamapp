@@ -318,7 +318,9 @@ class RegistrationViewModel @Inject constructor(
             )
             deviceCache.saveDevice(device, selectedProgram.id)
             currentSessionCache.clearSession()
-            collectorRepository.upsertCollector(_state.value.collector)
+            collectorRepository.upsertCollector(_state.value.collector).onError { error ->
+                throw Exception("Failed to save collector during registration: $error")
+            }
 
             // Wire user identity for Crashlytics + GA4 cohort analysis
             VectorCamAnalytics.setDevice(device, selectedProgram.id)

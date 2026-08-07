@@ -5,6 +5,7 @@ import com.vci.vectorcamapp.core.data.dto.cache.DeviceCacheDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -25,7 +26,7 @@ object DeviceCacheDtoSerializer : Serializer<DeviceCacheDto> {
                 string = input.readBytes().decodeToString()
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "DeviceCache: deserialization failed, resetting to default")
             defaultValue
         }
     }

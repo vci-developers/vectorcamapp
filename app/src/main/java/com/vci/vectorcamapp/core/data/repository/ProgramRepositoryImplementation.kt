@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import javax.inject.Inject
 
 class ProgramRepositoryImplementation @Inject constructor(
@@ -20,6 +21,7 @@ class ProgramRepositoryImplementation @Inject constructor(
             programDao.upsertProgram(program.toEntity())
             Result.Success(Unit)
         } catch (e: Exception) {
+            Timber.e(e, "ProgramRepository: upsertProgram failed")
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }

@@ -16,7 +16,10 @@ import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
+import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.navigation.Destination
@@ -177,6 +180,15 @@ class CollectionBatchListViewModel @Inject constructor(
                     val currentSessionSiteId = currentSessionCache.getSiteId()
 
                     if (currentSession == null || currentSessionSiteId == null) {
+                        VectorCamCrashlytics.exception(
+                            throwable = IllegalStateException("Submit attempted with no active session in cache"),
+                            context = VectorCamCrashlyticsContext(
+                                screen = "CollectionBatchList",
+                                feature = "Session Submit",
+                                action = "ConfirmSubmitSession"
+                            )
+                        )
+                        emitError(RoomDbError.UNKNOWN_ERROR)
                         _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
                         return@launch
                     }
@@ -188,6 +200,17 @@ class CollectionBatchListViewModel @Inject constructor(
                         )
                         currentSessionCache.clearSession()
                         _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
+                    } else {
+                        VectorCamCrashlytics.exception(
+                            throwable = IllegalStateException("markSessionAsComplete returned false"),
+                            context = VectorCamCrashlyticsContext(
+                                screen = "CollectionBatchList",
+                                feature = "Session Submit",
+                                action = "markSessionAsComplete",
+                                sessionId = currentSession.localId.toString()
+                            )
+                        )
+                        emitError(RoomDbError.UNKNOWN_ERROR)
                     }
                 }
             }

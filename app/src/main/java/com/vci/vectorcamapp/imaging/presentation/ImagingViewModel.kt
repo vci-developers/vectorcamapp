@@ -331,6 +331,15 @@ class ImagingViewModel @Inject constructor(
                     val currentSessionSiteId = currentSessionCache.getSiteId()
 
                     if (currentSession == null || currentSessionSiteId == null) {
+                        VectorCamCrashlytics.exception(
+                            throwable = IllegalStateException("Submit attempted with no active session in cache"),
+                            context = VectorCamCrashlyticsContext(
+                                screen = "Imaging",
+                                feature = "Session Submit",
+                                action = "SubmitSession"
+                            )
+                        )
+                        emitError(ImagingError.NO_ACTIVE_SESSION)
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
                         return@launch
                     }
@@ -352,6 +361,17 @@ class ImagingViewModel @Inject constructor(
                         )
                         currentSessionCache.clearSession()
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
+                    } else {
+                        VectorCamCrashlytics.exception(
+                            throwable = IllegalStateException("markSessionAsComplete returned false"),
+                            context = VectorCamCrashlyticsContext(
+                                screen = "Imaging",
+                                feature = "Session Submit",
+                                action = "markSessionAsComplete",
+                                sessionId = currentSession.localId.toString()
+                            )
+                        )
+                        emitError(ImagingError.UNKNOWN_ERROR)
                     }
                 }
 
@@ -785,6 +805,18 @@ class ImagingViewModel @Inject constructor(
                     _events.send(
                         ImagingEvent.NavigateBackToCollectionBatchListScreen(currentSession.localId)
                     )
+                }
+
+                is ImagingAction.CameraBindFailed -> {
+                    VectorCamCrashlytics.exception(
+                        throwable = action.throwable,
+                        context = VectorCamCrashlyticsContext(
+                            screen = "Imaging",
+                            feature = "Camera",
+                            action = "bindToLifecycle"
+                        )
+                    )
+                    emitError(ImagingError.UNKNOWN_INITIALIZATION_ERROR)
                 }
             }
         }

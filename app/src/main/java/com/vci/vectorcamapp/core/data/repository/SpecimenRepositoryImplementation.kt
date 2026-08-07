@@ -12,6 +12,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import timber.log.Timber
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -31,6 +32,7 @@ class SpecimenRepositoryImplementation @Inject constructor(
         } catch (e: SQLiteConstraintException) {
             Result.Error(RoomDbError.CONSTRAINT_VIOLATION)
         } catch (e: Exception) {
+            Timber.e(e, "SpecimenRepository: insertSpecimen failed")
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }
@@ -48,6 +50,7 @@ class SpecimenRepositoryImplementation @Inject constructor(
         } catch (e: SQLiteConstraintException) {
             Result.Error(RoomDbError.CONSTRAINT_VIOLATION)
         } catch (e: Exception) {
+            Timber.e(e, "SpecimenRepository: updateSpecimen failed")
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }

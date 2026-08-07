@@ -216,33 +216,29 @@ class SettingsViewModel @Inject constructor(
                         return@launch
                     }
 
-                    try {
-                        collectorRepository.upsertCollector(collector)
-                        _state.update {
+                    when (collectorRepository.upsertCollector(collector)) {
+                        is Result.Success -> _state.update {
                             it.copy(
                                 selectedCollector = null,
                                 isEditCollectorDialogVisible = false,
                                 similarCollector = null
                             )
                         }
-                    } catch (e: Exception) {
-                        emitError(SettingsError.COLLECTOR_SAVE_FAILED)
+                        is Result.Error -> emitError(SettingsError.COLLECTOR_SAVE_FAILED)
                     }
                 }
 
                 SettingsAction.ConfirmSaveCollector -> {
                     val collector = state.value.selectedCollector ?: return@launch
-                    try {
-                        collectorRepository.upsertCollector(collector)
-                        _state.update {
+                    when (collectorRepository.upsertCollector(collector)) {
+                        is Result.Success -> _state.update {
                             it.copy(
                                 selectedCollector = null,
                                 isEditCollectorDialogVisible = false,
                                 similarCollector = null
                             )
                         }
-                    } catch (e: Exception) {
-                        emitError(SettingsError.COLLECTOR_SAVE_FAILED)
+                        is Result.Error -> emitError(SettingsError.COLLECTOR_SAVE_FAILED)
                     }
                 }
 
@@ -268,8 +264,13 @@ class SettingsViewModel @Inject constructor(
 
                 SettingsAction.ConfirmDeleteCollector -> {
                     val collector = state.value.selectedCollector ?: return@launch
-                    try {
+                    val deleted = try {
                         collectorRepository.deleteCollector(collector)
+                    } catch (e: Exception) {
+                        emitError(SettingsError.COLLECTOR_DELETION_FAILED)
+                        return@launch
+                    }
+                    if (deleted) {
                         _state.update {
                             it.copy(
                                 selectedCollector = null,
@@ -277,7 +278,7 @@ class SettingsViewModel @Inject constructor(
                                 isDeleteCollectorDialogVisible = false
                             )
                         }
-                    } catch (e: Exception) {
+                    } else {
                         emitError(SettingsError.COLLECTOR_DELETION_FAILED)
                     }
                 }
@@ -426,9 +427,18 @@ class SettingsViewModel @Inject constructor(
 
     private fun loadSettingsDetails() {
         viewModelScope.launch {
-            val device = deviceCache.getDevice() ?: return@launch
-            val programId = deviceCache.getProgramId() ?: return@launch
-            val program = programRepository.getProgramById(programId) ?: return@launch
+            val device = deviceCache.getDevice() ?: run {
+                emitError(SettingsError.DATA_SYNC_FAILED)
+                return@launch
+            }
+            val programId = deviceCache.getProgramId() ?: run {
+                emitError(SettingsError.DATA_SYNC_FAILED)
+                return@launch
+            }
+            val program = programRepository.getProgramById(programId) ?: run {
+                emitError(SettingsError.DATA_SYNC_FAILED)
+                return@launch
+            }
 
             _state.update {
                 it.copy(

@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
+import timber.log.Timber
 import javax.inject.Inject
 
 class InferenceResultRepositoryImplementation @Inject constructor(
@@ -19,6 +20,7 @@ class InferenceResultRepositoryImplementation @Inject constructor(
         } catch (e: SQLiteConstraintException) {
             Result.Error(RoomDbError.CONSTRAINT_VIOLATION)
         } catch (e: Exception) {
+            Timber.e(e, "InferenceResultRepository: insertInferenceResult failed")
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }
@@ -34,6 +36,7 @@ class InferenceResultRepositoryImplementation @Inject constructor(
         } catch (e: SQLiteConstraintException) {
             Result.Error(RoomDbError.CONSTRAINT_VIOLATION)
         } catch (e: Exception) {
+            Timber.e(e, "InferenceResultRepository: updateInferenceResult failed")
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }

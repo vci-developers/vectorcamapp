@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.imaging.presentation
 import android.view.Surface
 import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.Camera
+import androidx.camera.core.CameraState
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
@@ -48,6 +49,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,6 +57,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Observer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -176,8 +179,22 @@ fun ImagingScreen(
             camera = boundCamera
 
         } catch (e: Exception) {
-            e.printStackTrace()
+            onAction(ImagingAction.CameraBindFailed(e))
         }
+    }
+
+    // Observe CameraX state after a successful bind so errors that occur at runtime
+    // (e.g. camera permission revoked while the screen is active, hardware disconnect)
+    // are surfaced to the user rather than showing a silent black screen.
+    DisposableEffect(camera) {
+        val cameraInfo = camera?.cameraInfo ?: return@DisposableEffect onDispose {}
+        val observer = Observer<CameraState> { cameraState ->
+            if (cameraState.error != null) {
+                onAction(ImagingAction.CameraBindFailed(Exception("CameraX error ${cameraState.error!!.code}")))
+            }
+        }
+        cameraInfo.cameraState.observeForever(observer)
+        onDispose { cameraInfo.cameraState.removeObserver(observer) }
     }
 
     val pagerState = rememberPagerState(

@@ -8,6 +8,7 @@ import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
+import timber.log.Timber
 import javax.inject.Inject
 
 class FormQuestionRepositoryImplementation @Inject constructor(
@@ -21,6 +22,7 @@ class FormQuestionRepositoryImplementation @Inject constructor(
             formQuestionDao.upsertFormQuestion(formQuestion.toEntity(formId, parentId))
             Result.Success(Unit)
         } catch (e: Exception) {
+            Timber.e(e, "FormQuestionRepository: upsertFormQuestion failed")
             Result.Error(RoomDbError.UNKNOWN_ERROR)
         }
     }
