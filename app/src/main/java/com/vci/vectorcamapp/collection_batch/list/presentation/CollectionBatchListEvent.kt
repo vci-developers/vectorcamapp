@@ -8,4 +8,5 @@ sealed interface CollectionBatchListEvent {
         val sessionId: UUID,
         val sessionUnitId: UUID?
     ) : CollectionBatchListEvent
+    data object NavigateToSettingsScreen : CollectionBatchListEvent
 }

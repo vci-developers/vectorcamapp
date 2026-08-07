@@ -7,6 +7,8 @@ import com.vci.vectorcamapp.collection_batch.domain.util.CollectionBatchIdentity
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
+import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
+import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
@@ -45,6 +47,7 @@ class CollectionBatchListViewModel @Inject constructor(
     private val formQuestionRepository: FormQuestionRepository,
     private val formAnswerRepository: FormAnswerRepository,
     private val workManagerRepository: WorkManagerRepository,
+    private val formDataSource: FormDataSource,
     errorMessageEmitter: ErrorMessageEmitter
 ) : CoreViewModel(errorMessageEmitter) {
 
@@ -187,11 +190,41 @@ class CollectionBatchListViewModel @Inject constructor(
                             currentSession.localId, currentSessionSiteId
                         )
                         currentSessionCache.clearSession()
-                        _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
+                        checkFormVersionAndNavigate()
                     }
+                }
+
+                CollectionBatchListAction.DismissFormObsoleteDialog -> {
+                    _state.update { it.copy(showFormObsoleteDialog = false) }
+                    _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
+                }
+
+                CollectionBatchListAction.GoToSettingsFromFormObsolete -> {
+                    _state.update { it.copy(showFormObsoleteDialog = false) }
+                    _events.send(CollectionBatchListEvent.NavigateToSettingsScreen)
                 }
             }
         }
+    }
+
+    private suspend fun checkFormVersionAndNavigate() {
+        val programId = deviceCache.getProgramId()
+        if (programId != null) {
+            val program = programRepository.getProgramById(programId)
+            val localFormVersion = program?.formVersion
+            if (localFormVersion != null) {
+                when (val result = formDataSource.getCurrentFormByProgramId(programId)) {
+                    is Result.Success -> {
+                        if (result.data.version != localFormVersion) {
+                            _state.update { it.copy(showFormObsoleteDialog = true) }
+                            return
+                        }
+                    }
+                    is Result.Error -> { /* network error — proceed normally */ }
+                }
+            }
+        }
+        _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
     }
 
     private suspend fun loadSessionUnitFormQuestions(): List<FormQuestion> {

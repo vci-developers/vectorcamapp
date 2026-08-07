@@ -26,4 +26,6 @@ sealed interface ImagingAction {
     data object ClearPendingAction : ImagingAction
     data object ConfirmPendingAction : ImagingAction
     data object ReturnToCollectionBatchList : ImagingAction
+    data object DismissFormObsoleteDialog : ImagingAction
+    data object GoToSettingsFromFormObsolete : ImagingAction
 }

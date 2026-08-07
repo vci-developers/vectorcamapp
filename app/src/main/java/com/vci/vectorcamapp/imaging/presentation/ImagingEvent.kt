@@ -5,4 +5,5 @@ import java.util.UUID
 sealed interface ImagingEvent {
     data object NavigateBackToLandingScreen : ImagingEvent
     data class NavigateBackToCollectionBatchListScreen(val sessionId: UUID) : ImagingEvent
+    data object NavigateToSettingsScreen : ImagingEvent
 }

@@ -444,6 +444,48 @@ fun ImagingScreen(
                     )
                 }
 
+                if (state.showFormObsoleteDialog) {
+                    AlertDialog(
+                        onDismissRequest = { onAction(ImagingAction.DismissFormObsoleteDialog) },
+                        title = {
+                            Text(
+                                text = "Form Update Required",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colors.textPrimary
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = "The form version on your device is out of date. Please sync to get the latest form before starting a new session.\n\nWould you like to go to Settings to sync now?",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colors.textSecondary
+                            )
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = { onAction(ImagingAction.GoToSettingsFromFormObsolete) }
+                            ) {
+                                Text(
+                                    text = "Go to Settings",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.buttonText
+                                )
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = { onAction(ImagingAction.DismissFormObsoleteDialog) }
+                            ) {
+                                Text(
+                                    text = "Later",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textPrimary
+                                )
+                            }
+                        }
+                    )
+                }
+
                 if (state.currentSpecimen.shouldProcessFurther) {
                     AlertDialog(
                         onDismissRequest = { },
