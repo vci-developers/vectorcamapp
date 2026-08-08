@@ -17,7 +17,8 @@ data class ImageMetadataDto(
     val imageHeight: Int = 0,
     val focalPointX: Float? = null,
     val focalPointY: Float? = null,
-    val afRegions: List<AfRegionDto> = emptyList()
+    val afRegions: List<AfRegionDto> = emptyList(),
+    val modelFileNames: List<String> = emptyList()
 )
 
 @Serializable
