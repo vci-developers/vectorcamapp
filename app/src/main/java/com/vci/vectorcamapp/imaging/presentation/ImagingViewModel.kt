@@ -179,6 +179,14 @@ class ImagingViewModel @Inject constructor(
                     _state.update { it.copy(focusPoint = null, isManualFocusing = false) }
                 }
 
+                is ImagingAction.ToggleFlash -> {
+                    VectorCamAnalytics.logEvent(
+                        "imaging_flash_toggled",
+                        mapOf("is_enabled" to action.isOn)
+                    )
+                    _state.update { it.copy(isFlashOn = action.isOn) }
+                }
+
                 is ImagingAction.CorrectSpecimenId -> {
                     VectorCamAnalytics.logEvent(
                         "imaging_specimen_id_corrected",

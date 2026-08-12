@@ -9,10 +9,12 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
@@ -24,6 +26,7 @@ import com.vci.vectorcamapp.animation.presentation.CaptureAnimation
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.imaging.data.camera.CameraFocusControllerImplementation
 import com.vci.vectorcamapp.ui.extensions.colors
+import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
 fun LiveCameraPreview(
@@ -35,7 +38,9 @@ fun LiveCameraPreview(
     onCancelFocus: () -> Unit,
     modifier: Modifier = Modifier,
     isManualFocusing: Boolean,
-    isProcessing: Boolean
+    isProcessing: Boolean,
+    isFlashOn: Boolean,
+    onToggleFlash: (Boolean) -> Unit,
 ) {
     val density = LocalDensity.current
     val view = LocalView.current
@@ -128,6 +133,15 @@ fun LiveCameraPreview(
                 }
             }
         }
+
+        FlashToggleOverlay(
+            camera = camera,
+            isFlashOn = isFlashOn,
+            onToggleFlash = onToggleFlash,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(MaterialTheme.dimensions.paddingMedium),
+        )
 
         CaptureAnimation(
             modifier = Modifier.fillMaxSize(),

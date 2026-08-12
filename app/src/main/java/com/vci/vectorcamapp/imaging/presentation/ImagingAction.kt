@@ -19,6 +19,7 @@ sealed interface ImagingAction {
     data object RetakeImage : ImagingAction
     data class FocusAt(val offset: Offset) : ImagingAction
     data object CancelFocus : ImagingAction
+    data class ToggleFlash(val isOn: Boolean) : ImagingAction
     data object ShowExitDialog : ImagingAction
     data object DismissExitDialog : ImagingAction
     data class TogglePackagingConfirmation(val isChecked: Boolean) : ImagingAction

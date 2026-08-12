@@ -56,5 +56,7 @@
     <string name="imaging_content_description_mosquito">Mosquito</string>
     <string name="imaging_content_description_previous">Ícono de anterior</string>
     <string name="imaging_content_description_next">Ícono de siguiente</string>
+    <string name="imaging_content_description_flash_on">Apagar flash</string>
+    <string name="imaging_content_description_flash_off">Encender flash</string>
 
 </resources>

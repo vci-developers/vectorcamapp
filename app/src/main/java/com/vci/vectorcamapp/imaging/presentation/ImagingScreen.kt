@@ -754,7 +754,9 @@ fun ImagingScreen(
                                     onCancelFocus = { onAction(ImagingAction.CancelFocus) },
                                     modifier = Modifier.fillMaxSize(),
                                     isManualFocusing = state.isManualFocusing,
-                                    isProcessing = state.isProcessing
+                                    isProcessing = state.isProcessing,
+                                    isFlashOn = state.isFlashOn,
+                                    onToggleFlash = { isOn -> onAction(ImagingAction.ToggleFlash(isOn)) },
                                 )
                             }
 

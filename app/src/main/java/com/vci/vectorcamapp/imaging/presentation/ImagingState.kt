@@ -39,6 +39,7 @@ data class ImagingState(
     val allowModelInferenceToggle: Boolean = false,
     val shouldRunInference: Boolean = true,
     val isManualFocusing: Boolean = false,
+    val isFlashOn: Boolean = false,
     val isCameraReady: Boolean = false,
     val showExitDialog: Boolean = false,
     val showProcessFurtherDialog: Boolean = false,
