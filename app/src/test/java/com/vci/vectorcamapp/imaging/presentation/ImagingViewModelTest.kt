@@ -4,7 +4,10 @@ import androidx.compose.ui.geometry.Offset
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
+import com.vci.vectorcamapp.core.data.dto.cache.ProgramConfigCacheDto
+import com.vci.vectorcamapp.core.data.dto.program.SpecimenIdConfigDto
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.cache.ProgramConfigCache
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.util.Result
@@ -50,6 +53,7 @@ class ImagingViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var currentSessionCache: CurrentSessionCache
+    private lateinit var programConfigCache: ProgramConfigCache
     private lateinit var sessionRepository: SessionRepository
     private lateinit var specimenRepository: SpecimenRepository
     private lateinit var specimenImageRepository: SpecimenImageRepository
@@ -103,6 +107,14 @@ class ImagingViewModelTest {
         coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
 
         currentSessionCache = mockk(relaxed = true)
+        programConfigCache = mockk(relaxed = true)
+        coEvery { programConfigCache.getProgramConfig() } returns ProgramConfigCacheDto(
+            collectorTitles = emptyList(),
+            specimenId = SpecimenIdConfigDto(
+                validation = "^[A-Za-z]{3}\\d{3}$",
+                errorMessage = "Specimen ID must be 3 letters followed by 3 numbers (e.g., ABC123).",
+            ),
+        )
         sessionRepository = mockk(relaxed = true)
         specimenRepository = mockk(relaxed = true)
         specimenImageRepository = mockk(relaxed = true)
@@ -158,6 +170,7 @@ class ImagingViewModelTest {
         viewModel = ImagingViewModel(
             savedStateHandle = savedStateHandle,
             currentSessionCache = currentSessionCache,
+            programConfigCache = programConfigCache,
             sessionRepository = sessionRepository,
             specimenRepository = specimenRepository,
             specimenImageRepository = specimenImageRepository,

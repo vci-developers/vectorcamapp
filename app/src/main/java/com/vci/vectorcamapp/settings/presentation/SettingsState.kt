@@ -25,6 +25,7 @@ data class SettingsState (
         collectorLastTrainedOn = null
     ),
     val collectors: List<Collector> = emptyList(),
+    val collectorTitles: List<String> = emptyList(),
     val selectedCollector: Collector? = null,
     val similarCollector: Collector? = null,
     val isEditCollectorDialogVisible: Boolean = false,

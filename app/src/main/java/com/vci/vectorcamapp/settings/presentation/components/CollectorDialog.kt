@@ -20,13 +20,13 @@ import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
-import com.vci.vectorcamapp.settings.domain.model.SettingsDropdownOptions
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
 fun CollectorDialog(
     collector: Collector,
+    collectorTitles: List<String>,
     collectorNameError: CollectorValidationError?,
     collectorTitleError: CollectorValidationError?,
     collectorLastTrainedOnError: CollectorValidationError?,
@@ -74,18 +74,19 @@ fun CollectorDialog(
 
                     DropdownField(
                         label = stringResource(R.string.settings_label_collector_title),
-                        options = SettingsDropdownOptions.CollectorTitleOption.entries,
-                        selectedOption = SettingsDropdownOptions.CollectorTitleOption.entries.firstOrNull { it.label == collector.title },
-                        onOptionSelected = { option ->
-                            onTitleChange(option.label)
+                        options = collectorTitles,
+                        selectedOption = collectorTitles.firstOrNull { it == collector.title },
+                        onOptionSelected = { title ->
+                            onTitleChange(title)
                         },
+                        enabled = collectorTitles.isNotEmpty(),
                         error = collectorTitleError,
                         modifier = modifier
                             .fillMaxWidth()
                             .height(MaterialTheme.dimensions.componentHeightLarge)
-                    ) { option ->
+                    ) { title ->
                         Text(
-                            text = option.label,
+                            text = title,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textPrimary
                         )

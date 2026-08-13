@@ -6,8 +6,11 @@ import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto
 import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.util.sortByHierarchy
+import com.vci.vectorcamapp.core.data.dto.cache.ProgramConfigCacheDto
+import com.vci.vectorcamapp.core.data.dto.program.SpecimenIdConfigDto
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.cache.ProgramConfigCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
@@ -30,6 +33,7 @@ import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.registration.domain.model.DefaultCollectorTitles
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.registration.logging.RegistrationErrorLogger
 import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
@@ -51,6 +55,7 @@ class RegistrationViewModel @Inject constructor(
     private val transactionHelper: TransactionHelper,
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
+    private val programConfigCache: ProgramConfigCache,
     private val collectorRepository: CollectorRepository,
     private val collectorValidationUseCases: CollectorValidationUseCases,
     private val programDataSource: ProgramDataSource,
@@ -100,7 +105,21 @@ class RegistrationViewModel @Inject constructor(
                             "program_name" to action.program.name
                         )
                     )
-                    _state.update { it.copy(selectedProgram = action.program) }
+                    _state.update {
+                        it.copy(
+                            selectedProgram = action.program,
+                            isLoadingSelectedProgram = true,
+                            collectorTitles = emptyList(),
+                            specimenIdValidation = null,
+                            specimenIdErrorMessage = null,
+                            collector = it.collector.copy(title = ""),
+                            registrationErrors = it.registrationErrors.copy(
+                                collectorName = null,
+                                collectorTitle = null,
+                            )
+                        )
+                    }
+                    fetchProgramById(action.program.id)
                 }
 
                 is RegistrationAction.EnterCollectorName -> {
@@ -317,6 +336,18 @@ class RegistrationViewModel @Inject constructor(
                 submittedAt = null,
             )
             deviceCache.saveDevice(device, selectedProgram.id)
+            val specimenIdConfig = SpecimenIdConfigDto(
+                validation = _state.value.specimenIdValidation,
+                errorMessage = _state.value.specimenIdErrorMessage,
+            ).takeIf {
+                !it.validation.isNullOrBlank() || !it.errorMessage.isNullOrBlank()
+            }
+            programConfigCache.saveProgramConfig(
+                ProgramConfigCacheDto(
+                    collectorTitles = _state.value.collectorTitles.takeIf { it.isNotEmpty() },
+                    specimenId = specimenIdConfig,
+                )
+            )
             currentSessionCache.clearSession()
             collectorRepository.upsertCollector(_state.value.collector)
 
@@ -358,6 +389,78 @@ class RegistrationViewModel @Inject constructor(
     private fun loadRegistrationDetails() {
         viewModelScope.launch {
             fetchAndSeedAllPrograms()
+        }
+    }
+
+    private suspend fun fetchProgramById(programId: Int) {
+        if (!_isConnectedToInternet.value) {
+            applyCollectorTitlesFallback(programId)
+            emitError(NetworkError.NO_INTERNET)
+            return
+        }
+
+        when (val result = programDataSource.getProgramById(programId)) {
+            is Result.Success -> {
+                val programDto = result.data
+                val program = programDto.toDomain()
+                val collectorTitles = programDto.config?.collectorTitles
+                    ?.takeIf { it.isNotEmpty() }
+                    ?: DefaultCollectorTitles.VALUES
+                val specimenIdValidation = programDto.config?.specimenId?.validation
+                val specimenIdErrorMessage = programDto.config?.specimenId?.errorMessage
+
+                programRepository.upsertProgram(program)
+                _state.update { currentState ->
+                    // Ignore stale responses if the user already selected a different program.
+                    if (currentState.selectedProgram?.id != programId) {
+                        return@update currentState
+                    }
+                    currentState.copy(
+                        selectedProgram = program,
+                        isLoadingSelectedProgram = false,
+                        collectorTitles = collectorTitles,
+                        specimenIdValidation = specimenIdValidation,
+                        specimenIdErrorMessage = specimenIdErrorMessage,
+                        collector = currentState.collector.copy(
+                            title = currentState.collector.title.takeIf { it in collectorTitles }
+                                .orEmpty()
+                        )
+                    )
+                }
+                VectorCamAnalytics.logEvent(
+                    "registration_program_fetched",
+                    mapOf(
+                        "program_id" to programId,
+                        "collector_title_count" to collectorTitles.size
+                    )
+                )
+            }
+
+            is Result.Error -> {
+                applyCollectorTitlesFallback(programId)
+                VectorCamAnalytics.logEvent(
+                    "registration_program_fetch_failed",
+                    mapOf(
+                        "program_id" to programId,
+                        "error_class" to (result.error as? Enum<*>)?.name
+                    )
+                )
+                emitError(result.error)
+            }
+        }
+    }
+
+    private fun applyCollectorTitlesFallback(programId: Int) {
+        _state.update { currentState ->
+            if (currentState.selectedProgram?.id != programId) {
+                return@update currentState
+            }
+            currentState.copy(
+                isLoadingSelectedProgram = false,
+                collectorTitles = DefaultCollectorTitles.VALUES,
+                specimenIdValidation = null,
+                specimenIdErrorMessage = null,
+            )
         }
     }
 

@@ -12,6 +12,10 @@ data class RegistrationState(
     val isLoading: Boolean = false,
     val programs: List<Program> = emptyList(),
     val selectedProgram: Program? = null,
+    val isLoadingSelectedProgram: Boolean = false,
+    val collectorTitles: List<String> = emptyList(),
+    val specimenIdValidation: String? = null,
+    val specimenIdErrorMessage: String? = null,
     val collector: Collector = Collector(
         id = UUID.randomUUID(),
         name = "",

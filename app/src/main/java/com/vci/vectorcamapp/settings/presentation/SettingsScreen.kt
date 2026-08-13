@@ -321,6 +321,7 @@ fun SettingsScreen(
     state.selectedCollector?.let { collector ->
         CollectorDialog(
             collector = collector,
+            collectorTitles = state.collectorTitles,
             collectorNameError = state.settingsErrors.collectorName,
             collectorTitleError = state.settingsErrors.collectorTitle,
             collectorLastTrainedOnError = state.settingsErrors.collectorLastTrainedOn,

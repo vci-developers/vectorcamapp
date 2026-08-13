@@ -101,7 +101,15 @@ class RegistrationScreenTest {
                                     onAction = { action ->
                                         when (action) {
                                             is RegistrationAction.SelectProgram -> {
-                                                state = state.copy(selectedProgram = action.program)
+                                                state = state.copy(
+                                                    selectedProgram = action.program,
+                                                    isLoadingSelectedProgram = false,
+                                                    collectorTitles = listOf(
+                                                        "Vector Control Officer (VCO)",
+                                                        "Village Health Team (VHT)",
+                                                        "Field Operations Team (FOT)",
+                                                    ),
+                                                )
                                             }
 
                                             is RegistrationAction.ConfirmRegistration -> {
@@ -232,7 +240,17 @@ class RegistrationScreenTest {
         launchRegistrationScreen(
             initialState = RegistrationState(
                 programs = testPrograms,
-                selectedProgram = testPrograms.first()
+                selectedProgram = testPrograms.first(),
+                isLoadingSelectedProgram = false,
+                collectorTitles = listOf(
+                    "Vector Control Officer (VCO)",
+                    "Village Health Team (VHT)",
+                    "Field Operations Team (FOT)",
+                ),
+                collector = RegistrationState().collector.copy(
+                    name = "Alice",
+                    title = "Vector Control Officer (VCO)",
+                ),
             )
         )
         assertConfirmEnabled(true)

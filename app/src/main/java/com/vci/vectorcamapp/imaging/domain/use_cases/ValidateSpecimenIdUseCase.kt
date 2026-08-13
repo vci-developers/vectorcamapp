@@ -8,7 +8,7 @@ class ValidateSpecimenIdUseCase @Inject constructor() {
 
     companion object {
         private const val SPECIMEN_ID_LENGTH = 6
-        private val SPECIMEN_ID_PATTERN = Regex("^[A-Z]{3}\\d{3}$")
+        private const val DEFAULT_SPECIMEN_ID_PATTERN = "^[A-Z]{3}\\d{3}$"
 
         private val LETTER_CORRECTIONS = mapOf(
             "0" to "O",
@@ -38,15 +38,18 @@ class ValidateSpecimenIdUseCase @Inject constructor() {
     }
 
     operator fun invoke(
-        specimenId: String, shouldAutoCorrect: Boolean
+        specimenId: String,
+        shouldAutoCorrect: Boolean,
+        validationPattern: String? = null,
     ): Result<String, ImagingError> {
         val cleanedSpecimenId = specimenId.trim().replace(" ", "").uppercase()
 
-        if (cleanedSpecimenId.length != SPECIMEN_ID_LENGTH || !cleanedSpecimenId.all { it.isLetterOrDigit() }) {
+        if (cleanedSpecimenId.isEmpty() || !cleanedSpecimenId.all { it.isLetterOrDigit() }) {
             return Result.Error(ImagingError.INVALID_SPECIMEN_ID)
         }
 
-        val corrected = if (shouldAutoCorrect) {
+        // Auto-correct assumes the historical 3-letter + 3-digit specimen ID shape.
+        val corrected = if (shouldAutoCorrect && cleanedSpecimenId.length == SPECIMEN_ID_LENGTH) {
             buildString {
                 cleanedSpecimenId.forEachIndexed { index, character ->
                     val correctedChar = if (index < 3) {
@@ -61,10 +64,20 @@ class ValidateSpecimenIdUseCase @Inject constructor() {
             cleanedSpecimenId
         }
 
-        return if (SPECIMEN_ID_PATTERN.matches(corrected)) {
+        val pattern = resolvePattern(validationPattern)
+        return if (pattern.matches(corrected)) {
             Result.Success(corrected)
         } else {
             Result.Error(ImagingError.INVALID_SPECIMEN_ID)
+        }
+    }
+
+    private fun resolvePattern(validationPattern: String?): Regex {
+        val pattern = validationPattern?.takeIf { it.isNotBlank() } ?: DEFAULT_SPECIMEN_ID_PATTERN
+        return try {
+            Regex(pattern)
+        } catch (_: Exception) {
+            Regex(DEFAULT_SPECIMEN_ID_PATTERN)
         }
     }
 }

@@ -6,6 +6,7 @@ import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.cache.ProgramConfigCache
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
@@ -58,6 +59,7 @@ class IntakeViewModel @Inject constructor(
     private val deviceCache: DeviceCache,
     private val currentSessionCache: CurrentSessionCache,
     private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache,
+    private val programConfigCache: ProgramConfigCache,
     private val siteRepository: SiteRepository,
     private val locationTypeRepository: LocationTypeRepository,
     private val surveillanceFormRepository: SurveillanceFormRepository,
@@ -313,6 +315,14 @@ class IntakeViewModel @Inject constructor(
                             )
                             _events.send(IntakeEvent.NavigateAfterIntake(collectionMethodWorkflow.postIntakeDestination))
                         }
+                    }
+                }
+
+                is IntakeAction.SelectCollectorTitle -> {
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(collectorTitle = action.title)
+                        )
                     }
                 }
 
@@ -655,6 +665,7 @@ class IntakeViewModel @Inject constructor(
             val cachedDefaultDistrict = defaultFields?.district.orEmpty()
             val cachedDefaultVillageName = defaultFields?.villageName.orEmpty()
             val cachedLocationSelection = defaultFields?.locationSelections ?: emptyMap()
+            val collectorTitles = programConfigCache.getProgramConfig()?.collectorTitles.orEmpty()
 
             val effectiveSession = currentSession ?: _state.value.session.copy(
                 type = resolvedSessionType,
@@ -752,6 +763,7 @@ class IntakeViewModel @Inject constructor(
                         siteSelectionsByLocationTypeId = validatedSiteSelectionsByLocationTypeId,
                         allSitesInProgram = currentAllSites,
                         allCollectors = currentAllCollectors,
+                        collectorTitles = collectorTitles,
                         allLocationTypesInProgram = currentAllLocationTypes,
                         selectedDistrict = validatedDistrict,
                         selectedVillageName = validatedVillageName,

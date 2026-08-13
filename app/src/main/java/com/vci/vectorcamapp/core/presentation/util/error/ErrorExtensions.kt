@@ -5,6 +5,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.collection_batch.domain.util.error.CollectionBatchFormError
 import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError
 import com.vci.vectorcamapp.core.domain.util.Error
+import com.vci.vectorcamapp.core.domain.util.MessageError
 import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
@@ -18,6 +19,10 @@ import com.vci.vectorcamapp.landing.domain.util.LandingError
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
 
 fun Error.toString(context: Context): String {
+    if (this is MessageError) {
+        return message
+    }
+
     val resId = when (this) {
         is NetworkError -> when (this) {
             NetworkError.REQUEST_TIMEOUT -> R.string.network_error_request_timeout

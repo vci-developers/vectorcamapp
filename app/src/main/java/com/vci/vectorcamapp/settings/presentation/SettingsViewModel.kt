@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.data.util.sortByHierarchy
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.cache.ProgramConfigCache
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
@@ -63,6 +64,7 @@ class SettingsViewModel @Inject constructor(
     private val formQuestionRepository: FormQuestionRepository,
     private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache,
     private val currentSessionCache: CurrentSessionCache,
+    private val programConfigCache: ProgramConfigCache,
     private val appLocaleManager: AppLocaleManager,
     connectivityObserver: ConnectivityObserver,
     errorMessageEmitter: ErrorMessageEmitter,
@@ -429,11 +431,13 @@ class SettingsViewModel @Inject constructor(
             val device = deviceCache.getDevice() ?: return@launch
             val programId = deviceCache.getProgramId() ?: return@launch
             val program = programRepository.getProgramById(programId) ?: return@launch
+            val collectorTitles = programConfigCache.getProgramConfig()?.collectorTitles.orEmpty()
 
             _state.update {
                 it.copy(
                     device = device,
                     program = program,
+                    collectorTitles = collectorTitles,
                 )
             }
         }
