@@ -31,6 +31,7 @@ fun TextEntryField(
     label: String? = null,
     singleLine: Boolean = false,
     error: Error? = null,
+    errorMessage: String? = null,
     placeholder: String? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -108,7 +109,7 @@ fun TextEntryField(
 
         if (error != null && showErrorMessage) {
             Text(
-                text = error.toString(context),
+                text = errorMessage ?: error.toString(context),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.error
             )

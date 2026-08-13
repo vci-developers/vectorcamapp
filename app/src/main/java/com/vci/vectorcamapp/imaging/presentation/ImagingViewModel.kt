@@ -881,6 +881,7 @@ class ImagingViewModel @Inject constructor(
                         shouldRunInference = !allowModelInferenceToggle,
                         sessionType = session.type,
                         sessionUnitId = sessionUnitId,
+                        specimenIdErrorMessage = specimenIdErrorMessage,
                     )
                 }
                 VectorCamAnalytics.logEvent(
