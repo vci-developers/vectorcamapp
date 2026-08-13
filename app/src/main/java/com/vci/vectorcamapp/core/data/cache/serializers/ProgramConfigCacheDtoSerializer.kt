@@ -4,6 +4,7 @@ import androidx.datastore.core.Serializer
 import com.vci.vectorcamapp.core.data.dto.cache.ProgramConfigCacheDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import java.io.InputStream
 import java.io.OutputStream
@@ -24,8 +25,9 @@ object ProgramConfigCacheDtoSerializer : Serializer<ProgramConfigCacheDto> {
                 deserializer = ProgramConfigCacheDto.serializer(),
                 string = input.readBytes().decodeToString()
             )
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: SerializationException) {
+            defaultValue
+        } catch (_: IllegalArgumentException) {
             defaultValue
         }
     }
