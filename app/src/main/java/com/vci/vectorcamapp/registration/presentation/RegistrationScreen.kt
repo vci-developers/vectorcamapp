@@ -42,7 +42,6 @@ import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.gestures.PullToRefresh
-import com.vci.vectorcamapp.registration.domain.model.RegistrationDropdownOptions
 import com.vci.vectorcamapp.registration.presentation.util.RegistrationTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.customShadow
@@ -142,30 +141,33 @@ fun RegistrationScreen(
                         }
                     }
 
-                    TextEntryField(
-                        label = stringResource(R.string.registration_label_collector_name),
-                        value = state.collector.name,
-                        onValueChange = { onAction(RegistrationAction.EnterCollectorName(it)) },
-                        singleLine = true,
-                        error = state.registrationErrors.collectorName
-                    )
-
-                    DropdownField(
-                        label = stringResource(R.string.registration_label_collector_title),
-                        options = RegistrationDropdownOptions.CollectorTitleOption.entries,
-                        selectedOption = RegistrationDropdownOptions.CollectorTitleOption.entries.firstOrNull { it.label == state.collector.title },
-                        onOptionSelected = { option ->
-                            onAction(RegistrationAction.EnterCollectorTitle(option.label))
-                        },
-                        error = state.registrationErrors.collectorTitle,
-                        modifier = modifier.fillMaxWidth()
-                            .height(MaterialTheme.dimensions.componentHeightLarge)
-                    ) { option ->
-                        Text(
-                            text = option.label,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colors.textPrimary
+                    if (state.selectedProgram != null && !state.isLoadingSelectedProgram) {
+                        TextEntryField(
+                            label = stringResource(R.string.registration_label_collector_name),
+                            value = state.collector.name,
+                            onValueChange = { onAction(RegistrationAction.EnterCollectorName(it)) },
+                            singleLine = true,
+                            error = state.registrationErrors.collectorName
                         )
+
+                        DropdownField(
+                            label = stringResource(R.string.registration_label_collector_title),
+                            options = state.collectorTitles,
+                            selectedOption = state.collectorTitles.firstOrNull { it == state.collector.title },
+                            onOptionSelected = { title ->
+                                onAction(RegistrationAction.EnterCollectorTitle(title))
+                            },
+                            enabled = state.collectorTitles.isNotEmpty(),
+                            error = state.registrationErrors.collectorTitle,
+                            modifier = modifier.fillMaxWidth()
+                                .height(MaterialTheme.dimensions.componentHeightLarge)
+                        ) { title ->
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colors.textPrimary
+                            )
+                        }
                     }
 
                     DatePickerField(
@@ -181,6 +183,7 @@ fun RegistrationScreen(
                     label = stringResource(R.string.registration_action_confirm),
                     onClick = { onAction(RegistrationAction.ConfirmRegistration) },
                     enabled = state.selectedProgram != null &&
+                            !state.isLoadingSelectedProgram &&
                             state.collector.name.isNotBlank() &&
                             state.collector.title.isNotBlank() &&
                             state.collector.lastTrainedOn != 0L &&

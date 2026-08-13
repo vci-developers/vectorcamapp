@@ -200,4 +200,41 @@ class ValidateSpecimenIdUseCaseTest {
     }
 
     // endregion
+
+    // region g - Program config validation pattern
+
+    @Test
+    fun programConfigPattern_acceptsMatchingId() {
+        val result = useCase(
+            specimenId = "abc123",
+            shouldAutoCorrect = false,
+            validationPattern = "^[A-Za-z]{3}\\d{3}$",
+        )
+        assertTrue(result is Result.Success)
+        assertEquals("ABC123", (result as Result.Success).data)
+    }
+
+    @Test
+    fun programConfigPattern_rejectsNonMatchingId() {
+        val result = useCase(
+            specimenId = "AB1234",
+            shouldAutoCorrect = false,
+            validationPattern = "^[A-Za-z]{3}\\d{3}$",
+        )
+        assertTrue(result is Result.Error)
+        assertEquals(ImagingError.INVALID_SPECIMEN_ID, (result as Result.Error).error)
+    }
+
+    @Test
+    fun invalidProgramConfigPattern_fallsBackToDefault() {
+        val result = useCase(
+            specimenId = "ABC123",
+            shouldAutoCorrect = false,
+            validationPattern = "[",
+        )
+        assertTrue(result is Result.Success)
+        assertEquals("ABC123", (result as Result.Success).data)
+    }
+
+    // endregion
 }

@@ -4,9 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
+import com.vci.vectorcamapp.core.data.dto.cache.ProgramConfigCacheDto
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.cache.ProgramConfigCache
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.model.Site
@@ -65,6 +67,7 @@ class IntakeViewModelTest {
     private lateinit var deviceCache: DeviceCache
     private lateinit var currentSessionCache: CurrentSessionCache
     private lateinit var defaultIntakeFieldsCache: DefaultIntakeFieldsCache
+    private lateinit var programConfigCache: ProgramConfigCache
     private lateinit var siteRepository: SiteRepository
     private lateinit var locationTypeRepository: LocationTypeRepository
     private lateinit var surveillanceFormRepository: SurveillanceFormRepository
@@ -106,6 +109,15 @@ class IntakeViewModelTest {
         deviceCache = mockk(relaxed = true)
         currentSessionCache = mockk(relaxed = true)
         defaultIntakeFieldsCache = mockk(relaxed = true)
+        programConfigCache = mockk(relaxed = true)
+        coEvery { programConfigCache.getProgramConfig() } returns ProgramConfigCacheDto(
+            collectorTitles = listOf(
+                "Vector Control Officer (VCO)",
+                "Village Health Team (VHT)",
+                "Field Operations Team (FOT)",
+                "Other"
+            )
+        )
         siteRepository = mockk(relaxed = true)
         locationTypeRepository = mockk(relaxed = true)
         surveillanceFormRepository = mockk(relaxed = true)
@@ -168,6 +180,7 @@ class IntakeViewModelTest {
             deviceCache = deviceCache,
             currentSessionCache = currentSessionCache,
             defaultIntakeFieldsCache = defaultIntakeFieldsCache,
+            programConfigCache = programConfigCache,
             siteRepository = siteRepository,
             locationTypeRepository = locationTypeRepository,
             surveillanceFormRepository = surveillanceFormRepository,

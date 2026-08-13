@@ -192,16 +192,20 @@ fun IntakeScreen(
                                         )
                                     }
 
-                                    Column(
-                                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
-                                    ) {
+                                    DropdownField(
+                                        label = stringResource(R.string.intake_label_title),
+                                        options = state.collectorTitles,
+                                        selectedOption = state.collectorTitles.firstOrNull {
+                                            it == state.session.collectorTitle
+                                        },
+                                        onOptionSelected = {
+                                            onAction(IntakeAction.SelectCollectorTitle(it))
+                                        },
+                                        enabled = state.collectorTitles.isNotEmpty(),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) { title ->
                                         Text(
-                                            text = stringResource(R.string.intake_label_title),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colors.textSecondary
-                                        )
-                                        Text(
-                                            text = state.session.collectorTitle,
+                                            text = title,
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colors.textPrimary
                                         )

@@ -17,6 +17,7 @@ import java.util.UUID
 data class IntakeState(
     val isLoading: Boolean = false,
     val allCollectors: List<Collector> = emptyList(),
+    val collectorTitles: List<String> = emptyList(),
     val isCurrentCollectorMissing: Boolean = false,
     val isCollectionMethodLocked: Boolean = false,
     val locationError: IntakeError? = null,

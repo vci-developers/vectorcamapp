@@ -3,9 +3,11 @@ package com.vci.vectorcamapp.core.di
 import com.vci.vectorcamapp.core.data.cache.CurrentSessionCacheImplementation
 import com.vci.vectorcamapp.core.data.cache.DeviceCacheImplementation
 import com.vci.vectorcamapp.core.data.cache.DefaultIntakeFieldsCacheImplementation
+import com.vci.vectorcamapp.core.data.cache.ProgramConfigCacheImplementation
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
+import com.vci.vectorcamapp.core.domain.cache.ProgramConfigCache
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -33,4 +35,10 @@ abstract class CacheModule {
     abstract fun bindDefaultIntakeFieldsCache(
         defaultIntakeFieldsCacheImplementation: DefaultIntakeFieldsCacheImplementation
     ): DefaultIntakeFieldsCache
+
+    @Binds
+    @Singleton
+    abstract fun bindProgramConfigCache(
+        programConfigCacheImplementation: ProgramConfigCacheImplementation
+    ): ProgramConfigCache
 }

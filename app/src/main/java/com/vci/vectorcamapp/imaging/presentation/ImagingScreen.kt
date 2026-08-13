@@ -77,6 +77,7 @@ import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
 import com.vci.vectorcamapp.imaging.data.camera.CameraMetadataListenerImplementation
+import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreview
 import com.vci.vectorcamapp.imaging.presentation.components.icon.AnimatedArrowIcon
 import com.vci.vectorcamapp.imaging.presentation.components.specimen.CapturedSpecimenTile
@@ -676,7 +677,9 @@ fun ImagingScreen(
                                         },
                                         singleLine = true,
                                         error = state.specimenIdError,
-                                        showErrorMessage = false,
+                                        errorMessage = state.specimenIdErrorMessage
+                                            .takeIf { state.specimenIdError == ImagingError.INVALID_SPECIMEN_ID },
+                                        showErrorMessage = true,
                                     )
 
                                     Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))

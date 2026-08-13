@@ -3,11 +3,14 @@ package com.vci.vectorcamapp.registration.presentation
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.data.dto.program.GetAllProgramsResponseDto
+import com.vci.vectorcamapp.core.data.dto.program.ProgramConfigDto
 import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
+import com.vci.vectorcamapp.core.data.dto.program.SpecimenIdConfigDto
 import com.vci.vectorcamapp.core.data.dto.program.VerifyProgramAccessCodeResponseDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.cache.ProgramConfigCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
@@ -23,6 +26,7 @@ import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
@@ -48,6 +52,7 @@ class RegistrationViewModelTest {
 
     private lateinit var deviceCache: DeviceCache
     private lateinit var sessionCache: CurrentSessionCache
+    private lateinit var programConfigCache: ProgramConfigCache
     private lateinit var programRepository: ProgramRepository
     private lateinit var programDataSource: ProgramDataSource
     private lateinit var siteDataSource: SiteDataSource
@@ -80,6 +85,7 @@ class RegistrationViewModelTest {
 
         deviceCache = mockk(relaxed = true)
         sessionCache = mockk(relaxed = true)
+        programConfigCache = mockk(relaxed = true)
         programRepository = mockk()
         programDataSource = mockk()
         coEvery { programDataSource.getAllPrograms() } returns Result.Success(
@@ -89,9 +95,34 @@ class RegistrationViewModelTest {
                 }
             )
         )
+        coEvery { programDataSource.getProgramById(any()) } answers {
+            val programId = firstArg<Int>()
+            val program = testPrograms.first { it.id == programId }
+            Result.Success(
+                ProgramDto(
+                    programId = program.id,
+                    name = program.name,
+                    country = program.country,
+                    formVersion = program.formVersion,
+                    config = ProgramConfigDto(
+                        collectorTitles = listOf(
+                            "Vector Control Officer (VCO)",
+                            "Village Health Team (VHT)",
+                            "Field Operations Team (FOT)",
+                            "Other"
+                        ),
+                        specimenId = SpecimenIdConfigDto(
+                            validation = "^[A-Za-z]{3}\\d{3}$",
+                            errorMessage = "Specimen ID must be 3 letters followed by 3 numbers (e.g., ABC123).",
+                        ),
+                    )
+                )
+            )
+        }
         coEvery { programDataSource.verifyAccessCode(any(), any()) } returns Result.Success(
             VerifyProgramAccessCodeResponseDto(valid = true)
         )
+        coEvery { programRepository.upsertProgram(any()) } returns Result.Success(Unit)
         siteDataSource = mockk()
         siteRepository = mockk()
         locationTypeDataSource = mockk()
@@ -118,6 +149,7 @@ class RegistrationViewModelTest {
             transactionHelper = transactionHelper,
             deviceCache = deviceCache,
             currentSessionCache = sessionCache,
+            programConfigCache = programConfigCache,
             collectorRepository = collectorRepository,
             collectorValidationUseCases = collectorValidationUseCases,
             programDataSource = programDataSource,
@@ -223,9 +255,41 @@ class RegistrationViewModelTest {
             viewModel.onAction(RegistrationAction.SelectProgram(programToSelect))
             advanceUntilIdle()
 
-            val updatedState = awaitItem()
+            val updatedState = expectMostRecentItem()
             assertThat(updatedState.selectedProgram).isEqualTo(programToSelect)
             assertThat(updatedState.programs).isEqualTo(testPrograms)
+            assertThat(updatedState.isLoadingSelectedProgram).isFalse()
+            assertThat(updatedState.collectorTitles).containsExactly(
+                "Vector Control Officer (VCO)",
+                "Village Health Team (VHT)",
+                "Field Operations Team (FOT)",
+                "Other"
+            )
+            coVerify(exactly = 1) { programDataSource.getProgramById(programToSelect.id) }
+        }
+    }
+
+    @Test
+    fun regVm_b03_programFetchFailureUsesDefaultCollectorTitles() = runTest {
+        coEvery { programDataSource.getProgramById(any()) } returns Result.Error(NetworkError.SERVER_ERROR)
+        val programToSelect = testPrograms[0]
+        advanceUntilIdle()
+
+        viewModel.state.test {
+            awaitItem()
+            awaitItem()
+
+            viewModel.onAction(RegistrationAction.SelectProgram(programToSelect))
+            advanceUntilIdle()
+
+            val updatedState = expectMostRecentItem()
+            assertThat(updatedState.isLoadingSelectedProgram).isFalse()
+            assertThat(updatedState.collectorTitles).containsExactly(
+                "Vector Control Officer (VCO)",
+                "Village Health Team (VHT)",
+                "Field Operations Team (FOT)"
+            )
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
@@ -297,6 +361,7 @@ class RegistrationViewModelTest {
 
         coVerifyOrder {
             deviceCache.saveDevice(match { it.id == -1 }, selectedProgram.id)
+            programConfigCache.saveProgramConfig(any())
             sessionCache.clearSession()
             collectorRepository.upsertCollector(any())
         }
@@ -425,6 +490,7 @@ class RegistrationViewModelTest {
             transactionHelper = transactionHelper,
             deviceCache = deviceCache,
             currentSessionCache = sessionCache,
+            programConfigCache = programConfigCache,
             collectorRepository = collectorRepository,
             collectorValidationUseCases = collectorValidationUseCases,
             programDataSource = programDataSource,

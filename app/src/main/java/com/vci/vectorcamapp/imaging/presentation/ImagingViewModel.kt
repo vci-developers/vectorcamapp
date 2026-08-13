@@ -9,7 +9,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
+import com.vci.vectorcamapp.core.domain.cache.ProgramConfigCache
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
+import com.vci.vectorcamapp.core.domain.util.MessageError
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
@@ -71,6 +73,7 @@ import kotlin.random.Random
 class ImagingViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val currentSessionCache: CurrentSessionCache,
+    private val programConfigCache: ProgramConfigCache,
     private val sessionRepository: SessionRepository,
     private val specimenRepository: SpecimenRepository,
     private val specimenImageRepository: SpecimenImageRepository,
@@ -83,6 +86,8 @@ class ImagingViewModel @Inject constructor(
 ) : CoreViewModel(errorMessageEmitter) {
     private val destination = savedStateHandle.toRoute<Destination.Imaging>()
     private val sessionUnitId: UUID? = destination.sessionUnitId?.let(UUID::fromString)
+    private var specimenIdValidationPattern: String? = null
+    private var specimenIdErrorMessage: String? = null
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
@@ -216,8 +221,9 @@ class ImagingViewModel @Inject constructor(
 
                             val specimenId = inferenceRepository.readSpecimenId(bitmap)
                             validateSpecimenIdUseCase(
-                                specimenId,
-                                shouldAutoCorrect = true
+                                specimenId = specimenId,
+                                shouldAutoCorrect = true,
+                                validationPattern = specimenIdValidationPattern,
                             ).onSuccess { correctedSpecimenId ->
                                 _state.update {
                                     it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
@@ -634,7 +640,9 @@ class ImagingViewModel @Inject constructor(
                     }
 
                     val specimenId = when (val validationResult = validateSpecimenIdUseCase(
-                        _state.value.currentSpecimen.id, shouldAutoCorrect = false
+                        specimenId = _state.value.currentSpecimen.id,
+                        shouldAutoCorrect = false,
+                        validationPattern = specimenIdValidationPattern,
                     )) {
                         is Result.Success -> {
                             _state.update { it.copy(specimenIdError = null) }
@@ -643,7 +651,12 @@ class ImagingViewModel @Inject constructor(
 
                         is Result.Error -> {
                             _state.update { it.copy(specimenIdError = validationResult.error) }
-                            emitError(validationResult.error)
+                            emitError(
+                                specimenIdErrorMessage
+                                    ?.takeIf { it.isNotBlank() }
+                                    ?.let(::MessageError)
+                                    ?: validationResult.error
+                            )
                             return@launch
                         }
                     }
@@ -852,6 +865,9 @@ class ImagingViewModel @Inject constructor(
 
     private fun loadImagingDetails() {
         viewModelScope.launch {
+            val programConfig = programConfigCache.getProgramConfig()
+            specimenIdValidationPattern = programConfig?.specimenId?.validation
+            specimenIdErrorMessage = programConfig?.specimenId?.errorMessage
             val session = currentSessionCache.getSession()
             if (session != null) {
                 VectorCamAnalytics.updateDeviceCondition()
@@ -865,6 +881,7 @@ class ImagingViewModel @Inject constructor(
                         shouldRunInference = !allowModelInferenceToggle,
                         sessionType = session.type,
                         sessionUnitId = sessionUnitId,
+                        specimenIdErrorMessage = specimenIdErrorMessage,
                     )
                 }
                 VectorCamAnalytics.logEvent(

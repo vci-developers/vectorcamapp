@@ -3,9 +3,11 @@ package com.vci.vectorcamapp.settings.presentation
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
+import com.vci.vectorcamapp.core.data.dto.cache.ProgramConfigCacheDto
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.cache.ProgramConfigCache
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
@@ -71,6 +73,7 @@ class SettingsViewModelTest {
     private lateinit var formQuestionRepository: FormQuestionRepository
     private lateinit var defaultIntakeFieldsCache: DefaultIntakeFieldsCache
     private lateinit var currentSessionCache: CurrentSessionCache
+    private lateinit var programConfigCache: ProgramConfigCache
     private lateinit var appLocaleManager: AppLocaleManager
     private lateinit var connectivityObserver: ConnectivityObserver
 
@@ -103,6 +106,15 @@ class SettingsViewModelTest {
         formQuestionRepository = mockk(relaxed = true)
         defaultIntakeFieldsCache = mockk(relaxed = true)
         currentSessionCache = mockk(relaxed = true)
+        programConfigCache = mockk(relaxed = true)
+        coEvery { programConfigCache.getProgramConfig() } returns ProgramConfigCacheDto(
+            collectorTitles = listOf(
+                "Vector Control Officer (VCO)",
+                "Village Health Team (VHT)",
+                "Field Operations Team (FOT)",
+                "Other"
+            )
+        )
         connectivityObserver = mockk(relaxed = true)
         every { connectivityObserver.isConnected } returns MutableStateFlow(false)
 
@@ -139,6 +151,7 @@ class SettingsViewModelTest {
         formQuestionRepository = formQuestionRepository,
         defaultIntakeFieldsCache = defaultIntakeFieldsCache,
         currentSessionCache = currentSessionCache,
+        programConfigCache = programConfigCache,
         appLocaleManager = appLocaleManager,
         connectivityObserver = connectivityObserver,
         errorMessageEmitter = errorMessageEmitter,
