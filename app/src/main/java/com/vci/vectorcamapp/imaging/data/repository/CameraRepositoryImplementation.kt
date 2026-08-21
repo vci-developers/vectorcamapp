@@ -23,13 +23,16 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.imaging.data.util.FocusStackFusion
-import com.vci.vectorcamapp.imaging.domain.cache.FocusWarpCache
 import com.vci.vectorcamapp.imaging.domain.camera.CameraMetadataListener
 import com.vci.vectorcamapp.imaging.domain.model.FocusStackResult
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -50,7 +53,6 @@ import kotlin.coroutines.suspendCoroutine
 
 class CameraRepositoryImplementation @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val focusWarpCache: FocusWarpCache,
     private val focusStackFusion: FocusStackFusion,
 ) : CameraRepository {
 
@@ -67,33 +69,50 @@ class CameraRepositoryImplementation @Inject constructor(
             return@withContext Result.Error(ImagingError.CAPTURE_ERROR)
         }
 
-        val rotatedMats = mutableListOf<Mat>()
-        val frameJpegs = mutableListOf<ByteArray>()
-
-        try {
-            for (plane in FOCUS_PLANE_DIOPTERS) {
-                metadataListener.reset()
-                setManualFocus(camera2Control, plane)
-                awaitLensSettled(metadataListener)
-                val imageProxy = takePictureOnce(imageCapture)
-                    ?: run {
-                        rotatedMats.forEach { it.release() }
-                        return@withContext Result.Error(ImagingError.CAPTURE_ERROR)
+        val bracketResult = coroutineScope {
+            val processingJobs = mutableListOf<Deferred<Pair<Mat, ByteArray>>>()
+            var captureFailed = false
+            try {
+                for (plane in FOCUS_PLANE_DIOPTERS) {
+                    metadataListener.reset()
+                    setManualFocus(camera2Control, plane)
+                    awaitLensSettled(metadataListener)
+                    val imageProxy = takePictureOnce(imageCapture)
+                    if (imageProxy == null) {
+                        captureFailed = true
+                        break
                     }
-                val rotatedMat = try {
-                    rotateImageProxyToMat(imageProxy)
-                } finally {
-                    imageProxy.close()
+                    processingJobs += async {
+                        val rotatedMat = try {
+                            rotateImageProxyToMat(imageProxy)
+                        } finally {
+                            imageProxy.close()
+                        }
+                        val jpeg = encodeMatToJpeg(rotatedMat)
+                        rotatedMat to jpeg
+                    }
                 }
-                val jpeg = encodeMatToJpeg(rotatedMat)
-                rotatedMats.add(rotatedMat)
-                frameJpegs.add(jpeg)
+            } finally {
+                restoreContinuousAutoFocus(camera2Control)
             }
-        } finally {
-            restoreContinuousAutoFocus(camera2Control)
-        }
 
-        val fusion = focusStackFusion.fuse(rotatedMats, focusWarpCache)
+            if (captureFailed) {
+                processingJobs.forEach { it.cancel() }
+                processingJobs.forEach { job ->
+                    runCatching { job.await() }.getOrNull()?.first?.release()
+                }
+                null
+            } else {
+                val results = processingJobs.awaitAll()
+                results.map { it.first } to results.map { it.second }
+            }
+        }
+        if (bracketResult == null) {
+            return@withContext Result.Error(ImagingError.CAPTURE_ERROR)
+        }
+        val (rotatedMats, frameJpegs) = bracketResult
+
+        val fusion = focusStackFusion.fuse(rotatedMats)
         Result.Success(
             FocusStackResult(
                 compositeJpeg = fusion.jpeg,

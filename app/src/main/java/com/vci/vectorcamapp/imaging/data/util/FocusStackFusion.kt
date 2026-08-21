@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.imaging.data.util
 
-import com.vci.vectorcamapp.imaging.domain.cache.FocusWarpCache
 import org.opencv.core.Core
 import org.opencv.core.CvType
 import org.opencv.core.Mat
@@ -26,42 +25,32 @@ class FocusStackFusion @Inject constructor() {
         val height: Int,
     )
 
-    fun fuse(
-        colorMats: List<Mat>,
-        warpCache: FocusWarpCache? = null,
-    ): FocusStackFusionOutput {
+    fun fuse(colorMats: List<Mat>): FocusStackFusionOutput {
         require(colorMats.isNotEmpty()) { "At least one frame required" }
         val referenceIndex = min(REFERENCE_FRAME_INDEX, colorMats.size - 1)
         val originalSize = colorMats[0].size()
 
-        val referenceGrayFull = Mat()
-        Imgproc.cvtColor(colorMats[referenceIndex], referenceGrayFull, Imgproc.COLOR_BGR2GRAY)
-        val referenceGrayEcc = downscaleForEcc(referenceGrayFull)
-        referenceGrayFull.release()
-
-        val alignedColorMats = colorMats.mapIndexed { index, colorMat ->
-            if (index == referenceIndex) return@mapIndexed colorMat.clone()
-            val cachedWarp = warpCache?.get(index)
-            if (cachedWarp != null) {
-                applyWarp(colorMat, cachedWarp)
-            } else {
-                val (aligned, computedWarp) = alignEcc(colorMat, referenceGrayEcc)
-                if (computedWarp != null) warpCache?.put(index, computedWarp)
-                aligned
-            }
-        }
-        referenceGrayEcc.release()
-        colorMats.forEach { it.release() }
-
-        val downscaledMats = alignedColorMats.map { mat ->
+        val downscaledMats = colorMats.map { mat ->
             val down = Mat()
             Imgproc.pyrDown(mat, down)
             down
         }
-        alignedColorMats.forEach { it.release() }
+        colorMats.forEach { it.release() }
 
-        val downscaledComposite = fuseLaplacianPyramid(downscaledMats)
+        val referenceGrayFusion = Mat()
+        Imgproc.cvtColor(downscaledMats[referenceIndex], referenceGrayFusion, Imgproc.COLOR_BGR2GRAY)
+        val referenceGrayEcc = downscaleForEcc(referenceGrayFusion)
+        referenceGrayFusion.release()
+
+        val alignedMats = downscaledMats.mapIndexed { index, mat ->
+            if (index == referenceIndex) mat.clone()
+            else alignEcc(mat, referenceGrayEcc)
+        }
+        referenceGrayEcc.release()
         downscaledMats.forEach { it.release() }
+
+        val downscaledComposite = fuseLaplacianPyramid(alignedMats)
+        alignedMats.forEach { it.release() }
 
         val composite = Mat()
         Imgproc.pyrUp(downscaledComposite, composite, originalSize)
@@ -84,7 +73,7 @@ class FocusStackFusion @Inject constructor() {
         return FocusStackFusionOutput(jpegBytes, width, height)
     }
 
-    private fun alignEcc(sourceColor: Mat, referenceGrayEcc: Mat): Pair<Mat, FloatArray?> {
+    private fun alignEcc(sourceColor: Mat, referenceGrayEcc: Mat): Mat {
         val sourceGrayFull = Mat()
         Imgproc.cvtColor(sourceColor, sourceGrayFull, Imgproc.COLOR_BGR2GRAY)
         val sourceGrayEcc = downscaleForEcc(sourceGrayFull)
@@ -98,7 +87,6 @@ class FocusStackFusion @Inject constructor() {
         )
 
         val aligned = Mat()
-        var computedWarp: FloatArray? = null
         try {
             Video.findTransformECC(
                 referenceGrayEcc,
@@ -117,26 +105,10 @@ class FocusStackFusion @Inject constructor() {
                 sourceColor.size(),
                 Imgproc.INTER_LINEAR or Imgproc.WARP_INVERSE_MAP,
             )
-            computedWarp = FloatArray(6).also { warp.get(0, 0, it) }
         } catch (e: Exception) {
             sourceColor.copyTo(aligned)
         }
         sourceGrayEcc.release()
-        warp.release()
-        return aligned to computedWarp
-    }
-
-    private fun applyWarp(sourceColor: Mat, warpData: FloatArray): Mat {
-        val warp = Mat(2, 3, CvType.CV_32F)
-        warp.put(0, 0, warpData)
-        val aligned = Mat()
-        Imgproc.warpAffine(
-            sourceColor,
-            aligned,
-            warp,
-            sourceColor.size(),
-            Imgproc.INTER_LINEAR or Imgproc.WARP_INVERSE_MAP,
-        )
         warp.release()
         return aligned
     }
@@ -281,7 +253,7 @@ class FocusStackFusion @Inject constructor() {
 
     companion object {
         private const val REFERENCE_FRAME_INDEX = 1
-        private const val MAX_PYRAMID_LEVELS = 6
+        private const val MAX_PYRAMID_LEVELS = 4
         private const val PYRAMID_MIN_DIMENSION = 16
         private const val ECC_MAX_ITERATIONS = 50
         private const val ECC_EPSILON = 1e-4

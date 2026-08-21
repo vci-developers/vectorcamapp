@@ -1,9 +1,7 @@
 package com.vci.vectorcamapp.imaging.di
 
-import com.vci.vectorcamapp.imaging.data.cache.FocusWarpCacheImplementation
 import com.vci.vectorcamapp.imaging.data.repository.CameraRepositoryImplementation
 import com.vci.vectorcamapp.imaging.data.repository.InferenceRepositoryImplementation
-import com.vci.vectorcamapp.imaging.domain.cache.FocusWarpCache
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
 import dagger.Binds
@@ -27,10 +25,4 @@ abstract class ImagingRepositoryModule {
     abstract fun bindInferenceRepository(
         inferenceRepositoryImplementation: InferenceRepositoryImplementation
     ) : InferenceRepository
-
-    @Binds
-    @ViewModelScoped
-    abstract fun bindFocusWarpCache(
-        focusWarpCacheImplementation: FocusWarpCacheImplementation
-    ) : FocusWarpCache
 }
