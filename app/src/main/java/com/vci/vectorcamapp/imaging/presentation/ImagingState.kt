@@ -33,6 +33,7 @@ data class ImagingState(
     ),
     val currentInferenceResult: InferenceResult? = null,
     val currentImageBytes: ByteArray? = null,
+    val currentFrameJpegs: List<ByteArray> = emptyList(),
     val previewInferenceResults: List<InferenceResult> = emptyList(),
     val specimensWithImagesAndInferenceResults: List<SpecimenWithSpecimenImagesAndInferenceResults> = emptyList(),
     val focusPoint: Offset? = null,

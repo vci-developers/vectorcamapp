@@ -135,12 +135,11 @@ fun ImagingScreen(
             }
 
         val imageCaptureBuilder = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .setTargetRotation(rotation)
             .setResolutionSelector(
                 ResolutionSelector.Builder()
                     .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
-                    .setAllowedResolutionMode(ResolutionSelector.PREFER_HIGHER_RESOLUTION_OVER_CAPTURE_RATE)
                     .build()
             )
 
@@ -823,11 +822,16 @@ fun ImagingScreen(
                                         ActionButton(
                                             label = "Capture",
                                             onClick = {
-                                                imageCaptureUseCase?.let {
+                                                val currentImageCapture = imageCaptureUseCase
+                                                val currentCamera = camera
+                                                if (currentImageCapture != null && currentCamera != null) {
                                                     onAction(
                                                         ImagingAction.CaptureImage(
-                                                            it,
-                                                            metadataListener.latestMetadata
+                                                            imageCapture = currentImageCapture,
+                                                            cameraControl = currentCamera.cameraControl,
+                                                            cameraInfo = currentCamera.cameraInfo,
+                                                            metadataListener = metadataListener,
+                                                            cameraMetadata = metadataListener.latestMetadata,
                                                         )
                                                     )
                                                 }

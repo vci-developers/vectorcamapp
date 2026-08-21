@@ -7,6 +7,7 @@ data class CameraMetadata(
     val iso: Int? = null,
     val colorCorrectionGains: ColorCorrectionGains? = null,
     val awbMode: Int? = null,
+    val lensState: Int? = null,
     val imageWidth: Int = 0,
     val imageHeight: Int = 0,
     val focalPointX: Float? = null,

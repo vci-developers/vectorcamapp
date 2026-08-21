@@ -43,6 +43,7 @@ class CameraMetadataListenerImplementation : CameraCaptureSession.CaptureCallbac
                     )
                 },
                 awbMode = result[CaptureResult.CONTROL_AWB_MODE],
+                lensState = result[CaptureResult.LENS_STATE],
                 afRegions = result[CaptureResult.CONTROL_AF_REGIONS]?.map { region ->
                     AfRegion(
                         x = region.x,

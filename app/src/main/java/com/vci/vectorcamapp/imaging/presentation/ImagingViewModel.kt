@@ -387,36 +387,39 @@ class ImagingViewModel @Inject constructor(
 
                     _state.update { it.copy(isProcessing = true) }
 
-                    val captureResult = cameraRepository.captureImage(action.imageCapture)
+                    val captureResult = cameraRepository.captureImage(
+                        imageCapture = action.imageCapture,
+                        cameraControl = action.cameraControl,
+                        cameraInfo = action.cameraInfo,
+                        metadataListener = action.metadataListener,
+                    )
 
                     withContext(Dispatchers.Default) {
-                        captureResult.onSuccess { image ->
-                            val bitmap = image.toUprightBitmap()
-                            image.close()
+                        captureResult.onSuccess { focusStack ->
+                            val jpegByteArray = focusStack.compositeJpeg
+                            val frameJpegs = focusStack.frameJpegs
+                            val imageWidth = focusStack.width
+                            val imageHeight = focusStack.height
 
                             val captureDurationMs = System.currentTimeMillis() - captureStartedAt
                             VectorCamAnalytics.logEvent(
                                 "imaging_specimen_image_captured",
                                 mapOf(
                                     "capture_duration_ms" to captureDurationMs,
-                                    "image_width" to bitmap.width,
-                                    "image_height" to bitmap.height,
+                                    "image_width" to imageWidth,
+                                    "image_height" to imageHeight,
                                     "had_focus_point" to (_state.value.focusPoint != null)
                                 )
                             )
 
                             val capturedMetadata = action.cameraMetadata?.copy(
-                                imageWidth = bitmap.width,
-                                imageHeight = bitmap.height,
+                                imageWidth = imageWidth,
+                                imageHeight = imageHeight,
                                 focalPointX = _state.value.focusPoint?.x,
                                 focalPointY = _state.value.focusPoint?.y
                             )
 
                             _state.update { it.copy(currentCameraMetadata = capturedMetadata) }
-
-                            val jpegStream = ByteArrayOutputStream()
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
-                            val jpegByteArray = jpegStream.toByteArray()
 
                             val bgrMatrix = Imgcodecs.imdecode(
                                 MatOfByte(*jpegByteArray),
@@ -551,6 +554,7 @@ class ImagingViewModel @Inject constructor(
                                                         abdomenStatus = abdomenLabel,
                                                     ),
                                                     currentImageBytes = jpegByteArray,
+                                                    currentFrameJpegs = frameJpegs,
                                                     currentInferenceResult = InferenceResult(
                                                         bboxTopLeftX = captureDetectorResult.bboxTopLeftX,
                                                         bboxTopLeftY = captureDetectorResult.bboxTopLeftY,
@@ -581,6 +585,7 @@ class ImagingViewModel @Inject constructor(
                                 _state.update {
                                     it.copy(
                                         currentImageBytes = jpegByteArray,
+                                        currentFrameJpegs = frameJpegs,
                                     )
                                 }
                             }
@@ -691,27 +696,77 @@ class ImagingViewModel @Inject constructor(
                         return@launch
                     }
 
-                    val saveResult = cameraRepository.saveImage(jpegBytes, filename, currentSession)
+                    val frameJpegs = _state.value.currentFrameJpegs
+                    val compositeSaveResult = cameraRepository.saveImage(jpegBytes, filename, currentSession)
 
-                    saveResult.onSuccess { imageUri ->
+                    compositeSaveResult.onSuccess { compositeUri ->
+                        val sliceUris = mutableListOf<Uri>()
+                        var sliceSaveError: ImagingError? = null
+                        for ((index, sliceJpeg) in frameJpegs.withIndex()) {
+                            val sliceFilename = buildString {
+                                append(specimenId)
+                                append("_")
+                                append(timestamp)
+                                append("_z")
+                                append(index)
+                                append(".jpg")
+                            }
+                            val sliceResult = cameraRepository.saveImage(sliceJpeg, sliceFilename, currentSession)
+                            when (sliceResult) {
+                                is Result.Success -> sliceUris.add(sliceResult.data)
+                                is Result.Error -> {
+                                    sliceSaveError = sliceResult.error
+                                    break
+                                }
+                            }
+                        }
+
+                        if (sliceSaveError != null) {
+                            emitError(sliceSaveError)
+                            cameraRepository.deleteSavedImage(compositeUri)
+                            sliceUris.forEach { cameraRepository.deleteSavedImage(it) }
+                            return@onSuccess
+                        }
+
+                        val species = _state.value.currentSpecimenImage.species
+                        val sex = _state.value.currentSpecimenImage.sex
+                        val abdomenStatus = _state.value.currentSpecimenImage.abdomenStatus
+                        val imageMetadata = _state.value.currentCameraMetadata
+
                         val specimen = Specimen(
                             id = specimenId,
                             remoteId = null,
                             shouldProcessFurther = shouldProcessFurther
                         )
-                        val specimenImage = SpecimenImage(
+                        val compositeImage = SpecimenImage(
                             localId = calculateMd5(jpegBytes),
                             remoteId = null,
-                            species = _state.value.currentSpecimenImage.species,
-                            sex = _state.value.currentSpecimenImage.sex,
-                            abdomenStatus = _state.value.currentSpecimenImage.abdomenStatus,
-                            imageUri = imageUri,
+                            species = species,
+                            sex = sex,
+                            abdomenStatus = abdomenStatus,
+                            imageUri = compositeUri,
                             imageUploadStatus = UploadStatus.NOT_STARTED,
                             metadataUploadStatus = UploadStatus.NOT_STARTED,
                             capturedAt = timestamp,
                             submittedAt = null,
-                            imageMetadata = _state.value.currentCameraMetadata
+                            imageMetadata = imageMetadata
                         )
+                        val sliceImages = frameJpegs.mapIndexed { index, sliceJpeg ->
+                            SpecimenImage(
+                                localId = calculateMd5(sliceJpeg),
+                                remoteId = null,
+                                species = species,
+                                sex = sex,
+                                abdomenStatus = abdomenStatus,
+                                imageUri = sliceUris[index],
+                                imageUploadStatus = UploadStatus.NOT_STARTED,
+                                metadataUploadStatus = UploadStatus.NOT_STARTED,
+                                capturedAt = timestamp,
+                                submittedAt = null,
+                                imageMetadata = imageMetadata
+                            )
+                        }
+                        val allImages = listOf(compositeImage) + sliceImages
 
                         val success = transactionHelper.runAsTransaction {
                             val inferenceResult = _state.value.currentInferenceResult
@@ -725,30 +780,32 @@ class ImagingViewModel @Inject constructor(
                             } else {
                                 Result.Success(Unit)
                             }
-                            val specimenImageInsertionResult =
+
+                            val imageInsertionResults = allImages.map { image ->
                                 specimenImageRepository.insertSpecimenImage(
-                                    specimenImage, specimen.id, currentSession.localId
+                                    image, specimen.id, currentSession.localId
                                 )
+                            }
 
                             val inferenceResultInsertionResult = inferenceResult?.let {
                                 inferenceResultRepository.insertInferenceResult(
-                                    inferenceResult, specimenImage.localId
+                                    inferenceResult, compositeImage.localId
                                 )
                             } ?: Result.Success(Unit)
 
                             specimenInsertionResult.onError { error ->
                                 emitError(error)
                             }
-
-                            specimenImageInsertionResult.onError { error ->
-                                emitError(error)
+                            imageInsertionResults.forEach { result ->
+                                result.onError { error -> emitError(error) }
                             }
-
                             inferenceResultInsertionResult.onError { error ->
                                 emitError(error)
                             }
 
-                            (specimenInsertionResult !is Result.Error) && (specimenImageInsertionResult !is Result.Error) && (inferenceResultInsertionResult !is Result.Error)
+                            (specimenInsertionResult !is Result.Error) &&
+                                imageInsertionResults.all { it !is Result.Error } &&
+                                (inferenceResultInsertionResult !is Result.Error)
                         }
 
                         if (success) {
@@ -762,13 +819,15 @@ class ImagingViewModel @Inject constructor(
                                     "is_new_specimen" to (existingSpecimen == null),
                                     "should_process_further" to shouldProcessFurther,
                                     "image_size_bytes" to jpegBytes.size.toLong(),
+                                    "slice_count" to sliceImages.size,
                                     "total_specimens_so_far" to totalSpecimens
                                 )
                             )
                             clearStateFields()
                         } else {
                             emitError(ImagingError.SAVE_ERROR)
-                            cameraRepository.deleteSavedImage(imageUri)
+                            cameraRepository.deleteSavedImage(compositeUri)
+                            sliceUris.forEach { cameraRepository.deleteSavedImage(it) }
                         }
                     }.onError { error ->
                         emitError(error)
@@ -810,6 +869,7 @@ class ImagingViewModel @Inject constructor(
                 ),
                 currentInferenceResult = null,
                 currentImageBytes = null,
+                currentFrameJpegs = emptyList(),
                 isCameraReady = false,
                 previewInferenceResults = emptyList(),
                 focusPoint = null,

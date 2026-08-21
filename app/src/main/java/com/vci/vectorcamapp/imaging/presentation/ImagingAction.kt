@@ -1,8 +1,11 @@
 package com.vci.vectorcamapp.imaging.presentation
 
+import androidx.camera.core.CameraControl
+import androidx.camera.core.CameraInfo
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageProxy
 import androidx.compose.ui.geometry.Offset
+import com.vci.vectorcamapp.imaging.domain.camera.CameraMetadataListener
 import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
 
 sealed interface ImagingAction {
@@ -13,7 +16,10 @@ sealed interface ImagingAction {
     data class ToggleModelInference(val isChecked: Boolean) : ImagingAction
     data class CaptureImage(
         val imageCapture: ImageCapture,
-        val cameraMetadata: CameraMetadata? = null
+        val cameraControl: CameraControl,
+        val cameraInfo: CameraInfo,
+        val metadataListener: CameraMetadataListener,
+        val cameraMetadata: CameraMetadata? = null,
     ) : ImagingAction
     data object SaveImageToSession : ImagingAction
     data object RetakeImage : ImagingAction
