@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
 import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorDataFlow
@@ -78,7 +79,7 @@ fun ErrorSnackbarHost(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_error),
-                        contentDescription = "Error",
+                        contentDescription = stringResource(R.string.core_content_description_error),
                         tint = MaterialTheme.colors.error,
                         modifier = Modifier
                             .size(MaterialTheme.dimensions.iconSizeLarge)
@@ -93,7 +94,7 @@ fun ErrorSnackbarHost(
                     Spacer(modifier = Modifier.widthIn(min = MaterialTheme.dimensions.spacingMedium))
                     Icon(
                         painter = painterResource(R.drawable.ic_close),
-                        contentDescription = "Dismiss Icon",
+                        contentDescription = stringResource(R.string.core_content_description_dismiss),
                         tint = MaterialTheme.colors.textSecondary,
                         modifier = Modifier
                                 .size(MaterialTheme.dimensions.iconSizeExtraSmall)

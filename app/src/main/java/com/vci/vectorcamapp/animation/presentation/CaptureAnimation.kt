@@ -34,6 +34,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import kotlin.math.min
@@ -124,7 +126,7 @@ fun CaptureAnimation(
             )
 
             Text(
-                text = "Capturing… Hold Still",
+                text = stringResource(R.string.capture_animation_label_capturing),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,

@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.SessionUnit
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
@@ -51,7 +52,7 @@ fun CollectionBatchCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = bucketName.ifBlank { "Batch ${sessionUnit.unitOrder}" },
+                        text = bucketName.ifBlank { stringResource(R.string.collection_batch_label_batch, sessionUnit.unitOrder) },
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colors.textPrimary,
                         modifier = Modifier.weight(1f)
@@ -68,7 +69,7 @@ fun CollectionBatchCard(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrow_right),
-                            contentDescription = "Open collection batch",
+                            contentDescription = stringResource(R.string.collection_batch_content_description_open),
                             tint = MaterialTheme.colors.icon,
                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
                         )
@@ -76,7 +77,7 @@ fun CollectionBatchCard(
                 }
 
                 InfoPill(
-                    text = "Specimen Count: $specimenCount",
+                    text = stringResource(R.string.collection_batch_label_specimen_count, specimenCount),
                     color = MaterialTheme.colors.info
                 )
             }
@@ -87,7 +88,7 @@ fun CollectionBatchCard(
             )
 
             Text(
-                text = "Created: ${dateFormatter.format(sessionUnit.createdAt)}",
+                text = stringResource(R.string.collection_batch_label_created, dateFormatter.format(sessionUnit.createdAt)),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colors.textSecondary
             )

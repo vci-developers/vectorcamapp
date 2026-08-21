@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="permission_title_permissions_required">Permissions Required</string>
+    <string name="permission_title_gps_required">GPS Required</string>
+    <string name="permission_title_auto_time_required">Automatic Date &amp; Time Required</string>
+    <string name="permission_title_tooltip">App Permissions</string>
+    <string name="permission_title_camera">Camera Permission</string>
+    <string name="permission_title_location">Location Permission</string>
+    <string name="permission_title_notification">Notification Permission</string>
+
+    <!-- Body -->
+    <string name="permission_body_required">To work properly, this app needs access to your camera, location, and notifications. One or more of these permissions are currently disabled. Please enable them in settings to continue.</string>
+    <string name="permission_body_gps_required">To work properly, this app needs GPS location services enabled. Please enable GPS in settings to continue.</string>
+    <string name="permission_body_auto_time_required">To keep timestamps accurate, this app requires automatic date and time (internet time). Please enable it in your device settings to continue.</string>
+    <string name="permission_body_camera">Required to capture detailed images of mosquito specimens for accurate identification and analysis.</string>
+    <string name="permission_body_location">Needed to log exact collection sites and associate each specimen with its geographic origin for field tracking.</string>
+    <string name="permission_body_notification">Allows the app to show upload progress, completion alerts, and other key background status updates.</string>
+    <string name="splash_body_tagline">Democratizing Vector Surveillance</string>
+
+    <!-- Actions -->
+    <string name="permission_action_learn_more">Tap to learn more about app permissions</string>
+    <string name="permission_action_grant">Grant Permissions</string>
+    <string name="permission_action_enable_gps">Enable GPS</string>
+    <string name="permission_action_enable_auto_time">Enable Automatic Date &amp; Time</string>
+
+    <!-- Content Descriptions -->
+    <string name="permission_content_description_background">Mosquito background</string>
+    <string name="permission_content_description_camera">Camera</string>
+    <string name="permission_content_description_location">Location</string>
+    <string name="permission_content_description_notification">Notification</string>
+    <string name="splash_content_description_logo">Splash logo</string>
+
+</resources>

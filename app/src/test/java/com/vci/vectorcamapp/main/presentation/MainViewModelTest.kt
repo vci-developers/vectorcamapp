@@ -111,8 +111,10 @@ class MainViewModelTest {
                 assertThat(startDestination).isNull()
                 assertThat(allGranted).isFalse()
                 assertThat(isGpsEnabled).isFalse()
+                assertThat(isAutoTimeEnabled).isFalse()
                 assertThat(permissionChecked).isFalse()
                 assertThat(gpsChecked).isFalse()
+                assertThat(autoTimeChecked).isFalse()
             }
             cancelAndIgnoreRemainingEvents()
         }
@@ -135,6 +137,9 @@ class MainViewModelTest {
 
             viewModel.onAction(MainAction.OpenLocationSettings)
             assertThat(awaitItem()).isEqualTo(MainEvent.NavigateToLocationSettings)
+
+            viewModel.onAction(MainAction.OpenDateSettings)
+            assertThat(awaitItem()).isEqualTo(MainEvent.NavigateToDateSettings)
 
             expectNoEvents()
         }
@@ -185,6 +190,28 @@ class MainViewModelTest {
             val stateAfterDisable = awaitItem()
             assertThat(stateAfterDisable.isGpsEnabled).isFalse()
             assertThat(stateAfterDisable.gpsChecked).isTrue()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun mainVm_c03_updateAutoTimeStatus_updatesStateCorrectly() = runTest {
+        initViewModel()
+
+        viewModel.state.test {
+            skipItems(2)
+
+            viewModel.onAction(MainAction.UpdateAutoTimeStatus(isAutoTimeEnabled = true))
+
+            val stateAfterEnable = awaitItem()
+            assertThat(stateAfterEnable.isAutoTimeEnabled).isTrue()
+            assertThat(stateAfterEnable.autoTimeChecked).isTrue()
+
+            viewModel.onAction(MainAction.UpdateAutoTimeStatus(isAutoTimeEnabled = false))
+
+            val stateAfterDisable = awaitItem()
+            assertThat(stateAfterDisable.isAutoTimeEnabled).isFalse()
+            assertThat(stateAfterDisable.autoTimeChecked).isTrue()
             cancelAndIgnoreRemainingEvents()
         }
     }

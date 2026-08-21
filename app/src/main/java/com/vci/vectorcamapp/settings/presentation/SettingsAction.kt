@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.settings.presentation
 
 import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.presentation.util.locale.SupportedLanguage
 
 interface SettingsAction {
     data object ReturnToLandingScreen : SettingsAction
@@ -19,4 +20,5 @@ interface SettingsAction {
     data object ResyncProgramData : SettingsAction
     data object ConfirmSaveCollector : SettingsAction
     data object DismissCollectorWarningDialog : SettingsAction
+    data class SelectLanguage(val language: SupportedLanguage) : SettingsAction
 }
