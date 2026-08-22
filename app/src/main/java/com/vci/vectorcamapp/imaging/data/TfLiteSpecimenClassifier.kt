@@ -63,20 +63,8 @@ class TfLiteSpecimenClassifier(
 
                 if (usingGpu) {
                     val elapsedMs = System.currentTimeMillis() - startTime
+                    // Slow classifier warm-up only affects future live-camera GPU decisions.
                     GpuAccelerationPolicy.recordGpuWarmup(context, elapsedMs, succeeded = true)
-
-                    if (!GpuAccelerationPolicy.shouldAttemptGpu(context)) {
-                        Timber.w(
-                            "GPU warm-up too slow (${elapsedMs}ms) on this device; " +
-                                "rebuilding $filePath on CPU"
-                        )
-                        releaseModelLocked()
-                        model = createModelCpuOnly(filePath)
-                        inputBuffers = model!!.createInputBuffers()
-                        outputBuffers = model!!.createOutputBuffers()
-                        resolveTensorShapes()
-                        warmModel()
-                    }
                 }
 
                 Timber.d(
@@ -90,8 +78,12 @@ class TfLiteSpecimenClassifier(
     }
 
     private fun createModelPreferringGpu(assetName: String): CompiledModel {
-        if (!GpuAccelerationPolicy.shouldAttemptGpu(context)) {
-            Timber.w("GPU accelerator skipped on this device tier; using CPU for $assetName")
+        if (!GpuAccelerationPolicy.shouldAttemptGpu(
+                context,
+                GpuAccelerationPolicy.GpuUseCase.CLASSIFICATION,
+            )
+        ) {
+            Timber.w("GPU accelerator skipped for classification; using CPU for $assetName")
             return createModelCpuOnly(assetName)
         }
 

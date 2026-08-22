@@ -70,7 +70,11 @@ class TfLiteSpecimenDetector(
                     val elapsedMs = System.currentTimeMillis() - startTime
                     GpuAccelerationPolicy.recordGpuWarmup(context, elapsedMs, succeeded = true)
 
-                    if (!GpuAccelerationPolicy.shouldAttemptGpu(context)) {
+                    if (!GpuAccelerationPolicy.shouldAttemptGpu(
+                            context,
+                            GpuAccelerationPolicy.GpuUseCase.LIVE_CAMERA,
+                        )
+                    ) {
                         Timber.w(
                             "GPU warm-up too slow (${elapsedMs}ms) on this device; " +
                                 "rebuilding detector on CPU"
@@ -95,8 +99,12 @@ class TfLiteSpecimenDetector(
     }
 
     private fun createModelPreferringGpu(assetName: String): CompiledModel {
-        if (!GpuAccelerationPolicy.shouldAttemptGpu(context)) {
-            Timber.w("GPU accelerator skipped on this device tier; using CPU")
+        if (!GpuAccelerationPolicy.shouldAttemptGpu(
+                context,
+                GpuAccelerationPolicy.GpuUseCase.LIVE_CAMERA,
+            )
+        ) {
+            Timber.w("GPU accelerator skipped for live camera on this device tier; using CPU")
             return createModelCpuOnly(assetName)
         }
 
