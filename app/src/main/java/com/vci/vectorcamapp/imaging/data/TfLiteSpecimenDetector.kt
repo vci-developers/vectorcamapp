@@ -58,31 +58,12 @@ class TfLiteSpecimenDetector(
             if (model != null || isClosed) return
 
             try {
-                val startTime = System.currentTimeMillis()
                 model = createModelPreferringGpu(MODEL_ASSET)
                 inputBuffers = model!!.createInputBuffers()
                 outputBuffers = model!!.createOutputBuffers()
 
                 resolveTensorShapes()
                 warmModel()
-
-                if (usingGpu) {
-                    val elapsedMs = System.currentTimeMillis() - startTime
-                    GpuAccelerationPolicy.recordGpuWarmup(context, elapsedMs, succeeded = true)
-
-                    if (!GpuAccelerationPolicy.shouldAttemptGpu(context)) {
-                        Timber.w(
-                            "GPU warm-up too slow (${elapsedMs}ms) on this device; " +
-                                "rebuilding detector on CPU"
-                        )
-                        releaseModelLocked()
-                        model = createModelCpuOnly(MODEL_ASSET)
-                        inputBuffers = model!!.createInputBuffers()
-                        outputBuffers = model!!.createOutputBuffers()
-                        resolveTensorShapes()
-                        warmModel()
-                    }
-                }
 
                 Timber.d(
                     "LiteRT CompiledModel initialized (accelerator=${if (usingGpu) "GPU" else "CPU"})"
@@ -100,7 +81,6 @@ class TfLiteSpecimenDetector(
             return createModelCpuOnly(assetName)
         }
 
-        val startTime = System.currentTimeMillis()
         return try {
             CompiledModel.create(
                 context.assets,
@@ -112,11 +92,6 @@ class TfLiteSpecimenDetector(
             }
         } catch (e: Exception) {
             Timber.w("GPU CompiledModel failed (${e.message}); falling back to CPU")
-            GpuAccelerationPolicy.recordGpuWarmup(
-                context,
-                System.currentTimeMillis() - startTime,
-                succeeded = false
-            )
             createModelCpuOnly(assetName)
         }
     }
