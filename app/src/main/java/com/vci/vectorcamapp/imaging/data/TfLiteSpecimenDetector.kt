@@ -70,11 +70,7 @@ class TfLiteSpecimenDetector(
                     val elapsedMs = System.currentTimeMillis() - startTime
                     GpuAccelerationPolicy.recordGpuWarmup(context, elapsedMs, succeeded = true)
 
-                    if (!GpuAccelerationPolicy.shouldAttemptGpu(
-                            context,
-                            GpuAccelerationPolicy.GpuUseCase.LIVE_CAMERA,
-                        )
-                    ) {
+                    if (!GpuAccelerationPolicy.shouldAttemptGpu(context)) {
                         Timber.w(
                             "GPU warm-up too slow (${elapsedMs}ms) on this device; " +
                                 "rebuilding detector on CPU"
@@ -99,11 +95,7 @@ class TfLiteSpecimenDetector(
     }
 
     private fun createModelPreferringGpu(assetName: String): CompiledModel {
-        if (!GpuAccelerationPolicy.shouldAttemptGpu(
-                context,
-                GpuAccelerationPolicy.GpuUseCase.LIVE_CAMERA,
-            )
-        ) {
+        if (!GpuAccelerationPolicy.shouldAttemptGpu(context)) {
             Timber.w("GPU accelerator skipped for live camera on this device tier; using CPU")
             return createModelCpuOnly(assetName)
         }
@@ -404,8 +396,10 @@ class TfLiteSpecimenDetector(
     companion object {
         private const val MODEL_ASSET = "detect.tflite"
         private const val SIGNATURE = "serving_default"
-        private const val INPUT_TENSOR_NAME = "serving_default_keras_tensor_121:0"
-        private const val OUTPUT_TENSOR_NAME = "StatefulPartitionedCall_1:0"
+
+        // Signature input/output names rather than tensor names - see TfLiteSpecimenClassifier.
+        private const val INPUT_TENSOR_NAME = "keras_tensor_121"
+        private const val OUTPUT_TENSOR_NAME = "output_0"
         private const val INPUT_CHANNELS = 3
 
         private const val DEFAULT_TENSOR_HEIGHT = 640

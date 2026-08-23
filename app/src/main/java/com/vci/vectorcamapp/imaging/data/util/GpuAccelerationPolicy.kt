@@ -15,12 +15,13 @@ import timber.log.Timber
  * a freeze to the user. Because creation doesn't throw, the normal GPU-fails-so-fall-back-to-CPU
  * path in the detector/classifiers never triggers on its own.
  *
- * That contention matters most for [GpuUseCase.LIVE_CAMERA], where detection runs continuously
- * alongside CameraX preview updates. Post-capture [GpuUseCase.CLASSIFICATION] runs once after the
- * user presses capture, so a slower GPU pass is acceptable and GPU is still preferred there.
+ * This policy covers live-camera detection only, where detection runs continuously alongside
+ * CameraX preview updates and contention is what hurts. Post-capture classification has the
+ * opposite problem - GPU there returns plausible but wrong logits - so it is decided by
+ * correctness instead, in [ClassifierAcceleratorSelector].
  *
  * Rather than hardcoding a list of known-bad device models (which only protects against exactly
- * the devices we've already seen fail), live-camera gating uses two general signals:
+ * the devices we've already seen fail), gating uses two general signals:
  *
  * 1. A hardware-tier heuristic ([isLowTierDevice]) - budget SoCs that ship with GPUs too weak for
  *    LiteRT's GPU delegate are, in practice, always paired with a small amount of RAM. Gating on
@@ -30,17 +31,9 @@ import timber.log.Timber
  *    the first time a model initializes, and if it's too slow (or throws), live-camera GPU
  *    acceleration is disabled and the decision is persisted. This self-heals for any device that
  *    slips past the RAM-tier heuristic but still has a slow/buggy GPU delegate for other reasons
- *    (driver bugs, thermal throttling, etc). Classification continues to attempt GPU.
+ *    (driver bugs, thermal throttling, etc).
  */
 object GpuAccelerationPolicy {
-
-    enum class GpuUseCase {
-        /** Continuous frame detection alongside the live preview. */
-        LIVE_CAMERA,
-
-        /** One-shot species/sex/abdomen classification after capture. */
-        CLASSIFICATION,
-    }
 
     private const val PREFS_NAME = "gpu_acceleration_policy"
     private const val KEY_FORCE_CPU = "force_cpu"
@@ -57,16 +50,7 @@ object GpuAccelerationPolicy {
     // "budget device class", not a specific device.
     private const val LOW_TIER_TOTAL_RAM_MB = 4096L
 
-    fun shouldAttemptGpu(
-        context: Context,
-        useCase: GpuUseCase = GpuUseCase.LIVE_CAMERA,
-    ): Boolean {
-        // Post-capture classification is not contended with the live preview, so prefer GPU even
-        // on low-tier devices. Creation failure still falls back to CPU in the caller.
-        if (useCase == GpuUseCase.CLASSIFICATION) {
-            return true
-        }
-
+    fun shouldAttemptGpu(context: Context): Boolean {
         val prefs = prefs(context)
         if (prefs.contains(KEY_FORCE_CPU)) {
             return !prefs.getBoolean(KEY_FORCE_CPU, false)

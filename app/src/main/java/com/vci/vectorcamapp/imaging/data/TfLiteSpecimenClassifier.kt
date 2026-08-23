@@ -4,11 +4,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
-import com.google.ai.edge.litert.Accelerator
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.TensorBuffer
 import com.vci.vectorcamapp.core.domain.model.results.ClassifierResult
-import com.vci.vectorcamapp.imaging.data.util.GpuAccelerationPolicy
+import com.vci.vectorcamapp.imaging.data.util.ClassifierAcceleratorSelector
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
 import org.opencv.android.Utils
 import org.opencv.core.Core
@@ -53,22 +52,22 @@ class TfLiteSpecimenClassifier(
             if (model != null || isClosed) return
 
             try {
-                val startTime = System.currentTimeMillis()
-                model = createModelPreferringGpu(filePath)
+                val selection = ClassifierAcceleratorSelector.selectModel(
+                    context = context,
+                    assetName = filePath,
+                    signature = SIGNATURE,
+                    inputTensorName = INPUT_TENSOR_NAME,
+                )
+                model = selection.model
+                usingGpu = selection.usingGpu
                 inputBuffers = model!!.createInputBuffers()
                 outputBuffers = model!!.createOutputBuffers()
 
                 resolveTensorShapes()
                 warmModel()
 
-                if (usingGpu) {
-                    val elapsedMs = System.currentTimeMillis() - startTime
-                    // Slow classifier warm-up only affects future live-camera GPU decisions.
-                    GpuAccelerationPolicy.recordGpuWarmup(context, elapsedMs, succeeded = true)
-                }
-
                 Timber.d(
-                    "LiteRT CompiledModel initialized ($filePath, accelerator=${if (usingGpu) "GPU" else "CPU"})"
+                    "LiteRT CompiledModel initialized ($filePath, accelerator=${selection.variantName})"
                 )
             } catch (e: Exception) {
                 Timber.e(e, "Failed to initialize LiteRT CompiledModel ($filePath): ${e.message}")
@@ -77,48 +76,9 @@ class TfLiteSpecimenClassifier(
         }
     }
 
-    private fun createModelPreferringGpu(assetName: String): CompiledModel {
-        if (!GpuAccelerationPolicy.shouldAttemptGpu(
-                context,
-                GpuAccelerationPolicy.GpuUseCase.CLASSIFICATION,
-            )
-        ) {
-            Timber.w("GPU accelerator skipped for classification; using CPU for $assetName")
-            return createModelCpuOnly(assetName)
-        }
-
-        val startTime = System.currentTimeMillis()
-        return try {
-            CompiledModel.create(
-                context.assets,
-                assetName,
-                CompiledModel.Options(Accelerator.GPU),
-            ).also {
-                usingGpu = true
-                Timber.d("CompiledModel created with GPU accelerator ($assetName)")
-            }
-        } catch (e: Exception) {
-            Timber.w("GPU CompiledModel failed for $assetName (${e.message}); falling back to CPU")
-            GpuAccelerationPolicy.recordGpuWarmup(
-                context,
-                System.currentTimeMillis() - startTime,
-                succeeded = false
-            )
-            createModelCpuOnly(assetName)
-        }
-    }
-
-    private fun createModelCpuOnly(assetName: String): CompiledModel {
-        usingGpu = false
-        return CompiledModel.create(
-            context.assets,
-            assetName,
-            CompiledModel.Options(Accelerator.CPU),
-        )
-    }
-
     private fun resolveTensorShapes() {
         val compiled = model ?: return
+        var inputResolved = false
 
         try {
             val inputDims = compiled.getInputTensorType(INPUT_TENSOR_NAME, SIGNATURE).layout?.dimensions
@@ -126,10 +86,11 @@ class TfLiteSpecimenClassifier(
                 // NCHW: [1, C, H, W]
                 inputTensorHeight = inputDims[2]
                 inputTensorWidth = inputDims[3]
+                inputResolved = true
                 Timber.d("Input tensor type for $filePath: $inputDims")
             }
         } catch (e: Exception) {
-            Timber.w("getInputTensorType failed for $filePath: ${e.message}")
+            Timber.e(e, "getInputTensorType failed for $filePath: ${e.message}")
         }
 
         // Buffer requirements are authoritative for writeFloat sizing.
@@ -142,13 +103,23 @@ class TfLiteSpecimenClassifier(
             if (side > 0 && side * side * INPUT_CHANNELS == floatCount) {
                 inputTensorHeight = side
                 inputTensorWidth = side
+                inputResolved = true
             }
             Timber.d(
                 "Resolved input ${inputTensorWidth}x$inputTensorHeight for $filePath " +
                     "(buffer floats=$floatCount)"
             )
         } catch (e: Exception) {
-            Timber.w("getInputBufferRequirements failed for $filePath: ${e.message}")
+            Timber.e(e, "getInputBufferRequirements failed for $filePath: ${e.message}")
+        }
+
+        // Falling back to the defaults silently feeds the model the wrong resolution, which yields
+        // confident but meaningless predictions rather than an outright failure.
+        if (!inputResolved) {
+            Timber.e(
+                "Could not resolve input shape for $filePath; " +
+                    "classifying at fallback ${inputTensorWidth}x$inputTensorHeight"
+            )
         }
 
         try {
@@ -202,7 +173,7 @@ class TfLiteSpecimenClassifier(
 
                         inputBuffers[0].writeFloat(chwArray)
                         model!!.run(inputBuffers, outputBuffers)
-                        outputBuffers[0].readFloat().toList()
+                        outputBuffers[0].readFloat().take(outputNumClasses)
                     }
 
                     Timber.d("Inference result: $logits")
@@ -261,7 +232,9 @@ class TfLiteSpecimenClassifier(
         inputBuffers[0].writeFloat(FloatArray(inputSize))
         model?.run(inputBuffers, outputBuffers)
         val output = outputBuffers[0].readFloat()
-        if (output.isNotEmpty()) {
+        // Only trust the buffer length when the model didn't report its output shape: accelerator
+        // buffers can be padded beyond the real class count.
+        if (output.isNotEmpty() && outputNumClasses == DEFAULT_NUM_CLASSES) {
             outputNumClasses = output.size
         }
         Timber.d(
@@ -314,8 +287,12 @@ class TfLiteSpecimenClassifier(
 
     companion object {
         private const val SIGNATURE = "serving_default"
-        private const val INPUT_TENSOR_NAME = "serving_default_args_0:0"
-        private const val OUTPUT_TENSOR_NAME = "StatefulPartitionedCall:0"
+
+        // These are the signature's input/output names, not the underlying tensor names
+        // ("serving_default_args_0:0" / "StatefulPartitionedCall:0"). LiteRT resolves shapes and
+        // buffer requirements by signature name, and passing tensor names makes every lookup throw.
+        private const val INPUT_TENSOR_NAME = "args_0"
+        private const val OUTPUT_TENSOR_NAME = "output_0"
         private const val INPUT_CHANNELS = 3
 
         // Defaults only used until shapes are resolved from the model.
