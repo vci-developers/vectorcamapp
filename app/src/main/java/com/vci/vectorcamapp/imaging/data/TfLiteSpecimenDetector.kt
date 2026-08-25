@@ -101,7 +101,11 @@ class TfLiteSpecimenDetector(
         return CompiledModel.create(
             context.assets,
             assetName,
-            CompiledModel.Options(Accelerator.CPU),
+            CompiledModel.Options(Accelerator.CPU).apply {
+                cpuOptions = CompiledModel.CpuOptions(
+                    numThreads = Runtime.getRuntime().availableProcessors()
+                )
+            },
         )
     }
 
