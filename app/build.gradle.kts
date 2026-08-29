@@ -149,6 +149,8 @@ android {
 
     kotlinOptions {
         jvmTarget = "11"
+        // LiteRT 2.1.x ships Kotlin 2.3 metadata; ABI is compatible with Kotlin 2.0.x.
+        freeCompilerArgs += listOf("-Xskip-metadata-version-check")
     }
 
     buildFeatures {
@@ -232,11 +234,8 @@ dependencies {
     // Open CV Library
     implementation(libs.opencv)
 
-    // LiteRT Library
+    // LiteRT Library (CompiledModel API; GPU accelerator is built into the Kotlin package)
     implementation(libs.litert)
-    implementation(libs.litert.gpu)
-    implementation(libs.litert.gpu.api)
-    implementation(libs.litert.support)
 
     // Room Database Dependencies
     implementation(libs.androidx.room.runtime)
