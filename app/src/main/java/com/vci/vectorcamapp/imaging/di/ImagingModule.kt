@@ -8,6 +8,9 @@ import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenClassifier
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
+import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
+import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
+import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,14 +40,24 @@ object ImagingModule {
     @ViewModelScoped
     @SpeciesClassifier
     fun provideSpeciesClassifier(@ApplicationContext context: Context): SpecimenClassifier {
-        return TfLiteSpecimenClassifier(context, "species.tflite", "LiteRTSpeciesClassifierThread")
+        return TfLiteSpecimenClassifier(
+            context,
+            "species.tflite",
+            "LiteRTSpeciesClassifierThread",
+            expectedNumClasses = SpeciesLabel.entries.size,
+        )
     }
 
     @Provides
     @ViewModelScoped
     @SexClassifier
     fun provideSexClassifier(@ApplicationContext context: Context): SpecimenClassifier {
-        return TfLiteSpecimenClassifier(context, "sex.tflite", "LiteRTSexClassifierThread")
+        return TfLiteSpecimenClassifier(
+            context,
+            "sex.tflite",
+            "LiteRTSexClassifierThread",
+            expectedNumClasses = SexLabel.entries.size,
+        )
     }
 
     @Provides
@@ -54,7 +67,8 @@ object ImagingModule {
         return TfLiteSpecimenClassifier(
             context,
             "abdomen_status.tflite",
-            "LiteRTAbdomenStatusClassifierThread"
+            "LiteRTAbdomenStatusClassifierThread",
+            expectedNumClasses = AbdomenStatusLabel.entries.size,
         )
     }
 }
