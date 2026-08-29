@@ -8,7 +8,6 @@ import com.google.mlkit.vision.text.TextRecognizer
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.model.results.ClassifierResult
 import com.vci.vectorcamapp.core.domain.model.results.DetectorResult
-import com.vci.vectorcamapp.imaging.data.GpuDelegateManager
 import com.vci.vectorcamapp.imaging.di.AbdomenStatusClassifier
 import com.vci.vectorcamapp.imaging.di.Detector
 import com.vci.vectorcamapp.imaging.di.SexClassifier
@@ -145,6 +144,5 @@ class InferenceRepositoryImplementation @Inject constructor(
         speciesClassifier.close()
         sexClassifier.close()
         abdomenStatusClassifier.close()
-        GpuDelegateManager.close()
     }
 }

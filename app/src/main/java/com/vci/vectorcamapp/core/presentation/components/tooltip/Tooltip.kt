@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -42,7 +43,7 @@ fun Tooltip(
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_info),
-            contentDescription = "Tooltip Icon",
+            contentDescription = stringResource(R.string.core_content_description_tooltip),
             tint = MaterialTheme.colors.icon,
             modifier = Modifier
                 .size(iconSize)

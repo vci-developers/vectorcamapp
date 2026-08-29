@@ -4,8 +4,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
-import android.util.Log
+import com.google.ai.edge.litert.Accelerator
+import com.google.ai.edge.litert.CompiledModel
+import com.google.ai.edge.litert.TensorBuffer
 import com.vci.vectorcamapp.core.domain.model.results.DetectorResult
+import com.vci.vectorcamapp.imaging.data.util.GpuAccelerationPolicy
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import org.opencv.android.Utils
 import org.opencv.core.CvType
@@ -19,9 +22,7 @@ import org.opencv.core.Scalar
 import org.opencv.core.Size
 import org.opencv.dnn.Dnn
 import org.opencv.imgproc.Imgproc
-import org.tensorflow.lite.DataType
-import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
@@ -32,12 +33,15 @@ class TfLiteSpecimenDetector(
     private val modelPath: String = "detect.tflite",
 ) : SpecimenDetector {
 
-    private var detector: Interpreter? = null
+    private var model: CompiledModel? = null
+    private var inputBuffers: List<TensorBuffer> = emptyList()
+    private var outputBuffers: List<TensorBuffer> = emptyList()
 
     private val detectorLock = Any()
     private var isClosed = false
+    private var usingGpu = false
 
-    private val handlerThread = HandlerThread("TFLiteSpecimenDetectorThread").apply { start() }
+    private val handlerThread = HandlerThread("LiteRTSpecimenDetectorThread").apply { start() }
     private val handler = Handler(handlerThread.looper)
 
     private var inputTensorHeight = DEFAULT_TENSOR_HEIGHT
@@ -46,54 +50,108 @@ class TfLiteSpecimenDetector(
     private var outputNumChannels = DEFAULT_NUM_CHANNELS
     private var outputNumElements = DEFAULT_NUM_ELEMENTS
 
-    private var isGpuDelegateInitialized = false
-
     init {
-        handler.post { initializeInterpreter() }
+        handler.post { initializeModel() }
     }
 
-    private fun initializeInterpreter() {
+    private fun initializeModel() {
         synchronized(detectorLock) {
-            if (detector != null || isClosed) return
+            if (model != null || isClosed) return
 
             try {
-                val model = TfLiteModelLoader.load(context, modelPath)
-                val options = Interpreter.Options().apply {
-                    useNNAPI = false
-                    useXNNPACK = false
-                    numThreads = Runtime.getRuntime().availableProcessors()
-                }
+                model = createModelPreferringGpu(modelPath)
+                inputBuffers = model!!.createInputBuffers()
+                outputBuffers = model!!.createOutputBuffers()
 
-//                if (CompatibilityList().isDelegateSupportedOnThisDevice) {
-//                    try {
-//                        options.addDelegate(GpuDelegateManager.getDelegate())
-//                        isGpuDelegateInitialized = true
-//                        Log.d(TAG, "GPU delegate initialized for Detector")
-//                    } catch (e: Exception) {
-//                        Log.w(TAG, "GPU delegate for Detector failed: ${e.message}. Falling back to CPU.")
-//                    }
-//                }
-                
-                detector = Interpreter(model, options)
+                resolveTensorShapes()
+                warmModel()
 
-                detector?.let {
-                    inputTensorHeight = it.getInputTensor(0).shape()[1]
-                    inputTensorWidth = it.getInputTensor(0).shape()[2]
-
-                    outputNumChannels = it.getOutputTensor(0).shape()[1]
-                    outputNumElements = it.getOutputTensor(0).shape()[2]
-                }
-
-                if (isGpuDelegateInitialized) {
-                    warmDetector()
-                }
-                else {
-                    Log.d(TAG, "Skipping detector warmup (CPU mode).")
-                }
-                Log.d(TAG, "TFLite interpreter initialized")
+                Timber.d(
+                    "LiteRT CompiledModel initialized (accelerator=${if (usingGpu) "GPU" else "CPU"})"
+                )
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
+                Timber.e(e, "Failed to initialize LiteRT CompiledModel: ${e.message}")
+                releaseModelLocked()
             }
+        }
+    }
+
+    private fun createModelPreferringGpu(assetName: String): CompiledModel {
+        if (!GpuAccelerationPolicy.shouldAttemptGpu(context)) {
+            Timber.w("GPU accelerator skipped for live camera on this device tier; using CPU")
+            return createModelCpuOnly(assetName)
+        }
+
+        return try {
+            TfLiteModelLoader.create(
+                context,
+                assetName,
+                CompiledModel.Options(Accelerator.GPU),
+            ).also {
+                usingGpu = true
+                Timber.d("CompiledModel created with GPU accelerator")
+            }
+        } catch (e: Exception) {
+            Timber.w("GPU CompiledModel failed (${e.message}); falling back to CPU")
+            createModelCpuOnly(assetName)
+        }
+    }
+
+    private fun createModelCpuOnly(assetName: String): CompiledModel {
+        usingGpu = false
+        return TfLiteModelLoader.create(
+            context,
+            assetName,
+            CompiledModel.Options(Accelerator.CPU).apply {
+                cpuOptions = CompiledModel.CpuOptions(
+                    numThreads = Runtime.getRuntime().availableProcessors()
+                )
+            },
+        )
+    }
+
+    private fun resolveTensorShapes() {
+        val compiled = model ?: return
+
+        try {
+            val inputDims = compiled.getInputTensorType(INPUT_TENSOR_NAME, SIGNATURE).layout?.dimensions
+            if (inputDims != null && inputDims.size >= 3) {
+                // NHWC: [1, H, W, C]
+                inputTensorHeight = inputDims[1]
+                inputTensorWidth = inputDims[2]
+                Timber.d("Input tensor type: $inputDims")
+            }
+        } catch (e: Exception) {
+            Timber.w("getInputTensorType failed: ${e.message}")
+        }
+
+        try {
+            val floatCount =
+                compiled.getInputBufferRequirements(INPUT_TENSOR_NAME, SIGNATURE).bufferSize /
+                    Float.SIZE_BYTES
+            val spatial = floatCount / INPUT_CHANNELS
+            val side = kotlin.math.sqrt(spatial.toDouble()).toInt()
+            if (side > 0 && side * side * INPUT_CHANNELS == floatCount) {
+                inputTensorHeight = side
+                inputTensorWidth = side
+            }
+            Timber.d(
+                "Resolved input ${inputTensorWidth}x$inputTensorHeight (buffer floats=$floatCount)"
+            )
+        } catch (e: Exception) {
+            Timber.w("getInputBufferRequirements failed: ${e.message}")
+        }
+
+        try {
+            val outputDims =
+                compiled.getOutputTensorType(OUTPUT_TENSOR_NAME, SIGNATURE).layout?.dimensions
+            if (outputDims != null && outputDims.size >= 3) {
+                // [1, numChannels, numElements]
+                outputNumChannels = outputDims[1]
+                outputNumElements = outputDims[2]
+            }
+        } catch (e: Exception) {
+            Timber.w("getOutputTensorType failed: ${e.message}")
         }
     }
 
@@ -115,27 +173,18 @@ class TfLiteSpecimenDetector(
                     val preprocessedMatrixWidth = preprocessedMatrix.width()
                     val preprocessedMatrixChannels = preprocessedMatrix.channels()
 
-                    val inputTensor = TensorBuffer.createFixedSize(
-                        intArrayOf(
-                            1,
-                            preprocessedMatrixHeight,
-                            preprocessedMatrixWidth,
-                            preprocessedMatrixChannels
-                        ), DataType.FLOAT32
-                    )
                     val inputFloatBuffer =
                         FloatArray(preprocessedMatrixHeight * preprocessedMatrixWidth * preprocessedMatrixChannels)
                     preprocessedMatrix.get(0, 0, inputFloatBuffer)
-                    inputTensor.loadArray(inputFloatBuffer)
-
-                    val outputTensor = TensorBuffer.createFixedSize(
-                        intArrayOf(1, outputNumChannels, outputNumElements), DataType.FLOAT32
-                    )
 
                     val result = synchronized(detectorLock) {
                         if (!isReady()) return@post continuation.resume(emptyList())
-                        detector?.run(inputTensor.buffer, outputTensor.buffer)
-                        getDetectedResults(outputTensor.floatArray).map { bboxPrediction ->
+
+                        inputBuffers[0].writeFloat(inputFloatBuffer)
+                        model!!.run(inputBuffers, outputBuffers)
+                        val output = outputBuffers[0].readFloat()
+
+                        getDetectedResults(output).map { bboxPrediction ->
                             DetectorResult(
                                 bboxTopLeftX = bboxPrediction[0],
                                 bboxTopLeftY = bboxPrediction[1],
@@ -150,7 +199,7 @@ class TfLiteSpecimenDetector(
 
                     continuation.resume(result)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Inference failed: ${e.message}")
+                    Timber.e("Inference failed: ${e.message}")
                     continuation.resume(emptyList())
                 }
             }
@@ -158,7 +207,7 @@ class TfLiteSpecimenDetector(
     }
 
     private fun isReady(): Boolean = synchronized(detectorLock) {
-        !isClosed && detector != null
+        !isClosed && model != null && inputBuffers.isNotEmpty() && outputBuffers.isNotEmpty()
     }
 
     private fun prepareInputMatrix(bitmap: Bitmap): Mat {
@@ -263,7 +312,7 @@ class TfLiteSpecimenDetector(
 
             val topLeftX = (centerX - width / 2f).coerceAtLeast(0f)
             val topLeftY = (centerY - height / 2f).coerceAtLeast(0f)
-            Log.d("InferenceResult", "($topLeftX, $topLeftY) -> ($width, $height)")
+            Timber.d("InferenceResult: ($topLeftX, $topLeftY) -> ($width, $height)")
 
             finalBboxPredictions.add(floatArrayOf(topLeftX, topLeftY, width, height, confidence, classId))
         }
@@ -271,17 +320,38 @@ class TfLiteSpecimenDetector(
         return finalBboxPredictions
     }
 
-    private fun warmDetector() {
-        detector?.let { interpreter ->
-            val inputShape = interpreter.getInputTensor(0).shape()
-            val outputShape = interpreter.getOutputTensor(0).shape()
-            val dummyInputBuffer = TensorBuffer.createFixedSize(inputShape, DataType.FLOAT32).buffer
-            val dummyOutputBuffer =
-                TensorBuffer.createFixedSize(outputShape, DataType.FLOAT32).buffer
-
-            interpreter.run(dummyInputBuffer, dummyOutputBuffer)
-            Log.d(TAG, "Detector warmed up with GPU delegate.")
+    private fun warmModel() {
+        val inputSize = inputTensorHeight * inputTensorWidth * INPUT_CHANNELS
+        inputBuffers[0].writeFloat(FloatArray(inputSize))
+        model?.run(inputBuffers, outputBuffers)
+        val output = outputBuffers[0].readFloat()
+        if (output.isNotEmpty() && output.size % outputNumElements == 0) {
+            outputNumChannels = output.size / outputNumElements
         }
+        Timber.d("Detector warmed up (gpu=$usingGpu, outputChannels=$outputNumChannels)")
+    }
+
+    private fun releaseModelLocked() {
+        inputBuffers.forEach { buffer ->
+            try {
+                buffer.close()
+            } catch (_: Exception) {
+            }
+        }
+        outputBuffers.forEach { buffer ->
+            try {
+                buffer.close()
+            } catch (_: Exception) {
+            }
+        }
+        inputBuffers = emptyList()
+        outputBuffers = emptyList()
+        try {
+            model?.close()
+        } catch (_: Exception) {
+        }
+        model = null
+        usingGpu = false
     }
 
     override fun close() {
@@ -291,19 +361,26 @@ class TfLiteSpecimenDetector(
 
             handler.post {
                 try {
-                    detector?.close()
-                    detector = null
+                    synchronized(detectorLock) {
+                        releaseModelLocked()
+                    }
                     handlerThread.quitSafely()
-                    Log.d(TAG, "Detector closed")
+                    Timber.d("Detector closed")
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error during detector close: ${e.message}")
+                    Timber.e("Error during detector close: ${e.message}")
                 }
             }
         }
     }
 
     companion object {
-        private const val TAG = "TfLiteSpecimenDetector"
+        private const val SIGNATURE = "serving_default"
+
+        // Signature input/output names rather than tensor names - see TfLiteSpecimenClassifier.
+        private const val INPUT_TENSOR_NAME = "keras_tensor_121"
+        private const val OUTPUT_TENSOR_NAME = "output_0"
+        private const val INPUT_CHANNELS = 3
+
         private const val DEFAULT_TENSOR_HEIGHT = 640
         private const val DEFAULT_TENSOR_WIDTH = 640
         private const val DEFAULT_NUM_CHANNELS = 25200

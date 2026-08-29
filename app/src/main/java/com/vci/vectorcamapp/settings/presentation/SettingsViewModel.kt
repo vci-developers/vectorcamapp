@@ -31,6 +31,7 @@ import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.logging.ProgramModelLog
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.locale.AppLocaleManager
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
 import com.vci.vectorcamapp.settings.presentation.model.SettingsErrors
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -64,6 +65,7 @@ class SettingsViewModel @Inject constructor(
     private val programModelRepository: ProgramModelRepository,
     private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache,
     private val currentSessionCache: CurrentSessionCache,
+    private val appLocaleManager: AppLocaleManager,
     connectivityObserver: ConnectivityObserver,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
@@ -76,7 +78,7 @@ class SettingsViewModel @Inject constructor(
     private val _collectors = collectorRepository.observeAllCollectors()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
-    private val _state = MutableStateFlow(SettingsState())
+    private val _state = MutableStateFlow(SettingsState(selectedLanguage = appLocaleManager.getCurrentLanguage()))
     val state = combine(
         _isConnectedToInternet,
         _collectors,
@@ -106,6 +108,11 @@ class SettingsViewModel @Inject constructor(
 
                 SettingsAction.ReturnToLandingScreen -> {
                     _events.send(SettingsEvent.NavigateBackToLandingScreen)
+                }
+
+                is SettingsAction.SelectLanguage -> {
+                    appLocaleManager.setLanguage(action.language)
+                    _state.update { it.copy(selectedLanguage = action.language) }
                 }
 
                 SettingsAction.ShowAddCollectorDialog -> {

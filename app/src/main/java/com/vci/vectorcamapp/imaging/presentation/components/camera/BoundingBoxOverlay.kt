@@ -12,7 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -42,7 +44,7 @@ fun BoundingBoxOverlay(
 
     Box(modifier = modifier.offset(x = xOffsetDp, y = yOffsetDp)) {
         Text(
-            text = "specimen $formattedConfidence",
+            text = stringResource(R.string.imaging_label_bounding_box, formattedConfidence),
             color = MaterialTheme.colors.buttonText,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier

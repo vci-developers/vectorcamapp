@@ -1,21 +1,20 @@
 package com.vci.vectorcamapp.imaging.data
 
 import android.content.Context
-import org.tensorflow.lite.support.common.FileUtil
+import com.google.ai.edge.litert.CompiledModel
 import java.io.File
-import java.io.FileInputStream
-import java.nio.MappedByteBuffer
-import java.nio.channels.FileChannel
 
 internal object TfLiteModelLoader {
-    fun load(context: Context, assetOrAbsolutePath: String): MappedByteBuffer {
+    fun create(
+        context: Context,
+        assetOrAbsolutePath: String,
+        options: CompiledModel.Options,
+    ): CompiledModel {
         val file = File(assetOrAbsolutePath)
         return if (file.isAbsolute && file.exists()) {
-            FileInputStream(file).channel.use { channel ->
-                channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size())
-            }
+            CompiledModel.create(file.absolutePath, options)
         } else {
-            FileUtil.loadMappedFile(context, assetOrAbsolutePath)
+            CompiledModel.create(context.assets, assetOrAbsolutePath, options)
         }
     }
 }

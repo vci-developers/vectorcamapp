@@ -62,7 +62,7 @@ object ImagingModule {
             roleModelId = { it.species },
             assetFallback = "species.tflite",
         )
-        return TfLiteSpecimenClassifier(context, path, "TFLiteSpeciesClassifierThread")
+        return TfLiteSpecimenClassifier(context, path, "LiteRTSpeciesClassifierThread")
     }
 
     @Provides
@@ -79,7 +79,7 @@ object ImagingModule {
             roleModelId = { it.sex },
             assetFallback = "sex.tflite",
         )
-        return TfLiteSpecimenClassifier(context, path, "TFLiteSexClassifierThread")
+        return TfLiteSpecimenClassifier(context, path, "LiteRTSexClassifierThread")
     }
 
     @Provides
@@ -96,7 +96,7 @@ object ImagingModule {
             roleModelId = { it.abdomenStatus },
             assetFallback = "abdomen_status.tflite",
         )
-        return TfLiteSpecimenClassifier(context, path, "TFLiteAbdomenStatusClassifierThread")
+        return TfLiteSpecimenClassifier(context, path, "LiteRTAbdomenStatusClassifierThread")
     }
 
     private fun resolveModelPath(

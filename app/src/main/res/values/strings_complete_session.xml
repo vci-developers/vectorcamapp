@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="complete_session_title_screen">Complete Sessions</string>
+    <string name="complete_session_title_details_screen">Session Information</string>
+    <string name="complete_session_title_session_status">Session Status</string>
+    <string name="complete_session_title_general_info">General Information</string>
+    <string name="complete_session_title_geographical_info">Geographical Information</string>
+    <string name="complete_session_title_surveillance_form">Surveillance Form</string>
+    <string name="complete_session_title_additional_notes">Additional Notes</string>
+    <string name="complete_session_title_card">Completed Session on\n%1$s</string>
+
+    <!-- Body -->
+    <string name="complete_session_body_subtitle">Click on a session to view more details</string>
+    <string name="complete_session_body_empty">No completed sessions found.</string>
+    <string name="complete_session_body_no_results">No matching sessions found.</string>
+    <string name="complete_session_body_no_specimens">No specimens were captured during this session.</string>
+    <string name="complete_session_body_no_matching_specimens">No matching specimens found.</string>
+    <string name="complete_session_body_no_responses">No responses recorded.</string>
+    <string name="complete_session_body_no_responses_batch">No responses recorded for this batch.</string>
+
+    <!-- Labels -->
+    <string name="complete_session_label_id">ID: %1$s</string>
+    <string name="complete_session_label_created_at">Created At: %1$s</string>
+    <string name="complete_session_label_completed_at">Completed At: %1$s</string>
+    <string name="complete_session_label_session_type">Session Type: %1$s</string>
+    <string name="complete_session_label_collector">Collector: %1$s, %2$s</string>
+    <string name="complete_session_label_hardware_id">Hardware ID: %1$s</string>
+    <string name="complete_session_label_not_provided">Not Provided</string>
+    <string name="complete_session_label_collection_date">Collection Date: %1$s</string>
+    <string name="complete_session_label_collection_method">Collection Method: %1$s</string>
+    <string name="complete_session_label_specimen_condition">Specimen Condition: %1$s</string>
+    <string name="complete_session_label_district">District: %1$s</string>
+    <string name="complete_session_label_sub_county">Sub-County: %1$s</string>
+    <string name="complete_session_label_parish">Parish: %1$s</string>
+    <string name="complete_session_label_village_name">Village Name: %1$s</string>
+    <string name="complete_session_label_house_number">House Number: %1$s</string>
+    <string name="complete_session_label_health_center">Nearest Health Center: %1$s</string>
+    <string name="complete_session_label_detail">%1$s: %2$s</string>
+    <string name="complete_session_label_num_people_house">Number of People who Slept in the House: %1$s</string>
+    <string name="complete_session_label_irs_conducted">Was Indoor Residual Spray (IRS) Conducted: %1$s</string>
+    <string name="complete_session_label_yes">Yes</string>
+    <string name="complete_session_label_no">No</string>
+    <string name="complete_session_label_months_since_irs">Months Since IRS: %1$s</string>
+    <string name="complete_session_label_num_llins">Number of Long Lasting Insecticide-coated Nets (LLINs) Available: %1$s</string>
+    <string name="complete_session_label_llin_type">LLIN Type: %1$s</string>
+    <string name="complete_session_label_llin_brand">LLIN Brand: %1$s</string>
+    <string name="complete_session_label_num_people_llin">Number of People who Slept Under LLIN: %1$s</string>
+    <string name="complete_session_label_notes">Notes:</string>
+    <string name="complete_session_label_batch">Batch %1$s</string>
+    <string name="complete_session_label_batch_name">Batch: %1$s</string>
+    <string name="complete_session_label_specimen_id">Specimen ID: %1$s</string>
+    <string name="complete_session_label_species">Species: %1$s</string>
+    <string name="complete_session_label_sex">Sex: %1$s</string>
+    <string name="complete_session_label_abdomen_status">Abdomen Status: %1$s</string>
+    <string name="complete_session_label_captured_on">Captured On: %1$s</string>
+    <string name="complete_session_label_upload_progress">Upload Progress</string>
+    <string name="complete_session_label_metadata_upload_status">"Metadata Upload Status: "</string>
+    <string name="complete_session_label_image_upload_status">"Image Upload Status: "</string>
+    <string name="complete_session_label_image_badge">%1$d of %2$d</string>
+
+    <!-- Status -->
+    <string name="complete_session_status_completed">Completed</string>
+    <string name="complete_session_status_not_started">Not started</string>
+    <string name="complete_session_status_metadata_progress">%1$d / %2$d metadata</string>
+    <string name="complete_session_status_image_progress">%1$d / %2$d images</string>
+
+    <!-- Placeholders -->
+    <string name="complete_session_placeholder_search">Search by collector, district, session type, etc.</string>
+    <string name="complete_session_placeholder_search_specimens">Search by specimen ID, species, etc.</string>
+
+    <!-- Content Descriptions -->
+    <string name="complete_session_content_description_back">Back Button</string>
+    <string name="complete_session_content_description_cloud_upload">Cloud Upload</string>
+    <string name="complete_session_content_description_information">Information</string>
+    <string name="complete_session_content_description_pin">Pin</string>
+    <string name="complete_session_content_description_clipboard">Clipboard</string>
+    <string name="complete_session_content_description_notes">Notes</string>
+    <string name="complete_session_content_description_collection_batch">Collection Batch</string>
+    <string name="complete_session_content_description_arrow">Arrow Right</string>
+    <string name="complete_session_content_description_person">Person</string>
+    <string name="complete_session_content_description_map">Map</string>
+    <string name="complete_session_content_description_navigation">Navigation</string>
+    <string name="complete_session_content_description_house">House</string>
+    <string name="complete_session_content_description_hospital">Hospital</string>
+    <string name="complete_session_content_description_location">Location</string>
+    <string name="complete_session_content_description_uploading">Currently uploading</string>
+    <string name="complete_session_content_description_refresh">Refresh</string>
+    <string name="complete_session_content_description_upload">Upload</string>
+    <string name="complete_session_content_description_specimen_image">Specimen Image: %1$s</string>
+    <string name="complete_session_content_description_mosquito">Mosquito</string>
+
+</resources>

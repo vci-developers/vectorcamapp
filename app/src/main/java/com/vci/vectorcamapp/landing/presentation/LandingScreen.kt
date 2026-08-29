@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
@@ -35,14 +36,14 @@ fun LandingScreen(
     modifier: Modifier = Modifier
 ) {
     ScreenHeader(
-        title = "Welcome to VectorCam!",
-        subtitle = "Program: ${state.enrolledProgram.name}",
+        title = stringResource(R.string.landing_title_welcome),
+        subtitle = stringResource(R.string.landing_label_program, state.enrolledProgram.name),
         modifier = modifier.testTag(LandingTestTags.SCREEN),
         trailingIcon = {
             IconButton(onClick = { onAction(LandingAction.OpenSettings) }) {
                 Icon(
                     painter = painterResource(R.drawable.ic_settings),
-                    contentDescription = "Settings Icon",
+                    contentDescription = stringResource(R.string.landing_content_description_settings),
                     modifier = Modifier
                         .size(MaterialTheme.dimensions.iconSizeLarge)
                 )
@@ -55,12 +56,12 @@ fun LandingScreen(
                 modifier = Modifier.padding(top = MaterialTheme.dimensions.spacingMedium)
             ) {
                 LandingSection(
-                    title = "Imaging",
+                    title = stringResource(R.string.landing_title_section_imaging),
                     testTag = LandingTestTags.SECTION_IMAGING
                 ) {
                     LandingActionTile(
-                        title = "New Surveillance Session",
-                        description = "Begin a new household visit and capture mosquito images.",
+                        title = stringResource(R.string.landing_title_new_surveillance),
+                        description = stringResource(R.string.landing_body_new_surveillance),
                         icon = painterResource(R.drawable.ic_specimen),
                         onClick = { onAction(LandingAction.StartNewSurveillanceSession) },
                         testTag = LandingTestTags.TILE_NEW_SURVEILLANCE
@@ -68,12 +69,12 @@ fun LandingScreen(
                 }
 
                 LandingSection(
-                    title = "Library",
+                    title = stringResource(R.string.landing_title_section_library),
                     testTag = LandingTestTags.SECTION_LIBRARY
                 ) {
                     LandingActionTile(
-                        title = "View Sessions in Progress",
-                        description = "Resume and complete any unfinished sessions.",
+                        title = stringResource(R.string.landing_title_incomplete_sessions),
+                        description = stringResource(R.string.landing_body_incomplete_sessions),
                         icon = painterResource(R.drawable.ic_minus_circle),
                         onClick = { onAction(LandingAction.ViewIncompleteSessions) },
                         badgeCount = state.incompleteSessionsCount,
@@ -81,8 +82,8 @@ fun LandingScreen(
                     )
 
                     LandingActionTile(
-                        title = "View Complete Sessions",
-                        description = "Review fully completed sessions and uploaded data.",
+                        title = stringResource(R.string.landing_title_complete_sessions),
+                        description = stringResource(R.string.landing_body_complete_sessions),
                         icon = painterResource(R.drawable.ic_complete),
                         onClick = { onAction(LandingAction.ViewCompleteSessions) },
                         testTag = LandingTestTags.TILE_COMPLETE
@@ -97,14 +98,14 @@ fun LandingScreen(
             onDismissRequest = { onAction(LandingAction.DismissResumePrompt) },
             title = {
                 Text(
-                    text = "Resume unfinished session?",
+                    text = stringResource(R.string.landing_title_resume_dialog),
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colors.textPrimary
                 )
             },
             text = {
                 Text(
-                    text = "You have a surveillance session in progress. Resume where you left off?",
+                    text = stringResource(R.string.landing_body_resume_dialog),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colors.textSecondary
                 )
@@ -118,7 +119,7 @@ fun LandingScreen(
                     modifier = Modifier.testTag(LandingTestTags.RESUME_CONFIRM)
                 ) {
                     Text(
-                        text = "Yes, resume",
+                        text = stringResource(R.string.landing_action_resume_dialog_confirm),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colors.buttonText
                     )
@@ -130,7 +131,7 @@ fun LandingScreen(
                     modifier = Modifier.testTag(LandingTestTags.RESUME_DISMISS)
                 ) {
                     Text(
-                        text = "No, start new",
+                        text = stringResource(R.string.landing_action_resume_dialog_dismiss),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colors.error
                     )

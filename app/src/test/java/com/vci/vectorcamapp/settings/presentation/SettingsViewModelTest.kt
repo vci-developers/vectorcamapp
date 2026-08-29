@@ -27,6 +27,8 @@ import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationU
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.locale.AppLocaleManager
+import com.vci.vectorcamapp.core.presentation.util.locale.SupportedLanguage
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
 import io.mockk.coEvery
@@ -71,6 +73,7 @@ class SettingsViewModelTest {
     private lateinit var programModelRepository: ProgramModelRepository
     private lateinit var defaultIntakeFieldsCache: DefaultIntakeFieldsCache
     private lateinit var currentSessionCache: CurrentSessionCache
+    private lateinit var appLocaleManager: AppLocaleManager
     private lateinit var connectivityObserver: ConnectivityObserver
 
     private lateinit var collectorsFlow: MutableStateFlow<List<Collector>>
@@ -108,6 +111,9 @@ class SettingsViewModelTest {
         connectivityObserver = mockk(relaxed = true)
         every { connectivityObserver.isConnected } returns MutableStateFlow(false)
 
+        appLocaleManager = mockk(relaxed = true)
+        every { appLocaleManager.getCurrentLanguage() } returns SupportedLanguage.ENGLISH
+
         every { collectorValidationUseCases.validateCollectorName(any()) } returns Result.Success(Unit)
         every { collectorValidationUseCases.validateCollectorTitle(any()) } returns Result.Success(Unit)
         every { collectorValidationUseCases.validateCollectorLastTrainedOn(any()) } returns Result.Success(Unit)
@@ -139,6 +145,7 @@ class SettingsViewModelTest {
         programModelRepository = programModelRepository,
         defaultIntakeFieldsCache = defaultIntakeFieldsCache,
         currentSessionCache = currentSessionCache,
+        appLocaleManager = appLocaleManager,
         connectivityObserver = connectivityObserver,
         errorMessageEmitter = errorMessageEmitter,
     )

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="permission_title_permissions_required">Permisos requeridos</string>
+    <string name="permission_title_gps_required">GPS requerido</string>
+    <string name="permission_title_auto_time_required">Fecha y hora automáticas requeridas</string>
+    <string name="permission_title_tooltip">Permisos de la aplicación</string>
+    <string name="permission_title_camera">Permiso de cámara</string>
+    <string name="permission_title_location">Permiso de ubicación</string>
+    <string name="permission_title_notification">Permiso de notificaciones</string>
+
+    <!-- Body -->
+    <string name="permission_body_required">Para funcionar correctamente, esta aplicación necesita acceso a tu cámara, ubicación y notificaciones. Uno o más de estos permisos están desactivados. Actívalos en la configuración para continuar.</string>
+    <string name="permission_body_gps_required">Para funcionar correctamente, esta aplicación necesita los servicios de ubicación GPS activados. Activa el GPS en la configuración para continuar.</string>
+    <string name="permission_body_auto_time_required">Para mantener las marcas de tiempo precisas, esta aplicación requiere la fecha y hora automáticas (hora de internet). Actívalas en la configuración de tu dispositivo para continuar.</string>
+    <string name="permission_body_camera">Necesario para capturar imágenes detalladas de los especímenes de mosquitos para una identificación y un análisis precisos.</string>
+    <string name="permission_body_location">Necesario para registrar los sitios exactos de recolección y asociar cada espécimen con su origen geográfico para el seguimiento de campo.</string>
+    <string name="permission_body_notification">Permite que la aplicación muestre el progreso de las subidas, alertas de finalización y otras actualizaciones clave de estado en segundo plano.</string>
+    <string name="splash_body_tagline">Democratizando la vigilancia de vectores</string>
+
+    <!-- Actions -->
+    <string name="permission_action_learn_more">Toca para obtener más información sobre los permisos de la aplicación</string>
+    <string name="permission_action_grant">Conceder permisos</string>
+    <string name="permission_action_enable_gps">Activar GPS</string>
+    <string name="permission_action_enable_auto_time">Activar fecha y hora automáticas</string>
+
+    <!-- Content Descriptions -->
+    <string name="permission_content_description_background">Fondo de mosquito</string>
+    <string name="permission_content_description_camera">Cámara</string>
+    <string name="permission_content_description_location">Ubicación</string>
+    <string name="permission_content_description_notification">Notificación</string>
+    <string name="splash_content_description_logo">Logotipo de bienvenida</string>
+
+</resources>

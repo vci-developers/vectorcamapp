@@ -26,12 +26,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
+import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
+import com.vci.vectorcamapp.core.presentation.util.locale.SupportedLanguage
 import com.vci.vectorcamapp.settings.presentation.components.CollectorDialog
 import com.vci.vectorcamapp.settings.presentation.components.CollectorWarningDialog
 import com.vci.vectorcamapp.settings.presentation.components.SettingsActionTile
@@ -54,12 +57,12 @@ fun SettingsScreen(
         remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
 
     ScreenHeader(
-        title = "Settings",
-        subtitle = "Configure app preferences",
+        title = stringResource(R.string.settings_title_screen),
+        subtitle = stringResource(R.string.settings_body_subtitle),
         leadingIcon = {
             Icon(
                 painter = painterResource(R.drawable.ic_arrow_left),
-                contentDescription = "Back Button",
+                contentDescription = stringResource(R.string.settings_content_description_back),
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeLarge)
@@ -69,23 +72,44 @@ fun SettingsScreen(
         modifier = modifier
     ) {
         item {
-            SettingsSection(title = "Actions") {
+            SettingsSection(title = stringResource(R.string.settings_title_actions)) {
                 SettingsActionTile(
-                    title = "Start Data Collection",
+                    title = stringResource(R.string.settings_title_start_data_collection),
                     onClick = { onAction(SettingsAction.StartNewDataCollectionSession) },
                     modifier = modifier
                 )
 
                 SettingsActionTile(
-                    title = "Start Practice Session",
+                    title = stringResource(R.string.settings_title_start_practice),
                     onClick = { onAction(SettingsAction.StartNewPracticeSession) },
                     modifier = modifier
                 )
             }
 
-            SettingsSection(title = "Update Data from Server") {
+            SettingsSection(title = stringResource(R.string.settings_title_preferences)) {
+                SettingsInfoTile(title = stringResource(R.string.settings_title_language)) {
+                    DropdownField(
+                        options = SupportedLanguage.entries,
+                        selectedOption = state.selectedLanguage,
+                        onOptionSelected = { language ->
+                            onAction(SettingsAction.SelectLanguage(language))
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(MaterialTheme.dimensions.componentHeightLarge)
+                    ) { language ->
+                        Text(
+                            text = stringResource(language.displayNameResId),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.textPrimary
+                        )
+                    }
+                }
+            }
+
+            SettingsSection(title = stringResource(R.string.settings_title_update_data)) {
                 SettingsInfoTile(
-                    title = "Cloud Sync",
+                    title = stringResource(R.string.settings_title_cloud_sync),
                     modifier = modifier
                 ) {
                     Column(
@@ -104,7 +128,7 @@ fun SettingsScreen(
                                     )
                             )
                             Text(
-                                text = if (state.isConnectedToInternet) "Connected to Internet" else "No Internet Connection - Resync Unavailable",
+                                text = if (state.isConnectedToInternet) stringResource(R.string.settings_body_connected) else stringResource(R.string.settings_body_no_internet),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = if (state.isConnectedToInternet) MaterialTheme.colors.textSecondary else MaterialTheme.colors.error
                             )
@@ -123,8 +147,8 @@ fun SettingsScreen(
                                 ActionButton(
                                     label = when {
                                         state.modelDownloadProgress != null -> "Downloading Model..."
-                                        state.isSyncingData -> "Syncing Data..."
-                                        else -> "Resync Data"
+                                        state.isSyncingData -> stringResource(R.string.settings_action_syncing)
+                                        else -> stringResource(R.string.settings_action_resync)
                                     },
                                     onClick = {
                                         if (state.isConnectedToInternet && !state.isSyncingData) {
@@ -183,9 +207,9 @@ fun SettingsScreen(
                 }
             }
 
-            SettingsSection("About") {
+            SettingsSection(stringResource(R.string.settings_title_about)) {
                 SettingsInfoTile(
-                    title = "Registered Collectors",
+                    title = stringResource(R.string.settings_title_registered_collectors),
                     modifier = modifier
                 ) {
                     Column(
@@ -207,7 +231,7 @@ fun SettingsScreen(
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_person),
-                                    contentDescription = "Profile Icon",
+                                    contentDescription = stringResource(R.string.settings_content_description_profile),
                                     tint = MaterialTheme.colors.icon,
                                     modifier = Modifier
                                         .padding(horizontal = MaterialTheme.dimensions.paddingSmall)
@@ -236,7 +260,7 @@ fun SettingsScreen(
                                     contentAlignment = Alignment.CenterEnd
                                 ) {
                                     Text(
-                                        text = "Edit",
+                                        text = stringResource(R.string.settings_action_edit),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colors.icon,
                                         maxLines = 1
@@ -254,78 +278,78 @@ fun SettingsScreen(
                     }
                     Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingMedium))
                     ActionButton(
-                        label = "Add Profile",
+                        label = stringResource(R.string.settings_action_add_profile),
                         onClick = { onAction(SettingsAction.ShowAddCollectorDialog) },
                         textSize = MaterialTheme.typography.bodyMedium
                     )
                 }
                 SettingsInfoTile(
-                    title = "Device Information",
+                    title = stringResource(R.string.settings_title_device_info),
                     modifier = modifier
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                     ) {
                         Text(
-                            text = "Device ID: ${state.device.id}",
+                            text = stringResource(R.string.settings_label_device_id, state.device.id),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textSecondary
                         )
                         Text(
-                            text = "Device Model: ${state.device.model}",
+                            text = stringResource(R.string.settings_label_device_model, state.device.model),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textSecondary
                         )
                         Text(
-                            text = "Registered At: ${dateTimeFormatter.format(state.device.registeredAt)}",
+                            text = stringResource(R.string.settings_label_registered_at, dateTimeFormatter.format(state.device.registeredAt)),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textSecondary
                         )
                     }
                 }
                 SettingsInfoTile(
-                    title = "Program Information",
+                    title = stringResource(R.string.settings_title_program_info),
                     modifier = modifier
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                     ) {
                         Text(
-                            text = "Program ID: ${state.program.id}",
+                            text = stringResource(R.string.settings_label_program_id, state.program.id),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textSecondary
                         )
                         Text(
-                            text = "Program Name: ${state.program.name}",
+                            text = stringResource(R.string.settings_label_program_name, state.program.name),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textSecondary
                         )
                         Text(
-                            text = "Country: ${state.program.country}",
+                            text = stringResource(R.string.settings_label_country, state.program.country),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textSecondary
                         )
                     }
                 }
                 SettingsInfoTile(
-                    title = "App Information",
+                    title = stringResource(R.string.settings_title_app_info),
                     modifier = modifier
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                     ) {
                         Text(
-                            text = "Version: ${BuildConfig.VERSION_NAME}",
+                            text = stringResource(R.string.settings_label_version, BuildConfig.VERSION_NAME),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textSecondary
                         )
                         Text(
-                            text = "Build Code: ${BuildConfig.VERSION_CODE}",
+                            text = stringResource(R.string.settings_label_build_code, BuildConfig.VERSION_CODE),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textSecondary
                         )
                         Text(
-                            text = "Build Type: ${BuildConfig.BUILD_TYPE}",
+                            text = stringResource(R.string.settings_label_build_type, BuildConfig.BUILD_TYPE),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.textSecondary
                         )

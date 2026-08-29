@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.search.SearchTextField
@@ -33,12 +34,12 @@ fun IncompleteSessionScreen(
     modifier: Modifier = Modifier
 ) {
     ScreenHeader(
-        title = "Sessions in Progress",
-        subtitle = "Click on a session to resume",
+        title = stringResource(R.string.incomplete_session_title_screen),
+        subtitle = stringResource(R.string.incomplete_session_body_subtitle),
         leadingIcon = {
             Icon(
                 painter = painterResource(R.drawable.ic_arrow_left),
-                contentDescription = "Back Button",
+                contentDescription = stringResource(R.string.incomplete_session_content_description_back),
                 tint = MaterialTheme.colors.icon,
                 modifier = Modifier
                     .size(MaterialTheme.dimensions.iconSizeLarge)
@@ -55,7 +56,7 @@ fun IncompleteSessionScreen(
                 onSearchQueryChange = { newSearchQueryText ->
                     onAction(IncompleteSessionAction.UpdateSearchQuery(newSearchQueryText))
                 },
-                placeholder = "Search by collector, district, session type, etc.",
+                placeholder = stringResource(R.string.incomplete_session_placeholder_search),
                 modifier = Modifier.padding(
                     start = MaterialTheme.dimensions.spacingMedium,
                     end = MaterialTheme.dimensions.spacingMedium,
@@ -73,9 +74,9 @@ fun IncompleteSessionScreen(
             item {
                 Text(
                     text = if (state.searchQuery.isBlank())
-                        "No sessions currently in progress."
+                        stringResource(R.string.incomplete_session_body_empty)
                     else
-                        "No matching sessions found.",
+                        stringResource(R.string.incomplete_session_body_no_results),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colors.textSecondary,
                     textAlign = TextAlign.Center,
@@ -104,14 +105,14 @@ fun IncompleteSessionScreen(
             },
             title = {
                 Text(
-                    text = "Delete Session?",
+                    text = stringResource(R.string.incomplete_session_title_delete_dialog),
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colors.textPrimary
                 )
             },
             text = {
                 Text(
-                    text = "This will permanently delete the session and all associated images from your device. This action cannot be undone.",
+                    text = stringResource(R.string.incomplete_session_body_delete_dialog),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colors.textSecondary
                 )
@@ -126,7 +127,7 @@ fun IncompleteSessionScreen(
                     )
                 ) {
                     Text(
-                        text = "Yes, Delete",
+                        text = stringResource(R.string.incomplete_session_action_delete_dialog_confirm),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colors.buttonText
                     )
@@ -137,7 +138,7 @@ fun IncompleteSessionScreen(
                     onClick = { onAction(IncompleteSessionAction.DismissDeleteDialog) }
                 ) {
                     Text(
-                        "Cancel",
+                        stringResource(R.string.incomplete_session_action_delete_dialog_cancel),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colors.textPrimary
                     )
