@@ -890,6 +890,7 @@
     <ID>SwallowedException:responseToResult.kt$e: NoTransformationFoundException</ID>
     <ID>ThrowsCount:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun uploadSingleImage( task: ImageUploadTask, sessionId: UUID ): DomainResult&lt;String, NetworkError&gt;</ID>
     <ID>TooGenericExceptionCaught:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ClassifierAcceleratorSelector.kt$ClassifierAcceleratorSelector$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CollectorRepositoryImplementation.kt$CollectorRepositoryImplementation$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CurrentSessionCacheDtoSerializer.kt$CurrentSessionCacheDtoSerializer$e: Exception</ID>
     <ID>TooGenericExceptionCaught:DefaultIntakeFieldsCacheDtoSerializer.kt$DefaultIntakeFieldsCacheDtoSerializer$e: Exception</ID>

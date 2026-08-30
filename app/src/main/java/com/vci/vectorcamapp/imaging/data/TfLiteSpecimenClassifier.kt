@@ -177,37 +177,62 @@ class TfLiteSpecimenClassifier(
     private fun initializeModel(): Boolean {
         if (model != null) return true
 
-        return try {
-            val startTime = System.currentTimeMillis()
-            val selection = ClassifierAcceleratorSelector.selectModel(
+        val selection = try {
+            ClassifierAcceleratorSelector.selectModel(
                 context = context,
                 assetName = filePath,
                 signature = SIGNATURE,
                 inputTensorName = INPUT_TENSOR_NAME,
             )
-            val compiledModel = selection.model
-            model = compiledModel
-            inputBuffers = compiledModel.createInputBuffers()
-            outputBuffers = compiledModel.createOutputBuffers()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to select accelerator for $filePath")
+            return initializeOnCpu()
+        }
 
-            resolveTensorShapes(compiledModel)
-            warmModel()
-
-            Timber.d(
-                "Initialized $filePath: $inputLayout ${inputTensorWidth}x$inputTensorHeight, " +
-                    "$outputNumClasses classes, accelerator=${selection.variantName}, " +
-                    "${System.currentTimeMillis() - startTime}ms"
-            )
+        return try {
+            bindAndWarm(selection)
             true
         } catch (e: Exception) {
-            // Includes the shape contracts in resolveTensorShapes. Failing here leaves the
-            // classifier unusable and classify() returning null, which is the point: feeding the
-            // model the wrong resolution or reading the wrong class count yields confident
-            // nonsense rather than an obvious failure.
-            Timber.e(e, "Failed to initialize $filePath")
+            // Shape contracts fail here too. A GPU model that created but then failed buffers,
+            // shapes or the dummy run must not be retried as GPU forever; CPU is the fallback.
+            // A real shape mismatch fails on CPU as well and classify() returns null.
+            Timber.e(e, "Failed to initialize $filePath on ${selection.variantName}")
             releaseModel()
-            false
+            if (selection.usingGpu) initializeOnCpu() else false
         }
+    }
+
+    private fun initializeOnCpu(): Boolean = try {
+        Timber.w("Retrying $filePath on CPU")
+        bindAndWarm(
+            ClassifierAcceleratorSelector.Selection(
+                ClassifierAcceleratorSelector.cpuModel(context, filePath),
+                usingGpu = false,
+                variantName = "cpu",
+            )
+        )
+        true
+    } catch (e: Exception) {
+        Timber.e(e, "CPU fallback failed for $filePath")
+        releaseModel()
+        false
+    }
+
+    private fun bindAndWarm(selection: ClassifierAcceleratorSelector.Selection) {
+        val startTime = System.currentTimeMillis()
+        val compiledModel = selection.model
+        model = compiledModel
+        inputBuffers = compiledModel.createInputBuffers()
+        outputBuffers = compiledModel.createOutputBuffers()
+
+        resolveTensorShapes(compiledModel)
+        warmModel()
+
+        Timber.d(
+            "Initialized $filePath: $inputLayout ${inputTensorWidth}x$inputTensorHeight, " +
+                "$outputNumClasses classes, accelerator=${selection.variantName}, " +
+                "${System.currentTimeMillis() - startTime}ms"
+        )
     }
 
     private fun resolveTensorShapes(compiledModel: CompiledModel) {

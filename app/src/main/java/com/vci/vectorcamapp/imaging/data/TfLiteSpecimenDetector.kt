@@ -98,28 +98,42 @@ class TfLiteSpecimenDetector(
     private fun initializeModel(): Boolean {
         if (model != null) return true
 
-        return try {
-            val startTime = System.currentTimeMillis()
-            val compiled = createModelPreferringGpu(MODEL_ASSET)
-            model = compiled
-            inputBuffers = compiled.createInputBuffers()
-            outputBuffers = compiled.createOutputBuffers()
+        val attemptedGpu = GpuAccelerationPolicy.shouldAttemptGpu(context)
+        if (bindAndWarm(preferGpu = attemptedGpu)) return true
+        if (!attemptedGpu) return false
 
-            resolveTensorShapes()
-            warmModel()
-            isWarm = true
+        // GPU create can succeed and then buffers, shapes or the dummy run throw. Create's own
+        // catch never sees that, so retry the whole bind on CPU rather than leaving the detector
+        // cold (empty preview, capture reports no specimen).
+        Timber.w("Detector GPU init failed after create; retrying on CPU")
+        return bindAndWarm(preferGpu = false)
+    }
 
-            Timber.d(
-                "LiteRT CompiledModel initialized " +
-                    "(accelerator=${if (usingGpu) "GPU" else "CPU"}, " +
-                    "${System.currentTimeMillis() - startTime}ms)"
-            )
-            true
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to initialize LiteRT CompiledModel: ${e.message}")
-            releaseModel()
-            false
+    private fun bindAndWarm(preferGpu: Boolean): Boolean = try {
+        val startTime = System.currentTimeMillis()
+        val compiled = if (preferGpu) {
+            createModelPreferringGpu(MODEL_ASSET)
+        } else {
+            createModelCpuOnly(MODEL_ASSET)
         }
+        model = compiled
+        inputBuffers = compiled.createInputBuffers()
+        outputBuffers = compiled.createOutputBuffers()
+
+        resolveTensorShapes()
+        warmModel()
+        isWarm = true
+
+        Timber.d(
+            "LiteRT CompiledModel initialized " +
+                "(accelerator=${if (usingGpu) "GPU" else "CPU"}, " +
+                "${System.currentTimeMillis() - startTime}ms)"
+        )
+        true
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to initialize LiteRT CompiledModel: ${e.message}")
+        releaseModel()
+        false
     }
 
     private fun createModelPreferringGpu(assetName: String): CompiledModel {

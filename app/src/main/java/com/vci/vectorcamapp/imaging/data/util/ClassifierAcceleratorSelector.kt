@@ -133,8 +133,8 @@ object ClassifierAcceleratorSelector {
                 usingGpu = true,
                 variantName = variant.name,
             )
-        } catch (e: LiteRtException) {
-            Timber.w("Variant ${variant.name} no longer builds for $assetName: ${e.message}")
+        } catch (e: Exception) {
+            Timber.w(e, "Variant ${variant.name} no longer builds for $assetName; using CPU")
             Selection(createCpuModel(context, assetName), false, CPU_VARIANT)
         }
     }
@@ -197,10 +197,12 @@ object ClassifierAcceleratorSelector {
             assetName,
             variant.options(context, assetName, serialize = false),
         )
-    } catch (e: LiteRtException) {
-        Timber.w("GPU variant ${variant.name} failed to build for $assetName: ${e.message}")
+    } catch (e: Exception) {
+        Timber.w(e, "GPU variant ${variant.name} failed to build for $assetName")
         null
     }
+
+    fun cpuModel(context: Context, assetName: String): CompiledModel = createCpuModel(context, assetName)
 
     private fun createCpuModel(context: Context, assetName: String): CompiledModel {
         // LiteRT's CPU accelerator does not thread across all cores by default, which makes these
