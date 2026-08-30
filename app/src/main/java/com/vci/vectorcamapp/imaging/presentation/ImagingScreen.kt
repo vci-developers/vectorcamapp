@@ -136,7 +136,7 @@ fun ImagingScreen(
             }
 
         val imageCaptureBuilder = ImageCapture.Builder()
-            //.setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            // .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
             .setTargetRotation(rotation)
             .setResolutionSelector(
                 ResolutionSelector.Builder()
