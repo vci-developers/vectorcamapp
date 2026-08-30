@@ -42,6 +42,7 @@ class TfLiteSpecimenDetector(
 
     private val stateLock = Any()
     private var warmUpRequested = false
+    private var warmUpGeneration = 0
     private var isClosed = false
 
     @Volatile
@@ -63,22 +64,41 @@ class TfLiteSpecimenDetector(
     private var outputNumElements = DEFAULT_NUM_ELEMENTS
 
     override fun warm() {
-        synchronized(stateLock) {
+        val generation = synchronized(stateLock) {
             if (isClosed || warmUpRequested) return
             warmUpRequested = true
+            ++warmUpGeneration
         }
 
         handler.post {
             // A release posted between the request and here means nobody wants this model any
             // more, and building it only to tear it down would hold the thread for seconds.
-            if (synchronized(stateLock) { warmUpRequested }) initializeModel()
+            val stillWanted = synchronized(stateLock) {
+                warmUpRequested && warmUpGeneration == generation
+            }
+            val built = if (stillWanted) initializeModel() else false
+
+            // A failed build must not latch. This detector is a singleton, so leaving
+            // warmUpRequested true after a failure would make every later detect() no-op for
+            // the rest of the process — preview stays empty and capture reports no specimen.
+            // initializeModel releases whatever it allocated before returning false. The
+            // generation check is what stops a newer warm() from being cancelled if release
+            // landed mid-build. The next detect() or warm() will retry; frames that arrive
+            // while a build is in flight still no-op because warmUpRequested stays true.
+            if (!built) {
+                synchronized(stateLock) {
+                    if (warmUpRequested && warmUpGeneration == generation) {
+                        warmUpRequested = false
+                    }
+                }
+            }
         }
     }
 
-    private fun initializeModel() {
-        if (model != null) return
+    private fun initializeModel(): Boolean {
+        if (model != null) return true
 
-        try {
+        return try {
             val startTime = System.currentTimeMillis()
             val compiled = createModelPreferringGpu(MODEL_ASSET)
             model = compiled
@@ -94,9 +114,11 @@ class TfLiteSpecimenDetector(
                     "(accelerator=${if (usingGpu) "GPU" else "CPU"}, " +
                     "${System.currentTimeMillis() - startTime}ms)"
             )
+            true
         } catch (e: Exception) {
             Timber.e(e, "Failed to initialize LiteRT CompiledModel: ${e.message}")
             releaseModel()
+            false
         }
     }
 
