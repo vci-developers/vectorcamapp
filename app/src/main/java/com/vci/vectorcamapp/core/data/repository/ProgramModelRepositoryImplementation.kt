@@ -232,7 +232,7 @@ class ProgramModelRepositoryImplementation @Inject constructor(
         }
     }
 
-    private fun promoteDownloadedModel(
+    private suspend fun promoteDownloadedModel(
         programId: Int,
         metadata: ProgramModelDto,
         completedBytes: Long,
@@ -266,7 +266,7 @@ class ProgramModelRepositoryImplementation @Inject constructor(
         return Result.Success(metadata.toDomain(path))
     }
 
-    private fun persistRoleMapping(
+    private suspend fun persistRoleMapping(
         programId: Int,
         apiConfig: ProgramModelsConfig?,
         synced: List<ProgramModel>,
