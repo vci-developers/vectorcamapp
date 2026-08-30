@@ -29,7 +29,8 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 class TfLiteSpecimenDetector(
-    private val context: Context
+    private val context: Context,
+    private val modelPath: String = "detect.tflite",
 ) : SpecimenDetector {
 
     private var model: CompiledModel? = null
@@ -58,7 +59,7 @@ class TfLiteSpecimenDetector(
             if (model != null || isClosed) return
 
             try {
-                model = createModelPreferringGpu(MODEL_ASSET)
+                model = createModelPreferringGpu(modelPath)
                 inputBuffers = model!!.createInputBuffers()
                 outputBuffers = model!!.createOutputBuffers()
 
@@ -82,8 +83,8 @@ class TfLiteSpecimenDetector(
         }
 
         return try {
-            CompiledModel.create(
-                context.assets,
+            TfLiteModelLoader.create(
+                context,
                 assetName,
                 CompiledModel.Options(Accelerator.GPU),
             ).also {
@@ -98,8 +99,8 @@ class TfLiteSpecimenDetector(
 
     private fun createModelCpuOnly(assetName: String): CompiledModel {
         usingGpu = false
-        return CompiledModel.create(
-            context.assets,
+        return TfLiteModelLoader.create(
+            context,
             assetName,
             CompiledModel.Options(Accelerator.CPU).apply {
                 cpuOptions = CompiledModel.CpuOptions(
@@ -373,7 +374,6 @@ class TfLiteSpecimenDetector(
     }
 
     companion object {
-        private const val MODEL_ASSET = "detect.tflite"
         private const val SIGNATURE = "serving_default"
 
         // Signature input/output names rather than tensor names - see TfLiteSpecimenClassifier.

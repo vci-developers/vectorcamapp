@@ -5,6 +5,7 @@ import com.google.ai.edge.litert.Accelerator
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.LiteRtException
 import com.google.ai.edge.litert.TensorBuffer
+import com.vci.vectorcamapp.imaging.data.TfLiteModelLoader
 import timber.log.Timber
 import kotlin.math.abs
 import kotlin.math.max
@@ -105,7 +106,7 @@ object ClassifierAcceleratorSelector {
 
         return try {
             Selection(
-                CompiledModel.create(context.assets, assetName, variant.createOptions()),
+                TfLiteModelLoader.create(context, assetName, variant.createOptions()),
                 usingGpu = true,
                 variantName = variant.name,
             )
@@ -158,7 +159,7 @@ object ClassifierAcceleratorSelector {
         assetName: String,
         variant: Variant,
     ): CompiledModel? = try {
-        CompiledModel.create(context.assets, assetName, variant.createOptions())
+        TfLiteModelLoader.create(context, assetName, variant.createOptions())
     } catch (e: LiteRtException) {
         Timber.w("GPU variant ${variant.name} failed to build for $assetName: ${e.message}")
         null
@@ -172,7 +173,7 @@ object ClassifierAcceleratorSelector {
                 numThreads = Runtime.getRuntime().availableProcessors(),
             )
         }
-        return CompiledModel.create(context.assets, assetName, options)
+        return TfLiteModelLoader.create(context, assetName, options)
     }
 
     private fun createProbeInput(

@@ -5,6 +5,7 @@ import com.vci.vectorcamapp.core.data.network.api.RemoteFormAnswerDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteFormDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteLocationTypeDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteProgramDataSource
+import com.vci.vectorcamapp.core.data.network.api.RemoteProgramModelDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSessionDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSessionUnitDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSiteDataSource
@@ -16,6 +17,7 @@ import com.vci.vectorcamapp.core.domain.network.api.FormAnswerDataSource
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
+import com.vci.vectorcamapp.core.domain.network.api.ProgramModelDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SessionDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SessionUnitDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource
@@ -97,4 +99,10 @@ abstract class DataSourceModule {
     abstract fun bindFormAnswerDataSource(
         remoteFormAnswerDataSource: RemoteFormAnswerDataSource
     ): FormAnswerDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindProgramModelDataSource(
+        remoteProgramModelDataSource: RemoteProgramModelDataSource
+    ): ProgramModelDataSource
 }
