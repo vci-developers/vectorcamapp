@@ -27,9 +27,33 @@ class ProgramModelRepositoryImplementation @Inject constructor(
     ): Result<List<ProgramModel>, NetworkError> {
         ProgramModelLog.i("SYNC start programId=%d", programId)
 
-        // Program config is optional (maps roles -> modelId). Never let it block downloading
-        // the models the list endpoint actually returns.
-        val apiConfig = when (val programResult = programDataSource.getProgramById(programId)) {
+        val apiConfig = resolveOptionalApiConfig(programId)
+        val listedModels = when (val listResult = loadListedModels(programId, onProgress)) {
+            is Result.Error -> return listResult
+            is Result.Success -> listResult.data
+        }
+        if (listedModels.isEmpty()) {
+            return Result.Success(emptyList())
+        }
+
+        val syncedResult = downloadListedModels(programId, listedModels, onProgress)
+        if (syncedResult is Result.Error) {
+            return syncedResult
+        }
+        val synced = (syncedResult as Result.Success).data
+
+        persistRoleMapping(programId, apiConfig, synced)
+        ProgramModelLog.i(
+            "SYNC SUCCESS programId=%d downloaded=%d modelIds=%s",
+            programId,
+            synced.size,
+            synced.joinToString { it.modelId }
+        )
+        return Result.Success(synced)
+    }
+
+    private suspend fun resolveOptionalApiConfig(programId: Int): ProgramModelsConfig? {
+        return when (val programResult = programDataSource.getProgramById(programId)) {
             is Result.Error -> {
                 ProgramModelLog.w(
                     "SYNC WARN get program error=%s programId=%d — continuing without API config",
@@ -49,8 +73,13 @@ class ProgramModelRepositoryImplementation @Inject constructor(
                 modelsConfig
             }
         }
+    }
 
-        val listedModels = when (val listResult = programModelDataSource.getModels(programId)) {
+    private suspend fun loadListedModels(
+        programId: Int,
+        onProgress: (bytesDownloaded: Long, totalBytes: Long) -> Unit,
+    ): Result<List<ProgramModelDto>, NetworkError> {
+        return when (val listResult = programModelDataSource.getModels(programId)) {
             is Result.Error -> {
                 if (listResult.error == NetworkError.NOT_FOUND) {
                     ProgramModelLog.i(
@@ -58,14 +87,15 @@ class ProgramModelRepositoryImplementation @Inject constructor(
                         programId
                     )
                     onProgress(0L, 0L)
-                    return Result.Success(emptyList())
+                    Result.Success(emptyList())
+                } else {
+                    ProgramModelLog.w(
+                        "SYNC FAIL models list error=%s programId=%d",
+                        listResult.error,
+                        programId
+                    )
+                    Result.Error(listResult.error)
                 }
-                ProgramModelLog.w(
-                    "SYNC FAIL models list error=%s programId=%d",
-                    listResult.error,
-                    programId
-                )
-                return Result.Error(listResult.error)
             }
 
             is Result.Success -> {
@@ -75,22 +105,26 @@ class ProgramModelRepositoryImplementation @Inject constructor(
                     listResult.data.models.size,
                     listResult.data.models.joinToString { it.modelId }
                 )
-                listResult.data.models
+                if (listResult.data.models.isEmpty()) {
+                    ProgramModelLog.i(
+                        "SYNC success no downloadable configured models programId=%d — using bundled assets",
+                        programId
+                    )
+                    onProgress(0L, 0L)
+                }
+                Result.Success(listResult.data.models)
             }
         }
+    }
 
+    private suspend fun downloadListedModels(
+        programId: Int,
+        listedModels: List<ProgramModelDto>,
+        onProgress: (bytesDownloaded: Long, totalBytes: Long) -> Unit,
+    ): Result<List<ProgramModel>, NetworkError> {
         val metadataById = linkedMapOf<String, ProgramModelDto>()
         for (model in listedModels) {
             metadataById[model.modelId] = model
-        }
-
-        if (metadataById.isEmpty()) {
-            ProgramModelLog.i(
-                "SYNC success no downloadable configured models programId=%d — using bundled assets",
-                programId
-            )
-            onProgress(0L, 0L)
-            return Result.Success(emptyList())
         }
 
         val totalBytes = metadataById.values.sumOf { it.fileSize.coerceAtLeast(0L) }
@@ -98,115 +132,145 @@ class ProgramModelRepositoryImplementation @Inject constructor(
         onProgress(0L, totalBytes)
 
         val synced = mutableListOf<ProgramModel>()
-
-        for ((modelId, metadata) in metadataById) {
-            ProgramModelLog.i(
-                "SYNC model begin modelId=%s size=%d md5=%s",
-                modelId,
-                metadata.fileSize,
-                metadata.fileMd5
-            )
-
-            if (localProgramModelStore.hasMatchingModel(programId, modelId, metadata.fileMd5)) {
-                localProgramModelStore.saveMetadata(metadata)
-                val path = localProgramModelStore.modelFile(programId, modelId).absolutePath
-                completedBytes += metadata.fileSize
-                onProgress(completedBytes.coerceAtMost(totalBytes), totalBytes)
-                ProgramModelLog.i(
-                    "SYNC model already cached modelId=%s path=%s",
-                    modelId,
-                    path
-                )
-                synced += metadata.toDomain(path)
-                continue
-            }
-
-            val tempFile = localProgramModelStore.tempModelFile(programId, modelId)
-            if (tempFile.exists() && tempFile.length() > metadata.fileSize) {
-                ProgramModelLog.w(
-                    "Temp file oversized for modelId=%s (%d > %d); deleting",
-                    modelId,
-                    tempFile.length(),
-                    metadata.fileSize
-                )
-                tempFile.delete()
-            }
-
-            val existingBytes = if (tempFile.exists()) tempFile.length() else 0L
-            onProgress(
-                (completedBytes + existingBytes).coerceAtMost(totalBytes),
-                totalBytes
-            )
-
+        for ((_, metadata) in metadataById) {
             when (
-                val downloadResult = programModelDataSource.downloadModel(
-                    downloadPath = metadata.downloadUrl.ifBlank {
-                        "/programs/$programId/models/$modelId/download"
-                    },
-                    destination = tempFile,
-                    expectedSize = metadata.fileSize,
-                    onProgress = { bytesDownloaded, _ ->
-                        onProgress(
-                            (completedBytes + bytesDownloaded).coerceAtMost(totalBytes),
-                            totalBytes
-                        )
-                    },
+                val modelResult = syncSingleModel(
+                    programId = programId,
+                    metadata = metadata,
+                    completedBytes = completedBytes,
+                    totalBytes = totalBytes,
+                    onProgress = onProgress,
                 )
             ) {
-                is Result.Error -> {
-                    ProgramModelLog.w(
-                        "SYNC FAIL download modelId=%s error=%s partialBytes=%d",
-                        modelId,
-                        downloadResult.error,
-                        if (tempFile.exists()) tempFile.length() else 0L
-                    )
-                    if (downloadResult.error == NetworkError.NOT_FOUND) {
-                        ProgramModelLog.w("SYNC modelId=%s download 404 — skipping", modelId)
-                        continue
-                    }
-                    return Result.Error(downloadResult.error)
-                }
-
+                is Result.Error -> return modelResult
                 is Result.Success -> {
-                    val promoted = localProgramModelStore.promoteTempFile(
-                        programId = programId,
-                        modelId = modelId,
-                        expectedMd5 = metadata.fileMd5,
-                    )
-                    if (!promoted) {
-                        ProgramModelLog.e(
-                            "SYNC FAIL MD5 mismatch modelId=%s expectedMd5=%s",
-                            modelId,
-                            metadata.fileMd5
-                        )
-                        return Result.Error(NetworkError.UNKNOWN_ERROR)
+                    val model = modelResult.data
+                    if (model != null) {
+                        completedBytes += metadata.fileSize
+                        synced += model
                     }
-
-                    localProgramModelStore.saveMetadata(metadata)
-                    val path = localProgramModelStore.modelFile(programId, modelId).absolutePath
-                    completedBytes += metadata.fileSize
-                    onProgress(completedBytes.coerceAtMost(totalBytes), totalBytes)
-                    ProgramModelLog.i(
-                        "SYNC model SUCCESS modelId=%s path=%s md5=%s",
-                        modelId,
-                        path,
-                        metadata.fileMd5
-                    )
-                    synced += metadata.toDomain(path)
                 }
             }
         }
+        return Result.Success(synced)
+    }
 
+    private suspend fun syncSingleModel(
+        programId: Int,
+        metadata: ProgramModelDto,
+        completedBytes: Long,
+        totalBytes: Long,
+        onProgress: (bytesDownloaded: Long, totalBytes: Long) -> Unit,
+    ): Result<ProgramModel?, NetworkError> {
+        val modelId = metadata.modelId
         ProgramModelLog.i(
-            "SYNC SUCCESS programId=%d downloaded=%d modelIds=%s",
-            programId,
-            synced.size,
-            synced.joinToString { it.modelId }
+            "SYNC model begin modelId=%s size=%d md5=%s",
+            modelId,
+            metadata.fileSize,
+            metadata.fileMd5
         )
 
-        // Persist role -> modelId mapping to disk (config.json) so Imaging can find downloaded
-        // models later without re-syncing. Prefer the API-provided config; fall back to
-        // inferring roles from conventional modelId names among the models actually downloaded.
+        if (localProgramModelStore.hasMatchingModel(programId, modelId, metadata.fileMd5)) {
+            localProgramModelStore.saveMetadata(metadata)
+            val path = localProgramModelStore.modelFile(programId, modelId).absolutePath
+            onProgress((completedBytes + metadata.fileSize).coerceAtMost(totalBytes), totalBytes)
+            ProgramModelLog.i("SYNC model already cached modelId=%s path=%s", modelId, path)
+            return Result.Success(metadata.toDomain(path))
+        }
+
+        val tempFile = localProgramModelStore.tempModelFile(programId, modelId)
+        if (tempFile.exists() && tempFile.length() > metadata.fileSize) {
+            ProgramModelLog.w(
+                "Temp file oversized for modelId=%s (%d > %d); deleting",
+                modelId,
+                tempFile.length(),
+                metadata.fileSize
+            )
+            tempFile.delete()
+        }
+
+        val existingBytes = if (tempFile.exists()) tempFile.length() else 0L
+        onProgress((completedBytes + existingBytes).coerceAtMost(totalBytes), totalBytes)
+
+        return when (
+            val downloadResult = programModelDataSource.downloadModel(
+                downloadPath = metadata.downloadUrl.ifBlank {
+                    "/programs/$programId/models/$modelId/download"
+                },
+                destination = tempFile,
+                expectedSize = metadata.fileSize,
+                onProgress = { bytesDownloaded, _ ->
+                    onProgress(
+                        (completedBytes + bytesDownloaded).coerceAtMost(totalBytes),
+                        totalBytes
+                    )
+                },
+            )
+        ) {
+            is Result.Error -> {
+                ProgramModelLog.w(
+                    "SYNC FAIL download modelId=%s error=%s partialBytes=%d",
+                    modelId,
+                    downloadResult.error,
+                    if (tempFile.exists()) tempFile.length() else 0L
+                )
+                if (downloadResult.error == NetworkError.NOT_FOUND) {
+                    ProgramModelLog.w("SYNC modelId=%s download 404 — skipping", modelId)
+                    Result.Success(null)
+                } else {
+                    Result.Error(downloadResult.error)
+                }
+            }
+
+            is Result.Success -> promoteDownloadedModel(
+                programId = programId,
+                metadata = metadata,
+                completedBytes = completedBytes,
+                totalBytes = totalBytes,
+                onProgress = onProgress,
+            )
+        }
+    }
+
+    private fun promoteDownloadedModel(
+        programId: Int,
+        metadata: ProgramModelDto,
+        completedBytes: Long,
+        totalBytes: Long,
+        onProgress: (bytesDownloaded: Long, totalBytes: Long) -> Unit,
+    ): Result<ProgramModel?, NetworkError> {
+        val modelId = metadata.modelId
+        val promoted = localProgramModelStore.promoteTempFile(
+            programId = programId,
+            modelId = modelId,
+            expectedMd5 = metadata.fileMd5,
+        )
+        if (!promoted) {
+            ProgramModelLog.e(
+                "SYNC FAIL MD5 mismatch modelId=%s expectedMd5=%s",
+                modelId,
+                metadata.fileMd5
+            )
+            return Result.Error(NetworkError.UNKNOWN_ERROR)
+        }
+
+        localProgramModelStore.saveMetadata(metadata)
+        val path = localProgramModelStore.modelFile(programId, modelId).absolutePath
+        onProgress((completedBytes + metadata.fileSize).coerceAtMost(totalBytes), totalBytes)
+        ProgramModelLog.i(
+            "SYNC model SUCCESS modelId=%s path=%s md5=%s",
+            modelId,
+            path,
+            metadata.fileMd5
+        )
+        return Result.Success(metadata.toDomain(path))
+    }
+
+    private fun persistRoleMapping(
+        programId: Int,
+        apiConfig: ProgramModelsConfig?,
+        synced: List<ProgramModel>,
+    ) {
         val effectiveConfig = apiConfig?.takeUnless { it.isEmpty() }
             ?: ProgramModelsConfig.inferFromModelIds(synced.map { it.modelId })
 
@@ -225,8 +289,6 @@ class ProgramModelRepositoryImplementation @Inject constructor(
                 synced.joinToString { it.modelId }.ifEmpty { "none" }
             )
         }
-
-        return Result.Success(synced)
     }
 
     override suspend fun getLocalModel(programId: Int, modelId: String): ProgramModel? {

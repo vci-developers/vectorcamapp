@@ -10,17 +10,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,11 +33,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.window.Dialog
@@ -48,6 +48,7 @@ import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.gestures.PullToRefresh
+import com.vci.vectorcamapp.core.presentation.util.FileSizeFormatter
 import com.vci.vectorcamapp.registration.domain.model.RegistrationDropdownOptions
 import com.vci.vectorcamapp.registration.presentation.util.RegistrationTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -336,7 +337,9 @@ private fun RegistrationLoadingDialog(
                             )
                             Text(
                                 text = if (totalBytes > 0L) {
-                                    "${formatBytes(downloadedBytes)} / ${formatBytes(totalBytes)}"
+                                    FileSizeFormatter.format(downloadedBytes) +
+                                        " / " +
+                                        FileSizeFormatter.format(totalBytes)
                                 } else {
                                     "Fetching model details…"
                                 },
@@ -378,14 +381,6 @@ private fun RegistrationLoadingDialog(
             }
         }
     }
-}
-
-private fun formatBytes(bytes: Long): String {
-    if (bytes < 1024L) return "$bytes B"
-    val kb = bytes / 1024.0
-    if (kb < 1024.0) return String.format("%.1f KB", kb)
-    val mb = kb / 1024.0
-    return String.format("%.1f MB", mb)
 }
 
 @PreviewLightDark

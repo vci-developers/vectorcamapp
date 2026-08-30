@@ -34,6 +34,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
+import com.vci.vectorcamapp.core.presentation.util.FileSizeFormatter
 import com.vci.vectorcamapp.core.presentation.util.locale.SupportedLanguage
 import com.vci.vectorcamapp.settings.presentation.components.CollectorDialog
 import com.vci.vectorcamapp.settings.presentation.components.CollectorWarningDialog
@@ -185,8 +186,8 @@ fun SettingsScreen(
                                 Text(
                                     text = if (state.modelDownloadTotalBytes > 0L) {
                                         "Downloading ML model… $percent% " +
-                                            "(${formatModelBytes(state.modelDownloadBytes)} / " +
-                                            "${formatModelBytes(state.modelDownloadTotalBytes)})"
+                                            "(${FileSizeFormatter.format(state.modelDownloadBytes)} / " +
+                                            "${FileSizeFormatter.format(state.modelDownloadTotalBytes)})"
                                     } else {
                                         "Downloading ML model… $percent%"
                                     },
@@ -386,14 +387,6 @@ fun SettingsScreen(
             onDismiss = { onAction(SettingsAction.DismissCollectorWarningDialog) }
         )
     }
-}
-
-private fun formatModelBytes(bytes: Long): String {
-    if (bytes < 1024L) return "$bytes B"
-    val kb = bytes / 1024.0
-    if (kb < 1024.0) return String.format("%.1f KB", kb)
-    val mb = kb / 1024.0
-    return String.format("%.1f MB", mb)
 }
 
 @PreviewLightDark

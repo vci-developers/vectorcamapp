@@ -20,9 +20,9 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.bearerAuth
-import io.ktor.serialization.kotlinx.json.json
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import io.tus.android.client.TusPreferencesURLStore
 import io.tus.java.client.TusClient
 import kotlinx.serialization.json.Json

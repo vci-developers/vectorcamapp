@@ -75,9 +75,9 @@ class RemoteProgramModelDataSource @Inject constructor(
         } catch (e: UnknownHostException) {
             ProgramModelLog.e(e, "API GET models list FAIL NO_INTERNET url=%s", url)
             Result.Error(NetworkError.NO_INTERNET)
-        } catch (e: Exception) {
+        } catch (ignored: Exception) {
             coroutineContext.ensureActive()
-            ProgramModelLog.e(e, "API GET models list FAIL UNKNOWN url=%s", url)
+            ProgramModelLog.e(ignored, "API GET models list FAIL UNKNOWN url=%s", url)
             Result.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
@@ -127,9 +127,9 @@ class RemoteProgramModelDataSource @Inject constructor(
         } catch (e: UnknownHostException) {
             ProgramModelLog.e(e, "API GET model metadata FAIL NO_INTERNET url=%s", url)
             Result.Error(NetworkError.NO_INTERNET)
-        } catch (e: Exception) {
+        } catch (ignored: Exception) {
             coroutineContext.ensureActive()
-            ProgramModelLog.e(e, "API GET model metadata FAIL UNKNOWN url=%s", url)
+            ProgramModelLog.e(ignored, "API GET model metadata FAIL UNKNOWN url=%s", url)
             Result.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
@@ -165,102 +165,21 @@ class RemoteProgramModelDataSource @Inject constructor(
                 )
                 onProgress(bytesDownloaded, expectedSize)
 
-                var resumeAttempts = 0
-                var lastLoggedPercent = -1
-                while (bytesDownloaded < expectedSize) {
-                    when (val urlResult = resolvePresignedUrl(downloadPath)) {
-                        is Result.Error -> {
-                            ProgramModelLog.w(
-                                "Resolve presigned URL FAIL error=%s apiPath=%s",
-                                urlResult.error,
-                                downloadPath
-                            )
-                            return@withContext Result.Error(urlResult.error)
-                        }
-
-                        is Result.Success -> {
-                            when (
-                                val chunkResult = downloadRangeChunk(
-                                    presignedUrl = urlResult.data,
-                                    startByte = bytesDownloaded,
-                                    destination = destination,
-                                    expectedSize = expectedSize,
-                                    onProgress = { downloaded, total ->
-                                        onProgress(downloaded, total)
-                                        if (total > 0L) {
-                                            val percent = ((downloaded * 100) / total).toInt()
-                                            if (percent >= lastLoggedPercent + 5 || percent == 100) {
-                                                lastLoggedPercent = percent
-                                                ProgramModelLog.d(
-                                                    "PROGRESS %d%% (%d / %d bytes)",
-                                                    percent,
-                                                    downloaded,
-                                                    total
-                                                )
-                                            }
-                                        }
-                                    },
-                                )
-                            ) {
-                                is RangeDownloadResult.ExpiredUrl -> {
-                                    resumeAttempts++
-                                    ProgramModelLog.w(
-                                        "Presigned URL expired/retryable attempt=%d/%d offset=%d",
-                                        resumeAttempts,
-                                        MAX_RESUME_ATTEMPTS,
-                                        bytesDownloaded
-                                    )
-                                    if (resumeAttempts > MAX_RESUME_ATTEMPTS) {
-                                        ProgramModelLog.e(
-                                            "Resume attempts exhausted offset=%d",
-                                            bytesDownloaded
-                                        )
-                                        return@withContext Result.Error(NetworkError.UNKNOWN_ERROR)
-                                    }
-                                }
-
-                                is RangeDownloadResult.Error -> {
-                                    ProgramModelLog.w(
-                                        "S3 range download FAIL error=%s offset=%d",
-                                        chunkResult.error,
-                                        bytesDownloaded
-                                    )
-                                    return@withContext Result.Error(chunkResult.error)
-                                }
-
-                                is RangeDownloadResult.Success -> {
-                                    if (chunkResult.bytesDownloaded <= bytesDownloaded) {
-                                        resumeAttempts++
-                                        ProgramModelLog.w(
-                                            "S3 made no progress (still %d bytes); attempt=%d/%d",
-                                            bytesDownloaded,
-                                            resumeAttempts,
-                                            MAX_RESUME_ATTEMPTS
-                                        )
-                                        if (resumeAttempts > MAX_RESUME_ATTEMPTS) {
-                                            return@withContext Result.Error(NetworkError.UNKNOWN_ERROR)
-                                        }
-                                    } else {
-                                        resumeAttempts = 0
-                                        bytesDownloaded = chunkResult.bytesDownloaded
-                                        ProgramModelLog.d(
-                                            "S3 chunk success bytesDownloaded=%d expectedSize=%d",
-                                            bytesDownloaded,
-                                            expectedSize
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                ProgramModelLog.i(
-                    "S3 download SUCCESS bytes=%d destination=%s",
-                    bytesDownloaded,
-                    destination.absolutePath
+                val downloadResult = downloadUntilComplete(
+                    downloadPath = downloadPath,
+                    destination = destination,
+                    expectedSize = expectedSize,
+                    initialBytesDownloaded = bytesDownloaded,
+                    onProgress = onProgress,
                 )
-                Result.Success(Unit)
+                if (downloadResult is Result.Success) {
+                    ProgramModelLog.i(
+                        "S3 download SUCCESS bytes=%d destination=%s",
+                        destination.length(),
+                        destination.absolutePath
+                    )
+                }
+                downloadResult
             }
         } catch (e: UnresolvedAddressException) {
             ProgramModelLog.e(e, "S3 download FAIL NO_INTERNET path=%s", downloadPath)
@@ -268,11 +187,124 @@ class RemoteProgramModelDataSource @Inject constructor(
         } catch (e: UnknownHostException) {
             ProgramModelLog.e(e, "S3 download FAIL NO_INTERNET path=%s", downloadPath)
             Result.Error(NetworkError.NO_INTERNET)
-        } catch (e: Exception) {
+        } catch (ignored: Exception) {
             coroutineContext.ensureActive()
-            ProgramModelLog.e(e, "S3 download FAIL UNKNOWN path=%s", downloadPath)
+            ProgramModelLog.e(ignored, "S3 download FAIL UNKNOWN path=%s", downloadPath)
             Result.Error(NetworkError.UNKNOWN_ERROR)
         }
+    }
+
+    private suspend fun downloadUntilComplete(
+        downloadPath: String,
+        destination: File,
+        expectedSize: Long,
+        initialBytesDownloaded: Long,
+        onProgress: (bytesDownloaded: Long, totalBytes: Long) -> Unit,
+    ): Result<Unit, NetworkError> {
+        var bytesDownloaded = initialBytesDownloaded
+        var resumeAttempts = 0
+        var lastLoggedPercent = -1
+        var failure: NetworkError? = null
+
+        while (failure == null && bytesDownloaded < expectedSize) {
+            val urlResult = resolvePresignedUrl(downloadPath)
+            if (urlResult is Result.Error) {
+                ProgramModelLog.w(
+                    "Resolve presigned URL FAIL error=%s apiPath=%s",
+                    urlResult.error,
+                    downloadPath
+                )
+                failure = urlResult.error
+            } else {
+                val chunkResult = downloadRangeChunk(
+                    presignedUrl = (urlResult as Result.Success).data,
+                    startByte = bytesDownloaded,
+                    destination = destination,
+                    expectedSize = expectedSize,
+                    onProgress = { downloaded, total ->
+                        onProgress(downloaded, total)
+                        lastLoggedPercent = logProgressIfNeeded(downloaded, total, lastLoggedPercent)
+                    },
+                )
+                failure = applyChunkResult(
+                    chunkResult = chunkResult,
+                    currentOffset = bytesDownloaded,
+                    resumeAttempts = resumeAttempts,
+                    onResumeAttempt = { resumeAttempts = it },
+                    onBytesDownloaded = { bytesDownloaded = it },
+                )
+            }
+        }
+
+        return failure?.let { Result.Error(it) } ?: Result.Success(Unit)
+    }
+
+    private fun applyChunkResult(
+        chunkResult: RangeDownloadResult,
+        currentOffset: Long,
+        resumeAttempts: Int,
+        onResumeAttempt: (Int) -> Unit,
+        onBytesDownloaded: (Long) -> Unit,
+    ): NetworkError? {
+        return when (chunkResult) {
+            is RangeDownloadResult.ExpiredUrl -> {
+                val nextAttempt = resumeAttempts + 1
+                onResumeAttempt(nextAttempt)
+                ProgramModelLog.w(
+                    "Presigned URL expired/retryable attempt=%d/%d offset=%d",
+                    nextAttempt,
+                    MAX_RESUME_ATTEMPTS,
+                    currentOffset
+                )
+                if (nextAttempt > MAX_RESUME_ATTEMPTS) {
+                    ProgramModelLog.e("Resume attempts exhausted offset=%d", currentOffset)
+                    NetworkError.UNKNOWN_ERROR
+                } else {
+                    null
+                }
+            }
+
+            is RangeDownloadResult.Error -> {
+                ProgramModelLog.w(
+                    "S3 range download FAIL error=%s offset=%d",
+                    chunkResult.error,
+                    currentOffset
+                )
+                chunkResult.error
+            }
+
+            is RangeDownloadResult.Success -> {
+                if (chunkResult.bytesDownloaded <= currentOffset) {
+                    val nextAttempt = resumeAttempts + 1
+                    onResumeAttempt(nextAttempt)
+                    ProgramModelLog.w(
+                        "S3 made no progress (still %d bytes); attempt=%d/%d",
+                        currentOffset,
+                        nextAttempt,
+                        MAX_RESUME_ATTEMPTS
+                    )
+                    if (nextAttempt > MAX_RESUME_ATTEMPTS) {
+                        NetworkError.UNKNOWN_ERROR
+                    } else {
+                        null
+                    }
+                } else {
+                    onResumeAttempt(0)
+                    onBytesDownloaded(chunkResult.bytesDownloaded)
+                    null
+                }
+            }
+        }
+    }
+
+    private fun logProgressIfNeeded(downloaded: Long, total: Long, lastLoggedPercent: Int): Int {
+        if (total <= 0L) return lastLoggedPercent
+        val percent = ((downloaded * 100) / total).toInt()
+        if (percent < lastLoggedPercent + PROGRESS_LOG_STEP_PERCENT && percent != 100) {
+            return lastLoggedPercent
+        }
+        ProgramModelLog.d("PROGRESS %d%% (%d / %d bytes)", percent, downloaded, total)
+        return percent
     }
 
     private suspend fun resolvePresignedUrl(downloadPath: String): Result<String, NetworkError> {
@@ -287,16 +319,9 @@ class RemoteProgramModelDataSource @Inject constructor(
                     socketTimeoutMillis = RESOLVE_TIMEOUT_MS
                 }
             }
-        } catch (e: UnresolvedAddressException) {
-            ProgramModelLog.e(e, "API GET download redirect FAIL NO_INTERNET url=%s", url)
-            return Result.Error(NetworkError.NO_INTERNET)
-        } catch (e: UnknownHostException) {
-            ProgramModelLog.e(e, "API GET download redirect FAIL NO_INTERNET url=%s", url)
-            return Result.Error(NetworkError.NO_INTERNET)
-        } catch (e: Exception) {
+        } catch (ignored: Exception) {
             coroutineContext.ensureActive()
-            ProgramModelLog.e(e, "API GET download redirect FAIL UNKNOWN url=%s", url)
-            return Result.Error(NetworkError.UNKNOWN_ERROR)
+            return mapResolveFailure(ignored, url)
         }
 
         val location = response.headers[HttpHeaders.Location]
@@ -306,80 +331,29 @@ class RemoteProgramModelDataSource @Inject constructor(
             location?.let { ProgramModelLog.redactUrl(it) } ?: "null"
         )
 
-        return when (response.status.value) {
-            HttpStatusCode.MovedPermanently.value,
-            HttpStatusCode.Found.value,
-            HttpStatusCode.SeeOther.value,
-            HttpStatusCode.TemporaryRedirect.value,
-            HttpStatusCode.PermanentRedirect.value,
-            -> {
-                response.discardBody()
-                if (location.isNullOrBlank()) {
-                    ProgramModelLog.e("API redirect missing Location header url=%s", url)
-                    Result.Error(NetworkError.UNKNOWN_ERROR)
-                } else {
-                    ProgramModelLog.i(
-                        "API redirect SUCCESS presignedUrl=%s",
-                        ProgramModelLog.redactUrl(location)
-                    )
-                    Result.Success(location)
-                }
-            }
-
-            404 -> {
-                response.discardBody()
-                ProgramModelLog.w("API download redirect FAIL NOT_FOUND url=%s", url)
-                Result.Error(NetworkError.NOT_FOUND)
-            }
-
-            401 -> {
-                response.discardBody()
-                ProgramModelLog.w("API download redirect FAIL UNAUTHORIZED url=%s", url)
-                Result.Error(NetworkError.CLIENT_ERROR)
-            }
-
-            408 -> {
-                response.discardBody()
-                ProgramModelLog.w("API download redirect FAIL TIMEOUT url=%s", url)
-                Result.Error(NetworkError.REQUEST_TIMEOUT)
-            }
-
-            429 -> {
-                response.discardBody()
-                ProgramModelLog.w("API download redirect FAIL TOO_MANY_REQUESTS url=%s", url)
-                Result.Error(NetworkError.TOO_MANY_REQUESTS)
-            }
-
-            in 400..499 -> {
-                response.discardBody()
-                ProgramModelLog.w(
-                    "API download redirect FAIL CLIENT_ERROR status=%d url=%s",
-                    response.status.value,
-                    url
-                )
-                Result.Error(NetworkError.CLIENT_ERROR)
-            }
-
-            in 500..599 -> {
-                response.discardBody()
-                ProgramModelLog.w(
-                    "API download redirect FAIL SERVER_ERROR status=%d url=%s",
-                    response.status.value,
-                    url
-                )
-                Result.Error(NetworkError.SERVER_ERROR)
-            }
-
-            else -> {
-                response.discardBody()
-                ProgramModelLog.w(
-                    "API download redirect FAIL unexpected status=%d url=%s",
-                    response.status.value,
-                    url
-                )
+        if (isRedirectStatus(response.status.value)) {
+            response.discardBody()
+            return if (location.isNullOrBlank()) {
+                ProgramModelLog.e("API redirect missing Location header url=%s", url)
                 Result.Error(NetworkError.UNKNOWN_ERROR)
+            } else {
+                ProgramModelLog.i(
+                    "API redirect SUCCESS presignedUrl=%s",
+                    ProgramModelLog.redactUrl(location)
+                )
+                Result.Success(location)
             }
         }
+
+        response.discardBody()
+        val error = networkErrorForStatus(response.status.value) ?: NetworkError.UNKNOWN_ERROR
+        ProgramModelLog.w(
+            "API download redirect FAIL error=%s status=%d url=%s",
+            error,
+            response.status.value,
+            url
+        )
+        return Result.Error(error)
     }
 
     private suspend fun downloadRangeChunk(
@@ -416,7 +390,9 @@ class RemoteProgramModelDataSource @Inject constructor(
                 )
 
                 when (response.status.value) {
-                    401, 403 -> {
+                    HttpStatusCode.Unauthorized.value,
+                    HttpStatusCode.Forbidden.value,
+                    -> {
                         response.discardBody()
                         ProgramModelLog.w(
                             "S3 GET expired/unauthorized status=%d",
@@ -425,7 +401,9 @@ class RemoteProgramModelDataSource @Inject constructor(
                         RangeDownloadResult.ExpiredUrl
                     }
 
-                    200, 206 -> {
+                    HttpStatusCode.OK.value,
+                    HttpStatusCode.PartialContent.value,
+                    -> {
                         ProgramModelLog.d(
                             "S3 GET body streaming status=%d startByte=%d",
                             response.status.value,
@@ -440,40 +418,16 @@ class RemoteProgramModelDataSource @Inject constructor(
                         )
                     }
 
-                    404 -> {
-                        response.discardBody()
-                        ProgramModelLog.w("S3 GET FAIL NOT_FOUND")
-                        RangeDownloadResult.Error(NetworkError.NOT_FOUND)
-                    }
-
-                    408 -> {
-                        response.discardBody()
-                        ProgramModelLog.w("S3 GET FAIL TIMEOUT")
-                        RangeDownloadResult.Error(NetworkError.REQUEST_TIMEOUT)
-                    }
-
-                    429 -> {
-                        response.discardBody()
-                        ProgramModelLog.w("S3 GET FAIL TOO_MANY_REQUESTS")
-                        RangeDownloadResult.Error(NetworkError.TOO_MANY_REQUESTS)
-                    }
-
-                    in 400..499 -> {
-                        response.discardBody()
-                        ProgramModelLog.w("S3 GET FAIL CLIENT_ERROR status=%d", response.status.value)
-                        RangeDownloadResult.Error(NetworkError.CLIENT_ERROR)
-                    }
-
-                    in 500..599 -> {
-                        response.discardBody()
-                        ProgramModelLog.w("S3 GET FAIL SERVER_ERROR status=%d", response.status.value)
-                        RangeDownloadResult.Error(NetworkError.SERVER_ERROR)
-                    }
-
                     else -> {
                         response.discardBody()
-                        ProgramModelLog.w("S3 GET FAIL unexpected status=%d", response.status.value)
-                        RangeDownloadResult.Error(NetworkError.UNKNOWN_ERROR)
+                        val error = networkErrorForStatus(response.status.value)
+                            ?: NetworkError.UNKNOWN_ERROR
+                        ProgramModelLog.w(
+                            "S3 GET FAIL error=%s status=%d",
+                            error,
+                            response.status.value
+                        )
+                        RangeDownloadResult.Error(error)
                     }
                 }
             }
@@ -483,9 +437,13 @@ class RemoteProgramModelDataSource @Inject constructor(
         } catch (e: UnknownHostException) {
             ProgramModelLog.e(e, "S3 GET FAIL NO_INTERNET")
             RangeDownloadResult.Error(NetworkError.NO_INTERNET)
-        } catch (e: Exception) {
+        } catch (ignored: Exception) {
             coroutineContext.ensureActive()
-            ProgramModelLog.e(e, "S3 GET stream interrupted; will resume from offset=%d", startByte)
+            ProgramModelLog.e(
+                ignored,
+                "S3 GET stream interrupted; will resume from offset=%d",
+                startByte
+            )
             RangeDownloadResult.ExpiredUrl
         }
     }
@@ -512,13 +470,16 @@ class RemoteProgramModelDataSource @Inject constructor(
 
         RandomAccessFile(destination, "rw").use { raf ->
             raf.seek(bytesDownloaded)
-            while (!channel.isClosedForRead) {
+            var keepReading = true
+            while (keepReading && !channel.isClosedForRead) {
                 val bytesRead = channel.readAvailable(buffer, 0, buffer.size)
-                if (bytesRead < 0) break
-                if (bytesRead == 0) continue
-                raf.write(buffer, 0, bytesRead)
-                bytesDownloaded += bytesRead
-                onProgress(bytesDownloaded.coerceAtMost(expectedSize), expectedSize)
+                if (bytesRead > 0) {
+                    raf.write(buffer, 0, bytesRead)
+                    bytesDownloaded += bytesRead
+                    onProgress(bytesDownloaded.coerceAtMost(expectedSize), expectedSize)
+                } else {
+                    keepReading = bytesRead == 0
+                }
             }
         }
 
@@ -540,10 +501,48 @@ class RemoteProgramModelDataSource @Inject constructor(
         data class Error(val error: NetworkError) : RangeDownloadResult
     }
 
+    private fun mapResolveFailure(error: Exception, url: String): Result<String, NetworkError> {
+        return when (error) {
+            is UnresolvedAddressException, is UnknownHostException -> {
+                ProgramModelLog.e(error, "API GET download redirect FAIL NO_INTERNET url=%s", url)
+                Result.Error(NetworkError.NO_INTERNET)
+            }
+            else -> {
+                ProgramModelLog.e(error, "API GET download redirect FAIL UNKNOWN url=%s", url)
+                Result.Error(NetworkError.UNKNOWN_ERROR)
+            }
+        }
+    }
+
+    private fun isRedirectStatus(status: Int): Boolean {
+        return status == HttpStatusCode.MovedPermanently.value ||
+            status == HttpStatusCode.Found.value ||
+            status == HttpStatusCode.SeeOther.value ||
+            status == HttpStatusCode.TemporaryRedirect.value ||
+            status == HttpStatusCode.PermanentRedirect.value
+    }
+
+    private fun networkErrorForStatus(status: Int): NetworkError? {
+        return when (status) {
+            HttpStatusCode.NotFound.value -> NetworkError.NOT_FOUND
+            HttpStatusCode.Unauthorized.value -> NetworkError.CLIENT_ERROR
+            HttpStatusCode.RequestTimeout.value -> NetworkError.REQUEST_TIMEOUT
+            HttpStatusCode.TooManyRequests.value -> NetworkError.TOO_MANY_REQUESTS
+            in HTTP_CLIENT_ERROR_MIN..HTTP_CLIENT_ERROR_MAX -> NetworkError.CLIENT_ERROR
+            in HTTP_SERVER_ERROR_MIN..HTTP_SERVER_ERROR_MAX -> NetworkError.SERVER_ERROR
+            else -> null
+        }
+    }
+
     private companion object {
         const val RESOLVE_TIMEOUT_MS = 30_000L
         const val DOWNLOAD_TIMEOUT_MS = 10 * 60 * 1000L
         const val DEFAULT_BUFFER_SIZE = 8 * 1024
         const val MAX_RESUME_ATTEMPTS = 5
+        const val PROGRESS_LOG_STEP_PERCENT = 5
+        const val HTTP_CLIENT_ERROR_MIN = 400
+        const val HTTP_CLIENT_ERROR_MAX = 499
+        const val HTTP_SERVER_ERROR_MIN = 500
+        const val HTTP_SERVER_ERROR_MAX = 599
     }
 }
