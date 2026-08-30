@@ -103,6 +103,9 @@ class VectorCamApp : Application(), Configuration.Provider {
         }
         ProcessLifecycleOwner.get().lifecycle.addObserver(lifecycleObserver)
 
+        // Start the GPU builds during splash / permission checks, not when Imaging opens.
+        specimenModelWarmer.warm()
+
         val initStartMs = System.currentTimeMillis()
         try {
             OpenCVLoader.initLocal()

@@ -7,7 +7,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -28,7 +27,6 @@ import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.logging.analytics.analyticsScreenName
 import com.vci.vectorcamapp.core.presentation.components.scaffold.BaseScaffold
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
-import com.vci.vectorcamapp.imaging.domain.SpecimenModelWarmer
 import com.vci.vectorcamapp.imaging.presentation.ImagingEvent
 import com.vci.vectorcamapp.imaging.presentation.ImagingScreen
 import com.vci.vectorcamapp.imaging.presentation.ImagingViewModel
@@ -49,31 +47,13 @@ import com.vci.vectorcamapp.settings.presentation.SettingsEvent
 import com.vci.vectorcamapp.settings.presentation.SettingsScreen
 import com.vci.vectorcamapp.settings.presentation.SettingsViewModel
 
-/**
- * Destinations from which the user can reach imaging without another screen in between, plus
- * imaging itself. Landing on one of these is the signal to start building the inference models, so
- * that the build overlaps with the form-filling rather than with the first capture.
- */
-private val IMAGING_APPROACH_ROUTES = listOf(
-    Destination.Intake::class,
-    Destination.CollectionBatchForm::class,
-    Destination.Imaging::class,
-)
-
 @Composable
-fun NavGraph(startDestination: Destination, specimenModelWarmer: SpecimenModelWarmer) {
+fun NavGraph(startDestination: Destination) {
     val navController = rememberNavController()
 
     val currentEntry by navController.currentBackStackEntryAsState()
     LaunchedEffect(currentEntry) {
         currentEntry?.analyticsScreenName()?.let { VectorCamAnalytics.screenView(it) }
-
-        val approachingImaging = currentEntry?.destination?.let { destination ->
-            IMAGING_APPROACH_ROUTES.any { destination.hasRoute(it) }
-        } == true
-        if (approachingImaging) {
-            specimenModelWarmer.warm()
-        }
     }
 
     NavHost(

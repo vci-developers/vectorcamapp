@@ -19,8 +19,8 @@ import kotlin.time.Duration.Companion.seconds
  * Decides when the detector and classifiers are held in memory.
  *
  * Building them costs seconds. Doing it when the imaging screen opens puts that cost directly in
- * front of the first capture of a session, so instead they are warmed from the screens that lead
- * into imaging, where the user is already reading and typing.
+ * front of the first capture, so they are warmed at process start and overlap with splash,
+ * permissions, and whatever screen the user lands on.
  *
  * They are deliberately not held for the life of the process. Together they hold a few hundred
  * megabytes, and a backgrounded app that size is a prime target for the low-memory killer - which
@@ -52,7 +52,7 @@ class SpecimenModelWarmer @Inject constructor(
 
     /**
      * Marks the models as wanted and starts building any that are cold. Returns immediately and is
-     * cheap to call repeatedly, so screens can call it unconditionally on entry.
+     * cheap to call repeatedly.
      */
     fun warm() {
         synchronized(lock) {
@@ -63,13 +63,7 @@ class SpecimenModelWarmer @Inject constructor(
     }
 
     fun onForeground() {
-        val shouldRebuild = synchronized(lock) {
-            cancelPendingRelease()
-            warmWanted
-        }
-        if (shouldRebuild) {
-            models.forEach { it.warm() }
-        }
+        warm()
     }
 
     fun onBackground() {

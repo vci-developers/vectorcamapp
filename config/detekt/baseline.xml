@@ -292,7 +292,7 @@
     <ID>CyclomaticComplexMethod:IntakeViewModel.kt$IntakeViewModel$fun onAction(action: IntakeAction)</ID>
     <ID>CyclomaticComplexMethod:IntakeViewModel.kt$IntakeViewModel$private fun loadFormDetails()</ID>
     <ID>CyclomaticComplexMethod:MetadataUploadWorker.kt$MetadataUploadWorker$override suspend fun doWork(): WorkerResult</ID>
-    <ID>CyclomaticComplexMethod:NavGraph.kt$@Composable fun NavGraph(startDestination: Destination, specimenModelWarmer: SpecimenModelWarmer)</ID>
+    <ID>CyclomaticComplexMethod:NavGraph.kt$@Composable fun NavGraph(startDestination: Destination)</ID>
     <ID>CyclomaticComplexMethod:SettingsViewModel.kt$SettingsViewModel$fun onAction(action: SettingsAction)</ID>
     <ID>Filename:Migration_10_11_AddClassificationDurationColumns.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_10_11_AddClassificationDurationColumns.kt</ID>
     <ID>Filename:Migration_11_12_AddDetectionDurationColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_11_12_AddDetectionDurationColumn.kt</ID>
@@ -474,7 +474,7 @@
     <ID>LongMethod:MetadataUploadWorker.kt$MetadataUploadWorker$override suspend fun doWork(): WorkerResult</ID>
     <ID>LongMethod:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSpecimenImageAndInferenceResultIfNeeded( localSpecimenImage: SpecimenImage, localInferenceResult: InferenceResult?, syncedSpecimen: Specimen, syncedLocalSessionId: UUID ): DomainResult&lt;Unit, NetworkError&gt;</ID>
     <ID>LongMethod:Migration_3_4_Schema_V2.kt$&lt;no name provided&gt;$override fun migrate(db: SupportSQLiteDatabase)</ID>
-    <ID>LongMethod:NavGraph.kt$@Composable fun NavGraph(startDestination: Destination, specimenModelWarmer: SpecimenModelWarmer)</ID>
+    <ID>LongMethod:NavGraph.kt$@Composable fun NavGraph(startDestination: Destination)</ID>
     <ID>LongMethod:PermissionScreen.kt$@Composable fun PermissionScreen( state: MainState, onAction: (MainAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:RegistrationScreen.kt$@Composable fun RegistrationScreen( state: RegistrationState, onAction: (RegistrationAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:RegistrationViewModel.kt$RegistrationViewModel$fun onAction(action: RegistrationAction)</ID>
