@@ -11,44 +11,49 @@ import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
+/**
+ * These live for the whole process rather than per imaging screen, so that a rebuild is not forced
+ * every time the screen is opened. They start cold and hold nothing until warmed;
+ * [com.vci.vectorcamapp.imaging.domain.SpecimenModelWarmer] owns when they build and release.
+ */
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 object ImagingModule {
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     @SpecimenIdRecognizer
     fun provideSpecimenIdRecognizer(): TextRecognizer {
         return TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     @Detector
     fun provideSpecimenDetector(@ApplicationContext context: Context): SpecimenDetector {
         return TfLiteSpecimenDetector(context)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     @SpeciesClassifier
     fun provideSpeciesClassifier(@ApplicationContext context: Context): SpecimenClassifier {
         return TfLiteSpecimenClassifier(context, "species.tflite", "LiteRTSpeciesClassifierThread")
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     @SexClassifier
     fun provideSexClassifier(@ApplicationContext context: Context): SpecimenClassifier {
         return TfLiteSpecimenClassifier(context, "sex.tflite", "LiteRTSexClassifierThread")
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     @AbdomenStatusClassifier
     fun provideAbdomenStatusClassifier(@ApplicationContext context: Context): SpecimenClassifier {
         return TfLiteSpecimenClassifier(

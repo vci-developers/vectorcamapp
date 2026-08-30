@@ -9,6 +9,7 @@ import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.TensorBuffer
 import com.vci.vectorcamapp.core.domain.model.results.DetectorResult
 import com.vci.vectorcamapp.imaging.data.util.GpuAccelerationPolicy
+import com.vci.vectorcamapp.imaging.data.util.GpuModelCache
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import org.opencv.android.Utils
 import org.opencv.core.CvType
@@ -32,46 +33,70 @@ class TfLiteSpecimenDetector(
     private val context: Context
 ) : SpecimenDetector {
 
+    // Only touched on [handler]'s thread, which is the single thread every build, inference and
+    // teardown is posted to.
     private var model: CompiledModel? = null
     private var inputBuffers: List<TensorBuffer> = emptyList()
     private var outputBuffers: List<TensorBuffer> = emptyList()
-
-    private val detectorLock = Any()
-    private var isClosed = false
     private var usingGpu = false
+
+    private val stateLock = Any()
+    private var warmUpRequested = false
+    private var isClosed = false
+
+    @Volatile
+    private var isWarm = false
 
     private val handlerThread = HandlerThread("LiteRTSpecimenDetectorThread").apply { start() }
     private val handler = Handler(handlerThread.looper)
 
+    @Volatile
     private var inputTensorHeight = DEFAULT_TENSOR_HEIGHT
+
+    @Volatile
     private var inputTensorWidth = DEFAULT_TENSOR_WIDTH
 
+    @Volatile
     private var outputNumChannels = DEFAULT_NUM_CHANNELS
+
+    @Volatile
     private var outputNumElements = DEFAULT_NUM_ELEMENTS
 
-    init {
-        handler.post { initializeModel() }
+    override fun warm() {
+        synchronized(stateLock) {
+            if (isClosed || warmUpRequested) return
+            warmUpRequested = true
+        }
+
+        handler.post {
+            // A release posted between the request and here means nobody wants this model any
+            // more, and building it only to tear it down would hold the thread for seconds.
+            if (synchronized(stateLock) { warmUpRequested }) initializeModel()
+        }
     }
 
     private fun initializeModel() {
-        synchronized(detectorLock) {
-            if (model != null || isClosed) return
+        if (model != null) return
 
-            try {
-                model = createModelPreferringGpu(MODEL_ASSET)
-                inputBuffers = model!!.createInputBuffers()
-                outputBuffers = model!!.createOutputBuffers()
+        try {
+            val startTime = System.currentTimeMillis()
+            val compiled = createModelPreferringGpu(MODEL_ASSET)
+            model = compiled
+            inputBuffers = compiled.createInputBuffers()
+            outputBuffers = compiled.createOutputBuffers()
 
-                resolveTensorShapes()
-                warmModel()
+            resolveTensorShapes()
+            warmModel()
+            isWarm = true
 
-                Timber.d(
-                    "LiteRT CompiledModel initialized (accelerator=${if (usingGpu) "GPU" else "CPU"})"
-                )
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to initialize LiteRT CompiledModel: ${e.message}")
-                releaseModelLocked()
-            }
+            Timber.d(
+                "LiteRT CompiledModel initialized " +
+                    "(accelerator=${if (usingGpu) "GPU" else "CPU"}, " +
+                    "${System.currentTimeMillis() - startTime}ms)"
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to initialize LiteRT CompiledModel: ${e.message}")
+            releaseModel()
         }
     }
 
@@ -85,7 +110,7 @@ class TfLiteSpecimenDetector(
             CompiledModel.create(
                 context.assets,
                 assetName,
-                CompiledModel.Options(Accelerator.GPU),
+                GpuModelCache.options(context, cacheKey = assetName),
             ).also {
                 usingGpu = true
                 Timber.d("CompiledModel created with GPU accelerator")
@@ -159,7 +184,13 @@ class TfLiteSpecimenDetector(
     override fun getOutputTensorShape(): Pair<Int, Int> = outputNumChannels to outputNumElements
 
     override suspend fun detect(bitmap: Bitmap): List<DetectorResult> {
-        if (!isReady()) return emptyList()
+        // Preview frames arrive continuously, so waiting on the build would queue a burst that all
+        // runs at once the moment it finishes. Dropping frames until the model is up is cheaper and
+        // looks the same on screen.
+        if (!isWarm) {
+            warm()
+            return emptyList()
+        }
 
         return suspendCoroutine { continuation ->
             handler.post {
@@ -176,11 +207,14 @@ class TfLiteSpecimenDetector(
                         FloatArray(preprocessedMatrixHeight * preprocessedMatrixWidth * preprocessedMatrixChannels)
                     preprocessedMatrix.get(0, 0, inputFloatBuffer)
 
-                    val result = synchronized(detectorLock) {
-                        if (!isReady()) return@post continuation.resume(emptyList())
+                    // A release can land between the warm check and this runnable, so the model has
+                    // to be re-checked here.
+                    val compiled = model
+                        ?: return@post continuation.resume(emptyList())
 
+                    val result = run {
                         inputBuffers[0].writeFloat(inputFloatBuffer)
-                        model!!.run(inputBuffers, outputBuffers)
+                        compiled.run(inputBuffers, outputBuffers)
                         val output = outputBuffers[0].readFloat()
 
                         getDetectedResults(output).map { bboxPrediction ->
@@ -203,10 +237,6 @@ class TfLiteSpecimenDetector(
                 }
             }
         }
-    }
-
-    private fun isReady(): Boolean = synchronized(detectorLock) {
-        !isClosed && model != null && inputBuffers.isNotEmpty() && outputBuffers.isNotEmpty()
     }
 
     private fun prepareInputMatrix(bitmap: Bitmap): Mat {
@@ -330,14 +360,9 @@ class TfLiteSpecimenDetector(
         Timber.d("Detector warmed up (gpu=$usingGpu, outputChannels=$outputNumChannels)")
     }
 
-    private fun releaseModelLocked() {
-        inputBuffers.forEach { buffer ->
-            try {
-                buffer.close()
-            } catch (_: Exception) {
-            }
-        }
-        outputBuffers.forEach { buffer ->
+    private fun releaseModel() {
+        isWarm = false
+        (inputBuffers + outputBuffers).forEach { buffer ->
             try {
                 buffer.close()
             } catch (_: Exception) {
@@ -353,21 +378,32 @@ class TfLiteSpecimenDetector(
         usingGpu = false
     }
 
+    override fun release() {
+        synchronized(stateLock) {
+            if (isClosed || !warmUpRequested) return
+            warmUpRequested = false
+        }
+
+        handler.post {
+            releaseModel()
+            Timber.d("Detector released")
+        }
+    }
+
     override fun close() {
-        synchronized(detectorLock) {
+        synchronized(stateLock) {
             if (isClosed) return
             isClosed = true
+            warmUpRequested = false
+        }
 
-            handler.post {
-                try {
-                    synchronized(detectorLock) {
-                        releaseModelLocked()
-                    }
-                    handlerThread.quitSafely()
-                    Timber.d("Detector closed")
-                } catch (e: Exception) {
-                    Timber.e("Error during detector close: ${e.message}")
-                }
+        handler.post {
+            try {
+                releaseModel()
+                handlerThread.quitSafely()
+                Timber.d("Detector closed")
+            } catch (e: Exception) {
+                Timber.e("Error during detector close: ${e.message}")
             }
         }
     }

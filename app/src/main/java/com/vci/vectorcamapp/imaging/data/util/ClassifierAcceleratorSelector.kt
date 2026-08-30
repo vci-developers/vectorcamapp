@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.imaging.data.util
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.google.ai.edge.litert.Accelerator
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.LiteRtException
@@ -19,8 +20,11 @@ import kotlin.random.Random
  * `CompiledModel.create` nor a plausibility check on the output is enough to trust it. Which GPU
  * configuration works is driver-dependent (precision, buffer storage, backend all matter), so each
  * candidate is scored against the CPU result for an identical input and the first one that agrees
- * wins. The verdict is cached per asset, so the sweep costs one extra model build per asset per
- * install rather than one per imaging session.
+ * wins. The verdict is recorded per asset and reset on each install, so the sweep costs a handful
+ * of model builds once per install rather than one per imaging session.
+ *
+ * The winning variant is then built through [GpuModelCache], which lets LiteRT reuse the compiled
+ * shaders across sessions.
  */
 object ClassifierAcceleratorSelector {
 
@@ -31,6 +35,7 @@ object ClassifierAcceleratorSelector {
     )
 
     private const val PREFS_NAME = "classifier_accelerator"
+    private const val INSTALL_TOKEN_KEY = "install_token"
     private const val CPU_VARIANT = "cpu"
 
     // GPU math legitimately differs from CPU in the last digits; a wrong prediction differs by far
@@ -47,37 +52,54 @@ object ClassifierAcceleratorSelector {
     // A sweep holds two models at once, so keep the three classifiers from sweeping together.
     private val sweepLock = Any()
 
-    private class Variant(val name: String, val createOptions: () -> CompiledModel.Options)
+    private val prefsLock = Any()
+    private var prefsValidated = false
+
+    private class Variant(
+        val name: String,
+        val precision: CompiledModel.GpuOptions.Precision =
+            CompiledModel.GpuOptions.Precision.DEFAULT,
+        val bufferStorageType: CompiledModel.GpuOptions.BufferStorageType =
+            CompiledModel.GpuOptions.BufferStorageType.DEFAULT,
+        val backend: CompiledModel.GpuOptions.Backend =
+            CompiledModel.GpuOptions.Backend.AUTOMATIC,
+    ) {
+        fun options(context: Context, assetName: String, serialize: Boolean) =
+            GpuModelCache.options(
+                context = context,
+                // The same asset compiled for a different backend or precision is a different
+                // program, so the variant has to be part of the key.
+                cacheKey = "$assetName#$name",
+                precision = precision,
+                bufferStorageType = bufferStorageType,
+                backend = backend,
+                serialize = serialize,
+            )
+    }
 
     private val gpuVariants: List<Variant> = listOf(
-        Variant("gpu-default") { CompiledModel.Options(Accelerator.GPU) },
-        Variant("gpu-fp32") {
-            gpuAcceleratorOptions(precision = CompiledModel.GpuOptions.Precision.FP32)
-        },
-        Variant("gpu-fp32-buffer") {
-            gpuAcceleratorOptions(
-                precision = CompiledModel.GpuOptions.Precision.FP32,
-                bufferStorageType = CompiledModel.GpuOptions.BufferStorageType.BUFFER,
-            )
-        },
-        Variant("gpu-fp32-texture2d") {
-            gpuAcceleratorOptions(
-                precision = CompiledModel.GpuOptions.Precision.FP32,
-                bufferStorageType = CompiledModel.GpuOptions.BufferStorageType.TEXTURE_2D,
-            )
-        },
-        Variant("gpu-opencl-fp32") {
-            gpuAcceleratorOptions(
-                precision = CompiledModel.GpuOptions.Precision.FP32,
-                backend = CompiledModel.GpuOptions.Backend.OPENCL,
-            )
-        },
-        Variant("gpu-opengl-fp32") {
-            gpuAcceleratorOptions(
-                precision = CompiledModel.GpuOptions.Precision.FP32,
-                backend = CompiledModel.GpuOptions.Backend.OPENGL,
-            )
-        },
+        Variant("gpu-default"),
+        Variant("gpu-fp32", precision = CompiledModel.GpuOptions.Precision.FP32),
+        Variant(
+            "gpu-fp32-buffer",
+            precision = CompiledModel.GpuOptions.Precision.FP32,
+            bufferStorageType = CompiledModel.GpuOptions.BufferStorageType.BUFFER,
+        ),
+        Variant(
+            "gpu-fp32-texture2d",
+            precision = CompiledModel.GpuOptions.Precision.FP32,
+            bufferStorageType = CompiledModel.GpuOptions.BufferStorageType.TEXTURE_2D,
+        ),
+        Variant(
+            "gpu-opencl-fp32",
+            precision = CompiledModel.GpuOptions.Precision.FP32,
+            backend = CompiledModel.GpuOptions.Backend.OPENCL,
+        ),
+        Variant(
+            "gpu-opengl-fp32",
+            precision = CompiledModel.GpuOptions.Precision.FP32,
+            backend = CompiledModel.GpuOptions.Backend.OPENGL,
+        ),
     )
 
     fun selectModel(
@@ -86,16 +108,14 @@ object ClassifierAcceleratorSelector {
         signature: String,
         inputTensorName: String,
     ): Selection {
-        val cachedVariant = prefs(context).getString(assetName, null)
-        if (cachedVariant != null) {
-            return buildCachedVariant(context, assetName, cachedVariant)
-        }
-        return synchronized(sweepLock) {
-            sweepVariants(context, assetName, signature, inputTensorName)
-        }
+        val variantName = prefs(context).getString(assetName, null)
+            ?: synchronized(sweepLock) {
+                sweepForVariant(context, assetName, signature, inputTensorName)
+            }
+        return buildVariant(context, assetName, variantName)
     }
 
-    private fun buildCachedVariant(
+    private fun buildVariant(
         context: Context,
         assetName: String,
         variantName: String,
@@ -105,52 +125,66 @@ object ClassifierAcceleratorSelector {
 
         return try {
             Selection(
-                CompiledModel.create(context.assets, assetName, variant.createOptions()),
+                CompiledModel.create(
+                    context.assets,
+                    assetName,
+                    variant.options(context, assetName, serialize = true),
+                ),
                 usingGpu = true,
                 variantName = variant.name,
             )
         } catch (e: LiteRtException) {
-            Timber.w("Cached variant ${variant.name} no longer builds for $assetName: ${e.message}")
+            Timber.w("Variant ${variant.name} no longer builds for $assetName: ${e.message}")
             Selection(createCpuModel(context, assetName), false, CPU_VARIANT)
         }
     }
 
-    private fun sweepVariants(
+    /**
+     * Decides which variant to use for [assetName] and records the verdict, closing everything it
+     * builds. The chosen variant is built for real afterwards by [buildVariant].
+     */
+    private fun sweepForVariant(
         context: Context,
         assetName: String,
         signature: String,
         inputTensorName: String,
-    ): Selection {
+    ): String {
         val cpuModel = createCpuModel(context, assetName)
-        val probe = createProbeInput(cpuModel, signature, inputTensorName)
-        val reference = probe?.let { runOnce(cpuModel, it) }
+        try {
+            val probe = createProbeInput(cpuModel, signature, inputTensorName)
+            val reference = probe?.let { runOnce(cpuModel, it) }
 
-        if (reference == null || !reference.hasSignal()) {
-            Timber.w("No usable CPU reference for $assetName; keeping CPU without sweeping GPU")
-            return Selection(cpuModel, false, CPU_VARIANT)
-        }
-
-        for (variant in gpuVariants) {
-            val candidate = createGpuModel(context, assetName, variant) ?: continue
-            val logits = runOnce(candidate, probe)
-
-            if (logits != null && agreesWith(reference, logits)) {
-                Timber.i("GPU variant ${variant.name} matches CPU for $assetName; using GPU")
-                cpuModel.close()
-                persistVariant(context, assetName, variant.name)
-                return Selection(candidate, usingGpu = true, variantName = variant.name)
+            if (probe == null || reference == null || !reference.hasSignal()) {
+                Timber.w("No usable CPU reference for $assetName; keeping CPU without sweeping GPU")
+                return persistVariant(context, assetName, CPU_VARIANT)
             }
 
-            Timber.w(
-                "GPU variant ${variant.name} disagrees with CPU for $assetName " +
-                    "(cpu=${reference.toList()}, gpu=${logits?.toList()})"
-            )
-            candidate.close()
-        }
+            for (variant in gpuVariants) {
+                // Candidates are built without serialization: only the winner's compiled program is
+                // worth keeping, and that one is written when the selection is built for real.
+                val candidate = createGpuModel(context, assetName, variant) ?: continue
+                val logits = try {
+                    runOnce(candidate, probe)
+                } finally {
+                    candidate.close()
+                }
 
-        Timber.w("No GPU variant matched CPU for $assetName; using CPU")
-        persistVariant(context, assetName, CPU_VARIANT)
-        return Selection(cpuModel, false, CPU_VARIANT)
+                if (logits != null && agreesWith(reference, logits)) {
+                    Timber.i("GPU variant ${variant.name} matches CPU for $assetName; using GPU")
+                    return persistVariant(context, assetName, variant.name)
+                }
+
+                Timber.w(
+                    "GPU variant ${variant.name} disagrees with CPU for $assetName " +
+                        "(cpu=${reference.toList()}, gpu=${logits?.toList()})"
+                )
+            }
+
+            Timber.w("No GPU variant matched CPU for $assetName; using CPU")
+            return persistVariant(context, assetName, CPU_VARIANT)
+        } finally {
+            cpuModel.close()
+        }
     }
 
     private fun createGpuModel(
@@ -158,7 +192,11 @@ object ClassifierAcceleratorSelector {
         assetName: String,
         variant: Variant,
     ): CompiledModel? = try {
-        CompiledModel.create(context.assets, assetName, variant.createOptions())
+        CompiledModel.create(
+            context.assets,
+            assetName,
+            variant.options(context, assetName, serialize = false),
+        )
     } catch (e: LiteRtException) {
         Timber.w("GPU variant ${variant.name} failed to build for $assetName: ${e.message}")
         null
@@ -227,25 +265,24 @@ object ClassifierAcceleratorSelector {
     private fun FloatArray.indexOfMax(): Int =
         indices.maxByOrNull { this[it] } ?: -1
 
-    private fun persistVariant(context: Context, assetName: String, variantName: String) {
+    private fun persistVariant(context: Context, assetName: String, variantName: String): String {
         prefs(context).edit().putString(assetName, variantName).apply()
+        return variantName
     }
 
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private fun prefs(context: Context): SharedPreferences = synchronized(prefsLock) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        if (prefsValidated) return prefs
+        prefsValidated = true
 
-    private fun gpuAcceleratorOptions(
-        precision: CompiledModel.GpuOptions.Precision =
-            CompiledModel.GpuOptions.Precision.DEFAULT,
-        bufferStorageType: CompiledModel.GpuOptions.BufferStorageType =
-            CompiledModel.GpuOptions.BufferStorageType.DEFAULT,
-        backend: CompiledModel.GpuOptions.Backend =
-            CompiledModel.GpuOptions.Backend.AUTOMATIC,
-    ) = CompiledModel.Options(Accelerator.GPU).apply {
-        gpuOptions = CompiledModel.GpuOptions(
-            precision = precision,
-            bufferStorageType = bufferStorageType,
-            backend = backend,
-        )
+        // A verdict is only about the model bytes and the LiteRT version that produced it, and both
+        // can change with an install. Keeping an old verdict across one would silently run a new
+        // model on an accelerator it was never checked against.
+        val token = GpuModelCache.installToken(context)
+        if (token != null && prefs.getString(INSTALL_TOKEN_KEY, null) != token) {
+            prefs.edit().clear().putString(INSTALL_TOKEN_KEY, token).apply()
+            Timber.d("Accelerator verdicts reset for install $token")
+        }
+        prefs
     }
 }
