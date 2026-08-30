@@ -79,7 +79,20 @@ class TfLiteSpecimenClassifier(
             // A release posted between the request and here means nobody wants this model any
             // more, and building it only to tear it down would hold the thread for seconds.
             val stillWanted = synchronized(stateLock) { warmUp === pending }
-            pending.complete(if (stillWanted) initializeModel() else false)
+            val built = if (stillWanted) initializeModel() else false
+
+            // A failed build must not latch. These classifiers are singletons, so a deferred left
+            // completed-false would make every later classify() return null for the rest of the
+            // process. initializeModel releases whatever it allocated before returning false, so
+            // clearing this is enough to let the next call rebuild; a genuine shape-contract
+            // failure just fails again.
+            if (!built) {
+                synchronized(stateLock) {
+                    if (warmUp === pending) warmUp = null
+                }
+            }
+
+            pending.complete(built)
         }
         return pending
     }
