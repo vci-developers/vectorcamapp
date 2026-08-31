@@ -7,6 +7,7 @@ import com.google.ai.edge.litert.CompiledModel
 import com.vci.vectorcamapp.BuildConfig
 import timber.log.Timber
 import java.io.File
+import java.io.IOException
 
 /**
  * Backs LiteRT's GPU program cache so shader compilation is paid once per install rather than once
@@ -27,7 +28,6 @@ import java.io.File
 object GpuModelCache {
 
     private const val ROOT_DIR_NAME = "litert_gpu"
-    private const val HEX_RADIX = 16
 
     // Serializing the transformed weight tensors as well would cut the build further, but costs
     // roughly the size of the model assets on disk (~92MB). Shader compilation is the dominant
@@ -57,6 +57,8 @@ object GpuModelCache {
         serialize: Boolean = true,
     ): CompiledModel.Options {
         val serializationDir = if (serialize) directory(context) else null
+        val fingerprint = assetFingerprint(context, cacheKey.substringBefore('#'))
+        val programKey = GpuCacheIdentity.programCacheKey(cacheKey, fingerprint)
 
         return CompiledModel.Options(Accelerator.GPU).apply {
             gpuOptions = CompiledModel.GpuOptions(
@@ -64,7 +66,7 @@ object GpuModelCache {
                 bufferStorageType = bufferStorageType,
                 backend = backend,
                 serializationDir = serializationDir?.absolutePath,
-                modelCacheKey = serializationDir?.let { cacheKey },
+                modelCacheKey = serializationDir?.let { programKey },
                 serializeProgramCache = serializationDir?.let { true },
                 serializeExternalTensors = serializationDir?.let { SERIALIZE_EXTERNAL_TENSORS },
             )
@@ -80,9 +82,21 @@ object GpuModelCache {
         val lastUpdateTime = context.packageManager
             .getPackageInfo(context.packageName, 0)
             .lastUpdateTime
-        "v${BuildConfig.VERSION_CODE}-${lastUpdateTime.toString(HEX_RADIX)}"
+        GpuCacheIdentity.installToken(BuildConfig.VERSION_CODE, lastUpdateTime)
     } catch (e: PackageManager.NameNotFoundException) {
         Timber.w(e, "Could not read install time; treating derived caches as unavailable")
+        null
+    }
+
+    /**
+     * Cheap identity for an asset: uncompressed length. `.tflite` files are stored uncompressed,
+     * so this does not require reading the model. Two different models with the exact same length
+     * would collide; the install-token directory still separates app updates.
+     */
+    fun assetFingerprint(context: Context, assetName: String): String? = try {
+        context.assets.openFd(assetName).use { fd -> fd.length.toString() }
+    } catch (e: IOException) {
+        Timber.w(e, "Could not fingerprint $assetName; GPU program key will omit it")
         null
     }
 

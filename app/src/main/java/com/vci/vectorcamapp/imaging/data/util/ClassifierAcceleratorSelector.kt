@@ -36,6 +36,7 @@ object ClassifierAcceleratorSelector {
 
     private const val PREFS_NAME = "classifier_accelerator"
     private const val INSTALL_TOKEN_KEY = "install_token"
+    private const val FINGERPRINT_SUFFIX = ".fp"
     private const val CPU_VARIANT = "cpu"
 
     // GPU math legitimately differs from CPU in the last digits; a wrong prediction differs by far
@@ -108,11 +109,28 @@ object ClassifierAcceleratorSelector {
         signature: String,
         inputTensorName: String,
     ): Selection {
-        val variantName = prefs(context).getString(assetName, null)
+        val fingerprint = GpuModelCache.assetFingerprint(context, assetName)
+        val variantName = cachedVariant(context, assetName, fingerprint)
             ?: synchronized(sweepLock) {
-                sweepForVariant(context, assetName, signature, inputTensorName)
+                cachedVariant(context, assetName, fingerprint)
+                    ?: sweepForVariant(context, assetName, signature, inputTensorName, fingerprint)
             }
         return buildVariant(context, assetName, variantName)
+    }
+
+    private fun cachedVariant(
+        context: Context,
+        assetName: String,
+        fingerprint: String?,
+    ): String? {
+        val prefs = prefs(context)
+        val stored = prefs.getString(assetName, null) ?: return null
+        val storedFingerprint = prefs.getString(assetName + FINGERPRINT_SUFFIX, null)
+        if (!GpuCacheIdentity.assetVerdictValid(storedFingerprint, fingerprint)) {
+            Timber.i("Asset fingerprint changed for $assetName; re-sweeping GPU vs CPU")
+            return null
+        }
+        return stored
     }
 
     private fun buildVariant(
@@ -148,6 +166,7 @@ object ClassifierAcceleratorSelector {
         assetName: String,
         signature: String,
         inputTensorName: String,
+        fingerprint: String?,
     ): String {
         val cpuModel = createCpuModel(context, assetName)
         try {
@@ -156,7 +175,7 @@ object ClassifierAcceleratorSelector {
 
             if (probe == null || reference == null || !reference.hasSignal()) {
                 Timber.w("No usable CPU reference for $assetName; keeping CPU without sweeping GPU")
-                return persistVariant(context, assetName, CPU_VARIANT)
+                return persistVariant(context, assetName, CPU_VARIANT, fingerprint)
             }
 
             for (variant in gpuVariants) {
@@ -171,7 +190,7 @@ object ClassifierAcceleratorSelector {
 
                 if (logits != null && agreesWith(reference, logits)) {
                     Timber.i("GPU variant ${variant.name} matches CPU for $assetName; using GPU")
-                    return persistVariant(context, assetName, variant.name)
+                    return persistVariant(context, assetName, variant.name, fingerprint)
                 }
 
                 Timber.w(
@@ -181,7 +200,7 @@ object ClassifierAcceleratorSelector {
             }
 
             Timber.w("No GPU variant matched CPU for $assetName; using CPU")
-            return persistVariant(context, assetName, CPU_VARIANT)
+            return persistVariant(context, assetName, CPU_VARIANT, fingerprint)
         } finally {
             cpuModel.close()
         }
@@ -267,8 +286,20 @@ object ClassifierAcceleratorSelector {
     private fun FloatArray.indexOfMax(): Int =
         indices.maxByOrNull { this[it] } ?: -1
 
-    private fun persistVariant(context: Context, assetName: String, variantName: String): String {
-        prefs(context).edit().putString(assetName, variantName).apply()
+    private fun persistVariant(
+        context: Context,
+        assetName: String,
+        variantName: String,
+        fingerprint: String?,
+    ): String {
+        prefs(context).edit().apply {
+            putString(assetName, variantName)
+            if (fingerprint != null) {
+                putString(assetName + FINGERPRINT_SUFFIX, fingerprint)
+            } else {
+                remove(assetName + FINGERPRINT_SUFFIX)
+            }
+        }.apply()
         return variantName
     }
 
@@ -279,10 +310,13 @@ object ClassifierAcceleratorSelector {
 
         // A verdict is only about the model bytes and the LiteRT version that produced it, and both
         // can change with an install. Keeping an old verdict across one would silently run a new
-        // model on an accelerator it was never checked against.
+        // model on an accelerator it was never checked against. If the install token cannot be
+        // read, the verdicts are unusable for the same reason.
         val token = GpuModelCache.installToken(context)
-        if (token != null && prefs.getString(INSTALL_TOKEN_KEY, null) != token) {
-            prefs.edit().clear().putString(INSTALL_TOKEN_KEY, token).apply()
+        if (!GpuCacheIdentity.installTokenMatches(prefs.getString(INSTALL_TOKEN_KEY, null), token)) {
+            prefs.edit().clear().apply {
+                if (token != null) putString(INSTALL_TOKEN_KEY, token)
+            }.apply()
             Timber.d("Accelerator verdicts reset for install $token")
         }
         prefs

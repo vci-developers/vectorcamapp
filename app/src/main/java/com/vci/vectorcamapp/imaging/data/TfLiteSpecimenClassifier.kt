@@ -279,6 +279,10 @@ class TfLiteSpecimenClassifier(
             FloatArray(INPUT_CHANNELS * inputTensorHeight * inputTensorWidth)
         )
         model?.run(inputBuffers, outputBuffers)
+        val logits = outputBuffers[0].readFloat().take(outputNumClasses)
+        require(logits.isNotEmpty() && logits.all { it.isFinite() }) {
+            "Non-finite logits from $filePath after warm-up"
+        }
     }
 
     private fun toRgbMatrix(croppedBitmap: Bitmap): Mat {

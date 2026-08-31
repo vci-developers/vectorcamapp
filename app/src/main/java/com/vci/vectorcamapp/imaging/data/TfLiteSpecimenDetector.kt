@@ -390,7 +390,10 @@ class TfLiteSpecimenDetector(
         inputBuffers[0].writeFloat(FloatArray(inputSize))
         model?.run(inputBuffers, outputBuffers)
         val output = outputBuffers[0].readFloat()
-        if (output.isNotEmpty() && output.size % outputNumElements == 0) {
+        require(output.isNotEmpty() && output.all { it.isFinite() }) {
+            "Non-finite detector output after warm-up"
+        }
+        if (output.size % outputNumElements == 0) {
             outputNumChannels = output.size / outputNumElements
         }
         Timber.d("Detector warmed up (gpu=$usingGpu, outputChannels=$outputNumChannels)")
