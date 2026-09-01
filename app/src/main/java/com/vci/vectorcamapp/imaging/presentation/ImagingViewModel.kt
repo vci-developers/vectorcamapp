@@ -884,11 +884,6 @@ class ImagingViewModel @Inject constructor(
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        inferenceRepository.closeResources()
-    }
-
     private companion object {
         private const val MONTHLY_FURTHER_PROCESSING_CAP = 20
     }

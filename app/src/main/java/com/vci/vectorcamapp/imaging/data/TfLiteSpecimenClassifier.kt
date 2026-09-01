@@ -9,6 +9,7 @@ import com.google.ai.edge.litert.TensorBuffer
 import com.vci.vectorcamapp.core.domain.model.results.ClassifierResult
 import com.vci.vectorcamapp.imaging.data.util.ClassifierAcceleratorSelector
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
+import kotlinx.coroutines.CompletableDeferred
 import org.opencv.android.Utils
 import org.opencv.core.Core
 import org.opencv.core.CvType
@@ -30,30 +31,77 @@ class TfLiteSpecimenClassifier(
 
     private enum class TensorLayout { NCHW, NHWC }
 
-    private val classifierLock = Any()
     private val handlerThread = HandlerThread(threadName).apply { start() }
     private val handler = Handler(handlerThread.looper)
 
+    // Only touched on [handler]'s thread, which is the single thread every build, inference and
+    // teardown is posted to. That confinement is what keeps callers off a lock during the build.
     private var model: CompiledModel? = null
     private var inputBuffers: List<TensorBuffer> = emptyList()
     private var outputBuffers: List<TensorBuffer> = emptyList()
+    private var inputLayout = TensorLayout.NCHW
+
+    private val stateLock = Any()
+    private var warmUp: CompletableDeferred<Boolean>? = null
     private var isClosed = false
 
-    private var inputLayout = TensorLayout.NCHW
+    // Read from outside the handler thread by the shape getters.
+    @Volatile
     private var inputTensorHeight = DEFAULT_TENSOR_SIZE
-    private var inputTensorWidth = DEFAULT_TENSOR_SIZE
-    private var outputNumClasses = expectedNumClasses
 
-    init {
-        handler.post { initializeModel() }
-    }
+    @Volatile
+    private var inputTensorWidth = DEFAULT_TENSOR_SIZE
+
+    @Volatile
+    private var outputNumClasses = expectedNumClasses
 
     override fun getInputTensorShape(): Pair<Int, Int> = inputTensorHeight to inputTensorWidth
 
     override fun getOutputTensorShape(): Int = outputNumClasses
 
+    override fun warm() {
+        startWarmUp()
+    }
+
+    /**
+     * Returns the in-flight or completed build, starting one if the model is cold. The result is
+     * awaited rather than polled so a capture that lands mid-build suspends instead of holding a
+     * thread.
+     */
+    private fun startWarmUp(): CompletableDeferred<Boolean> {
+        val pending = synchronized(stateLock) {
+            if (isClosed) return CompletableDeferred(false)
+            warmUp?.let { return it }
+            CompletableDeferred<Boolean>().also { warmUp = it }
+        }
+
+        handler.post {
+            // A release posted between the request and here means nobody wants this model any
+            // more, and building it only to tear it down would hold the thread for seconds.
+            val stillWanted = synchronized(stateLock) { warmUp === pending }
+            val built = if (stillWanted) initializeModel() else false
+
+            // A failed build must not latch. These classifiers are singletons, so a deferred left
+            // completed-false would make every later classify() return null for the rest of the
+            // process. initializeModel releases whatever it allocated before returning false, so
+            // clearing this is enough to let the next call rebuild; a genuine shape-contract
+            // failure just fails again.
+            if (!built) {
+                synchronized(stateLock) {
+                    if (warmUp === pending) warmUp = null
+                }
+            }
+
+            pending.complete(built)
+        }
+        return pending
+    }
+
     override suspend fun classify(croppedBitmap: Bitmap): ClassifierResult? {
-        if (!isReady()) return null
+        // All three classifiers are called in parallel from Dispatchers.Default, so waiting on the
+        // build has to suspend: blocking here would park three of that pool's threads for as long
+        // as the build takes.
+        if (!startWarmUp().await()) return null
 
         return suspendCoroutine { continuation ->
             handler.post {
@@ -63,17 +111,21 @@ class TfLiteSpecimenClassifier(
                 try {
                     val startTime = System.currentTimeMillis()
 
+                    // A release can land between the build completing and this runnable, so the
+                    // model has to be re-checked here rather than trusted from the warm-up.
+                    val compiledModel = model
+                    if (compiledModel == null) {
+                        continuation.resume(null)
+                        return@post
+                    }
+
                     rgbMatrix = toRgbMatrix(croppedBitmap)
                     preprocessedMatrix = preprocess(rgbMatrix)
                     val inputValues = toModelInput(preprocessedMatrix)
 
-                    val logits = synchronized(classifierLock) {
-                        if (!isReady()) return@post continuation.resume(null)
-
-                        inputBuffers[0].writeFloat(inputValues)
-                        model!!.run(inputBuffers, outputBuffers)
-                        outputBuffers[0].readFloat().take(outputNumClasses)
-                    }
+                    inputBuffers[0].writeFloat(inputValues)
+                    compiledModel.run(inputBuffers, outputBuffers)
+                    val logits = outputBuffers[0].readFloat().take(outputNumClasses)
 
                     Timber.d("$filePath logits: $logits")
                     continuation.resume(
@@ -93,50 +145,94 @@ class TfLiteSpecimenClassifier(
         }
     }
 
+    override fun release() {
+        synchronized(stateLock) {
+            if (isClosed || warmUp == null) return
+            warmUp = null
+        }
+
+        handler.post {
+            releaseModel()
+            Timber.d("Released $filePath")
+        }
+    }
+
     override fun close() {
-        synchronized(classifierLock) {
+        synchronized(stateLock) {
             if (isClosed) return
             isClosed = true
+            warmUp = null
+        }
 
-            handler.post {
-                try {
-                    synchronized(classifierLock) { releaseModelLocked() }
-                    handlerThread.quitSafely()
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to close $filePath")
-                }
+        handler.post {
+            try {
+                releaseModel()
+                handlerThread.quitSafely()
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to close $filePath")
             }
         }
     }
 
-    private fun initializeModel() {
-        synchronized(classifierLock) {
-            if (model != null || isClosed) return
+    private fun initializeModel(): Boolean {
+        if (model != null) return true
 
-            try {
-                val selection = ClassifierAcceleratorSelector.selectModel(
-                    context = context,
-                    assetName = filePath,
-                    signature = SIGNATURE,
-                    inputTensorName = INPUT_TENSOR_NAME,
-                )
-                val compiledModel = selection.model
-                model = compiledModel
-                inputBuffers = compiledModel.createInputBuffers()
-                outputBuffers = compiledModel.createOutputBuffers()
-
-                resolveTensorShapes(compiledModel)
-                warmModel()
-
-                Timber.d(
-                    "Initialized $filePath: $inputLayout ${inputTensorWidth}x$inputTensorHeight, " +
-                        "$outputNumClasses classes, accelerator=${selection.variantName}"
-                )
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to initialize $filePath")
-                releaseModelLocked()
-            }
+        val selection = try {
+            ClassifierAcceleratorSelector.selectModel(
+                context = context,
+                assetName = filePath,
+                signature = SIGNATURE,
+                inputTensorName = INPUT_TENSOR_NAME,
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to select accelerator for $filePath")
+            return initializeOnCpu()
         }
+
+        return try {
+            bindAndWarm(selection)
+            true
+        } catch (e: Exception) {
+            // Shape contracts fail here too. A GPU model that created but then failed buffers,
+            // shapes or the dummy run must not be retried as GPU forever; CPU is the fallback.
+            // A real shape mismatch fails on CPU as well and classify() returns null.
+            Timber.e(e, "Failed to initialize $filePath on ${selection.variantName}")
+            releaseModel()
+            if (selection.usingGpu) initializeOnCpu() else false
+        }
+    }
+
+    private fun initializeOnCpu(): Boolean = try {
+        Timber.w("Retrying $filePath on CPU")
+        bindAndWarm(
+            ClassifierAcceleratorSelector.Selection(
+                ClassifierAcceleratorSelector.cpuModel(context, filePath),
+                usingGpu = false,
+                variantName = "cpu",
+            )
+        )
+        true
+    } catch (e: Exception) {
+        Timber.e(e, "CPU fallback failed for $filePath")
+        releaseModel()
+        false
+    }
+
+    private fun bindAndWarm(selection: ClassifierAcceleratorSelector.Selection) {
+        val startTime = System.currentTimeMillis()
+        val compiledModel = selection.model
+        model = compiledModel
+        inputBuffers = compiledModel.createInputBuffers()
+        outputBuffers = compiledModel.createOutputBuffers()
+
+        resolveTensorShapes(compiledModel)
+        warmModel()
+
+        Timber.d(
+            "Initialized $filePath: $inputLayout ${inputTensorWidth}x$inputTensorHeight, " +
+                "$outputNumClasses classes, accelerator=${selection.variantName}, " +
+                "${System.currentTimeMillis() - startTime}ms"
+        )
     }
 
     private fun resolveTensorShapes(compiledModel: CompiledModel) {
@@ -183,10 +279,10 @@ class TfLiteSpecimenClassifier(
             FloatArray(INPUT_CHANNELS * inputTensorHeight * inputTensorWidth)
         )
         model?.run(inputBuffers, outputBuffers)
-    }
-
-    private fun isReady(): Boolean = synchronized(classifierLock) {
-        !isClosed && model != null && inputBuffers.isNotEmpty() && outputBuffers.isNotEmpty()
+        val logits = outputBuffers[0].readFloat().take(outputNumClasses)
+        require(logits.isNotEmpty() && logits.all { it.isFinite() }) {
+            "Non-finite logits from $filePath after warm-up"
+        }
     }
 
     private fun toRgbMatrix(croppedBitmap: Bitmap): Mat {
@@ -264,7 +360,7 @@ class TfLiteSpecimenClassifier(
         return chwValues
     }
 
-    private fun releaseModelLocked() {
+    private fun releaseModel() {
         (inputBuffers + outputBuffers).forEach { buffer ->
             try {
                 buffer.close()
