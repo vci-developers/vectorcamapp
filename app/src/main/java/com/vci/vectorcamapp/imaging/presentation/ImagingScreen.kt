@@ -754,7 +754,7 @@ fun ImagingScreen(
                                     onCancelFocus = { onAction(ImagingAction.CancelFocus) },
                                     modifier = Modifier.fillMaxSize(),
                                     isManualFocusing = state.isManualFocusing,
-                                    isProcessing = state.isProcessing
+                                    captureStage = state.captureStage
                                 )
                             }
 
@@ -834,7 +834,7 @@ fun ImagingScreen(
                                                 }
                                             },
                                             iconPainter = painterResource(id = R.drawable.ic_camera),
-                                            enabled = (!state.isProcessing && state.isCameraReady),
+                                            enabled = (state.captureStage == null && state.isCameraReady),
                                             modifier = Modifier.fillMaxWidth()
                                         )
                                     }
