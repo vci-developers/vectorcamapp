@@ -36,6 +36,8 @@
 
     <!-- Capture Animation -->
     <string name="capture_animation_label_capturing">Capturing… Hold Still</string>
+    <string name="capture_animation_label_detecting">Locating Specimen…</string>
+    <string name="capture_animation_label_classifying">Classifying Specimen…</string>
 
     <!-- Upload Notifications -->
     <string name="upload_notification_session_title">Session from %1$s</string>

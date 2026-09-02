@@ -59,8 +59,14 @@ class PermissionScreenTest {
     // =========================
 
     @Test
-    fun permUi_a01_allDenied_showsTitleAndBothButtons() {
-        launchPermissionScreen(initialState = MainState(allGranted = false, isGpsEnabled = false))
+    fun permUi_a01_allDenied_showsTitleAndAllButtons() {
+        launchPermissionScreen(
+            initialState = MainState(
+                allGranted = false,
+                isGpsEnabled = false,
+                isAutoTimeEnabled = false
+            )
+        )
 
         composeRule.onNodeWithTag(PermissionTestTags.TITLE)
             .assertIsDisplayed()
@@ -68,11 +74,18 @@ class PermissionScreenTest {
 
         composeRule.onNodeWithTag(PermissionTestTags.GRANT_PERMISSIONS_BUTTON).assertIsDisplayed()
         composeRule.onNodeWithTag(PermissionTestTags.ENABLE_GPS_BUTTON).assertIsDisplayed()
+        composeRule.onNodeWithTag(PermissionTestTags.ENABLE_AUTO_TIME_BUTTON).assertIsDisplayed()
     }
 
     @Test
     fun permUi_a02_onlyPermissionsDenied_showsTitleAndGrantButton() {
-        launchPermissionScreen(initialState = MainState(allGranted = false, isGpsEnabled = true))
+        launchPermissionScreen(
+            initialState = MainState(
+                allGranted = false,
+                isGpsEnabled = true,
+                isAutoTimeEnabled = true
+            )
+        )
 
         composeRule.onNodeWithTag(PermissionTestTags.TITLE)
             .assertIsDisplayed()
@@ -80,11 +93,18 @@ class PermissionScreenTest {
 
         composeRule.onNodeWithTag(PermissionTestTags.GRANT_PERMISSIONS_BUTTON).assertIsDisplayed()
         composeRule.onNodeWithTag(PermissionTestTags.ENABLE_GPS_BUTTON).assertDoesNotExist()
+        composeRule.onNodeWithTag(PermissionTestTags.ENABLE_AUTO_TIME_BUTTON).assertDoesNotExist()
     }
 
     @Test
     fun permUi_a03_onlyGpsDisabled_showsTitleAndGpsButton() {
-        launchPermissionScreen(initialState = MainState(allGranted = true, isGpsEnabled = false))
+        launchPermissionScreen(
+            initialState = MainState(
+                allGranted = true,
+                isGpsEnabled = false,
+                isAutoTimeEnabled = true
+            )
+        )
 
         composeRule.onNodeWithTag(PermissionTestTags.TITLE)
             .assertIsDisplayed()
@@ -92,17 +112,42 @@ class PermissionScreenTest {
 
         composeRule.onNodeWithTag(PermissionTestTags.GRANT_PERMISSIONS_BUTTON).assertDoesNotExist()
         composeRule.onNodeWithTag(PermissionTestTags.ENABLE_GPS_BUTTON).assertIsDisplayed()
+        composeRule.onNodeWithTag(PermissionTestTags.ENABLE_AUTO_TIME_BUTTON).assertDoesNotExist()
     }
 
     @Test
-    fun permUi_a04_allGranted_showsTitleButNoButtons() {
+    fun permUi_a04_onlyAutoTimeDisabled_showsTitleAndAutoTimeButton() {
         launchPermissionScreen(
-            initialState = MainState(allGranted = true, isGpsEnabled = true)
+            initialState = MainState(
+                allGranted = true,
+                isGpsEnabled = true,
+                isAutoTimeEnabled = false
+            )
+        )
+
+        composeRule.onNodeWithTag(PermissionTestTags.TITLE)
+            .assertIsDisplayed()
+            .assertTextEquals("Automatic Date & Time Required")
+
+        composeRule.onNodeWithTag(PermissionTestTags.GRANT_PERMISSIONS_BUTTON).assertDoesNotExist()
+        composeRule.onNodeWithTag(PermissionTestTags.ENABLE_GPS_BUTTON).assertDoesNotExist()
+        composeRule.onNodeWithTag(PermissionTestTags.ENABLE_AUTO_TIME_BUTTON).assertIsDisplayed()
+    }
+
+    @Test
+    fun permUi_a05_allGranted_showsTitleButNoButtons() {
+        launchPermissionScreen(
+            initialState = MainState(
+                allGranted = true,
+                isGpsEnabled = true,
+                isAutoTimeEnabled = true
+            )
         )
 
         composeRule.onNodeWithTag(PermissionTestTags.TITLE).assertIsDisplayed()
         composeRule.onNodeWithTag(PermissionTestTags.GRANT_PERMISSIONS_BUTTON).assertDoesNotExist()
         composeRule.onNodeWithTag(PermissionTestTags.ENABLE_GPS_BUTTON).assertDoesNotExist()
+        composeRule.onNodeWithTag(PermissionTestTags.ENABLE_AUTO_TIME_BUTTON).assertDoesNotExist()
     }
 
     // =========================
@@ -112,8 +157,14 @@ class PermissionScreenTest {
     @Test
     fun permUi_b01_clickGrantPermissions_invokesCorrectAction() {
         var lastAction: MainAction? = null
-        launchPermissionScreen(initialState = MainState(allGranted = false, isGpsEnabled = true),
-            onAction = { lastAction = it })
+        launchPermissionScreen(
+            initialState = MainState(
+                allGranted = false,
+                isGpsEnabled = true,
+                isAutoTimeEnabled = true
+            ),
+            onAction = { lastAction = it }
+        )
 
         composeRule.onNodeWithTag(PermissionTestTags.GRANT_PERMISSIONS_BUTTON).performClick()
         assertThat(lastAction).isEqualTo(MainAction.OpenAppSettings)
@@ -122,17 +173,43 @@ class PermissionScreenTest {
     @Test
     fun permUi_b02_clickEnableGps_invokesCorrectAction() {
         var lastAction: MainAction? = null
-        launchPermissionScreen(initialState = MainState(allGranted = true, isGpsEnabled = false),
-            onAction = { lastAction = it })
+        launchPermissionScreen(
+            initialState = MainState(
+                allGranted = true,
+                isGpsEnabled = false,
+                isAutoTimeEnabled = true
+            ),
+            onAction = { lastAction = it }
+        )
 
         composeRule.onNodeWithTag(PermissionTestTags.ENABLE_GPS_BUTTON).performClick()
         assertThat(lastAction).isEqualTo(MainAction.OpenLocationSettings)
     }
 
     @Test
-    fun permUi_b03_bothButtons_areEnabledAndClickable() {
+    fun permUi_b03_clickEnableAutoTime_invokesCorrectAction() {
+        var lastAction: MainAction? = null
         launchPermissionScreen(
-            initialState = MainState(allGranted = false, isGpsEnabled = false)
+            initialState = MainState(
+                allGranted = true,
+                isGpsEnabled = true,
+                isAutoTimeEnabled = false
+            ),
+            onAction = { lastAction = it }
+        )
+
+        composeRule.onNodeWithTag(PermissionTestTags.ENABLE_AUTO_TIME_BUTTON).performClick()
+        assertThat(lastAction).isEqualTo(MainAction.OpenDateSettings)
+    }
+
+    @Test
+    fun permUi_b04_allButtons_areEnabledAndClickable() {
+        launchPermissionScreen(
+            initialState = MainState(
+                allGranted = false,
+                isGpsEnabled = false,
+                isAutoTimeEnabled = false
+            )
         )
 
         composeRule.onNodeWithTag(PermissionTestTags.GRANT_PERMISSIONS_BUTTON)
@@ -140,6 +217,10 @@ class PermissionScreenTest {
             .assertHasClickAction()
 
         composeRule.onNodeWithTag(PermissionTestTags.ENABLE_GPS_BUTTON)
+            .assertIsEnabled()
+            .assertHasClickAction()
+
+        composeRule.onNodeWithTag(PermissionTestTags.ENABLE_AUTO_TIME_BUTTON)
             .assertIsEnabled()
             .assertHasClickAction()
     }
@@ -151,12 +232,17 @@ class PermissionScreenTest {
     @Test
     fun permUi_c01_clickingButtons_withNoCallback_doesNotCrash() {
         launchPermissionScreen(
-            initialState = MainState(allGranted = false, isGpsEnabled = false),
+            initialState = MainState(
+                allGranted = false,
+                isGpsEnabled = false,
+                isAutoTimeEnabled = false
+            ),
             onAction = null
         )
 
         composeRule.onNodeWithTag(PermissionTestTags.GRANT_PERMISSIONS_BUTTON).performClick()
         composeRule.onNodeWithTag(PermissionTestTags.ENABLE_GPS_BUTTON).performClick()
+        composeRule.onNodeWithTag(PermissionTestTags.ENABLE_AUTO_TIME_BUTTON).performClick()
     }
 
     @Test
@@ -189,6 +275,7 @@ class PermissionScreenTest {
             initialState = MainState(
                 allGranted = false,
                 isGpsEnabled = false,
+                isAutoTimeEnabled = false,
                 isPermissionTooltipVisible = true
             )
         )
@@ -201,6 +288,7 @@ class PermissionScreenTest {
             initialState = MainState(
                 allGranted = false,
                 isGpsEnabled = false,
+                isAutoTimeEnabled = false,
                 isPermissionTooltipVisible = false
             )
         )

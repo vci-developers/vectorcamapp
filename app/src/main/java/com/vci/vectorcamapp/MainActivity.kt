@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp
 
 import android.Manifest
-import androidx.compose.runtime.CompositionLocalProvider
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
@@ -9,30 +8,31 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.window.layout.WindowMetricsCalculator
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
+import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
 import com.vci.vectorcamapp.main.presentation.MainAction
 import com.vci.vectorcamapp.main.presentation.MainEvent
 import com.vci.vectorcamapp.main.presentation.MainViewModel
-import com.vci.vectorcamapp.main.presentation.SplashScreen
 import com.vci.vectorcamapp.main.presentation.PermissionScreen
-import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
+import com.vci.vectorcamapp.main.presentation.SplashScreen
 import com.vci.vectorcamapp.navigation.NavGraph
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import com.vci.vectorcamapp.ui.theme.getWindowType
 import dagger.hilt.android.AndroidEntryPoint
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -72,13 +72,15 @@ class MainActivity : AppCompatActivity() {
             
                 val state by viewModel.state.collectAsState()
 
-                val isReady = state.permissionChecked && state.gpsChecked
+                val isReady =
+                    state.permissionChecked && state.gpsChecked && state.autoTimeChecked
 
                 ObserveAsEvents(events = viewModel.events) { event ->
                     when (event) {
                         MainEvent.LaunchPermissionRequest -> permissionLauncher.launch(permissionsRequired)
                         MainEvent.NavigateToAppSettings -> openAppSettings()
                         MainEvent.NavigateToLocationSettings -> openLocationSettings()
+                        MainEvent.NavigateToDateSettings -> openDateSettings()
                     }
                 }
 
@@ -86,10 +88,12 @@ class MainActivity : AppCompatActivity() {
                     !isReady ->{
                         SplashScreen(modifier = Modifier.fillMaxSize())
                     }
-                    state.allGranted && state.isGpsEnabled -> {
+                    state.allGranted && state.isGpsEnabled && state.isAutoTimeEnabled -> {
                         when (val startDestination = state.startDestination) {
                             null -> SplashScreen(modifier = Modifier.fillMaxSize())
-                            else -> NavGraph(startDestination = startDestination)
+                            else -> NavGraph(
+                                startDestination = startDestination,
+                            )
                         }
                     }
                     else -> {
@@ -113,6 +117,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         checkAndUpdatePermissionStatus()
         checkAndUpdateGpsStatus()
+        checkAndUpdateAutoTimeStatus()
     }
 
     private fun checkAndUpdatePermissionStatus() {
@@ -134,6 +139,16 @@ class MainActivity : AppCompatActivity() {
         viewModel.onAction(MainAction.UpdateGpsStatus(isGpsEnabled))
     }
 
+    private fun checkAndUpdateAutoTimeStatus() {
+        val isAutoTimeEnabled = Settings.Global.getInt(
+            contentResolver,
+            Settings.Global.AUTO_TIME,
+            0
+        ) == 1
+
+        viewModel.onAction(MainAction.UpdateAutoTimeStatus(isAutoTimeEnabled))
+    }
+
     private fun openAppSettings() {
         Intent(
             Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
@@ -145,5 +160,9 @@ class MainActivity : AppCompatActivity() {
         Intent(
             Settings.ACTION_LOCATION_SOURCE_SETTINGS
         ).also(::startActivity)
+    }
+
+    private fun openDateSettings() {
+        Intent(Settings.ACTION_DATE_SETTINGS).also(::startActivity)
     }
 }

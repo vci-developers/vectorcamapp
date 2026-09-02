@@ -1,0 +1,1000 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>ArgumentListWrapping:ActionButton.kt$( brush = Brush.horizontalGradient( colors = listOf( MaterialTheme.colors.buttonGradientLeft, MaterialTheme.colors.buttonGradientRight ) ), shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium) )</ID>
+    <ID>ArgumentListWrapping:ActionButton.kt$(MaterialTheme.dimensions.spacingMedium)</ID>
+    <ID>ArgumentListWrapping:ActionButton.kt$(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium), verticalAlignment = Alignment.CenterVertically)</ID>
+    <ID>ArgumentListWrapping:AnimatedArrowIcon.kt$(R.string.imaging_content_description_next)</ID>
+    <ID>ArgumentListWrapping:AnimatedArrowIcon.kt$(R.string.imaging_content_description_previous)</ID>
+    <ID>ArgumentListWrapping:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$( ContextCompat.getMainExecutor(context), object : OnImageCapturedCallback() { override fun onCaptureSuccess(image: ImageProxy) { super.onCaptureSuccess(image) continuation.resume(Result.Success(image)) } override fun onError(exception: ImageCaptureException) { super.onError(exception) continuation.resume(Result.Error(ImagingError.CAPTURE_ERROR)) } })</ID>
+    <ID>ArgumentListWrapping:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$( uri, arrayOf(MediaStore.MediaColumns.RELATIVE_PATH), null, null, null )</ID>
+    <ID>ArgumentListWrapping:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$(MediaStore.MediaColumns._ID)</ID>
+    <ID>ArgumentListWrapping:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$(collection, arrayOf(MediaStore.MediaColumns._ID), selection, arrayOf(relativePath), null)</ID>
+    <ID>ArgumentListWrapping:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$(relativePath)</ID>
+    <ID>ArgumentListWrapping:CapturedSpecimenTile.kt$(R.string.imaging_label_abdomen_status, specimenImage.abdomenStatus)</ID>
+    <ID>ArgumentListWrapping:CapturedSpecimenTile.kt$(R.string.imaging_label_captured_at, dateTimeFormatter.format(specimenImage.capturedAt))</ID>
+    <ID>ArgumentListWrapping:CapturedSpecimenTile.kt$(R.string.imaging_label_sex, specimenImage.sex)</ID>
+    <ID>ArgumentListWrapping:CapturedSpecimenTile.kt$(R.string.imaging_label_species, specimenImage.species)</ID>
+    <ID>ArgumentListWrapping:CapturedSpecimenTile.kt$(specimenImage.capturedAt)</ID>
+    <ID>ArgumentListWrapping:CollectionBatchCard.kt$(R.string.collection_batch_label_batch, sessionUnit.unitOrder)</ID>
+    <ID>ArgumentListWrapping:CollectionBatchCard.kt$(R.string.collection_batch_label_created, dateFormatter.format(sessionUnit.createdAt))</ID>
+    <ID>ArgumentListWrapping:CollectionBatchCard.kt$(sessionUnit.createdAt)</ID>
+    <ID>ArgumentListWrapping:CollectionBatchFormScreen.kt$( question.prerequisite, answerMap, )</ID>
+    <ID>ArgumentListWrapping:CollectionBatchFormViewModel.kt$CollectionBatchFormViewModel$( answer, sessionId, draftSessionUnitId, questionId, )</ID>
+    <ID>ArgumentListWrapping:CollectionBatchFormViewModel.kt$CollectionBatchFormViewModel$( formQuestions, formAnswersByQuestionId, )</ID>
+    <ID>ArgumentListWrapping:CollectionBatchFormViewModel.kt$CollectionBatchFormViewModel$( viewModelScope, SharingStarted.WhileSubscribed(5000), CollectionBatchFormState() )</ID>
+    <ID>ArgumentListWrapping:CollectionBatchListScreen.kt$(R.string.collection_batch_body_confirm_save)</ID>
+    <ID>ArgumentListWrapping:CollectionBatchListScreen.kt$(R.string.collection_batch_body_confirm_submit)</ID>
+    <ID>ArgumentListWrapping:CollectionBatchListScreen.kt$(R.string.collection_batch_content_description_close_dialog)</ID>
+    <ID>ArgumentListWrapping:CollectionBatchListScreen.kt$(R.string.collection_batch_content_description_save_icon)</ID>
+    <ID>ArgumentListWrapping:CollectionBatchListScreen.kt$(R.string.collection_batch_content_description_submit_icon)</ID>
+    <ID>ArgumentListWrapping:CollectionBatchListScreen.kt$(R.string.collection_batch_title_confirm_action)</ID>
+    <ID>ArgumentListWrapping:CollectionBatchListScreen.kt$(R.string.collection_batch_title_end_session)</ID>
+    <ID>ArgumentListWrapping:CollectionBatchListViewModel.kt$CollectionBatchListViewModel$( currentSession.localId, currentSessionSiteId )</ID>
+    <ID>ArgumentListWrapping:CollectionBatchListViewModel.kt$CollectionBatchListViewModel$( viewModelScope, SharingStarted.WhileSubscribed(5000L), CollectionBatchListState(sessionId = sessionId) )</ID>
+    <ID>ArgumentListWrapping:CollectorDialog.kt$(R.string.settings_action_collector_dialog_confirm_delete)</ID>
+    <ID>ArgumentListWrapping:CollectorDialog.kt$(R.string.settings_action_collector_dialog_submit)</ID>
+    <ID>ArgumentListWrapping:CollectorDialog.kt$(text = if (isDeleteDialogVisible) stringResource(R.string.settings_action_collector_dialog_confirm_delete) else stringResource(R.string.settings_action_collector_dialog_submit), style = MaterialTheme.typography.bodyMedium)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionDetailsScreen.kt$( painter = painterResource(R.drawable.ic_arrow_left), contentDescription = stringResource(R.string.complete_session_content_description_back), tint = MaterialTheme.colors.icon, modifier = Modifier .size(MaterialTheme.dimensions.iconSizeLarge) .clickable { onAction(CompleteSessionDetailsAction.ReturnToCompleteSessionListScreen) })</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_collection_date, dateFormatter.format(session.collectionDate))</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_collector, session.collectorName, session.collectorTitle)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_completed_at, dateTimeFormatter.format(session.completedAt))</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_created_at, dateTimeFormatter.format(session.createdAt))</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_detail, formQuestion.label, displayValue)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_hardware_id, session.hardwareId ?: stringResource(R.string.complete_session_label_not_provided))</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_irs_conducted, if (it.wasIrsConducted) stringResource(R.string.complete_session_label_yes) else stringResource(R.string.complete_session_label_no))</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_no)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_num_people_house, it.numPeopleSleptInHouse)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_num_people_llin, numPeopleSleptUnderLlin)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_session_type, session.type.displayText(context))</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_specimen_condition, session.specimenCondition)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(R.string.complete_session_label_yes)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(context)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(session.collectionDate)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(session.completedAt)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(session.createdAt)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionForm.kt$(text = stringResource(R.string.complete_session_label_session_type, session.type.displayText(context)), color = MaterialTheme.colors.info)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListScreen.kt$( items = state.sessionAndSiteToUploadProgress.toList().asReversed(), key = { it.first.session.localId })</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListScreen.kt$( painter = painterResource(R.drawable.ic_arrow_left), contentDescription = stringResource(R.string.complete_session_content_description_back), tint = MaterialTheme.colors.icon, modifier = Modifier .size(MaterialTheme.dimensions.iconSizeLarge) .clickable { onAction(CompleteSessionListAction.ReturnToLandingScreen) })</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListScreen.kt$(R.string.complete_session_content_description_refresh)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListScreen.kt$(R.string.complete_session_content_description_upload)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(MaterialTheme.dimensions.spacingExtraExtraSmall)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(R.string.complete_session_content_description_arrow)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(R.string.complete_session_content_description_location)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(R.string.complete_session_content_description_uploading)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(R.string.complete_session_label_collector, session.collectorName, session.collectorTitle)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(R.string.complete_session_label_completed_at, dateTimeFormatter.format(session.completedAt))</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(R.string.complete_session_label_created_at, dateTimeFormatter.format(session.createdAt))</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(R.string.complete_session_label_session_type, session.type.displayText(context))</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(R.string.complete_session_status_completed)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(R.string.complete_session_status_image_progress, sessionUploadProgress.uploadedImageCount, sessionUploadProgress.totalCount)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(R.string.complete_session_status_metadata_progress, sessionUploadProgress.uploadedMetadataCount, sessionUploadProgress.totalCount)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(R.string.complete_session_title_card, dateFormatter.format(completedAt))</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(completedAt)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(context)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(session.completedAt)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListTile.kt$(session.createdAt)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListViewModel.kt$CompleteSessionListViewModel$( session.localId, null )</ID>
+    <ID>ArgumentListWrapping:CompleteSessionSpecimens.kt$(R.string.complete_session_label_image_badge, index + 1, totalImages)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionSpecimens.kt$(items = specimensWithImagesAndInferenceResults.asReversed())</ID>
+    <ID>ArgumentListWrapping:CompleteSessionSpecimensTile.kt$(R.string.complete_session_content_description_specimen_image, specimen.id)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionSpecimensTile.kt$(R.string.complete_session_label_abdomen_status, specimenImage.abdomenStatus)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionSpecimensTile.kt$(R.string.complete_session_label_captured_on, dateTimeFormatter.format(specimenImage.capturedAt))</ID>
+    <ID>ArgumentListWrapping:CompleteSessionSpecimensTile.kt$(R.string.complete_session_label_sex, specimenImage.sex)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionSpecimensTile.kt$(R.string.complete_session_label_species, specimenImage.species)</ID>
+    <ID>ArgumentListWrapping:CompleteSessionSpecimensTile.kt$(specimenImage.capturedAt)</ID>
+    <ID>ArgumentListWrapping:DatePickerField.kt$( modifier = modifier .fillMaxWidth() .background( color = MaterialTheme.colors.cardBackground, shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall) ) .border( width = MaterialTheme.dimensions.borderThicknessThick, color = if (error != null) MaterialTheme.colors.error else MaterialTheme.colors.primary, shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall) ) .heightIn(min = MaterialTheme.dimensions.componentHeightMedium) .clickable { DatePickerDialog( context, { _, year, month, dayOfMonth -&gt; val newCalendar = Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault()) newCalendar.set(Calendar.YEAR, year) newCalendar.set(Calendar.MONTH, month) newCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth) newCalendar.set(Calendar.HOUR_OF_DAY, 0) newCalendar.set(Calendar.MINUTE, 0) newCalendar.set(Calendar.SECOND, 0) newCalendar.set(Calendar.MILLISECOND, 0) onDateSelected(newCalendar.timeInMillis) }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH) ).apply { datePicker.maxDate = System.currentTimeMillis() }.show() })</ID>
+    <ID>ArgumentListWrapping:DefaultErrorMessageEmitter.kt$DefaultErrorMessageEmitter$( replay = 0, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST )</ID>
+    <ID>ArgumentListWrapping:DropdownField.kt$( modifier = Modifier .fillMaxWidth() .background( color = MaterialTheme.colors.cardBackground, shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall) ) .border( width = MaterialTheme.dimensions.borderThicknessThick, color = if (error != null) MaterialTheme.colors.error else MaterialTheme.colors.primary, shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall) ) .heightIn(min = MaterialTheme.dimensions.componentHeightMedium) .clickable(enabled = enabled) { expanded = true } .testTag(menuTestTag ?: "dropdown-menu"))</ID>
+    <ID>ArgumentListWrapping:DropdownField.kt$(R.string.core_content_description_collapse_dropdown)</ID>
+    <ID>ArgumentListWrapping:DropdownField.kt$(R.string.core_content_description_expand_dropdown)</ID>
+    <ID>ArgumentListWrapping:DropdownField.kt$(if (expanded) R.drawable.ic_arrow_up else R.drawable.ic_arrow_down)</ID>
+    <ID>ArgumentListWrapping:DropdownField.kt$(if (menuItemTestTagPrefix != null) "${menuItemTestTagPrefix}-$index" else "dropdown-menu-item-$index")</ID>
+    <ID>ArgumentListWrapping:ImageUploadWorker.kt$ImageUploadWorker$(R.string.upload_notification_complete)</ID>
+    <ID>ArgumentListWrapping:ImageUploadWorker.kt$ImageUploadWorker$(R.string.upload_notification_error)</ID>
+    <ID>ArgumentListWrapping:ImageUploadWorker.kt$ImageUploadWorker$(R.string.upload_notification_summary, notificationSessionTitle, successful, total)</ID>
+    <ID>ArgumentListWrapping:ImageUploadWorker.kt$ImageUploadWorker$(R.string.upload_notification_uploading_image, notificationCurrentImageIndex, notificationTotalImages)</ID>
+    <ID>ArgumentListWrapping:ImageUploadWorker.kt$ImageUploadWorker$(context.getString(R.string.upload_notification_uploading_image, notificationCurrentImageIndex, notificationTotalImages))</ID>
+    <ID>ArgumentListWrapping:ImageUploadWorker.kt$ImageUploadWorker$(task.image.imageUri, COMPRESSION_QUALITY, specimenId = task.specimen.id, imageId = task.image.localId)</ID>
+    <ID>ArgumentListWrapping:ImagingModule.kt$ImagingModule$( context, "abdomen_status.tflite", "TFLiteAbdomenStatusClassifierThread" )</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$( initialPage = state.specimensWithImagesAndInferenceResults.size, pageCount = { state.specimensWithImagesAndInferenceResults.size + 1 })</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$( state = ImagingState(), onAction = { }, modifier = Modifier.padding(innerPadding) )</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$( state = pagerState, modifier = modifier.fillMaxSize() )</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(MaterialTheme.dimensions.componentHeightExtraExtraExtraLarge)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(MaterialTheme.dimensions.paddingSmall)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_action_exit_dialog_return)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_action_exit_dialog_save)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_body_confirm_return)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_body_confirm_save)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_content_description_close_dialog)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_content_description_delete)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_content_description_return)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_content_description_save)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_content_description_submit)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_label_abdomen_status, state.currentSpecimenImage.abdomenStatus)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_label_image_badge, index + 1, imageList.size)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_label_sex, state.currentSpecimenImage.sex)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_label_species, state.currentSpecimenImage.species)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_label_specimen_id_placeholder)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_label_specimen_of_total, page + 1, state.specimensWithImagesAndInferenceResults.size)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_title_exit)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(R.string.imaging_title_leave)</ID>
+    <ID>ArgumentListWrapping:ImagingScreen.kt$(modifier = Modifier.height(MaterialTheme.dimensions.componentHeightExtraExtraExtraLarge))</ID>
+    <ID>ArgumentListWrapping:ImagingViewModel.kt$ImagingViewModel$( _specimensWithImagesAndInferenceResults, _state )</ID>
+    <ID>ArgumentListWrapping:ImagingViewModel.kt$ImagingViewModel$( _state.value.currentSpecimen.id, shouldAutoCorrect = false )</ID>
+    <ID>ArgumentListWrapping:ImagingViewModel.kt$ImagingViewModel$( currentSession.localId, currentSessionSiteId )</ID>
+    <ID>ArgumentListWrapping:ImagingViewModel.kt$ImagingViewModel$( id = "", remoteId = null, shouldProcessFurther = false )</ID>
+    <ID>ArgumentListWrapping:ImagingViewModel.kt$ImagingViewModel$( specimenId, currentSession.localId )</ID>
+    <ID>ArgumentListWrapping:ImagingViewModel.kt$ImagingViewModel$( specimenImage, specimen.id, currentSession.localId )</ID>
+    <ID>ArgumentListWrapping:ImagingViewModel.kt$ImagingViewModel$(imagingWorkflow.specimenFurtherProcessingProbability)</ID>
+    <ID>ArgumentListWrapping:ImagingViewModel.kt$ImagingViewModel$(screen = "Imaging", feature = "CaptureImage", action = "capture")</ID>
+    <ID>ArgumentListWrapping:ImagingViewModelTest.kt$ImagingViewModelTest$( ImagingError.SPECIMEN_ID_USED_IN_ANOTHER_COLLECTION_BATCH, any() )</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionCard.kt$(IncompleteSessionTestTags.CARD_TYPE_PILL)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionCard.kt$(R.string.incomplete_session_content_description_location)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionCard.kt$(R.string.incomplete_session_content_description_navigation)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionCard.kt$(R.string.incomplete_session_content_description_resume)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionCard.kt$(R.string.incomplete_session_label_collector, sessionAndSite.session.collectorName, sessionAndSite.session.collectorTitle)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionCard.kt$(R.string.incomplete_session_label_created_at, detailFormatter.format(sessionAndSite.session.createdAt))</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionCard.kt$(R.string.incomplete_session_label_session_type, sessionAndSite.session.type.displayText(context))</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionCard.kt$(R.string.incomplete_session_title_card, titleFormatter.format(sessionAndSite.session.createdAt))</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionCard.kt$(context)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionCard.kt$(sessionAndSite.session.createdAt)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionCard.kt$(text = stringResource(R.string.incomplete_session_label_session_type, sessionAndSite.session.type.displayText(context)), color = MaterialTheme.colors.info, modifier = Modifier.testTag(IncompleteSessionTestTags.CARD_TYPE_PILL))</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionScreen.kt$( painter = painterResource(R.drawable.ic_arrow_left), contentDescription = stringResource(R.string.incomplete_session_content_description_back), tint = MaterialTheme.colors.icon, modifier = Modifier .size(MaterialTheme.dimensions.iconSizeLarge) .clickable { onAction(IncompleteSessionAction.ReturnToLandingScreen) } .testTag(IncompleteSessionTestTags.BACK_BUTTON) )</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$("IncompleteSessionViewModel", "Successfully deleted session and images for ID: ${action.sessionId}")</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name), action.sessionId)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$(Exception(IncompleteSessionError.SESSION_DELETION_FAILED.name, e), action.sessionId)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$(Exception(IncompleteSessionError.SESSION_NOT_FOUND.name), action.sessionId)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$(Exception(IncompleteSessionError.SESSION_RETRIEVAL_FAILED.name, e), action.sessionId)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$(IncompleteSessionError.SESSION_DELETION_FAILED.name)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$(IncompleteSessionError.SESSION_DELETION_FAILED.name, e)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$(IncompleteSessionError.SESSION_NOT_FOUND.name)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$(IncompleteSessionError.SESSION_RETRIEVAL_FAILED.name, e)</ID>
+    <ID>ArgumentListWrapping:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$(sessionAndSite.session, sessionAndSite.site.id)</ID>
+    <ID>ArgumentListWrapping:InferenceRepositoryImplementation.kt$InferenceRepositoryImplementation$( grayscaleImageMatrix, thresholdForegroundMaskMatrix, 0.0, 255.0, Imgproc.THRESH_BINARY_INV or Imgproc.THRESH_OTSU )</ID>
+    <ID>ArgumentListWrapping:InferenceResultEntity.kt$InferenceResultEntity$( tableName = "inference_result", foreignKeys = [ ForeignKey( entity = SpecimenImageEntity::class, parentColumns = ["localId"], childColumns = ["specimenImageId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE ) ] )</ID>
+    <ID>ArgumentListWrapping:InfoPill.kt$(horizontal = MaterialTheme.dimensions.paddingMedium, vertical = MaterialTheme.dimensions.paddingSmall)</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$( IntakeDropdownOptions.CollectionMethodOption.OTHER.label, ignoreCase = true )</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$( IntakeDropdownOptions.SpecimenConditionOption.OTHER.label, ignoreCase = true )</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$( label = stringResource(R.string.intake_label_irs_conducted), checked = surveillanceForm.wasIrsConducted, onCheckedChange = { onAction( IntakeAction.ToggleIrsConducted( it ) ) })</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$( locationType.id, it )</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$( painter = painterResource(R.drawable.ic_arrow_left), contentDescription = stringResource(R.string.intake_content_description_back), tint = MaterialTheme.colors.icon, modifier = Modifier .size(MaterialTheme.dimensions.iconSizeLarge) .clickable { onAction(IntakeAction.ReturnToPreviousScreen) })</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$( question = question, value = state.formAnswersByQuestionId[question.id]?.value.orEmpty(), error = state.intakeErrors.formAnswerErrors[question.id], onValueChange = { onAction(IntakeAction.UpdateFormAnswer(question.id, it)) })</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$( question.prerequisite, answerMap )</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$( state = IntakeState(), onAction = { }, modifier = Modifier.padding(innerPadding) )</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$("${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it")</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$("${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it")</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$(IntakeAction.UpdateCollectionMethod("${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it"))</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$(IntakeAction.UpdateSpecimenCondition("${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it"))</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$(IntakeDropdownOptions.CollectionMethodOption.OTHER.label)</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label)</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$(MaterialTheme.dimensions.spacingExtraExtraSmall)</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$(MaterialTheme.dimensions.spacingExtraSmall)</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$(R.string.intake_body_location_error, state.locationError.toString(context))</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$(R.string.intake_content_description_missing_collector)</ID>
+    <ID>ArgumentListWrapping:IntakeScreen.kt$(context)</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( Exception(error.name), session.localId )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( Exception(error.name), session.localId, selectedSite.id )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( _state.value.formQuestions, _state.value.formAnswersByQuestionId )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( action.questionId, existingFormAnswer.copy(value = action.value) )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( answer, session.localId, null, questionId )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( latitude = null, longitude = null )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( llinType = "", numPeopleSleptUnderLlin = -1 )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( llinType = action.option.label, llinBrand = "" )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( selectedVillageName = action.villageName, selectedHouseNumber = "" )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( session = it.session.copy( collectorName = updatedCollector.name, collectorTitle = updatedCollector.title, collectorLastTrainedOn = updatedCollector.lastTrainedOn ), isCurrentCollectorMissing = false )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( session = it.session.copy( latitude = location.latitude.toFloat(), longitude = location.longitude.toFloat(), ), locationError = null )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( session.collectorName, session.collectorTitle )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( siteRepository.observeAllSitesByProgramId(programId), currentSession?.let { surveillanceFormRepository.observeSurveillanceFormBySessionId(it.localId) } ?: flowOf&lt;SurveillanceForm?&gt;(null), collectorRepository.observeAllCollectors(), locationTypeRepository.observeAllLocationTypesByProgramId(programId))</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$( viewModelScope, SharingStarted.WhileSubscribed(5000L), IntakeState() )</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$(IntakeEvent.NavigateAfterIntake(collectionMethodWorkflow.postIntakeDestination))</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$(collectionMethodWorkflow.postIntakeDestination)</ID>
+    <ID>ArgumentListWrapping:IntakeViewModel.kt$IntakeViewModel$(programId)</ID>
+    <ID>ArgumentListWrapping:LandingErrorLogger.kt$LandingErrorLogger$( screen = "LandingScreen", feature = "Session Management", action = "resume_session" )</ID>
+    <ID>ArgumentListWrapping:LandingViewModel.kt$LandingViewModel$( enrolledProgram = program, isLoading = false )</ID>
+    <ID>ArgumentListWrapping:LocationClient.kt$LocationClient$( Priority.PRIORITY_HIGH_ACCURACY, cancellationTokenSource.token )</ID>
+    <ID>ArgumentListWrapping:MainViewModel.kt$MainViewModel$( screen = "Main", feature = "DeviceCache", action = "observe_program_id" )</ID>
+    <ID>ArgumentListWrapping:MainViewModel.kt$MainViewModel$( throwable = Exception(MainError.DEVICE_FETCH_FAILED.name, throwable), context = VectorCamCrashlyticsContext( screen = "Main", feature = "DeviceCache", action = "observe_program_id" ), tags = mapOf( "error_type" to "device_fetch_failure", "critical" to "true", "phase" to "startup", ), extras = mapOf( "fallback_destination" to "Registration", "error_context" to "User redirected to registration", "recovery_action" to "Defaulting to registration flow", "possible_causes" to "Program ID not cached, database not initialized, device configuration incomplete, corruption in device cache" ) )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( localSession, localSiteId, syncedDevice.id, totalSpecimensForSession )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( localSession, localSiteId, syncedDeviceId, expectedSpecimens )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( localSessionId, null )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( localSessionUnit, syncedSession.localId, syncedSession.remoteId )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( localSessionUnit.localId, syncSessionUnitResult.data )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( localSpecimen.id, syncedRemoteSessionId )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( localSpecimenImage.localId, syncedSpecimen.remoteId )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( localSurveillanceForm, syncedRemoteSessionId )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( localSurveillanceForm, syncedSession.localId, syncedSession.remoteId )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( questionId to null, FormAnswerDto( id = answer.remoteId, frontendId = answer.localId, sessionId = syncedRemoteSessionId, sessionUnitId = null, questionId = questionId, value = answer.value, dataType = answer.dataType, submittedAt = answer.submittedAt ) )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( questionId to remoteSessionUnitId, FormAnswerDto( id = answer.remoteId, frontendId = answer.localId, sessionId = syncedRemoteSessionId, sessionUnitId = remoteSessionUnitId, questionId = questionId, value = answer.value, dataType = answer.dataType, submittedAt = answer.submittedAt ) )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( remoteInferenceResult, remoteSpecimenImage.localId )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( remoteSessionUnit, syncedLocalSessionId )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( remoteSpecimenImage, syncedSpecimen.id, syncedLocalSessionId )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( remoteSurveillanceForm, syncedLocalSessionId )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( specimenImage, inferenceResult, syncedSpecimen, syncedSession.localId )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$(R.string.upload_notification_failed)</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$(R.string.upload_notification_retrying)</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$(R.string.upload_notification_specimen_image_progress, currentSpecimenIndex + 1, totalSpecimens, currentImageIndex + 1, totalImagesForSpecimen)</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$(R.string.upload_notification_specimen_progress, currentSpecimenIndex + 1, totalSpecimens)</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$(context, CHANNEL_ID)</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$(context.getString(R.string.upload_notification_failed))</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$(context.getString(R.string.upload_notification_retrying))</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$(context.getString(R.string.upload_notification_specimen_progress, currentSpecimenIndex + 1, totalSpecimens))</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt$MetadataUploadWorker$(localSessionUnit, syncedRemoteSessionId)</ID>
+    <ID>ArgumentListWrapping:Migration_23_24_AddLocationTypeLevelColumn.kt$&lt;no name provided&gt;$( """ UPDATE `location_type` SET `level` = ( SELECT COUNT(*) FROM `location_type` AS lt2 WHERE lt2.programId = location_type.programId AND lt2.id &lt;= location_type.id ) """.trimIndent())</ID>
+    <ID>ArgumentListWrapping:Migration_7_8_SpecimenImageSeparation.kt$&lt;no name provided&gt;$("CREATE INDEX IF NOT EXISTS `index_specimen_image_specimenId_sessionId` ON `specimen_image` (`specimenId`, `sessionId`);")</ID>
+    <ID>ArgumentListWrapping:Migration_9_10_RefactorSpecimenImageAndInferenceResultKeys.kt$&lt;no name provided&gt;$("CREATE INDEX IF NOT EXISTS `index_specimen_image_specimenId_sessionId` ON `specimen_image` (`specimenId`, `sessionId`)")</ID>
+    <ID>ArgumentListWrapping:NavGraph.kt$( Destination.Landing, false )</ID>
+    <ID>ArgumentListWrapping:NavGraph.kt$( Destination.Registration, false )</ID>
+    <ID>ArgumentListWrapping:NavGraph.kt$( navController = navController, startDestination = startDestination )</ID>
+    <ID>ArgumentListWrapping:NavGraph.kt$( state = state, onAction = viewModel::onAction )</ID>
+    <ID>ArgumentListWrapping:NavGraph.kt$( state = state, onAction = viewModel::onAction, )</ID>
+    <ID>ArgumentListWrapping:NavGraph.kt$( state = state, onAction = viewModel::onAction, modifier = Modifier )</ID>
+    <ID>ArgumentListWrapping:NavGraph.kt$(Destination.Landing, false)</ID>
+    <ID>ArgumentListWrapping:PermissionScreen.kt$(R.string.permission_title_gps_required)</ID>
+    <ID>ArgumentListWrapping:PermissionScreen.kt$(R.string.permission_title_permissions_required)</ID>
+    <ID>ArgumentListWrapping:PullToRefresh.kt$( state = pullToRefreshState, isRefreshing = isRefreshing, onRefresh = onRefresh )</ID>
+    <ID>ArgumentListWrapping:PullToRefresh.kt$(modifier = modifier .fillMaxSize() .verticalScroll(scrollState))</ID>
+    <ID>ArgumentListWrapping:RegistrationScreen.kt$(R.string.registration_content_description_hide_access_code)</ID>
+    <ID>ArgumentListWrapping:RegistrationScreen.kt$(R.string.registration_content_description_show_access_code)</ID>
+    <ID>ArgumentListWrapping:RegistrationViewModel.kt$RegistrationViewModel$("Program not found during registration")</ID>
+    <ID>ArgumentListWrapping:RegistrationViewModel.kt$RegistrationViewModel$(IllegalStateException("Program not found during registration"))</ID>
+    <ID>ArgumentListWrapping:SegmentedTabBar.kt$( contentAlignment = Alignment.Center, modifier = Modifier .weight(1f) .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium)) .background( brush = if (isSelected) Brush.horizontalGradient( listOf( MaterialTheme.colors.segmentedTabBarActiveGradientLeft, MaterialTheme.colors.segmentedTabBarActiveGradientRight ) ) else Brush.horizontalGradient( listOf( MaterialTheme.colors.segmentedTabBarInactive, MaterialTheme.colors.segmentedTabBarInactive ) ) ) .clickable { onTabSelected(tab) } .padding(vertical = MaterialTheme.dimensions.paddingMedium))</ID>
+    <ID>ArgumentListWrapping:SessionEntity.kt$SessionEntity$( tableName = "session", foreignKeys = [ForeignKey( entity = SiteEntity::class, parentColumns = ["id"], childColumns = ["siteId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE )], indices = [Index("completedAt"), Index("siteId"), Index("type")] )</ID>
+    <ID>ArgumentListWrapping:SessionUnitEntity.kt$SessionUnitEntity$( tableName = "session_unit", foreignKeys = [ForeignKey( entity = SessionEntity::class, parentColumns = ["localId"], childColumns = ["sessionId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE )], indices = [Index("sessionId")] )</ID>
+    <ID>ArgumentListWrapping:SettingsInfoTile.kt$(R.string.settings_content_description_collapse)</ID>
+    <ID>ArgumentListWrapping:SettingsInfoTile.kt$(R.string.settings_content_description_expand)</ID>
+    <ID>ArgumentListWrapping:SettingsScreen.kt$(R.string.settings_action_resync)</ID>
+    <ID>ArgumentListWrapping:SettingsScreen.kt$(R.string.settings_action_syncing)</ID>
+    <ID>ArgumentListWrapping:SettingsScreen.kt$(R.string.settings_body_connected)</ID>
+    <ID>ArgumentListWrapping:SettingsScreen.kt$(R.string.settings_body_no_internet)</ID>
+    <ID>ArgumentListWrapping:SettingsScreen.kt$(R.string.settings_label_registered_at, dateTimeFormatter.format(state.device.registeredAt))</ID>
+    <ID>ArgumentListWrapping:SettingsScreen.kt$(state.device.registeredAt)</ID>
+    <ID>ArgumentListWrapping:SettingsViewModel.kt$SettingsViewModel$(collector.lastTrainedOn)</ID>
+    <ID>ArgumentListWrapping:SettingsViewModel.kt$SettingsViewModel$(nameValidationResult, titleValidationResult, lastTrainedOnValidationResult)</ID>
+    <ID>ArgumentListWrapping:SettingsViewModelTest.kt$SettingsViewModelTest$(id = UUID.randomUUID(), name = "Alice", title = "Dr.", lastTrainedOn = 1_000_000L)</ID>
+    <ID>ArgumentListWrapping:SpecimenDao.kt$SpecimenDao$("SELECT COUNT(*) FROM specimen JOIN session ON specimen.sessionId = session.localId WHERE specimen.shouldProcessFurther = 1 AND session.collectionDate BETWEEN :startDate AND :endDate")</ID>
+    <ID>ArgumentListWrapping:SpecimenEntity.kt$SpecimenEntity$( tableName = "specimen", foreignKeys = [ForeignKey( entity = SessionEntity::class, parentColumns = ["localId"], childColumns = ["sessionId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE ), ForeignKey( entity = SessionUnitEntity::class, parentColumns = ["localId"], childColumns = ["sessionUnitId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE )], indices = [Index("sessionId"), Index("sessionUnitId")], primaryKeys = ["id", "sessionId"] )</ID>
+    <ID>ArgumentListWrapping:SpecimenImageEntity.kt$SpecimenImageEntity$( tableName = "specimen_image", foreignKeys = [ ForeignKey( entity = SpecimenEntity::class, parentColumns = ["id", "sessionId"], childColumns = ["specimenId", "sessionId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE ) ], indices = [Index(value = ["specimenId", "sessionId"])] )</ID>
+    <ID>ArgumentListWrapping:SpecimenRepositoryImplementation.kt$SpecimenRepositoryImplementation$( specimen = specimenEntity.toDomain(), specimenImagesAndInferenceResults = specimenImagesAndResults.map { relation -&gt; SpecimenImageAndInferenceResult( specimenImage = relation.specimenImageEntity.toDomain(), inferenceResult = relation.inferenceResultEntity?.toDomain() ) })</ID>
+    <ID>ArgumentListWrapping:SpecimenRepositoryImplementation.kt$SpecimenRepositoryImplementation$( specimenEntities.map { specimenEntity -&gt; specimenDao.observeSpecimenImagesAndInferenceResultsBySpecimen( specimenEntity.id, sessionId ).map { specimenImagesAndResults -&gt; SpecimenWithSpecimenImagesAndInferenceResults( specimen = specimenEntity.toDomain(), specimenImagesAndInferenceResults = specimenImagesAndResults.map { relation -&gt; SpecimenImageAndInferenceResult( specimenImage = relation.specimenImageEntity.toDomain(), inferenceResult = relation.inferenceResultEntity?.toDomain() ) }) } })</ID>
+    <ID>ArgumentListWrapping:SpecimenRepositoryImplementation.kt$SpecimenRepositoryImplementation$( specimenEntity.id, sessionId )</ID>
+    <ID>ArgumentListWrapping:SurveillanceFormEntity.kt$SurveillanceFormEntity$( tableName = "surveillance_form", foreignKeys = [ForeignKey( entity = SessionEntity::class, parentColumns = ["localId"], childColumns = ["sessionId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE )] )</ID>
+    <ID>ArgumentListWrapping:TfLiteSpecimenClassifier.kt$TfLiteSpecimenClassifier$( intArrayOf( 1, preprocessedMatrixChannels, preprocessedMatrixHeight, preprocessedMatrixWidth ), DataType.FLOAT32 )</ID>
+    <ID>ArgumentListWrapping:TfLiteSpecimenClassifier.kt$TfLiteSpecimenClassifier$( intArrayOf(1, outputNumClasses), DataType.FLOAT32 )</ID>
+    <ID>ArgumentListWrapping:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$( boxesMatrix, confidenceScoresMatrix, CONFIDENCE_THRESHOLD, IOU_THRESHOLD, indicesMatrix )</ID>
+    <ID>ArgumentListWrapping:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$( intArrayOf( 1, preprocessedMatrixHeight, preprocessedMatrixWidth, preprocessedMatrixChannels ), DataType.FLOAT32 )</ID>
+    <ID>ArgumentListWrapping:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$( intArrayOf(1, outputNumChannels, outputNumElements), DataType.FLOAT32 )</ID>
+    <ID>ArgumentListWrapping:UploadForegroundService.kt$UploadForegroundService$(NOTIFICATION_ID, buildNotification(getString(R.string.upload_service_preparing)), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)</ID>
+    <ID>ArgumentListWrapping:UploadForegroundService.kt$UploadForegroundService$(R.string.upload_service_preparing)</ID>
+    <ID>ArgumentListWrapping:UploadForegroundService.kt$UploadForegroundService$(getString(R.string.upload_service_preparing))</ID>
+    <ID>ArgumentListWrapping:ValidateCollectionMethodUseCase.kt$ValidateCollectionMethodUseCase$(IntakeDropdownOptions.CollectionMethodOption.OTHER.label)</ID>
+    <ID>ArgumentListWrapping:ValidateSpecimenConditionUseCase.kt$ValidateSpecimenConditionUseCase$(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label)</ID>
+    <ID>ArgumentListWrapping:ValidateSpecimenConditionUseCase.kt$ValidateSpecimenConditionUseCase$(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label, ignoreCase = true)</ID>
+    <ID>ArgumentListWrapping:VectorCamAnalytics.kt$VectorCamAnalytics$( "device_model", "registration_cohort_week", "registered_at_date", "program_id", "site_id" )</ID>
+    <ID>ArgumentListWrapping:VectorCamAnalytics.kt$VectorCamAnalytics$( BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN )</ID>
+    <ID>ArgumentListWrapping:VectorCamAnalytics.kt$VectorCamAnalytics$("STATIC_PROPS → app=${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) android=${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})")</ID>
+    <ID>ArgumentListWrapping:VectorCamApp.kt$VectorCamApp$( "module" to "OpenCV", "phase" to "startup" )</ID>
+    <ID>ArgumentListWrapping:VectorCamApp.kt$VectorCamApp$( screen = "AppStart", feature = "OpenCV Initialization", action = "initLocal()" )</ID>
+    <ID>CyclomaticComplexMethod:CompleteSessionForm.kt$@Composable fun CompleteSessionForm( session: Session, site: Site, surveillanceForm: SurveillanceForm?, form: Form?, sessionScopedFormAnswersAndQuestions: List&lt;FormAnswerAndQuestion&gt;, sessionUnits: List&lt;SessionUnit&gt;, sessionUnitAnswersAndQuestionsByUnitId: Map&lt;UUID, List&lt;FormAnswerAndQuestion&gt;&gt;, bucketNameBySessionUnitId: Map&lt;UUID, String&gt;, modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:CompleteSessionListTile.kt$@Composable fun CompleteSessionListTile( sessionAndSite: SessionAndSite, sessionUploadProgress: SessionUploadProgress, onClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:ErrorExtensions.kt$fun Error.toString(context: Context): String</ID>
+    <ID>CyclomaticComplexMethod:ImagingScreen.kt$@Composable fun ImagingScreen( state: ImagingState, onAction: (ImagingAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:ImagingViewModel.kt$ImagingViewModel$fun onAction(action: ImagingAction)</ID>
+    <ID>CyclomaticComplexMethod:IntakeScreen.kt$@Composable fun IntakeScreen( state: IntakeState, onAction: (IntakeAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:IntakeViewModel.kt$IntakeViewModel$fun onAction(action: IntakeAction)</ID>
+    <ID>CyclomaticComplexMethod:IntakeViewModel.kt$IntakeViewModel$private fun loadFormDetails()</ID>
+    <ID>CyclomaticComplexMethod:MetadataUploadWorker.kt$MetadataUploadWorker$override suspend fun doWork(): WorkerResult</ID>
+    <ID>CyclomaticComplexMethod:NavGraph.kt$@Composable fun NavGraph(startDestination: Destination)</ID>
+    <ID>CyclomaticComplexMethod:SettingsViewModel.kt$SettingsViewModel$fun onAction(action: SettingsAction)</ID>
+    <ID>Filename:Migration_10_11_AddClassificationDurationColumns.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_10_11_AddClassificationDurationColumns.kt</ID>
+    <ID>Filename:Migration_11_12_AddDetectionDurationColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_11_12_AddDetectionDurationColumn.kt</ID>
+    <ID>Filename:Migration_12_13_RemoveSentinelSiteAndMoveHouseNumberUnderSite.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_12_13_RemoveSentinelSiteAndMoveHouseNumberUnderSite.kt</ID>
+    <ID>Filename:Migration_13_14_AddCollectorTable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_13_14_AddCollectorTable.kt</ID>
+    <ID>Filename:Migration_14_15_BackfillCollectors.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_14_15_BackfillCollectors.kt</ID>
+    <ID>Filename:Migration_15_16_AddSpecimenShouldProcessFurtherColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_15_16_AddSpecimenShouldProcessFurtherColumn.kt</ID>
+    <ID>Filename:Migration_16_17_AddSessionCollectorLastTrainedOnColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_16_17_AddSessionCollectorLastTrainedOnColumn.kt</ID>
+    <ID>Filename:Migration_17_18_AddCollectorLastTrainedOnColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_17_18_AddCollectorLastTrainedOnColumn.kt</ID>
+    <ID>Filename:Migration_18_19_AddSessionHardwareIdColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_18_19_AddSessionHardwareIdColumn.kt</ID>
+    <ID>Filename:Migration_19_20_MakeHardwareIdColumnNullable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_19_20_MakeHardwareIdColumnNullable.kt</ID>
+    <ID>Filename:Migration_1_2_CreateBoundingBoxTable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_1_2_CreateBoundingBoxTable.kt</ID>
+    <ID>Filename:Migration_20_21_CreateLocationTypeTable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_20_21_CreateLocationTypeTable.kt</ID>
+    <ID>Filename:Migration_21_22_AddSiteNewHierarchyColumns.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_21_22_AddSiteNewHierarchyColumns.kt</ID>
+    <ID>Filename:Migration_22_23_MakeSiteLocationColumnsNullable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_22_23_MakeSiteLocationColumnsNullable.kt</ID>
+    <ID>Filename:Migration_23_24_AddLocationTypeLevelColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_23_24_AddLocationTypeLevelColumn.kt</ID>
+    <ID>Filename:Migration_24_25_AddDynamicFormTables.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_24_25_AddDynamicFormTables.kt</ID>
+    <ID>Filename:Migration_25_26_AddImageMetadataToSpecimenImage.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_25_26_AddImageMetadataToSpecimenImage.kt</ID>
+    <ID>Filename:Migration_26_27_RecreateFormTables.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_26_27_RecreateFormTables.kt</ID>
+    <ID>Filename:Migration_27_28_ChangeProgramFormVersionToText.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_27_28_ChangeProgramFormVersionToText.kt</ID>
+    <ID>Filename:Migration_28_29_UpdateFormAnswerPrimaryKey.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_28_29_UpdateFormAnswerPrimaryKey.kt</ID>
+    <ID>Filename:Migration_29_30_AddPrerequisiteToFormQuestion.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_29_30_AddPrerequisiteToFormQuestion.kt</ID>
+    <ID>Filename:Migration_2_3_CreateSurveillanceFormTable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_2_3_CreateSurveillanceFormTable.kt</ID>
+    <ID>Filename:Migration_30_31_AddSessionUnitTable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_30_31_AddSessionUnitTable.kt</ID>
+    <ID>Filename:Migration_3_4_Schema_V2.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_3_4_Schema_V2.kt</ID>
+    <ID>Filename:Migration_4_5_AddSubmittedAtColumnsToSpecimenAndSurveillanceFormTables.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_4_5_AddSubmittedAtColumnsToSpecimenAndSurveillanceFormTables.kt</ID>
+    <ID>Filename:Migration_5_6_AddUploadStatusToSpecimen.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_5_6_AddUploadStatusToSpecimen.kt</ID>
+    <ID>Filename:Migration_6_7_BoundingBoxToInferenceResult.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_6_7_BoundingBoxToInferenceResult.kt</ID>
+    <ID>Filename:Migration_7_8_SpecimenImageSeparation.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_7_8_SpecimenImageSeparation.kt</ID>
+    <ID>Filename:Migration_8_9_AddSessionTypeColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_8_9_AddSessionTypeColumn.kt</ID>
+    <ID>Filename:Migration_9_10_RefactorSpecimenImageAndInferenceResultKeys.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_9_10_RefactorSpecimenImageAndInferenceResultKeys.kt</ID>
+    <ID>Filename:WindowInfo.kt$com.vci.vectorcamapp.ui.theme.WindowInfo.kt</ID>
+    <ID>Filename:constructUrl.kt$com.vci.vectorcamapp.core.data.network.constructUrl.kt</ID>
+    <ID>Filename:responseToResult.kt$com.vci.vectorcamapp.core.data.network.responseToResult.kt</ID>
+    <ID>Filename:safeCall.kt$com.vci.vectorcamapp.core.data.network.safeCall.kt</ID>
+    <ID>FinalNewline:AndroidConnectivityObserver.kt$com.vci.vectorcamapp.core.data.network.connectivity.AndroidConnectivityObserver.kt</ID>
+    <ID>FinalNewline:CameraRepositoryImplementation.kt$com.vci.vectorcamapp.imaging.data.repository.CameraRepositoryImplementation.kt</ID>
+    <ID>FinalNewline:CollectionBatchCard.kt$com.vci.vectorcamapp.collection_batch.list.presentation.components.CollectionBatchCard.kt</ID>
+    <ID>FinalNewline:CollectionBatchFormViewModel.kt$com.vci.vectorcamapp.collection_batch.form.presentation.CollectionBatchFormViewModel.kt</ID>
+    <ID>FinalNewline:CollectionBatchIdentityResolver.kt$com.vci.vectorcamapp.collection_batch.domain.util.CollectionBatchIdentityResolver.kt</ID>
+    <ID>FinalNewline:CollectionBatchListViewModel.kt$com.vci.vectorcamapp.collection_batch.list.presentation.CollectionBatchListViewModel.kt</ID>
+    <ID>FinalNewline:CompleteSessionListDetailRow.kt$com.vci.vectorcamapp.complete_session.list.presentation.components.CompleteSessionListDetailRow.kt</ID>
+    <ID>FinalNewline:DuplicateIdentityWarningBanner.kt$com.vci.vectorcamapp.collection_batch.form.presentation.components.DuplicateIdentityWarningBanner.kt</ID>
+    <ID>FinalNewline:DynamicFormField.kt$com.vci.vectorcamapp.intake.presentation.components.DynamicFormField.kt</ID>
+    <ID>FinalNewline:FloatListConverter.kt$com.vci.vectorcamapp.core.data.room.converters.FloatListConverter.kt</ID>
+    <ID>FinalNewline:FormQuestionPrerequisiteEvaluator.kt$com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator.kt</ID>
+    <ID>FinalNewline:FormQuestionPrerequisiteExpressionConverter.kt$com.vci.vectorcamapp.core.data.room.converters.FormQuestionPrerequisiteExpressionConverter.kt</ID>
+    <ID>FinalNewline:FormQuestionScopeConverter.kt$com.vci.vectorcamapp.core.data.room.converters.FormQuestionScopeConverter.kt</ID>
+    <ID>FinalNewline:FormQuestionScopeSerializer.kt$com.vci.vectorcamapp.core.data.dto.serializers.FormQuestionScopeSerializer.kt</ID>
+    <ID>FinalNewline:ImagingModule.kt$com.vci.vectorcamapp.imaging.di.ImagingModule.kt</ID>
+    <ID>FinalNewline:ImagingQualifiers.kt$com.vci.vectorcamapp.imaging.di.ImagingQualifiers.kt</ID>
+    <ID>FinalNewline:ImagingRepositoryModule.kt$com.vci.vectorcamapp.imaging.di.ImagingRepositoryModule.kt</ID>
+    <ID>FinalNewline:IncompleteSessionAction.kt$com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionAction.kt</ID>
+    <ID>FinalNewline:IncompleteSessionEvent.kt$com.vci.vectorcamapp.incomplete_session.presentation.IncompleteSessionEvent.kt</ID>
+    <ID>FinalNewline:InferenceRepositoryImplementation.kt$com.vci.vectorcamapp.imaging.data.repository.InferenceRepositoryImplementation.kt</ID>
+    <ID>FinalNewline:InferenceResultRepository.kt$com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository.kt</ID>
+    <ID>FinalNewline:InferenceResultRepositoryImplementation.kt$com.vci.vectorcamapp.core.data.repository.InferenceResultRepositoryImplementation.kt</ID>
+    <ID>FinalNewline:IntakeTile.kt$com.vci.vectorcamapp.intake.presentation.components.IntakeTile.kt</ID>
+    <ID>FinalNewline:LandingTestTags.kt$com.vci.vectorcamapp.landing.presentation.util.LandingTestTags.kt</ID>
+    <ID>FinalNewline:LocationClient.kt$com.vci.vectorcamapp.intake.data.LocationClient.kt</ID>
+    <ID>FinalNewline:MainViewModelTest.kt$com.vci.vectorcamapp.main.presentation.MainViewModelTest.kt</ID>
+    <ID>FinalNewline:Migration_19_20_MakeHardwareIdColumnNullable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_19_20_MakeHardwareIdColumnNullable.kt</ID>
+    <ID>FinalNewline:Migration_20_21_CreateLocationTypeTable.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_20_21_CreateLocationTypeTable.kt</ID>
+    <ID>FinalNewline:Migration_26_27_RecreateFormTables.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_26_27_RecreateFormTables.kt</ID>
+    <ID>FinalNewline:Migration_27_28_ChangeProgramFormVersionToText.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_27_28_ChangeProgramFormVersionToText.kt</ID>
+    <ID>FinalNewline:Migration_3_4_Schema_V2.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_3_4_Schema_V2.kt</ID>
+    <ID>FinalNewline:Migration_6_7_BoundingBoxToInferenceResult.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_6_7_BoundingBoxToInferenceResult.kt</ID>
+    <ID>FinalNewline:Migration_8_9_AddSessionTypeColumn.kt$com.vci.vectorcamapp.core.data.room.migrations.versions.Migration_8_9_AddSessionTypeColumn.kt</ID>
+    <ID>FinalNewline:PermissionTestTags.kt$com.vci.vectorcamapp.main.presentation.util.PermissionTestTags.kt</ID>
+    <ID>FinalNewline:PostFormAnswersRequestDto.kt$com.vci.vectorcamapp.core.data.dto.form_answer.PostFormAnswersRequestDto.kt</ID>
+    <ID>FinalNewline:RemoteFormAnswerDataSource.kt$com.vci.vectorcamapp.core.data.network.api.RemoteFormAnswerDataSource.kt</ID>
+    <ID>FinalNewline:RemoteFormDataSource.kt$com.vci.vectorcamapp.core.data.network.api.RemoteFormDataSource.kt</ID>
+    <ID>FinalNewline:RemoteSessionUnitDataSource.kt$com.vci.vectorcamapp.core.data.network.api.RemoteSessionUnitDataSource.kt</ID>
+    <ID>FinalNewline:RemoteSpecimenImageDataSource.kt$com.vci.vectorcamapp.core.data.network.api.RemoteSpecimenImageDataSource.kt</ID>
+    <ID>FinalNewline:SearchUtils.kt$com.vci.vectorcamapp.core.presentation.util.search.SearchUtils.kt</ID>
+    <ID>FinalNewline:SessionAndSite.kt$com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite.kt</ID>
+    <ID>FinalNewline:SessionAndSurveillanceForm.kt$com.vci.vectorcamapp.core.domain.model.composites.SessionAndSurveillanceForm.kt</ID>
+    <ID>FinalNewline:SettingsScreen.kt$com.vci.vectorcamapp.settings.presentation.SettingsScreen.kt</ID>
+    <ID>FinalNewline:TfLiteSpecimenClassifier.kt$com.vci.vectorcamapp.imaging.data.TfLiteSpecimenClassifier.kt</ID>
+    <ID>FinalNewline:ThemeExtensions.kt$com.vci.vectorcamapp.ui.extensions.ThemeExtensions.kt</ID>
+    <ID>FinalNewline:TimeoutConfiguredTusClient.kt$com.vci.vectorcamapp.core.data.upload.image.util.TimeoutConfiguredTusClient.kt</ID>
+    <ID>FinalNewline:UploadStatusConverter.kt$com.vci.vectorcamapp.core.data.room.converters.UploadStatusConverter.kt</ID>
+    <ID>FinalNewline:UploadStatusExtensions.kt$com.vci.vectorcamapp.ui.extensions.UploadStatusExtensions.kt</ID>
+    <ID>FinalNewline:ValidateCollectionBatchIdentityUseCase.kt$com.vci.vectorcamapp.collection_batch.domain.use_cases.ValidateCollectionBatchIdentityUseCase.kt</ID>
+    <ID>FinalNewline:ValidateFormAnswersUseCase.kt$com.vci.vectorcamapp.collection_batch.domain.use_cases.ValidateFormAnswersUseCase.kt</ID>
+    <ID>ForbiddenComment:CompleteSessionDetailsScreen.kt$/* TODO: CLEANUP */</ID>
+    <ID>ForbiddenComment:CompleteSessionDetailsViewModel.kt$CompleteSessionDetailsViewModel$/* TODO: CLEANUP */</ID>
+    <ID>ForbiddenComment:CompleteSessionForm.kt$/* TODO: CLEANUP */</ID>
+    <ID>ForbiddenComment:CompleteSessionSpecimens.kt$/* TODO: CLEANUP */</ID>
+    <ID>ForbiddenComment:CompleteSessionSpecimensTile.kt$/* TODO: CLEANUP */</ID>
+    <ID>FunctionReturnTypeSpacing:CameraRepository.kt$CameraRepository$suspend fun saveImage(jpegBytes: ByteArray, filename: String, currentSession: Session) : Result&lt;Uri, ImagingError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:CurrentSessionCache.kt$CurrentSessionCache$suspend fun getSession() : Session?</ID>
+    <ID>FunctionReturnTypeSpacing:DataStoreModule.kt$DataStoreModule$@Provides @Singleton fun provideCurrentSessionDataStore(@ApplicationContext context: Context) : DataStore&lt;CurrentSessionCacheDto&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:DataStoreModule.kt$DataStoreModule$@Provides @Singleton fun provideDeviceDataStore(@ApplicationContext context: Context) : DataStore&lt;DeviceCacheDto&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:FormDataSource.kt$FormDataSource$suspend fun getCurrentFormByProgramId(programId: Int) : Result&lt;FormDto, NetworkError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:ImagingRepositoryModule.kt$ImagingRepositoryModule$@Binds @ViewModelScoped abstract fun bindCameraRepository( cameraRepositoryImplementation: CameraRepositoryImplementation ) : CameraRepository</ID>
+    <ID>FunctionReturnTypeSpacing:ImagingRepositoryModule.kt$ImagingRepositoryModule$@Binds @ViewModelScoped abstract fun bindInferenceRepository( inferenceRepositoryImplementation: InferenceRepositoryImplementation ) : InferenceRepository</ID>
+    <ID>FunctionReturnTypeSpacing:InferenceResultMapper.kt$fun InferenceResult.toEntity(specimenImageId: String) : InferenceResultEntity</ID>
+    <ID>FunctionReturnTypeSpacing:InferenceResultMapper.kt$fun InferenceResultEntity.toDomain() : InferenceResult</ID>
+    <ID>FunctionReturnTypeSpacing:InferenceResultRepository.kt$InferenceResultRepository$suspend fun insertInferenceResult(inferenceResult: InferenceResult, specimenImageId: String) : Result&lt;Unit, RoomDbError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:InferenceResultRepository.kt$InferenceResultRepository$suspend fun updateInferenceResult(inferenceResult: InferenceResult, specimenImageId: String) : Result&lt;Unit, RoomDbError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:SiteMapper.kt$fun Site.toEntity(programId: Int, locationTypeId: Int?, parentId: Int?) : SiteEntity</ID>
+    <ID>FunctionReturnTypeSpacing:SiteMapper.kt$fun SiteEntity.toDomain() : Site</ID>
+    <ID>FunctionReturnTypeSpacing:SpecimenClassifier.kt$SpecimenClassifier$fun getInputTensorShape() : Pair&lt;Int, Int&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:SpecimenClassifier.kt$SpecimenClassifier$fun getOutputTensorShape() : Int</ID>
+    <ID>FunctionReturnTypeSpacing:SpecimenImageRepository.kt$SpecimenImageRepository$suspend fun insertSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID) : Result&lt;Unit, RoomDbError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:SpecimenImageRepository.kt$SpecimenImageRepository$suspend fun updateSpecimenImage(specimenImage: SpecimenImage, specimenId: String, sessionId: UUID) : Result&lt;Unit, RoomDbError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:SurveillanceFormDao.kt$SurveillanceFormDao$@Upsert suspend fun upsertSurveillanceForm(surveillanceForm: SurveillanceFormEntity) : Long</ID>
+    <ID>FunctionReturnTypeSpacing:SurveillanceFormMapper.kt$fun SurveillanceForm.toEntity(sessionId: UUID) : SurveillanceFormEntity</ID>
+    <ID>FunctionReturnTypeSpacing:SurveillanceFormMapper.kt$fun SurveillanceFormEntity.toDomain() : SurveillanceForm</ID>
+    <ID>FunctionReturnTypeSpacing:TransactionHelper.kt$TransactionHelper$suspend fun &lt;T&gt; runAsTransaction(block: suspend () -&gt; T) : T</ID>
+    <ID>FunctionReturnTypeSpacing:ValidateCollectionDateUseCase.kt$ValidateCollectionDateUseCase$operator fun invoke(collectionDate: Long) : Result&lt;Unit, FormValidationError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:ValidateCollectorLastTrainedOnUseCase.kt$ValidateCollectorLastTrainedOnUseCase$operator fun invoke(collectionDate: Long) : Result&lt;Unit, CollectorValidationError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:ValidateCollectorNameUseCase.kt$ValidateCollectorNameUseCase$operator fun invoke(collectorName: String) : Result&lt;Unit, CollectorValidationError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:ValidateCollectorTitleUseCase.kt$ValidateCollectorTitleUseCase$operator fun invoke(collectorTitle: String) : Result&lt;Unit, CollectorValidationError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:ValidateCollectorUseCase.kt$ValidateCollectorUseCase$operator fun invoke(collectorName: String, collectorTitle: String) : Result&lt;Unit, FormValidationError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:ValidateDistrictUseCase.kt$ValidateDistrictUseCase$operator fun invoke(district: String) : Result&lt;Unit, FormValidationError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:ValidateHouseNumberUseCase.kt$ValidateHouseNumberUseCase$operator fun invoke(householdNumber: String) : Result&lt;Unit, FormValidationError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:ValidateLlinBrandUseCase.kt$ValidateLlinBrandUseCase$operator fun invoke(llinBrand: String) : Result&lt;Unit, FormValidationError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:ValidateLlinTypeUseCase.kt$ValidateLlinTypeUseCase$operator fun invoke(llinType: String) : Result&lt;Unit, FormValidationError&gt;</ID>
+    <ID>FunctionReturnTypeSpacing:ValidateVillageNameUseCase.kt$ValidateVillageNameUseCase$operator fun invoke(villageName: String) : Result&lt;Unit, FormValidationError&gt;</ID>
+    <ID>FunctionStartOfBodySpacing:Tooltip.kt$@Composable fun Tooltip( isVisible: Boolean, onClick: () -&gt; Unit, onDismiss: () -&gt; Unit, modifier: Modifier = Modifier, buttonText: String? = null, confirmText: String = "Done", iconSize: Dp = MaterialTheme.dimensions.iconSizeSmall, textStyle: TextStyle = MaterialTheme.typography.bodySmall, content: @Composable (() -&gt; Unit) )</ID>
+    <ID>ImportOrdering:ActionButton.kt$import androidx.compose.foundation.background import androidx.compose.foundation.layout.Arrangement import androidx.compose.foundation.layout.Row import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.foundation.layout.height import androidx.compose.foundation.layout.size import androidx.compose.foundation.shape.RoundedCornerShape import androidx.compose.material3.Button import androidx.compose.material3.ButtonDefaults import androidx.compose.material3.Icon import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Text import androidx.compose.runtime.Composable import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.graphics.Brush import androidx.compose.ui.graphics.painter.Painter import androidx.compose.ui.text.TextStyle import androidx.compose.ui.text.font.FontWeight import androidx.compose.ui.platform.testTag import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.dimensions</ID>
+    <ID>ImportOrdering:CacheModule.kt$import com.vci.vectorcamapp.core.data.cache.CurrentSessionCacheImplementation import com.vci.vectorcamapp.core.data.cache.DeviceCacheImplementation import com.vci.vectorcamapp.core.data.cache.DefaultIntakeFieldsCacheImplementation import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache import com.vci.vectorcamapp.core.domain.cache.DeviceCache import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache import dagger.Binds import dagger.Module import dagger.hilt.InstallIn import dagger.hilt.components.SingletonComponent import javax.inject.Singleton</ID>
+    <ID>ImportOrdering:CameraRepository.kt$import android.net.Uri import androidx.camera.core.ImageCapture import androidx.camera.core.ImageProxy import com.vci.vectorcamapp.core.domain.model.Session import com.vci.vectorcamapp.imaging.domain.util.ImagingError import com.vci.vectorcamapp.core.domain.util.Result</ID>
+    <ID>ImportOrdering:CompleteSessionDetailsViewModelTest.kt$import android.content.Context import androidx.lifecycle.SavedStateHandle import app.cash.turbine.test import com.google.common.truth.Truth.assertThat import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError import com.vci.vectorcamapp.complete_session.details.presentation.enums.CompleteSessionDetailsTab import com.vci.vectorcamapp.core.domain.model.Session import com.vci.vectorcamapp.core.domain.model.Site import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite import com.vci.vectorcamapp.core.domain.model.enums.SessionType import com.vci.vectorcamapp.core.domain.cache.DeviceCache import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository import com.vci.vectorcamapp.core.domain.repository.FormRepository import com.vci.vectorcamapp.core.domain.repository.ProgramRepository import com.vci.vectorcamapp.core.domain.repository.SessionRepository import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter import com.vci.vectorcamapp.core.rules.MainDispatcherRule import io.mockk.coEvery import io.mockk.coVerify import io.mockk.every import io.mockk.mockk import kotlinx.coroutines.ExperimentalCoroutinesApi import kotlinx.coroutines.flow.MutableStateFlow import kotlinx.coroutines.launch import kotlinx.coroutines.test.advanceUntilIdle import kotlinx.coroutines.test.runTest import org.junit.Before import org.junit.Rule import org.junit.Test import java.util.UUID</ID>
+    <ID>ImportOrdering:CompleteSessionListScreen.kt$import androidx.compose.animation.core.infiniteRepeatable import androidx.compose.animation.core.rememberInfiniteTransition import androidx.compose.animation.core.tween import androidx.compose.foundation.clickable import androidx.compose.foundation.layout.Box import androidx.compose.foundation.layout.fillMaxSize import androidx.compose.foundation.layout.padding import androidx.compose.foundation.layout.size import androidx.compose.foundation.lazy.items import androidx.compose.material3.FloatingActionButton import androidx.compose.material3.Icon import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Scaffold import androidx.compose.material3.Text import androidx.compose.runtime.Composable import androidx.compose.runtime.getValue import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.res.painterResource import androidx.compose.ui.res.stringResource import androidx.compose.ui.text.style.TextAlign import androidx.compose.ui.tooling.preview.PreviewLightDark import com.vci.vectorcamapp.R import com.vci.vectorcamapp.complete_session.list.presentation.components.CompleteSessionListTile import com.vci.vectorcamapp.core.presentation.search.SearchTextField import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.dimensions import com.vci.vectorcamapp.ui.theme.VectorcamappTheme import androidx.compose.animation.core.LinearEasing import androidx.compose.animation.core.RepeatMode import androidx.compose.animation.core.animateFloat import androidx.compose.ui.draw.rotate import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent</ID>
+    <ID>ImportOrdering:CompleteSessionSpecimensTile.kt$import androidx.compose.foundation.border import androidx.compose.foundation.layout.Arrangement import androidx.compose.foundation.layout.BoxWithConstraints import androidx.compose.foundation.layout.Column import androidx.compose.foundation.layout.Row import androidx.compose.foundation.layout.aspectRatio import androidx.compose.foundation.layout.fillMaxHeight import androidx.compose.foundation.layout.fillMaxSize import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.foundation.layout.height import androidx.compose.foundation.layout.padding import androidx.compose.foundation.layout.size import androidx.compose.material3.Badge import androidx.compose.material3.Icon import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Text import androidx.compose.material3.VerticalDivider import androidx.compose.runtime.Composable import androidx.compose.runtime.remember import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.draw.clip import androidx.compose.ui.graphics.RectangleShape import androidx.compose.ui.layout.ContentScale import androidx.compose.ui.platform.LocalContext import androidx.compose.ui.platform.LocalDensity import androidx.compose.ui.res.painterResource import androidx.compose.ui.res.stringResource import androidx.compose.ui.text.SpanStyle import androidx.compose.ui.text.buildAnnotatedString import androidx.compose.ui.text.withStyle import androidx.compose.ui.unit.IntSize import coil3.compose.AsyncImage import coil3.request.ImageRequest import com.vci.vectorcamapp.R import com.vci.vectorcamapp.core.domain.model.Specimen import com.vci.vectorcamapp.core.domain.model.SpecimenImage import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile import com.vci.vectorcamapp.ui.extensions.color import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.dimensions import com.vci.vectorcamapp.ui.extensions.displayText import java.text.SimpleDateFormat import java.util.Locale import com.vci.vectorcamapp.ui.extensions.zoomPanGesture</ID>
+    <ID>ImportOrdering:DataStoreModule.kt$import android.content.Context import androidx.datastore.core.DataStore import androidx.datastore.core.DataStoreFactory import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler import androidx.datastore.dataStoreFile import com.vci.vectorcamapp.core.data.cache.serializers.DeviceCacheDtoSerializer import com.vci.vectorcamapp.core.data.cache.serializers.CurrentSessionCacheDtoSerializer import com.vci.vectorcamapp.core.data.cache.serializers.DefaultIntakeFieldsCacheDtoSerializer import com.vci.vectorcamapp.core.data.dto.cache.DeviceCacheDto import com.vci.vectorcamapp.core.data.dto.cache.CurrentSessionCacheDto import com.vci.vectorcamapp.core.data.dto.cache.DefaultIntakeFieldsCacheDto import dagger.Module import dagger.Provides import dagger.hilt.InstallIn import dagger.hilt.android.qualifiers.ApplicationContext import dagger.hilt.components.SingletonComponent import kotlinx.coroutines.CoroutineScope import kotlinx.coroutines.Dispatchers import kotlinx.coroutines.SupervisorJob import javax.inject.Singleton</ID>
+    <ID>ImportOrdering:DefaultIntakeFieldsCacheImplementation.kt$import androidx.datastore.core.DataStore import com.vci.vectorcamapp.core.data.dto.cache.DefaultIntakeFieldsCacheDto import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache import kotlinx.coroutines.flow.firstOrNull import javax.inject.Inject</ID>
+    <ID>ImportOrdering:ErrorExtensions.kt$import android.content.Context import com.vci.vectorcamapp.R import com.vci.vectorcamapp.collection_batch.domain.util.error.CollectionBatchFormError import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError import com.vci.vectorcamapp.core.domain.util.Error import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError import com.vci.vectorcamapp.core.domain.util.network.NetworkError import com.vci.vectorcamapp.core.domain.util.room.RoomDbError import com.vci.vectorcamapp.imaging.domain.util.ImagingError import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError import com.vci.vectorcamapp.main.domain.util.MainError import com.vci.vectorcamapp.registration.domain.util.RegistrationError import com.vci.vectorcamapp.intake.domain.util.FormValidationError import com.vci.vectorcamapp.intake.domain.util.IntakeError import com.vci.vectorcamapp.landing.domain.util.LandingError import com.vci.vectorcamapp.settings.domain.util.SettingsError</ID>
+    <ID>ImportOrdering:ImagingViewModelTest.kt$import androidx.compose.ui.geometry.Offset import app.cash.turbine.test import com.google.common.truth.Truth.assertThat import com.vci.vectorcamapp.core.data.room.TransactionHelper import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache import com.vci.vectorcamapp.core.domain.model.Session import com.vci.vectorcamapp.core.domain.model.enums.SessionType import com.vci.vectorcamapp.core.domain.util.Result import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository import com.vci.vectorcamapp.core.domain.repository.SessionRepository import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter import com.vci.vectorcamapp.core.rules.MainDispatcherRule import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase import com.vci.vectorcamapp.imaging.domain.util.ImagingError import android.net.Uri import androidx.lifecycle.SavedStateHandle import androidx.navigation.toRoute import com.vci.vectorcamapp.core.domain.model.Specimen import com.vci.vectorcamapp.navigation.Destination import io.mockk.mockkStatic import io.mockk.unmockkStatic import io.mockk.coEvery import io.mockk.coVerify import io.mockk.every import io.mockk.mockk import kotlinx.coroutines.ExperimentalCoroutinesApi import kotlinx.coroutines.flow.MutableStateFlow import kotlinx.coroutines.launch import kotlinx.coroutines.test.advanceUntilIdle import kotlinx.coroutines.test.runTest import org.junit.After import org.junit.Before import org.junit.Rule import org.junit.Test import java.util.UUID</ID>
+    <ID>ImportOrdering:IncompleteSessionCard.kt$import androidx.compose.foundation.background import androidx.compose.foundation.layout.Arrangement import androidx.compose.foundation.layout.Box import androidx.compose.foundation.layout.Column import androidx.compose.foundation.layout.Row import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.foundation.layout.padding import androidx.compose.foundation.layout.size import androidx.compose.foundation.shape.CircleShape import androidx.compose.material3.HorizontalDivider import androidx.compose.material3.Icon import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Text import androidx.compose.runtime.Composable import androidx.compose.runtime.remember import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.platform.testTag import androidx.compose.ui.platform.LocalContext import androidx.compose.ui.res.painterResource import androidx.compose.ui.res.stringResource import com.vci.vectorcamapp.R import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite import com.vci.vectorcamapp.core.presentation.components.gestures.SwipeToReveal import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile import com.vci.vectorcamapp.incomplete_session.presentation.util.IncompleteSessionTestTags import com.vci.vectorcamapp.core.presentation.extensions.displayText import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.dimensions import java.text.SimpleDateFormat import java.util.Locale</ID>
+    <ID>ImportOrdering:IncompleteSessionScreen.kt$import androidx.compose.foundation.clickable import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.foundation.layout.padding import androidx.compose.foundation.layout.size import androidx.compose.foundation.lazy.itemsIndexed import androidx.compose.material3.AlertDialog import androidx.compose.material3.Button import androidx.compose.material3.ButtonDefaults import androidx.compose.material3.Icon import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Text import androidx.compose.material3.TextButton import androidx.compose.runtime.Composable import androidx.compose.ui.Modifier import androidx.compose.ui.platform.testTag import androidx.compose.ui.res.painterResource import androidx.compose.ui.res.stringResource import androidx.compose.ui.text.style.TextAlign import com.vci.vectorcamapp.R import com.vci.vectorcamapp.core.presentation.search.SearchTextField import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader import com.vci.vectorcamapp.core.presentation.search.SearchHelpTooltipContent import com.vci.vectorcamapp.incomplete_session.presentation.components.IncompleteSessionCard import com.vci.vectorcamapp.incomplete_session.presentation.util.IncompleteSessionTestTags import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.dimensions</ID>
+    <ID>ImportOrdering:IncompleteSessionViewModelTest.kt$import android.net.Uri import android.util.Log import app.cash.turbine.test import com.google.common.truth.Truth.assertThat import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache import com.vci.vectorcamapp.core.domain.model.Session import com.vci.vectorcamapp.core.domain.model.enums.SessionType import com.vci.vectorcamapp.core.domain.repository.SessionRepository import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter import com.vci.vectorcamapp.core.rules.MainDispatcherRule import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository import io.mockk.coEvery import io.mockk.coVerify import io.mockk.every import io.mockk.mockk import io.mockk.mockkStatic import io.mockk.unmockkStatic import kotlinx.coroutines.ExperimentalCoroutinesApi import kotlinx.coroutines.flow.MutableStateFlow import kotlinx.coroutines.test.advanceUntilIdle import kotlinx.coroutines.test.runTest import org.junit.After import org.junit.Before import org.junit.Rule import org.junit.Test import java.util.UUID</ID>
+    <ID>ImportOrdering:IntakeScreen.kt$import androidx.activity.compose.BackHandler import androidx.compose.foundation.clickable import androidx.compose.foundation.layout.Arrangement import androidx.compose.foundation.layout.Column import androidx.compose.foundation.layout.Row import androidx.compose.foundation.layout.Spacer import androidx.compose.foundation.layout.fillMaxSize import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.foundation.layout.height import androidx.compose.foundation.layout.padding import androidx.compose.foundation.layout.size import androidx.compose.foundation.shape.RoundedCornerShape import androidx.compose.material3.Button import androidx.compose.material3.ButtonDefaults import androidx.compose.material3.CircularProgressIndicator import androidx.compose.material3.Icon import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Scaffold import androidx.compose.material3.Surface import androidx.compose.material3.Text import androidx.compose.runtime.Composable import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.platform.LocalContext import androidx.compose.ui.res.painterResource import androidx.compose.ui.res.stringResource import androidx.compose.ui.text.font.FontWeight import androidx.compose.ui.tooling.preview.PreviewLightDark import com.vci.vectorcamapp.R import com.vci.vectorcamapp.core.domain.model.Collector import com.vci.vectorcamapp.core.domain.model.enums.SessionType import com.vci.vectorcamapp.core.presentation.components.button.ActionButton import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField import com.vci.vectorcamapp.core.presentation.components.form.DropdownField import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField import com.vci.vectorcamapp.core.presentation.components.form.ToggleField import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip import com.vci.vectorcamapp.core.presentation.extensions.displayText import com.vci.vectorcamapp.core.presentation.util.error.toString import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator import com.vci.vectorcamapp.intake.domain.util.IntakeError import com.vci.vectorcamapp.intake.presentation.components.CollectionMethodTooltipRow import com.vci.vectorcamapp.intake.presentation.components.DynamicFormField import com.vci.vectorcamapp.intake.presentation.components.IntakeTile import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.dimensions import com.vci.vectorcamapp.intake.presentation.components.PracticeSessionWarningBanner import com.vci.vectorcamapp.ui.theme.VectorcamappTheme import java.util.UUID</ID>
+    <ID>ImportOrdering:IntakeState.kt$import com.vci.vectorcamapp.core.domain.model.Collector import com.vci.vectorcamapp.core.domain.model.Form import com.vci.vectorcamapp.core.domain.model.FormAnswer import com.vci.vectorcamapp.core.domain.model.FormQuestion import com.vci.vectorcamapp.core.domain.model.LocationType import com.vci.vectorcamapp.core.domain.model.Session import com.vci.vectorcamapp.core.domain.model.Site import com.vci.vectorcamapp.core.domain.model.SurveillanceForm import com.vci.vectorcamapp.core.domain.model.enums.SessionType import com.vci.vectorcamapp.intake.presentation.model.IntakeErrors import com.vci.vectorcamapp.intake.domain.util.IntakeError import java.util.UUID</ID>
+    <ID>ImportOrdering:LandingErrorLogger.kt$import android.os.Build import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext import com.vci.vectorcamapp.core.logging.crashlytics.Severity</ID>
+    <ID>ImportOrdering:Migrations.kt$import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_10_11_ADD_CLASSIFICATION_DURATION_COLUMNS import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_11_12_ADD_DETECTION_DURATION_COLUMN import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_12_13_REMOVE_SENTINEL_SITE_AND_MOVE_HOUSE_NUMBER_UNDER_SITE import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_13_14_ADD_COLLECTOR_TABLE import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_14_15_BACKFILL_COLLECTORS import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_2_3_CREATE_SURVEILLANCE_FORM_TABLE import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_3_4_SCHEMA_V2 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_4_5_ADD_SUBMITTED_AT_COLUMNS_TO_SPECIMEN_AND_SURVEILLANCE_FORM_TABLES import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_5_6_ADD_UPLOAD_STATUS_TO_SPECIMEN import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_6_7_BOUNDING_BOX_TO_INFERENCE_RESULT import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_7_8_SPECIMEN_IMAGE_SEPARATION import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_8_9_ADD_SESSION_TYPE_COLUMN import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_9_10_REFACTOR_SPECIMEN_IMAGE_AND_INFERENCE_RESULT_KEYS import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_15_16_ADD_SPECIMEN_SHOULD_PROCESS_FURTHER_COLUMN import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_16_17_ADD_SESSION_COLLECTOR_LAST_TRAINED_ON_COLUMN import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_17_18_ADD_COLLECTOR_LAST_TRAINED_ON_COLUMN import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_18_19_ADD_SESSION_HARDWARE_ID_COLUMN import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_19_20_MAKE_HARDWARE_ID_COLUMN_NULLABLE import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_20_21_CREATE_LOCATION_TYPE_TABLE import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_21_22_UPDATE_SITE_TABLE import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_22_23_MAKE_SITE_LOCATION_COLUMNS_NULLABLE import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_23_24_ADD_LOCATION_TYPE_LEVEL_COLUMN import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_24_25_ADD_DYNAMIC_FORM_TABLES import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_25_26_ADD_IMAGE_METADATA_TO_SPECIMEN_IMAGE import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_26_27_RECREATE_FORM_TABLES import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_27_28_CHANGE_PROGRAM_FORM_VERSION_TO_TEXT import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_28_29_UPDATE_FORM_ANSWER_PRIMARY_KEY import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_29_30_ADD_PREREQUISITE_TO_FORM_QUESTION import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_30_31_ADD_SESSION_UNIT_TABLE</ID>
+    <ID>ImportOrdering:ModifierExtensions.kt$import android.graphics.RectF import androidx.compose.foundation.gestures.rememberTransformableState import androidx.compose.foundation.gestures.transformable import androidx.compose.runtime.mutableFloatStateOf import androidx.compose.runtime.mutableStateOf import androidx.compose.runtime.remember import androidx.compose.ui.Modifier import androidx.compose.ui.composed import androidx.compose.ui.draw.drawBehind import androidx.compose.ui.geometry.Offset import androidx.compose.ui.graphics.Color import androidx.compose.ui.graphics.Paint import androidx.compose.ui.graphics.drawscope.DrawScope import androidx.compose.ui.graphics.toArgb import androidx.compose.ui.unit.Dp import androidx.compose.ui.unit.dp import androidx.compose.ui.graphics.drawscope.drawIntoCanvas import androidx.compose.ui.graphics.graphicsLayer import androidx.compose.ui.graphics.nativeCanvas import androidx.compose.ui.unit.IntSize</ID>
+    <ID>ImportOrdering:NetworkModule.kt$import android.content.Context import com.vci.vectorcamapp.BuildConfig import com.vci.vectorcamapp.core.data.network.connectivity.AndroidConnectivityObserver import com.vci.vectorcamapp.core.data.upload.image.util.TimeoutConfiguredTusClient import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver import dagger.Module import dagger.Provides import dagger.hilt.InstallIn import dagger.hilt.android.qualifiers.ApplicationContext import dagger.hilt.components.SingletonComponent import io.ktor.client.HttpClient import io.ktor.client.engine.android.Android import io.ktor.client.plugins.DefaultRequest import io.ktor.client.plugins.contentnegotiation.ContentNegotiation import io.ktor.client.plugins.logging.ANDROID import io.ktor.client.plugins.logging.LogLevel import io.ktor.client.plugins.logging.Logger import io.ktor.client.plugins.logging.Logging import io.ktor.client.request.bearerAuth import io.ktor.serialization.kotlinx.json.json import io.ktor.http.ContentType import io.ktor.http.contentType import io.tus.android.client.TusPreferencesURLStore import io.tus.java.client.TusClient import kotlinx.serialization.json.Json import javax.inject.Named import javax.inject.Singleton</ID>
+    <ID>ImportOrdering:RegistrationScreen.kt$import androidx.compose.foundation.Image import androidx.compose.foundation.layout.Arrangement import androidx.compose.foundation.layout.Column import androidx.compose.foundation.layout.IntrinsicSize import androidx.compose.foundation.layout.fillMaxSize import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.foundation.layout.height import androidx.compose.foundation.layout.padding import androidx.compose.foundation.text.KeyboardOptions import androidx.compose.foundation.shape.RoundedCornerShape import androidx.compose.material3.AlertDialog import androidx.compose.material3.Button import androidx.compose.material3.ButtonDefaults import androidx.compose.material3.Card import androidx.compose.material3.CardDefaults import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Icon import androidx.compose.material3.IconButton import androidx.compose.material3.Scaffold import androidx.compose.material3.Text import androidx.compose.material3.TextButton import androidx.compose.runtime.Composable import androidx.compose.runtime.getValue import androidx.compose.runtime.mutableStateOf import androidx.compose.runtime.remember import androidx.compose.runtime.setValue import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.graphics.Color import androidx.compose.ui.layout.ContentScale import androidx.compose.ui.text.input.PasswordVisualTransformation import androidx.compose.ui.text.input.VisualTransformation import androidx.compose.ui.text.input.KeyboardType import androidx.compose.ui.res.painterResource import androidx.compose.ui.res.stringResource import androidx.compose.ui.tooling.preview.PreviewLightDark import com.vci.vectorcamapp.R import com.vci.vectorcamapp.core.presentation.components.button.ActionButton import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField import com.vci.vectorcamapp.core.presentation.components.form.DropdownField import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField import com.vci.vectorcamapp.core.presentation.components.gestures.PullToRefresh import com.vci.vectorcamapp.registration.domain.model.RegistrationDropdownOptions import com.vci.vectorcamapp.registration.presentation.util.RegistrationTestTags import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.customShadow import com.vci.vectorcamapp.ui.extensions.dimensions import com.vci.vectorcamapp.ui.theme.VectorcamappTheme</ID>
+    <ID>ImportOrdering:RegistrationViewModel.kt$import android.os.Build import androidx.lifecycle.viewModelScope import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto import com.vci.vectorcamapp.core.data.mappers.toDomain import com.vci.vectorcamapp.core.data.room.TransactionHelper import com.vci.vectorcamapp.core.data.util.sortByHierarchy import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache import com.vci.vectorcamapp.core.domain.cache.DeviceCache import com.vci.vectorcamapp.core.domain.model.Device import com.vci.vectorcamapp.core.domain.model.Program import com.vci.vectorcamapp.core.domain.network.api.FormDataSource import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource import com.vci.vectorcamapp.core.domain.network.api.SiteDataSource import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver import com.vci.vectorcamapp.core.domain.repository.CollectorRepository import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository import com.vci.vectorcamapp.core.domain.repository.FormRepository import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository import com.vci.vectorcamapp.core.domain.repository.ProgramRepository import com.vci.vectorcamapp.core.domain.repository.SiteRepository import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases import com.vci.vectorcamapp.core.domain.util.Result import com.vci.vectorcamapp.core.domain.util.errorOrNull import com.vci.vectorcamapp.core.domain.util.network.NetworkError import com.vci.vectorcamapp.core.domain.util.onError import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics import com.vci.vectorcamapp.core.presentation.CoreViewModel import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter import com.vci.vectorcamapp.registration.domain.util.RegistrationError import com.vci.vectorcamapp.registration.logging.RegistrationErrorLogger import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors import dagger.hilt.android.lifecycle.HiltViewModel import kotlinx.coroutines.channels.Channel import kotlinx.coroutines.flow.MutableStateFlow import kotlinx.coroutines.flow.SharingStarted import kotlinx.coroutines.flow.StateFlow import kotlinx.coroutines.flow.combine import kotlinx.coroutines.flow.onStart import kotlinx.coroutines.flow.receiveAsFlow import kotlinx.coroutines.flow.stateIn import kotlinx.coroutines.flow.update import kotlinx.coroutines.launch import javax.inject.Inject</ID>
+    <ID>ImportOrdering:RemoteSpecimenImageDataSource.kt$import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageRequestDto import com.vci.vectorcamapp.core.data.mappers.toImageMetadataDto import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageResponseDto import com.vci.vectorcamapp.core.data.dto.specimen_image.SpecimenImageDto import com.vci.vectorcamapp.core.data.network.constructUrl import com.vci.vectorcamapp.core.data.network.safeCall import com.vci.vectorcamapp.core.domain.model.InferenceResult import com.vci.vectorcamapp.core.domain.model.SpecimenImage import com.vci.vectorcamapp.core.domain.network.api.SpecimenImageDataSource import com.vci.vectorcamapp.core.domain.util.Result import com.vci.vectorcamapp.core.domain.util.network.NetworkError import io.ktor.client.HttpClient import io.ktor.client.request.get import io.ktor.client.request.post import io.ktor.client.request.setBody import javax.inject.Inject</ID>
+    <ID>ImportOrdering:ScreenHeader.kt$import androidx.compose.ui.geometry.Offset import androidx.compose.ui.graphics.Brush import com.vci.vectorcamapp.core.presentation.util.ScreenHeaderTestTags import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.dimensions import com.vci.vectorcamapp.ui.theme.screenHeightFraction import androidx.compose.foundation.background import androidx.compose.foundation.layout.Arrangement import androidx.compose.foundation.layout.Box import androidx.compose.foundation.layout.Column import androidx.compose.foundation.layout.Row import androidx.compose.foundation.layout.Spacer import androidx.compose.foundation.layout.fillMaxSize import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.foundation.layout.height import androidx.compose.foundation.layout.padding import androidx.compose.foundation.lazy.LazyColumn import androidx.compose.foundation.lazy.LazyListScope import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Text import androidx.compose.runtime.Composable import androidx.compose.ui.Modifier import androidx.compose.ui.platform.testTag</ID>
+    <ID>ImportOrdering:SearchHelpTooltipContent.kt$import androidx.compose.foundation.layout.Column import androidx.compose.foundation.layout.Arrangement import androidx.compose.foundation.layout.padding import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Text import androidx.compose.runtime.Composable import androidx.compose.ui.Modifier import androidx.compose.ui.text.font.FontWeight import androidx.compose.ui.res.stringResource import com.vci.vectorcamapp.R import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.dimensions</ID>
+    <ID>ImportOrdering:SearchTextField.kt$import androidx.compose.foundation.layout.padding import androidx.compose.foundation.text.KeyboardActions import androidx.compose.foundation.text.KeyboardOptions import androidx.compose.material3.MaterialTheme import androidx.compose.runtime.Composable import androidx.compose.ui.Modifier import androidx.compose.ui.platform.LocalSoftwareKeyboardController import androidx.compose.ui.text.input.ImeAction import androidx.compose.ui.res.stringResource import com.vci.vectorcamapp.R import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip import com.vci.vectorcamapp.ui.extensions.dimensions</ID>
+    <ID>ImportOrdering:SessionDao.kt$import android.net.Uri import androidx.room.Dao import androidx.room.Delete import androidx.room.Query import androidx.room.Transaction import androidx.room.Upsert import com.vci.vectorcamapp.core.data.room.entities.SessionEntity import com.vci.vectorcamapp.core.data.room.entities.relations.SessionAndSurveillanceFormRelation import com.vci.vectorcamapp.core.data.room.entities.relations.SessionAndSiteRelation import kotlinx.coroutines.flow.Flow import java.util.UUID</ID>
+    <ID>ImportOrdering:SessionRepository.kt$import android.net.Uri import com.vci.vectorcamapp.core.domain.model.Session import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSurveillanceForm import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite import com.vci.vectorcamapp.core.domain.util.Result import com.vci.vectorcamapp.core.domain.util.room.RoomDbError import kotlinx.coroutines.flow.Flow import java.util.UUID</ID>
+    <ID>ImportOrdering:SessionRepositoryImplementation.kt$import android.net.Uri import com.vci.vectorcamapp.core.data.mappers.toDomain import com.vci.vectorcamapp.core.data.mappers.toEntity import com.vci.vectorcamapp.core.data.room.dao.SessionDao import com.vci.vectorcamapp.core.domain.model.Session import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSurveillanceForm import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite import com.vci.vectorcamapp.core.domain.repository.SessionRepository import com.vci.vectorcamapp.core.domain.util.Result import com.vci.vectorcamapp.core.domain.util.room.RoomDbError import kotlinx.coroutines.flow.Flow import kotlinx.coroutines.flow.map import java.util.UUID import javax.inject.Inject</ID>
+    <ID>ImportOrdering:Tooltip.kt$import androidx.compose.foundation.clickable import androidx.compose.foundation.layout.Column import androidx.compose.foundation.layout.Row import androidx.compose.foundation.layout.Spacer import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.foundation.layout.padding import androidx.compose.foundation.layout.size import androidx.compose.material3.AlertDialog import androidx.compose.material3.Icon import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Text import androidx.compose.material3.TextButton import androidx.compose.runtime.Composable import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.res.painterResource import androidx.compose.ui.text.TextStyle import androidx.compose.ui.unit.Dp import androidx.compose.ui.res.stringResource import com.vci.vectorcamapp.R import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.dimensions</ID>
+    <ID>ImportOrdering:ValidateFormAnswersUseCase.kt$import com.vci.vectorcamapp.core.domain.model.FormAnswer import com.vci.vectorcamapp.core.domain.util.Result import com.vci.vectorcamapp.core.domain.model.FormQuestion import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator import com.vci.vectorcamapp.intake.domain.util.FormValidationError import javax.inject.Inject</ID>
+    <ID>ImportOrdering:VectorCamAnalytics.kt$import android.content.Context import android.content.Intent import android.content.IntentFilter import android.net.ConnectivityManager import android.net.NetworkCapabilities import android.os.BatteryManager import android.os.Build import android.os.Bundle import android.os.Environment import android.os.StatFs import com.google.firebase.analytics.FirebaseAnalytics import timber.log.Timber import com.vci.vectorcamapp.BuildConfig import com.vci.vectorcamapp.core.domain.model.Device import java.io.File import java.time.Instant import java.time.ZoneOffset import java.time.temporal.WeekFields import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics</ID>
+    <ID>ImportOrdering:safeCall.kt$import com.vci.vectorcamapp.core.domain.util.network.NetworkError import com.vci.vectorcamapp.core.domain.util.Result import io.ktor.client.statement.HttpResponse import io.ktor.util.network.UnresolvedAddressException import kotlinx.coroutines.ensureActive import kotlinx.serialization.SerializationException import java.net.UnknownHostException import kotlin.coroutines.coroutineContext</ID>
+    <ID>LargeClass:ImagingViewModel.kt$ImagingViewModel : CoreViewModel</ID>
+    <ID>LargeClass:IntakeViewModel.kt$IntakeViewModel : CoreViewModel</ID>
+    <ID>LargeClass:MetadataUploadWorker.kt$MetadataUploadWorker : CoroutineWorker</ID>
+    <ID>LongMethod:CapturedSpecimenTile.kt$@Composable fun CapturedSpecimenTile( specimen: Specimen, specimenImage: SpecimenImage, inferenceResult: InferenceResult?, modifier: Modifier = Modifier, badgeText: String? = null, )</ID>
+    <ID>LongMethod:CollectionBatchFormViewModel.kt$CollectionBatchFormViewModel$fun onAction(action: CollectionBatchFormAction)</ID>
+    <ID>LongMethod:CollectionBatchListScreen.kt$@Composable fun CollectionBatchListScreen( state: CollectionBatchListState, onAction: (CollectionBatchListAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:CompleteSessionForm.kt$@Composable fun CompleteSessionForm( session: Session, site: Site, surveillanceForm: SurveillanceForm?, form: Form?, sessionScopedFormAnswersAndQuestions: List&lt;FormAnswerAndQuestion&gt;, sessionUnits: List&lt;SessionUnit&gt;, sessionUnitAnswersAndQuestionsByUnitId: Map&lt;UUID, List&lt;FormAnswerAndQuestion&gt;&gt;, bucketNameBySessionUnitId: Map&lt;UUID, String&gt;, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:CompleteSessionListScreen.kt$@Composable fun CompleteSessionListScreen( state: CompleteSessionListState, onAction: (CompleteSessionListAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:CompleteSessionListTile.kt$@Composable fun CompleteSessionListTile( sessionAndSite: SessionAndSite, sessionUploadProgress: SessionUploadProgress, onClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:CompleteSessionSpecimensTile.kt$@Composable fun CompleteSessionSpecimensTile( specimen: Specimen, specimenImage: SpecimenImage, modifier: Modifier = Modifier, badgeText: String? = null, batchName: String? = null, )</ID>
+    <ID>LongMethod:DropdownField.kt$@Composable fun &lt;T&gt; DropdownField( options: List&lt;T&gt;, selectedOption: T?, onOptionSelected: (T) -&gt; Unit, modifier: Modifier = Modifier, label: String? = null, error: Error? = null, menuTestTag: String? = null, menuItemTestTagPrefix: String? = null, required: Boolean = false, enabled: Boolean = true, itemContent: @Composable (T) -&gt; Unit, )</ID>
+    <ID>LongMethod:ErrorExtensions.kt$fun Error.toString(context: Context): String</ID>
+    <ID>LongMethod:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun uploadSingleImage( task: ImageUploadTask, sessionId: UUID ): DomainResult&lt;String, NetworkError&gt;</ID>
+    <ID>LongMethod:ImagingScreen.kt$@Composable fun ImagingScreen( state: ImagingState, onAction: (ImagingAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ImagingViewModel.kt$ImagingViewModel$fun onAction(action: ImagingAction)</ID>
+    <ID>LongMethod:IncompleteSessionCard.kt$@Composable fun IncompleteSessionCard( sessionAndSite: SessionAndSite, onClick: () -&gt; Unit, onDelete: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:IncompleteSessionScreen.kt$@Composable fun IncompleteSessionScreen( state: IncompleteSessionState, onAction: (IncompleteSessionAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:IntakeScreen.kt$@Composable fun IntakeScreen( state: IntakeState, onAction: (IntakeAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:IntakeViewModel.kt$IntakeViewModel$fun onAction(action: IntakeAction)</ID>
+    <ID>LongMethod:IntakeViewModel.kt$IntakeViewModel$private fun loadFormDetails()</ID>
+    <ID>LongMethod:LandingScreen.kt$@Composable fun LandingScreen( state: LandingState, onAction: (LandingAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:MetadataUploadWorker.kt$MetadataUploadWorker$override suspend fun doWork(): WorkerResult</ID>
+    <ID>LongMethod:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSpecimenImageAndInferenceResultIfNeeded( localSpecimenImage: SpecimenImage, localInferenceResult: InferenceResult?, syncedSpecimen: Specimen, syncedLocalSessionId: UUID ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>LongMethod:Migration_3_4_Schema_V2.kt$&lt;no name provided&gt;$override fun migrate(db: SupportSQLiteDatabase)</ID>
+    <ID>LongMethod:NavGraph.kt$@Composable fun NavGraph(startDestination: Destination)</ID>
+    <ID>LongMethod:PermissionScreen.kt$@Composable fun PermissionScreen( state: MainState, onAction: (MainAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:RegistrationScreen.kt$@Composable fun RegistrationScreen( state: RegistrationState, onAction: (RegistrationAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:RegistrationViewModel.kt$RegistrationViewModel$fun onAction(action: RegistrationAction)</ID>
+    <ID>LongMethod:SettingsScreen.kt$@Composable fun SettingsScreen( state: SettingsState, onAction: (SettingsAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:SettingsViewModel.kt$SettingsViewModel$fun onAction(action: SettingsAction)</ID>
+    <ID>LongParameterList:CollectionBatchListViewModel.kt$CollectionBatchListViewModel$( savedStateHandle: SavedStateHandle, private val deviceCache: DeviceCache, private val currentSessionCache: CurrentSessionCache, private val sessionRepository: SessionRepository, private val sessionUnitRepository: SessionUnitRepository, private val specimenImageRepository: SpecimenImageRepository, private val programRepository: ProgramRepository, private val formRepository: FormRepository, private val formQuestionRepository: FormQuestionRepository, private val formAnswerRepository: FormAnswerRepository, private val workManagerRepository: WorkManagerRepository, errorMessageEmitter: ErrorMessageEmitter )</ID>
+    <ID>LongParameterList:CollectorDialog.kt$( collector: Collector, collectorNameError: CollectorValidationError?, collectorTitleError: CollectorValidationError?, collectorLastTrainedOnError: CollectorValidationError?, onNameChange: (String) -&gt; Unit, onTitleChange: (String) -&gt; Unit, onLastTrainedOnChange: (Long) -&gt; Unit, onDismiss: () -&gt; Unit, onSave: () -&gt; Unit, onDelete: () -&gt; Unit, onConfirmDelete: () -&gt; Unit, onDismissDeleteDialog: () -&gt; Unit, isEditDialogVisible: Boolean, isDeleteDialogVisible: Boolean, modifier: Modifier = Modifier )</ID>
+    <ID>LongParameterList:IntakeViewModel.kt$IntakeViewModel$( private val savedStateHandle: SavedStateHandle, private val intakeValidationUseCases: IntakeValidationUseCases, private val deviceCache: DeviceCache, private val currentSessionCache: CurrentSessionCache, private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache, private val siteRepository: SiteRepository, private val locationTypeRepository: LocationTypeRepository, private val surveillanceFormRepository: SurveillanceFormRepository, private val sessionRepository: SessionRepository, private val sessionUnitRepository: SessionUnitRepository, private val locationRepository: LocationRepository, private val collectorRepository: CollectorRepository, private val programRepository: ProgramRepository, private val formAnswerRepository: FormAnswerRepository, errorMessageEmitter: ErrorMessageEmitter, )</ID>
+    <ID>LongParameterList:MetadataUploadWorker.kt$MetadataUploadWorker$( @Assisted private val context: Context, @Assisted private val workerParams: WorkerParameters, private val deviceCache: DeviceCache, private val programRepository: ProgramRepository, private val transactionHelper: TransactionHelper, private val sessionRepository: SessionRepository, private val sessionUnitRepository: SessionUnitRepository, private val surveillanceFormRepository: SurveillanceFormRepository, private val specimenRepository: SpecimenRepository, private val specimenImageRepository: SpecimenImageRepository, private val inferenceResultRepository: InferenceResultRepository, private val deviceDataSource: DeviceDataSource, private val sessionDataSource: SessionDataSource, private val sessionUnitDataSource: SessionUnitDataSource, private val surveillanceFormDataSource: SurveillanceFormDataSource, private val specimenDataSource: SpecimenDataSource, private val specimenImageDataSource: SpecimenImageDataSource, private val formAnswerDataSource: FormAnswerDataSource, private val formAnswerRepository: FormAnswerRepository, private val formRepository: FormRepository, private val formQuestionRepository: FormQuestionRepository )</ID>
+    <ID>LongParameterList:RegistrationViewModel.kt$RegistrationViewModel$( private val transactionHelper: TransactionHelper, private val deviceCache: DeviceCache, private val currentSessionCache: CurrentSessionCache, private val collectorRepository: CollectorRepository, private val collectorValidationUseCases: CollectorValidationUseCases, private val programDataSource: ProgramDataSource, private val programRepository: ProgramRepository, private val siteDataSource: SiteDataSource, private val siteRepository: SiteRepository, private val locationTypeDataSource: LocationTypeDataSource, private val locationTypeRepository: LocationTypeRepository, private val formDataSource: FormDataSource, private val formRepository: FormRepository, private val formQuestionRepository: FormQuestionRepository, connectivityObserver: ConnectivityObserver, errorMessageEmitter: ErrorMessageEmitter, )</ID>
+    <ID>LongParameterList:SettingsViewModel.kt$SettingsViewModel$( private val transactionHelper: TransactionHelper, private val deviceCache: DeviceCache, private val programRepository: ProgramRepository, private val collectorRepository: CollectorRepository, private val collectorValidationUseCases: CollectorValidationUseCases, private val locationTypeDataSource: LocationTypeDataSource, private val siteDataSource: SiteDataSource, private val formDataSource: FormDataSource, private val locationTypeRepository: LocationTypeRepository, private val siteRepository: SiteRepository, private val sessionRepository: SessionRepository, private val formRepository: FormRepository, private val formQuestionRepository: FormQuestionRepository, private val defaultIntakeFieldsCache: DefaultIntakeFieldsCache, private val currentSessionCache: CurrentSessionCache, private val appLocaleManager: AppLocaleManager, connectivityObserver: ConnectivityObserver, errorMessageEmitter: ErrorMessageEmitter, )</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0x80000000</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF00796B</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF0277BD</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF10B981</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF1A1A1A</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF34D399</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF43A047</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF4DBD8C</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF57C88B</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF64748B</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF6DCB81</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF6EDB81</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFF828282</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFB6EAD8</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFD1FAE5</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFD3F5DF</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFD5D5D5</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFD9D9D9</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFE0F2F1</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFE54848</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFF2FDF5</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFF7F8F7</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFFFA600</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFFFF3CD</ID>
+    <ID>MagicNumber:Colors.kt$Colors$0xFFFFFFFF</ID>
+    <ID>MagicNumber:CompleteSessionSpecimens.kt$0.9f</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$12</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$14</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$16</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$18</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$24</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$240</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$32</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$36</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$48</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$6</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$60</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$64</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$72</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$8</ID>
+    <ID>MagicNumber:Dimensions.kt$Dimensions$84</ID>
+    <ID>MagicNumber:DropdownField.kt$0.3f</ID>
+    <ID>MagicNumber:ImageProxyExtensions.kt$180</ID>
+    <ID>MagicNumber:ImageProxyExtensions.kt$270</ID>
+    <ID>MagicNumber:ImageProxyExtensions.kt$90</ID>
+    <ID>MagicNumber:ImagingViewModel.kt$ImagingViewModel$2_000</ID>
+    <ID>MagicNumber:ImagingViewModel.kt$ImagingViewModel$5_000</ID>
+    <ID>MagicNumber:InferenceRepositoryImplementation.kt$InferenceRepositoryImplementation$255.0</ID>
+    <ID>MagicNumber:SettingsScreen.kt$0.5f</ID>
+    <ID>MagicNumber:SplashScreen.kt$0.8f</ID>
+    <ID>MagicNumber:VectorCamAnalytics.kt$VectorCamAnalytics$1024</ID>
+    <ID>MagicNumber:VectorCamCrashlytics.kt$VectorCamCrashlytics$1024</ID>
+    <ID>MagicNumber:VectorCamCrashlytics.kt$VectorCamCrashlytics$64</ID>
+    <ID>MagicNumber:WindowInfo.kt$600</ID>
+    <ID>MagicNumber:WindowInfo.kt$840</ID>
+    <ID>MagicNumber:responseToResult.kt$200</ID>
+    <ID>MagicNumber:responseToResult.kt$299</ID>
+    <ID>MagicNumber:responseToResult.kt$400</ID>
+    <ID>MagicNumber:responseToResult.kt$404</ID>
+    <ID>MagicNumber:responseToResult.kt$408</ID>
+    <ID>MagicNumber:responseToResult.kt$409</ID>
+    <ID>MagicNumber:responseToResult.kt$429</ID>
+    <ID>MagicNumber:responseToResult.kt$499</ID>
+    <ID>MagicNumber:responseToResult.kt$500</ID>
+    <ID>MagicNumber:responseToResult.kt$599</ID>
+    <ID>MatchingDeclarationName:WindowInfo.kt$WindowType</ID>
+    <ID>MaximumLineLength:AnimatedArrowIcon.kt$ </ID>
+    <ID>MaximumLineLength:CapturedSpecimenTile.kt$ </ID>
+    <ID>MaximumLineLength:CollectionBatchListScreen.kt$ </ID>
+    <ID>MaximumLineLength:CollectorDialog.kt$ </ID>
+    <ID>MaximumLineLength:CompleteSessionForm.kt$ </ID>
+    <ID>MaximumLineLength:CompleteSessionListScreen.kt$ </ID>
+    <ID>MaximumLineLength:CompleteSessionListTile.kt$ </ID>
+    <ID>MaximumLineLength:CompleteSessionSpecimensTile.kt$ </ID>
+    <ID>MaximumLineLength:DropdownField.kt$ </ID>
+    <ID>MaximumLineLength:ImageUploadWorker.kt$ImageUploadWorker$ </ID>
+    <ID>MaximumLineLength:ImagingScreen.kt$ </ID>
+    <ID>MaximumLineLength:ImagingViewModel.kt$ImagingViewModel$ </ID>
+    <ID>MaximumLineLength:IncompleteSessionCard.kt$ </ID>
+    <ID>MaximumLineLength:IncompleteSessionErrorLogger.kt$IncompleteSessionErrorLogger$ </ID>
+    <ID>MaximumLineLength:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$ </ID>
+    <ID>MaximumLineLength:IntakeScreen.kt$ </ID>
+    <ID>MaximumLineLength:IntakeViewModel.kt$IntakeViewModel$ </ID>
+    <ID>MaximumLineLength:MainViewModel.kt$MainViewModel$ </ID>
+    <ID>MaximumLineLength:MetadataUploadWorker.kt$MetadataUploadWorker$ </ID>
+    <ID>MaximumLineLength:PermissionScreen.kt$ </ID>
+    <ID>MaximumLineLength:RegistrationScreen.kt$ </ID>
+    <ID>MaximumLineLength:SettingsInfoTile.kt$ </ID>
+    <ID>MaximumLineLength:SettingsScreen.kt$ </ID>
+    <ID>MaximumLineLength:SpecimenDao.kt$SpecimenDao$ </ID>
+    <ID>MaximumLineLength:UploadForegroundService.kt$UploadForegroundService$ </ID>
+    <ID>MaximumLineLength:VectorCamAnalytics.kt$VectorCamAnalytics$ </ID>
+    <ID>MultiLineIfElse:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$null</ID>
+    <ID>MultiLineIfElse:CollectorDialog.kt$stringResource(R.string.settings_title_add_profile)</ID>
+    <ID>MultiLineIfElse:CollectorDialog.kt$stringResource(R.string.settings_title_delete_profile)</ID>
+    <ID>MultiLineIfElse:CollectorDialog.kt$stringResource(R.string.settings_title_edit_profile)</ID>
+    <ID>MultiLineIfElse:CompleteSessionDetailsViewModel.kt$CompleteSessionDetailsViewModel$emptyMap()</ID>
+    <ID>MultiLineIfElse:CompleteSessionDetailsViewModel.kt$CompleteSessionDetailsViewModel$flowOf(emptyList())</ID>
+    <ID>MultiLineIfElse:CompleteSessionDetailsViewModel.kt$CompleteSessionDetailsViewModel$specimenRepository.observeSpecimenImagesAndInferenceResultsBySessionScope( sessionId, null )</ID>
+    <ID>MultiLineIfElse:CompleteSessionDetailsViewModel.kt$CompleteSessionDetailsViewModel$specimensWithImagesAndInferenceResults.associate { specimenWithImagesAndInferenceResults -&gt; specimenWithImagesAndInferenceResults.specimen.id to specimenRepository.getSessionUnitIdForSpecimen( specimenId = specimenWithImagesAndInferenceResults.specimen.id, sessionId = sessionId, ) }</ID>
+    <ID>MultiLineIfElse:CompleteSessionListScreen.kt$painterResource( id = R.drawable.ic_cloud_upload )</ID>
+    <ID>MultiLineIfElse:CompleteSessionListScreen.kt$painterResource(id = R.drawable.ic_refresh)</ID>
+    <ID>MultiLineIfElse:CompleteSessionListScreen.kt$stringResource(R.string.complete_session_body_empty)</ID>
+    <ID>MultiLineIfElse:CompleteSessionListScreen.kt$stringResource(R.string.complete_session_body_no_results)</ID>
+    <ID>MultiLineIfElse:IncompleteSessionScreen.kt$stringResource(R.string.incomplete_session_body_empty)</ID>
+    <ID>MultiLineIfElse:IncompleteSessionScreen.kt$stringResource(R.string.incomplete_session_body_no_results)</ID>
+    <ID>MultiLineIfElse:IntakeScreen.kt$""</ID>
+    <ID>MultiLineIfElse:IntakeScreen.kt$IntakeDropdownOptions.CollectionMethodOption.OTHER</ID>
+    <ID>MultiLineIfElse:IntakeScreen.kt$IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod }</ID>
+    <ID>MultiLineIfElse:IntakeScreen.kt$IntakeDropdownOptions.SpecimenConditionOption.OTHER</ID>
+    <ID>MultiLineIfElse:IntakeScreen.kt$IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition }</ID>
+    <ID>MultiLineIfElse:IntakeScreen.kt$monthsSinceIrs.toString()</ID>
+    <ID>MultiLineIfElse:IntakeScreen.kt$numPeopleSleptUnderLlin.toString()</ID>
+    <ID>MultiLineIfElse:IntakeScreen.kt$surveillanceForm.numLlinsAvailable.toString()</ID>
+    <ID>MultiLineIfElse:IntakeScreen.kt$surveillanceForm.numPeopleSleptInHouse.toString()</ID>
+    <ID>MultiLineIfElse:IntakeViewModel.kt$IntakeViewModel$null</ID>
+    <ID>MultiLineIfElse:RegistrationScreen.kt$R.drawable.ic_visibility</ID>
+    <ID>MultiLineIfElse:RegistrationScreen.kt$R.drawable.ic_visibility_off</ID>
+    <ID>MultiLineIfElse:SegmentedTabBar.kt$Brush.horizontalGradient( listOf( MaterialTheme.colors.segmentedTabBarActiveGradientLeft, MaterialTheme.colors.segmentedTabBarActiveGradientRight ) )</ID>
+    <ID>MultiLineIfElse:SegmentedTabBar.kt$Brush.horizontalGradient( listOf( MaterialTheme.colors.segmentedTabBarInactive, MaterialTheme.colors.segmentedTabBarInactive ) )</ID>
+    <ID>MultiLineIfElse:SegmentedTabBar.kt$MaterialTheme.colors.segmentedTabBarActiveText</ID>
+    <ID>MultiLineIfElse:SegmentedTabBar.kt$MaterialTheme.colors.segmentedTabBarInactiveText</ID>
+    <ID>MultiLineIfElse:SpecimenImageMapper.kt$null</ID>
+    <ID>MultiLineIfElse:TextEntryField.kt$MaterialTheme.colors.error</ID>
+    <ID>MultiLineIfElse:TextEntryField.kt$MaterialTheme.colors.textPrimary</ID>
+    <ID>MultiLineIfElse:ValidateFormAnswersUseCase.kt$ValidateFormAnswersUseCase$Result.Success(Unit)</ID>
+    <ID>NestedBlockDepth:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$override suspend fun deleteSavedImage(uri: Uri)</ID>
+    <ID>NestedBlockDepth:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun executeUploadLoop( initialUploader: TusUploader, upload: TusUpload, file: File, ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>NestedBlockDepth:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun uploadSingleImage( task: ImageUploadTask, sessionId: UUID ): DomainResult&lt;String, NetworkError&gt;</ID>
+    <ID>NestedBlockDepth:MetadataUploadWorker.kt$MetadataUploadWorker$override suspend fun doWork(): WorkerResult</ID>
+    <ID>NestedBlockDepth:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncDeviceIfNeeded( localDevice: Device, localProgramId: Int ): DomainResult&lt;Device, NetworkError&gt;</ID>
+    <ID>NestedBlockDepth:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSessionIfNeeded( localSession: Session, localSiteId: Int, syncedDeviceId: Int, expectedSpecimens: Int ): DomainResult&lt;Session, NetworkError&gt;</ID>
+    <ID>NestedBlockDepth:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSpecimenIfNeeded( localSpecimen: Specimen, syncedLocalSessionId: UUID, syncedRemoteSessionId: Int, syncedLocalSessionUnitId: UUID?, syncedRemoteSessionUnitId: Int?, expectedImages: Int, ): DomainResult&lt;Specimen, NetworkError&gt;</ID>
+    <ID>NestedBlockDepth:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSpecimenImageAndInferenceResultIfNeeded( localSpecimenImage: SpecimenImage, localInferenceResult: InferenceResult?, syncedSpecimen: Specimen, syncedLocalSessionId: UUID ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>NestedBlockDepth:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSurveillanceFormIfNeeded( localSurveillanceForm: SurveillanceForm, syncedLocalSessionId: UUID, syncedRemoteSessionId: Int ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>NoBlankLineBeforeRbrace:CollectionBatchFormScreen.kt$ </ID>
+    <ID>NoBlankLineBeforeRbrace:FormQuestionPrerequisiteEvaluator.kt$FormQuestionPrerequisiteEvaluator$ </ID>
+    <ID>NoBlankLineBeforeRbrace:ImagingScreen.kt$ </ID>
+    <ID>NoBlankLineBeforeRbrace:Migration_26_27_RecreateFormTables.kt$&lt;no name provided&gt;$ </ID>
+    <ID>NoBlankLineBeforeRbrace:RemoteFormAnswerDataSource.kt$RemoteFormAnswerDataSource$ </ID>
+    <ID>NoConsecutiveBlankLines:CompleteSessionSpecimensTile.kt$ </ID>
+    <ID>NoConsecutiveBlankLines:DeviceCacheImplementation.kt$ </ID>
+    <ID>NoConsecutiveBlankLines:FormDao.kt$ </ID>
+    <ID>NoConsecutiveBlankLines:ImageUploadWorker.kt$ImageUploadWorker$ </ID>
+    <ID>NoConsecutiveBlankLines:ImagingViewModel.kt$ </ID>
+    <ID>NoConsecutiveBlankLines:IntakeScreen.kt$ </ID>
+    <ID>NoConsecutiveBlankLines:IntakeViewModel.kt$IntakeViewModel$ </ID>
+    <ID>NoConsecutiveBlankLines:LandingViewModel.kt$ </ID>
+    <ID>NoConsecutiveBlankLines:LandingViewModelTest.kt$LandingViewModelTest$ </ID>
+    <ID>NoConsecutiveBlankLines:MainActivity.kt$MainActivity$ </ID>
+    <ID>NoConsecutiveBlankLines:MainViewModelTest.kt$MainViewModelTest$ </ID>
+    <ID>NoConsecutiveBlankLines:RegistrationViewModel.kt$RegistrationViewModel$ </ID>
+    <ID>NoConsecutiveBlankLines:SettingsInfoTile.kt$ </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:CollectorDialog.kt$ </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:CompleteSessionDetailsScreen.kt$ </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:CompleteSessionFormTile.kt$ </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:CompleteSessionSpecimensTile.kt$ </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:InferenceRepositoryImplementation.kt$InferenceRepositoryImplementation$ </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:MainActivity.kt$MainActivity$ </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:SegmentedTabBar.kt$ </ID>
+    <ID>NoMultipleSpaces:DefaultIntakeFieldsCacheImplementation.kt$ </ID>
+    <ID>NoMultipleSpaces:VectorCamCrashlytics.kt$VectorCamCrashlytics$ </ID>
+    <ID>NoSemicolons:CompleteSessionDetailsError.kt$CompleteSessionDetailsError.UNKNOWN_ERROR$;</ID>
+    <ID>NoSemicolons:ImagingError.kt$ImagingError.UNKNOWN_ERROR$;</ID>
+    <ID>NoSemicolons:IncompleteSessionError.kt$IncompleteSessionError.UNKNOWN_ERROR$;</ID>
+    <ID>NoSemicolons:IntakeError.kt$IntakeError.UNKNOWN_ERROR$;</ID>
+    <ID>NoSemicolons:MainError.kt$MainError.UNKNOWN_ERROR$;</ID>
+    <ID>NoSemicolons:NetworkError.kt$NetworkError.TUS_PERMANENT_ERROR$;</ID>
+    <ID>NoTrailingSpaces:DynamicFormField.kt$ </ID>
+    <ID>NoTrailingSpaces:InferenceRepositoryImplementation.kt$InferenceRepositoryImplementation$ </ID>
+    <ID>NoTrailingSpaces:LandingViewModelTest.kt$LandingViewModelTest$ </ID>
+    <ID>NoTrailingSpaces:MainActivity.kt$MainActivity$ </ID>
+    <ID>NoTrailingSpaces:ProgramRepositoryImplementation.kt$ProgramRepositoryImplementation$ </ID>
+    <ID>NoTrailingSpaces:SpecimenImageRepositoryImplementation.kt$SpecimenImageRepositoryImplementation$ </ID>
+    <ID>NoTrailingSpaces:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$ </ID>
+    <ID>NoUnusedImports:CameraFocusControllerImplementation.kt$com.vci.vectorcamapp.imaging.data.camera.CameraFocusControllerImplementation.kt</ID>
+    <ID>NoUnusedImports:CompleteSessionListDetailRow.kt$com.vci.vectorcamapp.complete_session.list.presentation.components.CompleteSessionListDetailRow.kt</ID>
+    <ID>NoUnusedImports:FormDao.kt$com.vci.vectorcamapp.core.data.room.dao.FormDao.kt</ID>
+    <ID>NoUnusedImports:FormRepository.kt$com.vci.vectorcamapp.core.domain.repository.FormRepository.kt</ID>
+    <ID>NoUnusedImports:FormRepositoryImplementation.kt$com.vci.vectorcamapp.core.data.repository.FormRepositoryImplementation.kt</ID>
+    <ID>NoUnusedImports:IncompleteSessionListDetailRow.kt$com.vci.vectorcamapp.incomplete_session.presentation.components.IncompleteSessionListDetailRow.kt</ID>
+    <ID>NoUnusedImports:LandingViewModelTest.kt$com.vci.vectorcamapp.landing.presentation.LandingViewModelTest.kt</ID>
+    <ID>NoUnusedImports:RemoteSessionUnitDataSource.kt$com.vci.vectorcamapp.core.data.network.api.RemoteSessionUnitDataSource.kt</ID>
+    <ID>NoUnusedImports:SessionUnitDataSource.kt$com.vci.vectorcamapp.core.domain.network.api.SessionUnitDataSource.kt</ID>
+    <ID>NoUnusedImports:SettingsScreen.kt$com.vci.vectorcamapp.settings.presentation.SettingsScreen.kt</ID>
+    <ID>NoUnusedImports:SettingsViewModel.kt$com.vci.vectorcamapp.settings.presentation.SettingsViewModel.kt</ID>
+    <ID>NoUnusedImports:SpecimenImageDao.kt$com.vci.vectorcamapp.core.data.room.dao.SpecimenImageDao.kt</ID>
+    <ID>NoUnusedImports:ToggleField.kt$com.vci.vectorcamapp.core.presentation.components.form.ToggleField.kt</ID>
+    <ID>PackageName:CollectionBatchCard.kt$package com.vci.vectorcamapp.collection_batch.list.presentation.components</ID>
+    <ID>PackageName:CollectionBatchFormAction.kt$package com.vci.vectorcamapp.collection_batch.form.presentation</ID>
+    <ID>PackageName:CollectionBatchFormError.kt$package com.vci.vectorcamapp.collection_batch.domain.util.error</ID>
+    <ID>PackageName:CollectionBatchFormErrors.kt$package com.vci.vectorcamapp.collection_batch.form.presentation.model</ID>
+    <ID>PackageName:CollectionBatchFormEvent.kt$package com.vci.vectorcamapp.collection_batch.form.presentation</ID>
+    <ID>PackageName:CollectionBatchFormScreen.kt$package com.vci.vectorcamapp.collection_batch.form.presentation</ID>
+    <ID>PackageName:CollectionBatchFormState.kt$package com.vci.vectorcamapp.collection_batch.form.presentation</ID>
+    <ID>PackageName:CollectionBatchFormTile.kt$package com.vci.vectorcamapp.collection_batch.form.presentation.components</ID>
+    <ID>PackageName:CollectionBatchFormValidationUseCases.kt$package com.vci.vectorcamapp.collection_batch.domain.use_cases</ID>
+    <ID>PackageName:CollectionBatchFormViewModel.kt$package com.vci.vectorcamapp.collection_batch.form.presentation</ID>
+    <ID>PackageName:CollectionBatchIdentityResolver.kt$package com.vci.vectorcamapp.collection_batch.domain.util</ID>
+    <ID>PackageName:CollectionBatchListAction.kt$package com.vci.vectorcamapp.collection_batch.list.presentation</ID>
+    <ID>PackageName:CollectionBatchListEvent.kt$package com.vci.vectorcamapp.collection_batch.list.presentation</ID>
+    <ID>PackageName:CollectionBatchListScreen.kt$package com.vci.vectorcamapp.collection_batch.list.presentation</ID>
+    <ID>PackageName:CollectionBatchListState.kt$package com.vci.vectorcamapp.collection_batch.list.presentation</ID>
+    <ID>PackageName:CollectionBatchListViewModel.kt$package com.vci.vectorcamapp.collection_batch.list.presentation</ID>
+    <ID>PackageName:CollectionMethodWorkflow.kt$package com.vci.vectorcamapp.intake.domain.strategy.collection_method</ID>
+    <ID>PackageName:CollectionMethodWorkflowFactory.kt$package com.vci.vectorcamapp.intake.domain.strategy.collection_method</ID>
+    <ID>PackageName:CollectorValidationUseCases.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageName:CollectorValidationUseCasesTest.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageName:CompleteSessionDetailsAction.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageName:CompleteSessionDetailsError.kt$package com.vci.vectorcamapp.complete_session.details.domain.util</ID>
+    <ID>PackageName:CompleteSessionDetailsEvent.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageName:CompleteSessionDetailsScreen.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageName:CompleteSessionDetailsState.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageName:CompleteSessionDetailsTab.kt$package com.vci.vectorcamapp.complete_session.details.presentation.enums</ID>
+    <ID>PackageName:CompleteSessionDetailsViewModel.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageName:CompleteSessionDetailsViewModelTest.kt$package com.vci.vectorcamapp.complete_session.details.presentation</ID>
+    <ID>PackageName:CompleteSessionForm.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components.form</ID>
+    <ID>PackageName:CompleteSessionFormTile.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components.form</ID>
+    <ID>PackageName:CompleteSessionListAction.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageName:CompleteSessionListDetailRow.kt$package com.vci.vectorcamapp.complete_session.list.presentation.components</ID>
+    <ID>PackageName:CompleteSessionListEvent.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageName:CompleteSessionListScreen.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageName:CompleteSessionListState.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageName:CompleteSessionListTile.kt$package com.vci.vectorcamapp.complete_session.list.presentation.components</ID>
+    <ID>PackageName:CompleteSessionListViewModel.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageName:CompleteSessionListViewModelTest.kt$package com.vci.vectorcamapp.complete_session.list.presentation</ID>
+    <ID>PackageName:CompleteSessionSpecimens.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components.specimens</ID>
+    <ID>PackageName:CompleteSessionSpecimensTile.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components.specimens</ID>
+    <ID>PackageName:DuplicateIdentityWarningBanner.kt$package com.vci.vectorcamapp.collection_batch.form.presentation.components</ID>
+    <ID>PackageName:FormAnswerDto.kt$package com.vci.vectorcamapp.core.data.dto.form_answer</ID>
+    <ID>PackageName:FormPresentWorkflow.kt$package com.vci.vectorcamapp.intake.domain.strategy.program_form.concrete</ID>
+    <ID>PackageName:FormQuestionDto.kt$package com.vci.vectorcamapp.core.data.dto.form_question</ID>
+    <ID>PackageName:FormQuestionPrerequisiteExpressionDto.kt$package com.vci.vectorcamapp.core.data.dto.form_question</ID>
+    <ID>PackageName:GetAllLocationTypesResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.location_type</ID>
+    <ID>PackageName:GetFormAnswersResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.form_answer</ID>
+    <ID>PackageName:GetSessionUnitsResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.session_unit</ID>
+    <ID>PackageName:ImageMetadataDto.kt$package com.vci.vectorcamapp.core.data.dto.specimen_image</ID>
+    <ID>PackageName:IncompleteSessionAction.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageName:IncompleteSessionCard.kt$package com.vci.vectorcamapp.incomplete_session.presentation.components</ID>
+    <ID>PackageName:IncompleteSessionDeleteBackground.kt$package com.vci.vectorcamapp.incomplete_session.presentation.components</ID>
+    <ID>PackageName:IncompleteSessionError.kt$package com.vci.vectorcamapp.incomplete_session.domain.util</ID>
+    <ID>PackageName:IncompleteSessionErrorLogger.kt$package com.vci.vectorcamapp.incomplete_session.logging</ID>
+    <ID>PackageName:IncompleteSessionEvent.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageName:IncompleteSessionListDetailRow.kt$package com.vci.vectorcamapp.incomplete_session.presentation.components</ID>
+    <ID>PackageName:IncompleteSessionScreen.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageName:IncompleteSessionState.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageName:IncompleteSessionTestTags.kt$package com.vci.vectorcamapp.incomplete_session.presentation.util</ID>
+    <ID>PackageName:IncompleteSessionViewModel.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageName:IncompleteSessionViewModelTest.kt$package com.vci.vectorcamapp.incomplete_session.presentation</ID>
+    <ID>PackageName:InferenceResultDto.kt$package com.vci.vectorcamapp.core.data.dto.inference_result</ID>
+    <ID>PackageName:IntakeValidationUseCases.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:IntakeValidationUseCasesTest.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:LocationTypeDto.kt$package com.vci.vectorcamapp.core.data.dto.location_type</ID>
+    <ID>PackageName:MultipleBatchWorkflow.kt$package com.vci.vectorcamapp.intake.domain.strategy.collection_method.concrete</ID>
+    <ID>PackageName:PostFormAnswersRequestDto.kt$package com.vci.vectorcamapp.core.data.dto.form_answer</ID>
+    <ID>PackageName:PostFormAnswersResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.form_answer</ID>
+    <ID>PackageName:PostSessionUnitRequestDto.kt$package com.vci.vectorcamapp.core.data.dto.session_unit</ID>
+    <ID>PackageName:PostSessionUnitResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.session_unit</ID>
+    <ID>PackageName:PostSpecimenImageRequestDto.kt$package com.vci.vectorcamapp.core.data.dto.specimen_image</ID>
+    <ID>PackageName:PostSpecimenImageResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.specimen_image</ID>
+    <ID>PackageName:PostSurveillanceFormRequestDto.kt$package com.vci.vectorcamapp.core.data.dto.surveillance_form</ID>
+    <ID>PackageName:PostSurveillanceFormResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.surveillance_form</ID>
+    <ID>PackageName:ProgramFormAbsentWorkflow.kt$package com.vci.vectorcamapp.intake.domain.strategy.program_form.concrete</ID>
+    <ID>PackageName:ProgramFormWorkflow.kt$package com.vci.vectorcamapp.intake.domain.strategy.program_form</ID>
+    <ID>PackageName:ProgramFormWorkflowFactory.kt$package com.vci.vectorcamapp.intake.domain.strategy.program_form</ID>
+    <ID>PackageName:SegmentedTabBar.kt$package com.vci.vectorcamapp.complete_session.details.presentation.components</ID>
+    <ID>PackageName:SessionUnitDto.kt$package com.vci.vectorcamapp.core.data.dto.session_unit</ID>
+    <ID>PackageName:SingleBatchWorkflow.kt$package com.vci.vectorcamapp.intake.domain.strategy.collection_method.concrete</ID>
+    <ID>PackageName:SpecimenImageDto.kt$package com.vci.vectorcamapp.core.data.dto.specimen_image</ID>
+    <ID>PackageName:SurveillanceFormDto.kt$package com.vci.vectorcamapp.core.data.dto.surveillance_form</ID>
+    <ID>PackageName:SurveillanceFormPresentWorkflow.kt$package com.vci.vectorcamapp.intake.domain.strategy.program_form.concrete</ID>
+    <ID>PackageName:ValidateCollectionBatchIdentityUseCase.kt$package com.vci.vectorcamapp.collection_batch.domain.use_cases</ID>
+    <ID>PackageName:ValidateCollectionDateUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateCollectionMethodUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateCollectorLastTrainedOnUseCase.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageName:ValidateCollectorNameUseCase.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageName:ValidateCollectorTitleUseCase.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
+    <ID>PackageName:ValidateCollectorUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateDistrictUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateFormAnswersUseCase.kt$package com.vci.vectorcamapp.collection_batch.domain.use_cases</ID>
+    <ID>PackageName:ValidateFormAnswersUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateFormAnswersUseCaseTest.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateHouseNumberUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateLlinBrandUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateLlinTypeUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateMonthsSinceIrsUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateNumLlinsAvailableUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateNumPeopleSleptInHouseUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateNumPeopleSleptUnderLlinUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateSpecimenConditionUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PackageName:ValidateSpecimenIdUseCase.kt$package com.vci.vectorcamapp.imaging.domain.use_cases</ID>
+    <ID>PackageName:ValidateSpecimenIdUseCaseTest.kt$package com.vci.vectorcamapp.imaging.domain.use_cases</ID>
+    <ID>PackageName:ValidateVillageNameUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
+    <ID>PrintStackTrace:CollectorRepositoryImplementation.kt$CollectorRepositoryImplementation$e</ID>
+    <ID>PrintStackTrace:CurrentSessionCacheDtoSerializer.kt$CurrentSessionCacheDtoSerializer$e</ID>
+    <ID>PrintStackTrace:DefaultIntakeFieldsCacheDtoSerializer.kt$DefaultIntakeFieldsCacheDtoSerializer$e</ID>
+    <ID>PrintStackTrace:DeviceCacheDtoSerializer.kt$DeviceCacheDtoSerializer$e</ID>
+    <ID>PrintStackTrace:safeCall.kt$e</ID>
+    <ID>PropertyWrapping:SettingsViewModelTest.kt$SettingsViewModelTest$private val testCollector = Collector(id = UUID.randomUUID(), name = "Alice", title = "Dr.", lastTrainedOn = 1_000_000L)</ID>
+    <ID>ReturnCount:ImageUploadWorker.kt$ImageUploadWorker$override suspend fun doWork(): WorkerResult</ID>
+    <ID>ReturnCount:MetadataUploadWorker.kt$MetadataUploadWorker$override suspend fun doWork(): WorkerResult</ID>
+    <ID>ReturnCount:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncFormAnswersIfNeeded( sessionScopedAnswers: Map&lt;Int, FormAnswer&gt;, sessionUnitScopedAnswersBySessionUnitLocalId: Map&lt;UUID, Map&lt;Int, FormAnswer&gt;&gt;, syncedSessionUnitsByLocalId: Map&lt;UUID, SessionUnit&gt;, syncedLocalSessionId: UUID, syncedRemoteSessionId: Int, ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>ReturnCount:MetadataUploadWorker.kt$MetadataUploadWorker$private suspend fun syncSpecimenImageAndInferenceResultIfNeeded( localSpecimenImage: SpecimenImage, localInferenceResult: InferenceResult?, syncedSpecimen: Specimen, syncedLocalSessionId: UUID ): DomainResult&lt;Unit, NetworkError&gt;</ID>
+    <ID>ReturnCount:safeCall.kt$suspend inline fun &lt;reified T&gt; safeCall( execute: () -&gt; HttpResponse ): Result&lt;T, NetworkError&gt;</ID>
+    <ID>SpacingAroundColon:ActionTile.kt$:</ID>
+    <ID>SpacingAroundColon:CameraRepository.kt$CameraRepository$:</ID>
+    <ID>SpacingAroundColon:CollectionBatchFormAction.kt$CollectionBatchFormAction.ReturnToCollectionBatchListScreen$:</ID>
+    <ID>SpacingAroundColon:CollectionBatchFormError.kt$CollectionBatchFormError$:</ID>
+    <ID>SpacingAroundColon:CompleteSessionDetailsEvent.kt$CompleteSessionDetailsEvent.NavigateBackToCompleteSessionListScreen$:</ID>
+    <ID>SpacingAroundColon:CurrentSessionCache.kt$CurrentSessionCache$:</ID>
+    <ID>SpacingAroundColon:DataStoreModule.kt$DataStoreModule$:</ID>
+    <ID>SpacingAroundColon:Destination.kt$Destination.Settings$:</ID>
+    <ID>SpacingAroundColon:FormDataSource.kt$FormDataSource$:</ID>
+    <ID>SpacingAroundColon:ImagingRepositoryModule.kt$ImagingRepositoryModule$:</ID>
+    <ID>SpacingAroundColon:InferenceResultMapper.kt$:</ID>
+    <ID>SpacingAroundColon:InferenceResultRepository.kt$InferenceResultRepository$:</ID>
+    <ID>SpacingAroundColon:InfoTile.kt$:</ID>
+    <ID>SpacingAroundColon:IntakeAction.kt$IntakeAction.EnterHardwareId$:</ID>
+    <ID>SpacingAroundColon:IntakeAction.kt$IntakeAction.HideCollectionMethodTooltipDialog$:</ID>
+    <ID>SpacingAroundColon:IntakeAction.kt$IntakeAction.RetryLocation$:</ID>
+    <ID>SpacingAroundColon:IntakeAction.kt$IntakeAction.SelectLocationTypeSiteOption$:</ID>
+    <ID>SpacingAroundColon:IntakeAction.kt$IntakeAction.ShowCollectionMethodTooltipDialog$:</ID>
+    <ID>SpacingAroundColon:IntakeAction.kt$IntakeAction.SubmitIntakeForm$:</ID>
+    <ID>SpacingAroundColon:IntakeAction.kt$IntakeAction.ToggleIrsConducted$:</ID>
+    <ID>SpacingAroundColon:LandingEvent.kt$LandingEvent.NavigateBackToRegistrationScreen$:</ID>
+    <ID>SpacingAroundColon:LandingEvent.kt$LandingEvent.NavigateToCompleteSessionsScreen$:</ID>
+    <ID>SpacingAroundColon:LandingEvent.kt$LandingEvent.NavigateToIncompleteSessionsScreen$:</ID>
+    <ID>SpacingAroundColon:LandingEvent.kt$LandingEvent.NavigateToIntakeScreen$:</ID>
+    <ID>SpacingAroundColon:LandingEvent.kt$LandingEvent.NavigateToSettingsScreen$:</ID>
+    <ID>SpacingAroundColon:LocationTypeRepositoryImplementation.kt$LocationTypeRepositoryImplementation$:</ID>
+    <ID>SpacingAroundColon:MainEvent.kt$MainEvent.NavigateToLocationSettings$:</ID>
+    <ID>SpacingAroundColon:Migration_10_11_AddClassificationDurationColumns.kt$&lt;no name provided&gt;$:</ID>
+    <ID>SpacingAroundColon:Migration_28_29_UpdateFormAnswerPrimaryKey.kt$&lt;no name provided&gt;$:</ID>
+    <ID>SpacingAroundColon:Migration_4_5_AddSubmittedAtColumnsToSpecimenAndSurveillanceFormTables.kt$&lt;no name provided&gt;$:</ID>
+    <ID>SpacingAroundColon:Migration_9_10_RefactorSpecimenImageAndInferenceResultKeys.kt$&lt;no name provided&gt;$:</ID>
+    <ID>SpacingAroundColon:Result.kt$:</ID>
+    <ID>SpacingAroundColon:SettingsEvent.kt$SettingsEvent.NavigateBackToLandingScreen$:</ID>
+    <ID>SpacingAroundColon:SettingsEvent.kt$SettingsEvent.NavigateToIntakeScreen$:</ID>
+    <ID>SpacingAroundColon:SiteMapper.kt$:</ID>
+    <ID>SpacingAroundColon:SpecimenClassifier.kt$SpecimenClassifier$:</ID>
+    <ID>SpacingAroundColon:SpecimenImageRepository.kt$SpecimenImageRepository$:</ID>
+    <ID>SpacingAroundColon:SpecimenImageRepositoryImplementation.kt$SpecimenImageRepositoryImplementation$:</ID>
+    <ID>SpacingAroundColon:SurveillanceFormDao.kt$SurveillanceFormDao$:</ID>
+    <ID>SpacingAroundColon:SurveillanceFormMapper.kt$:</ID>
+    <ID>SpacingAroundColon:TransactionHelper.kt$TransactionHelper$:</ID>
+    <ID>SpacingAroundColon:ValidateCollectionDateUseCase.kt$ValidateCollectionDateUseCase$:</ID>
+    <ID>SpacingAroundColon:ValidateCollectorLastTrainedOnUseCase.kt$ValidateCollectorLastTrainedOnUseCase$:</ID>
+    <ID>SpacingAroundColon:ValidateCollectorNameUseCase.kt$ValidateCollectorNameUseCase$:</ID>
+    <ID>SpacingAroundColon:ValidateCollectorTitleUseCase.kt$ValidateCollectorTitleUseCase$:</ID>
+    <ID>SpacingAroundColon:ValidateCollectorUseCase.kt$ValidateCollectorUseCase$:</ID>
+    <ID>SpacingAroundColon:ValidateDistrictUseCase.kt$ValidateDistrictUseCase$:</ID>
+    <ID>SpacingAroundColon:ValidateHouseNumberUseCase.kt$ValidateHouseNumberUseCase$:</ID>
+    <ID>SpacingAroundColon:ValidateLlinBrandUseCase.kt$ValidateLlinBrandUseCase$:</ID>
+    <ID>SpacingAroundColon:ValidateLlinTypeUseCase.kt$ValidateLlinTypeUseCase$:</ID>
+    <ID>SpacingAroundColon:ValidateVillageNameUseCase.kt$ValidateVillageNameUseCase$:</ID>
+    <ID>SpacingAroundCurly:CapturedSpecimenTile.kt${</ID>
+    <ID>SpacingAroundCurly:DataStoreModule.kt$DataStoreModule$}</ID>
+    <ID>SpacingAroundCurly:LandingViewModelTest.kt$LandingViewModelTest$}</ID>
+    <ID>SpacingAroundCurly:MainActivity.kt$MainActivity${</ID>
+    <ID>SpacingAroundCurly:Migration_15_16_AddSpecimenShouldProcessFurtherColumn.kt$&lt;no name provided&gt;${</ID>
+    <ID>SpacingAroundCurly:Tooltip.kt${</ID>
+    <ID>SpacingAroundKeyword:CollectorDialog.kt$else</ID>
+    <ID>SpacingAroundKeyword:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$else</ID>
+    <ID>SpacingAroundOperators:MainActivity.kt$MainActivity$-&gt;</ID>
+    <ID>SpacingAroundParens:CapturedSpecimenTile.kt$(</ID>
+    <ID>SpacingAroundParens:IncompleteSessionScreen.kt$)</ID>
+    <ID>SpacingAroundParens:SettingsState.kt$SettingsState$(</ID>
+    <ID>SpacingBetweenDeclarationsWithAnnotations:VectorCamCrashlytics.kt$VectorCamCrashlytics$@Volatile var crashlytics: FirebaseCrashlytics? = null</ID>
+    <ID>SpreadOperator:ImagingViewModel.kt$ImagingViewModel$(*jpegByteArray)</ID>
+    <ID>SpreadOperator:RoomDatabaseModule.kt$RoomDatabaseModule$(*ALL_MIGRATIONS)</ID>
+    <ID>SpreadOperator:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$(*boxesForNms.toTypedArray())</ID>
+    <ID>SpreadOperator:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$(*confidenceScoresForNms.toFloatArray())</ID>
+    <ID>StringTemplate:DropdownField.kt$${menuItemTestTagPrefix}</ID>
+    <ID>StringTemplate:ImageUploadWorker.kt$ImageUploadWorker$${imageId}</ID>
+    <ID>StringTemplate:RemoteSpecimenImageDataSource.kt$RemoteSpecimenImageDataSource$${specimenId}</ID>
+    <ID>StringTemplate:RemoteSpecimenImageDataSource.kt$RemoteSpecimenImageDataSource$${specimenImageId}</ID>
+    <ID>StringTemplate:VectorCamAnalytics.kt$VectorCamAnalytics$${it}</ID>
+    <ID>SwallowedException:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:FormAnswerRepositoryImplementation.kt$FormAnswerRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:FormQuestionRepositoryImplementation.kt$FormQuestionRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:FormRepositoryImplementation.kt$FormRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:ImagingViewModel.kt$ImagingViewModel$e: Exception</ID>
+    <ID>SwallowedException:InferenceResultRepositoryImplementation.kt$InferenceResultRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:InferenceResultRepositoryImplementation.kt$InferenceResultRepositoryImplementation$e: SQLiteConstraintException</ID>
+    <ID>SwallowedException:IntakeViewModel.kt$IntakeViewModel$e: SecurityException</ID>
+    <ID>SwallowedException:IntakeViewModel.kt$IntakeViewModel$e: TimeoutCancellationException</ID>
+    <ID>SwallowedException:LocationTypeRepositoryImplementation.kt$LocationTypeRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:MetadataUploadWorker.kt$MetadataUploadWorker$e: Exception</ID>
+    <ID>SwallowedException:MetadataUploadWorker.kt$MetadataUploadWorker$e: IOException</ID>
+    <ID>SwallowedException:MetadataUploadWorker.kt$MetadataUploadWorker$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:ProgramRepositoryImplementation.kt$ProgramRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:SessionRepositoryImplementation.kt$SessionRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:SessionUnitRepositoryImplementation.kt$SessionUnitRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>SwallowedException:SiteRepositoryImplementation.kt$SiteRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:SpecimenImageRepositoryImplementation.kt$SpecimenImageRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:SpecimenImageRepositoryImplementation.kt$SpecimenImageRepositoryImplementation$e: SQLiteConstraintException</ID>
+    <ID>SwallowedException:SpecimenRepositoryImplementation.kt$SpecimenRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:SpecimenRepositoryImplementation.kt$SpecimenRepositoryImplementation$e: SQLiteConstraintException</ID>
+    <ID>SwallowedException:SurveillanceFormRepositoryImplementation.kt$SurveillanceFormRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:responseToResult.kt$e: NoTransformationFoundException</ID>
+    <ID>ThrowsCount:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun uploadSingleImage( task: ImageUploadTask, sessionId: UUID ): DomainResult&lt;String, NetworkError&gt;</ID>
+    <ID>TooGenericExceptionCaught:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ClassifierAcceleratorSelector.kt$ClassifierAcceleratorSelector$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CollectorRepositoryImplementation.kt$CollectorRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CurrentSessionCacheDtoSerializer.kt$CurrentSessionCacheDtoSerializer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DefaultIntakeFieldsCacheDtoSerializer.kt$DefaultIntakeFieldsCacheDtoSerializer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DeviceCacheDtoSerializer.kt$DeviceCacheDtoSerializer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FormAnswerRepositoryImplementation.kt$FormAnswerRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FormQuestionRepositoryImplementation.kt$FormQuestionRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FormRepositoryImplementation.kt$FormRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ImageUploadWorker.kt$ImageUploadWorker$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ImageUploadWorker.kt$ImageUploadWorker$restore: Exception</ID>
+    <ID>TooGenericExceptionCaught:ImageUploadWorker.kt$ImageUploadWorker$resumeException: Exception</ID>
+    <ID>TooGenericExceptionCaught:ImagingScreen.kt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ImagingViewModel.kt$ImagingViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:IncompleteSessionViewModel.kt$IncompleteSessionViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:InferenceRepositoryImplementation.kt$InferenceRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:InferenceResultRepositoryImplementation.kt$InferenceResultRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:IntakeViewModel.kt$IntakeViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:LocationTypeRepositoryImplementation.kt$LocationTypeRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:MetadataUploadWorker.kt$MetadataUploadWorker$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProgramRepositoryImplementation.kt$ProgramRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:RegistrationViewModel.kt$RegistrationViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SessionRepositoryImplementation.kt$SessionRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SessionUnitRepositoryImplementation.kt$SessionUnitRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SiteRepositoryImplementation.kt$SiteRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SpecimenImageRepositoryImplementation.kt$SpecimenImageRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SpecimenRepositoryImplementation.kt$SpecimenRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SurveillanceFormRepositoryImplementation.kt$SurveillanceFormRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:TfLiteSpecimenClassifier.kt$TfLiteSpecimenClassifier$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:VectorCamApp.kt$VectorCamApp$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:safeCall.kt$e: Exception</ID>
+    <ID>TooGenericExceptionThrown:RegistrationViewModel.kt$RegistrationViewModel$throw Exception("Failed to fetch location types for program $programId")</ID>
+    <ID>TooGenericExceptionThrown:RegistrationViewModel.kt$RegistrationViewModel$throw Exception("Failed to fetch sites for program $programId")</ID>
+    <ID>TooGenericExceptionThrown:RegistrationViewModel.kt$RegistrationViewModel$throw Exception("Failed to fetch surveillance form for program $programId")</ID>
+    <ID>TooGenericExceptionThrown:RegistrationViewModel.kt$RegistrationViewModel$throw Exception("Failed to save location types for program $programId")</ID>
+    <ID>TooGenericExceptionThrown:RegistrationViewModel.kt$RegistrationViewModel$throw Exception("Failed to save sites for program $programId")</ID>
+    <ID>TooGenericExceptionThrown:RegistrationViewModel.kt$RegistrationViewModel$throw Exception("Failed to save surveillance form for program $programId")</ID>
+    <ID>TooGenericExceptionThrown:RegistrationViewModel.kt$RegistrationViewModel$throw Exception("Failed to save surveillance form questions")</ID>
+    <ID>TooGenericExceptionThrown:SettingsViewModel.kt$SettingsViewModel$throw Exception("Failed to fetch location types for program $programId")</ID>
+    <ID>TooGenericExceptionThrown:SettingsViewModel.kt$SettingsViewModel$throw Exception("Failed to fetch sites for program $programId")</ID>
+    <ID>TooGenericExceptionThrown:SettingsViewModel.kt$SettingsViewModel$throw Exception("Failed to fetch surveillance form for program $programId")</ID>
+    <ID>TooGenericExceptionThrown:SettingsViewModel.kt$SettingsViewModel$throw Exception("Failed to save location types for program $programId")</ID>
+    <ID>TooGenericExceptionThrown:SettingsViewModel.kt$SettingsViewModel$throw Exception("Failed to save sites for program $programId")</ID>
+    <ID>TooGenericExceptionThrown:SettingsViewModel.kt$SettingsViewModel$throw Exception("Failed to save surveillance form for program $programId")</ID>
+    <ID>TooGenericExceptionThrown:SettingsViewModel.kt$SettingsViewModel$throw Exception("Failed to save surveillance form questions")</ID>
+    <ID>TooManyFunctions:RoomDatabaseModule.kt$RoomDatabaseModule</ID>
+    <ID>TooManyFunctions:VectorCamAnalytics.kt$VectorCamAnalytics</ID>
+    <ID>UnusedParameter:IncompleteSessionErrorLogger.kt$IncompleteSessionErrorLogger$failedImageUri: Uri</ID>
+    <ID>UnusedPrivateProperty:SortByHierarchyTest.kt$SortByHierarchyTest$val firstRootIdx = depths.indexOfFirst { it in rootIds }</ID>
+    <ID>UnusedPrivateProperty:SpecimenImageAnalyzer.kt$SpecimenImageAnalyzer$private var frameCounter = 0</ID>
+    <ID>VariableNaming:CompleteSessionListScreen.kt$val ROTATION_DURATION = 2000</ID>
+    <ID>VariableNaming:CompleteSessionListTile.kt$val PROGRESS_BAR_LOW_OPACITY = 0.3f</ID>
+    <ID>VariableNaming:CompleteSessionListTile.kt$val UPLOAD_ICON_ANIMATION_DURATION_MS = 1000</ID>
+    <ID>VariableNaming:CompleteSessionListTile.kt$val UPLOAD_ICON_MAX_ALPHA = 1f</ID>
+    <ID>VariableNaming:CompleteSessionListTile.kt$val UPLOAD_ICON_MIN_ALPHA = 0.3f</ID>
+    <ID>VariableNaming:ErrorSnackbarHost.kt$val SCREEN_WIDTH_FRACTION = 0.96f</ID>
+    <ID>VariableNaming:LiveCameraPreview.kt$val DOT_RADIUS_DP = 3.dp</ID>
+    <ID>VariableNaming:SettingsViewModel.kt$SettingsViewModel$val MAX_EDIT_DISTANCE = 2</ID>
+    <ID>Wrapping:ActionButton.kt$( brush = Brush.horizontalGradient( colors = listOf( MaterialTheme.colors.buttonGradientLeft, MaterialTheme.colors.buttonGradientRight ) ), shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium) )</ID>
+    <ID>Wrapping:CameraMetadataListenerImplementation.kt$CameraMetadataListenerImplementation$CameraCaptureSession.CaptureCallback(), CameraMetadataListener</ID>
+    <ID>Wrapping:CameraRepositoryImplementation.kt$CameraRepositoryImplementation$(</ID>
+    <ID>Wrapping:CollectionBatchFormViewModel.kt$CollectionBatchFormViewModel$(</ID>
+    <ID>Wrapping:CollectionBatchFormViewModel.kt$CollectionBatchFormViewModel$;</ID>
+    <ID>Wrapping:CompleteSessionDetailsScreen.kt$(</ID>
+    <ID>Wrapping:CompleteSessionListScreen.kt$(</ID>
+    <ID>Wrapping:DatePickerField.kt$(</ID>
+    <ID>Wrapping:DropdownField.kt$(</ID>
+    <ID>Wrapping:ImagingScreen.kt$(</ID>
+    <ID>Wrapping:ImagingViewModel.kt$ImagingViewModel$(</ID>
+    <ID>Wrapping:IncompleteSessionScreen.kt$(</ID>
+    <ID>Wrapping:InferenceRepositoryImplementation.kt$InferenceRepositoryImplementation$;</ID>
+    <ID>Wrapping:InferenceResultEntity.kt$InferenceResultEntity$( tableName = "inference_result", foreignKeys = [ ForeignKey( entity = SpecimenImageEntity::class, parentColumns = ["localId"], childColumns = ["specimenImageId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE ) ] )</ID>
+    <ID>Wrapping:IntakeScreen.kt$(</ID>
+    <ID>Wrapping:IntakeScreen.kt$it.district == state.selectedDistrict &amp;&amp; it.villageName == state.selectedVillageName</ID>
+    <ID>Wrapping:IntakeScreen.kt$it.type?.label == surveillanceForm.llinType || it.type == null</ID>
+    <ID>Wrapping:IntakeScreen.kt$onAction(IntakeAction.UpdateCollectionMethod("${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it"))</ID>
+    <ID>Wrapping:IntakeScreen.kt$onAction(IntakeAction.UpdateSpecimenCondition("${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it"))</ID>
+    <ID>Wrapping:IntakeViewModel.kt$IntakeViewModel$(</ID>
+    <ID>Wrapping:IntakeViewModel.kt$IntakeViewModel$( session = it.session.copy( collectorName = updatedCollector.name, collectorTitle = updatedCollector.title, collectorLastTrainedOn = updatedCollector.lastTrainedOn ), isCurrentCollectorMissing = false )</ID>
+    <ID>Wrapping:IntakeViewModel.kt$IntakeViewModel$( session = it.session.copy( latitude = location.latitude.toFloat(), longitude = location.longitude.toFloat(), ), locationError = null )</ID>
+    <ID>Wrapping:IntakeViewModel.kt$IntakeViewModel$;</ID>
+    <ID>Wrapping:LocationTypeEntity.kt$LocationTypeEntity$(</ID>
+    <ID>Wrapping:LocationTypeEntity.kt$LocationTypeEntity$(tableName = "location_type", foreignKeys = [ForeignKey( entity = ProgramEntity::class, parentColumns = ["id"], childColumns = ["programId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE )], indices = [Index("programId")])</ID>
+    <ID>Wrapping:LocationTypeEntity.kt$LocationTypeEntity$[</ID>
+    <ID>Wrapping:MainViewModel.kt$MainViewModel$( throwable = Exception(MainError.DEVICE_FETCH_FAILED.name, throwable), context = VectorCamCrashlyticsContext( screen = "Main", feature = "DeviceCache", action = "observe_program_id" ), tags = mapOf( "error_type" to "device_fetch_failure", "critical" to "true", "phase" to "startup", ), extras = mapOf( "fallback_destination" to "Registration", "error_context" to "User redirected to registration", "recovery_action" to "Defaulting to registration flow", "possible_causes" to "Program ID not cached, database not initialized, device configuration incomplete, corruption in device cache" ) )</ID>
+    <ID>Wrapping:MetadataUploadWorker.kt$MetadataUploadWorker$(</ID>
+    <ID>Wrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( questionId to null, FormAnswerDto( id = answer.remoteId, frontendId = answer.localId, sessionId = syncedRemoteSessionId, sessionUnitId = null, questionId = questionId, value = answer.value, dataType = answer.dataType, submittedAt = answer.submittedAt ) )</ID>
+    <ID>Wrapping:MetadataUploadWorker.kt$MetadataUploadWorker$( questionId to remoteSessionUnitId, FormAnswerDto( id = answer.remoteId, frontendId = answer.localId, sessionId = syncedRemoteSessionId, sessionUnitId = remoteSessionUnitId, questionId = questionId, value = answer.value, dataType = answer.dataType, submittedAt = answer.submittedAt ) )</ID>
+    <ID>Wrapping:MetadataUploadWorker.kt$MetadataUploadWorker$it.frontendId == localSessionUnit.localId</ID>
+    <ID>Wrapping:Migration_23_24_AddLocationTypeLevelColumn.kt$&lt;no name provided&gt;$(</ID>
+    <ID>Wrapping:Migration_26_27_RecreateFormTables.kt$&lt;no name provided&gt;$(</ID>
+    <ID>Wrapping:Migration_27_28_ChangeProgramFormVersionToText.kt$&lt;no name provided&gt;$(</ID>
+    <ID>Wrapping:Migration_9_10_RefactorSpecimenImageAndInferenceResultKeys.kt$&lt;no name provided&gt;$(</ID>
+    <ID>Wrapping:NetworkModule.kt$NetworkModule$(</ID>
+    <ID>Wrapping:PullToRefresh.kt$(</ID>
+    <ID>Wrapping:RegistrationScreen.kt$it.label == state.collector.title</ID>
+    <ID>Wrapping:SegmentedTabBar.kt$(</ID>
+    <ID>Wrapping:SessionEntity.kt$SessionEntity$( tableName = "session", foreignKeys = [ForeignKey( entity = SiteEntity::class, parentColumns = ["id"], childColumns = ["siteId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE )], indices = [Index("completedAt"), Index("siteId"), Index("type")] )</ID>
+    <ID>Wrapping:SessionEntity.kt$SessionEntity$[</ID>
+    <ID>Wrapping:SessionUnitEntity.kt$SessionUnitEntity$( tableName = "session_unit", foreignKeys = [ForeignKey( entity = SessionEntity::class, parentColumns = ["localId"], childColumns = ["sessionId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE )], indices = [Index("sessionId")] )</ID>
+    <ID>Wrapping:SessionUnitEntity.kt$SessionUnitEntity$[</ID>
+    <ID>Wrapping:SettingsViewModel.kt$SettingsViewModel$it is Result.Error</ID>
+    <ID>Wrapping:SpecimenDao.kt$SpecimenDao$(</ID>
+    <ID>Wrapping:SpecimenEntity.kt$SpecimenEntity$( tableName = "specimen", foreignKeys = [ForeignKey( entity = SessionEntity::class, parentColumns = ["localId"], childColumns = ["sessionId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE ), ForeignKey( entity = SessionUnitEntity::class, parentColumns = ["localId"], childColumns = ["sessionUnitId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE )], indices = [Index("sessionId"), Index("sessionUnitId")], primaryKeys = ["id", "sessionId"] )</ID>
+    <ID>Wrapping:SpecimenEntity.kt$SpecimenEntity$[</ID>
+    <ID>Wrapping:SpecimenImageEntity.kt$SpecimenImageEntity$( tableName = "specimen_image", foreignKeys = [ ForeignKey( entity = SpecimenEntity::class, parentColumns = ["id", "sessionId"], childColumns = ["specimenId", "sessionId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE ) ], indices = [Index(value = ["specimenId", "sessionId"])] )</ID>
+    <ID>Wrapping:SpecimenRepositoryImplementation.kt$SpecimenRepositoryImplementation$(</ID>
+    <ID>Wrapping:SurveillanceFormEntity.kt$SurveillanceFormEntity$( tableName = "surveillance_form", foreignKeys = [ForeignKey( entity = SessionEntity::class, parentColumns = ["localId"], childColumns = ["sessionId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE )] )</ID>
+    <ID>Wrapping:SurveillanceFormEntity.kt$SurveillanceFormEntity$[</ID>
+    <ID>Wrapping:TfLiteSpecimenClassifier.kt$TfLiteSpecimenClassifier$(</ID>
+    <ID>Wrapping:TfLiteSpecimenClassifier.kt$TfLiteSpecimenClassifier$( intArrayOf( 1, preprocessedMatrixChannels, preprocessedMatrixHeight, preprocessedMatrixWidth ), DataType.FLOAT32 )</ID>
+    <ID>Wrapping:TfLiteSpecimenDetector.kt$TfLiteSpecimenDetector$( intArrayOf( 1, preprocessedMatrixHeight, preprocessedMatrixWidth, preprocessedMatrixChannels ), DataType.FLOAT32 )</ID>
+    <ID>Wrapping:VectorCamAnalytics.kt$VectorCamAnalytics$(</ID>
+    <ID>Wrapping:WorkManagerRepositoryImplementation.kt$WorkManagerRepositoryImplementation$(</ID>
+  </CurrentIssues>
+</SmellBaseline>

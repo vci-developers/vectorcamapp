@@ -4,9 +4,12 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
-import android.util.Log
+import com.google.ai.edge.litert.CompiledModel
+import com.google.ai.edge.litert.TensorBuffer
 import com.vci.vectorcamapp.core.domain.model.results.ClassifierResult
+import com.vci.vectorcamapp.imaging.data.util.ClassifierAcceleratorSelector
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
+import kotlinx.coroutines.CompletableDeferred
 import org.opencv.android.Utils
 import org.opencv.core.Core
 import org.opencv.core.CvType
@@ -14,10 +17,7 @@ import org.opencv.core.Mat
 import org.opencv.core.Scalar
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
-import org.tensorflow.lite.DataType
-import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.common.FileUtil
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
@@ -26,139 +26,286 @@ class TfLiteSpecimenClassifier(
     private val context: Context,
     private val filePath: String,
     threadName: String,
+    private val expectedNumClasses: Int,
 ) : SpecimenClassifier {
 
-    private var classifier: Interpreter? = null
-
-    private val classifierLock = Any()
-    private var isClosed = false
+    private enum class TensorLayout { NCHW, NHWC }
 
     private val handlerThread = HandlerThread(threadName).apply { start() }
     private val handler = Handler(handlerThread.looper)
 
-    private var inputTensorHeight = DEFAULT_TENSOR_HEIGHT
-    private var inputTensorWidth = DEFAULT_TENSOR_WIDTH
+    // Only touched on [handler]'s thread, which is the single thread every build, inference and
+    // teardown is posted to. That confinement is what keeps callers off a lock during the build.
+    private var model: CompiledModel? = null
+    private var inputBuffers: List<TensorBuffer> = emptyList()
+    private var outputBuffers: List<TensorBuffer> = emptyList()
+    private var inputLayout = TensorLayout.NCHW
 
-    private var outputNumClasses = DEFAULT_NUM_CLASSES
+    private val stateLock = Any()
+    private var warmUp: CompletableDeferred<Boolean>? = null
+    private var isClosed = false
 
-    init {
-        handler.post { initializeInterpreter() }
-    }
+    // Read from outside the handler thread by the shape getters.
+    @Volatile
+    private var inputTensorHeight = DEFAULT_TENSOR_SIZE
 
-    private fun initializeInterpreter() {
-        synchronized(classifierLock) {
-            if (classifier != null || isClosed) return
+    @Volatile
+    private var inputTensorWidth = DEFAULT_TENSOR_SIZE
 
-            try {
-                val model = FileUtil.loadMappedFile(context, filePath)
-                val options = Interpreter.Options().apply {
-                    useNNAPI = false
-                    useXNNPACK = false
-                    numThreads = Runtime.getRuntime().availableProcessors()
-                }
-
-                classifier = Interpreter(model, options)
-
-                classifier?.let {
-                    inputTensorHeight = it.getInputTensor(0).shape()[2]
-                    inputTensorWidth = it.getInputTensor(0).shape()[3]
-
-                    outputNumClasses = it.getOutputTensor(0).shape()[1]
-                }
-
-                Log.d(TAG, "TFLite interpreter initialized")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to initialize TFLite interpreter: ${e.message}")
-            }
-        }
-    }
-
-    private fun isReady(): Boolean = synchronized(classifierLock) {
-        !isClosed && classifier != null
-    }
+    @Volatile
+    private var outputNumClasses = expectedNumClasses
 
     override fun getInputTensorShape(): Pair<Int, Int> = inputTensorHeight to inputTensorWidth
 
     override fun getOutputTensorShape(): Int = outputNumClasses
 
+    override fun warm() {
+        startWarmUp()
+    }
+
+    /**
+     * Returns the in-flight or completed build, starting one if the model is cold. The result is
+     * awaited rather than polled so a capture that lands mid-build suspends instead of holding a
+     * thread.
+     */
+    private fun startWarmUp(): CompletableDeferred<Boolean> {
+        val pending = synchronized(stateLock) {
+            if (isClosed) return CompletableDeferred(false)
+            warmUp?.let { return it }
+            CompletableDeferred<Boolean>().also { warmUp = it }
+        }
+
+        handler.post {
+            // A release posted between the request and here means nobody wants this model any
+            // more, and building it only to tear it down would hold the thread for seconds.
+            val stillWanted = synchronized(stateLock) { warmUp === pending }
+            val built = if (stillWanted) initializeModel() else false
+
+            // A failed build must not latch. These classifiers are singletons, so a deferred left
+            // completed-false would make every later classify() return null for the rest of the
+            // process. initializeModel releases whatever it allocated before returning false, so
+            // clearing this is enough to let the next call rebuild; a genuine shape-contract
+            // failure just fails again.
+            if (!built) {
+                synchronized(stateLock) {
+                    if (warmUp === pending) warmUp = null
+                }
+            }
+
+            pending.complete(built)
+        }
+        return pending
+    }
+
     override suspend fun classify(croppedBitmap: Bitmap): ClassifierResult? {
-        if (!isReady()) return null
+        // All three classifiers are called in parallel from Dispatchers.Default, so waiting on the
+        // build has to suspend: blocking here would park three of that pool's threads for as long
+        // as the build takes.
+        if (!startWarmUp().await()) return null
 
         return suspendCoroutine { continuation ->
             handler.post {
+                var rgbMatrix: Mat? = null
+                var preprocessedMatrix: Mat? = null
+
                 try {
                     val startTime = System.currentTimeMillis()
-                    val inputMatrix = prepareInputMatrix(croppedBitmap)
 
-                    val preprocessedMatrix = preprocessMatrix(inputMatrix)
-                    val preprocessedMatrixHeight = preprocessedMatrix.height()
-                    val preprocessedMatrixWidth = preprocessedMatrix.width()
-                    val preprocessedMatrixChannels = preprocessedMatrix.channels()
-
-                    val inputTensor = TensorBuffer.createFixedSize(
-                        intArrayOf(
-                            1,
-                            preprocessedMatrixChannels,
-                            preprocessedMatrixHeight,
-                            preprocessedMatrixWidth
-                        ), DataType.FLOAT32
-                    )
-                    val inputFloatBuffer =
-                        FloatArray(preprocessedMatrixHeight * preprocessedMatrixWidth * preprocessedMatrixChannels)
-                    preprocessedMatrix.get(0, 0, inputFloatBuffer)
-
-                    val chwArray =
-                        FloatArray(preprocessedMatrixChannels * preprocessedMatrixHeight * preprocessedMatrixWidth)
-                    for (channel in 0 until preprocessedMatrixChannels) {
-                        for (i in 0 until preprocessedMatrixHeight * preprocessedMatrixWidth) {
-                            chwArray[channel * preprocessedMatrixHeight * preprocessedMatrixWidth + i] =
-                                inputFloatBuffer[i * preprocessedMatrixChannels + channel]
-                        }
-                    }
-                    inputTensor.loadArray(chwArray)
-
-                    val outputTensor = TensorBuffer.createFixedSize(
-                        intArrayOf(1, outputNumClasses), DataType.FLOAT32
-                    )
-
-                    val logits = synchronized(classifierLock) {
-                        if (!isReady()) return@post continuation.resume(null)
-                        classifier?.run(inputTensor.buffer, outputTensor.buffer)
-                        outputTensor.floatArray.toList()
+                    // A release can land between the build completing and this runnable, so the
+                    // model has to be re-checked here rather than trusted from the warm-up.
+                    val compiledModel = model
+                    if (compiledModel == null) {
+                        continuation.resume(null)
+                        return@post
                     }
 
-                    Log.d(TAG, "Inference result: $logits")
-                    continuation.resume(ClassifierResult(
-                        logits = logits,
-                        inferenceDuration = System.currentTimeMillis() - startTime
-                    ))
+                    rgbMatrix = toRgbMatrix(croppedBitmap)
+                    preprocessedMatrix = preprocess(rgbMatrix)
+                    val inputValues = toModelInput(preprocessedMatrix)
+
+                    inputBuffers[0].writeFloat(inputValues)
+                    compiledModel.run(inputBuffers, outputBuffers)
+                    val logits = outputBuffers[0].readFloat().take(outputNumClasses)
+
+                    Timber.d("$filePath logits: $logits")
+                    continuation.resume(
+                        ClassifierResult(
+                            logits = logits,
+                            inferenceDuration = System.currentTimeMillis() - startTime
+                        )
+                    )
                 } catch (e: Exception) {
-                    Log.e(TAG, "Inference failed: ${e.message}")
+                    Timber.e(e, "Inference failed for $filePath")
                     continuation.resume(null)
+                } finally {
+                    preprocessedMatrix?.release()
+                    rgbMatrix?.release()
                 }
             }
         }
     }
 
-    private fun prepareInputMatrix(croppedBitmap: Bitmap): Mat {
-        val inputMatrix = Mat()
-        Utils.bitmapToMat(croppedBitmap, inputMatrix)
-        Imgproc.cvtColor(inputMatrix, inputMatrix, Imgproc.COLOR_RGBA2RGB)
-        return inputMatrix
+    override fun release() {
+        synchronized(stateLock) {
+            if (isClosed || warmUp == null) return
+            warmUp = null
+        }
+
+        handler.post {
+            releaseModel()
+            Timber.d("Released $filePath")
+        }
     }
 
-    private fun preprocessMatrix(inputMatrix: Mat): Mat {
-        val inputMatrixWidth = inputMatrix.width()
-        val inputMatrixHeight = inputMatrix.height()
-        val paddedSideLength = max(inputMatrixWidth, inputMatrixHeight)
-        val paddedMatrix = Mat.zeros(paddedSideLength, paddedSideLength, inputMatrix.type())
+    override fun close() {
+        synchronized(stateLock) {
+            if (isClosed) return
+            isClosed = true
+            warmUp = null
+        }
 
-        val rowStart = (paddedSideLength - inputMatrixHeight) / 2
-        val rowEnd = rowStart + inputMatrixHeight
-        val colStart = (paddedSideLength - inputMatrixWidth) / 2
-        val colEnd = colStart + inputMatrixWidth
-        val regionOfIntersection = paddedMatrix.submat(rowStart, rowEnd, colStart, colEnd)
-        inputMatrix.copyTo(regionOfIntersection)
+        handler.post {
+            try {
+                releaseModel()
+                handlerThread.quitSafely()
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to close $filePath")
+            }
+        }
+    }
+
+    private fun initializeModel(): Boolean {
+        if (model != null) return true
+
+        val selection = try {
+            ClassifierAcceleratorSelector.selectModel(
+                context = context,
+                assetName = filePath,
+                signature = SIGNATURE,
+                inputTensorName = INPUT_TENSOR_NAME,
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to select accelerator for $filePath")
+            return initializeOnCpu()
+        }
+
+        return try {
+            bindAndWarm(selection)
+            true
+        } catch (e: Exception) {
+            // Shape contracts fail here too. A GPU model that created but then failed buffers,
+            // shapes or the dummy run must not be retried as GPU forever; CPU is the fallback.
+            // A real shape mismatch fails on CPU as well and classify() returns null.
+            Timber.e(e, "Failed to initialize $filePath on ${selection.variantName}")
+            releaseModel()
+            if (selection.usingGpu) initializeOnCpu() else false
+        }
+    }
+
+    private fun initializeOnCpu(): Boolean = try {
+        Timber.w("Retrying $filePath on CPU")
+        bindAndWarm(
+            ClassifierAcceleratorSelector.Selection(
+                ClassifierAcceleratorSelector.cpuModel(context, filePath),
+                usingGpu = false,
+                variantName = "cpu",
+            )
+        )
+        true
+    } catch (e: Exception) {
+        Timber.e(e, "CPU fallback failed for $filePath")
+        releaseModel()
+        false
+    }
+
+    private fun bindAndWarm(selection: ClassifierAcceleratorSelector.Selection) {
+        val startTime = System.currentTimeMillis()
+        val compiledModel = selection.model
+        model = compiledModel
+        inputBuffers = compiledModel.createInputBuffers()
+        outputBuffers = compiledModel.createOutputBuffers()
+
+        resolveTensorShapes(compiledModel)
+        warmModel()
+
+        Timber.d(
+            "Initialized $filePath: $inputLayout ${inputTensorWidth}x$inputTensorHeight, " +
+                "$outputNumClasses classes, accelerator=${selection.variantName}, " +
+                "${System.currentTimeMillis() - startTime}ms"
+        )
+    }
+
+    private fun resolveTensorShapes(compiledModel: CompiledModel) {
+        val inputDimensions =
+            compiledModel.getInputTensorType(INPUT_TENSOR_NAME, SIGNATURE).layout?.dimensions
+        requireNotNull(inputDimensions) { "Missing input tensor layout for $filePath" }
+        require(inputDimensions.size == 4 && inputDimensions[0] == 1) {
+            "Unsupported input shape for $filePath: ${inputDimensions.joinToString()}"
+        }
+
+        when {
+            inputDimensions[1] == INPUT_CHANNELS -> {
+                inputLayout = TensorLayout.NCHW
+                inputTensorHeight = inputDimensions[2]
+                inputTensorWidth = inputDimensions[3]
+            }
+
+            inputDimensions[3] == INPUT_CHANNELS -> {
+                inputLayout = TensorLayout.NHWC
+                inputTensorHeight = inputDimensions[1]
+                inputTensorWidth = inputDimensions[2]
+            }
+
+            else -> throw IllegalArgumentException(
+                "Unsupported input shape for $filePath: ${inputDimensions.joinToString()}"
+            )
+        }
+
+        val outputDimensions =
+            compiledModel.getOutputTensorType(OUTPUT_TENSOR_NAME, SIGNATURE).layout?.dimensions
+        requireNotNull(outputDimensions) { "Missing output tensor layout for $filePath" }
+        require(outputDimensions.size == 2 && outputDimensions[0] == 1) {
+            "Unsupported output shape for $filePath: ${outputDimensions.joinToString()}"
+        }
+
+        outputNumClasses = outputDimensions[1]
+        require(outputNumClasses == expectedNumClasses) {
+            "$filePath emits $outputNumClasses classes, expected $expectedNumClasses"
+        }
+    }
+
+    private fun warmModel() {
+        inputBuffers[0].writeFloat(
+            FloatArray(INPUT_CHANNELS * inputTensorHeight * inputTensorWidth)
+        )
+        model?.run(inputBuffers, outputBuffers)
+        val logits = outputBuffers[0].readFloat().take(outputNumClasses)
+        require(logits.isNotEmpty() && logits.all { it.isFinite() }) {
+            "Non-finite logits from $filePath after warm-up"
+        }
+    }
+
+    private fun toRgbMatrix(croppedBitmap: Bitmap): Mat {
+        val rgbMatrix = Mat()
+        Utils.bitmapToMat(croppedBitmap, rgbMatrix)
+        Imgproc.cvtColor(rgbMatrix, rgbMatrix, Imgproc.COLOR_RGBA2RGB)
+        return rgbMatrix
+    }
+
+    private fun preprocess(rgbMatrix: Mat): Mat {
+        val squareSideLength = max(rgbMatrix.width(), rgbMatrix.height())
+        val paddedMatrix = Mat.zeros(squareSideLength, squareSideLength, rgbMatrix.type())
+        val rowStart = (squareSideLength - rgbMatrix.height()) / 2
+        val columnStart = (squareSideLength - rgbMatrix.width()) / 2
+
+        val centeredRegion = paddedMatrix.submat(
+            rowStart,
+            rowStart + rgbMatrix.height(),
+            columnStart,
+            columnStart + rgbMatrix.width(),
+        )
+        rgbMatrix.copyTo(centeredRegion)
+        centeredRegion.release()
 
         val resizedMatrix = Mat()
         Imgproc.resize(
@@ -166,42 +313,79 @@ class TfLiteSpecimenClassifier(
             resizedMatrix,
             Size(inputTensorWidth.toDouble(), inputTensorHeight.toDouble())
         )
+        paddedMatrix.release()
+
         resizedMatrix.convertTo(resizedMatrix, CvType.CV_32F, PIXEL_NORMALIZATION_SCALE.toDouble())
 
         val meanMatrix = Mat(resizedMatrix.size(), CvType.CV_32FC3, NORMALIZE_MEAN)
-        val stdDevMatrix = Mat(resizedMatrix.size(), CvType.CV_32FC3, NORMALIZE_STDDEV)
+        val standardDeviationMatrix = Mat(resizedMatrix.size(), CvType.CV_32FC3, NORMALIZE_STDDEV)
         Core.subtract(resizedMatrix, meanMatrix, resizedMatrix)
-        Core.divide(resizedMatrix, stdDevMatrix, resizedMatrix)
+        Core.divide(resizedMatrix, standardDeviationMatrix, resizedMatrix)
+        meanMatrix.release()
+        standardDeviationMatrix.release()
 
         return resizedMatrix
     }
 
-    override fun close() {
-        synchronized(classifierLock) {
-            if (isClosed) return
-            isClosed = true
+    private fun toModelInput(preprocessedMatrix: Mat): FloatArray {
+        require(
+            preprocessedMatrix.height() == inputTensorHeight &&
+                preprocessedMatrix.width() == inputTensorWidth &&
+                preprocessedMatrix.channels() == INPUT_CHANNELS
+        ) {
+            "Unexpected preprocessed shape for $filePath: ${preprocessedMatrix.height()}x" +
+                "${preprocessedMatrix.width()}x${preprocessedMatrix.channels()}"
+        }
 
-            handler.post {
-                try {
-                    classifier?.close()
-                    classifier = null
-                    handlerThread.quitSafely()
-                    Log.d(TAG, "Classifier closed")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error during classifier close: ${e.message}")
-                }
-            }
+        val hwcValues = FloatArray(inputTensorHeight * inputTensorWidth * INPUT_CHANNELS)
+        preprocessedMatrix.get(0, 0, hwcValues)
+
+        return when (inputLayout) {
+            TensorLayout.NHWC -> hwcValues
+            TensorLayout.NCHW -> toChannelsFirst(hwcValues)
         }
     }
 
-    companion object {
-        private const val TAG = "TfLiteSpeciesClassifier"
-        private const val DEFAULT_TENSOR_HEIGHT = 512
-        private const val DEFAULT_TENSOR_WIDTH = 512
-        private const val DEFAULT_NUM_CLASSES = 1
+    private fun toChannelsFirst(hwcValues: FloatArray): FloatArray {
+        val pixelCount = inputTensorHeight * inputTensorWidth
+        val chwValues = FloatArray(hwcValues.size)
 
-        private const val PIXEL_NORMALIZATION_SCALE = 1f / 255f
-        private val NORMALIZE_MEAN = Scalar(0.485, 0.456, 0.406)
-        private val NORMALIZE_STDDEV = Scalar(0.229, 0.224, 0.225)
+        for (channel in 0 until INPUT_CHANNELS) {
+            for (pixel in 0 until pixelCount) {
+                chwValues[channel * pixelCount + pixel] =
+                    hwcValues[pixel * INPUT_CHANNELS + channel]
+            }
+        }
+
+        return chwValues
+    }
+
+    private fun releaseModel() {
+        (inputBuffers + outputBuffers).forEach { buffer ->
+            try {
+                buffer.close()
+            } catch (_: Exception) {
+            }
+        }
+        inputBuffers = emptyList()
+        outputBuffers = emptyList()
+
+        try {
+            model?.close()
+        } catch (_: Exception) {
+        }
+        model = null
+    }
+
+    private companion object {
+        const val SIGNATURE = "serving_default"
+        const val INPUT_TENSOR_NAME = "args_0"
+        const val OUTPUT_TENSOR_NAME = "output_0"
+        const val INPUT_CHANNELS = 3
+        const val DEFAULT_TENSOR_SIZE = 300
+        const val PIXEL_NORMALIZATION_SCALE = 1f / 255f
+
+        val NORMALIZE_MEAN = Scalar(0.485, 0.456, 0.406)
+        val NORMALIZE_STDDEV = Scalar(0.229, 0.224, 0.225)
     }
 }

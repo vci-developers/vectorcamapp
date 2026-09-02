@@ -31,7 +31,8 @@ import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
  *     exact duration in milliseconds, visible as a custom event in GA4 Explorer.
  *
  * Device condition (battery + temperature) is tracked as user properties so every event
- * in GA4 carries the device state at the time it was fired.
+ * in GA4 carries the device state at the time it was fired. Flavor [BuildConfig.APPLICATION_ID]
+ * is sent as `app_package` on every event and as a user property.
  */
 object VectorCamAnalytics {
 
@@ -103,13 +104,22 @@ object VectorCamAnalytics {
      * Call once from VectorCamApp.onCreate() after [analytics] is assigned.
      */
     fun setStaticProperties() {
-        Timber.d("STATIC_PROPS → app=${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) android=${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})")
+        Timber.d(
+            "STATIC_PROPS → package=${BuildConfig.APPLICATION_ID} " +
+                "app=${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) " +
+                "android=${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})"
+        )
         if (!enabled) return
+        analytics?.setUserProperty("app_package", BuildConfig.APPLICATION_ID)
         analytics?.setUserProperty("app_version", BuildConfig.VERSION_NAME)
         analytics?.setUserProperty("app_build", BuildConfig.VERSION_CODE.toString())
         analytics?.setUserProperty("android_version", Build.VERSION.RELEASE)
         analytics?.setUserProperty("android_sdk", Build.VERSION.SDK_INT.toString())
     }
+
+    /** Params attached to every tracked event (flavor applicationId). */
+    private fun commonParams(): Map<String, Any?> =
+        mapOf("app_package" to BuildConfig.APPLICATION_ID)
 
     private fun readDeviceCondition(): DeviceCondition? {
         val context = appContext ?: return null
@@ -167,12 +177,27 @@ object VectorCamAnalytics {
     private fun conditionParams(): Map<String, Any?> {
         val condition = lastCondition ?: return emptyMap()
         return buildMap {
+            // Numeric event params — register as GA4 Custom metrics for > / < filters.
+            // User properties above must stay strings (Firebase API limitation).
             put("battery_level", condition.batteryLevelPct)
-            put("battery_temp_c", "%.1f".format(condition.batteryTempC))
+            put("battery_temp_c", condition.batteryTempC.toDouble())
             put("is_charging", condition.isCharging.toString())
-            condition.cpuTempC?.let { put("cpu_temp_c", "%.1f".format(it)) }
+            condition.cpuTempC?.let { put("cpu_temp_c", it.toDouble()) }
             put("network_type", condition.networkType)
             put("storage_available_mb", condition.availableStorageMb)
+        }
+    }
+
+    private fun putParam(bundle: Bundle, key: String, value: Any?) {
+        when (value) {
+            null -> {}
+            is String -> bundle.putString(key, value)
+            is Long -> bundle.putLong(key, value)
+            is Int -> bundle.putLong(key, value.toLong())
+            is Double -> bundle.putDouble(key, value)
+            is Float -> bundle.putDouble(key, value.toDouble())
+            is Boolean -> bundle.putString(key, value.toString())
+            else -> bundle.putString(key, value.toString())
         }
     }
 
@@ -212,10 +237,10 @@ object VectorCamAnalytics {
             data = mapOf("screen" to screenName, "class" to screenClass),
         )
 
-        val condition = conditionParams()
+        val eventParams = commonParams() + conditionParams()
 
-        val conditionString = if (condition.isEmpty()) "" else " | ${condition.entries.joinToString { "${it.key}=${it.value}" }}"
-        Timber.d("SCREEN_VIEW → $screenName$conditionString")
+        val paramsString = if (eventParams.isEmpty()) "" else " | ${eventParams.entries.joinToString { "${it.key}=${it.value}" }}"
+        Timber.d("SCREEN_VIEW → $screenName$paramsString")
 
         if (!enabled) return
         // Bail out before touching Bundle when no Firebase instance is attached
@@ -225,14 +250,7 @@ object VectorCamAnalytics {
         val bundle = Bundle().apply {
             putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
             putString(FirebaseAnalytics.Param.SCREEN_CLASS, screenClass)
-            condition.forEach { (key, value) ->
-                when (value) {
-                    is String -> putString(key, value)
-                    is Int -> putLong(key, value.toLong())
-                    is Long -> putLong(key, value)
-                    else -> putString(key, value.toString())
-                }
-            }
+            eventParams.forEach { (key, value) -> putParam(this, key, value) }
         }
         firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle)
     }
@@ -240,25 +258,15 @@ object VectorCamAnalytics {
     // ── Generic event logging ─────────────────────────────────────────────────
 
     fun logEvent(name: String, params: Map<String, Any?> = emptyMap()) {
-        val paramsStr = if (params.isEmpty()) "" else " | ${params.entries.joinToString { "${it.key}=${it.value}" }}"
+        val mergedParams = commonParams() + conditionParams() + params
+        val paramsStr = if (mergedParams.isEmpty()) "" else " | ${mergedParams.entries.joinToString { "${it.key}=${it.value}" }}"
         Timber.d("EVENT → $name$paramsStr")
         if (!enabled) return
         // Bail out before touching Bundle when no Firebase instance is attached
         // (also keeps plain-JVM unit tests off unmocked android.os.Bundle APIs).
         val firebaseAnalytics = analytics ?: return
         val bundle = Bundle()
-        params.forEach { (key, value) ->
-            when (value) {
-                is String -> bundle.putString(key, value)
-                is Long -> bundle.putLong(key, value)
-                is Int -> bundle.putInt(key, value)
-                is Double -> bundle.putDouble(key, value)
-                is Float -> bundle.putDouble(key, value.toDouble())
-                is Boolean -> bundle.putString(key, value.toString())
-                null -> {}
-                else -> bundle.putString(key, value.toString())
-            }
-        }
+        mergedParams.forEach { (key, value) -> putParam(bundle, key, value) }
         firebaseAnalytics.logEvent(name, bundle)
     }
 

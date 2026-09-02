@@ -22,10 +22,10 @@ import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
+import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
+import com.vci.vectorcamapp.core.logging.crashlytics.Severity
 import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext
-import com.vci.vectorcamapp.core.logging.crashlytics.Severity
-import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
@@ -37,6 +37,7 @@ import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
 import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
+import com.vci.vectorcamapp.imaging.presentation.enums.CaptureStage
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import com.vci.vectorcamapp.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -211,7 +212,7 @@ class ImagingViewModel @Inject constructor(
                             }
                         }
 
-                        if (!_state.value.isProcessing) {
+                        if (_state.value.captureStage == null) {
                             val bitmap = action.frame.toUprightBitmap()
 
                             val specimenId = inferenceRepository.readSpecimenId(bitmap)
@@ -385,7 +386,7 @@ class ImagingViewModel @Inject constructor(
                         )
                     )
 
-                    _state.update { it.copy(isProcessing = true) }
+                    _state.update { it.copy(captureStage = CaptureStage.CAPTURING) }
 
                     val captureResult = cameraRepository.captureImage(action.imageCapture)
 
@@ -430,6 +431,8 @@ class ImagingViewModel @Inject constructor(
                             rgbaMatrix.release()
 
                             if (_state.value.shouldRunInference) {
+                                _state.update { it.copy(captureStage = CaptureStage.DETECTING) }
+
                                 val detectionStartMs = System.currentTimeMillis()
                                 val captureDetectorResults =
                                     inferenceRepository.detectSpecimen(jpegBitmap)
@@ -497,6 +500,8 @@ class ImagingViewModel @Inject constructor(
                                                 clampedWidth,
                                                 clampedHeight
                                             )
+
+                                            _state.update { it.copy(captureStage = CaptureStage.CLASSIFYING) }
 
                                             inferenceStartedAt = System.currentTimeMillis()
                                             var (speciesResult, sexResult, abdomenStatusResult) = inferenceRepository.classifySpecimen(
@@ -602,7 +607,7 @@ class ImagingViewModel @Inject constructor(
                             }
                         }
                     }
-                    _state.update { it.copy(isProcessing = false) }
+                    _state.update { it.copy(captureStage = null) }
                 }
 
                 ImagingAction.RetakeImage -> {
@@ -882,11 +887,6 @@ class ImagingViewModel @Inject constructor(
                 emitError(ImagingError.NO_ACTIVE_SESSION)
             }
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        inferenceRepository.closeResources()
     }
 
     private companion object {
