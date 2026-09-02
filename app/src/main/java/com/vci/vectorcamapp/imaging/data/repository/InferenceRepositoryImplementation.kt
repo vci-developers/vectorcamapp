@@ -137,12 +137,4 @@ class InferenceRepositoryImplementation @Inject constructor(
     private suspend fun getClassification(
         croppedBitmap: Bitmap, classifier: SpecimenClassifier
     ): ClassifierResult? = classifier.classify(croppedBitmap)
-
-    override fun closeResources() {
-        specimenIdRecognizer.close()
-        specimenDetector.close()
-        speciesClassifier.close()
-        sexClassifier.close()
-        abdomenStatusClassifier.close()
-    }
 }
