@@ -9,6 +9,7 @@ import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.TensorBuffer
 import com.vci.vectorcamapp.core.domain.model.results.DetectorResult
 import com.vci.vectorcamapp.imaging.data.util.GpuAccelerationPolicy
+import com.vci.vectorcamapp.imaging.data.util.GpuModelCache
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
 import org.opencv.android.Utils
 import org.opencv.core.CvType
@@ -33,47 +34,107 @@ class TfLiteSpecimenDetector(
     private val modelPath: String = "detect.tflite",
 ) : SpecimenDetector {
 
+    // Only touched on [handler]'s thread, which is the single thread every build, inference and
+    // teardown is posted to.
     private var model: CompiledModel? = null
     private var inputBuffers: List<TensorBuffer> = emptyList()
     private var outputBuffers: List<TensorBuffer> = emptyList()
-
-    private val detectorLock = Any()
-    private var isClosed = false
     private var usingGpu = false
+
+    private val stateLock = Any()
+    private var warmUpRequested = false
+    private var warmUpGeneration = 0
+    private var isClosed = false
+
+    @Volatile
+    private var isWarm = false
 
     private val handlerThread = HandlerThread("LiteRTSpecimenDetectorThread").apply { start() }
     private val handler = Handler(handlerThread.looper)
 
+    @Volatile
     private var inputTensorHeight = DEFAULT_TENSOR_HEIGHT
+
+    @Volatile
     private var inputTensorWidth = DEFAULT_TENSOR_WIDTH
 
+    @Volatile
     private var outputNumChannels = DEFAULT_NUM_CHANNELS
+
+    @Volatile
     private var outputNumElements = DEFAULT_NUM_ELEMENTS
 
-    init {
-        handler.post { initializeModel() }
-    }
+    override fun warm() {
+        val generation = synchronized(stateLock) {
+            if (isClosed || warmUpRequested) return
+            warmUpRequested = true
+            ++warmUpGeneration
+        }
 
-    private fun initializeModel() {
-        synchronized(detectorLock) {
-            if (model != null || isClosed) return
+        handler.post {
+            // A release posted between the request and here means nobody wants this model any
+            // more, and building it only to tear it down would hold the thread for seconds.
+            val stillWanted = synchronized(stateLock) {
+                warmUpRequested && warmUpGeneration == generation
+            }
+            val built = if (stillWanted) initializeModel() else false
 
-            try {
-                model = createModelPreferringGpu(modelPath)
-                inputBuffers = model!!.createInputBuffers()
-                outputBuffers = model!!.createOutputBuffers()
-
-                resolveTensorShapes()
-                warmModel()
-
-                Timber.d(
-                    "LiteRT CompiledModel initialized (accelerator=${if (usingGpu) "GPU" else "CPU"})"
-                )
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to initialize LiteRT CompiledModel: ${e.message}")
-                releaseModelLocked()
+            // A failed build must not latch. This detector is a singleton, so leaving
+            // warmUpRequested true after a failure would make every later detect() no-op for
+            // the rest of the process — preview stays empty and capture reports no specimen.
+            // initializeModel releases whatever it allocated before returning false. The
+            // generation check is what stops a newer warm() from being cancelled if release
+            // landed mid-build. The next detect() or warm() will retry; frames that arrive
+            // while a build is in flight still no-op because warmUpRequested stays true.
+            if (!built) {
+                synchronized(stateLock) {
+                    if (warmUpRequested && warmUpGeneration == generation) {
+                        warmUpRequested = false
+                    }
+                }
             }
         }
+    }
+
+    private fun initializeModel(): Boolean {
+        if (model != null) return true
+
+        val attemptedGpu = GpuAccelerationPolicy.shouldAttemptGpu(context)
+        if (bindAndWarm(preferGpu = attemptedGpu)) return true
+        if (!attemptedGpu) return false
+
+        // GPU create can succeed and then buffers, shapes or the dummy run throw. Create's own
+        // catch never sees that, so retry the whole bind on CPU rather than leaving the detector
+        // cold (empty preview, capture reports no specimen).
+        Timber.w("Detector GPU init failed after create; retrying on CPU")
+        return bindAndWarm(preferGpu = false)
+    }
+
+    private fun bindAndWarm(preferGpu: Boolean): Boolean = try {
+        val startTime = System.currentTimeMillis()
+        val compiled = if (preferGpu) {
+            createModelPreferringGpu(modelPath)
+        } else {
+            createModelCpuOnly(modelPath)
+        }
+        model = compiled
+        inputBuffers = compiled.createInputBuffers()
+        outputBuffers = compiled.createOutputBuffers()
+
+        resolveTensorShapes()
+        warmModel()
+        isWarm = true
+
+        Timber.d(
+            "LiteRT CompiledModel initialized " +
+                "(accelerator=${if (usingGpu) "GPU" else "CPU"}, " +
+                "${System.currentTimeMillis() - startTime}ms)"
+        )
+        true
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to initialize LiteRT CompiledModel: ${e.message}")
+        releaseModel()
+        false
     }
 
     private fun createModelPreferringGpu(assetName: String): CompiledModel {
@@ -86,7 +147,7 @@ class TfLiteSpecimenDetector(
             TfLiteModelLoader.create(
                 context,
                 assetName,
-                CompiledModel.Options(Accelerator.GPU),
+                GpuModelCache.options(context, cacheKey = assetName),
             ).also {
                 usingGpu = true
                 Timber.d("CompiledModel created with GPU accelerator")
@@ -160,7 +221,13 @@ class TfLiteSpecimenDetector(
     override fun getOutputTensorShape(): Pair<Int, Int> = outputNumChannels to outputNumElements
 
     override suspend fun detect(bitmap: Bitmap): List<DetectorResult> {
-        if (!isReady()) return emptyList()
+        // Preview frames arrive continuously, so waiting on the build would queue a burst that all
+        // runs at once the moment it finishes. Dropping frames until the model is up is cheaper and
+        // looks the same on screen.
+        if (!isWarm) {
+            warm()
+            return emptyList()
+        }
 
         return suspendCoroutine { continuation ->
             handler.post {
@@ -177,11 +244,14 @@ class TfLiteSpecimenDetector(
                         FloatArray(preprocessedMatrixHeight * preprocessedMatrixWidth * preprocessedMatrixChannels)
                     preprocessedMatrix.get(0, 0, inputFloatBuffer)
 
-                    val result = synchronized(detectorLock) {
-                        if (!isReady()) return@post continuation.resume(emptyList())
+                    // A release can land between the warm check and this runnable, so the model has
+                    // to be re-checked here.
+                    val compiled = model
+                        ?: return@post continuation.resume(emptyList())
 
+                    val result = run {
                         inputBuffers[0].writeFloat(inputFloatBuffer)
-                        model!!.run(inputBuffers, outputBuffers)
+                        compiled.run(inputBuffers, outputBuffers)
                         val output = outputBuffers[0].readFloat()
 
                         getDetectedResults(output).map { bboxPrediction ->
@@ -204,10 +274,6 @@ class TfLiteSpecimenDetector(
                 }
             }
         }
-    }
-
-    private fun isReady(): Boolean = synchronized(detectorLock) {
-        !isClosed && model != null && inputBuffers.isNotEmpty() && outputBuffers.isNotEmpty()
     }
 
     private fun prepareInputMatrix(bitmap: Bitmap): Mat {
@@ -325,20 +391,18 @@ class TfLiteSpecimenDetector(
         inputBuffers[0].writeFloat(FloatArray(inputSize))
         model?.run(inputBuffers, outputBuffers)
         val output = outputBuffers[0].readFloat()
-        if (output.isNotEmpty() && output.size % outputNumElements == 0) {
+        require(output.isNotEmpty() && output.all { it.isFinite() }) {
+            "Non-finite detector output after warm-up"
+        }
+        if (output.size % outputNumElements == 0) {
             outputNumChannels = output.size / outputNumElements
         }
         Timber.d("Detector warmed up (gpu=$usingGpu, outputChannels=$outputNumChannels)")
     }
 
-    private fun releaseModelLocked() {
-        inputBuffers.forEach { buffer ->
-            try {
-                buffer.close()
-            } catch (_: Exception) {
-            }
-        }
-        outputBuffers.forEach { buffer ->
+    private fun releaseModel() {
+        isWarm = false
+        (inputBuffers + outputBuffers).forEach { buffer ->
             try {
                 buffer.close()
             } catch (_: Exception) {
@@ -354,21 +418,32 @@ class TfLiteSpecimenDetector(
         usingGpu = false
     }
 
+    override fun release() {
+        synchronized(stateLock) {
+            if (isClosed || !warmUpRequested) return
+            warmUpRequested = false
+        }
+
+        handler.post {
+            releaseModel()
+            Timber.d("Detector released")
+        }
+    }
+
     override fun close() {
-        synchronized(detectorLock) {
+        synchronized(stateLock) {
             if (isClosed) return
             isClosed = true
+            warmUpRequested = false
+        }
 
-            handler.post {
-                try {
-                    synchronized(detectorLock) {
-                        releaseModelLocked()
-                    }
-                    handlerThread.quitSafely()
-                    Timber.d("Detector closed")
-                } catch (e: Exception) {
-                    Timber.e("Error during detector close: ${e.message}")
-                }
+        handler.post {
+            try {
+                releaseModel()
+                handlerThread.quitSafely()
+                Timber.d("Detector closed")
+            } catch (e: Exception) {
+                Timber.e("Error during detector close: ${e.message}")
             }
         }
     }

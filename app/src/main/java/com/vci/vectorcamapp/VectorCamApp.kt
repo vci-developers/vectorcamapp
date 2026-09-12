@@ -10,16 +10,17 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.logging.CrashlyticsTree
+import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext
-import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
-import timber.log.Timber
+import com.vci.vectorcamapp.imaging.domain.SpecimenModelWarmer
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.opencv.android.OpenCVLoader
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -32,6 +33,9 @@ class VectorCamApp : Application(), Configuration.Provider {
     // constructor injection for Android framework entry-point classes.
     @Inject
     lateinit var deviceCache: DeviceCache
+
+    @Inject
+    lateinit var specimenModelWarmer: SpecimenModelWarmer
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -85,6 +89,7 @@ class VectorCamApp : Application(), Configuration.Provider {
             override fun onStart(owner: LifecycleOwner) {
                 foregroundedAt = System.currentTimeMillis()
                 VectorCamAnalytics.logEvent("app_foregrounded")
+                specimenModelWarmer.onForeground()
             }
 
             override fun onStop(owner: LifecycleOwner) {
@@ -93,9 +98,13 @@ class VectorCamApp : Application(), Configuration.Provider {
                     "app_backgrounded",
                     mapOf("foreground_duration_ms" to duration)
                 )
+                specimenModelWarmer.onBackground()
             }
         }
         ProcessLifecycleOwner.get().lifecycle.addObserver(lifecycleObserver)
+
+        // Start the GPU builds during splash / permission checks, not when Imaging opens.
+        specimenModelWarmer.warm()
 
         val initStartMs = System.currentTimeMillis()
         try {

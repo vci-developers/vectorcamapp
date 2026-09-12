@@ -11,5 +11,4 @@ interface InferenceRepository {
     suspend fun detectSpecimen(bitmap: Bitmap): List<DetectorResult>
     suspend fun classifySpecimen(croppedBitmap: Bitmap): Triple<ClassifierResult?, ClassifierResult?, ClassifierResult?>
     suspend fun computeAutofocusCentroid(bitmap: Bitmap, detection: InferenceResult): Offset?
-    fun closeResources()
 }
