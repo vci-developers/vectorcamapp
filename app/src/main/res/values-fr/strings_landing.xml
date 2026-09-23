@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="landing_title_welcome">Bienvenue sur VectorCam !</string>
+    <string name="landing_title_section_imaging">Imagerie</string>
+    <string name="landing_title_section_library">Bibliothèque</string>
+    <string name="landing_title_new_surveillance">Nouvelle session de surveillance</string>
+    <string name="landing_title_incomplete_sessions">Voir les sessions en cours</string>
+    <string name="landing_title_complete_sessions">Voir les sessions terminées</string>
+    <string name="landing_title_resume_dialog">Reprendre la session inachevée ?</string>
+
+    <!-- Body -->
+    <string name="landing_body_new_surveillance">Commence une nouvelle visite à domicile et capture des images de moustiques.</string>
+    <string name="landing_body_incomplete_sessions">Reprends et termine les sessions inachevées.</string>
+    <string name="landing_body_complete_sessions">Consulte les sessions terminées et les données envoyées.</string>
+    <string name="landing_body_resume_dialog">Tu as une session de surveillance en cours. Souhaites-tu reprendre où tu en étais ?</string>
+
+    <!-- Actions -->
+    <string name="landing_action_resume_dialog_confirm">Oui, reprendre</string>
+    <string name="landing_action_resume_dialog_dismiss">Non, recommencer</string>
+
+    <!-- Labels -->
+    <string name="landing_label_program">Programme : %1$s</string>
+
+    <!-- Content Descriptions -->
+    <string name="landing_content_description_settings">Icône de paramètres</string>
+    <string name="landing_content_description_action_icon">Icône d\'action</string>
+    <string name="landing_content_description_arrow">Flèche droite</string>
+
+</resources>
