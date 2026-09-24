@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Error Fallback -->
+    <string name="error_fallback">Une erreur inconnue s\'est produite. Réessaie ou contacte le support si le problème persiste.</string>
+
+    <!-- Network Errors -->
+    <string name="network_error_request_timeout">La requête a expiré. Vérifie ta connexion et réessaie.</string>
+    <string name="network_error_too_many_requests">Tu as envoyé trop de requêtes en peu de temps. Patiente et réessaie plus tard.</string>
+    <string name="network_error_no_internet">Aucune connexion Internet. Vérifie tes paramètres réseau et réessaie.</string>
+    <string name="network_error_server_error">Une erreur s\'est produite sur le serveur. Réessaie plus tard.</string>
+    <string name="network_error_serialization_error">Un problème est survenu lors du traitement de la réponse. Contacte le support si cela persiste.</string>
+    <string name="network_error_session_not_completed">Cette session n\'a pas encore été marquée comme terminée.</string>
+    <string name="network_error_not_found">L\'élément demandé est introuvable.</string>
+    <string name="network_error_conflict">Un élément portant le même ID existe déjà.</string>
+    <string name="network_error_client_error">La requête n\'était pas valide. Vérifie ta saisie et réessaie.</string>
+    <string name="network_error_tus_transient_error">Erreur temporaire du téléverseur tus. Nouvelle tentative en attente.</string>
+    <string name="network_error_tus_permanent_error">Erreur permanente du téléverseur tus. Contacte le support si le problème persiste.</string>
+    <string name="network_error_unknown_error">Une erreur inconnue s\'est produite. Réessaie ou contacte le support si le problème persiste.</string>
+
+    <!-- Database Errors -->
+    <string name="roomdb_error_constraint_violation">Certaines des informations saisies sont invalides ou existent déjà. Vérifie-les et réessaie.</string>
+    <string name="roomdb_error_no_rows_affected">Impossible d\'enregistrer les informations. Réessaie.</string>
+    <string name="roomdb_error_unknown_error">Une erreur inconnue s\'est produite lors de l\'enregistrement des données. Contacte le support si ce problème persiste.</string>
+
+    <!-- Form Validation Errors -->
+    <string name="form_validation_error_blank_collector">Le collecteur est obligatoire.</string>
+    <string name="form_validation_error_blank_district">Le district est obligatoire.</string>
+    <string name="form_validation_error_blank_village_name">Le nom du village est obligatoire.</string>
+    <string name="form_validation_error_blank_house_number">Le numéro de maison est obligatoire.</string>
+    <string name="form_validation_error_blank_location_type_selection">La sélection d\'un site pour ce type de localisation est obligatoire.</string>
+    <string name="form_validation_error_blank_llin_type">Ce champ est obligatoire lorsque des LLIN sont disponibles.</string>
+    <string name="form_validation_error_blank_llin_brand">Ce champ est obligatoire lorsque des LLIN sont disponibles.</string>
+    <string name="form_validation_error_future_collection_date">La date de collecte ne peut pas être dans le futur.</string>
+    <string name="form_validation_error_blank_collection_method">La méthode de collecte est obligatoire.</string>
+    <string name="form_validation_error_blank_specimen_condition">L\'état du spécimen est obligatoire.</string>
+    <string name="form_validation_error_invalid_num_people_slept_under_llin_condition">Ce champ est obligatoire lorsque des LLIN sont disponibles.</string>
+    <string name="form_validation_error_invalid_num_people_slept_in_house_condition">Le nombre de personnes vivant dans cette maison est obligatoire.</string>
+    <string name="form_validation_error_invalid_num_llins_available">Le nombre de LLIN disponibles est obligatoire.</string>
+    <string name="form_validation_error_invalid_months_since_irs">Ce champ est obligatoire lorsqu\'une IRS a été effectuée.</string>
+    <string name="form_validation_error_invalid_form_answer">Ce champ est obligatoire. Fournis une réponse valide.</string>
+
+    <!-- Imaging Errors -->
+    <string name="imaging_error_capture_error">Impossible de prendre la photo. Réessaie.</string>
+    <string name="imaging_error_save_error">Impossible d\'enregistrer la photo. Réessaie.</string>
+    <string name="imaging_error_processing_error">Impossible de traiter la photo. Réessaie.</string>
+    <string name="imaging_error_invalid_specimen_id">L\'ID du spécimen doit comporter 3 lettres suivies de 3 chiffres (par ex. ABC123).</string>
+    <string name="imaging_error_no_specimen_found">Aucun spécimen trouvé sur la photo. Réessaie avec une image plus nette.</string>
+    <string name="imaging_error_multiple_specimens_found">Plusieurs spécimens détectés. Assure-toi qu\'un seul spécimen est dans le cadre.</string>
+    <string name="imaging_error_no_active_session">Aucune session active trouvée. Démarre une nouvelle session avant de capturer des images.</string>
+    <string name="imaging_error_model_initialization_failed">L\'application n\'a pas pu charger son moteur d\'analyse. Essaie de la redémarrer.</string>
+    <string name="imaging_error_gpu_delegate_initialization_failed">Ton appareil ne prend peut-être pas en charge l\'analyse d\'image accélérée. L\'application fonctionnera quand même, mais plus lentement.</string>
+    <string name="imaging_error_unknown_initialization_error">Un problème est survenu lors de la préparation de la session. Redémarre l\'application ou contacte le support.</string>
+    <string name="imaging_error_invalid_input_shape">L\'application a rencontré un problème lors de l\'analyse de l\'image. Reprends la photo.</string>
+    <string name="imaging_error_specimen_id_recognition_failed">Impossible de lire l\'ID du spécimen. Assure-toi que l\'étiquette est nette et bien éclairée.</string>
+    <string name="imaging_error_specimen_id_used_in_another_collection_batch">Cet ID de spécimen est déjà utilisé dans un autre lot de collecte de cette session.</string>
+    <string name="imaging_error_specimen_detection_failed">Impossible de détecter un spécimen sur l\'image. Essaie de prendre une photo plus nette.</string>
+    <string name="imaging_error_unknown_inference_error">Une erreur inconnue s\'est produite pendant l\'analyse. Réessaie.</string>
+    <string name="imaging_error_unknown_error">Une erreur inconnue s\'est produite. Contacte le support si ce problème persiste.</string>
+
+    <!-- Main Errors -->
+    <string name="main_error_device_fetch_failed">Impossible de charger les informations de l\'appareil. Réessaie.</string>
+    <string name="main_error_unknown_error">Une erreur inconnue s\'est produite. Réessaie ou contacte le support si le problème persiste.</string>
+
+    <!-- Landing Errors -->
+    <string name="landing_error_program_not_found">Impossible de trouver un programme valide pour cet appareil.</string>
+    <string name="landing_error_session_not_found">Impossible de trouver une session enregistrée. Démarres-en une nouvelle.</string>
+
+    <!-- Intake Errors -->
+    <string name="intake_error_site_not_found">Site introuvable pour le district et le site sentinelle sélectionnés.</string>
+    <string name="intake_error_missing_program_id">L\'ID du programme est manquant. Contacte le support.</string>
+    <string name="intake_error_location_permission_denied">Erreur d\'autorisation. Active l\'accès à la localisation dans les paramètres.</string>
+    <string name="intake_error_location_gps_timeout">Délai GPS dépassé. Déplace-toi à un autre endroit et réessaie.</string>
+    <string name="intake_error_missing_collector">Sélectionne un collecteur enregistré.</string>
+    <string name="intake_error_collector_save_failed">Impossible d\'enregistrer le collecteur. Réessaie.</string>
+    <string name="intake_error_form_invalid">Un ou plusieurs champs de ce formulaire sont invalides.</string>
+    <string name="intake_error_unknown_error">Une erreur inconnue s\'est produite. Réessaie ou contacte le support si le problème persiste.</string>
+
+    <!-- Collection Batch Errors -->
+    <string name="collection_batch_form_error_form_invalid">Un ou plusieurs champs de ce formulaire sont invalides.</string>
+    <string name="collection_batch_form_error_invalid_form_answer">Ce champ est obligatoire. Fournis une réponse valide.</string>
+    <string name="collection_batch_form_error_duplicate_identity">Un lot de collecte avec cette identité existe déjà. Modifie l\'un des champs d\'identité.</string>
+    <string name="collection_batch_form_error_unknown_error">Une erreur inconnue s\'est produite lors de l\'enregistrement de ce lot de collecte.</string>
+
+    <!-- Registration Errors -->
+    <string name="registration_error_program_not_found">Programme introuvable. Contacte le support.</string>
+    <string name="registration_error_invalid_program_access_code">Code d\'accès invalide. Réessaie.</string>
+    <string name="registration_error_unknown_error">Une erreur inconnue s\'est produite. Réessaie ou contacte le support si le problème persiste.</string>
+
+    <!-- Collector Validation Errors -->
+    <string name="collector_validation_error_blank_collector_title">La fonction du collecteur est obligatoire.</string>
+    <string name="collector_validation_error_blank_collector_name">Le nom du collecteur est obligatoire.</string>
+    <string name="collector_validation_error_invalid_collector_last_trained_on">La date de dernière formation du collecteur est invalide.</string>
+
+    <!-- Incomplete Session Errors -->
+    <string name="incomplete_session_error_session_not_found">Session introuvable. Réessaie.</string>
+    <string name="incomplete_session_error_session_retrieval_failed">Impossible de récupérer la session. Réessaie.</string>
+    <string name="incomplete_session_error_session_deletion_failed">Impossible de supprimer la session.</string>
+    <string name="incomplete_session_error_unknown_error">Une erreur inconnue s\'est produite. Réessaie ou contacte le support si le problème persiste.</string>
+
+    <!-- Complete Session Errors -->
+    <string name="complete_session_error_session_not_found">Impossible de charger les détails de la session. Réessaie.</string>
+    <string name="complete_session_error_site_not_found">Impossible de charger les détails du site. Réessaie.</string>
+    <string name="complete_session_error_specimens_not_found">Impossible de charger les spécimens. Réessaie.</string>
+    <string name="complete_session_error_program_not_found">Impossible de charger les détails du programme. Réessaie ou contacte le support si le problème persiste.</string>
+    <string name="complete_session_error_form_not_found">Impossible de charger les détails du formulaire. Réessaie ou contacte le support si le problème persiste.</string>
+    <string name="complete_session_error_unknown_error">Une erreur inconnue s\'est produite. Réessaie ou contacte le support si le problème persiste.</string>
+
+    <!-- Settings Errors -->
+    <string name="settings_error_collector_save_failed">Impossible d\'enregistrer le collecteur. Réessaie.</string>
+    <string name="settings_error_collector_deletion_failed">Impossible de supprimer le collecteur. Réessaie.</string>
+    <string name="settings_error_data_sync_failed">Impossible de synchroniser les données. Réessaie.</string>
+    <string name="settings_error_data_sync_in_progress_session_exist">Termine toutes les sessions en cours et réessaie.</string>
+
+    <!-- Upload Errors -->
+    <string name="upload_error_invalid_request">Requête d\'envoi invalide. Vérifie l\'ID de session et l\'ID de site.</string>
+    <string name="upload_error_invalid_session_id">Format d\'ID de session invalide.</string>
+    <string name="upload_error_device_session_not_found">Appareil ou session introuvable.</string>
+    <string name="upload_error_program_not_found">Programme introuvable.</string>
+    <string name="upload_error_session_not_found_server">Session introuvable sur le serveur.</string>
+    <string name="upload_error_lost_connection">Connexion Internet perdue pendant l\'envoi.</string>
+    <string name="upload_error_unknown">Une erreur inconnue s\'est produite pendant l\'envoi.</string>
+    <string name="upload_error_images_failed">Échec de l\'envoi d\'une ou plusieurs images.</string>
+
+</resources>
