@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="registration_title_register">S\'inscrire</string>
+    <string name="registration_title_access_code_dialog">Saisis le code d\'accès du programme</string>
+
+    <!-- Body -->
+    <string name="registration_body_select_program">Sélectionne ton programme affilié</string>
+
+    <!-- Labels -->
+    <string name="registration_label_program">Programme</string>
+    <string name="registration_label_collector_name">Nom du collecteur</string>
+    <string name="registration_label_collector_title">Fonction du collecteur</string>
+    <string name="registration_label_last_trained">Quand remonte ta dernière formation ?</string>
+    <string name="registration_label_access_code">Code d\'accès</string>
+
+    <!-- Actions -->
+    <string name="registration_action_confirm">Confirmer</string>
+    <string name="registration_action_access_code_dialog_confirm">Confirmer</string>
+    <string name="registration_action_access_code_dialog_cancel">Annuler</string>
+
+    <!-- Content Descriptions -->
+    <string name="registration_content_description_background">Arrière-plan avec moustique</string>
+    <string name="registration_content_description_hide_access_code">Masquer le code d\'accès</string>
+    <string name="registration_content_description_show_access_code">Afficher le code d\'accès</string>
+
+</resources>
