@@ -166,6 +166,14 @@ android {
         noCompress += "tflite"
     }
 
+    // Keep native libraries uncompressed so AGP 8.5.1+ can ZIP-align them to 16 KB.
+    // Required for Android 15+ devices that use 16 KB memory pages.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
     room {
         schemaDirectory("$projectDir/schemas")
     }
