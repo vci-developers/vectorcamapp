@@ -19,6 +19,7 @@ import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
+import com.vci.vectorcamapp.core.domain.repository.ProgramModelRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
@@ -69,6 +70,7 @@ class SettingsViewModelTest {
     private lateinit var formRepository: FormRepository
     private lateinit var formAnswerRepository: FormAnswerRepository
     private lateinit var formQuestionRepository: FormQuestionRepository
+    private lateinit var programModelRepository: ProgramModelRepository
     private lateinit var defaultIntakeFieldsCache: DefaultIntakeFieldsCache
     private lateinit var currentSessionCache: CurrentSessionCache
     private lateinit var appLocaleManager: AppLocaleManager
@@ -101,6 +103,9 @@ class SettingsViewModelTest {
         formRepository = mockk(relaxed = true)
         formAnswerRepository = mockk(relaxed = true)
         formQuestionRepository = mockk(relaxed = true)
+        programModelRepository = mockk(relaxed = true)
+        coEvery { programModelRepository.syncConfiguredModels(any(), any()) } returns Result.Success(emptyList())
+        coEvery { programModelRepository.getLocalModelsConfig(any()) } returns null
         defaultIntakeFieldsCache = mockk(relaxed = true)
         currentSessionCache = mockk(relaxed = true)
         connectivityObserver = mockk(relaxed = true)
@@ -137,6 +142,7 @@ class SettingsViewModelTest {
         sessionRepository = sessionRepository,
         formRepository = formRepository,
         formQuestionRepository = formQuestionRepository,
+        programModelRepository = programModelRepository,
         defaultIntakeFieldsCache = defaultIntakeFieldsCache,
         currentSessionCache = currentSessionCache,
         appLocaleManager = appLocaleManager,

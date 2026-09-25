@@ -19,6 +19,7 @@ import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
+import com.vci.vectorcamapp.core.domain.repository.ProgramModelRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
@@ -26,8 +27,9 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
-import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
+import com.vci.vectorcamapp.core.logging.ProgramModelLog
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
@@ -62,6 +64,7 @@ class RegistrationViewModel @Inject constructor(
     private val formDataSource: FormDataSource,
     private val formRepository: FormRepository,
     private val formQuestionRepository: FormQuestionRepository,
+    private val programModelRepository: ProgramModelRepository,
     connectivityObserver: ConnectivityObserver,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
@@ -233,11 +236,17 @@ class RegistrationViewModel @Inject constructor(
                                         "duration_ms" to verifyDurationMs
                                     )
                                 )
+                                // Close access-code dialog and show download loader immediately.
                                 _state.update {
                                     it.copy(
                                         isProgramAccessCodeDialogVisible = false,
                                         programAccessCodeInput = "",
-                                        programAccessCodeError = null
+                                        programAccessCodeError = null,
+                                        isLoading = true,
+                                        loadingPhase = RegistrationLoadingPhase.DOWNLOADING_MODEL,
+                                        modelDownloadProgress = 0f,
+                                        modelDownloadBytes = 0L,
+                                        modelDownloadTotalBytes = 0L,
                                     )
                                 }
                                 registerCollectorAndProceed(selectedProgram)
@@ -293,6 +302,7 @@ class RegistrationViewModel @Inject constructor(
     private suspend fun registerCollectorAndProceed(selectedProgram: Program) {
         if (!_isConnectedToInternet.value) {
             emitError(NetworkError.NO_INTERNET)
+            _state.update { it.copy(isLoading = false, loadingPhase = null) }
             return
         }
 
@@ -303,7 +313,22 @@ class RegistrationViewModel @Inject constructor(
         )
 
         try {
-            _state.update { it.copy(isLoading = true) }
+            _state.update {
+                it.copy(
+                    isLoading = true,
+                    loadingPhase = RegistrationLoadingPhase.DOWNLOADING_MODEL,
+                    modelDownloadProgress = 0f,
+                    modelDownloadBytes = 0L,
+                    modelDownloadTotalBytes = 0L,
+                )
+            }
+            fetchAndSeedModelForProgram(selectedProgram.id)
+            _state.update {
+                it.copy(
+                    loadingPhase = RegistrationLoadingPhase.SETTING_UP_PROGRAM,
+                    modelDownloadProgress = 1f,
+                )
+            }
             transactionHelper.runAsTransaction {
                 fetchAndSeedAllLocationTypesForProgram(selectedProgram.id)
                 fetchAndSeedAllSitesForProgram(selectedProgram.id)
@@ -351,7 +376,83 @@ class RegistrationViewModel @Inject constructor(
                 )
             )
         } finally {
-            _state.update { it.copy(isLoading = false) }
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    loadingPhase = null,
+                    modelDownloadProgress = 0f,
+                    modelDownloadBytes = 0L,
+                    modelDownloadTotalBytes = 0L,
+                )
+            }
+        }
+    }
+
+    private suspend fun fetchAndSeedModelForProgram(programId: Int) {
+        _state.update {
+            it.copy(
+                isLoading = true,
+                loadingPhase = RegistrationLoadingPhase.DOWNLOADING_MODEL,
+                modelDownloadProgress = 0f,
+                modelDownloadBytes = 0L,
+                modelDownloadTotalBytes = 0L,
+            )
+        }
+        when (
+            val result = programModelRepository.syncConfiguredModels(programId) { bytesDownloaded, totalBytes ->
+                val progress = if (totalBytes > 0L) {
+                    (bytesDownloaded.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
+                } else {
+                    0f
+                }
+                _state.update {
+                    it.copy(
+                        isLoading = true,
+                        loadingPhase = RegistrationLoadingPhase.DOWNLOADING_MODEL,
+                        modelDownloadProgress = progress,
+                        modelDownloadBytes = bytesDownloaded,
+                        modelDownloadTotalBytes = totalBytes,
+                    )
+                }
+            }
+        ) {
+            is Result.Success -> {
+                val models = result.data
+                ProgramModelLog.i(
+                    "Registration model sync SUCCESS programId=%d count=%d modelIds=%s fallback=%s",
+                    programId,
+                    models.size,
+                    models.joinToString { it.modelId }.ifEmpty { "none" },
+                    models.isEmpty()
+                )
+                VectorCamAnalytics.logEvent(
+                    "program_model_sync_succeeded",
+                    mapOf(
+                        "program_id" to programId,
+                        "model_count" to models.size,
+                        "model_ids" to models.joinToString(",") { it.modelId },
+                        "downloaded" to models.isNotEmpty(),
+                        "fallback" to models.isEmpty(),
+                    )
+                )
+            }
+
+            is Result.Error -> {
+                // Keep going with bundled asset models when download fails.
+                ProgramModelLog.w(
+                    "Registration model sync FAIL programId=%d error=%s — using bundled assets",
+                    programId,
+                    result.error
+                )
+                VectorCamAnalytics.logEvent(
+                    "program_model_download_failed",
+                    mapOf(
+                        "program_id" to programId,
+                        "error_class" to (result.error as? Enum<*>)?.name,
+                        "fallback" to "bundled_assets"
+                    )
+                )
+            }
         }
     }
 
