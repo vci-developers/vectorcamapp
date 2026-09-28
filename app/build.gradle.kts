@@ -119,6 +119,19 @@ android {
             
             resValue("string", "app_name_region", "VectorCam Ghana")
         }
+
+        create("cameroon") {
+            dimension = "region"
+            applicationIdSuffix = ".cameroon"
+            versionCode = 6001
+            versionName = "1.0.1"
+
+            buildConfigField("String", "REGION", "\"cameroon\"")
+            buildConfigField("String", "REGION_CODE", "\"CM\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Cameroon\"")
+
+            resValue("string", "app_name_region", "VectorCam Cameroon")
+        }
     }
 
     buildTypes {
