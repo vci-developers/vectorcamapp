@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Upload Status -->
+    <string name="upload_status_completed">Terminé</string>
+    <string name="upload_status_in_progress">En cours</string>
+    <string name="upload_status_not_started">Non démarré</string>
+    <string name="upload_status_retry">Réessayer</string>
+
+    <!-- Session Type -->
+    <string name="session_type_surveillance">Surveillance</string>
+    <string name="session_type_data_collection">Collecte de données</string>
+    <string name="session_type_practice">Entraînement</string>
+
+    <!-- Search Help -->
+    <string name="search_title_help">Fonctionnement de la recherche</string>
+    <string name="search_body_space_rule">• Mets un ESPACE entre les mots lorsque tu veux des résultats qui contiennent tous les mots.</string>
+    <string name="search_body_comma_rule">• Mets une VIRGULE entre les groupes lorsque n\'importe lequel des groupes convient.</string>
+    <string name="search_label_examples">Exemples :</string>
+    <string name="search_body_example_1">• Anopheles Male → doit contenir Anopheles et Male.</string>
+    <string name="search_body_example_2">• Anopheles Male, Mansonia Female → soit (Anopheles et Male), soit (Mansonia et Female).</string>
+    <string name="search_action_learn_more">Appuie pour en savoir plus sur la recherche</string>
+
+    <!-- Shared Component Content Descriptions -->
+    <string name="core_content_description_calendar">Calendrier</string>
+    <string name="core_content_description_collapse_dropdown">Réduire le menu déroulant</string>
+    <string name="core_content_description_expand_dropdown">Développer le menu déroulant</string>
+    <string name="core_content_description_tooltip">Icône d\'aide</string>
+    <string name="core_content_description_pill">Icône d\'étiquette</string>
+    <string name="core_content_description_error">Erreur</string>
+    <string name="core_content_description_dismiss">Icône pour fermer</string>
+
+    <!-- Capture Animation -->
+    <string name="capture_animation_label_capturing">Capture en cours… Ne bouge pas</string>
+    <string name="capture_animation_label_detecting">Localisation du spécimen…</string>
+    <string name="capture_animation_label_classifying">Classification du spécimen…</string>
+
+    <!-- Upload Notifications -->
+    <string name="upload_notification_session_title">Session du %1$s</string>
+    <string name="upload_notification_preparing">Préparation de l\'envoi de %1$d images…</string>
+    <string name="upload_notification_verifying">Vérification...</string>
+    <string name="upload_notification_uploading_image">Envoi de l\'image %1$d sur %2$d</string>
+    <string name="upload_notification_complete">Envoi terminé</string>
+    <string name="upload_notification_error">Erreur d\'envoi</string>
+    <string name="upload_notification_summary">%1$s : %2$d images sur %3$d envoyées.</string>
+    <string name="upload_notification_registering">Enregistrement de l\'appareil et de la session...</string>
+    <string name="upload_notification_uploading_metadata">Envoi des métadonnées du spécimen %1$s</string>
+    <string name="upload_notification_specimen_progress">Spécimen %1$d sur %2$d</string>
+    <string name="upload_notification_specimen_image_progress">Spécimen %1$d sur %2$d\nImage %3$d sur %4$d</string>
+    <string name="upload_notification_retrying">Nouvelle tentative d\'envoi...</string>
+    <string name="upload_notification_failed">Échec de l\'envoi</string>
+
+    <!-- Upload Service -->
+    <string name="upload_service_channel_name">Service d\'envoi</string>
+    <string name="upload_service_channel_description">Maintient l\'envoi des données et des images en arrière-plan</string>
+    <string name="upload_service_title">Envoi des données de la session</string>
+    <string name="upload_service_preparing">Préparation de l\'envoi…</string>
+    <string name="upload_service_waiting">En attente d\'une connexion réseau…</string>
+    <string name="upload_service_running">L\'envoi s\'exécute en arrière-plan…</string>
+
+</resources>

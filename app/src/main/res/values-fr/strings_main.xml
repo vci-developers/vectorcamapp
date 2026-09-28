@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="permission_title_permissions_required">Autorisations requises</string>
+    <string name="permission_title_gps_required">GPS requis</string>
+    <string name="permission_title_auto_time_required">Date et heure automatiques requises</string>
+    <string name="permission_title_tooltip">Autorisations de l\'application</string>
+    <string name="permission_title_camera">Autorisation d\'accès à la caméra</string>
+    <string name="permission_title_location">Autorisation d\'accès à la localisation</string>
+    <string name="permission_title_notification">Autorisation de notifications</string>
+
+    <!-- Body -->
+    <string name="permission_body_required">Pour fonctionner correctement, cette application a besoin d\'accéder à ta caméra, à ta localisation et à tes notifications. Une ou plusieurs de ces autorisations sont actuellement désactivées. Active-les dans les paramètres pour continuer.</string>
+    <string name="permission_body_gps_required">Pour fonctionner correctement, cette application a besoin que les services de localisation GPS soient activés. Active le GPS dans les paramètres pour continuer.</string>
+    <string name="permission_body_auto_time_required">Pour garantir des horodatages précis, cette application nécessite la date et l\'heure automatiques (heure Internet). Active-les dans les paramètres de ton appareil pour continuer.</string>
+    <string name="permission_body_camera">Nécessaire pour capturer des images détaillées des spécimens de moustiques afin de permettre une identification et une analyse précises.</string>
+    <string name="permission_body_location">Nécessaire pour enregistrer les sites de collecte exacts et associer chaque spécimen à son origine géographique pour le suivi sur le terrain.</string>
+    <string name="permission_body_notification">Permet à l\'application d\'afficher la progression des envois, les alertes de fin et d\'autres mises à jour importantes en arrière-plan.</string>
+    <string name="splash_body_tagline">Démocratiser la surveillance vectorielle</string>
+
+    <!-- Actions -->
+    <string name="permission_action_learn_more">Appuie pour en savoir plus sur les autorisations de l\'application</string>
+    <string name="permission_action_grant">Accorder les autorisations</string>
+    <string name="permission_action_enable_gps">Activer le GPS</string>
+    <string name="permission_action_enable_auto_time">Activer la date et l\'heure automatiques</string>
+
+    <!-- Content Descriptions -->
+    <string name="permission_content_description_background">Arrière-plan avec moustique</string>
+    <string name="permission_content_description_camera">Caméra</string>
+    <string name="permission_content_description_location">Localisation</string>
+    <string name="permission_content_description_notification">Notification</string>
+    <string name="splash_content_description_logo">Logo de l\'écran d\'accueil</string>
+
+</resources>

@@ -15,6 +15,7 @@
     <!-- Language -->
     <string name="language_english" translatable="false">English</string>
     <string name="language_spanish" translatable="false">Español</string>
+    <string name="language_french" translatable="false">Français</string>
 
     <!-- Search Help -->
     <string name="search_title_help">How Search Works</string>
@@ -36,6 +37,8 @@
 
     <!-- Capture Animation -->
     <string name="capture_animation_label_capturing">Capturing… Hold Still</string>
+    <string name="capture_animation_label_detecting">Locating Specimen…</string>
+    <string name="capture_animation_label_classifying">Classifying Specimen…</string>
 
     <!-- Upload Notifications -->
     <string name="upload_notification_session_title">Session from %1$s</string>

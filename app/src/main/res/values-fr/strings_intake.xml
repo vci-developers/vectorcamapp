@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="intake_title_screen">Saisie : %1$s</string>
+    <string name="intake_title_general_info">Informations générales</string>
+    <string name="intake_title_collector_not_found">Collecteur introuvable</string>
+    <string name="intake_title_collection_methods">Méthodes de collecte</string>
+    <string name="intake_title_cdc_light_trap">Piège lumineux CDC</string>
+    <string name="intake_title_human_landing_catch">Capture sur appât humain</string>
+    <string name="intake_title_pyrethrum_spray_catch">Capture par pulvérisation de pyrèthre</string>
+    <string name="intake_title_geographical_info">Informations géographiques</string>
+    <string name="intake_title_surveillance_form">Formulaire de surveillance</string>
+    <string name="intake_title_additional_notes">Notes supplémentaires</string>
+
+    <!-- Body -->
+    <string name="intake_body_subtitle">Remplis les informations ci-dessous</string>
+    <string name="intake_body_collector_not_found">Le collecteur associé à cette session ne figure pas dans ta liste actuelle. Tu peux sélectionner un collecteur existant ou enregistrer celui-ci.</string>
+    <string name="intake_body_method_locked">Impossible de changer la méthode de collecte : des lots de collecte ont déjà été créés pour cette session.</string>
+    <string name="intake_body_cdc_light_trap">Un piège alimenté par batterie qui utilise une lumière pour attirer et collecter les moustiques la nuit.</string>
+    <string name="intake_body_human_landing_catch">Une personne expose une partie de son corps et collecte les moustiques qui se posent sur la peau.</string>
+    <string name="intake_body_pyrethrum_spray_catch">Une méthode de collecte en intérieur qui utilise un insecticide en aérosol pour faire tomber sur un drap les moustiques au repos.</string>
+    <string name="intake_body_location_error">Impossible d\'obtenir la localisation : %1$s</string>
+    <string name="intake_body_getting_location">Obtention de la localisation…</string>
+    <string name="intake_body_practice_warning">Il s\'agit d\'une session d\'entraînement. Les données soumises ne seront pas considérées comme des données de surveillance de routine.</string>
+
+    <!-- Labels -->
+    <string name="intake_label_collector">Collecteur</string>
+    <string name="intake_label_name">Nom</string>
+    <string name="intake_label_title">Fonction</string>
+    <string name="intake_label_hardware_id">ID du matériel</string>
+    <string name="intake_label_collection_date">Date de collecte</string>
+    <string name="intake_label_collection_method">Méthode de collecte</string>
+    <string name="intake_label_other_collection_method">Autre méthode de collecte</string>
+    <string name="intake_label_specimen_condition">État du spécimen</string>
+    <string name="intake_label_other_specimen_condition">Autre état du spécimen</string>
+    <string name="intake_label_district">District</string>
+    <string name="intake_label_village_name">Nom du village</string>
+    <string name="intake_label_house_number">Numéro de maison</string>
+    <string name="intake_label_latitude">Latitude : %1$s</string>
+    <string name="intake_label_longitude">Longitude : %1$s</string>
+    <string name="intake_label_num_people_house">Nombre de personnes vivant dans la maison</string>
+    <string name="intake_label_irs_conducted">Une IRS a-t-elle été effectuée dans ce foyer ?</string>
+    <string name="intake_label_months_since_irs">Mois écoulés depuis l\'IRS</string>
+    <string name="intake_label_num_llins">Nombre de LLIN disponibles</string>
+    <string name="intake_label_llin_type">Type de LLIN</string>
+    <string name="intake_label_llin_brand">Marque de LLIN</string>
+    <string name="intake_label_num_people_llin">Nombre de personnes ayant dormi sous une LLIN</string>
+    <string name="intake_label_notes">Notes</string>
+
+    <!-- Placeholders -->
+    <string name="intake_placeholder_notes">Limite de 1000 caractères...</string>
+
+    <!-- Actions -->
+    <string name="intake_action_register_collector">Enregistrer le collecteur manquant</string>
+    <string name="intake_action_learn_more_methods">Appuie pour en savoir plus sur les méthodes de collecte</string>
+    <string name="intake_action_retry_location">Réessayer la localisation</string>
+    <string name="intake_action_begin_imaging">Imagerie : %1$s</string>
+
+    <!-- Content Descriptions -->
+    <string name="intake_content_description_back">Bouton de retour</string>
+    <string name="intake_content_description_general_info">Icône d\'informations générales</string>
+    <string name="intake_content_description_missing_collector">Collecteur manquant</string>
+    <string name="intake_content_description_cdc_light_trap">Icône de piège lumineux CDC</string>
+    <string name="intake_content_description_human_landing_catch">Icône de capture sur appât humain</string>
+    <string name="intake_content_description_pyrethrum_spray_catch">Capture par pulvérisation de pyrèthre</string>
+    <string name="intake_content_description_geographical_info">Icône d\'informations géographiques</string>
+    <string name="intake_content_description_surveillance_form">Icône de formulaire de surveillance</string>
+    <string name="intake_content_description_additional_notes">Icône de notes supplémentaires</string>
+
+</resources>

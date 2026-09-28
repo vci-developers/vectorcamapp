@@ -119,7 +119,11 @@
 # ===============================
 # Native Libraries (Full Preservation)
 # ===============================
-# TensorFlow Lite (ML models)
+# LiteRT (ML models)
+-keep class com.google.ai.edge.litert.** { *; }
+-keepclassmembers class com.google.ai.edge.litert.** {
+    native <methods>;
+}
 -keep class org.tensorflow.lite.** { *; }
 -keepclassmembers class org.tensorflow.lite.** {
     native <methods>;

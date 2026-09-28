@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="settings_title_screen">Paramètres</string>
+    <string name="settings_title_actions">Actions</string>
+    <string name="settings_title_start_data_collection">Collecte de données</string>
+    <string name="settings_title_start_practice">Session d\'entraînement</string>
+    <string name="settings_title_update_data">Mise à jour des données</string>
+    <string name="settings_title_cloud_sync">Synchronisation cloud</string>
+    <string name="settings_title_about">À propos</string>
+    <string name="settings_title_language">Langue</string>
+    <string name="settings_title_preferences">Préférences</string>
+    <string name="settings_title_registered_collectors">Collecteurs enregistrés</string>
+    <string name="settings_title_device_info">Informations sur l\'appareil</string>
+    <string name="settings_title_program_info">Informations sur le programme</string>
+    <string name="settings_title_app_info">Informations sur l\'application</string>
+    <string name="settings_title_delete_profile">Supprimer le profil ?</string>
+    <string name="settings_title_edit_profile">Modifier le profil</string>
+    <string name="settings_title_add_profile">Ajouter un profil</string>
+    <string name="settings_title_typo_warning">Faute de frappe possible détectée</string>
+
+    <!-- Body -->
+    <string name="settings_body_subtitle">Configure les préférences de l\'application</string>
+    <string name="settings_body_connected">Connecté à Internet</string>
+    <string name="settings_body_no_internet">Aucune connexion Internet - Resynchronisation indisponible</string>
+    <string name="settings_body_delete_collector">Cette opération supprimera définitivement ce profil de collecteur. Cette action est irréversible.</string>
+    <string name="settings_body_typo_warning">Le nom \'%1$s\' est très similaire à celui d\'un collecteur existant \'%2$s\'.\n\nFonction : %3$s\nDernière formation le : %4$s\n\nVeux-tu vraiment ajouter ce profil ?</string>
+
+    <!-- Labels -->
+    <string name="settings_label_collector_name">Nom du collecteur</string>
+    <string name="settings_label_collector_title">Fonction du collecteur</string>
+    <string name="settings_label_last_trained">Quand remonte ta dernière formation ?</string>
+    <string name="settings_label_device_id">ID de l\'appareil : %1$s</string>
+    <string name="settings_label_device_model">Modèle de l\'appareil : %1$s</string>
+    <string name="settings_label_registered_at">Enregistré le : %1$s</string>
+    <string name="settings_label_program_id">ID du programme : %1$s</string>
+    <string name="settings_label_program_name">Nom du programme : %1$s</string>
+    <string name="settings_label_country">Pays : %1$s</string>
+    <string name="settings_label_version">Version : %1$s</string>
+    <string name="settings_label_build_code">Code de build : %1$d</string>
+    <string name="settings_label_build_type">Type de build : %1$s</string>
+
+    <!-- Actions -->
+    <string name="settings_action_syncing">Synchronisation des données...</string>
+    <string name="settings_action_resync">Resynchroniser les données</string>
+    <string name="settings_action_edit">Modifier</string>
+    <string name="settings_action_add_profile">Ajouter un profil</string>
+    <string name="settings_action_collector_dialog_confirm_delete">Oui, supprimer</string>
+    <string name="settings_action_collector_dialog_submit">Soumettre</string>
+    <string name="settings_action_collector_dialog_delete">Supprimer</string>
+    <string name="settings_action_collector_dialog_cancel">Annuler</string>
+    <string name="settings_action_typo_warning_save">Enregistrer quand même</string>
+    <string name="settings_action_typo_warning_edit">Modifier le nom</string>
+
+    <!-- Content Descriptions -->
+    <string name="settings_content_description_back">Bouton de retour</string>
+    <string name="settings_content_description_profile">Icône de profil</string>
+    <string name="settings_content_description_navigate">Naviguer</string>
+    <string name="settings_content_description_collapse">Réduire</string>
+    <string name="settings_content_description_expand">Développer</string>
+
+</resources>

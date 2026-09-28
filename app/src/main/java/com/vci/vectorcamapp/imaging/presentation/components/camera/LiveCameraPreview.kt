@@ -20,9 +20,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.vci.vectorcamapp.animation.presentation.CaptureAnimation
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.imaging.data.camera.CameraFocusControllerImplementation
+import com.vci.vectorcamapp.imaging.presentation.enums.CaptureStage
 import com.vci.vectorcamapp.ui.extensions.colors
 
 @Composable
@@ -35,7 +35,7 @@ fun LiveCameraPreview(
     onCancelFocus: () -> Unit,
     modifier: Modifier = Modifier,
     isManualFocusing: Boolean,
-    isProcessing: Boolean
+    captureStage: CaptureStage?
 ) {
     val density = LocalDensity.current
     val view = LocalView.current
@@ -131,7 +131,7 @@ fun LiveCameraPreview(
 
         CaptureAnimation(
             modifier = Modifier.fillMaxSize(),
-            isVisible = isProcessing
+            stage = captureStage
         )
     }
 }

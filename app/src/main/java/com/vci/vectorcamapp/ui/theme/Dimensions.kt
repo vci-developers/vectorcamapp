@@ -79,9 +79,6 @@ data class Dimensions(
 
     // Aspect Ratio Height to Width
     val aspectRatio: Float = 4f / 3f,
-
-    // Capture Animation Parameters
-    val scannerLineHeight: Dp = (3 * scale).dp,
 )
 
 val LocalDimensions = staticCompositionLocalOf { Dimensions() }

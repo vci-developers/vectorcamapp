@@ -5,16 +5,17 @@ import androidx.compose.ui.geometry.Offset
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
-import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
+import com.vci.vectorcamapp.imaging.presentation.enums.CaptureStage
 import java.util.UUID
 
 data class ImagingState(
     val isLoading: Boolean = false,
-    val isProcessing: Boolean = false,
+    val captureStage: CaptureStage? = null,
     val sessionType: SessionType = SessionType.SURVEILLANCE,
     val sessionUnitId: UUID? = null,
     val currentSpecimen: Specimen = Specimen(id = "", remoteId = null, shouldProcessFurther = false),
