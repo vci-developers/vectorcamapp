@@ -38,6 +38,7 @@
     <string name="form_validation_error_invalid_num_people_slept_in_house_condition">Le nombre de personnes vivant dans cette maison est obligatoire.</string>
     <string name="form_validation_error_invalid_num_llins_available">Le nombre de LLIN disponibles est obligatoire.</string>
     <string name="form_validation_error_invalid_months_since_irs">Ce champ est obligatoire lorsqu\'une IRS a été effectuée.</string>
+    <string name="form_validation_error_invalid_num_children_under_5">Le nombre d\'enfants de moins de 5 ans est obligatoire.</string>
     <string name="form_validation_error_invalid_form_answer">Ce champ est obligatoire. Fournis une réponse valide.</string>
 
     <!-- Imaging Errors -->

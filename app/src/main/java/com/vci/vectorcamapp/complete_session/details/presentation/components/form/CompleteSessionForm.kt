@@ -209,6 +209,32 @@ fun CompleteSessionForm(
                         color = MaterialTheme.colors.textPrimary
                     )
 
+                    it.numChildrenUnder5?.let { numChildrenUnder5 ->
+                        Text(
+                            text = stringResource(
+                                R.string.complete_session_label_num_children_under_5,
+                                numChildrenUnder5
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colors.textPrimary
+                        )
+                    }
+
+                    it.hasPregnantWoman?.let { hasPregnantWoman ->
+                        Text(
+                            text = stringResource(
+                                R.string.complete_session_label_has_pregnant_woman,
+                                if (hasPregnantWoman) {
+                                    stringResource(R.string.complete_session_label_yes)
+                                } else {
+                                    stringResource(R.string.complete_session_label_no)
+                                }
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colors.textPrimary
+                        )
+                    }
+
                     Text(
                         text = stringResource(R.string.complete_session_label_irs_conducted, if (it.wasIrsConducted) stringResource(R.string.complete_session_label_yes) else stringResource(R.string.complete_session_label_no)),
                         style = MaterialTheme.typography.bodySmall,

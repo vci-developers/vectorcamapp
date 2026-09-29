@@ -39,6 +39,8 @@
     <string name="complete_session_label_health_center">Centre de santé le plus proche : %1$s</string>
     <string name="complete_session_label_detail">%1$s : %2$s</string>
     <string name="complete_session_label_num_people_house">Nombre de personnes ayant dormi dans la maison : %1$s</string>
+    <string name="complete_session_label_num_children_under_5">Nombre d\'enfants de moins de 5 ans : %1$s</string>
+    <string name="complete_session_label_has_pregnant_woman">Femme enceinte dans le foyer : %1$s</string>
     <string name="complete_session_label_irs_conducted">Pulvérisation intradomiciliaire à effet rémanent (IRS) effectuée : %1$s</string>
     <string name="complete_session_label_yes">Oui</string>
     <string name="complete_session_label_no">Non</string>

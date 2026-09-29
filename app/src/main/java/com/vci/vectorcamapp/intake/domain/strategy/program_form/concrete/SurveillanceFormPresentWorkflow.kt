@@ -15,6 +15,8 @@ class SurveillanceFormPresentWorkflow : ProgramFormWorkflow {
             llinType = null,
             llinBrand = null,
             numPeopleSleptUnderLlin = null,
+            numChildrenUnder5 = null,
+            hasPregnantWoman = false,
             submittedAt = null
         )
 

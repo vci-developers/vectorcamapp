@@ -35,6 +35,7 @@ import com.vci.vectorcamapp.intake.domain.use_cases.ValidateHouseNumberUseCase
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateLlinBrandUseCase
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateLlinTypeUseCase
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateMonthsSinceIrsUseCase
+import com.vci.vectorcamapp.intake.domain.use_cases.ValidateNumChildrenUnder5UseCase
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateNumLlinsAvailableUseCase
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateNumPeopleSleptInHouseUseCase
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateNumPeopleSleptUnderLlinUseCase
@@ -154,6 +155,7 @@ class IntakeViewModelTest {
             validateMonthsSinceIrs = ValidateMonthsSinceIrsUseCase(),
             validateNumLlinsAvailable = ValidateNumLlinsAvailableUseCase(),
             validateNumPeopleSleptUnderLlin = ValidateNumPeopleSleptUnderLlinUseCase(),
+            validateNumChildrenUnder5 = ValidateNumChildrenUnder5UseCase(),
             validateFormAnswersUseCase = ValidateFormAnswersUseCase(),
         )
     }

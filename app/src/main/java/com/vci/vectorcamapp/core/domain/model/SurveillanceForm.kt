@@ -8,5 +8,7 @@ data class SurveillanceForm(
     val llinType: String?,
     val llinBrand: String?,
     val numPeopleSleptUnderLlin: Int?,
+    val numChildrenUnder5: Int?,
+    val hasPregnantWoman: Boolean?,
     val submittedAt: Long?,
 )

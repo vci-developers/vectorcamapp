@@ -570,6 +570,21 @@ fun IntakeScreen(
                             error = state.intakeErrors.numPeopleSleptInHouse,
                         )
 
+                        TextEntryField(
+                            label = stringResource(R.string.intake_label_num_children_under_5),
+                            required = true,
+                            value = surveillanceForm.numChildrenUnder5?.toString() ?: "",
+                            onValueChange = { onAction(IntakeAction.EnterNumChildrenUnder5(it)) },
+                            singleLine = true,
+                            error = state.intakeErrors.numChildrenUnder5,
+                        )
+
+                        ToggleField(
+                            label = stringResource(R.string.intake_label_has_pregnant_woman),
+                            checked = surveillanceForm.hasPregnantWoman == true,
+                            onCheckedChange = { onAction(IntakeAction.ToggleHasPregnantWoman(it)) },
+                        )
+
                         ToggleField(
                             label = stringResource(R.string.intake_label_irs_conducted),
                             checked = surveillanceForm.wasIrsConducted,

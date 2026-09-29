@@ -38,6 +38,7 @@
     <string name="form_validation_error_invalid_num_people_slept_in_house_condition">Number of people who live in this house is required.</string>
     <string name="form_validation_error_invalid_num_llins_available">Number of LLINs available is required.</string>
     <string name="form_validation_error_invalid_months_since_irs">This field is required when IRS is conducted.</string>
+    <string name="form_validation_error_invalid_num_children_under_5">Number of children under 5 is required.</string>
     <string name="form_validation_error_invalid_form_answer">This field is required. Please provide a valid answer.</string>
 
     <!-- Imaging Errors -->

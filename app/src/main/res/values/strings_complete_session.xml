@@ -39,6 +39,8 @@
     <string name="complete_session_label_health_center">Nearest Health Center: %1$s</string>
     <string name="complete_session_label_detail">%1$s: %2$s</string>
     <string name="complete_session_label_num_people_house">Number of People who Slept in the House: %1$s</string>
+    <string name="complete_session_label_num_children_under_5">Number of Children Under 5: %1$s</string>
+    <string name="complete_session_label_has_pregnant_woman">Pregnant Woman in the Household: %1$s</string>
     <string name="complete_session_label_irs_conducted">Was Indoor Residual Spray (IRS) Conducted: %1$s</string>
     <string name="complete_session_label_yes">Yes</string>
     <string name="complete_session_label_no">No</string>

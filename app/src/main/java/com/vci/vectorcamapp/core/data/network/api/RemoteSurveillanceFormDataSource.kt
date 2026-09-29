@@ -34,7 +34,9 @@ class RemoteSurveillanceFormDataSource @Inject constructor(
                         numLlinsAvailable = surveillanceForm.numLlinsAvailable,
                         llinType = surveillanceForm.llinType,
                         llinBrand = surveillanceForm.llinBrand,
-                        numPeopleSleptUnderLlin = surveillanceForm.numPeopleSleptUnderLlin
+                        numPeopleSleptUnderLlin = surveillanceForm.numPeopleSleptUnderLlin,
+                        numChildrenUnder5 = surveillanceForm.numChildrenUnder5,
+                        hasPregnantWoman = surveillanceForm.hasPregnantWoman
                     )
                 )
             }
