@@ -389,7 +389,3 @@ class TfLiteSpecimenClassifier(
         val NORMALIZE_STDDEV = Scalar(0.229, 0.224, 0.225)
     }
 }
-
-
-
-

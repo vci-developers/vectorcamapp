@@ -2,6 +2,12 @@ package com.vci.vectorcamapp.settings.presentation
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.vci.vectorcamapp.core.data.dto.cache.DefaultIntakeFieldsCacheDto
+import com.vci.vectorcamapp.core.data.dto.form.FormDto
+import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto
+import com.vci.vectorcamapp.core.data.dto.location_type.GetAllLocationTypesResponseDto
+import com.vci.vectorcamapp.core.data.dto.location_type.LocationTypeDto
+import com.vci.vectorcamapp.core.data.dto.site.SiteDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
@@ -9,6 +15,9 @@ import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
+import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.Site
+import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
@@ -23,19 +32,10 @@ import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
-import com.vci.vectorcamapp.core.data.dto.cache.DefaultIntakeFieldsCacheDto
-import com.vci.vectorcamapp.core.data.dto.form.FormDto
-import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto
-import com.vci.vectorcamapp.core.data.dto.location_type.GetAllLocationTypesResponseDto
-import com.vci.vectorcamapp.core.data.dto.location_type.LocationTypeDto
-import com.vci.vectorcamapp.core.data.dto.site.SiteDto
-import com.vci.vectorcamapp.core.domain.model.Session
-import com.vci.vectorcamapp.core.domain.model.Site
-import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
-import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.locale.AppLocaleManager
 import com.vci.vectorcamapp.core.presentation.util.locale.SupportedLanguage
@@ -645,7 +645,13 @@ class SettingsViewModelTest {
         coVerify { programRepository.upsertProgram(testProgram.copy(formVersion = "v2")) }
         coVerify {
             defaultIntakeFieldsCache.saveDefaultIntakeFields(
-                "Ada", any(), any(), any(), "", "", emptyMap()
+                "Ada",
+                any(),
+                any(),
+                any(),
+                "",
+                "",
+                emptyMap(),
             )
         }
         assertThat(viewModel.state.value.isSyncingData).isFalse()

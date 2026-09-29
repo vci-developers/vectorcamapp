@@ -63,6 +63,18 @@ val generatedExcludes = listOf(
     "**/generated/**",
 )
 
+/**
+ * Code that matches an include pattern but cannot be exercised by JVM unit tests.
+ * CameraX, MediaStore, ML Kit, OpenCV, LiteRT, and Compose lifecycle all need a device.
+ */
+val deviceOnlyExcludes = listOf(
+    "**/ObserveAsEventsKt*.class",
+    "**/imaging/data/repository/CameraRepositoryImplementation*.class",
+    "**/imaging/data/repository/InferenceRepositoryImplementation*.class",
+    "**/imaging/data/util/ClassifierAcceleratorSelector*.class",
+    "**/imaging/data/util/GpuModelCache*.class",
+)
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -79,6 +91,7 @@ fun classTreeFor(variantName: String) =
     fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/$variantName")) {
         include(coverageIncludes)
         exclude(generatedExcludes)
+        exclude(deviceOnlyExcludes)
     }
 
 val sourceDirs = files("${project.projectDir}/src/main/java")

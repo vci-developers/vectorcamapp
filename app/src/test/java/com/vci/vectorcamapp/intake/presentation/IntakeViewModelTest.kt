@@ -1,15 +1,22 @@
 package com.vci.vectorcamapp.intake.presentation
 
+import android.location.Location
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.vci.vectorcamapp.core.data.dto.cache.DefaultIntakeFieldsCacheDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.model.FormQuestion
+import com.vci.vectorcamapp.core.domain.model.LocationType
 import com.vci.vectorcamapp.core.domain.model.Program
+import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
+import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
+import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
@@ -20,16 +27,9 @@ import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
-import android.location.Location
-import com.vci.vectorcamapp.core.domain.model.FormQuestion
-import com.vci.vectorcamapp.core.domain.model.LocationType
-import com.vci.vectorcamapp.core.domain.model.Session
-import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
-import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
-import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
-import com.vci.vectorcamapp.core.data.dto.cache.DefaultIntakeFieldsCacheDto
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteExpression
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteValue
 import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions
@@ -38,7 +38,6 @@ import com.vci.vectorcamapp.intake.domain.strategy.collection_method.CollectionM
 import com.vci.vectorcamapp.intake.domain.strategy.collection_method.CollectionMethodWorkflowFactory
 import com.vci.vectorcamapp.intake.domain.strategy.program_form.ProgramFormWorkflow
 import com.vci.vectorcamapp.intake.domain.strategy.program_form.ProgramFormWorkflowFactory
-import com.vci.vectorcamapp.navigation.Destination
 import com.vci.vectorcamapp.intake.domain.use_cases.IntakeValidationUseCases
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateCollectionDateUseCase
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateCollectionMethodUseCase
@@ -55,6 +54,7 @@ import com.vci.vectorcamapp.intake.domain.use_cases.ValidateNumPeopleSleptUnderL
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateSpecimenConditionUseCase
 import com.vci.vectorcamapp.intake.domain.use_cases.ValidateVillageNameUseCase
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
+import com.vci.vectorcamapp.navigation.Destination
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -71,6 +71,7 @@ import org.junit.Test
 import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Suppress("LargeClass")
 class IntakeViewModelTest {
 
     @get:Rule
@@ -555,7 +556,9 @@ class IntakeViewModelTest {
         val types = listOf(LocationType(1, "Village", 1), LocationType(2, "House", 2))
         every { locationTypeRepository.observeAllLocationTypesByProgramId(any()) } returns MutableStateFlow(types)
         val requiresYes = FormQuestionPrerequisiteExpression.Predicate(
-            1, "eq", FormQuestionPrerequisiteValue.StringValue("yes")
+            1,
+            "eq",
+            FormQuestionPrerequisiteValue.StringValue("yes"),
         )
         every { programFormWorkflow.formQuestions } returns listOf(
             question(1, "text"),
@@ -763,7 +766,12 @@ class IntakeViewModelTest {
         coVerify { formAnswerRepository.upsertFormAnswer(any(), any(), isNull(), 1) }
         coVerify {
             defaultIntakeFieldsCache.saveDefaultIntakeFields(
-                any(), any(), any(), any(), any(), any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
                 match { it.keys == setOf(1) },
             )
         }

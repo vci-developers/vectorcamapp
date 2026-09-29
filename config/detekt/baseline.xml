@@ -676,12 +676,15 @@
     <ID>PackageName:CollectionBatchFormTile.kt$package com.vci.vectorcamapp.collection_batch.form.presentation.components</ID>
     <ID>PackageName:CollectionBatchFormValidationUseCases.kt$package com.vci.vectorcamapp.collection_batch.domain.use_cases</ID>
     <ID>PackageName:CollectionBatchFormViewModel.kt$package com.vci.vectorcamapp.collection_batch.form.presentation</ID>
+    <ID>PackageName:CollectionBatchFormViewModelTest.kt$package com.vci.vectorcamapp.collection_batch.form.presentation</ID>
     <ID>PackageName:CollectionBatchIdentityResolver.kt$package com.vci.vectorcamapp.collection_batch.domain.util</ID>
+    <ID>PackageName:CollectionBatchIdentityResolverTest.kt$package com.vci.vectorcamapp.collection_batch.domain.util</ID>
     <ID>PackageName:CollectionBatchListAction.kt$package com.vci.vectorcamapp.collection_batch.list.presentation</ID>
     <ID>PackageName:CollectionBatchListEvent.kt$package com.vci.vectorcamapp.collection_batch.list.presentation</ID>
     <ID>PackageName:CollectionBatchListScreen.kt$package com.vci.vectorcamapp.collection_batch.list.presentation</ID>
     <ID>PackageName:CollectionBatchListState.kt$package com.vci.vectorcamapp.collection_batch.list.presentation</ID>
     <ID>PackageName:CollectionBatchListViewModel.kt$package com.vci.vectorcamapp.collection_batch.list.presentation</ID>
+    <ID>PackageName:CollectionBatchListViewModelTest.kt$package com.vci.vectorcamapp.collection_batch.list.presentation</ID>
     <ID>PackageName:CollectionMethodWorkflow.kt$package com.vci.vectorcamapp.intake.domain.strategy.collection_method</ID>
     <ID>PackageName:CollectionMethodWorkflowFactory.kt$package com.vci.vectorcamapp.intake.domain.strategy.collection_method</ID>
     <ID>PackageName:CollectorValidationUseCases.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
@@ -750,6 +753,7 @@
     <ID>PackageName:SurveillanceFormDto.kt$package com.vci.vectorcamapp.core.data.dto.surveillance_form</ID>
     <ID>PackageName:SurveillanceFormPresentWorkflow.kt$package com.vci.vectorcamapp.intake.domain.strategy.program_form.concrete</ID>
     <ID>PackageName:ValidateCollectionBatchIdentityUseCase.kt$package com.vci.vectorcamapp.collection_batch.domain.use_cases</ID>
+    <ID>PackageName:ValidateCollectionBatchIdentityUseCaseTest.kt$package com.vci.vectorcamapp.collection_batch.domain.use_cases</ID>
     <ID>PackageName:ValidateCollectionDateUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
     <ID>PackageName:ValidateCollectionMethodUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
     <ID>PackageName:ValidateCollectorLastTrainedOnUseCase.kt$package com.vci.vectorcamapp.core.domain.use_cases.collector</ID>
@@ -758,6 +762,7 @@
     <ID>PackageName:ValidateCollectorUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
     <ID>PackageName:ValidateDistrictUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
     <ID>PackageName:ValidateFormAnswersUseCase.kt$package com.vci.vectorcamapp.collection_batch.domain.use_cases</ID>
+    <ID>PackageName:ValidateFormAnswersUseCaseTest.kt$package com.vci.vectorcamapp.collection_batch.domain.use_cases</ID>
     <ID>PackageName:ValidateFormAnswersUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
     <ID>PackageName:ValidateFormAnswersUseCaseTest.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>
     <ID>PackageName:ValidateHouseNumberUseCase.kt$package com.vci.vectorcamapp.intake.domain.use_cases</ID>

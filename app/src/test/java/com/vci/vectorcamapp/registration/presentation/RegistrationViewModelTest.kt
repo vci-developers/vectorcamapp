@@ -8,9 +8,8 @@ import com.vci.vectorcamapp.core.data.dto.location_type.GetAllLocationTypesRespo
 import com.vci.vectorcamapp.core.data.dto.location_type.LocationTypeDto
 import com.vci.vectorcamapp.core.data.dto.program.GetAllProgramsResponseDto
 import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
-import com.vci.vectorcamapp.core.data.dto.site.SiteDto
-import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.data.dto.program.VerifyProgramAccessCodeResponseDto
+import com.vci.vectorcamapp.core.data.dto.site.SiteDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
@@ -29,6 +28,7 @@ import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
