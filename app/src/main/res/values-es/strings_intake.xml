@@ -46,6 +46,8 @@
     <string name="intake_label_llin_type">Tipo de LLIN</string>
     <string name="intake_label_llin_brand">Marca de LLIN</string>
     <string name="intake_label_num_people_llin">Número de personas que durmieron bajo un LLIN</string>
+    <string name="intake_label_num_children_under_5">Número de niños menores de 5 años</string>
+    <string name="intake_label_has_pregnant_woman">¿Hay una mujer embarazada en este hogar?</string>
     <string name="intake_label_notes">Notas</string>
 
     <!-- Placeholders -->

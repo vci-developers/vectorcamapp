@@ -177,6 +177,10 @@ class IntakeViewModel @Inject constructor(
                             intakeValidationUseCases.validateNumPeopleSleptUnderLlin(it)
                         }
 
+                    val numChildrenUnder5Result = surveillanceForm?.let {
+                        intakeValidationUseCases.validateNumChildrenUnder5(it.numChildrenUnder5)
+                    }
+
                     val formAnswersResult = intakeValidationUseCases.validateFormAnswersUseCase(
                         _state.value.formQuestions, _state.value.formAnswersByQuestionId
                     )
@@ -197,6 +201,7 @@ class IntakeViewModel @Inject constructor(
                                 numLlinsAvailable = numLlinsAvailableResult?.errorOrNull(),
                                 numPeopleSleptUnderLlin = numPeopleSleptUnderLlinResult?.errorOrNull(),
                                 numPeopleSleptInHouse = numPeopleSleptInHouseResult?.errorOrNull(),
+                                numChildrenUnder5 = numChildrenUnder5Result?.errorOrNull(),
                                 locationTypeSiteSelections = locationTypeSiteSelections,
                                 formAnswerErrors = formAnswersResult.mapValues { (_, result) -> result.errorOrNull() })
                         )
@@ -215,7 +220,8 @@ class IntakeViewModel @Inject constructor(
                         monthsSinceIrsResult,
                         numLlinsAvailableResult,
                         numPeopleSleptInHouseResult,
-                        numPeopleSleptUnderLlinResult
+                        numPeopleSleptUnderLlinResult,
+                        numChildrenUnder5Result
                     ).any { it is Result.Error }
                     val hasLocationTypeSiteSelectionError =
                         locationTypeSiteSelections.values.any { it != null }
@@ -489,6 +495,30 @@ class IntakeViewModel @Inject constructor(
                         it.copy(
                             surveillanceForm = it.surveillanceForm?.copy(
                                 numPeopleSleptUnderLlin = numPeopleSleptUnderLlin
+                            )
+                        )
+                    }
+                }
+
+                is IntakeAction.EnterNumChildrenUnder5 -> {
+                    val oldValue = _state.value.surveillanceForm?.numChildrenUnder5
+                    val normalized = normalizeNumericInput(oldValue, action.count)
+                    val numChildrenUnder5 = normalized.toIntOrNull()
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                numChildrenUnder5 = numChildrenUnder5
+                            )
+                        )
+                    }
+                }
+
+                is IntakeAction.ToggleHasPregnantWoman -> {
+                    val hasPregnantWoman = action.isChecked
+                    _state.update {
+                        it.copy(
+                            surveillanceForm = it.surveillanceForm?.copy(
+                                hasPregnantWoman = hasPregnantWoman
                             )
                         )
                     }

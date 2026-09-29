@@ -522,6 +522,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                 llinType = localSurveillanceForm.llinType,
                 llinBrand = localSurveillanceForm.llinBrand,
                 numPeopleSleptUnderLlin = localSurveillanceForm.numPeopleSleptUnderLlin,
+                numChildrenUnder5 = localSurveillanceForm.numChildrenUnder5,
+                hasPregnantWoman = localSurveillanceForm.hasPregnantWoman,
                 submittedAt = localSurveillanceForm.submittedAt
             )
 
@@ -556,6 +558,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                 llinType = remoteSurveillanceFormDto.llinType,
                 llinBrand = remoteSurveillanceFormDto.llinBrand,
                 numPeopleSleptUnderLlin = remoteSurveillanceFormDto.numPeopleSleptUnderLlin,
+                numChildrenUnder5 = remoteSurveillanceFormDto.numChildrenUnder5,
+                hasPregnantWoman = remoteSurveillanceFormDto.hasPregnantWoman,
                 submittedAt = remoteSurveillanceFormDto.submittedAt
             )
 

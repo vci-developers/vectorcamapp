@@ -30,6 +30,7 @@ import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_27_28_C
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_28_29_UPDATE_FORM_ANSWER_PRIMARY_KEY
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_29_30_ADD_PREREQUISITE_TO_FORM_QUESTION
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_30_31_ADD_SESSION_UNIT_TABLE
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_31_32_ADD_PREGNANT_WOMAN_PRESENCE_AND_NUM_CHILDREN_UNDER_5_COLUMNS
 
 val ALL_MIGRATIONS = arrayOf(
     MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE,
@@ -61,5 +62,6 @@ val ALL_MIGRATIONS = arrayOf(
     MIGRATION_27_28_CHANGE_PROGRAM_FORM_VERSION_TO_TEXT,
     MIGRATION_28_29_UPDATE_FORM_ANSWER_PRIMARY_KEY,
     MIGRATION_29_30_ADD_PREREQUISITE_TO_FORM_QUESTION,
-    MIGRATION_30_31_ADD_SESSION_UNIT_TABLE
+    MIGRATION_30_31_ADD_SESSION_UNIT_TABLE,
+    MIGRATION_31_32_ADD_PREGNANT_WOMAN_PRESENCE_AND_NUM_CHILDREN_UNDER_5_COLUMNS
 )

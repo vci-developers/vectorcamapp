@@ -21,6 +21,8 @@ sealed interface IntakeAction {
     data class SelectLlinType(val option: LlinTypeOption) : IntakeAction
     data class SelectLlinBrand(val option: LlinBrandOption) : IntakeAction
     data class EnterNumPeopleSleptUnderLlin(val count: String) : IntakeAction
+    data class EnterNumChildrenUnder5(val count: String) : IntakeAction
+    data class ToggleHasPregnantWoman(val isChecked: Boolean) : IntakeAction
     data class PickCollectionDate(val date: Long) : IntakeAction
     data class UpdateCollectionMethod(val collectionMethod: String) : IntakeAction
     data class UpdateSpecimenCondition(val specimenCondition: String) : IntakeAction

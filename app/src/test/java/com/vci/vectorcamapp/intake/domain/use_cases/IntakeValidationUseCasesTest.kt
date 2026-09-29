@@ -189,6 +189,40 @@ class IntakeValidationUseCasesTest {
 
     // endregion
 
+    // region ValidateNumChildrenUnder5UseCase
+
+    @Test
+    fun numChildrenUnder5_null_returnsError() {
+        val result = ValidateNumChildrenUnder5UseCase()(null)
+        assertEquals(FormValidationError.INVALID_NUM_CHILDREN_UNDER_5, (result as Result.Error).error)
+    }
+
+    @Test
+    fun numChildrenUnder5_zero_returnsSuccess() {
+        val result = ValidateNumChildrenUnder5UseCase()(0)
+        assertTrue(result is Result.Success)
+    }
+
+    @Test
+    fun numChildrenUnder5_positive_returnsSuccess() {
+        val result = ValidateNumChildrenUnder5UseCase()(3)
+        assertTrue(result is Result.Success)
+    }
+
+    @Test
+    fun numChildrenUnder5_negativeOne_returnsError() {
+        val result = ValidateNumChildrenUnder5UseCase()(-1)
+        assertEquals(FormValidationError.INVALID_NUM_CHILDREN_UNDER_5, (result as Result.Error).error)
+    }
+
+    @Test
+    fun numChildrenUnder5_veryNegative_returnsError() {
+        val result = ValidateNumChildrenUnder5UseCase()(-100)
+        assertEquals(FormValidationError.INVALID_NUM_CHILDREN_UNDER_5, (result as Result.Error).error)
+    }
+
+    // endregion
+
     // region ValidateNumPeopleSleptUnderLlinUseCase
 
     @Test
