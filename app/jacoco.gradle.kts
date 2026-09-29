@@ -73,6 +73,10 @@ val deviceOnlyExcludes = listOf(
     "**/imaging/data/repository/InferenceRepositoryImplementation*.class",
     "**/imaging/data/util/ClassifierAcceleratorSelector*.class",
     "**/imaging/data/util/GpuModelCache*.class",
+    // Inline Result helpers are copied into callers, so JaCoCo never records their bodies.
+    "**/core/domain/util/ResultKt.class",
+    // CaptureImage needs ImageCapture's static init and OpenCV native code.
+    "**/ImagingViewModel\$onAction\$1\$17*.class",
 )
 
 // ---------------------------------------------------------------------------
