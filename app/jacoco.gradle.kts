@@ -155,7 +155,7 @@ flavors.forEach { flavor ->
                 limit {
                     counter = "BRANCH"
                     value   = "COVEREDRATIO"
-                    minimum = "0.60".toBigDecimal() // 60%
+                    minimum = "0.70".toBigDecimal() // 70%
                 }
             }
         }
