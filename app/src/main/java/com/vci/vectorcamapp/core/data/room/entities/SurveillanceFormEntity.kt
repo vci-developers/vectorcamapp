@@ -23,5 +23,7 @@ data class SurveillanceFormEntity(
     val llinType: String? = null,
     val llinBrand: String? = null,
     val numPeopleSleptUnderLlin: Int? = null,
+    val numChildrenUnder5: Int? = null,
+    val hasPregnantWoman: Boolean? = null,
     val submittedAt: Long? = null
 )

@@ -62,6 +62,7 @@ data class IntakeState(
         numLlinsAvailable = null,
         numPeopleSleptUnderLlin = null,
         numPeopleSleptInHouse = null,
+        numChildrenUnder5 = null,
         locationTypeSiteSelections = emptyMap(),
         formAnswerErrors = emptyMap(),
     ),

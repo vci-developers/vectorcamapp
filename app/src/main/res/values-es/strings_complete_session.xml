@@ -39,6 +39,8 @@
     <string name="complete_session_label_health_center">Centro de salud más cercano: %1$s</string>
     <string name="complete_session_label_detail">%1$s: %2$s</string>
     <string name="complete_session_label_num_people_house">Número de personas que durmieron en la casa: %1$s</string>
+    <string name="complete_session_label_num_children_under_5">Número de niños menores de 5 años: %1$s</string>
+    <string name="complete_session_label_has_pregnant_woman">Mujer embarazada en el hogar: %1$s</string>
     <string name="complete_session_label_irs_conducted">¿Se realizó rociado residual intradomiciliario (IRS)?: %1$s</string>
     <string name="complete_session_label_yes">Sí</string>
     <string name="complete_session_label_no">No</string>

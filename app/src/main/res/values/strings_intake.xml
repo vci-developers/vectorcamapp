@@ -46,6 +46,8 @@
     <string name="intake_label_llin_type">LLIN Type</string>
     <string name="intake_label_llin_brand">LLIN Brand</string>
     <string name="intake_label_num_people_llin">Number of People who Slept Under LLIN</string>
+    <string name="intake_label_num_children_under_5">Number of Children Under 5</string>
+    <string name="intake_label_has_pregnant_woman">Is there a pregnant woman in this household?</string>
     <string name="intake_label_notes">Notes</string>
 
     <!-- Placeholders -->
