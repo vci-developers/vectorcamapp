@@ -1,10 +1,13 @@
 package com.vci.vectorcamapp.imaging.presentation.components.camera
 
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,10 +16,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -26,43 +33,99 @@ import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 /**
- * Static overlay shown while a capture is processing. Inference runs on the GPU and starves the
- * Compose render thread, so any animation here visibly stalls.
+ * Overlay shown while a capture is processing. The still is published before GPU inference so it
+ * can draw; animated progress would stall once inference occupies the render thread.
  */
 @Composable
 fun CaptureAnimation(
-    modifier: Modifier = Modifier, stage: CaptureStage?
+    modifier: Modifier = Modifier,
+    stage: CaptureStage?,
+    previewBitmap: Bitmap? = null,
 ) {
     if (stage == null) return
+
+    val label = stringResource(stage.labelResId)
+    val imageBitmap = remember(previewBitmap) { previewBitmap?.asImageBitmap() }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colors.overlayColor)
+            .then(
+                if (previewBitmap == null) {
+                    Modifier.background(MaterialTheme.colors.overlayColor)
+                } else {
+                    Modifier
+                }
+            )
             .pointerInput(Unit) { detectTapGestures { } },
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
-            modifier = Modifier
-                .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusLarge))
-                .background(MaterialTheme.colors.cardBackground)
-                .padding(MaterialTheme.dimensions.paddingLarge)
-        ) {
-            Icon(
-                painter = painterResource(stage.iconResId),
-                contentDescription = null,
-                tint = MaterialTheme.colors.secondary,
-                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraExtraLarge)
+        if (imageBitmap != null) {
+            Image(
+                bitmap = imageBitmap,
+                contentDescription = label,
+                contentScale = if (stage == CaptureStage.CLASSIFYING) {
+                    ContentScale.Fit
+                } else {
+                    ContentScale.Crop
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
             )
-            Text(
-                text = stringResource(stage.labelResId),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colors.textPrimary,
-                textAlign = TextAlign.Center
-            )
+        }
+
+        if (previewBitmap != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(MaterialTheme.dimensions.paddingMedium)
+                    .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusLarge))
+                    .background(MaterialTheme.colors.cardBackground)
+                    .padding(
+                        horizontal = MaterialTheme.dimensions.paddingMedium,
+                        vertical = MaterialTheme.dimensions.paddingSmall
+                    )
+            ) {
+                Icon(
+                    painter = painterResource(stage.iconResId),
+                    contentDescription = null,
+                    tint = MaterialTheme.colors.secondary,
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+                )
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colors.textPrimary,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusLarge))
+                    .background(MaterialTheme.colors.cardBackground)
+                    .padding(MaterialTheme.dimensions.paddingLarge)
+            ) {
+                Icon(
+                    painter = painterResource(stage.iconResId),
+                    contentDescription = null,
+                    tint = MaterialTheme.colors.secondary,
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraExtraLarge)
+                )
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colors.textPrimary,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }

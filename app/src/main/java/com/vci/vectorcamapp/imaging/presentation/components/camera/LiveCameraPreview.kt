@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation.components.camera
 
+import android.graphics.Bitmap
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.Camera
 import androidx.camera.core.SurfaceRequest
@@ -35,7 +36,8 @@ fun LiveCameraPreview(
     onCancelFocus: () -> Unit,
     modifier: Modifier = Modifier,
     isManualFocusing: Boolean,
-    captureStage: CaptureStage?
+    captureStage: CaptureStage?,
+    capturePreviewBitmap: Bitmap? = null,
 ) {
     val density = LocalDensity.current
     val view = LocalView.current
@@ -131,7 +133,8 @@ fun LiveCameraPreview(
 
         CaptureAnimation(
             modifier = Modifier.fillMaxSize(),
-            stage = captureStage
+            stage = captureStage,
+            previewBitmap = capturePreviewBitmap,
         )
     }
 }

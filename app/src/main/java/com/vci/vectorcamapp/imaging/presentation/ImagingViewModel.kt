@@ -43,6 +43,7 @@ import com.vci.vectorcamapp.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -431,7 +432,13 @@ class ImagingViewModel @Inject constructor(
                             rgbaMatrix.release()
 
                             if (_state.value.shouldRunInference) {
-                                _state.update { it.copy(captureStage = CaptureStage.DETECTING) }
+                                _state.update {
+                                    it.copy(
+                                        captureStage = CaptureStage.DETECTING,
+                                        capturePreviewBitmap = bitmapForCapturePreview(jpegBitmap)
+                                    )
+                                }
+                                awaitDrawnFrame()
 
                                 val detectionStartMs = System.currentTimeMillis()
                                 val captureDetectorResults =
@@ -501,7 +508,13 @@ class ImagingViewModel @Inject constructor(
                                                 clampedHeight
                                             )
 
-                                            _state.update { it.copy(captureStage = CaptureStage.CLASSIFYING) }
+                                            _state.update {
+                                                it.copy(
+                                                    captureStage = CaptureStage.CLASSIFYING,
+                                                    capturePreviewBitmap = bitmapForCapturePreview(croppedBitmap)
+                                                )
+                                            }
+                                            awaitDrawnFrame()
 
                                             inferenceStartedAt = System.currentTimeMillis()
                                             var (speciesResult, sexResult, abdomenStatusResult) = inferenceRepository.classifySpecimen(
@@ -607,7 +620,7 @@ class ImagingViewModel @Inject constructor(
                             }
                         }
                     }
-                    _state.update { it.copy(captureStage = null) }
+                    _state.update { it.copy(captureStage = null, capturePreviewBitmap = null) }
                 }
 
                 ImagingAction.RetakeImage -> {
@@ -815,6 +828,7 @@ class ImagingViewModel @Inject constructor(
                 ),
                 currentInferenceResult = null,
                 currentImageBytes = null,
+                capturePreviewBitmap = null,
                 isCameraReady = false,
                 previewInferenceResults = emptyList(),
                 focusPoint = null,
@@ -847,6 +861,24 @@ class ImagingViewModel @Inject constructor(
 
         if (specimensSelectedForFurtherProcessingThisMonth >= MONTHLY_FURTHER_PROCESSING_CAP) return false
         return Random.nextFloat() < selectionProbability
+    }
+
+    private fun bitmapForCapturePreview(bitmap: Bitmap): Bitmap {
+        val longEdge = maxOf(bitmap.width, bitmap.height)
+        if (longEdge <= CAPTURE_PREVIEW_MAX_EDGE_PX) return bitmap
+        val scale = CAPTURE_PREVIEW_MAX_EDGE_PX.toFloat() / longEdge.toFloat()
+        return Bitmap.createScaledBitmap(
+            bitmap,
+            (bitmap.width * scale).toInt().coerceAtLeast(1),
+            (bitmap.height * scale).toInt().coerceAtLeast(1),
+            true
+        )
+    }
+
+    private suspend fun awaitDrawnFrame() {
+        withContext(Dispatchers.Main.immediate) {
+            delay(CAPTURE_PREVIEW_DRAW_DELAY_MS)
+        }
     }
 
     private fun calculateMd5(imageByteArray: ByteArray): String {
@@ -891,6 +923,8 @@ class ImagingViewModel @Inject constructor(
 
     private companion object {
         private const val MONTHLY_FURTHER_PROCESSING_CAP = 20
+        private const val CAPTURE_PREVIEW_MAX_EDGE_PX = 1280
+        private const val CAPTURE_PREVIEW_DRAW_DELAY_MS = 100L
     }
 }
 

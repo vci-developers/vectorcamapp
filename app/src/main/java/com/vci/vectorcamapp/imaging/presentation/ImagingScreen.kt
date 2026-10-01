@@ -772,7 +772,8 @@ fun ImagingScreen(
                                     onCancelFocus = { onAction(ImagingAction.CancelFocus) },
                                     modifier = Modifier.fillMaxSize(),
                                     isManualFocusing = state.isManualFocusing,
-                                    captureStage = state.captureStage
+                                    captureStage = state.captureStage,
+                                    capturePreviewBitmap = state.capturePreviewBitmap,
                                 )
                             }
 
