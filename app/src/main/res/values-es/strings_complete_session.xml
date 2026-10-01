@@ -11,6 +11,10 @@
     <string name="complete_session_title_additional_notes">Notas adicionales</string>
     <string name="complete_session_title_card">Sesión completada el\n%1$s</string>
 
+    <!-- Tabs -->
+    <string name="complete_session_tab_form">Formulario</string>
+    <string name="complete_session_tab_specimens">Especímenes</string>
+
     <!-- Body -->
     <string name="complete_session_body_subtitle">Toca una sesión para ver más detalles</string>
     <string name="complete_session_body_empty">No se encontraron sesiones completadas.</string>
@@ -39,6 +43,8 @@
     <string name="complete_session_label_health_center">Centro de salud más cercano: %1$s</string>
     <string name="complete_session_label_detail">%1$s: %2$s</string>
     <string name="complete_session_label_num_people_house">Número de personas que durmieron en la casa: %1$s</string>
+    <string name="complete_session_label_num_children_under_5">Número de niños menores de 5 años: %1$s</string>
+    <string name="complete_session_label_has_pregnant_woman">Mujer embarazada en el hogar: %1$s</string>
     <string name="complete_session_label_irs_conducted">¿Se realizó rociado residual intradomiciliario (IRS)?: %1$s</string>
     <string name="complete_session_label_yes">Sí</string>
     <string name="complete_session_label_no">No</string>

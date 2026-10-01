@@ -14,11 +14,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
@@ -26,12 +25,11 @@ import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.presentation.components.gestures.SwipeToReveal
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
-import com.vci.vectorcamapp.incomplete_session.presentation.util.IncompleteSessionTestTags
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
+import com.vci.vectorcamapp.core.presentation.util.date.rememberDateFormatter
+import com.vci.vectorcamapp.incomplete_session.presentation.util.IncompleteSessionTestTags
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 @Composable
 fun IncompleteSessionCard(
@@ -42,8 +40,8 @@ fun IncompleteSessionCard(
 ) {
     val context = LocalContext.current
 
-    val titleFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
-    val detailFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
+    val titleFormatter = rememberDateFormatter(R.string.core_date_format_medium)
+    val detailFormatter = rememberDateFormatter(R.string.core_date_format_medium_with_time)
 
     SwipeToReveal(
         backgroundContent = {

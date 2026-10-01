@@ -16,6 +16,7 @@ data class IntakeErrors(
     val numLlinsAvailable: FormValidationError?,
     val numPeopleSleptUnderLlin: FormValidationError?,
     val numPeopleSleptInHouse: FormValidationError?,
+    val numChildrenUnder5: FormValidationError?,
     val locationTypeSiteSelections: Map<Int, FormValidationError?>,
     val formAnswerErrors: Map<Int, FormValidationError?>,
 )

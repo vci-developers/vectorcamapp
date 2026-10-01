@@ -7,14 +7,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.presentation.util.date.rememberDateFormatter
 import com.vci.vectorcamapp.ui.extensions.colors
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 @Composable
 fun CollectorWarningDialog(
@@ -24,7 +22,7 @@ fun CollectorWarningDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
+    val dateFormatter = rememberDateFormatter(R.string.core_date_format_medium)
     val formattedDate = dateFormatter.format(selectedCollector.lastTrainedOn)
 
     AlertDialog(

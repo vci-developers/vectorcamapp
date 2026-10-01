@@ -62,6 +62,7 @@ class IntakeScreenTest {
         numLlinsAvailable = null,
         numPeopleSleptUnderLlin = null,
         numPeopleSleptInHouse = null,
+        numChildrenUnder5 = null,
         locationTypeSiteSelections = emptyMap(),
         formAnswerErrors = emptyMap(),
     )
@@ -429,6 +430,8 @@ class IntakeScreenTest {
                     llinType = null,
                     llinBrand = null,
                     numPeopleSleptUnderLlin = null,
+                    numChildrenUnder5 = null,
+                    hasPregnantWoman = false,
                     submittedAt = null,
                 )
             )
@@ -439,6 +442,10 @@ class IntakeScreenTest {
         composeRule.onNodeWithText("Number of People Living in the House").assertIsDisplayed()
         scrollToText("Was IRS conducted in this household?")
         composeRule.onNodeWithText("Was IRS conducted in this household?").assertIsDisplayed()
+        scrollToText("Number of Children Under 5")
+        composeRule.onNodeWithText("Number of Children Under 5").assertIsDisplayed()
+        scrollToText("Is there a pregnant woman in this household?")
+        composeRule.onNodeWithText("Is there a pregnant woman in this household?").assertIsDisplayed()
     }
 
     @Test
@@ -468,6 +475,8 @@ class IntakeScreenTest {
                     llinType = null,
                     llinBrand = null,
                     numPeopleSleptUnderLlin = null,
+                    numChildrenUnder5 = 2,
+                    hasPregnantWoman = false,
                     submittedAt = null,
                 )
             )

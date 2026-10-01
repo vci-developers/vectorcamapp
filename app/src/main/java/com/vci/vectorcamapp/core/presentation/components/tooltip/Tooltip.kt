@@ -30,11 +30,11 @@ fun Tooltip(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     buttonText: String? = null,
-    confirmText: String = "Done",
+    confirmText: String = stringResource(R.string.core_action_done),
     iconSize: Dp = MaterialTheme.dimensions.iconSizeSmall,
     textStyle: TextStyle = MaterialTheme.typography.bodySmall,
     content: @Composable (() -> Unit)
-){
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier

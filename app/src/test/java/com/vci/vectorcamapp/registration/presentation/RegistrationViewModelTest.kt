@@ -2,9 +2,14 @@ package com.vci.vectorcamapp.registration.presentation
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.vci.vectorcamapp.core.data.dto.form.FormDto
+import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto
+import com.vci.vectorcamapp.core.data.dto.location_type.GetAllLocationTypesResponseDto
+import com.vci.vectorcamapp.core.data.dto.location_type.LocationTypeDto
 import com.vci.vectorcamapp.core.data.dto.program.GetAllProgramsResponseDto
 import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
 import com.vci.vectorcamapp.core.data.dto.program.VerifyProgramAccessCodeResponseDto
+import com.vci.vectorcamapp.core.data.dto.site.SiteDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
@@ -24,6 +29,7 @@ import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
+import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
@@ -467,5 +473,106 @@ class RegistrationViewModelTest {
         coVerify(exactly = 1) { deviceCache.saveDevice(any(), selectedProgram.id) }
         coVerify(exactly = 1) { sessionCache.clearSession() }
         coVerify(exactly = 1) { collectorRepository.upsertCollector(any()) }
+    }
+
+    @Test
+    fun regVm_g01_refresh_failureEmitsNetworkError() = runTest {
+        coEvery { programDataSource.getAllPrograms() } returns Result.Error(NetworkError.NO_INTERNET)
+        advanceUntilIdle()
+
+        viewModel.onAction(RegistrationAction.RefreshPrograms)
+        advanceUntilIdle()
+
+        coVerify { errorMessageEmitter.emit(NetworkError.NO_INTERNET, any()) }
+    }
+
+    @Test
+    fun regVm_g02_successfulRegistration_seedsLocationSitesAndForm() = runTest {
+        coEvery { transactionHelper.runAsTransaction<Unit>(any()) } coAnswers {
+            firstArg<suspend () -> Unit>().invoke()
+        }
+        coEvery { programRepository.upsertProgram(any()) } returns Result.Success(Unit)
+        coEvery { programRepository.getProgramById(1) } returns testPrograms[0]
+        coEvery { locationTypeDataSource.getAllLocationTypesForProgram(1) } returns Result.Success(
+            GetAllLocationTypesResponseDto(listOf(LocationTypeDto(2, 1, "Village", 1)))
+        )
+        coEvery { locationTypeRepository.upsertLocationType(any(), any()) } returns Result.Success(Unit)
+        coEvery { siteDataSource.getAllSitesForProgram(1) } returns Result.Success(
+            listOf(SiteDto(siteId = 4, name = "House", parentId = null))
+        )
+        coEvery { siteRepository.upsertSite(any(), any(), any(), any()) } returns Result.Success(Unit)
+        coEvery { formDataSource.getCurrentFormByProgramId(1) } returns Result.Success(
+            FormDto(
+                id = 3,
+                name = "Form",
+                version = "v9",
+                questions = listOf(
+                    FormQuestionDto(
+                        id = 8,
+                        label = "Parent",
+                        type = "text",
+                        subQuestions = listOf(FormQuestionDto(id = 9, label = "Child", type = "boolean")),
+                    )
+                ),
+            )
+        )
+        coEvery { formRepository.upsertForm(any(), any()) } returns Result.Success(Unit)
+        coEvery { formQuestionRepository.upsertFormQuestion(any(), any(), any()) } returns Result.Success(Unit)
+
+        selectProgram(testPrograms[0])
+        viewModel.onAction(RegistrationAction.EnterCollectorName("Ada"))
+        viewModel.onAction(RegistrationAction.EnterCollectorTitle("VCO"))
+        viewModel.onAction(RegistrationAction.EnterCollectorLastTrainedOn(10L))
+
+        viewModel.events.test {
+            confirmWithProgramAccessCode()
+            advanceUntilIdle()
+            assertThat(awaitItem()).isEqualTo(RegistrationEvent.NavigateToLandingScreen)
+            cancelAndIgnoreRemainingEvents()
+        }
+        coVerify { formQuestionRepository.upsertFormQuestion(any(), 3, 8) }
+        coVerify { programRepository.upsertProgram(testPrograms[0].copy(formVersion = "v9")) }
+    }
+
+    @Test
+    fun regVm_g03_seedFailure_emitsUnknownError() = runTest {
+        selectProgram(testPrograms[0])
+        advanceUntilIdle()
+        coEvery { transactionHelper.runAsTransaction<Unit>(any()) } coAnswers {
+            firstArg<suspend () -> Unit>().invoke()
+        }
+        coEvery { programRepository.upsertProgram(any()) } returns Result.Success(Unit)
+        coEvery { locationTypeDataSource.getAllLocationTypesForProgram(1) } returns
+            Result.Error(NetworkError.SERVER_ERROR)
+
+        viewModel.events.test {
+            confirmWithProgramAccessCode()
+            advanceUntilIdle()
+            expectNoEvents()
+        }
+        coVerify { errorMessageEmitter.emit(RegistrationError.UNKNOWN_ERROR, any()) }
+        coVerify { errorMessageEmitter.emit(NetworkError.SERVER_ERROR, any()) }
+    }
+
+    @Test
+    fun regVm_g04_missingForm_stillCompletesRegistration() = runTest {
+        selectProgram(testPrograms[0])
+        advanceUntilIdle()
+        coEvery { transactionHelper.runAsTransaction<Unit>(any()) } coAnswers {
+            firstArg<suspend () -> Unit>().invoke()
+        }
+        coEvery { programRepository.upsertProgram(any()) } returns Result.Success(Unit)
+        coEvery { locationTypeDataSource.getAllLocationTypesForProgram(1) } returns Result.Success(
+            GetAllLocationTypesResponseDto(emptyList())
+        )
+        coEvery { siteDataSource.getAllSitesForProgram(1) } returns Result.Success(emptyList())
+        coEvery { formDataSource.getCurrentFormByProgramId(1) } returns Result.Error(NetworkError.NOT_FOUND)
+
+        viewModel.events.test {
+            confirmWithProgramAccessCode()
+            advanceUntilIdle()
+            assertThat(awaitItem()).isEqualTo(RegistrationEvent.NavigateToLandingScreen)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 }

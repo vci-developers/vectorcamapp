@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Titles -->
+    <string name="collection_batch_title_screen">Lots de collecte</string>
+    <string name="collection_batch_title_form">Formulaire du lot de collecte</string>
+    <string name="collection_batch_title_identity">Identité du lot</string>
+    <string name="collection_batch_title_information">Informations du lot</string>
+    <string name="collection_batch_title_end_session">Terminer la session ?</string>
+    <string name="collection_batch_title_confirm_action">Confirmer l\'action</string>
+
+    <!-- Body -->
+    <string name="collection_batch_body_subtitle">Crée et modifie les lots de collecte ici</string>
+    <string name="collection_batch_body_form_subtitle">Remplis les informations ci-dessous</string>
+    <string name="collection_batch_body_empty">Aucun lot de collecte pour l\'instant.\nAppuie sur le bouton + ci-dessous pour en ajouter un.</string>
+    <string name="collection_batch_body_save_or_submit">Souhaites-tu enregistrer cette session pour plus tard ou la soumettre maintenant ?</string>
+    <string name="collection_batch_body_confirm_save">Veux-tu vraiment enregistrer la session et quitter ?</string>
+    <string name="collection_batch_body_confirm_submit">Veux-tu vraiment soumettre la session ?</string>
+    <string name="collection_batch_body_warning_zero">Avertissement : tu es sur le point de soumettre une session sans aucun lot de collecte.</string>
+
+    <!-- Labels -->
+    <string name="collection_batch_label_batch">Lot %1$s</string>
+    <string name="collection_batch_label_specimen_count">Nombre de spécimens : %1$d</string>
+    <string name="collection_batch_label_created">Créé le : %1$s</string>
+
+    <!-- Actions -->
+    <string name="collection_batch_action_continue">Continuer vers l\'imagerie</string>
+    <string name="collection_batch_action_exit_dialog_submit">Soumettre</string>
+    <string name="collection_batch_action_exit_dialog_confirm">Oui, confirmer</string>
+    <string name="collection_batch_action_exit_dialog_save">Enregistrer</string>
+    <string name="collection_batch_action_exit_dialog_back">Retour</string>
+
+    <!-- Content Descriptions -->
+    <string name="collection_batch_content_description_back">Bouton de retour</string>
+    <string name="collection_batch_content_description_submit_session">Soumettre la session</string>
+    <string name="collection_batch_content_description_add">Ajouter un lot de collecte</string>
+    <string name="collection_batch_content_description_close_dialog">Fermer la boîte de dialogue</string>
+    <string name="collection_batch_content_description_submit_icon">Icône de soumission</string>
+    <string name="collection_batch_content_description_save_icon">Icône d\'enregistrement</string>
+    <string name="collection_batch_content_description_identity">Icône d\'identité du lot</string>
+    <string name="collection_batch_content_description_information">Icône d\'informations du lot</string>
+    <string name="collection_batch_content_description_open">Ouvrir le lot de collecte</string>
+
+</resources>

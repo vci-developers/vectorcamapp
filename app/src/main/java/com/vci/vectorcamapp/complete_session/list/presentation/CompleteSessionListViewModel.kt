@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.ui.extensions.displayText
@@ -86,6 +87,7 @@ class CompleteSessionListViewModel @Inject constructor(
                     add(session.collectorName)
                     add(session.collectorTitle)
                     add(session.type.name)
+                    add(session.type.displayText(context))
                     add(site.district)
                     add(site.subCounty)
                     add(site.parish)

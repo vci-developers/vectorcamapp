@@ -21,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -35,6 +34,7 @@ import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.core.presentation.util.FileSizeFormatter
+import com.vci.vectorcamapp.core.presentation.util.date.rememberDateFormatter
 import com.vci.vectorcamapp.core.presentation.util.locale.SupportedLanguage
 import com.vci.vectorcamapp.settings.presentation.components.CollectorDialog
 import com.vci.vectorcamapp.settings.presentation.components.CollectorWarningDialog
@@ -54,8 +54,7 @@ fun SettingsScreen(
     onAction: (SettingsAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val dateTimeFormatter =
-        remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
+    val dateTimeFormatter = rememberDateFormatter(R.string.core_date_format_medium_with_time)
 
     ScreenHeader(
         title = stringResource(R.string.settings_title_screen),

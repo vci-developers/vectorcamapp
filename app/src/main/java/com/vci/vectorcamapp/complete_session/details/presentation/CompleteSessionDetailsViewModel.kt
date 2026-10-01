@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.complete_session.details.presentation
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.collection_batch.domain.util.CollectionBatchIdentityResolver
 import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
@@ -16,8 +17,12 @@ import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.extensions.displayTextFor
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
+import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
+import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
+import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel
 import com.vci.vectorcamapp.ui.extensions.displayText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -91,19 +96,16 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                         val fieldsForSearch = buildList {
                             add(specimenWithImagesAndInferenceResults.specimen.id)
                             specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { imageAndInferenceResult ->
-                                add(imageAndInferenceResult.specimenImage.species)
-                                add(imageAndInferenceResult.specimenImage.sex)
-                                add(imageAndInferenceResult.specimenImage.abdomenStatus)
-                                add(
-                                    imageAndInferenceResult.specimenImage.metadataUploadStatus.displayText(
-                                        context
-                                    )
-                                )
-                                add(
-                                    imageAndInferenceResult.specimenImage.imageUploadStatus.displayText(
-                                        context
-                                    )
-                                )
+                                val specimenImage = imageAndInferenceResult.specimenImage
+
+                                add(specimenImage.species)
+                                add(SpeciesLabel.displayTextFor(context, specimenImage.species))
+                                add(specimenImage.sex)
+                                add(SexLabel.displayTextFor(context, specimenImage.sex))
+                                add(specimenImage.abdomenStatus)
+                                add(AbdomenStatusLabel.displayTextFor(context, specimenImage.abdomenStatus))
+                                add(specimenImage.metadataUploadStatus.displayText(context))
+                                add(specimenImage.imageUploadStatus.displayText(context))
                             }
                         }
                         SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
@@ -231,7 +233,10 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                 )
                 bucketNameBySessionUnitId[sessionUnit.localId] = derivedBucketName
                     .takeIf { it.isNotBlank() }
-                    ?: "Batch ${sessionUnit.unitOrder}"
+                    ?: context.getString(
+                        R.string.complete_session_label_batch,
+                        sessionUnit.unitOrder.toString()
+                    )
             }
 
             _state.update {

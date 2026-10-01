@@ -2,6 +2,12 @@ package com.vci.vectorcamapp.settings.presentation
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.vci.vectorcamapp.core.data.dto.cache.DefaultIntakeFieldsCacheDto
+import com.vci.vectorcamapp.core.data.dto.form.FormDto
+import com.vci.vectorcamapp.core.data.dto.form_question.FormQuestionDto
+import com.vci.vectorcamapp.core.data.dto.location_type.GetAllLocationTypesResponseDto
+import com.vci.vectorcamapp.core.data.dto.location_type.LocationTypeDto
+import com.vci.vectorcamapp.core.data.dto.site.SiteDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
@@ -9,6 +15,9 @@ import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.Program
+import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.Site
+import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
 import com.vci.vectorcamapp.core.domain.network.api.LocationTypeDataSource
@@ -26,6 +35,8 @@ import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.use_cases.collector.CollectorValidationUseCases
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
+import com.vci.vectorcamapp.core.domain.util.network.NetworkError
+import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.locale.AppLocaleManager
 import com.vci.vectorcamapp.core.presentation.util.locale.SupportedLanguage
@@ -583,5 +594,193 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { collectorRepository.upsertCollector(any()) }
+    }
+
+    @Test
+    fun settingsVm_g01_resync_seedsProgramDataAndClearsCachedPlace() = runTest {
+        coEvery { transactionHelper.runAsTransaction<Boolean>(any()) } coAnswers {
+            firstArg<suspend () -> Boolean>().invoke()
+        }
+        coEvery { sessionRepository.getIncompleteSessionsAndSites() } returns emptyList()
+        coEvery { currentSessionCache.getSession() } returns null
+        coEvery { locationTypeDataSource.getAllLocationTypesForProgram(testProgram.id) } returns Result.Success(
+            GetAllLocationTypesResponseDto(listOf(LocationTypeDto(2, testProgram.id, "Village", 1)))
+        )
+        coEvery { locationTypeRepository.upsertLocationType(any(), any()) } returns Result.Success(Unit)
+        coEvery { siteDataSource.getAllSitesForProgram(testProgram.id) } returns Result.Success(
+            listOf(
+                SiteDto(siteId = 1, name = "District", parentId = null),
+                SiteDto(siteId = 2, name = "Village", parentId = 1),
+            )
+        )
+        coEvery { siteRepository.upsertSite(any(), any(), any(), any()) } returns Result.Success(Unit)
+        coEvery { formDataSource.getCurrentFormByProgramId(testProgram.id) } returns Result.Success(
+            FormDto(
+                id = 3,
+                programId = testProgram.id,
+                name = "Form",
+                version = "v2",
+                questions = listOf(
+                    FormQuestionDto(
+                        id = 8,
+                        label = "Parent",
+                        type = "text",
+                        subQuestions = listOf(FormQuestionDto(id = 9, label = "Child", type = "number")),
+                    )
+                ),
+            )
+        )
+        coEvery { formRepository.upsertForm(any(), any()) } returns Result.Success(Unit)
+        coEvery { formQuestionRepository.upsertFormQuestion(any(), any(), any()) } returns Result.Success(Unit)
+        coEvery { programRepository.getProgramById(testProgram.id) } returns testProgram
+        coEvery { programRepository.upsertProgram(any()) } returns Result.Success(Unit)
+        coEvery { defaultIntakeFieldsCache.getDefaultIntakeFields() } returns DefaultIntakeFieldsCacheDto(
+            collectorName = "Ada",
+            district = "Kampala",
+        )
+
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+
+        coVerify { siteRepository.setAllSitesInactiveForProgram(testProgram.id) }
+        coVerify { locationTypeRepository.upsertLocationType(any(), testProgram.id) }
+        coVerify { siteRepository.upsertSite(any(), testProgram.id, any(), any()) }
+        coVerify { formQuestionRepository.upsertFormQuestion(any(), 3, 8) }
+        coVerify { programRepository.upsertProgram(testProgram.copy(formVersion = "v2")) }
+        coVerify {
+            defaultIntakeFieldsCache.saveDefaultIntakeFields(
+                "Ada",
+                any(),
+                any(),
+                any(),
+                "",
+                "",
+                emptyMap(),
+            )
+        }
+        assertThat(viewModel.state.value.isSyncingData).isFalse()
+    }
+
+    @Test
+    fun settingsVm_g02_resync_blockedByOpenSession() = runTest {
+        val session = Session(
+            localId = UUID.randomUUID(),
+            remoteId = null,
+            hardwareId = null,
+            collectorTitle = "VCO",
+            collectorName = "Ada",
+            collectorLastTrainedOn = 0L,
+            collectionDate = 1L,
+            collectionMethod = "Net",
+            specimenCondition = "Fresh",
+            createdAt = 1L,
+            completedAt = null,
+            submittedAt = null,
+            notes = "",
+            latitude = null,
+            longitude = null,
+            type = SessionType.SURVEILLANCE,
+        )
+        coEvery { sessionRepository.getIncompleteSessionsAndSites() } returns listOf(
+            SessionAndSite(session, Site(1, null, null, null, null, null, null, true, "S", null))
+        )
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+
+        coVerify { errorMessageEmitter.emit(SettingsError.DATA_SYNC_IN_PROGRESS_SESSION_EXIST, any()) }
+        coVerify(exactly = 0) { transactionHelper.runAsTransaction<Boolean>(any()) }
+
+        coEvery { sessionRepository.getIncompleteSessionsAndSites() } returns emptyList()
+        coEvery { currentSessionCache.getSession() } returns session
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+        coVerify(exactly = 2) { errorMessageEmitter.emit(SettingsError.DATA_SYNC_IN_PROGRESS_SESSION_EXIST, any()) }
+    }
+
+    @Test
+    fun settingsVm_g03_resync_reportsFetchAndSaveFailures() = runTest {
+        coEvery { transactionHelper.runAsTransaction<Boolean>(any()) } coAnswers {
+            firstArg<suspend () -> Boolean>().invoke()
+        }
+        coEvery { sessionRepository.getIncompleteSessionsAndSites() } returns emptyList()
+        coEvery { currentSessionCache.getSession() } returns null
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+
+        coEvery { locationTypeDataSource.getAllLocationTypesForProgram(any()) } returns
+            Result.Error(NetworkError.NO_INTERNET)
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+
+        coEvery { locationTypeDataSource.getAllLocationTypesForProgram(any()) } returns Result.Success(
+            GetAllLocationTypesResponseDto(listOf(LocationTypeDto(2, testProgram.id, "Village", 1)))
+        )
+        coEvery { locationTypeRepository.upsertLocationType(any(), any()) } returns
+            Result.Error(RoomDbError.UNKNOWN_ERROR)
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+
+        coEvery { locationTypeRepository.upsertLocationType(any(), any()) } returns Result.Success(Unit)
+        coEvery { siteDataSource.getAllSitesForProgram(any()) } returns Result.Error(NetworkError.SERVER_ERROR)
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+
+        coEvery { siteDataSource.getAllSitesForProgram(any()) } returns Result.Success(
+            listOf(SiteDto(siteId = 1, name = "District"))
+        )
+        coEvery { siteRepository.upsertSite(any(), any(), any(), any()) } returns
+            Result.Error(RoomDbError.CONSTRAINT_VIOLATION)
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+
+        coEvery { siteRepository.upsertSite(any(), any(), any(), any()) } returns Result.Success(Unit)
+        coEvery { formDataSource.getCurrentFormByProgramId(any()) } returns Result.Error(NetworkError.NOT_FOUND)
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+
+        coEvery { formDataSource.getCurrentFormByProgramId(any()) } returns Result.Error(NetworkError.SERVER_ERROR)
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+
+        coEvery { formDataSource.getCurrentFormByProgramId(any()) } returns Result.Success(
+            FormDto(id = 3, name = "Form", version = "v2", questions = listOf(FormQuestionDto(id = 8, label = "Q", type = "text")))
+        )
+        coEvery { formRepository.upsertForm(any(), any()) } returns Result.Error(RoomDbError.UNKNOWN_ERROR)
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+
+        coEvery { formRepository.upsertForm(any(), any()) } returns Result.Success(Unit)
+        coEvery { formQuestionRepository.upsertFormQuestion(any(), any(), any()) } returns
+            Result.Error(RoomDbError.NO_ROWS_AFFECTED)
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+
+        coEvery { sessionRepository.getIncompleteSessionsAndSites() } throws IllegalStateException("db")
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+
+        coVerify { errorMessageEmitter.emit(NetworkError.NO_INTERNET, any()) }
+        coVerify { errorMessageEmitter.emit(NetworkError.SERVER_ERROR, any()) }
+        coVerify { errorMessageEmitter.emit(SettingsError.DATA_SYNC_FAILED, any()) }
+        assertThat(viewModel.state.value.isSyncingData).isFalse()
+    }
+
+    @Test
+    fun settingsVm_g04_resync_falseTransaction_emitsSyncFailed() = runTest {
+        coEvery { transactionHelper.runAsTransaction<Boolean>(any()) } returns false
+        coEvery { sessionRepository.getIncompleteSessionsAndSites() } returns emptyList()
+        coEvery { currentSessionCache.getSession() } returns null
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+
+        viewModel.onAction(SettingsAction.ResyncProgramData)
+        advanceUntilIdle()
+
+        coVerify { errorMessageEmitter.emit(SettingsError.DATA_SYNC_FAILED, any()) }
     }
 }

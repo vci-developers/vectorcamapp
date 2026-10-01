@@ -8,7 +8,8 @@ enum class SupportedLanguage(
     @StringRes val displayNameResId: Int
 ) {
     ENGLISH("en", R.string.language_english),
-    SPANISH("es", R.string.language_spanish);
+    SPANISH("es", R.string.language_spanish),
+    FRENCH("fr", R.string.language_french);
 
     companion object {
         val DEFAULT = ENGLISH

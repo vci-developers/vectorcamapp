@@ -87,7 +87,6 @@ class MetadataUploadWorker @AssistedInject constructor(
     companion object {
         const val MAX_RETRIES = 5
         const val CHANNEL_ID = "metadata_upload_channel"
-        const val CHANNEL_NAME = "Metadata Upload Channel"
     }
 
     private var notificationId = 1001
@@ -522,6 +521,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                 llinType = localSurveillanceForm.llinType,
                 llinBrand = localSurveillanceForm.llinBrand,
                 numPeopleSleptUnderLlin = localSurveillanceForm.numPeopleSleptUnderLlin,
+                numChildrenUnder5 = localSurveillanceForm.numChildrenUnder5,
+                hasPregnantWoman = localSurveillanceForm.hasPregnantWoman,
                 submittedAt = localSurveillanceForm.submittedAt
             )
 
@@ -556,6 +557,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                 llinType = remoteSurveillanceFormDto.llinType,
                 llinBrand = remoteSurveillanceFormDto.llinBrand,
                 numPeopleSleptUnderLlin = remoteSurveillanceFormDto.numPeopleSleptUnderLlin,
+                numChildrenUnder5 = remoteSurveillanceFormDto.numChildrenUnder5,
+                hasPregnantWoman = remoteSurveillanceFormDto.hasPregnantWoman,
                 submittedAt = remoteSurveillanceFormDto.submittedAt
             )
 
@@ -907,7 +910,9 @@ class MetadataUploadWorker @AssistedInject constructor(
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW
+            CHANNEL_ID,
+            context.getString(R.string.upload_notification_channel_metadata),
+            NotificationManager.IMPORTANCE_LOW
         )
         notificationManager.createNotificationChannel(channel)
     }

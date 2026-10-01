@@ -24,7 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -37,10 +36,9 @@ import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
+import com.vci.vectorcamapp.core.presentation.util.date.rememberDateFormatter
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 @Composable
 fun CompleteSessionListTile(
@@ -59,9 +57,8 @@ fun CompleteSessionListTile(
 
     val session = sessionAndSite.session
     val site = sessionAndSite.site
-    val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
-    val dateTimeFormatter =
-        remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
+    val dateFormatter = rememberDateFormatter(R.string.core_date_format_medium)
+    val dateTimeFormatter = rememberDateFormatter(R.string.core_date_format_medium_with_time)
 
     val sessionMetadataUploaded = session.submittedAt != null
 
