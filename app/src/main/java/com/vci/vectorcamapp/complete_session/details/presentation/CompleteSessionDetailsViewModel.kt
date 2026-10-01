@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.complete_session.details.presentation
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.collection_batch.domain.util.CollectionBatchIdentityResolver
 import com.vci.vectorcamapp.complete_session.details.domain.util.CompleteSessionDetailsError
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
@@ -231,7 +232,10 @@ class CompleteSessionDetailsViewModel @Inject constructor(
                 )
                 bucketNameBySessionUnitId[sessionUnit.localId] = derivedBucketName
                     .takeIf { it.isNotBlank() }
-                    ?: "Batch ${sessionUnit.unitOrder}"
+                    ?: context.getString(
+                        R.string.complete_session_label_batch,
+                        sessionUnit.unitOrder.toString()
+                    )
             }
 
             _state.update {

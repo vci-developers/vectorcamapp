@@ -27,10 +27,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.util.Error
+import com.vci.vectorcamapp.core.presentation.util.date.rememberDateFormatter
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
-import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Composable
@@ -50,11 +50,9 @@ fun DatePickerField(
         }
     }
 
-    val dateFormatter = remember {
-        SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-    }
+    val dateFormatter = rememberDateFormatter(R.string.core_date_format_medium)
 
-    val formattedDate = remember(selectedDateInMillis) {
+    val formattedDate = remember(selectedDateInMillis, dateFormatter) {
         selectedDateInMillis?.let { dateFormatter.format(it) }
     }
 
@@ -110,7 +108,7 @@ fun DatePickerField(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = formattedDate ?: "Select a date",
+                    text = formattedDate ?: stringResource(R.string.core_label_select_date),
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (formattedDate != null) MaterialTheme.colors.textPrimary else MaterialTheme.colors.textSecondary
                 )

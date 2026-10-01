@@ -54,7 +54,7 @@
     <string name="imaging_content_description_back_to_batches">Retour aux lots de collecte</string>
     <string name="imaging_content_description_exit">Quitter</string>
     <string name="imaging_content_description_mosquito">Moustique</string>
-    <string name="imaging_content_description_previous">Icône précédent</string>
-    <string name="imaging_content_description_next">Icône suivant</string>
+    <string name="imaging_content_description_previous">Icône Précédent</string>
+    <string name="imaging_content_description_next">Icône Suivant</string>
 
 </resources>

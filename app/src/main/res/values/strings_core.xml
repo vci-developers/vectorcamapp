@@ -26,6 +26,17 @@
     <string name="search_body_example_2">• Anopheles Male, Mansonia Female → either (Anopheles and Male) or (Mansonia and Female).</string>
     <string name="search_action_learn_more">Tap to learn more about searching</string>
 
+    <!-- Shared Component Labels -->
+    <string name="core_label_select">Select</string>
+    <string name="core_label_select_date">Select a date</string>
+    <string name="core_action_done">Done</string>
+    <string name="core_label_required_indicator" translatable="false">" *"</string>
+
+    <!-- Date Formats (SimpleDateFormat patterns - keep the quoted literals escaped) -->
+    <string name="core_date_format_medium">MMM dd, yyyy</string>
+    <string name="core_date_format_long">MMMM dd, yyyy</string>
+    <string name="core_date_format_medium_with_time">MMM dd, yyyy \'at\' h:mm a</string>
+
     <!-- Shared Component Content Descriptions -->
     <string name="core_content_description_calendar">Calendar</string>
     <string name="core_content_description_collapse_dropdown">Collapse dropdown</string>
@@ -54,6 +65,10 @@
     <string name="upload_notification_specimen_image_progress">Specimen %1$d of %2$d\nImage %3$d of %4$d</string>
     <string name="upload_notification_retrying">Retrying upload...</string>
     <string name="upload_notification_failed">Upload failed</string>
+
+    <!-- Upload Notification Channels -->
+    <string name="upload_notification_channel_metadata">Metadata Upload Channel</string>
+    <string name="upload_notification_channel_image">Image Upload Channel</string>
 
     <!-- Upload Service -->
     <string name="upload_service_channel_name">Upload Service</string>

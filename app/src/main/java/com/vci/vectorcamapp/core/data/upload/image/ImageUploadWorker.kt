@@ -73,7 +73,6 @@ class ImageUploadWorker @AssistedInject constructor(
         private const val MAX_RETRIES = 5
 
         private const val CHANNEL_ID = "image_upload_channel"
-        private const val CHANNEL_NAME = "Image Upload Channel"
 
         private const val COMPRESSION_QUALITY = 30
     }
@@ -86,7 +85,10 @@ class ImageUploadWorker @AssistedInject constructor(
     private var notificationTotalImages: Int = 0
     private var notificationCurrentImageIndex: Int = 0
 
-    private val dateFormatter = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+    private val dateFormatter = SimpleDateFormat(
+        context.getString(R.string.core_date_format_long),
+        Locale.getDefault()
+    )
 
     override suspend fun doWork(): WorkerResult {
         val sessionIdStr = inputData.getString(KEY_SESSION_ID)
@@ -533,8 +535,11 @@ class ImageUploadWorker @AssistedInject constructor(
         }
 
     private fun createNotificationChannel() {
-        val channel =
-            NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            context.getString(R.string.upload_notification_channel_image),
+            NotificationManager.IMPORTANCE_LOW
+        )
         notificationManager.createNotificationChannel(channel)
     }
 

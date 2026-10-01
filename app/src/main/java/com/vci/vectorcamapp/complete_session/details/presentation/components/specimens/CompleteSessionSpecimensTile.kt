@@ -18,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,12 +39,11 @@ import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
+import com.vci.vectorcamapp.core.presentation.util.date.rememberDateFormatter
 import com.vci.vectorcamapp.ui.extensions.color
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.extensions.displayText
-import java.text.SimpleDateFormat
-import java.util.Locale
 import com.vci.vectorcamapp.ui.extensions.zoomPanGesture
 
 /* TODO: CLEANUP */
@@ -60,8 +58,7 @@ fun CompleteSessionSpecimensTile(
 
     val context = LocalContext.current
     val density = LocalDensity.current
-    val dateTimeFormatter =
-        remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
+    val dateTimeFormatter = rememberDateFormatter(R.string.core_date_format_medium_with_time)
 
     val fallbackPainter = if (specimenImage.imageUploadStatus == UploadStatus.COMPLETED) {
         painterResource(R.drawable.specimen_image_placeholder_uploaded)

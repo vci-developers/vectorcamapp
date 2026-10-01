@@ -16,7 +16,7 @@
     <string name="permission_body_auto_time_required">Pour garantir des horodatages précis, cette application nécessite la date et l\'heure automatiques (heure Internet). Active-les dans les paramètres de ton appareil pour continuer.</string>
     <string name="permission_body_camera">Nécessaire pour capturer des images détaillées des spécimens de moustiques afin de permettre une identification et une analyse précises.</string>
     <string name="permission_body_location">Nécessaire pour enregistrer les sites de collecte exacts et associer chaque spécimen à son origine géographique pour le suivi sur le terrain.</string>
-    <string name="permission_body_notification">Permet à l\'application d\'afficher la progression des envois, les alertes de fin et d\'autres mises à jour importantes en arrière-plan.</string>
+    <string name="permission_body_notification">Permet à l\'application d\'afficher la progression des envois, les alertes de fin d\'envoi et d\'autres mises à jour importantes en arrière-plan.</string>
     <string name="splash_body_tagline">Démocratiser la surveillance vectorielle</string>
 
     <!-- Actions -->

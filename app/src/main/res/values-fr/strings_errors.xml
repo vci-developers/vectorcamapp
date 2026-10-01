@@ -50,7 +50,7 @@
     <string name="imaging_error_multiple_specimens_found">Plusieurs spécimens détectés. Assure-toi qu\'un seul spécimen est dans le cadre.</string>
     <string name="imaging_error_no_active_session">Aucune session active trouvée. Démarre une nouvelle session avant de capturer des images.</string>
     <string name="imaging_error_model_initialization_failed">L\'application n\'a pas pu charger son moteur d\'analyse. Essaie de la redémarrer.</string>
-    <string name="imaging_error_gpu_delegate_initialization_failed">Ton appareil ne prend peut-être pas en charge l\'analyse d\'image accélérée. L\'application fonctionnera quand même, mais plus lentement.</string>
+    <string name="imaging_error_gpu_delegate_initialization_failed">Ton appareil ne prend peut-être pas en charge l\'analyse d\'image accélérée. L\'application fonctionnera quand même, mais pourrait être plus lente.</string>
     <string name="imaging_error_unknown_initialization_error">Un problème est survenu lors de la préparation de la session. Redémarre l\'application ou contacte le support.</string>
     <string name="imaging_error_invalid_input_shape">L\'application a rencontré un problème lors de l\'analyse de l\'image. Reprends la photo.</string>
     <string name="imaging_error_specimen_id_recognition_failed">Impossible de lire l\'ID du spécimen. Assure-toi que l\'étiquette est nette et bien éclairée.</string>

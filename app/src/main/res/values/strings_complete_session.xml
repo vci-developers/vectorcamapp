@@ -11,6 +11,10 @@
     <string name="complete_session_title_additional_notes">Additional Notes</string>
     <string name="complete_session_title_card">Completed Session on\n%1$s</string>
 
+    <!-- Tabs -->
+    <string name="complete_session_tab_form">Form</string>
+    <string name="complete_session_tab_specimens">Specimens</string>
+
     <!-- Body -->
     <string name="complete_session_body_subtitle">Click on a session to view more details</string>
     <string name="complete_session_body_empty">No completed sessions found.</string>

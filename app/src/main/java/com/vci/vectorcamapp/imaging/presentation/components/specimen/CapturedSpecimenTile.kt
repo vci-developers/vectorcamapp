@@ -40,10 +40,9 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
+import com.vci.vectorcamapp.core.presentation.util.date.rememberDateFormatter
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 @Composable
 fun CapturedSpecimenTile(
@@ -54,8 +53,7 @@ fun CapturedSpecimenTile(
     badgeText: String? = null,
 ) {
     val context = LocalContext.current
-    val dateTimeFormatter =
-        remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
+    val dateTimeFormatter = rememberDateFormatter(R.string.core_date_format_medium_with_time)
 
     var isImageLoaded by remember { mutableStateOf(false) }
 
