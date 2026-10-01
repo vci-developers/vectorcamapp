@@ -40,7 +40,11 @@ import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
+import com.vci.vectorcamapp.core.presentation.extensions.displayTextFor
 import com.vci.vectorcamapp.core.presentation.util.date.rememberDateFormatter
+import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
+import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
+import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
@@ -54,6 +58,10 @@ fun CapturedSpecimenTile(
 ) {
     val context = LocalContext.current
     val dateTimeFormatter = rememberDateFormatter(R.string.core_date_format_medium_with_time)
+
+    val speciesDisplay = SpeciesLabel.displayTextFor(context, specimenImage.species)
+    val sexDisplay = SexLabel.displayTextFor(context, specimenImage.sex)
+    val abdomenStatusDisplay = AbdomenStatusLabel.displayTextFor(context, specimenImage.abdomenStatus)
 
     var isImageLoaded by remember { mutableStateOf(false) }
 
@@ -160,19 +168,30 @@ fun CapturedSpecimenTile(
                     }
 
                     Text(
-                        text = if (specimenImage.species != null) stringResource(R.string.imaging_label_species, specimenImage.species) else "",
+                        text = if (speciesDisplay != null) {
+                            stringResource(R.string.imaging_label_species, speciesDisplay)
+                        } else {
+                            ""
+                        },
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colors.textPrimary
                     )
 
                     Text(
-                        text = if (specimenImage.sex != null) stringResource(R.string.imaging_label_sex, specimenImage.sex) else "",
+                        text = if (sexDisplay != null) stringResource(R.string.imaging_label_sex, sexDisplay) else "",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colors.textPrimary
                     )
 
                     Text(
-                        text = if (specimenImage.abdomenStatus != null) stringResource(R.string.imaging_label_abdomen_status, specimenImage.abdomenStatus) else "",
+                        text = if (abdomenStatusDisplay != null) {
+                            stringResource(
+                                R.string.imaging_label_abdomen_status,
+                                abdomenStatusDisplay
+                            )
+                        } else {
+                            ""
+                        },
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colors.textPrimary
                     )

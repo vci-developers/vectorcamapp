@@ -12,6 +12,19 @@
     <string name="session_type_data_collection">Collecte de données</string>
     <string name="session_type_practice">Entraînement</string>
 
+    <!-- Specimen Species -->
+    <string name="species_anopheles_other">Autre Anopheles</string>
+    <string name="species_non_mosquito">Non-moustique</string>
+
+    <!-- Specimen Sex -->
+    <string name="sex_female">Femelle</string>
+    <string name="sex_male">Mâle</string>
+
+    <!-- Specimen Abdomen Status -->
+    <string name="abdomen_status_unfed">Non gorgée</string>
+    <string name="abdomen_status_fully_fed">Gorgée</string>
+    <string name="abdomen_status_gravid">Gravide</string>
+
     <!-- Search Help -->
     <string name="search_title_help">Fonctionnement de la recherche</string>
     <string name="search_body_space_rule">• Mets un ESPACE entre les mots lorsque tu veux des résultats qui contiennent tous les mots.</string>

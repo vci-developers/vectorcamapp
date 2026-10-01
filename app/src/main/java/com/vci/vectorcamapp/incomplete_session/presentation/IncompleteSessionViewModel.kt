@@ -1,16 +1,19 @@
 package com.vci.vectorcamapp.incomplete_session.presentation
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
+import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
 import com.vci.vectorcamapp.incomplete_session.logging.IncompleteSessionErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -23,6 +26,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class IncompleteSessionViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val sessionRepository: SessionRepository,
     private val currentSessionCache: CurrentSessionCache,
     private val cameraRepository: CameraRepository,
@@ -44,6 +48,7 @@ class IncompleteSessionViewModel @Inject constructor(
                     add(session.collectorName)
                     add(session.collectorTitle)
                     add(session.type.name)
+                    add(session.type.displayText(context))
                     add(site.district)
                     add(site.subCounty)
                     add(site.parish)

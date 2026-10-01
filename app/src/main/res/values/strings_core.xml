@@ -17,6 +17,24 @@
     <string name="language_spanish" translatable="false">Español</string>
     <string name="language_french" translatable="false">Français</string>
 
+    <!-- Specimen Species (classifier labels; the English value is what gets stored/uploaded) -->
+    <string name="species_anopheles_funestus" translatable="false">Anopheles funestus</string>
+    <string name="species_anopheles_gambiae" translatable="false">Anopheles gambiae</string>
+    <string name="species_anopheles_other">Anopheles other</string>
+    <string name="species_culex" translatable="false">Culex</string>
+    <string name="species_aedes" translatable="false">Aedes</string>
+    <string name="species_mansonia" translatable="false">Mansonia</string>
+    <string name="species_non_mosquito">Non-Mosquito</string>
+
+    <!-- Specimen Sex -->
+    <string name="sex_female">Female</string>
+    <string name="sex_male">Male</string>
+
+    <!-- Specimen Abdomen Status -->
+    <string name="abdomen_status_unfed">Unfed</string>
+    <string name="abdomen_status_fully_fed">Fully Fed</string>
+    <string name="abdomen_status_gravid">Gravid</string>
+
     <!-- Search Help -->
     <string name="search_title_help">How Search Works</string>
     <string name="search_body_space_rule">• Put a SPACE between words when you want results that include all the words.</string>
