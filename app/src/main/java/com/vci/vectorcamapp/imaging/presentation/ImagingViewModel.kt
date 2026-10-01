@@ -530,9 +530,9 @@ class ImagingViewModel @Inject constructor(
                                                 abdomenStatusIndex = null
                                             }
 
-                                            val speciesLabel = speciesIndex?.let { SpeciesLabel.entries[it].label }
-                                            val sexLabel = sexIndex?.let { SexLabel.entries[it].label }
-                                            val abdomenLabel = abdomenStatusIndex?.let { AbdomenStatusLabel.entries[it].label }
+                                            val speciesLabel = speciesIndex?.let { SpeciesLabel.entries[it].wireValue }
+                                            val sexLabel = sexIndex?.let { SexLabel.entries[it].wireValue }
+                                            val abdomenLabel = abdomenStatusIndex?.let { AbdomenStatusLabel.entries[it].wireValue }
 
                                             VectorCamAnalytics.logEvent(
                                                 "imaging_specimen_inference_completed",

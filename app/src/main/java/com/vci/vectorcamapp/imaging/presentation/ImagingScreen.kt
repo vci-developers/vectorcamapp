@@ -76,7 +76,11 @@ import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
+import com.vci.vectorcamapp.core.presentation.extensions.displayTextFor
 import com.vci.vectorcamapp.imaging.data.camera.CameraMetadataListenerImplementation
+import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
+import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
+import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel
 import com.vci.vectorcamapp.imaging.presentation.components.camera.LiveCameraPreview
 import com.vci.vectorcamapp.imaging.presentation.components.icon.AnimatedArrowIcon
 import com.vci.vectorcamapp.imaging.presentation.components.specimen.CapturedSpecimenTile
@@ -689,25 +693,39 @@ fun ImagingScreen(
                                         Column(
                                             verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.paddingSmall)
                                         ) {
-                                            if (state.currentSpecimenImage.species != null) {
+                                            val specimenImage = state.currentSpecimenImage
+                                            val speciesDisplay =
+                                                SpeciesLabel.displayTextFor(context, specimenImage.species)
+                                            val sexDisplay =
+                                                SexLabel.displayTextFor(context, specimenImage.sex)
+                                            val abdomenStatusDisplay =
+                                                AbdomenStatusLabel.displayTextFor(context, specimenImage.abdomenStatus)
+
+                                            if (speciesDisplay != null) {
                                                 Text(
-                                                    text = stringResource(R.string.imaging_label_species, state.currentSpecimenImage.species),
+                                                    text = stringResource(
+                                                        R.string.imaging_label_species,
+                                                        speciesDisplay
+                                                    ),
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     color = MaterialTheme.colors.textPrimary
                                                 )
                                             }
 
-                                            if (state.currentSpecimenImage.sex != null) {
+                                            if (sexDisplay != null) {
                                                 Text(
-                                                    text = stringResource(R.string.imaging_label_sex, state.currentSpecimenImage.sex),
+                                                    text = stringResource(R.string.imaging_label_sex, sexDisplay),
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     color = MaterialTheme.colors.textPrimary
                                                 )
                                             }
 
-                                            if (state.currentSpecimenImage.abdomenStatus != null) {
+                                            if (abdomenStatusDisplay != null) {
                                                 Text(
-                                                    text = stringResource(R.string.imaging_label_abdomen_status, state.currentSpecimenImage.abdomenStatus),
+                                                    text = stringResource(
+                                                        R.string.imaging_label_abdomen_status,
+                                                        abdomenStatusDisplay
+                                                    ),
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     color = MaterialTheme.colors.textPrimary
                                                 )

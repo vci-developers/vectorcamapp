@@ -12,14 +12,37 @@
     <string name="session_type_data_collection">Collecte de données</string>
     <string name="session_type_practice">Entraînement</string>
 
+    <!-- Specimen Species -->
+    <string name="species_anopheles_other">Autre Anopheles</string>
+    <string name="species_non_mosquito">Non-moustique</string>
+
+    <!-- Specimen Sex -->
+    <string name="sex_female">Femelle</string>
+    <string name="sex_male">Mâle</string>
+
+    <!-- Specimen Abdomen Status -->
+    <string name="abdomen_status_unfed">Non gorgée</string>
+    <string name="abdomen_status_fully_fed">Gorgée</string>
+    <string name="abdomen_status_gravid">Gravide</string>
+
     <!-- Search Help -->
     <string name="search_title_help">Fonctionnement de la recherche</string>
     <string name="search_body_space_rule">• Mets un ESPACE entre les mots lorsque tu veux des résultats qui contiennent tous les mots.</string>
     <string name="search_body_comma_rule">• Mets une VIRGULE entre les groupes lorsque n\'importe lequel des groupes convient.</string>
     <string name="search_label_examples">Exemples :</string>
-    <string name="search_body_example_1">• Anopheles Male → doit contenir Anopheles et Male.</string>
-    <string name="search_body_example_2">• Anopheles Male, Mansonia Female → soit (Anopheles et Male), soit (Mansonia et Female).</string>
+    <string name="search_body_example_1">• Anopheles Mâle → doit contenir Anopheles et Mâle.</string>
+    <string name="search_body_example_2">• Anopheles Mâle, Mansonia Femelle → soit (Anopheles et Mâle), soit (Mansonia et Femelle).</string>
     <string name="search_action_learn_more">Appuie pour en savoir plus sur la recherche</string>
+
+    <!-- Shared Component Labels -->
+    <string name="core_label_select">Sélectionner</string>
+    <string name="core_label_select_date">Sélectionne une date</string>
+    <string name="core_action_done">Terminé</string>
+
+    <!-- Date Formats (SimpleDateFormat patterns - keep the quoted literals escaped) -->
+    <string name="core_date_format_medium">MMM dd, yyyy</string>
+    <string name="core_date_format_long">MMMM dd, yyyy</string>
+    <string name="core_date_format_medium_with_time">MMM dd, yyyy \'à\' h:mm a</string>
 
     <!-- Shared Component Content Descriptions -->
     <string name="core_content_description_calendar">Calendrier</string>
@@ -49,6 +72,10 @@
     <string name="upload_notification_specimen_image_progress">Spécimen %1$d sur %2$d\nImage %3$d sur %4$d</string>
     <string name="upload_notification_retrying">Nouvelle tentative d\'envoi...</string>
     <string name="upload_notification_failed">Échec de l\'envoi</string>
+
+    <!-- Upload Notification Channels -->
+    <string name="upload_notification_channel_metadata">Canal d\'envoi des métadonnées</string>
+    <string name="upload_notification_channel_image">Canal d\'envoi des images</string>
 
     <!-- Upload Service -->
     <string name="upload_service_channel_name">Service d\'envoi</string>

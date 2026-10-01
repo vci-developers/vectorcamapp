@@ -11,6 +11,10 @@
     <string name="complete_session_title_additional_notes">Notes supplémentaires</string>
     <string name="complete_session_title_card">Session terminée le\n%1$s</string>
 
+    <!-- Tabs -->
+    <string name="complete_session_tab_form">Formulaire</string>
+    <string name="complete_session_tab_specimens">Spécimens</string>
+
     <!-- Body -->
     <string name="complete_session_body_subtitle">Appuie sur une session pour voir plus de détails</string>
     <string name="complete_session_body_empty">Aucune session terminée trouvée.</string>
@@ -45,7 +49,7 @@
     <string name="complete_session_label_yes">Oui</string>
     <string name="complete_session_label_no">Non</string>
     <string name="complete_session_label_months_since_irs">Mois écoulés depuis l\'IRS : %1$s</string>
-    <string name="complete_session_label_num_llins">Nombre de moustiquaires imprégnées longue durée (LLIN) disponibles : %1$s</string>
+    <string name="complete_session_label_num_llins">Nombre de moustiquaires imprégnées d\'insecticide à longue durée d\'action (LLIN) disponibles : %1$s</string>
     <string name="complete_session_label_llin_type">Type de LLIN : %1$s</string>
     <string name="complete_session_label_llin_brand">Marque de LLIN : %1$s</string>
     <string name="complete_session_label_num_people_llin">Nombre de personnes ayant dormi sous une LLIN : %1$s</string>

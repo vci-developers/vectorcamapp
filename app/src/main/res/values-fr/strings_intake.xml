@@ -57,7 +57,7 @@
     <string name="intake_action_register_collector">Enregistrer le collecteur manquant</string>
     <string name="intake_action_learn_more_methods">Appuie pour en savoir plus sur les méthodes de collecte</string>
     <string name="intake_action_retry_location">Réessayer la localisation</string>
-    <string name="intake_action_begin_imaging">Imagerie : %1$s</string>
+    <string name="intake_action_begin_imaging">Commencer l\'imagerie : %1$s</string>
 
     <!-- Content Descriptions -->
     <string name="intake_content_description_back">Bouton de retour</string>

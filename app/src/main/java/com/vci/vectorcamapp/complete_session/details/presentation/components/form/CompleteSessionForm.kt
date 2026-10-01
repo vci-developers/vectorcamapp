@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -19,9 +18,8 @@ import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.composites.FormAnswerAndQuestion
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
+import com.vci.vectorcamapp.core.presentation.util.date.rememberDateFormatter
 import com.vci.vectorcamapp.ui.extensions.colors
-import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.UUID
 
 /* TODO: CLEANUP */
@@ -39,9 +37,8 @@ fun CompleteSessionForm(
 ) {
     val context = LocalContext.current
 
-    val dateTimeFormatter =
-        remember { SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault()) }
-    val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
+    val dateTimeFormatter = rememberDateFormatter(R.string.core_date_format_medium_with_time)
+    val dateFormatter = rememberDateFormatter(R.string.core_date_format_medium)
 
     session.completedAt?.let {
         Column(modifier = modifier.fillMaxSize()) {
