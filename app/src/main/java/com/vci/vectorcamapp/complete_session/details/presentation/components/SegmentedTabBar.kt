@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.complete_session.details.presentation.enums.CompleteSessionDetailsTab
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -69,7 +70,7 @@ fun SegmentedTabBar(
                         .padding(vertical = MaterialTheme.dimensions.paddingMedium)) {
 
                     Text(
-                        text = tab.label,
+                        text = stringResource(tab.labelResId),
                         style = MaterialTheme.typography.bodyLarge,
                         color = if (isSelected) MaterialTheme.colors.segmentedTabBarActiveText
                         else MaterialTheme.colors.segmentedTabBarInactiveText

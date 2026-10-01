@@ -4,9 +4,9 @@
     <!-- Titles -->
     <string name="settings_title_screen">Paramètres</string>
     <string name="settings_title_actions">Actions</string>
-    <string name="settings_title_start_data_collection">Collecte de données</string>
-    <string name="settings_title_start_practice">Session d\'entraînement</string>
-    <string name="settings_title_update_data">Mise à jour des données</string>
+    <string name="settings_title_start_data_collection">Démarrer la collecte de données</string>
+    <string name="settings_title_start_practice">Démarrer une session d\'entraînement</string>
+    <string name="settings_title_update_data">Mettre à jour les données depuis le serveur</string>
     <string name="settings_title_cloud_sync">Synchronisation cloud</string>
     <string name="settings_title_about">À propos</string>
     <string name="settings_title_language">Langue</string>

@@ -1,18 +1,20 @@
 package com.vci.vectorcamapp.incomplete_session.presentation
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
-import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
-import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
+import com.vci.vectorcamapp.incomplete_session.domain.util.IncompleteSessionError
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -35,6 +37,7 @@ class IncompleteSessionViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    private lateinit var context: Context
     private lateinit var sessionRepository: SessionRepository
     private lateinit var currentSessionCache: CurrentSessionCache
     private lateinit var cameraRepository: CameraRepository
@@ -54,6 +57,9 @@ class IncompleteSessionViewModelTest {
         every { Log.e(any(), any()) } returns 0
         every { Log.e(any(), any(), any()) } returns 0
 
+        context = mockk(relaxed = true)
+        every { context.getString(any()) } returns ""
+
         sessionRepository = mockk()
         currentSessionCache = mockk(relaxed = true)
         cameraRepository = mockk(relaxed = true)
@@ -62,6 +68,7 @@ class IncompleteSessionViewModelTest {
         every { sessionRepository.observeIncompleteSessionsAndSites() } returns incompleteSessionsFlow
 
         viewModel = IncompleteSessionViewModel(
+            context = context,
             sessionRepository = sessionRepository,
             currentSessionCache = currentSessionCache,
             cameraRepository = cameraRepository,
@@ -412,5 +419,45 @@ class IncompleteSessionViewModelTest {
         coVerify(exactly = 1) { errorMessageEmitter.emit(IncompleteSessionError.SESSION_DELETION_FAILED, any()) }
         coVerify(exactly = 0) { cameraRepository.deleteSavedImage(any()) }
         coVerify(exactly = 0) { sessionRepository.deleteSession(any(), any()) }
+    }
+
+    // ========================================
+    // F. Search Filtering
+    // ========================================
+
+    @Test
+    fun incVm_f01_search_matchesLocalizedSessionType() = runTest {
+        every { context.getString(R.string.session_type_practice) } returns "Entraînement"
+        every { context.getString(R.string.session_type_surveillance) } returns "Surveillance"
+
+        val practice = makeSessionAndSite(makeSession(SessionType.PRACTICE), 1)
+        val surveillance = makeSessionAndSite(makeSession(SessionType.SURVEILLANCE), 2)
+
+        viewModel.state.test {
+            incompleteSessionsFlow.value = listOf(practice, surveillance)
+            viewModel.onAction(IncompleteSessionAction.UpdateSearchQuery("Entraînement"))
+            advanceUntilIdle()
+
+            assertThat(expectMostRecentItem().sessionAndSites).containsExactly(practice)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun incVm_f02_search_stillMatchesStoredSessionTypeName() = runTest {
+        every { context.getString(R.string.session_type_practice) } returns "Entraînement"
+        every { context.getString(R.string.session_type_surveillance) } returns "Surveillance"
+
+        val practice = makeSessionAndSite(makeSession(SessionType.PRACTICE), 1)
+        val surveillance = makeSessionAndSite(makeSession(SessionType.SURVEILLANCE), 2)
+
+        viewModel.state.test {
+            incompleteSessionsFlow.value = listOf(practice, surveillance)
+            viewModel.onAction(IncompleteSessionAction.UpdateSearchQuery("PRACTICE"))
+            advanceUntilIdle()
+
+            assertThat(expectMostRecentItem().sessionAndSites).containsExactly(practice)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 }

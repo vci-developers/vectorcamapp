@@ -100,7 +100,7 @@ fun <T> DropdownField(
                             itemContent(selectedOption)
                         } else {
                             Text(
-                                text = label ?: "Select",
+                                text = label ?: stringResource(R.string.core_label_select),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colors.textSecondary
                             )
