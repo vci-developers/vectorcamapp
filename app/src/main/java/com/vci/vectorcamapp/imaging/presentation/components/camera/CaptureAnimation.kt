@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -42,90 +41,56 @@ fun CaptureAnimation(
     stage: CaptureStage?,
     previewBitmap: Bitmap? = null,
 ) {
-    if (stage == null) return
+    if (stage == null || previewBitmap == null) return
 
     val label = stringResource(stage.labelResId)
-    val imageBitmap = remember(previewBitmap) { previewBitmap?.asImageBitmap() }
+    val imageBitmap = remember(previewBitmap) { previewBitmap.asImageBitmap() }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .then(
-                if (previewBitmap == null) {
-                    Modifier.background(MaterialTheme.colors.overlayColor)
-                } else {
-                    Modifier
-                }
-            )
             .pointerInput(Unit) { detectTapGestures { } },
         contentAlignment = Alignment.Center
     ) {
-        if (imageBitmap != null) {
-            Image(
-                bitmap = imageBitmap,
-                contentDescription = label,
-                contentScale = if (stage == CaptureStage.CLASSIFYING) {
-                    ContentScale.Fit
-                } else {
-                    ContentScale.Crop
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black)
-            )
-        }
+        Image(
+            bitmap = imageBitmap,
+            contentDescription = label,
+            contentScale = if (stage == CaptureStage.CLASSIFYING) {
+                ContentScale.Fit
+            } else {
+                ContentScale.Crop
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        )
 
-        if (previewBitmap != null) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(MaterialTheme.dimensions.paddingMedium)
-                    .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusLarge))
-                    .background(MaterialTheme.colors.cardBackground)
-                    .padding(
-                        horizontal = MaterialTheme.dimensions.paddingMedium,
-                        vertical = MaterialTheme.dimensions.paddingSmall
-                    )
-            ) {
-                Icon(
-                    painter = painterResource(stage.iconResId),
-                    contentDescription = null,
-                    tint = MaterialTheme.colors.secondary,
-                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(MaterialTheme.dimensions.paddingMedium)
+                .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusLarge))
+                .background(MaterialTheme.colors.cardBackground)
+                .padding(
+                    horizontal = MaterialTheme.dimensions.paddingMedium,
+                    vertical = MaterialTheme.dimensions.paddingSmall
                 )
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colors.textPrimary,
-                    textAlign = TextAlign.Center
-                )
-            }
-        } else {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusLarge))
-                    .background(MaterialTheme.colors.cardBackground)
-                    .padding(MaterialTheme.dimensions.paddingLarge)
-            ) {
-                Icon(
-                    painter = painterResource(stage.iconResId),
-                    contentDescription = null,
-                    tint = MaterialTheme.colors.secondary,
-                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraExtraLarge)
-                )
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colors.textPrimary,
-                    textAlign = TextAlign.Center
-                )
-            }
+        ) {
+            Icon(
+                painter = painterResource(stage.iconResId),
+                contentDescription = null,
+                tint = MaterialTheme.colors.secondary,
+                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colors.textPrimary,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
