@@ -72,7 +72,18 @@ class SessionRepositoryImplementationTest {
         val withForm = repository.getSessionAndSurveillanceFormById(sessionId)
         assertThat(withForm?.session).isEqualTo(session())
         assertThat(withForm?.surveillanceForm).isEqualTo(
-            SurveillanceForm(2, false, null, 0, null, null, null, null)
+            SurveillanceForm(
+                numPeopleSleptInHouse = 2,
+                wasIrsConducted = false,
+                monthsSinceIrs = null,
+                numLlinsAvailable = 0,
+                llinType = null,
+                llinBrand = null,
+                numPeopleSleptUnderLlin = null,
+                numChildrenUnder5 = null,
+                hasPregnantWoman = null,
+                submittedAt = null,
+            )
         )
 
         coEvery { dao.getSessionAndSurveillanceForm(sessionId) } returns SessionAndSurveillanceFormRelation(
