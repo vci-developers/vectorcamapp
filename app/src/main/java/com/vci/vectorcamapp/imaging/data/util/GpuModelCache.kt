@@ -89,15 +89,27 @@ object GpuModelCache {
     }
 
     /**
-     * Cheap identity for an asset: uncompressed length. `.tflite` files are stored uncompressed,
-     * so this does not require reading the model. Two different models with the exact same length
-     * would collide; the install-token directory still separates app updates.
+     * Cheap identity for a bundled asset or a downloaded model file. Assets use uncompressed
+     * length; on-disk files also include last-modified so a replacement of the same size still
+     * misses the GPU program cache.
      */
-    fun assetFingerprint(context: Context, assetName: String): String? = try {
-        context.assets.openFd(assetName).use { fd -> fd.length.toString() }
-    } catch (e: IOException) {
-        Timber.w(e, "Could not fingerprint $assetName; GPU program key will omit it")
-        null
+    fun assetFingerprint(context: Context, assetOrPath: String): String? {
+        val file = File(assetOrPath)
+        if (file.isAbsolute) {
+            return if (file.exists()) {
+                "${file.length()}-${file.lastModified()}"
+            } else {
+                Timber.w("Could not fingerprint missing model file $assetOrPath")
+                null
+            }
+        }
+
+        return try {
+            context.assets.openFd(assetOrPath).use { fd -> fd.length.toString() }
+        } catch (e: IOException) {
+            Timber.w(e, "Could not fingerprint $assetOrPath; GPU program key will omit it")
+            null
+        }
     }
 
     private fun directory(context: Context): File? = synchronized(lock) {
