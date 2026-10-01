@@ -861,6 +861,8 @@ class IntakeViewModelTest {
         llinType = "Pyrethroid Only",
         llinBrand = "OLYSET Net",
         numPeopleSleptUnderLlin = 1,
+        numChildrenUnder5 = null,
+        hasPregnantWoman = null,
         submittedAt = null,
     )
 
