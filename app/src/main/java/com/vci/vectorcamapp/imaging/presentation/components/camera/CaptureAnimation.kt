@@ -6,7 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -41,49 +41,48 @@ fun CaptureAnimation(
     stage: CaptureStage?,
     previewBitmap: Bitmap? = null,
 ) {
-    if (stage == null || previewBitmap == null) return
+    if (stage == null) return
 
     val label = stringResource(stage.labelResId)
-    val imageBitmap = remember(previewBitmap) { previewBitmap.asImageBitmap() }
+    val imageBitmap = remember(previewBitmap) { previewBitmap?.asImageBitmap() }
 
     Box(
         modifier = modifier
             .fillMaxSize()
+            .background(MaterialTheme.colors.overlayColor)
             .pointerInput(Unit) { detectTapGestures { } },
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            bitmap = imageBitmap,
-            contentDescription = label,
-            contentScale = if (stage == CaptureStage.CLASSIFYING) {
-                ContentScale.Fit
-            } else {
-                ContentScale.Crop
-            },
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
-        )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(MaterialTheme.dimensions.paddingMedium)
                 .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusLarge))
                 .background(MaterialTheme.colors.cardBackground)
-                .padding(
-                    horizontal = MaterialTheme.dimensions.paddingMedium,
-                    vertical = MaterialTheme.dimensions.paddingSmall
-                )
+                .padding(MaterialTheme.dimensions.paddingLarge)
         ) {
-            Icon(
-                painter = painterResource(stage.iconResId),
-                contentDescription = null,
-                tint = MaterialTheme.colors.secondary,
-                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
-            )
+            if (imageBitmap != null && stage != CaptureStage.CAPTURING) {
+                Image(
+                    bitmap = imageBitmap,
+                    contentDescription = label,
+                    contentScale = if (stage == CaptureStage.CLASSIFYING) {
+                        ContentScale.Fit
+                    } else {
+                        ContentScale.Crop
+                    },
+                    modifier = Modifier
+                        .size(MaterialTheme.dimensions.iconSizeExtraExtraLarge)
+                        .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
+                        .background(Color.Black)
+                )
+            } else {
+                Icon(
+                    painter = painterResource(stage.iconResId),
+                    contentDescription = null,
+                    tint = MaterialTheme.colors.secondary,
+                    modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraExtraLarge)
+                )
+            }
             Text(
                 text = label,
                 style = MaterialTheme.typography.titleMedium,
