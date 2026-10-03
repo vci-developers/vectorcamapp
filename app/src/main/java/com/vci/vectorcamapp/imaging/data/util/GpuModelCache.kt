@@ -104,7 +104,7 @@ object GpuModelCache {
         if (!directoryResolved) {
             directoryResolved = true
             directory = prepareDirectory(context)
-        }a` 1cfcfcf          
+        }
         directory
     }
 
