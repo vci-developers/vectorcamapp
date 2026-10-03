@@ -69,8 +69,10 @@ fun CaptureAnimation(
             AnimatedContent(
                 targetState = stage to previewBitmap,
                 transitionSpec = {
-                    (fadeIn(tween(CAPTURE_STAGE_FADE_MILLIS)) togetherWith
-                        fadeOut(tween(CAPTURE_STAGE_FADE_MILLIS))).using(null)
+                    (
+                        fadeIn(tween(CAPTURE_STAGE_FADE_MILLIS)) togetherWith
+                            fadeOut(tween(CAPTURE_STAGE_FADE_MILLIS))
+                    ).using(null)
                 },
                 contentAlignment = Alignment.Center,
                 label = "captureStage",
