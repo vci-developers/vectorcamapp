@@ -1,6 +1,11 @@
 package com.vci.vectorcamapp.imaging.presentation.components.camera
 
 import android.graphics.Bitmap
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -27,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.imaging.presentation.enums.CaptureStage
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -43,9 +49,6 @@ fun CaptureAnimation(
 ) {
     if (stage == null) return
 
-    val label = stringResource(stage.labelResId)
-    val imageBitmap = remember(previewBitmap) { previewBitmap?.asImageBitmap() }
-
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -55,11 +58,47 @@ fun CaptureAnimation(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
             modifier = Modifier
                 .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusLarge))
                 .background(MaterialTheme.colors.cardBackground)
-                .padding(MaterialTheme.dimensions.paddingLarge)
+                .padding(
+                    horizontal = MaterialTheme.dimensions.paddingExtraLarge,
+                    vertical = MaterialTheme.dimensions.paddingExtraLarge
+                )
+        ) {
+            AnimatedContent(
+                targetState = stage to previewBitmap,
+                transitionSpec = {
+                    (fadeIn(tween(CAPTURE_STAGE_FADE_MILLIS)) togetherWith
+                        fadeOut(tween(CAPTURE_STAGE_FADE_MILLIS))).using(null)
+                },
+                contentAlignment = Alignment.Center,
+                label = "captureStage",
+            ) { (animatedStage, animatedBitmap) ->
+                CaptureStageContent(
+                    stage = animatedStage,
+                    previewBitmap = animatedBitmap,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CaptureStageContent(
+    stage: CaptureStage,
+    previewBitmap: Bitmap?,
+) {
+    val label = stringResource(stage.labelResId)
+    val imageBitmap = remember(previewBitmap) { previewBitmap?.asImageBitmap() }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+    ) {
+        Box(
+            modifier = Modifier.size(width = CapturePreviewWidth, height = CapturePreviewHeight),
+            contentAlignment = Alignment.Center,
         ) {
             if (imageBitmap != null && stage != CaptureStage.CAPTURING) {
                 Image(
@@ -71,7 +110,7 @@ fun CaptureAnimation(
                         ContentScale.Crop
                     },
                     modifier = Modifier
-                        .size(MaterialTheme.dimensions.iconSizeExtraExtraLarge)
+                        .fillMaxSize()
                         .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
                         .background(Color.Black)
                 )
@@ -83,13 +122,17 @@ fun CaptureAnimation(
                     modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraExtraLarge)
                 )
             }
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colors.textPrimary,
-                textAlign = TextAlign.Center
-            )
         }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colors.textPrimary,
+            textAlign = TextAlign.Center
+        )
     }
 }
+
+private val CapturePreviewWidth = 168.dp
+private val CapturePreviewHeight = 120.dp
+private const val CAPTURE_STAGE_FADE_MILLIS = 300

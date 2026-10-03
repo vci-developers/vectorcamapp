@@ -514,7 +514,7 @@ class ImagingViewModel @Inject constructor(
                                                     capturePreviewBitmap = bitmapForCapturePreview(croppedBitmap)
                                                 )
                                             }
-                                            awaitDrawnFrame()
+                                            awaitDrawnFrame(CAPTURE_STAGE_CROSSFADE_DELAY_MS)
 
                                             inferenceStartedAt = System.currentTimeMillis()
                                             var (speciesResult, sexResult, abdomenStatusResult) = inferenceRepository.classifySpecimen(
@@ -875,9 +875,9 @@ class ImagingViewModel @Inject constructor(
         )
     }
 
-    private suspend fun awaitDrawnFrame() {
+    private suspend fun awaitDrawnFrame(delayMs: Long = CAPTURE_PREVIEW_DRAW_DELAY_MS) {
         withContext(Dispatchers.Main.immediate) {
-            delay(CAPTURE_PREVIEW_DRAW_DELAY_MS)
+            delay(delayMs)
         }
     }
 
@@ -925,6 +925,7 @@ class ImagingViewModel @Inject constructor(
         private const val MONTHLY_FURTHER_PROCESSING_CAP = 20
         private const val CAPTURE_PREVIEW_MAX_EDGE_PX = 1280
         private const val CAPTURE_PREVIEW_DRAW_DELAY_MS = 100L
+        private const val CAPTURE_STAGE_CROSSFADE_DELAY_MS = 350L
     }
 }
 
