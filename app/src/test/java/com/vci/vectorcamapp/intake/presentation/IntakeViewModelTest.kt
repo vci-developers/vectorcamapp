@@ -138,7 +138,7 @@ class IntakeViewModelTest {
         programFormWorkflow = mockk(relaxed = true)
         every { programFormWorkflow.surveillanceForm } returns null
         every { programFormWorkflow.form } returns null
-        every { programFormWorkflow.formQuestions } returns emptyList()
+        every { programFormWorkflow.sessionFormQuestions } returns emptyList()
 
         programFormWorkflowFactory = mockk()
         coEvery { programFormWorkflowFactory.create(any(), any()) } returns programFormWorkflow
@@ -562,7 +562,7 @@ class IntakeViewModelTest {
             "eq",
             FormQuestionPrerequisiteValue.StringValue("yes"),
         )
-        every { programFormWorkflow.formQuestions } returns listOf(
+        every { programFormWorkflow.sessionFormQuestions } returns listOf(
             question(1, "text"),
             question(2, "boolean", requiresYes),
             question(3, "text", requiresYes),
@@ -745,7 +745,7 @@ class IntakeViewModelTest {
             listOf(LocationType(1, "Village", 1), LocationType(2, "House", 2))
         )
         every { programFormWorkflow.surveillanceForm } returns surveillanceForm()
-        every { programFormWorkflow.formQuestions } returns listOf(question(1, "text"))
+        every { programFormWorkflow.sessionFormQuestions } returns listOf(question(1, "text"))
         runTransactions()
         coEvery { sessionRepository.upsertSession(any(), any()) } returns Result.Success(Unit)
         coEvery { surveillanceFormRepository.upsertSurveillanceForm(any(), any()) } returns Result.Success(Unit)
@@ -782,7 +782,7 @@ class IntakeViewModelTest {
     @Test
     fun intakeVm_i06_submit_repositoryFailures_doNotNavigate() = runTest {
         every { programFormWorkflow.surveillanceForm } returns surveillanceForm()
-        every { programFormWorkflow.formQuestions } returns listOf(question(1, "text"))
+        every { programFormWorkflow.sessionFormQuestions } returns listOf(question(1, "text"))
         runTransactions()
         val vm = makeViewModel()
         backgroundScope.launch { vm.state.collect {} }
@@ -861,6 +861,8 @@ class IntakeViewModelTest {
         llinType = "Pyrethroid Only",
         llinBrand = "OLYSET Net",
         numPeopleSleptUnderLlin = 1,
+        numChildrenUnder5 = 0,
+        hasPregnantWoman = false,
         submittedAt = null,
     )
 

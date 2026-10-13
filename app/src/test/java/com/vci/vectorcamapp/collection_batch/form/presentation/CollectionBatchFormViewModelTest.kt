@@ -14,12 +14,15 @@ import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.Program
+import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.SessionUnit
 import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
+import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
@@ -27,6 +30,7 @@ import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteExpression
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteValue
+import com.vci.vectorcamapp.intake.domain.strategy.program_form.ProgramFormWorkflowFactory
 import com.vci.vectorcamapp.navigation.Destination
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -56,6 +60,7 @@ class CollectionBatchFormViewModelTest {
     private val otherUnitId = UUID.fromString("00000000-0000-0000-0000-000000000003")
 
     private lateinit var deviceCache: DeviceCache
+    private lateinit var sessionRepository: SessionRepository
     private lateinit var sessionUnitRepository: SessionUnitRepository
     private lateinit var programRepository: ProgramRepository
     private lateinit var formRepository: FormRepository
@@ -70,6 +75,8 @@ class CollectionBatchFormViewModelTest {
     @Before
     fun setUp() {
         deviceCache = mockk(relaxed = true)
+        sessionRepository = mockk(relaxed = true)
+        coEvery { sessionRepository.getSessionById(sessionId) } returns session(SessionType.SURVEILLANCE)
         sessionUnitRepository = mockk(relaxed = true)
         programRepository = mockk(relaxed = true)
         formRepository = mockk(relaxed = true)
@@ -145,6 +152,93 @@ class CollectionBatchFormViewModelTest {
             assertThat(loaded.formAnswersByQuestionId.getValue(1)).isEqualTo(saved)
             assertThat(loaded.formAnswersByQuestionId.getValue(2).value).isEqualTo("false")
             cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun load_dataCollectionSession_keepsOnlyIdentityQuestions() = runTest {
+        coEvery { sessionRepository.getSessionById(sessionId) } returns
+            session(SessionType.DATA_COLLECTION)
+        stubForm(
+            listOf(
+                question(1, identity = true),
+                question(2, identity = false),
+                question(3, identity = true),
+            )
+        )
+        initViewModel()
+
+        viewModel.state.test {
+            awaitItem()
+            val loaded = awaitItem()
+            assertThat(loaded.formQuestions.map { it.id }).containsExactly(1, 3).inOrder()
+            assertThat(loaded.formAnswersByQuestionId.keys).containsExactly(1, 3)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun load_surveillanceSession_keepsEveryQuestion() = runTest {
+        coEvery { sessionRepository.getSessionById(sessionId) } returns
+            session(SessionType.SURVEILLANCE)
+        stubForm(listOf(question(1, identity = true), question(2, identity = false)))
+        initViewModel()
+
+        viewModel.state.test {
+            awaitItem()
+            assertThat(awaitItem().formQuestions.map { it.id }).containsExactly(1, 2).inOrder()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun load_practiceSession_mirrorsSurveillanceAndKeepsEveryQuestion() = runTest {
+        coEvery { sessionRepository.getSessionById(sessionId) } returns session(SessionType.PRACTICE)
+        stubForm(listOf(question(1, identity = true), question(2, identity = false)))
+        initViewModel()
+
+        viewModel.state.test {
+            awaitItem()
+            assertThat(awaitItem().formQuestions.map { it.id }).containsExactly(1, 2).inOrder()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun submit_dataCollectionSession_ignoresRequiredNonIdentityQuestion() = runTest {
+        coEvery { sessionRepository.getSessionById(sessionId) } returns
+            session(SessionType.DATA_COLLECTION)
+        stubForm(
+            listOf(
+                question(1, identity = true),
+                question(2, required = true, identity = false),
+            )
+        )
+        coEvery { sessionUnitRepository.getSessionUnitById(any()) } returns null
+        coEvery { sessionUnitRepository.getMaxSessionUnitOrderForSession(sessionId) } returns 0
+        coEvery { sessionUnitRepository.upsertSessionUnit(any(), any()) } returns Result.Success(Unit)
+        coEvery { formAnswerRepository.upsertFormAnswer(any(), any(), any(), any()) } returns
+            Result.Success(Unit)
+        initViewModel()
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(1, "House"))
+        advanceUntilIdle()
+
+        viewModel.events.test {
+            viewModel.onAction(CollectionBatchFormAction.SubmitSessionUnitForm)
+            val event = awaitItem() as CollectionBatchFormEvent.NavigateToImagingScreen
+            coVerify {
+                formAnswerRepository.upsertFormAnswer(any(), sessionId, event.sessionUnitId, 1)
+            }
+            coVerify(exactly = 0) {
+                formAnswerRepository.upsertFormAnswer(any(), any(), any(), 2)
+            }
+            cancelAndIgnoreRemainingEvents()
+        }
+        coVerify(exactly = 0) {
+            errorMessageEmitter.emit(CollectionBatchFormError.FORM_INVALID, any())
         }
     }
 
@@ -320,10 +414,13 @@ class CollectionBatchFormViewModelTest {
         viewModel = CollectionBatchFormViewModel(
             savedStateHandle = savedStateHandle,
             deviceCache = deviceCache,
+            sessionRepository = sessionRepository,
             sessionUnitRepository = sessionUnitRepository,
             programRepository = programRepository,
-            formRepository = formRepository,
-            formQuestionRepository = formQuestionRepository,
+            programFormWorkflowFactory = ProgramFormWorkflowFactory(
+                formRepository = formRepository,
+                formQuestionRepository = formQuestionRepository,
+            ),
             formAnswerRepository = formAnswerRepository,
             collectionBatchFormValidationUseCases = CollectionBatchFormValidationUseCases(
                 validateFormAnswers = ValidateFormAnswersUseCase(),
@@ -341,6 +438,25 @@ class CollectionBatchFormViewModelTest {
             formQuestionRepository.getQuestionsByFormIdAndScope(3, FormQuestionScope.SESSION_UNIT)
         } returns questions
     }
+
+    private fun session(type: SessionType) = Session(
+        localId = sessionId,
+        remoteId = null,
+        hardwareId = null,
+        collectorTitle = "Title",
+        collectorName = "Name",
+        collectorLastTrainedOn = 0L,
+        collectionDate = 0L,
+        collectionMethod = "Human Landing Catch (HLC)",
+        specimenCondition = "Fresh",
+        createdAt = 0L,
+        completedAt = null,
+        submittedAt = null,
+        notes = "",
+        latitude = null,
+        longitude = null,
+        type = type,
+    )
 
     private fun program(formVersion: String?) = Program(
         id = 7,

@@ -9,17 +9,16 @@ import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
 import com.vci.vectorcamapp.core.domain.model.SessionUnit
-import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
-import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
-import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
+import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.intake.domain.strategy.program_form.ProgramFormWorkflowFactory
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,10 +39,10 @@ import javax.inject.Inject
 class CollectionBatchFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val deviceCache: DeviceCache,
+    private val sessionRepository: SessionRepository,
     private val sessionUnitRepository: SessionUnitRepository,
     private val programRepository: ProgramRepository,
-    private val formRepository: FormRepository,
-    private val formQuestionRepository: FormQuestionRepository,
+    private val programFormWorkflowFactory: ProgramFormWorkflowFactory,
     private val formAnswerRepository: FormAnswerRepository,
     private val collectionBatchFormValidationUseCases: CollectionBatchFormValidationUseCases,
     errorMessageEmitter: ErrorMessageEmitter
@@ -217,14 +216,14 @@ class CollectionBatchFormViewModel @Inject constructor(
                 _state.update { it.copy(isLoading = false) }
                 return@launch
             }
+            val sessionType = sessionRepository.getSessionById(sessionId)?.type ?: run {
+                _state.update { it.copy(isLoading = false) }
+                return@launch
+            }
 
-            val form = program.formVersion?.let { formRepository.getFormByVersion(it) }
-            val formQuestions = form?.let {
-                formQuestionRepository.getQuestionsByFormIdAndScope(
-                    it.id,
-                    FormQuestionScope.SESSION_UNIT
-                )
-            }.orEmpty()
+            val formQuestions = programFormWorkflowFactory
+                .create(sessionType, program)
+                .sessionUnitFormQuestions
 
             val savedFormAnswers =
                 formAnswerRepository.getSessionUnitScopedFormAnswers(draftSessionUnitId)
