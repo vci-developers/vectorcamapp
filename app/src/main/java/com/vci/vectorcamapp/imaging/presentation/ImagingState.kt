@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.imaging.presentation
 
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.ui.geometry.Offset
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
@@ -16,6 +17,7 @@ import java.util.UUID
 data class ImagingState(
     val isLoading: Boolean = false,
     val captureStage: CaptureStage? = null,
+    val capturePreviewBitmap: Bitmap? = null,
     val sessionType: SessionType = SessionType.SURVEILLANCE,
     val sessionUnitId: UUID? = null,
     val currentSpecimen: Specimen = Specimen(id = "", remoteId = null, shouldProcessFurther = false),
