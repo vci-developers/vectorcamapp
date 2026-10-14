@@ -7,5 +7,6 @@ import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 interface ProgramFormWorkflow {
     val surveillanceForm: SurveillanceForm?
     val form: Form?
-    val formQuestions: List<FormQuestion>
+    val sessionFormQuestions: List<FormQuestion>
+    val sessionUnitFormQuestions: List<FormQuestion>
 }

@@ -219,6 +219,8 @@ class CatalogRepositoryImplementationTest {
         llinType = "LLIN",
         llinBrand = "Brand",
         numPeopleSleptUnderLlin = 2,
+        numChildrenUnder5 = 1,
+        hasPregnantWoman = false,
         submittedAt = 9L,
     )
 
@@ -231,6 +233,8 @@ class CatalogRepositoryImplementationTest {
         llinType = "LLIN",
         llinBrand = "Brand",
         numPeopleSleptUnderLlin = 2,
+        numChildrenUnder5 = 1,
+        hasPregnantWoman = false,
         submittedAt = 9L,
     )
 }

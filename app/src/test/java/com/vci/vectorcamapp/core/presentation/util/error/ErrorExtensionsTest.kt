@@ -133,6 +133,8 @@ class ErrorExtensionsTest {
         FormValidationError.INVALID_NUM_LLINS_AVAILABLE to
             R.string.form_validation_error_invalid_num_llins_available,
         FormValidationError.INVALID_MONTHS_SINCE_IRS to R.string.form_validation_error_invalid_months_since_irs,
+        FormValidationError.INVALID_NUM_CHILDREN_UNDER_5 to
+            R.string.form_validation_error_invalid_num_children_under_5,
         FormValidationError.INVALID_FORM_ANSWER to R.string.form_validation_error_invalid_form_answer,
         CollectionBatchFormError.FORM_INVALID to R.string.collection_batch_form_error_form_invalid,
         CollectionBatchFormError.INVALID_FORM_ANSWER to R.string.collection_batch_form_error_invalid_form_answer,
