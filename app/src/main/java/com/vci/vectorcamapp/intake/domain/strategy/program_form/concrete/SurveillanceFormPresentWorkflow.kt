@@ -23,6 +23,9 @@ class SurveillanceFormPresentWorkflow : ProgramFormWorkflow {
     override val form: Form?
         get() = null
 
-    override val formQuestions: List<FormQuestion>
+    override val sessionFormQuestions: List<FormQuestion>
+        get() = emptyList()
+
+    override val sessionUnitFormQuestions: List<FormQuestion>
         get() = emptyList()
 }
