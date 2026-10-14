@@ -767,8 +767,8 @@ class IntakeViewModel @Inject constructor(
                         surveillanceForm = currentSavedSurveillanceForm
                             ?: programFormWorkflow.surveillanceForm,
                         form = programFormWorkflow.form,
-                        formQuestions = programFormWorkflow.formQuestions,
-                        formAnswersByQuestionId = programFormWorkflow.formQuestions.associate { question ->
+                        formQuestions = programFormWorkflow.sessionFormQuestions,
+                        formAnswersByQuestionId = programFormWorkflow.sessionFormQuestions.associate { question ->
                             question.id to (savedFormAnswers[question.id] ?: FormAnswer(
                                 localId = UUID.randomUUID(),
                                 remoteId = null,

@@ -63,6 +63,22 @@ val generatedExcludes = listOf(
     "**/generated/**",
 )
 
+/**
+ * Code that matches an include pattern but cannot be exercised by JVM unit tests.
+ * CameraX, MediaStore, ML Kit, OpenCV, LiteRT, and Compose lifecycle all need a device.
+ */
+val deviceOnlyExcludes = listOf(
+    "**/ObserveAsEventsKt*.class",
+    "**/imaging/data/repository/CameraRepositoryImplementation*.class",
+    "**/imaging/data/repository/InferenceRepositoryImplementation*.class",
+    "**/imaging/data/util/ClassifierAcceleratorSelector*.class",
+    "**/imaging/data/util/GpuModelCache*.class",
+    // Inline Result helpers are copied into callers, so JaCoCo never records their bodies.
+    "**/core/domain/util/ResultKt.class",
+    // CaptureImage needs ImageCapture's static init and OpenCV native code.
+    "**/ImagingViewModel\$onAction\$1\$17*.class",
+)
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -79,6 +95,7 @@ fun classTreeFor(variantName: String) =
     fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/$variantName")) {
         include(coverageIncludes)
         exclude(generatedExcludes)
+        exclude(deviceOnlyExcludes)
     }
 
 val sourceDirs = files("${project.projectDir}/src/main/java")
@@ -138,7 +155,7 @@ flavors.forEach { flavor ->
                 limit {
                     counter = "BRANCH"
                     value   = "COVEREDRATIO"
-                    minimum = "0.60".toBigDecimal() // 60%
+                    minimum = "0.70".toBigDecimal() // 70%
                 }
             }
         }
