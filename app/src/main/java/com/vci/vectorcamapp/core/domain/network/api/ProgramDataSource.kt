@@ -1,11 +1,13 @@
 package com.vci.vectorcamapp.core.domain.network.api
 
 import com.vci.vectorcamapp.core.data.dto.program.GetAllProgramsResponseDto
+import com.vci.vectorcamapp.core.data.dto.program.ProgramDto
 import com.vci.vectorcamapp.core.data.dto.program.VerifyProgramAccessCodeResponseDto
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 
 interface ProgramDataSource {
     suspend fun getAllPrograms(): Result<GetAllProgramsResponseDto, NetworkError>
+    suspend fun getProgramById(programId: Int): Result<ProgramDto, NetworkError>
     suspend fun verifyAccessCode(programId: Int, accessCode: String): Result<VerifyProgramAccessCodeResponseDto, NetworkError>
 }

@@ -6,6 +6,7 @@ import com.google.ai.edge.litert.Accelerator
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.LiteRtException
 import com.google.ai.edge.litert.TensorBuffer
+import com.vci.vectorcamapp.imaging.data.TfLiteModelLoader
 import timber.log.Timber
 import kotlin.math.abs
 import kotlin.math.max
@@ -143,8 +144,8 @@ object ClassifierAcceleratorSelector {
 
         return try {
             Selection(
-                CompiledModel.create(
-                    context.assets,
+                TfLiteModelLoader.create(
+                    context,
                     assetName,
                     variant.options(context, assetName, serialize = true),
                 ),
@@ -211,8 +212,8 @@ object ClassifierAcceleratorSelector {
         assetName: String,
         variant: Variant,
     ): CompiledModel? = try {
-        CompiledModel.create(
-            context.assets,
+        TfLiteModelLoader.create(
+            context,
             assetName,
             variant.options(context, assetName, serialize = false),
         )
@@ -231,7 +232,7 @@ object ClassifierAcceleratorSelector {
                 numThreads = Runtime.getRuntime().availableProcessors(),
             )
         }
-        return CompiledModel.create(context.assets, assetName, options)
+        return TfLiteModelLoader.create(context, assetName, options)
     }
 
     private fun createProbeInput(
