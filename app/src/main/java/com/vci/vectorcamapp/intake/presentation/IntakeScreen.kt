@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.intake.presentation
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,11 +17,16 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,10 +52,11 @@ import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.presentation.components.CollectionMethodTooltipRow
 import com.vci.vectorcamapp.intake.presentation.components.DynamicFormField
+import com.vci.vectorcamapp.intake.presentation.components.HardwareIdBarcodeScannerDialog
 import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
+import com.vci.vectorcamapp.intake.presentation.components.PracticeSessionWarningBanner
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
-import com.vci.vectorcamapp.intake.presentation.components.PracticeSessionWarningBanner
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import java.util.UUID
 
@@ -58,6 +65,7 @@ fun IntakeScreen(
     state: IntakeState, onAction: (IntakeAction) -> Unit, modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var isBarcodeScannerVisible by remember { mutableStateOf(false) }
 
     BackHandler {
         onAction(IntakeAction.ReturnToPreviousScreen)
@@ -232,12 +240,29 @@ fun IntakeScreen(
                     }
                 }
 
-                TextEntryField(
-                    label = stringResource(R.string.intake_label_hardware_id),
-                    value = state.session.hardwareId.orEmpty(),
-                    onValueChange = { onAction(IntakeAction.EnterHardwareId(it)) },
-                    singleLine = true,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        TextEntryField(
+                            label = stringResource(R.string.intake_label_hardware_id),
+                            value = state.session.hardwareId.orEmpty(),
+                            onValueChange = { onAction(IntakeAction.EnterHardwareId(it)) },
+                            singleLine = true,
+                        )
+                    }
+                    IconButton(onClick = { isBarcodeScannerVisible = true }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_camera),
+                            contentDescription = stringResource(
+                                R.string.intake_content_description_scan_hardware_id
+                            ),
+                            tint = MaterialTheme.colors.icon,
+                        )
+                    }
+                }
 
                 DatePickerField(
                     label = stringResource(R.string.intake_label_collection_date),
@@ -712,6 +737,16 @@ fun IntakeScreen(
                 modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
             )
         }
+    }
+
+    if (isBarcodeScannerVisible) {
+        HardwareIdBarcodeScannerDialog(
+            onBarcodeScanned = { hardwareId ->
+                onAction(IntakeAction.EnterHardwareId(hardwareId))
+                isBarcodeScannerVisible = false
+            },
+            onDismiss = { isBarcodeScannerVisible = false },
+        )
     }
 }
 
