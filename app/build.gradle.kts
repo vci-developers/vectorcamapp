@@ -257,8 +257,9 @@ dependencies {
     // Coil Async Image Rendering Library
     implementation(libs.coil.compose)
 
-    // MLKit Text Recognition Library
+    // MLKit Text Recognition and Barcode Scanning
     implementation(libs.text.recognition)
+    implementation(libs.barcode.scanning)
 
     // Proto Data Store Library
     implementation(libs.androidx.datastore)

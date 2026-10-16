@@ -27,6 +27,7 @@ playServicesLocation = "21.3.0"
 room = "2.7.1"
 litert = "2.1.6"
 textRecognition = "16.0.1"
+barcodeScanning = "17.3.0"
 truth = "1.4.4"
 turbine = "1.2.1"
 uiTextGoogleFonts = "1.10.0"
@@ -96,6 +97,7 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 opencv = { module = "org.opencv:opencv", version.ref = "opencv" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "textRecognition" }
+barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }

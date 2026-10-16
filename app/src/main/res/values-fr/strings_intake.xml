@@ -12,6 +12,7 @@
     <string name="intake_title_geographical_info">Informations géographiques</string>
     <string name="intake_title_surveillance_form">Formulaire de surveillance</string>
     <string name="intake_title_additional_notes">Notes supplémentaires</string>
+    <string name="intake_title_scan_hardware_id">Scanner l\'ID du matériel</string>
 
     <!-- Body -->
     <string name="intake_body_subtitle">Remplis les informations ci-dessous</string>
@@ -23,6 +24,7 @@
     <string name="intake_body_location_error">Impossible d\'obtenir la localisation : %1$s</string>
     <string name="intake_body_getting_location">Obtention de la localisation…</string>
     <string name="intake_body_practice_warning">Il s\'agit d\'une session d\'entraînement. Les données soumises ne seront pas considérées comme des données de surveillance de routine.</string>
+    <string name="intake_body_scan_hardware_id">Pointez la caméra vers le code-barres de l\'appareil VectorCam.</string>
 
     <!-- Labels -->
     <string name="intake_label_collector">Collecteur</string>
@@ -69,5 +71,7 @@
     <string name="intake_content_description_geographical_info">Icône d\'informations géographiques</string>
     <string name="intake_content_description_surveillance_form">Icône de formulaire de surveillance</string>
     <string name="intake_content_description_additional_notes">Icône de notes supplémentaires</string>
+    <string name="intake_content_description_scan_hardware_id">Scanner l\'ID du matériel</string>
+    <string name="intake_content_description_close_scanner">Fermer le scanner</string>
 
 </resources>
