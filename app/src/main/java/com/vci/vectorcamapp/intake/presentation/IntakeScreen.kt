@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.intake.presentation
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -239,23 +240,29 @@ fun IntakeScreen(
                     }
                 }
 
-                TextEntryField(
-                    label = stringResource(R.string.intake_label_hardware_id),
-                    value = state.session.hardwareId.orEmpty(),
-                    onValueChange = { onAction(IntakeAction.EnterHardwareId(it)) },
-                    singleLine = true,
-                    trailingIcon = {
-                        IconButton(onClick = { isBarcodeScannerVisible = true }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_camera),
-                                contentDescription = stringResource(
-                                    R.string.intake_content_description_scan_hardware_id
-                                ),
-                                tint = MaterialTheme.colors.icon,
-                            )
-                        }
-                    },
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        TextEntryField(
+                            label = stringResource(R.string.intake_label_hardware_id),
+                            value = state.session.hardwareId.orEmpty(),
+                            onValueChange = { onAction(IntakeAction.EnterHardwareId(it)) },
+                            singleLine = true,
+                        )
+                    }
+                    IconButton(onClick = { isBarcodeScannerVisible = true }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_camera),
+                            contentDescription = stringResource(
+                                R.string.intake_content_description_scan_hardware_id
+                            ),
+                            tint = MaterialTheme.colors.icon,
+                        )
+                    }
+                }
 
                 DatePickerField(
                     label = stringResource(R.string.intake_label_collection_date),

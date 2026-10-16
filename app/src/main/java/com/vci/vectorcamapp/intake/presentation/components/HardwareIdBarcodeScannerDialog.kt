@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -121,18 +123,20 @@ fun HardwareIdBarcodeScannerDialog(
                         .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall))
                         .background(Color.Black),
                     overlay = {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .fillMaxWidth()
-                                .padding(horizontal = MaterialTheme.dimensions.paddingLarge)
-                                .height(MaterialTheme.dimensions.componentHeightExtraLarge)
-                                .border(
-                                    width = MaterialTheme.dimensions.borderThicknessThick,
-                                    color = MaterialTheme.colors.buttonText,
-                                    shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall),
-                                )
-                        )
+                        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                            val inset = MaterialTheme.dimensions.paddingLarge
+                            val side = minOf(maxWidth, maxHeight) - (inset * 2)
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .size(side)
+                                    .border(
+                                        width = MaterialTheme.dimensions.borderThicknessThick,
+                                        color = MaterialTheme.colors.buttonText,
+                                        shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall),
+                                    )
+                            )
+                        }
                     },
                 )
             }
