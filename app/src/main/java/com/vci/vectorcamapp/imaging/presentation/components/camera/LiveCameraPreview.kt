@@ -1,9 +1,8 @@
 package com.vci.vectorcamapp.imaging.presentation.components.camera
 
-import androidx.camera.compose.CameraXViewfinder
+import android.graphics.Bitmap
 import androidx.camera.core.Camera
 import androidx.camera.core.SurfaceRequest
-import androidx.camera.viewfinder.core.ImplementationMode
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -21,6 +20,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
+import com.vci.vectorcamapp.core.presentation.components.camera.CameraPreview
 import com.vci.vectorcamapp.imaging.data.camera.CameraFocusControllerImplementation
 import com.vci.vectorcamapp.imaging.presentation.enums.CaptureStage
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -35,7 +35,8 @@ fun LiveCameraPreview(
     onCancelFocus: () -> Unit,
     modifier: Modifier = Modifier,
     isManualFocusing: Boolean,
-    captureStage: CaptureStage?
+    captureStage: CaptureStage?,
+    capturePreviewBitmap: Bitmap? = null,
 ) {
     val density = LocalDensity.current
     val view = LocalView.current
@@ -67,13 +68,10 @@ fun LiveCameraPreview(
             }
         }
 
-        if (surfaceRequest != null) {
-            CameraXViewfinder(
-                surfaceRequest = surfaceRequest,
-                implementationMode = ImplementationMode.EXTERNAL,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+        CameraPreview(
+            surfaceRequest = surfaceRequest,
+            modifier = Modifier.fillMaxSize(),
+        )
 
         inferenceResults.map {
             BoundingBoxOverlay(
@@ -131,7 +129,8 @@ fun LiveCameraPreview(
 
         CaptureAnimation(
             modifier = Modifier.fillMaxSize(),
-            stage = captureStage
+            stage = captureStage,
+            previewBitmap = capturePreviewBitmap,
         )
     }
 }

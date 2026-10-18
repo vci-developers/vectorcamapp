@@ -12,6 +12,7 @@
     <string name="intake_title_geographical_info">Geographical Information</string>
     <string name="intake_title_surveillance_form">Surveillance Form</string>
     <string name="intake_title_additional_notes">Additional Notes</string>
+    <string name="intake_title_scan_hardware_id">Scan hardware ID</string>
 
     <!-- Body -->
     <string name="intake_body_subtitle">Please fill out the information below</string>
@@ -23,6 +24,7 @@
     <string name="intake_body_location_error">Could not get location: %1$s</string>
     <string name="intake_body_getting_location">Getting location…</string>
     <string name="intake_body_practice_warning">This is a practice session. Submitted data will not be considered routine surveillance data.</string>
+    <string name="intake_body_scan_hardware_id">Point the camera at the barcode on the VectorCam device.</string>
 
     <!-- Labels -->
     <string name="intake_label_collector">Collector</string>
@@ -69,5 +71,7 @@
     <string name="intake_content_description_geographical_info">Geographical Information Icon</string>
     <string name="intake_content_description_surveillance_form">Surveillance Form Icon</string>
     <string name="intake_content_description_additional_notes">Additional Notes Icon</string>
+    <string name="intake_content_description_scan_hardware_id">Scan hardware ID</string>
+    <string name="intake_content_description_close_scanner">Close scanner</string>
 
 </resources>

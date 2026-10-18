@@ -3,14 +3,11 @@ package com.vci.vectorcamapp.imaging.presentation
 import android.view.Surface
 import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.Camera
-import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceRequest
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
-import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -72,6 +69,7 @@ import coil3.request.crossfade
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
+import com.vci.vectorcamapp.core.presentation.components.camera.bindBackCamera
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
@@ -88,9 +86,7 @@ import com.vci.vectorcamapp.imaging.presentation.components.specimen.SpecimenIma
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun ImagingScreen(
@@ -122,23 +118,6 @@ fun ImagingScreen(
     val rotation = view.display?.rotation ?: Surface.ROTATION_0
 
     LaunchedEffect(lifecycleOwner, rotation) {
-        val provider = withContext(Dispatchers.IO) {
-            ProcessCameraProvider.getInstance(context).get()
-        }
-
-        val previewUseCase = Preview.Builder()
-            .setTargetRotation(rotation)
-            .setResolutionSelector(
-                ResolutionSelector.Builder()
-                    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
-                    .build()
-            )
-            .build().apply {
-                setSurfaceProvider { request ->
-                    surfaceRequest = request
-                }
-            }
-
         val imageCaptureBuilder = ImageCapture.Builder()
             // .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
             .setTargetRotation(rotation)
@@ -167,18 +146,15 @@ fun ImagingScreen(
         imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context), analyzer)
 
         try {
-            provider.unbindAll()
-            val boundCamera = provider.bindToLifecycle(
-                lifecycleOwner,
-                CameraSelector.DEFAULT_BACK_CAMERA,
-                previewUseCase,
-                imageCapture,
-                imageAnalysis
+            val boundCamera = bindBackCamera(
+                context = context,
+                lifecycleOwner = lifecycleOwner,
+                rotation = rotation,
+                onSurfaceRequest = { request -> surfaceRequest = request },
+                additionalUseCases = listOf(imageCapture, imageAnalysis),
             )
-
             imageCaptureUseCase = imageCapture
             camera = boundCamera
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -772,7 +748,8 @@ fun ImagingScreen(
                                     onCancelFocus = { onAction(ImagingAction.CancelFocus) },
                                     modifier = Modifier.fillMaxSize(),
                                     isManualFocusing = state.isManualFocusing,
-                                    captureStage = state.captureStage
+                                    captureStage = state.captureStage,
+                                    capturePreviewBitmap = state.capturePreviewBitmap,
                                 )
                             }
 
