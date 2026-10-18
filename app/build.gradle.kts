@@ -53,8 +53,8 @@ android {
         create("uganda") {
             dimension = "region"
             // applicationIdSuffix = ".uganda"
-            versionCode = 2100
-            versionName = "1.1.0"
+            versionCode = 2101
+            versionName = "1.1.1"
             
             buildConfigField("String", "REGION", "\"uganda\"")
             buildConfigField("String", "REGION_CODE", "\"UG\"")
@@ -110,8 +110,8 @@ android {
         create("ghana") {
             dimension = "region"
             applicationIdSuffix = ".ghana"
-            versionCode = 5004
-            versionName = "1.0.4"
+            versionCode = 5005
+            versionName = "1.0.5"
             
             buildConfigField("String", "REGION", "\"ghana\"")
             buildConfigField("String", "REGION_CODE", "\"GH\"")
@@ -123,14 +123,27 @@ android {
         create("cameroon") {
             dimension = "region"
             applicationIdSuffix = ".cameroon"
-            versionCode = 6001
-            versionName = "1.0.1"
+            versionCode = 6002
+            versionName = "1.0.2"
 
             buildConfigField("String", "REGION", "\"cameroon\"")
             buildConfigField("String", "REGION_CODE", "\"CM\"")
             buildConfigField("String", "REGION_DISPLAY_NAME", "\"Cameroon\"")
 
             resValue("string", "app_name_region", "VectorCam Cameroon")
+        }
+
+        create("pilgrimAfrica") {
+            dimension = "region"
+            applicationIdSuffix = ".pilgrimafrica"
+            versionCode = 7000
+            versionName = "1.0.0"
+
+            buildConfigField("String", "REGION", "\"pilgrimafrica\"")
+            buildConfigField("String", "REGION_CODE", "\"PLG\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Pilgrim Africa\"")
+
+            resValue("string", "app_name_region", "VectorCam Pilgrim Africa")
         }
     }
 
