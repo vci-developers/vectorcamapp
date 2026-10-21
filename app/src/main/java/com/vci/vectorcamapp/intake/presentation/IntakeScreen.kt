@@ -1,6 +1,8 @@
 package com.vci.vectorcamapp.intake.presentation
 
+import android.location.Location
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,7 +50,6 @@ import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
-import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.presentation.components.CollectionMethodTooltipRow
 import com.vci.vectorcamapp.intake.presentation.components.DynamicFormField
 import com.vci.vectorcamapp.intake.presentation.components.HardwareIdBarcodeScannerDialog
@@ -82,7 +83,8 @@ fun IntakeScreen(
                     .size(MaterialTheme.dimensions.iconSizeLarge)
                     .clickable {
                         onAction(IntakeAction.ReturnToPreviousScreen)
-                    })
+                    }
+            )
         },
         modifier = modifier
     ) {
@@ -155,15 +157,21 @@ fun IntakeScreen(
                                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
                             ) {
                                 Column(
-                                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                                    verticalArrangement = Arrangement.spacedBy(
+                                        MaterialTheme.dimensions.spacingExtraSmall
+                                    )
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)
+                                        horizontalArrangement = Arrangement.spacedBy(
+                                            MaterialTheme.dimensions.spacingExtraSmall
+                                        )
                                     ) {
                                         Icon(
                                             painter = painterResource(R.drawable.ic_warning),
-                                            contentDescription = stringResource(R.string.intake_content_description_missing_collector),
+                                            contentDescription = stringResource(
+                                                R.string.intake_content_description_missing_collector
+                                            ),
                                             tint = MaterialTheme.colors.error,
                                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium)
                                         )
@@ -185,7 +193,9 @@ fun IntakeScreen(
                                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
                                 ) {
                                     Column(
-                                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                                        verticalArrangement = Arrangement.spacedBy(
+                                            MaterialTheme.dimensions.spacingExtraExtraSmall
+                                        )
                                     ) {
                                         Text(
                                             text = stringResource(R.string.intake_label_name),
@@ -200,7 +210,9 @@ fun IntakeScreen(
                                     }
 
                                     Column(
-                                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                                        verticalArrangement = Arrangement.spacedBy(
+                                            MaterialTheme.dimensions.spacingExtraExtraSmall
+                                        )
                                     ) {
                                         Text(
                                             text = stringResource(R.string.intake_label_title),
@@ -273,7 +285,8 @@ fun IntakeScreen(
                 )
 
                 val isOtherCollectionMethod = state.session.collectionMethod.startsWith(
-                    IntakeDropdownOptions.CollectionMethodOption.OTHER.label, ignoreCase = true
+                    IntakeDropdownOptions.CollectionMethodOption.OTHER.label,
+                    ignoreCase = true
                 )
 
                 DropdownField(
@@ -281,8 +294,11 @@ fun IntakeScreen(
                     required = true,
                     enabled = !state.isCollectionMethodLocked,
                     options = IntakeDropdownOptions.CollectionMethodOption.entries,
-                    selectedOption = if (isOtherCollectionMethod) IntakeDropdownOptions.CollectionMethodOption.OTHER
-                    else IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod },
+                    selectedOption = if (isOtherCollectionMethod) {
+                        IntakeDropdownOptions.CollectionMethodOption.OTHER
+                    } else {
+                        IntakeDropdownOptions.CollectionMethodOption.entries.firstOrNull { it.label == state.session.collectionMethod }
+                    },
                     onOptionSelected = { onAction(IntakeAction.UpdateCollectionMethod(it.label)) },
                     error = state.intakeErrors.collectionMethod,
                     modifier = Modifier.fillMaxWidth()
@@ -344,24 +360,36 @@ fun IntakeScreen(
                     TextEntryField(
                         label = stringResource(R.string.intake_label_other_collection_method),
                         required = true,
-                        value = state.session.collectionMethod.removePrefix(IntakeDropdownOptions.CollectionMethodOption.OTHER.label)
+                        value = state.session.collectionMethod.removePrefix(
+                            IntakeDropdownOptions.CollectionMethodOption.OTHER.label
+                        )
                             .trimStart(),
-                        onValueChange = { onAction(IntakeAction.UpdateCollectionMethod("${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it")) },
+                        onValueChange = {
+                            onAction(
+                                IntakeAction.UpdateCollectionMethod(
+                                    "${IntakeDropdownOptions.CollectionMethodOption.OTHER.label} $it"
+                                )
+                            )
+                        },
                         singleLine = true,
                         error = state.intakeErrors.collectionMethod
                     )
                 }
 
                 val isOtherSpecimenCondition = state.session.specimenCondition.startsWith(
-                    IntakeDropdownOptions.SpecimenConditionOption.OTHER.label, ignoreCase = true
+                    IntakeDropdownOptions.SpecimenConditionOption.OTHER.label,
+                    ignoreCase = true
                 )
 
                 DropdownField(
                     label = stringResource(R.string.intake_label_specimen_condition),
                     required = true,
                     options = IntakeDropdownOptions.SpecimenConditionOption.entries,
-                    selectedOption = if (isOtherSpecimenCondition) IntakeDropdownOptions.SpecimenConditionOption.OTHER
-                    else IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition },
+                    selectedOption = if (isOtherSpecimenCondition) {
+                        IntakeDropdownOptions.SpecimenConditionOption.OTHER
+                    } else {
+                        IntakeDropdownOptions.SpecimenConditionOption.entries.firstOrNull { it.label == state.session.specimenCondition }
+                    },
                     onOptionSelected = { onAction(IntakeAction.UpdateSpecimenCondition(it.label)) },
                     error = state.intakeErrors.specimenCondition,
                     modifier = Modifier.fillMaxWidth()
@@ -377,9 +405,17 @@ fun IntakeScreen(
                     TextEntryField(
                         label = stringResource(R.string.intake_label_other_specimen_condition),
                         required = true,
-                        value = state.session.specimenCondition.removePrefix(IntakeDropdownOptions.SpecimenConditionOption.OTHER.label)
+                        value = state.session.specimenCondition.removePrefix(
+                            IntakeDropdownOptions.SpecimenConditionOption.OTHER.label
+                        )
                             .trimStart(),
-                        onValueChange = { onAction(IntakeAction.UpdateSpecimenCondition("${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it")) },
+                        onValueChange = {
+                            onAction(
+                                IntakeAction.UpdateSpecimenCondition(
+                                    "${IntakeDropdownOptions.SpecimenConditionOption.OTHER.label} $it"
+                                )
+                            )
+                        },
                         singleLine = true,
                         error = state.intakeErrors.specimenCondition
                     )
@@ -409,7 +445,6 @@ fun IntakeScreen(
                         )
                     }
 
-
                     if (state.selectedDistrict.isNotBlank()) {
                         DropdownField(
                             label = stringResource(R.string.intake_label_village_name),
@@ -434,7 +469,9 @@ fun IntakeScreen(
                         DropdownField(
                             label = stringResource(R.string.intake_label_house_number),
                             required = true,
-                            options = state.allSitesInProgram.filter { it.district == state.selectedDistrict && it.villageName == state.selectedVillageName }
+                            options = state.allSitesInProgram.filter {
+                                it.district == state.selectedDistrict && it.villageName == state.selectedVillageName
+                            }
                                 .mapNotNull { it.houseNumber }.distinct(),
                             selectedOption = state.selectedHouseNumber,
                             onOptionSelected = { onAction(IntakeAction.SelectHouseNumber(it)) },
@@ -477,7 +514,8 @@ fun IntakeScreen(
                                 onOptionSelected = {
                                     onAction(
                                         IntakeAction.SelectLocationTypeSiteOption(
-                                            locationType.id, it
+                                            locationType.id,
+                                            it
                                         )
                                     )
                                 },
@@ -493,91 +531,198 @@ fun IntakeScreen(
                     }
                 }
 
-                when {
-                    state.session.latitude != null && state.session.longitude != null -> {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.intake_label_your_location),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colors.textSecondary
-                            )
-                            Text(
-                                text = stringResource(
-                                    R.string.intake_label_coordinates,
-                                    state.session.latitude,
-                                    state.session.longitude
-                                ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colors.textPrimary
-                            )
-
-                            state.locationAccuracyMeters?.let { locationAccuracyMeters ->
-                                Text(
-                                    text = stringResource(R.string.intake_label_gps_accuracy, locationAccuracyMeters),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colors.textPrimary
-                                )
-                            }
-                        }
-                    }
-
-                    state.locationError != null -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)) {
-                            Text(
-                                text = stringResource(R.string.intake_body_location_error, state.locationError.toString(context)),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colors.error
-                            )
-
-                            if (state.locationError == IntakeError.LOCATION_GPS_TIMEOUT) {
-                                ActionButton(
-                                    label = stringResource(R.string.intake_action_retry_location),
-                                    onClick = { onAction(IntakeAction.RetryLocation) },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-                    }
-
-                    else -> {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colors.secondary,
-                                modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
-                            )
-                            Text(
-                                stringResource(R.string.intake_body_getting_location),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colors.textPrimary
-                            )
-                        }
+                val site = state.selectedSiteWithCoordinates
+                val collectionLatitude = state.session.latitude
+                val collectionLongitude = state.session.longitude
+                val siteLatitude = site?.latitude
+                val siteLongitude = site?.longitude
+                val distanceToSiteMeters = remember(
+                    collectionLatitude,
+                    collectionLongitude,
+                    siteLatitude,
+                    siteLongitude
+                ) {
+                    if (listOf(
+                            collectionLatitude,
+                            collectionLongitude,
+                            siteLatitude,
+                            siteLongitude
+                        ).any { it == null }) {
+                        null
+                    } else {
+                        val results = FloatArray(1)
+                        Location.distanceBetween(
+                            requireNotNull(collectionLatitude).toDouble(),
+                            requireNotNull(collectionLongitude).toDouble(),
+                            requireNotNull(siteLatitude).toDouble(),
+                            requireNotNull(siteLongitude).toDouble(),
+                            results
+                        )
+                        results[0]
                     }
                 }
-
-                if (state.selectedSiteWithCoordinates?.latitude != null && state.selectedSiteWithCoordinates.longitude != null) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                val locations = listOfNotNull(
+                    Triple(R.string.intake_label_collection_location, state.session.latitude, state.session.longitude),
+                    site?.takeIf { it.latitude != null && it.longitude != null }?.let {
+                        Triple(R.string.intake_label_site_location, it.latitude, it.longitude)
+                    }
+                )
+                locations.forEachIndexed { index, (title, latitude, longitude) ->
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(MaterialTheme.dimensions.paddingMedium),
+                        color = MaterialTheme.colors.appBackground,
+                        border = BorderStroke(
+                            MaterialTheme.dimensions.dividerThicknessThin,
+                            MaterialTheme.colors.fieldBorder
+                        )
                     ) {
-                        Text(
-                            text = stringResource(R.string.intake_label_site_location),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colors.textSecondary
-                        )
-                        Text(
-                            text = stringResource(
-                                R.string.intake_label_coordinates,
-                                state.selectedSiteWithCoordinates.latitude,
-                                state.selectedSiteWithCoordinates.longitude
-                            ),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colors.textPrimary
-                        )
+                        Column(
+                            modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium),
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                        ) {
+                            Text(
+                                text = stringResource(title),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colors.textPrimary
+                            )
+                            when {
+                                latitude != null && longitude != null -> {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(
+                                            MaterialTheme.dimensions.spacingExtraSmall
+                                        )
+                                    ) {
+                                        listOf(
+                                            R.string.intake_label_latitude to latitude,
+                                            R.string.intake_label_longitude to longitude
+                                        ).forEach { (label, value) ->
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Text(
+                                                    text = stringResource(label),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = MaterialTheme.colors.textSecondary
+                                                )
+                                                Text(
+                                                    text = value.toString(),
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = MaterialTheme.colors.textPrimary
+                                                )
+                                            }
+                                        }
+                                        state.locationAccuracyMeters?.takeIf { index == 0 }?.let { locationAccuracyMeters ->
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Text(
+                                                    text = stringResource(R.string.intake_label_gps_accuracy),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = MaterialTheme.colors.textSecondary
+                                                )
+                                                Text(
+                                                    text = stringResource(
+                                                        R.string.intake_value_gps_accuracy,
+                                                        locationAccuracyMeters
+                                                    ),
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = MaterialTheme.colors.textPrimary
+                                                )
+                                            }
+                                        }
+                                        distanceToSiteMeters?.takeIf { index == 1 }?.let { distance ->
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Text(
+                                                    text = stringResource(R.string.intake_label_distance_to_site),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = MaterialTheme.colors.textSecondary
+                                                )
+                                                Text(
+                                                    text = if (distance < 1000f) {
+                                                        stringResource(
+                                                            R.string.intake_label_distance_to_site_meters,
+                                                            distance
+                                                        )
+                                                    } else {
+                                                        stringResource(
+                                                            R.string.intake_label_distance_to_site_kilometers,
+                                                            distance / 1000f
+                                                        )
+                                                    },
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = MaterialTheme.colors.textPrimary
+                                                )
+                                            }
+                                        }
+                                        if (index == 0 && state.canUpdateLocation) {
+                                            ActionButton(
+                                                label = stringResource(R.string.intake_action_update_location),
+                                                onClick = { onAction(IntakeAction.RetryLocation) },
+                                                enabled = !state.isLoading,
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
+                                    }
+                                }
+                                !state.canUpdateLocation && !state.isLoading -> {
+                                    Text(
+                                        text = stringResource(R.string.intake_body_collection_location_not_recorded),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colors.textSecondary
+                                    )
+                                }
+                                state.locationError != null -> {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(
+                                            MaterialTheme.dimensions.spacingExtraSmall
+                                        )
+                                    ) {
+                                        Text(
+                                            text = stringResource(
+                                                R.string.intake_body_location_error,
+                                                state.locationError.toString(context)
+                                            ),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colors.error
+                                        )
+                                        ActionButton(
+                                            label = stringResource(R.string.intake_action_retry_location),
+                                            onClick = { onAction(IntakeAction.RetryLocation) },
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                }
+                                else -> {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(
+                                            MaterialTheme.dimensions.spacingMedium
+                                        ),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        CircularProgressIndicator(
+                                            color = MaterialTheme.colors.secondary,
+                                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge)
+                                        )
+                                        Text(
+                                            stringResource(R.string.intake_body_getting_location),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colors.textPrimary
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -594,7 +739,8 @@ fun IntakeScreen(
 
                     state.formQuestions.forEach { question ->
                         if (FormQuestionPrerequisiteEvaluator.evaluate(
-                                question.prerequisite, answerMap
+                                question.prerequisite,
+                                answerMap
                             )
                         ) {
                             DynamicFormField(
@@ -603,7 +749,8 @@ fun IntakeScreen(
                                 error = state.intakeErrors.formAnswerErrors[question.id],
                                 onValueChange = {
                                     onAction(IntakeAction.UpdateFormAnswer(question.id, it))
-                                })
+                                }
+                            )
                         }
                     }
                 }
@@ -619,8 +766,11 @@ fun IntakeScreen(
                         TextEntryField(
                             label = stringResource(R.string.intake_label_num_people_house),
                             required = true,
-                            value = if (surveillanceForm.numPeopleSleptInHouse < 0) ""
-                            else surveillanceForm.numPeopleSleptInHouse.toString(),
+                            value = if (surveillanceForm.numPeopleSleptInHouse < 0) {
+                                ""
+                            } else {
+                                surveillanceForm.numPeopleSleptInHouse.toString()
+                            },
                             onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptInHouse(it)) },
                             singleLine = true,
                             error = state.intakeErrors.numPeopleSleptInHouse,
@@ -650,14 +800,18 @@ fun IntakeScreen(
                                         it
                                     )
                                 )
-                            })
+                            }
+                        )
 
                         surveillanceForm.monthsSinceIrs?.let { monthsSinceIrs ->
                             TextEntryField(
                                 label = stringResource(R.string.intake_label_months_since_irs),
                                 required = true,
-                                value = if (monthsSinceIrs < 0) ""
-                                else monthsSinceIrs.toString(),
+                                value = if (monthsSinceIrs < 0) {
+                                    ""
+                                } else {
+                                    monthsSinceIrs.toString()
+                                },
                                 onValueChange = { onAction(IntakeAction.EnterMonthsSinceIrs(it)) },
                                 singleLine = true,
                                 error = state.intakeErrors.monthsSinceIrs,
@@ -667,8 +821,11 @@ fun IntakeScreen(
                         TextEntryField(
                             label = stringResource(R.string.intake_label_num_llins),
                             required = true,
-                            value = if (surveillanceForm.numLlinsAvailable < 0) ""
-                            else surveillanceForm.numLlinsAvailable.toString(),
+                            value = if (surveillanceForm.numLlinsAvailable < 0) {
+                                ""
+                            } else {
+                                surveillanceForm.numLlinsAvailable.toString()
+                            },
                             onValueChange = { onAction(IntakeAction.EnterNumLlinsAvailable(it)) },
                             singleLine = true,
                             error = state.intakeErrors.numLlinsAvailable,
@@ -697,7 +854,9 @@ fun IntakeScreen(
                             DropdownField(
                                 label = stringResource(R.string.intake_label_llin_brand),
                                 required = true,
-                                options = IntakeDropdownOptions.LlinBrandOption.entries.filter { it.type?.label == surveillanceForm.llinType || it.type == null },
+                                options = IntakeDropdownOptions.LlinBrandOption.entries.filter {
+                                    it.type?.label == surveillanceForm.llinType || it.type == null
+                                },
                                 selectedOption = IntakeDropdownOptions.LlinBrandOption.entries.firstOrNull { it.label == current },
                                 onOptionSelected = {
                                     onAction(IntakeAction.SelectLlinBrand(it))
@@ -716,8 +875,11 @@ fun IntakeScreen(
                             TextEntryField(
                                 label = stringResource(R.string.intake_label_num_people_llin),
                                 required = true,
-                                value = if (numPeopleSleptUnderLlin < 0) ""
-                                else numPeopleSleptUnderLlin.toString(),
+                                value = if (numPeopleSleptUnderLlin < 0) {
+                                    ""
+                                } else {
+                                    numPeopleSleptUnderLlin.toString()
+                                },
                                 onValueChange = {
                                     onAction(
                                         IntakeAction.EnterNumPeopleSleptUnderLlin(
@@ -787,7 +949,9 @@ fun SurveillanceFormScreenPreview() {
     VectorcamappTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             IntakeScreen(
-                state = IntakeState(), onAction = { }, modifier = Modifier.padding(innerPadding)
+                state = IntakeState(),
+                onAction = { },
+                modifier = Modifier.padding(innerPadding)
             )
         }
     }

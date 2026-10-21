@@ -8,8 +8,22 @@ object SiteSelectionResolver {
     fun findSelectedSiteWithCoordinates(
         allSites: List<Site>,
         allLocationTypes: List<LocationType>,
-        siteSelectionsByLocationTypeId: Map<Int, String>
+        siteSelectionsByLocationTypeId: Map<Int, String>,
+        selectedDistrict: String = "",
+        selectedVillageName: String = "",
+        selectedHouseNumber: String = ""
     ): Site? {
+        if (allSites.any { !it.district.isNullOrBlank() }) {
+            if (selectedDistrict.isBlank() || selectedVillageName.isBlank() || selectedHouseNumber.isBlank()) {
+                return null
+            }
+            return allSites.find {
+                it.district == selectedDistrict &&
+                    it.villageName == selectedVillageName &&
+                    it.houseNumber == selectedHouseNumber &&
+                    it.latitude != null && it.longitude != null
+            }
+        }
         val selectedLocationHierarchy = allLocationTypes.mapNotNull { locationType ->
             siteSelectionsByLocationTypeId[locationType.id]?.let { selectedLocationTypeSite ->
                 locationType.name to selectedLocationTypeSite

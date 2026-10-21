@@ -40,9 +40,17 @@
     <string name="intake_label_village_name">Nom du village</string>
     <string name="intake_label_house_number">Numéro de maison</string>
     <string name="intake_label_your_location">Votre position</string>
+    <string name="intake_label_collection_location">Lieu de collecte</string>
+    <string name="intake_body_collection_location_not_recorded">Le lieu de collecte n’a pas été enregistré.</string>
+    <string name="intake_label_latitude">Latitude</string>
+    <string name="intake_label_longitude">Longitude</string>
     <string name="intake_label_coordinates">Latitude, longitude : %1$s, %2$s</string>
-    <string name="intake_label_gps_accuracy">Précision GPS : %1$s m</string>
+    <string name="intake_label_gps_accuracy">Précision GPS</string>
+    <string name="intake_value_gps_accuracy">%1$.1f m</string>
     <string name="intake_label_site_location">Emplacement du site</string>
+    <string name="intake_label_distance_to_site">Distance approx.</string>
+    <string name="intake_label_distance_to_site_meters">%1$.0f m</string>
+    <string name="intake_label_distance_to_site_kilometers">%1$.2f km</string>
     <string name="intake_label_num_people_house">Nombre de personnes vivant dans la maison</string>
     <string name="intake_label_irs_conducted">Une IRS a-t-elle été effectuée dans ce foyer ?</string>
     <string name="intake_label_months_since_irs">Mois écoulés depuis l\'IRS</string>
@@ -61,6 +69,7 @@
     <string name="intake_action_register_collector">Enregistrer le collecteur manquant</string>
     <string name="intake_action_learn_more_methods">Appuie pour en savoir plus sur les méthodes de collecte</string>
     <string name="intake_action_retry_location">Réessayer la localisation</string>
+    <string name="intake_action_update_location">Actualiser la localisation</string>
     <string name="intake_action_begin_imaging">Commencer l\'imagerie : %1$s</string>
 
     <!-- Content Descriptions -->

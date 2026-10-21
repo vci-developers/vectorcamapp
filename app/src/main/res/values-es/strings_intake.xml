@@ -40,9 +40,17 @@
     <string name="intake_label_village_name">Nombre de la aldea</string>
     <string name="intake_label_house_number">Número de casa</string>
     <string name="intake_label_your_location">Tu ubicación</string>
+    <string name="intake_label_collection_location">Ubicación de recolección</string>
+    <string name="intake_body_collection_location_not_recorded">No se registró la ubicación de recolección.</string>
+    <string name="intake_label_latitude">Latitud</string>
+    <string name="intake_label_longitude">Longitud</string>
     <string name="intake_label_coordinates">Latitud, longitud: %1$s, %2$s</string>
-    <string name="intake_label_gps_accuracy">Precisión del GPS: %1$s m</string>
+    <string name="intake_label_gps_accuracy">Precisión del GPS</string>
+    <string name="intake_value_gps_accuracy">%1$.1f m</string>
     <string name="intake_label_site_location">Ubicación del sitio</string>
+    <string name="intake_label_distance_to_site">Distancia aprox.</string>
+    <string name="intake_label_distance_to_site_meters">%1$.0f m</string>
+    <string name="intake_label_distance_to_site_kilometers">%1$.2f km</string>
     <string name="intake_label_num_people_house">Número de personas que viven en la casa</string>
     <string name="intake_label_irs_conducted">¿Se realizó IRS en este hogar?</string>
     <string name="intake_label_months_since_irs">Meses desde el IRS</string>
@@ -61,6 +69,7 @@
     <string name="intake_action_register_collector">Registrar recolector faltante</string>
     <string name="intake_action_learn_more_methods">Toca para obtener más información sobre los métodos de recolección</string>
     <string name="intake_action_retry_location">Reintentar ubicación</string>
+    <string name="intake_action_update_location">Actualizar ubicación</string>
     <string name="intake_action_begin_imaging">Capturar %1$s</string>
 
     <!-- Content Descriptions -->

@@ -40,9 +40,17 @@
     <string name="intake_label_village_name">Village Name</string>
     <string name="intake_label_house_number">House Number</string>
     <string name="intake_label_your_location">Your Location</string>
+    <string name="intake_label_collection_location">Collection Location</string>
+    <string name="intake_body_collection_location_not_recorded">Collection location was not recorded.</string>
+    <string name="intake_label_latitude">Latitude</string>
+    <string name="intake_label_longitude">Longitude</string>
     <string name="intake_label_coordinates">Latitude, Longitude: %1$s, %2$s</string>
-    <string name="intake_label_gps_accuracy">GPS Accuracy: %1$s m</string>
+    <string name="intake_label_gps_accuracy">GPS Accuracy</string>
+    <string name="intake_value_gps_accuracy">%1$.1f m</string>
     <string name="intake_label_site_location">Site Location</string>
+    <string name="intake_label_distance_to_site">Approx. distance</string>
+    <string name="intake_label_distance_to_site_meters">%1$.0f m</string>
+    <string name="intake_label_distance_to_site_kilometers">%1$.2f km</string>
     <string name="intake_label_num_people_house">Number of People Living in the House</string>
     <string name="intake_label_irs_conducted">Was IRS conducted in this household?</string>
     <string name="intake_label_months_since_irs">Months Since IRS</string>
@@ -61,6 +69,7 @@
     <string name="intake_action_register_collector">Register Missing Collector</string>
     <string name="intake_action_learn_more_methods">Tap to learn more about collection methods</string>
     <string name="intake_action_retry_location">Retry Location</string>
+    <string name="intake_action_update_location">Update Location</string>
     <string name="intake_action_begin_imaging">Begin %1$s Imaging</string>
 
     <!-- Content Descriptions -->
