@@ -638,8 +638,14 @@ class IntakeViewModel @Inject constructor(
 
                 is IntakeAction.RetryLocation -> {
                     if (_state.value.isLoading || !_state.value.canUpdateLocation) return@launch
-                    _state.update { it.copy(locationError = null) }
-                    getLocation(forceRefresh = true)
+                    _state.update {
+                        it.copy(
+                            session = it.session.copy(latitude = null, longitude = null),
+                            locationError = null,
+                            locationAccuracyMeters = null
+                        )
+                    }
+                    getLocation()
                 }
 
                 is IntakeAction.ShowCollectionMethodTooltipDialog -> {
@@ -840,10 +846,10 @@ class IntakeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getLocation(forceRefresh: Boolean = false) {
+    private suspend fun getLocation() {
         // Never replace a resumed session's original collection location, even when missing.
         if (!_state.value.canUpdateLocation) return
-        if (forceRefresh || _state.value.session.latitude == null || _state.value.session.longitude == null) {
+        if (_state.value.session.latitude == null || _state.value.session.longitude == null) {
             val locationResult = try {
                 withTimeout(LOCATION_TIMEOUT_MS) {
                     locationRepository.getCurrentLocation()
