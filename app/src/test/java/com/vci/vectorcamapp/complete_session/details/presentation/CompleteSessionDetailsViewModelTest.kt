@@ -80,7 +80,9 @@ class CompleteSessionDetailsViewModelTest {
         healthCenter = "Test Center",
         isActive = true,
         name = null,
-        locationHierarchy = null
+        locationHierarchy = null,
+        latitude = null,
+        longitude = null
     )
 
     @Before

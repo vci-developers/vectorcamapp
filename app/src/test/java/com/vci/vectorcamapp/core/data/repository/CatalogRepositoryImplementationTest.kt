@@ -193,6 +193,8 @@ class CatalogRepositoryImplementationTest {
         isActive = true,
         name = "Site",
         locationHierarchy = mapOf("district" to "D"),
+        latitude = null,
+        longitude = null,
     )
 
     private fun sampleSiteEntity() = SiteEntity(

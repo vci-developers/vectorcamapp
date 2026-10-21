@@ -15,7 +15,9 @@ fun SiteEntity.toDomain() : Site {
         healthCenter = this.healthCenter,
         isActive = this.isActive,
         name = this.name,
-        locationHierarchy = this.locationHierarchy
+        locationHierarchy = this.locationHierarchy,
+        latitude = this.latitude,
+        longitude = this.longitude
     )
 }
 
@@ -33,7 +35,9 @@ fun Site.toEntity(programId: Int, locationTypeId: Int?, parentId: Int?) : SiteEn
         locationTypeId = locationTypeId,
         parentId = parentId,
         name = this.name,
-        locationHierarchy = this.locationHierarchy
+        locationHierarchy = this.locationHierarchy,
+        latitude = this.latitude,
+        longitude = this.longitude
     )
 }
 
@@ -48,6 +52,8 @@ fun SiteDto.toDomain(): Site {
         healthCenter = this.healthCenter,
         isActive = this.isActive,
         name = this.name,
-        locationHierarchy = this.locationHierarchy
+        locationHierarchy = this.locationHierarchy,
+        latitude = this.latitude,
+        longitude = this.longitude
     )
 }

@@ -10,5 +10,7 @@ data class Site(
     val healthCenter: String?,
     val isActive: Boolean,
     val name: String?,
-    val locationHierarchy: Map<String, String>?
+    val locationHierarchy: Map<String, String>?,
+    val latitude: Float?,
+    val longitude: Float?
 )
