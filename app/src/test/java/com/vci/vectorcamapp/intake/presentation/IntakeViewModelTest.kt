@@ -282,7 +282,7 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(4) // Initial state, loading, loaded, and initial location error.
+            skipItems(4)
 
             vm.onAction(IntakeAction.EnterHardwareId("DEVICE_001"))
             advanceUntilIdle()
@@ -547,22 +547,30 @@ class IntakeViewModelTest {
     }
 
     @Test
-    fun resumedSession_missingCoordinatesDoesNotFetchOrRetry() = runTest {
-        for (session in listOf(
+    fun resumedSession_missingCoordinatesFetchesAndAllowsUpdates() = runTest {
+        val location = mockk<Location>()
+        every { location.latitude } returns 2.5
+        every { location.longitude } returns 33.75
+        every { location.accuracy } returns 3f
+        coEvery { locationRepository.getCurrentLocation() } returns Result.Success(location)
+        for ((index, session) in listOf(
             sampleSession().copy(latitude = null, longitude = null),
             sampleSession().copy(latitude = null),
             sampleSession().copy(longitude = null)
-        )) {
+        ).withIndex()) {
             coEvery { currentSessionCache.getSession() } returns session
             val vm = makeViewModel()
             backgroundScope.launch { vm.state.collect {} }
             advanceUntilIdle()
-            assertThat(vm.state.value.canUpdateLocation).isFalse()
+            assertThat(vm.state.value.canUpdateLocation).isTrue()
+            coVerify(exactly = index * 2 + 1) { locationRepository.getCurrentLocation() }
+            assertThat(vm.state.value.session.latitude).isEqualTo(2.5f)
+            assertThat(vm.state.value.session.longitude).isEqualTo(33.75f)
             vm.onAction(IntakeAction.RetryLocation)
             advanceUntilIdle()
-            coVerify(exactly = 0) { locationRepository.getCurrentLocation() }
-            assertThat(vm.state.value.session.latitude).isEqualTo(session.latitude)
-            assertThat(vm.state.value.session.longitude).isEqualTo(session.longitude)
+            coVerify(exactly = (index + 1) * 2) { locationRepository.getCurrentLocation() }
+            assertThat(vm.state.value.session.latitude).isEqualTo(2.5f)
+            assertThat(vm.state.value.session.longitude).isEqualTo(33.75f)
             assertThat(vm.state.value.locationError).isNull()
         }
     }

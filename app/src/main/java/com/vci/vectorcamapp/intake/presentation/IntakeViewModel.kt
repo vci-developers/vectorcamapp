@@ -802,7 +802,7 @@ class IntakeViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         session = effectiveSession,
-                        canUpdateLocation = currentSession == null,
+                        canUpdateLocation = effectiveSession.latitude == null || effectiveSession.longitude == null,
                         surveillanceForm = currentSavedSurveillanceForm
                             ?: programFormWorkflow.surveillanceForm,
                         form = programFormWorkflow.form,
@@ -847,7 +847,6 @@ class IntakeViewModel @Inject constructor(
     }
 
     private suspend fun getLocation() {
-        // Never replace a resumed session's original collection location, even when missing.
         if (!_state.value.canUpdateLocation) return
         if (_state.value.session.latitude == null || _state.value.session.longitude == null) {
             val locationResult = try {
