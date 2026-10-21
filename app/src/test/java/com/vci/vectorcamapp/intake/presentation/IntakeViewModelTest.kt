@@ -113,7 +113,9 @@ class IntakeViewModelTest {
         healthCenter = "HC A",
         isActive = true,
         name = null,
-        locationHierarchy = null
+        locationHierarchy = null,
+        latitude = null,
+        longitude = null
     )
 
     @Before
@@ -525,6 +527,7 @@ class IntakeViewModelTest {
         val location = mockk<Location>()
         every { location.latitude } returns 1.25
         every { location.longitude } returns 32.5
+        every { location.accuracy } returns 4.8f
         coEvery { locationRepository.getCurrentLocation() } returns Result.Success(location)
         val vm = makeViewModel()
         backgroundScope.launch { vm.state.collect {} }
@@ -532,6 +535,7 @@ class IntakeViewModelTest {
 
         assertThat(vm.state.value.session.latitude).isEqualTo(1.25f)
         assertThat(vm.state.value.session.longitude).isEqualTo(32.5f)
+        assertThat(vm.state.value.locationAccuracyMeters).isEqualTo(4.8f)
 
         coEvery { locationRepository.getCurrentLocation() } throws SecurityException("denied")
         vm.onAction(IntakeAction.RetryLocation)

@@ -39,8 +39,10 @@
     <string name="intake_label_district">District</string>
     <string name="intake_label_village_name">Village Name</string>
     <string name="intake_label_house_number">House Number</string>
-    <string name="intake_label_latitude">Latitude: %1$s</string>
-    <string name="intake_label_longitude">Longitude: %1$s</string>
+    <string name="intake_label_your_location">Your Location</string>
+    <string name="intake_label_coordinates">Latitude, Longitude: %1$s, %2$s</string>
+    <string name="intake_label_gps_accuracy">GPS Accuracy: %1$s m</string>
+    <string name="intake_label_site_location">Site Location</string>
     <string name="intake_label_num_people_house">Number of People Living in the House</string>
     <string name="intake_label_irs_conducted">Was IRS conducted in this household?</string>
     <string name="intake_label_months_since_irs">Months Since IRS</string>

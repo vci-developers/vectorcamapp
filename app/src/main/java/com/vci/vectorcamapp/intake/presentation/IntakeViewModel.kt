@@ -33,6 +33,7 @@ import com.vci.vectorcamapp.intake.domain.use_cases.IntakeValidationUseCases
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
+import com.vci.vectorcamapp.intake.domain.util.SiteSelectionResolver
 import com.vci.vectorcamapp.intake.logging.IntakeErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.TimeoutCancellationException
@@ -365,7 +366,14 @@ class IntakeViewModel @Inject constructor(
                         }
 
                     _state.update {
-                        it.copy(siteSelectionsByLocationTypeId = updatedSiteSelections)
+                        it.copy(
+                            siteSelectionsByLocationTypeId = updatedSiteSelections,
+                            selectedSiteWithCoordinates = SiteSelectionResolver.findSelectedSiteWithCoordinates(
+                                allSites = it.allSitesInProgram,
+                                allLocationTypes = it.allLocationTypesInProgram,
+                                siteSelectionsByLocationTypeId = updatedSiteSelections
+                            )
+                        )
                     }
                 }
 
@@ -600,7 +608,7 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.RetryLocation -> {
-                    _state.update { it.copy(locationError = null) }
+                    _state.update { it.copy(locationError = null, locationAccuracyMeters = null) }
                     _state.update {
                         it.copy(
                             session = it.session.copy(
@@ -781,6 +789,11 @@ class IntakeViewModel @Inject constructor(
                         },
                         siteSelectionsByLocationTypeId = validatedSiteSelectionsByLocationTypeId,
                         allSitesInProgram = currentAllSites,
+                        selectedSiteWithCoordinates = SiteSelectionResolver.findSelectedSiteWithCoordinates(
+                            allSites = currentAllSites,
+                            allLocationTypes = currentAllLocationTypes,
+                            siteSelectionsByLocationTypeId = validatedSiteSelectionsByLocationTypeId
+                        ),
                         allCollectors = currentAllCollectors,
                         allLocationTypesInProgram = currentAllLocationTypes,
                         selectedDistrict = validatedDistrict,
@@ -817,7 +830,9 @@ class IntakeViewModel @Inject constructor(
                         session = it.session.copy(
                             latitude = location.latitude.toFloat(),
                             longitude = location.longitude.toFloat(),
-                        ), locationError = null
+                        ),
+                        locationError = null,
+                        locationAccuracyMeters = location.accuracy
                     )
                 }
             }.onError { error ->

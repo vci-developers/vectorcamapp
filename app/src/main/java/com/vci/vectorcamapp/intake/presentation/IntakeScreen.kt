@@ -43,7 +43,6 @@ import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
-import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.core.presentation.util.error.toString
@@ -496,20 +495,31 @@ fun IntakeScreen(
 
                 when {
                     state.session.latitude != null && state.session.longitude != null -> {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
-                            modifier = Modifier.fillMaxWidth()
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
                         ) {
-                            InfoPill(
-                                text = stringResource(R.string.intake_label_latitude, state.session.latitude),
-                                color = MaterialTheme.colors.info,
-                                modifier = Modifier.weight(1f)
+                            Text(
+                                text = stringResource(R.string.intake_label_your_location),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colors.textSecondary
                             )
-                            InfoPill(
-                                text = stringResource(R.string.intake_label_longitude, state.session.longitude),
-                                color = MaterialTheme.colors.info,
-                                modifier = Modifier.weight(1f)
+                            Text(
+                                text = stringResource(
+                                    R.string.intake_label_coordinates,
+                                    state.session.latitude,
+                                    state.session.longitude
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colors.textPrimary
                             )
+
+                            state.locationAccuracyMeters?.let { locationAccuracyMeters ->
+                                Text(
+                                    text = stringResource(R.string.intake_label_gps_accuracy, locationAccuracyMeters),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colors.textPrimary
+                                )
+                            }
                         }
                     }
 
@@ -547,6 +557,27 @@ fun IntakeScreen(
                                 color = MaterialTheme.colors.textPrimary
                             )
                         }
+                    }
+                }
+
+                if (state.selectedSiteWithCoordinates?.latitude != null && state.selectedSiteWithCoordinates.longitude != null) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraExtraSmall)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.intake_label_site_location),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colors.textSecondary
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.intake_label_coordinates,
+                                state.selectedSiteWithCoordinates.latitude,
+                                state.selectedSiteWithCoordinates.longitude
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.textPrimary
+                        )
                     }
                 }
             }

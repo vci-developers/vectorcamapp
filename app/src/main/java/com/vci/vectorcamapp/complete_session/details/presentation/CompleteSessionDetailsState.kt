@@ -41,7 +41,9 @@ data class CompleteSessionDetailsState(
         healthCenter = "",
         isActive = true,
         name = "",
-        locationHierarchy = emptyMap()
+        locationHierarchy = emptyMap(),
+        latitude = null,
+        longitude = null
     ),
     val surveillanceForm: SurveillanceForm? = null,
     val form: Form? = null,

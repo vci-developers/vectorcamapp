@@ -139,7 +139,7 @@ class SessionRepositoryImplementationTest {
         type = SessionType.SURVEILLANCE,
     )
 
-    private fun site() = Site(5, "D", null, null, "V", "1", null, true, "Site", null)
+    private fun site() = Site(5, "D", null, null, "V", "1", null, true, "Site", null, null, null)
 
     private fun siteEntity() = SiteEntity(
         id = 5,
