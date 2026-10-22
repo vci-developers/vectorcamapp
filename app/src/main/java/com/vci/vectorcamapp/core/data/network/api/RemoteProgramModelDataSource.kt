@@ -3,8 +3,10 @@ package com.vci.vectorcamapp.core.data.network.api
 import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.data.dto.program_model.GetProgramModelsResponseDto
 import com.vci.vectorcamapp.core.data.dto.program_model.ProgramModelDto
+import com.vci.vectorcamapp.core.data.network.ResumeDisposition
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.responseToResult
+import com.vci.vectorcamapp.core.data.network.resumeDisposition
 import com.vci.vectorcamapp.core.domain.network.api.ProgramModelDataSource
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
@@ -232,6 +234,9 @@ class RemoteProgramModelDataSource @Inject constructor(
                     resumeAttempts = resumeAttempts,
                     onResumeAttempt = { resumeAttempts = it },
                     onBytesDownloaded = { bytesDownloaded = it },
+                    onResetDownload = {
+                        if (destination.exists()) destination.delete()
+                    },
                 )
             }
         }
@@ -245,6 +250,7 @@ class RemoteProgramModelDataSource @Inject constructor(
         resumeAttempts: Int,
         onResumeAttempt: (Int) -> Unit,
         onBytesDownloaded: (Long) -> Unit,
+        onResetDownload: () -> Unit,
     ): NetworkError? {
         return when (chunkResult) {
             is RangeDownloadResult.ExpiredUrl -> {
@@ -274,7 +280,12 @@ class RemoteProgramModelDataSource @Inject constructor(
             }
 
             is RangeDownloadResult.Success -> {
-                if (chunkResult.bytesDownloaded <= currentOffset) {
+                val madeProgress = if (chunkResult.replacedFile) {
+                    chunkResult.bytesDownloaded > 0L
+                } else {
+                    chunkResult.bytesDownloaded > currentOffset
+                }
+                if (!madeProgress) {
                     val nextAttempt = resumeAttempts + 1
                     onResumeAttempt(nextAttempt)
                     ProgramModelLog.w(
@@ -293,6 +304,19 @@ class RemoteProgramModelDataSource @Inject constructor(
                     onBytesDownloaded(chunkResult.bytesDownloaded)
                     null
                 }
+            }
+
+            is RangeDownloadResult.ResetAndRetry -> {
+                onResetDownload()
+                onBytesDownloaded(0L)
+                val nextAttempt = resumeAttempts + 1
+                onResumeAttempt(nextAttempt)
+                ProgramModelLog.w(
+                    "S3 resume rejected; restarting from 0 attempt=%d/%d",
+                    nextAttempt,
+                    MAX_RESUME_ATTEMPTS,
+                )
+                if (nextAttempt > MAX_RESUME_ATTEMPTS) NetworkError.UNKNOWN_ERROR else null
             }
         }
     }
@@ -403,20 +427,13 @@ class RemoteProgramModelDataSource @Inject constructor(
 
                     HttpStatusCode.OK.value,
                     HttpStatusCode.PartialContent.value,
-                    -> {
-                        ProgramModelLog.d(
-                            "S3 GET body streaming status=%d startByte=%d",
-                            response.status.value,
-                            startByte
-                        )
-                        writeRangeBody(
-                            response = response,
-                            destination = destination,
-                            startByte = startByte,
-                            expectedSize = expectedSize,
-                            onProgress = onProgress,
-                        )
-                    }
+                    -> streamAcceptedBody(
+                        response = response,
+                        startByte = startByte,
+                        destination = destination,
+                        expectedSize = expectedSize,
+                        onProgress = onProgress,
+                    )
 
                     else -> {
                         response.discardBody()
@@ -448,27 +465,90 @@ class RemoteProgramModelDataSource @Inject constructor(
         }
     }
 
+    private suspend fun streamAcceptedBody(
+        response: HttpResponse,
+        startByte: Long,
+        destination: File,
+        expectedSize: Long,
+        onProgress: (bytesDownloaded: Long, totalBytes: Long) -> Unit,
+    ): RangeDownloadResult {
+        val disposition = resumeDisposition(
+            statusCode = response.status.value,
+            contentRange = response.headers[HttpHeaders.ContentRange],
+            startByte = startByte,
+        )
+        return when (disposition) {
+            ResumeDisposition.APPEND -> {
+                ProgramModelLog.d(
+                    "S3 GET body streaming status=%d startByte=%d",
+                    response.status.value,
+                    startByte,
+                )
+                writeRangeBody(
+                    response = response,
+                    destination = destination,
+                    startByte = startByte,
+                    expectedSize = expectedSize,
+                    restart = false,
+                    onProgress = onProgress,
+                )
+            }
+
+            ResumeDisposition.RESTART -> {
+                ProgramModelLog.w(
+                    "S3 resume did not continue at offset=%d (status=%d contentRange=%s); rewriting from 0",
+                    startByte,
+                    response.status.value,
+                    response.headers[HttpHeaders.ContentRange] ?: "n/a",
+                )
+                writeRangeBody(
+                    response = response,
+                    destination = destination,
+                    startByte = startByte,
+                    expectedSize = expectedSize,
+                    restart = true,
+                    onProgress = onProgress,
+                )
+            }
+
+            ResumeDisposition.REJECT -> {
+                response.discardBody()
+                ProgramModelLog.w(
+                    "S3 Content-Range %s does not start at offset=%d",
+                    response.headers[HttpHeaders.ContentRange] ?: "missing",
+                    startByte,
+                )
+                RangeDownloadResult.ResetAndRetry
+            }
+        }
+    }
+
     private suspend fun writeRangeBody(
         response: HttpResponse,
         destination: File,
         startByte: Long,
         expectedSize: Long,
+        restart: Boolean,
         onProgress: (bytesDownloaded: Long, totalBytes: Long) -> Unit,
     ): RangeDownloadResult {
         val channel = response.bodyAsChannel()
         val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
         var bytesDownloaded = startByte
+        val replaceFile = restart || (response.status == HttpStatusCode.OK && startByte > 0L)
 
-        if (response.status == HttpStatusCode.OK && startByte > 0L) {
-            ProgramModelLog.w(
-                "S3 ignored Range (HTTP 200); restarting file from 0 (was offset=%d)",
-                startByte
-            )
+        if (replaceFile) {
+            if (!restart) {
+                ProgramModelLog.w(
+                    "S3 ignored Range (HTTP 200); restarting file from 0 (was offset=%d)",
+                    startByte,
+                )
+            }
             destination.delete()
             bytesDownloaded = 0L
         }
 
         RandomAccessFile(destination, "rw").use { raf ->
+            if (bytesDownloaded == 0L) raf.setLength(0L)
             raf.seek(bytesDownloaded)
             var keepReading = true
             while (keepReading && !channel.isClosedForRead) {
@@ -488,7 +568,7 @@ class RemoteProgramModelDataSource @Inject constructor(
             bytesDownloaded,
             expectedSize
         )
-        return RangeDownloadResult.Success(bytesDownloaded)
+        return RangeDownloadResult.Success(bytesDownloaded, replacedFile = replaceFile)
     }
 
     private suspend fun HttpResponse.discardBody() {
@@ -497,7 +577,11 @@ class RemoteProgramModelDataSource @Inject constructor(
 
     private sealed interface RangeDownloadResult {
         data object ExpiredUrl : RangeDownloadResult
-        data class Success(val bytesDownloaded: Long) : RangeDownloadResult
+        data object ResetAndRetry : RangeDownloadResult
+        data class Success(
+            val bytesDownloaded: Long,
+            val replacedFile: Boolean = false,
+        ) : RangeDownloadResult
         data class Error(val error: NetworkError) : RangeDownloadResult
     }
 

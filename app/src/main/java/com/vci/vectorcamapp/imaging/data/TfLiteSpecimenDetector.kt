@@ -8,6 +8,7 @@ import com.google.ai.edge.litert.Accelerator
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.TensorBuffer
 import com.vci.vectorcamapp.core.domain.model.results.DetectorResult
+import com.vci.vectorcamapp.core.logging.ProgramModelLog
 import com.vci.vectorcamapp.imaging.data.util.GpuAccelerationPolicy
 import com.vci.vectorcamapp.imaging.data.util.GpuModelCache
 import com.vci.vectorcamapp.imaging.domain.SpecimenDetector
@@ -31,7 +32,7 @@ import kotlin.math.roundToInt
 
 class TfLiteSpecimenDetector(
     private val context: Context,
-    private val modelPath: String = "detect.tflite",
+    private val resolveModel: () -> ResolvedInferenceModel,
 ) : SpecimenDetector {
 
     // Only touched on [handler]'s thread, which is the single thread every build, inference and
@@ -40,6 +41,9 @@ class TfLiteSpecimenDetector(
     private var inputBuffers: List<TensorBuffer> = emptyList()
     private var outputBuffers: List<TensorBuffer> = emptyList()
     private var usingGpu = false
+    private var modelPath: String = ""
+    private var loadedPath: String? = null
+    private var loadedFileFingerprint: String? = null
 
     private val stateLock = Any()
     private var warmUpRequested = false
@@ -96,18 +100,53 @@ class TfLiteSpecimenDetector(
         }
     }
 
+    override fun refresh() {
+        val resolved = resolveModel()
+        val rebuild = synchronized(stateLock) {
+            if (isClosed || !warmUpRequested) return
+            if (loadedPath == resolved.path && loadedFileFingerprint == resolved.fileFingerprint) return
+            warmUpRequested = false
+            warmUpGeneration++
+            handler.post { releaseModel() }
+            true
+        }
+        if (rebuild) warm()
+    }
+
     private fun initializeModel(): Boolean {
-        if (model != null) return true
+        val resolved = resolveModel()
+        if (
+            model != null &&
+            loadedPath == resolved.path &&
+            loadedFileFingerprint == resolved.fileFingerprint
+        ) {
+            return true
+        }
+        if (model != null) releaseModel()
+
+        modelPath = resolved.path
+        loadedPath = resolved.path
+        loadedFileFingerprint = resolved.fileFingerprint
+        ProgramModelLog.i(
+            "Imaging loading detector path=%s downloaded=%s",
+            modelPath,
+            resolved.downloaded,
+        )
 
         val attemptedGpu = GpuAccelerationPolicy.shouldAttemptGpu(context)
-        if (bindAndWarm(preferGpu = attemptedGpu)) return true
-        if (!attemptedGpu) return false
-
-        // GPU create can succeed and then buffers, shapes or the dummy run throw. Create's own
-        // catch never sees that, so retry the whole bind on CPU rather than leaving the detector
-        // cold (empty preview, capture reports no specimen).
-        Timber.w("Detector GPU init failed after create; retrying on CPU")
-        return bindAndWarm(preferGpu = false)
+        val built = if (bindAndWarm(preferGpu = attemptedGpu)) {
+            true
+        } else if (!attemptedGpu) {
+            false
+        } else {
+            Timber.w("Detector GPU init failed after create; retrying on CPU")
+            bindAndWarm(preferGpu = false)
+        }
+        if (!built) {
+            loadedPath = null
+            loadedFileFingerprint = null
+        }
+        return built
     }
 
     private fun bindAndWarm(preferGpu: Boolean): Boolean = try {

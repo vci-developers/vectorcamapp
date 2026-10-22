@@ -4,20 +4,26 @@ import android.content.Context
 import com.vci.vectorcamapp.core.data.dto.program.ProgramModelsConfigDto
 import com.vci.vectorcamapp.core.data.dto.program_model.ProgramModelDto
 import com.vci.vectorcamapp.core.data.mappers.toDomain
+import com.vci.vectorcamapp.core.data.util.AtomicFile
 import com.vci.vectorcamapp.core.domain.model.ProgramModelsConfig
+import com.vci.vectorcamapp.core.logging.ProgramModelLog
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.io.IOException
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class LocalProgramModelStore @Inject constructor(
-    @ApplicationContext private val context: Context,
+class LocalProgramModelStore internal constructor(
+    private val filesDir: File,
 ) {
+    @Inject
+    constructor(@ApplicationContext context: Context) : this(context.filesDir)
+
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
@@ -50,32 +56,36 @@ class LocalProgramModelStore @Inject constructor(
 
     suspend fun saveConfig(programId: Int, config: ProgramModelsConfig): Unit =
         withContext(Dispatchers.IO) {
-            val file = configFile(programId)
-            file.parentFile?.mkdirs()
             val dto = ProgramModelsConfigDto(
                 species = config.species,
                 sex = config.sex,
                 abdomenStatus = config.abdomenStatus,
                 detect = config.detect,
             )
-            file.writeText(json.encodeToString(ProgramModelsConfigDto.serializer(), dto))
+            AtomicFile.writeText(
+                configFile(programId),
+                json.encodeToString(ProgramModelsConfigDto.serializer(), dto),
+            )
         }
+
+    fun getCachedMetadataSync(programId: Int, modelId: String): ProgramModelDto? {
+        val metadataFile = metadataFile(programId, modelId)
+        if (!metadataFile.exists() || !modelFile(programId, modelId).exists()) return null
+        return runCatching {
+            json.decodeFromString(ProgramModelDto.serializer(), metadataFile.readText())
+        }.getOrNull()
+    }
 
     suspend fun getCachedMetadata(programId: Int, modelId: String): ProgramModelDto? =
         withContext(Dispatchers.IO) {
-            val metadataFile = metadataFile(programId, modelId)
-            if (!metadataFile.exists() || !modelFile(programId, modelId).exists()) {
-                return@withContext null
-            }
-            runCatching {
-                json.decodeFromString(ProgramModelDto.serializer(), metadataFile.readText())
-            }.getOrNull()
+            getCachedMetadataSync(programId, modelId)
         }
 
     suspend fun saveMetadata(metadata: ProgramModelDto): Unit = withContext(Dispatchers.IO) {
-        val metadataFile = metadataFile(metadata.programId, metadata.modelId)
-        metadataFile.parentFile?.mkdirs()
-        metadataFile.writeText(json.encodeToString(ProgramModelDto.serializer(), metadata))
+        AtomicFile.writeText(
+            metadataFile(metadata.programId, metadata.modelId),
+            json.encodeToString(ProgramModelDto.serializer(), metadata),
+        )
     }
 
     suspend fun hasMatchingModel(programId: Int, modelId: String, expectedMd5: String): Boolean =
@@ -96,11 +106,22 @@ class LocalProgramModelStore @Inject constructor(
                 return@withContext false
             }
 
-            val target = modelFile(programId, modelId)
-            if (target.exists()) {
-                target.delete()
+            try {
+                AtomicFile.sync(tempFile)
+            } catch (e: IOException) {
+                ProgramModelLog.e(e, "Could not sync downloaded model %s", tempFile.absolutePath)
+                return@withContext false
             }
-            tempFile.renameTo(target)
+
+            val replaced = AtomicFile.replace(tempFile, modelFile(programId, modelId))
+            if (!replaced) {
+                ProgramModelLog.e(
+                    "Could not replace working model programId=%d modelId=%s; previous file kept",
+                    programId,
+                    modelId,
+                )
+            }
+            replaced
         }
 
     suspend fun clear(programId: Int): Unit = withContext(Dispatchers.IO) {
@@ -108,7 +129,7 @@ class LocalProgramModelStore @Inject constructor(
     }
 
     private fun programDir(programId: Int): File {
-        return File(context.filesDir, "$MODELS_DIR/$programId")
+        return File(filesDir, "$MODELS_DIR/$programId")
     }
 
     private fun modelDir(programId: Int, modelId: String): File {

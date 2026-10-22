@@ -4,6 +4,7 @@ import com.vci.vectorcamapp.core.data.dto.program_model.ProgramModelDto
 import com.vci.vectorcamapp.core.data.mappers.toDomain
 import com.vci.vectorcamapp.core.data.mappers.toModelsConfig
 import com.vci.vectorcamapp.core.data.program_model.LocalProgramModelStore
+import com.vci.vectorcamapp.core.domain.ProgramModelChangeNotifier
 import com.vci.vectorcamapp.core.domain.model.ProgramModel
 import com.vci.vectorcamapp.core.domain.model.ProgramModelsConfig
 import com.vci.vectorcamapp.core.domain.network.api.ProgramDataSource
@@ -19,37 +20,47 @@ class ProgramModelRepositoryImplementation @Inject constructor(
     private val programDataSource: ProgramDataSource,
     private val programModelDataSource: ProgramModelDataSource,
     private val localProgramModelStore: LocalProgramModelStore,
+    private val programModelChangeNotifier: ProgramModelChangeNotifier,
 ) : ProgramModelRepository {
 
     override suspend fun syncConfiguredModels(
         programId: Int,
         onProgress: (bytesDownloaded: Long, totalBytes: Long) -> Unit,
     ): Result<List<ProgramModel>, NetworkError> {
-        ProgramModelLog.i("SYNC start programId=%d", programId)
+        try {
+            ProgramModelLog.i("SYNC start programId=%d", programId)
 
-        val apiConfig = resolveOptionalApiConfig(programId)
-        val listedModels = when (val listResult = loadListedModels(programId, onProgress)) {
-            is Result.Error -> return listResult
-            is Result.Success -> listResult.data
-        }
-        if (listedModels.isEmpty()) {
-            return Result.Success(emptyList())
-        }
+            val apiConfig = resolveOptionalApiConfig(programId)
+            val listedModels = when (val listResult = loadListedModels(programId, onProgress)) {
+                is Result.Error -> return listResult
+                is Result.Success -> listResult.data
+            }
+            if (listedModels.isEmpty()) {
+                localProgramModelStore.clear(programId)
+                ProgramModelLog.i(
+                    "SYNC cleared downloaded models programId=%d — using bundled assets",
+                    programId,
+                )
+                return Result.Success(emptyList())
+            }
 
-        val syncedResult = downloadListedModels(programId, listedModels, onProgress)
-        if (syncedResult is Result.Error) {
-            return syncedResult
-        }
-        val synced = (syncedResult as Result.Success).data
+            val syncedResult = downloadListedModels(programId, listedModels, onProgress)
+            if (syncedResult is Result.Error) {
+                return syncedResult
+            }
+            val synced = (syncedResult as Result.Success).data
 
-        persistRoleMapping(programId, apiConfig, synced)
-        ProgramModelLog.i(
-            "SYNC SUCCESS programId=%d downloaded=%d modelIds=%s",
-            programId,
-            synced.size,
-            synced.joinToString { it.modelId }
-        )
-        return Result.Success(synced)
+            persistRoleMapping(programId, apiConfig, synced)
+            ProgramModelLog.i(
+                "SYNC SUCCESS programId=%d downloaded=%d modelIds=%s",
+                programId,
+                synced.size,
+                synced.joinToString { it.modelId }
+            )
+            return Result.Success(synced)
+        } finally {
+            programModelChangeNotifier.notifyChanged()
+        }
     }
 
     private suspend fun resolveOptionalApiConfig(programId: Int): ProgramModelsConfig? {
@@ -247,7 +258,7 @@ class ProgramModelRepositoryImplementation @Inject constructor(
         )
         if (!promoted) {
             ProgramModelLog.e(
-                "SYNC FAIL MD5 mismatch modelId=%s expectedMd5=%s",
+                "SYNC FAIL could not activate modelId=%s expectedMd5=%s",
                 modelId,
                 metadata.fileMd5
             )

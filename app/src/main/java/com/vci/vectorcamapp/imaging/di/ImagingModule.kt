@@ -4,10 +4,7 @@ import android.content.Context
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizer
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.vci.vectorcamapp.core.data.program_model.LocalProgramModelStore
-import com.vci.vectorcamapp.core.domain.cache.DeviceCache
-import com.vci.vectorcamapp.core.domain.model.ProgramModelsConfig
-import com.vci.vectorcamapp.core.logging.ProgramModelLog
+import com.vci.vectorcamapp.imaging.data.InferenceModelResolver
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenClassifier
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
@@ -20,7 +17,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.runBlocking
 import javax.inject.Singleton
 
 /**
@@ -44,16 +40,11 @@ object ImagingModule {
     @Detector
     fun provideSpecimenDetector(
         @ApplicationContext context: Context,
-        deviceCache: DeviceCache,
-        localProgramModelStore: LocalProgramModelStore,
+        inferenceModelResolver: InferenceModelResolver,
     ): SpecimenDetector {
-        val path = resolveModelPath(
-            deviceCache = deviceCache,
-            localProgramModelStore = localProgramModelStore,
-            roleModelId = { it.detect },
-            assetFallback = "detect.tflite",
-        )
-        return TfLiteSpecimenDetector(context, path)
+        return TfLiteSpecimenDetector(context) {
+            inferenceModelResolver.resolve({ it.detect }, "detect.tflite")
+        }
     }
 
     @Provides
@@ -61,20 +52,13 @@ object ImagingModule {
     @SpeciesClassifier
     fun provideSpeciesClassifier(
         @ApplicationContext context: Context,
-        deviceCache: DeviceCache,
-        localProgramModelStore: LocalProgramModelStore,
+        inferenceModelResolver: InferenceModelResolver,
     ): SpecimenClassifier {
-        val path = resolveModelPath(
-            deviceCache = deviceCache,
-            localProgramModelStore = localProgramModelStore,
-            roleModelId = { it.species },
-            assetFallback = "species.tflite",
-        )
         return TfLiteSpecimenClassifier(
-            context,
-            path,
-            "LiteRTSpeciesClassifierThread",
-            expectedNumClasses = SpeciesLabel.entries.size,
+            context = context,
+            threadName = "LiteRTSpeciesClassifierThread",
+            bundledClassCount = SpeciesLabel.entries.size,
+            resolveModel = { inferenceModelResolver.resolve({ it.species }, "species.tflite") },
         )
     }
 
@@ -83,20 +67,13 @@ object ImagingModule {
     @SexClassifier
     fun provideSexClassifier(
         @ApplicationContext context: Context,
-        deviceCache: DeviceCache,
-        localProgramModelStore: LocalProgramModelStore,
+        inferenceModelResolver: InferenceModelResolver,
     ): SpecimenClassifier {
-        val path = resolveModelPath(
-            deviceCache = deviceCache,
-            localProgramModelStore = localProgramModelStore,
-            roleModelId = { it.sex },
-            assetFallback = "sex.tflite",
-        )
         return TfLiteSpecimenClassifier(
-            context,
-            path,
-            "LiteRTSexClassifierThread",
-            expectedNumClasses = SexLabel.entries.size,
+            context = context,
+            threadName = "LiteRTSexClassifierThread",
+            bundledClassCount = SexLabel.entries.size,
+            resolveModel = { inferenceModelResolver.resolve({ it.sex }, "sex.tflite") },
         )
     }
 
@@ -105,75 +82,13 @@ object ImagingModule {
     @AbdomenStatusClassifier
     fun provideAbdomenStatusClassifier(
         @ApplicationContext context: Context,
-        deviceCache: DeviceCache,
-        localProgramModelStore: LocalProgramModelStore,
+        inferenceModelResolver: InferenceModelResolver,
     ): SpecimenClassifier {
-        val path = resolveModelPath(
-            deviceCache = deviceCache,
-            localProgramModelStore = localProgramModelStore,
-            roleModelId = { it.abdomenStatus },
-            assetFallback = "abdomen_status.tflite",
-        )
         return TfLiteSpecimenClassifier(
-            context,
-            path,
-            "LiteRTAbdomenStatusClassifierThread",
-            expectedNumClasses = AbdomenStatusLabel.entries.size,
+            context = context,
+            threadName = "LiteRTAbdomenStatusClassifierThread",
+            bundledClassCount = AbdomenStatusLabel.entries.size,
+            resolveModel = { inferenceModelResolver.resolve({ it.abdomenStatus }, "abdomen_status.tflite") },
         )
-    }
-
-    private fun resolveModelPath(
-        deviceCache: DeviceCache,
-        localProgramModelStore: LocalProgramModelStore,
-        roleModelId: (ProgramModelsConfig) -> String?,
-        assetFallback: String,
-    ): String {
-        val programId = runBlocking { deviceCache.getProgramId() }
-        if (programId == null || programId <= 0) {
-            ProgramModelLog.i(
-                "Imaging using bundled asset=%s (no programId registered)",
-                assetFallback
-            )
-            return assetFallback
-        }
-
-        val config = localProgramModelStore.getCachedConfigSync(programId)
-        if (config == null) {
-            ProgramModelLog.i(
-                "Imaging using bundled asset=%s (no local config.json for programId=%d)",
-                assetFallback,
-                programId
-            )
-            return assetFallback
-        }
-
-        val modelId = roleModelId(config)?.trim()?.takeIf { it.isNotEmpty() }
-        if (modelId == null) {
-            ProgramModelLog.i(
-                "Imaging using bundled asset=%s (role not configured in config.json for programId=%d)",
-                assetFallback,
-                programId
-            )
-            return assetFallback
-        }
-
-        val localPath = localProgramModelStore.modelPathIfExists(programId, modelId)
-        return if (localPath != null) {
-            ProgramModelLog.i(
-                "Imaging using downloaded model roleFallback=%s modelId=%s path=%s",
-                assetFallback,
-                modelId,
-                localPath
-            )
-            localPath
-        } else {
-            ProgramModelLog.i(
-                "Imaging using bundled asset=%s (no local file for modelId=%s programId=%d)",
-                assetFallback,
-                modelId,
-                programId
-            )
-            assetFallback
-        }
     }
 }
