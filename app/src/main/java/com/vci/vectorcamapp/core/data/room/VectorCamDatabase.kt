@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.vci.vectorcamapp.core.data.room.converters.CameraMetadataConverter
 import com.vci.vectorcamapp.core.data.room.converters.FloatListConverter
+import com.vci.vectorcamapp.core.data.room.converters.FormAnswerValueConverter
 import com.vci.vectorcamapp.core.data.room.converters.FormQuestionPrerequisiteExpressionConverter
 import com.vci.vectorcamapp.core.data.room.converters.FormQuestionScopeConverter
 import com.vci.vectorcamapp.core.data.room.converters.LocationHierarchyConverter
@@ -56,7 +57,7 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
         FormQuestionEntity::class,
         FormAnswerEntity::class
     ],
-    version = 34,
+    version = 35,
 )
 @TypeConverters(
     UuidConverter::class,
@@ -68,6 +69,7 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
     LocationHierarchyConverter::class,
     FormQuestionPrerequisiteExpressionConverter::class,
     StringListConverter::class,
+    FormAnswerValueConverter::class,
     FormQuestionScopeConverter::class
 )
 abstract class VectorCamDatabase : RoomDatabase() {

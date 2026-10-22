@@ -40,6 +40,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
+import com.vci.vectorcamapp.core.presentation.components.camera.BarcodeScannerDialog
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
@@ -52,7 +53,6 @@ import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.intake.presentation.components.CollectionMethodTooltipRow
 import com.vci.vectorcamapp.intake.presentation.components.DynamicFormField
-import com.vci.vectorcamapp.intake.presentation.components.HardwareIdBarcodeScannerDialog
 import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
 import com.vci.vectorcamapp.intake.presentation.components.PracticeSessionWarningBanner
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -547,7 +547,8 @@ fun IntakeScreen(
                             collectionLongitude,
                             siteLatitude,
                             siteLongitude
-                        ).any { it == null }) {
+                        ).any { it == null }
+                    ) {
                         null
                     } else {
                         val results = FloatArray(1)
@@ -745,7 +746,7 @@ fun IntakeScreen(
                         ) {
                             DynamicFormField(
                                 question = question,
-                                value = state.formAnswersByQuestionId[question.id]?.value.orEmpty(),
+                                    value = state.formAnswersByQuestionId.getValue(question.id).value,
                                 error = state.intakeErrors.formAnswerErrors[question.id],
                                 onValueChange = {
                                     onAction(IntakeAction.UpdateFormAnswer(question.id, it))
@@ -933,15 +934,26 @@ fun IntakeScreen(
     }
 
     if (isBarcodeScannerVisible) {
-        HardwareIdBarcodeScannerDialog(
+        BarcodeScannerDialog(
+            title = stringResource(R.string.intake_title_scan_hardware_id),
+            description = stringResource(R.string.intake_body_scan_hardware_id),
             onBarcodeScanned = { hardwareId ->
                 onAction(IntakeAction.EnterHardwareId(hardwareId))
                 isBarcodeScannerVisible = false
             },
             onDismiss = { isBarcodeScannerVisible = false },
+            transformValue = { value ->
+                value.trim().takeIf { trimmed ->
+                    trimmed.isNotEmpty() && trimmed.length <= MAX_HARDWARE_ID_LENGTH &&
+                        trimmed.all { it.code <= MAX_HARDWARE_ID_CHARACTER_CODE || it.isWhitespace() }
+                }
+            },
         )
     }
 }
+
+private const val MAX_HARDWARE_ID_LENGTH = 200
+private const val MAX_HARDWARE_ID_CHARACTER_CODE = 255
 
 @PreviewLightDark
 @Composable

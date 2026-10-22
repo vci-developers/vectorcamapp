@@ -13,7 +13,8 @@ object CollectionBatchIdentityResolver {
     ): String {
         return formQuestions.filter { it.answerScope == FormQuestionScope.SESSION_UNIT && it.isUnitIdentityComponent }
             .sortedBy { it.id }.mapNotNull { question ->
-                answersByQuestionId[question.id]?.value?.trim()?.takeIf { it.isNotBlank() }
+                val value = answersByQuestionId[question.id]?.value ?: return@mapNotNull null
+                value.displayText().trim().takeIf { it.isNotBlank() }
             }.joinToString(IDENTITY_SEPARATOR)
     }
 }

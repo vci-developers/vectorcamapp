@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.collection_batch.domain.use_cases
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.collection_batch.domain.util.error.CollectionBatchFormError
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.core.domain.util.Result
@@ -14,6 +15,21 @@ import java.util.UUID
 class ValidateFormAnswersUseCaseTest {
 
     private val useCase = ValidateFormAnswersUseCase()
+
+    @Test
+    fun multiSelect_validatesRequiredAndAllowedSelections() {
+        val question = question(1, type = "multi-select", required = true, options = listOf("A", "Other"))
+        fun validate(values: List<String>) = useCase(
+            listOf(question),
+            mapOf(1 to answer("", "multi-select").copy(value = FormAnswerValue.ListValue(values))),
+        ).getValue(1)
+        assertThat(validate(listOf("A", "Other"))).isEqualTo(Result.Success(Unit))
+        assertThat(validate(emptyList())).isEqualTo(Result.Error(CollectionBatchFormError.INVALID_FORM_ANSWER))
+        assertThat(
+            validate(listOf("Other reason"))
+        ).isEqualTo(Result.Error(CollectionBatchFormError.INVALID_FORM_ANSWER))
+        assertThat(validate(listOf("A", "A"))).isEqualTo(Result.Error(CollectionBatchFormError.INVALID_FORM_ANSWER))
+    }
 
     @Test
     fun hiddenQuestion_skipsValidation() {
@@ -80,6 +96,21 @@ class ValidateFormAnswersUseCaseTest {
         assertThat(result(question(1, type = "text"), "  house  ")).isEqualTo(Result.Success(Unit))
     }
 
+    @Test
+    fun qr_acceptsPayloadWithoutHardwareIdRestrictions() {
+        val payload = "https://example.com/标本/" + "x".repeat(250)
+        assertThat(result(question(1, type = "qr", required = true), payload))
+            .isEqualTo(Result.Success(Unit))
+    }
+
+    @Test
+    fun qr_requiredBlankIsInvalid_optionalBlankIsValid() {
+        assertThat(result(question(1, type = "qr", required = true), "  "))
+            .isEqualTo(Result.Error(CollectionBatchFormError.INVALID_FORM_ANSWER))
+        assertThat(result(question(1, type = "qr"), ""))
+            .isEqualTo(Result.Success(Unit))
+    }
+
     private fun result(question: FormQuestion, value: String): Result<Unit, CollectionBatchFormError> {
         return useCase(listOf(question), mapOf(question.id to answer(value, question.type))).getValue(question.id)
     }
@@ -105,7 +136,7 @@ class ValidateFormAnswersUseCaseTest {
     private fun answer(value: String, type: String = "text") = FormAnswer(
         localId = UUID.randomUUID(),
         remoteId = null,
-        value = value,
+        value = FormAnswerValue.StringValue(value),
         dataType = type,
         submittedAt = 0L,
     )

@@ -12,6 +12,7 @@ import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.model.Session
@@ -150,7 +151,7 @@ class CollectionBatchFormViewModelTest {
             awaitItem()
             val loaded = awaitItem()
             assertThat(loaded.formAnswersByQuestionId.getValue(1)).isEqualTo(saved)
-            assertThat(loaded.formAnswersByQuestionId.getValue(2).value).isEqualTo("false")
+            assertThat(loaded.formAnswersByQuestionId.getValue(2).value).isEqualTo(FormAnswerValue.StringValue("false"))
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -223,7 +224,7 @@ class CollectionBatchFormViewModelTest {
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
 
-        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(1, "House"))
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(1, FormAnswerValue.StringValue("House")))
         advanceUntilIdle()
 
         viewModel.events.test {
@@ -258,17 +259,23 @@ class CollectionBatchFormViewModelTest {
             awaitItem()
             awaitItem()
 
-            viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(2, "true"))
-            assertThat(awaitItem().formAnswersByQuestionId.getValue(2).value).isEqualTo("true")
-            viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, "note"))
-            assertThat(awaitItem().formAnswersByQuestionId.getValue(3).value).isEqualTo("note")
+            viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(2, FormAnswerValue.StringValue("true")))
+            assertThat(
+                awaitItem().formAnswersByQuestionId.getValue(2).value
+            ).isEqualTo(FormAnswerValue.StringValue("true"))
+            viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("note")))
+            assertThat(
+                awaitItem().formAnswersByQuestionId.getValue(3).value
+            ).isEqualTo(FormAnswerValue.StringValue("note"))
 
-            viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(1, "no"))
+            viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(1, FormAnswerValue.StringValue("no")))
             val cleared = awaitItem()
-            assertThat(cleared.formAnswersByQuestionId.getValue(2).value).isEqualTo("false")
-            assertThat(cleared.formAnswersByQuestionId.getValue(3).value).isEqualTo("")
+            assertThat(
+                cleared.formAnswersByQuestionId.getValue(2).value
+            ).isEqualTo(FormAnswerValue.StringValue("false"))
+            assertThat(cleared.formAnswersByQuestionId.getValue(3).value).isEqualTo(FormAnswerValue.StringValue(""))
 
-            viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(99, "ignored"))
+            viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(99, FormAnswerValue.StringValue("ignored")))
             advanceUntilIdle()
             expectNoEvents()
             cancelAndIgnoreRemainingEvents()
@@ -309,7 +316,7 @@ class CollectionBatchFormViewModelTest {
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
 
-        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(1, "House"))
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(1, FormAnswerValue.StringValue("House")))
         existingAnswers.value = mapOf(otherUnitId to mapOf(1 to answer("House")))
         advanceUntilIdle()
 
@@ -331,7 +338,7 @@ class CollectionBatchFormViewModelTest {
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
 
-        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(1, "House"))
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(1, FormAnswerValue.StringValue("House")))
         advanceUntilIdle()
 
         viewModel.events.test {
@@ -439,6 +446,40 @@ class CollectionBatchFormViewModelTest {
         } returns questions
     }
 
+    @Test
+    fun deselectingOtherClearsFollowUpAndDependentSelections() = runTest {
+        val requiresOther = FormQuestionPrerequisiteExpression.Predicate(
+            questionId = 1,
+            operator = "contains",
+            value = FormQuestionPrerequisiteValue.StringValue("Other"),
+        )
+        stubForm(
+            listOf(
+            question(1, type = "multi-select").copy(options = listOf("A", "Other")),
+            question(2, prerequisite = requiresOther),
+            question(3, type = "multi-select", prerequisite = requiresOther).copy(options = listOf("B")),
+        )
+        )
+        initViewModel()
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.formAnswersByQuestionId.getValue(1).value)
+            .isEqualTo(FormAnswerValue.ListValue(emptyList()))
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(1, FormAnswerValue.ListValue(listOf("Other"))))
+        advanceUntilIdle()
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(2, FormAnswerValue.StringValue("details")))
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, FormAnswerValue.ListValue(listOf("B"))))
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.formAnswersByQuestionId.getValue(2).value)
+            .isEqualTo(FormAnswerValue.StringValue("details"))
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(1, FormAnswerValue.ListValue(listOf("A"))))
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.formAnswersByQuestionId.getValue(2).value)
+            .isEqualTo(FormAnswerValue.StringValue(""))
+        assertThat(viewModel.state.value.formAnswersByQuestionId.getValue(3).value)
+            .isEqualTo(FormAnswerValue.ListValue(emptyList()))
+    }
+
     private fun session(type: SessionType) = Session(
         localId = sessionId,
         remoteId = null,
@@ -487,7 +528,7 @@ class CollectionBatchFormViewModelTest {
     private fun answer(value: String, type: String = "text") = FormAnswer(
         localId = UUID.randomUUID(),
         remoteId = null,
-        value = value,
+        value = FormAnswerValue.StringValue(value),
         dataType = type,
         submittedAt = 0L,
     )

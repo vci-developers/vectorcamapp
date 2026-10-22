@@ -5,20 +5,12 @@ import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_11_12_A
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_12_13_REMOVE_SENTINEL_SITE_AND_MOVE_HOUSE_NUMBER_UNDER_SITE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_13_14_ADD_COLLECTOR_TABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_14_15_BACKFILL_COLLECTORS
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_2_3_CREATE_SURVEILLANCE_FORM_TABLE
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_3_4_SCHEMA_V2
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_4_5_ADD_SUBMITTED_AT_COLUMNS_TO_SPECIMEN_AND_SURVEILLANCE_FORM_TABLES
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_5_6_ADD_UPLOAD_STATUS_TO_SPECIMEN
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_6_7_BOUNDING_BOX_TO_INFERENCE_RESULT
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_7_8_SPECIMEN_IMAGE_SEPARATION
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_8_9_ADD_SESSION_TYPE_COLUMN
-import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_9_10_REFACTOR_SPECIMEN_IMAGE_AND_INFERENCE_RESULT_KEYS
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_15_16_ADD_SPECIMEN_SHOULD_PROCESS_FURTHER_COLUMN
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_16_17_ADD_SESSION_COLLECTOR_LAST_TRAINED_ON_COLUMN
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_17_18_ADD_COLLECTOR_LAST_TRAINED_ON_COLUMN
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_18_19_ADD_SESSION_HARDWARE_ID_COLUMN
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_19_20_MAKE_HARDWARE_ID_COLUMN_NULLABLE
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_20_21_CREATE_LOCATION_TYPE_TABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_21_22_UPDATE_SITE_TABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_22_23_MAKE_SITE_LOCATION_COLUMNS_NULLABLE
@@ -29,10 +21,19 @@ import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_26_27_R
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_27_28_CHANGE_PROGRAM_FORM_VERSION_TO_TEXT
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_28_29_UPDATE_FORM_ANSWER_PRIMARY_KEY
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_29_30_ADD_PREREQUISITE_TO_FORM_QUESTION
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_2_3_CREATE_SURVEILLANCE_FORM_TABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_30_31_ADD_SESSION_UNIT_TABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_31_32_ADD_PREGNANT_WOMAN_PRESENCE_AND_NUM_CHILDREN_UNDER_5_COLUMNS
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_32_33_ADD_SITE_LATITUDE_AND_LONGITUDE_COLUMNS
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_33_34_ADD_SESSION_GPS_ACCURACY_COLUMN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_34_35_STORE_FORM_ANSWER_VALUE_AS_JSON
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_3_4_SCHEMA_V2
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_4_5_ADD_SUBMITTED_AT_COLUMNS_TO_SPECIMEN_AND_SURVEILLANCE_FORM_TABLES
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_5_6_ADD_UPLOAD_STATUS_TO_SPECIMEN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_6_7_BOUNDING_BOX_TO_INFERENCE_RESULT
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_7_8_SPECIMEN_IMAGE_SEPARATION
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_8_9_ADD_SESSION_TYPE_COLUMN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_9_10_REFACTOR_SPECIMEN_IMAGE_AND_INFERENCE_RESULT_KEYS
 
 val ALL_MIGRATIONS = arrayOf(
     MIGRATION_1_2_CREATE_BOUNDING_BOX_TABLE,
@@ -67,5 +68,6 @@ val ALL_MIGRATIONS = arrayOf(
     MIGRATION_30_31_ADD_SESSION_UNIT_TABLE,
     MIGRATION_31_32_ADD_PREGNANT_WOMAN_PRESENCE_AND_NUM_CHILDREN_UNDER_5_COLUMNS,
     MIGRATION_32_33_ADD_SITE_LATITUDE_AND_LONGITUDE_COLUMNS,
-    MIGRATION_33_34_ADD_SESSION_GPS_ACCURACY_COLUMN
+    MIGRATION_33_34_ADD_SESSION_GPS_ACCURACY_COLUMN,
+    MIGRATION_34_35_STORE_FORM_ANSWER_VALUE_AS_JSON
 )

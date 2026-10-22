@@ -13,6 +13,7 @@ import com.vci.vectorcamapp.core.data.room.entities.SessionUnitEntity
 import com.vci.vectorcamapp.core.data.room.entities.relations.FormAnswerAndQuestionRelation
 import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.SessionUnit
 import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
@@ -73,7 +74,7 @@ class FormRepositoryImplementationTest {
         assertThat(grouped).hasSize(1)
         assertThat(grouped.single().form).isEqualTo(Form(3, "Intake", "v1"))
         assertThat(grouped.single().formAnswersAndQuestions.map { it.answer.value })
-            .containsExactly("first", "later")
+            .containsExactly(FormAnswerValue.StringValue("first"), FormAnswerValue.StringValue("later"))
             .inOrder()
     }
 
@@ -211,7 +212,7 @@ class FormRepositoryImplementationTest {
     private fun sampleAnswer() = FormAnswer(
         localId = answerId,
         remoteId = null,
-        value = "Kampala",
+        value = FormAnswerValue.StringValue("Kampala"),
         dataType = "text",
         submittedAt = 3L,
     )
@@ -222,7 +223,7 @@ class FormRepositoryImplementationTest {
         sessionId = sessionId,
         sessionUnitId = sessionUnitId,
         questionId = questionId,
-        value = "Kampala",
+        value = FormAnswerValue.StringValue("Kampala"),
         dataType = "text",
         submittedAt = 3L,
     )
@@ -232,7 +233,7 @@ class FormRepositoryImplementationTest {
             localId = UUID.randomUUID(),
             sessionId = sessionId,
             questionId = questionId,
-            value = value,
+            value = FormAnswerValue.StringValue(value),
             dataType = "text",
         ),
         question = FormQuestionEntity(

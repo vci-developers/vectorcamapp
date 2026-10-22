@@ -8,6 +8,7 @@ import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
@@ -612,10 +613,7 @@ class IntakeViewModel @Inject constructor(
                                 )
                             ) {
                                 updatedAnswers[question.id]?.let { answer ->
-                                    val defaultValue = when (question.type) {
-                                        "boolean" -> "false"
-                                        else -> ""
-                                    }
+                                    val defaultValue = FormAnswerValue.emptyFor(question.type)
                                     updatedAnswers[question.id] = answer.copy(value = defaultValue)
                                     answerMap[question.id] = defaultValue
                                 }
@@ -811,10 +809,7 @@ class IntakeViewModel @Inject constructor(
                                 savedFormAnswers[question.id] ?: FormAnswer(
                                 localId = UUID.randomUUID(),
                                 remoteId = null,
-                                value = when (question.type) {
-                                    "boolean" -> "false"
-                                    else -> ""
-                                },
+                                value = FormAnswerValue.emptyFor(question.type),
                                 dataType = question.type,
                                 submittedAt = 0L
                             )
