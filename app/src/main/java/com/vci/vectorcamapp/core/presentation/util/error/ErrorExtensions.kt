@@ -120,6 +120,7 @@ fun Error.toString(context: Context): String {
             FormValidationError.INVALID_MONTHS_SINCE_IRS -> R.string.form_validation_error_invalid_months_since_irs
             FormValidationError.INVALID_NUM_CHILDREN_UNDER_5 -> R.string.form_validation_error_invalid_num_children_under_5
             FormValidationError.INVALID_FORM_ANSWER -> R.string.form_validation_error_invalid_form_answer
+            FormValidationError.INCONSISTENT_PEOPLE_COUNTS -> R.string.form_validation_error_inconsistent_people_counts
         }
 
         is CollectionBatchFormError -> when (this) {

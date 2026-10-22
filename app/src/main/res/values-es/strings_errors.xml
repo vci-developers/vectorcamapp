@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="form_validation_error_inconsistent_people_counts">Complete las tres cantidades. El total debe ser igual al número de personas que durmieron bajo un mosquitero LLIN más el número de las que no lo hicieron.</string>
 
     <!-- Error Fallback -->
     <string name="error_fallback">Ocurrió un error desconocido. Vuelve a intentarlo o contacta con soporte si el problema persiste.</string>

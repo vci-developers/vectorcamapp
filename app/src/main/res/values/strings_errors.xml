@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="form_validation_error_inconsistent_people_counts">Complete all three counts. The total must equal the number who slept under an LLIN plus the number who did not.</string>
 
     <!-- Error Fallback -->
     <string name="error_fallback">An unknown error occurred. Please try again or contact support if the issue persists.</string>

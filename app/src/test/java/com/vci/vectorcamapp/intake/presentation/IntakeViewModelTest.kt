@@ -238,6 +238,27 @@ class IntakeViewModelTest {
         unmockkStatic(Location::class)
     }
     @Test
+    fun kenyaNumberLimit_rejectsOverLimitUpdatesAndAllowsClearing() = runTest {
+        every { programFormWorkflow.sessionFormQuestions } returns listOf(
+            question(42, "number", questionKey = "how_many_people_slept_in_this_house_last_night")
+        )
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        runCurrent()
+        vm.onAction(IntakeAction.UpdateFormAnswer(42, FormAnswerValue.StringValue("30")))
+        runCurrent()
+        for (text in listOf("31", "30.01", "9999999999999999999999")) {
+            vm.onAction(IntakeAction.UpdateFormAnswer(42, FormAnswerValue.StringValue(text)))
+            runCurrent()
+            assertThat(vm.state.value.formAnswersByQuestionId[42]?.value)
+                .isEqualTo(FormAnswerValue.StringValue("30"))
+        }
+        vm.onAction(IntakeAction.UpdateFormAnswer(42, FormAnswerValue.StringValue("")))
+        runCurrent()
+        assertThat(vm.state.value.formAnswersByQuestionId[42]?.value)
+            .isEqualTo(FormAnswerValue.StringValue(""))
+    }
+    @Test
     fun consent_requiresExplicitTrueAndDoesNotLockFormEditing() = runTest {
         val vm = makeViewModel()
         backgroundScope.launch { vm.state.collect {} }
@@ -261,6 +282,46 @@ class IntakeViewModelTest {
                 .isEqualTo(value == FormAnswerValue.StringValue("true"))
             assertThat(vm.state.value.canFillForm).isTrue()
         }
+    }
+    @Test
+    fun consent_usesKeyRegardlessOfQuestionId() = runTest {
+        every { programFormWorkflow.sessionFormQuestions } returns listOf(
+            question(42, "boolean", questionKey = "did_the_household_head_or_an_adult_grant_the_con"),
+            question(1956, "boolean", questionKey = null)
+        )
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        runCurrent()
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("true")))
+        runCurrent()
+        assertThat(vm.state.value.hasHouseholdHeadConsent).isFalse()
+        vm.onAction(IntakeAction.UpdateFormAnswer(42, FormAnswerValue.StringValue("true")))
+        runCurrent()
+        assertThat(vm.state.value.hasHouseholdHeadConsent).isTrue()
+    }
+    @Test
+    fun consent_missingWrongOrDuplicateKeyFailsClosed() = runTest {
+        for (questions in listOf(
+            listOf(question(1956, "boolean", questionKey = null)),
+            listOf(question(1956, "boolean", questionKey = "another_question")),
+            listOf(question(1956, "text")),
+            listOf(
+                question(1956, "boolean"),
+                question(42, "boolean", questionKey = "did_the_household_head_or_an_adult_grant_the_con")
+            )
+        )) {
+            every { programFormWorkflow.sessionFormQuestions } returns questions
+            val vm = makeViewModel()
+            backgroundScope.launch { vm.state.collect {} }
+            runCurrent()
+            vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("true")))
+            runCurrent()
+            assertThat(vm.state.value.hasHouseholdHeadConsent).isFalse()
+            vm.onAction(IntakeAction.SubmitIntakeForm)
+            runCurrent()
+        }
+        coVerify(exactly = 4) { errorMessageEmitter.emit(IntakeError.CONSENT_REQUIRED, any()) }
+        coVerify(exactly = 0) { sessionRepository.upsertSession(any(), any()) }
     }
     @Test
     fun consent_missingQuestionFailsClosed() = runTest {
@@ -1216,10 +1277,12 @@ class IntakeViewModelTest {
         id: Int,
         type: String,
         prerequisite: FormQuestionPrerequisiteExpression? = null,
+        questionKey: String? = if (id == 1956)
+            "did_the_household_head_or_an_adult_grant_the_con" else null,
     ) = FormQuestion(
         id = id,
         label = "q$id",
-        questionKey = null,
+        questionKey = questionKey,
         type = type,
         required = false,
         prerequisite = prerequisite,

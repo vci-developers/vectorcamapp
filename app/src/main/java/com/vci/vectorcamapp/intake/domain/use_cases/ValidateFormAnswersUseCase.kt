@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import javax.inject.Inject
+import com.vci.vectorcamapp.program.kenya.domain.KenyaFormRules
 
 class ValidateFormAnswersUseCase @Inject constructor() {
     operator fun invoke(
@@ -20,6 +21,7 @@ class ValidateFormAnswersUseCase @Inject constructor() {
             }
         }
 
+        val invalidBreakdownIds = KenyaFormRules.invalidCountBreakdownQuestionIds(formQuestions, formAnswers)
         return formQuestions.associate { question ->
             if (!FormQuestionPrerequisiteEvaluator.evaluate(question.prerequisite, answerMap)) {
                 return@associate question.id to Result.Success(Unit)
@@ -27,7 +29,10 @@ class ValidateFormAnswersUseCase @Inject constructor() {
 
             val answer = formAnswers[question.id]?.value ?: FormAnswerValue.StringValue("")
 
-            val formAnswerResult = if (isValidAnswer(question, answer)) {
+            val formAnswerResult = if (question.id in invalidBreakdownIds) {
+                Result.Error(FormValidationError.INCONSISTENT_PEOPLE_COUNTS)
+            } else if (isValidAnswer(question, answer) &&
+                KenyaFormRules.isWithinNumberLimit(question, answer)) {
                 Result.Success(Unit)
             } else {
                 Result.Error(FormValidationError.INVALID_FORM_ANSWER)

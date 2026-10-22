@@ -3,7 +3,6 @@ package com.vci.vectorcamapp.intake.presentation
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
-import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.LocationType
 import com.vci.vectorcamapp.core.domain.model.Session
@@ -12,6 +11,7 @@ import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.presentation.model.IntakeErrors
+import com.vci.vectorcamapp.program.kenya.domain.KenyaFormRules
 import java.util.UUID
 
 data class IntakeState(
@@ -74,15 +74,8 @@ data class IntakeState(
         formAnswerErrors = emptyMap(),
     ),
 ) {
-    companion object {
-        // TODO: Replace this demo-only ID with the stable question key when mobile supports it.
-        private const val HOUSEHOLD_HEAD_CONSENT_QUESTION_ID = 1956
-    }
     val hasHouseholdHeadConsent: Boolean
-        get() = formQuestions.any {
-            it.id == HOUSEHOLD_HEAD_CONSENT_QUESTION_ID && it.type == "boolean"
-        } && formAnswersByQuestionId[HOUSEHOLD_HEAD_CONSENT_QUESTION_ID]?.value ==
-            FormAnswerValue.StringValue("true")
+        get() = KenyaFormRules.hasHouseholdHeadConsent(formQuestions, formAnswersByQuestionId)
     val canFillForm: Boolean
         get() = !isLoading && (isResumingSession ||
             (!isCheckingLocation && locationError == null && isWithinSiteRadius))

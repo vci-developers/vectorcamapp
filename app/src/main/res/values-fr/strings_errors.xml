@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="form_validation_error_inconsistent_people_counts">Renseignez les trois nombres. Le total doit être égal au nombre de personnes ayant dormi sous une MILD plus le nombre de celles qui ne l’ont pas fait.</string>
 
     <!-- Error Fallback -->
     <string name="error_fallback">Une erreur inconnue s\'est produite. Réessaie ou contacte le support si le problème persiste.</string>

@@ -17,6 +17,7 @@ import com.vci.vectorcamapp.core.presentation.components.form.QrCodeField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.ui.extensions.colors
+import com.vci.vectorcamapp.program.kenya.domain.KenyaFormRules
 
 @Composable
 fun DynamicFormField(
@@ -68,7 +69,8 @@ fun DynamicFormField(
                 required = question.required,
                 value = text,
                 onValueChange = { newValue ->
-                    if (newValue.isEmpty() || newValue.matches(Regex("^\\d+\\.?\\d{0,2}$"))) {
+                    if ((newValue.isEmpty() || newValue.matches(Regex("^\\d+\\.?\\d{0,2}$"))) &&
+                        KenyaFormRules.isWithinNumberLimit(question, FormAnswerValue.StringValue(newValue))) {
                         onTextChange(newValue)
                     }
                 },

@@ -1,4 +1,5 @@
 package com.vci.vectorcamapp.intake.presentation
+import com.vci.vectorcamapp.program.kenya.domain.KenyaFormRules
 
 import androidx.lifecycle.SavedStateHandle
 import android.location.Location
@@ -637,6 +638,10 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.UpdateFormAnswer -> {
+                    val question = _state.value.formQuestions.find { it.id == action.questionId }
+                    if (question != null && !KenyaFormRules.isWithinNumberLimit(question, action.value)) {
+                        return@launch
+                    }
                     _state.update {
                         val updatedAnswers = it.formAnswersByQuestionId.toMutableMap().apply {
                             val existingFormAnswer = get(action.questionId)

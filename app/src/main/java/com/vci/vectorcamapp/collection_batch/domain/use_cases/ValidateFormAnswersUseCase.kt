@@ -7,6 +7,7 @@ import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import javax.inject.Inject
+import com.vci.vectorcamapp.program.kenya.domain.KenyaFormRules
 
 class ValidateFormAnswersUseCase @Inject constructor() {
     operator fun invoke(
@@ -27,7 +28,8 @@ class ValidateFormAnswersUseCase @Inject constructor() {
 
             val answer = formAnswersByQuestionId[question.id]?.value ?: FormAnswerValue.StringValue("")
 
-            val formAnswerResult = if (isValidAnswer(question, answer)) {
+            val formAnswerResult = if (isValidAnswer(question, answer) &&
+                KenyaFormRules.isWithinNumberLimit(question, answer)) {
                 Result.Success(Unit)
             } else {
                 Result.Error(CollectionBatchFormError.INVALID_FORM_ANSWER)

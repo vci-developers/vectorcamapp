@@ -138,6 +138,7 @@ class ErrorExtensionsTest {
         FormValidationError.INVALID_NUM_CHILDREN_UNDER_5 to
             R.string.form_validation_error_invalid_num_children_under_5,
         FormValidationError.INVALID_FORM_ANSWER to R.string.form_validation_error_invalid_form_answer,
+        FormValidationError.INCONSISTENT_PEOPLE_COUNTS to R.string.form_validation_error_inconsistent_people_counts,
         CollectionBatchFormError.FORM_INVALID to R.string.collection_batch_form_error_form_invalid,
         CollectionBatchFormError.INVALID_FORM_ANSWER to R.string.collection_batch_form_error_invalid_form_answer,
         CollectionBatchFormError.DUPLICATE_IDENTITY to R.string.collection_batch_form_error_duplicate_identity,
