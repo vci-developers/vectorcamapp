@@ -29,6 +29,7 @@ data class CompleteSessionDetailsState(
         notes = "",
         latitude = null,
         longitude = null,
+        gpsAccuracy = null,
         type = SessionType.SURVEILLANCE,
     ),
     val site: Site = Site(

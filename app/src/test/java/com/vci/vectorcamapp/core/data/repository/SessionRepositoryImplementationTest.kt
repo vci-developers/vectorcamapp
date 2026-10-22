@@ -120,6 +120,7 @@ class SessionRepositoryImplementationTest {
         notes = "",
         latitude = 0.1f,
         longitude = 0.2f,
+        gpsAccuracy = 5f,
         type = SessionType.SURVEILLANCE,
     )
 
@@ -136,6 +137,7 @@ class SessionRepositoryImplementationTest {
         createdAt = 3L,
         latitude = 0.1f,
         longitude = 0.2f,
+        gpsAccuracy = 5f,
         type = SessionType.SURVEILLANCE,
     )
 

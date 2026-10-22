@@ -24,6 +24,7 @@ data class SessionDto(
     val notes: String = "",
     val latitude: Float? = null,
     val longitude: Float? = null,
+    val gpsAccuracy: Float? = null,
     @Serializable(with = SessionTypeSerializer::class)
     val type: SessionType = SessionType.SURVEILLANCE,
     val expectedSpecimens: Int = 0,

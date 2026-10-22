@@ -675,6 +675,7 @@ class SettingsViewModelTest {
             notes = "",
             latitude = null,
             longitude = null,
+            gpsAccuracy = null,
             type = SessionType.SURVEILLANCE,
         )
         coEvery { sessionRepository.getIncompleteSessionsAndSites() } returns listOf(

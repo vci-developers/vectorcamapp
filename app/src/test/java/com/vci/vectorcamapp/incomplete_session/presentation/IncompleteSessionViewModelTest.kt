@@ -102,6 +102,7 @@ class IncompleteSessionViewModelTest {
         notes = "",
         latitude = null,
         longitude = null,
+        gpsAccuracy = null,
         type = sessionType,
     )
 

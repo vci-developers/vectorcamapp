@@ -29,6 +29,7 @@ class CurrentSessionCacheImplementation @Inject constructor(
                 notes = session.notes,
                 latitude = session.latitude,
                 longitude = session.longitude,
+                gpsAccuracy = session.gpsAccuracy,
                 type = session.type,
             )
         }
@@ -55,6 +56,7 @@ class CurrentSessionCacheImplementation @Inject constructor(
                 notes = currentSessionCacheDto.notes,
                 latitude = currentSessionCacheDto.latitude,
                 longitude = currentSessionCacheDto.longitude,
+                gpsAccuracy = currentSessionCacheDto.gpsAccuracy,
                 type = currentSessionCacheDto.type,
             )
         }
