@@ -91,12 +91,21 @@ fun execFileFor(variantName: String): File {
         .get().asFile
 }
 
-fun classTreeFor(variantName: String) =
-    fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/$variantName")) {
+fun classTreeFor(variantName: String): FileTree {
+    // AGP 9 compiles Kotlin itself. The classes the unit tests ran against live
+    // under built_in_kotlinc. tmp/kotlin-classes is a leftover copy whose class
+    // ids do not match the exec data, so JaCoCo reports 0% if it reads them.
+    val variantCap = variantName.capitalizeFirst()
+    return fileTree(
+        layout.buildDirectory.dir(
+            "intermediates/built_in_kotlinc/$variantName/compile${variantCap}Kotlin/classes"
+        )
+    ) {
         include(coverageIncludes)
         exclude(generatedExcludes)
         exclude(deviceOnlyExcludes)
     }
+}
 
 val sourceDirs = files("${project.projectDir}/src/main/java")
 
