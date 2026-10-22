@@ -80,6 +80,21 @@ class ValidateFormAnswersUseCaseTest {
         assertThat(result(question(1, type = "text"), "  house  ")).isEqualTo(Result.Success(Unit))
     }
 
+    @Test
+    fun qr_acceptsPayloadWithoutHardwareIdRestrictions() {
+        val payload = "https://example.com/标本/" + "x".repeat(250)
+        assertThat(result(question(1, type = "qr", required = true), payload))
+            .isEqualTo(Result.Success(Unit))
+    }
+
+    @Test
+    fun qr_requiredBlankIsInvalid_optionalBlankIsValid() {
+        assertThat(result(question(1, type = "qr", required = true), "  "))
+            .isEqualTo(Result.Error(CollectionBatchFormError.INVALID_FORM_ANSWER))
+        assertThat(result(question(1, type = "qr"), ""))
+            .isEqualTo(Result.Success(Unit))
+    }
+
     private fun result(question: FormQuestion, value: String): Result<Unit, CollectionBatchFormError> {
         return useCase(listOf(question), mapOf(question.id to answer(value, question.type))).getValue(question.id)
     }

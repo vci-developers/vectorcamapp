@@ -52,7 +52,7 @@ import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.intake.presentation.components.CollectionMethodTooltipRow
 import com.vci.vectorcamapp.intake.presentation.components.DynamicFormField
-import com.vci.vectorcamapp.intake.presentation.components.HardwareIdBarcodeScannerDialog
+import com.vci.vectorcamapp.core.presentation.components.camera.BarcodeScannerDialog
 import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
 import com.vci.vectorcamapp.intake.presentation.components.PracticeSessionWarningBanner
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -933,12 +933,20 @@ fun IntakeScreen(
     }
 
     if (isBarcodeScannerVisible) {
-        HardwareIdBarcodeScannerDialog(
+        BarcodeScannerDialog(
+            title = stringResource(R.string.intake_title_scan_hardware_id),
+            description = stringResource(R.string.intake_body_scan_hardware_id),
             onBarcodeScanned = { hardwareId ->
                 onAction(IntakeAction.EnterHardwareId(hardwareId))
                 isBarcodeScannerVisible = false
             },
             onDismiss = { isBarcodeScannerVisible = false },
+            transformValue = { value ->
+                value.trim().takeIf { trimmed ->
+                    trimmed.isNotEmpty() && trimmed.length <= 200 &&
+                        trimmed.all { it.code <= 255 || it.isWhitespace() }
+                }
+            },
         )
     }
 }

@@ -56,6 +56,24 @@ class ValidateFormAnswersUseCaseTest {
     // region a - Required field validation
 
     @Test
+    fun qrField_acceptsPayloadWithoutHardwareIdRestrictions() {
+        val payload = "https://example.com/标本/" + "x".repeat(250)
+        val questions = listOf(question(id = 1, type = "qr", required = true))
+        assertTrue(useCase(questions, mapOf(answer(1, payload)))[1] is Result.Success)
+    }
+
+    @Test
+    fun qrField_requiredBlankIsInvalid_optionalBlankIsValid() {
+        val questions = listOf(
+            question(id = 1, type = "qr", required = true),
+            question(id = 2, type = "qr"),
+        )
+        val results = useCase(questions, mapOf(answer(1, "  "), answer(2, "")))
+        assertEquals(FormValidationError.INVALID_FORM_ANSWER, (results[1] as Result.Error).error)
+        assertTrue(results[2] is Result.Success)
+    }
+
+    @Test
     fun requiredField_withAnswer_returnsSuccess() {
         val questions = listOf(question(id = 1, required = true))
         val answers = mapOf(answer(1, "some value"))

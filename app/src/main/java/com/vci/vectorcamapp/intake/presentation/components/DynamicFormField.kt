@@ -11,6 +11,7 @@ import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
+import com.vci.vectorcamapp.core.presentation.components.form.QrCodeField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.ui.extensions.colors
@@ -25,6 +26,17 @@ fun DynamicFormField(
 ) {
     val label = question.label
     when (question.type) {
+        "qr" -> {
+            QrCodeField(
+                label = label,
+                required = question.required,
+                value = value,
+                onValueChange = onValueChange,
+                error = error,
+                modifier = modifier,
+            )
+        }
+
         "text" -> {
             TextEntryField(
                 label = label,
@@ -62,7 +74,7 @@ fun DynamicFormField(
                 onCheckedChange = { onValueChange(it.toString()) }
             )
         }
-        
+
         "date" -> {
             DatePickerField(
                 label = label,

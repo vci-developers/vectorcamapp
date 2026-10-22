@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.intake.presentation.components
+package com.vci.vectorcamapp.core.presentation.components.camera
 
 import android.view.Surface
 import androidx.camera.core.ImageAnalysis
@@ -12,9 +12,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.vci.vectorcamapp.core.presentation.components.camera.bindBackCamera
-import com.vci.vectorcamapp.core.presentation.components.camera.defaultCameraResolutionSelector
-import com.vci.vectorcamapp.core.presentation.components.camera.unbindCamera
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.withContext
@@ -22,13 +21,13 @@ import timber.log.Timber
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.atomic.AtomicBoolean
 
-private const val HARDWARE_ID_MAX_CHARACTERS = 200
-private const val HARDWARE_ID_MAX_CHARACTER_CODE = 255
 
 @Composable
-internal fun BindHardwareIdBarcodeScanner(
+internal fun BindBarcodeScanner(
     onBarcodeScanned: (String) -> Unit,
     onSurfaceRequest: (SurfaceRequest) -> Unit,
+    qrOnly: Boolean,
+    transformValue: (String) -> String?,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -36,9 +35,13 @@ internal fun BindHardwareIdBarcodeScanner(
     val rotation = view.display?.rotation ?: Surface.ROTATION_0
     val onBarcodeScannedState = rememberUpdatedState(onBarcodeScanned)
     val onSurfaceRequestState = rememberUpdatedState(onSurfaceRequest)
+    val transformValueState = rememberUpdatedState(transformValue)
 
-    LaunchedEffect(lifecycleOwner, rotation) {
-        val barcodeScanner = BarcodeScanning.getClient()
+    LaunchedEffect(lifecycleOwner, rotation, qrOnly) {
+        val options = BarcodeScannerOptions.Builder().apply {
+            if (qrOnly) setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+        }.build()
+        val barcodeScanner = BarcodeScanning.getClient(options)
         val delivered = AtomicBoolean(false)
         val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -56,21 +59,13 @@ internal fun BindHardwareIdBarcodeScanner(
                 if (delivered.get() || result.getThrowable(barcodeScanner) != null) {
                     return@MlKitAnalyzer
                 }
-                val hardwareId = result.getValue(barcodeScanner)
+                val value = result.getValue(barcodeScanner)
                     .orEmpty()
                     .firstNotNullOfOrNull { barcode ->
-                        val trimmed = barcode.rawValue?.trim().orEmpty()
-                        val hasValidCharacters = trimmed.all { character ->
-                            character.code <= HARDWARE_ID_MAX_CHARACTER_CODE || character.isWhitespace()
-                        }
-                        trimmed.takeIf {
-                            it.isNotEmpty() &&
-                                it.length <= HARDWARE_ID_MAX_CHARACTERS &&
-                                hasValidCharacters
-                        }
+                        barcode.rawValue?.let { transformValueState.value(it) }
                     }
-                if (hardwareId != null && delivered.compareAndSet(false, true)) {
-                    onBarcodeScannedState.value(hardwareId)
+                if (value != null && delivered.compareAndSet(false, true)) {
+                    onBarcodeScannedState.value(value)
                 }
             },
         )
@@ -90,6 +85,8 @@ internal fun BindHardwareIdBarcodeScanner(
             Timber.e(exception, "Could not open the barcode scanner camera")
         } catch (exception: IllegalStateException) {
             Timber.e(exception, "Could not open the barcode scanner camera")
+        } catch (exception: SecurityException) {
+            Timber.e(exception, "Camera permission is unavailable")
         } finally {
             withContext(NonCancellable) {
                 imageAnalysis.clearAnalyzer()
