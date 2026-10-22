@@ -99,6 +99,7 @@ class DynamicFormFieldTest {
     private fun question(id: Int, type: String, label: String) = FormQuestion(
         id = id,
         label = label,
+        questionKey = null,
         type = type,
         required = false,
         prerequisite = null,

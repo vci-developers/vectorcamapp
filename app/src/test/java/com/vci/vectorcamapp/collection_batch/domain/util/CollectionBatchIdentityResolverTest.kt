@@ -52,6 +52,7 @@ class CollectionBatchIdentityResolverTest {
     ) = FormQuestion(
         id = id,
         label = label,
+        questionKey = null,
         type = "text",
         required = false,
         prerequisite = null,
