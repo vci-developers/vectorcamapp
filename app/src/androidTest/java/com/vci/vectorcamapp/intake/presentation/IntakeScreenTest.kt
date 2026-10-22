@@ -90,6 +90,7 @@ class IntakeScreenTest {
         notes = notes,
         latitude = latitude,
         longitude = longitude,
+        gpsAccuracy = null,
         type = type,
     )
 

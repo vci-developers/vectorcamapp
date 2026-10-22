@@ -640,9 +640,8 @@ class IntakeViewModel @Inject constructor(
                     if (_state.value.isLoading || !_state.value.canUpdateLocation) return@launch
                     _state.update {
                         it.copy(
-                            session = it.session.copy(latitude = null, longitude = null),
-                            locationError = null,
-                            locationAccuracyMeters = null
+                            session = it.session.copy(latitude = null, longitude = null, gpsAccuracy = null),
+                            locationError = null
                         )
                     }
                     getLocation()
@@ -868,9 +867,9 @@ class IntakeViewModel @Inject constructor(
                         session = it.session.copy(
                             latitude = location.latitude.toFloat(),
                             longitude = location.longitude.toFloat(),
+                            gpsAccuracy = location.accuracy,
                         ),
-                        locationError = null,
-                        locationAccuracyMeters = location.accuracy
+                        locationError = null
                     )
                 }
             }.onError { error ->

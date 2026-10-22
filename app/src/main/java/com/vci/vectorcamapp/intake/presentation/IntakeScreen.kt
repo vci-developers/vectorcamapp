@@ -615,7 +615,7 @@ fun IntakeScreen(
                                                 )
                                             }
                                         }
-                                        state.locationAccuracyMeters?.takeIf { index == 0 }?.let { locationAccuracyMeters ->
+                                        state.session.gpsAccuracy?.takeIf { index == 0 }?.let { gpsAccuracy ->
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 horizontalArrangement = Arrangement.SpaceBetween
@@ -628,7 +628,7 @@ fun IntakeScreen(
                                                 Text(
                                                     text = stringResource(
                                                         R.string.intake_value_gps_accuracy,
-                                                        locationAccuracyMeters
+                                                        gpsAccuracy
                                                     ),
                                                     style = MaterialTheme.typography.bodyLarge,
                                                     fontWeight = FontWeight.Medium,

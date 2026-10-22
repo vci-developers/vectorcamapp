@@ -61,6 +61,7 @@ class CompleteSessionListViewModelTest {
         notes = "",
         latitude = null,
         longitude = null,
+        gpsAccuracy = null,
         type = SessionType.SURVEILLANCE,
     )
     private val testSite = Site(
