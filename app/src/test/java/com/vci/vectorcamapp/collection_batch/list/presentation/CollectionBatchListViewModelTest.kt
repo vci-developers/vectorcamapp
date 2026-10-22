@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.model.Session
@@ -361,7 +362,7 @@ class CollectionBatchListViewModelTest {
     private fun answer(value: String) = FormAnswer(
         localId = UUID.randomUUID(),
         remoteId = null,
-        value = value,
+        value = FormAnswerValue.StringValue(value),
         dataType = "text",
         submittedAt = 0L,
     )
@@ -382,6 +383,7 @@ class CollectionBatchListViewModelTest {
         notes = "",
         latitude = null,
         longitude = null,
+        gpsAccuracy = null,
         type = SessionType.SURVEILLANCE,
     )
 }

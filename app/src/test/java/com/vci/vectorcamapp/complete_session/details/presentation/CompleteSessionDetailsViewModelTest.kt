@@ -68,6 +68,7 @@ class CompleteSessionDetailsViewModelTest {
         notes = "",
         latitude = null,
         longitude = null,
+        gpsAccuracy = null,
         type = SessionType.SURVEILLANCE,
     )
     private val testSite = Site(
@@ -80,7 +81,9 @@ class CompleteSessionDetailsViewModelTest {
         healthCenter = "Test Center",
         isActive = true,
         name = null,
-        locationHierarchy = null
+        locationHierarchy = null,
+        latitude = null,
+        longitude = null
     )
 
     @Before

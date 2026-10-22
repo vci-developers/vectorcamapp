@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -20,39 +21,12 @@ class LocationClient @Inject constructor(
     private val fusedLocationProviderClient: FusedLocationProviderClient,
     @ApplicationContext private val context: Context
 ) {
-    companion object {
-        private const val LOCATION_CACHE_DURATION_MS = 5 * 60 * 1000L
-    }
 
     suspend fun getCurrentLocation(): Result<Location, IntakeError> =
         suspendCancellableCoroutine { continuation ->
             val cancellationTokenSource = CancellationTokenSource()
-            val currentTime = System.currentTimeMillis()
 
-            if (ContextCompat.checkSelfPermission(
-                    context, Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                fusedLocationProviderClient.lastLocation.addOnSuccessListener { lastKnownLocation ->
-                    when {
-                        lastKnownLocation != null && currentTime - lastKnownLocation.time <= LOCATION_CACHE_DURATION_MS -> {
-                            if (continuation.isActive && !continuation.isCompleted) {
-                                continuation.resume(Result.Success(lastKnownLocation))
-                            }
-                        }
-
-                        else -> {
-                            requestFreshLocation(cancellationTokenSource, continuation)
-                        }
-                    }
-                }.addOnFailureListener {
-                    requestFreshLocation(cancellationTokenSource, continuation)
-                }
-            } else {
-                if (continuation.isActive && !continuation.isCompleted) {
-                    continuation.resume(Result.Error(IntakeError.LOCATION_PERMISSION_DENIED))
-                }
-            }
+            requestFreshLocation(cancellationTokenSource, continuation)
 
             continuation.invokeOnCancellation {
                 cancellationTokenSource.cancel()
@@ -68,7 +42,11 @@ class LocationClient @Inject constructor(
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             fusedLocationProviderClient.getCurrentLocation(
-                Priority.PRIORITY_HIGH_ACCURACY, cancellationTokenSource.token
+                CurrentLocationRequest.Builder()
+                    .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                    .setMaxUpdateAgeMillis(0)
+                    .build(),
+                cancellationTokenSource.token
             ).addOnSuccessListener { location ->
                 when {
                     location != null -> {

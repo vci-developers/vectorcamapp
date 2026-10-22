@@ -9,13 +9,13 @@ import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
-import com.vci.vectorcamapp.intake.presentation.model.IntakeErrors
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
-
+import com.vci.vectorcamapp.intake.presentation.model.IntakeErrors
 import java.util.UUID
 
 data class IntakeState(
     val isLoading: Boolean = false,
+    val canUpdateLocation: Boolean = false,
     val allCollectors: List<Collector> = emptyList(),
     val isCurrentCollectorMissing: Boolean = false,
     val isCollectionMethodLocked: Boolean = false,
@@ -23,6 +23,7 @@ data class IntakeState(
     val siteSelectionsByLocationTypeId: Map<Int, String> = emptyMap(),
     val allLocationTypesInProgram: List<LocationType> = emptyList(),
     val allSitesInProgram: List<Site> = emptyList(),
+    val selectedSiteWithCoordinates: Site? = null,
     val selectedDistrict: String = "",
     val selectedVillageName: String = "",
     val selectedHouseNumber: String = "",
@@ -42,6 +43,7 @@ data class IntakeState(
         notes = "",
         latitude = null,
         longitude = null,
+        gpsAccuracy = null,
         type = SessionType.SURVEILLANCE,
     ),
     val surveillanceForm: SurveillanceForm? = null,

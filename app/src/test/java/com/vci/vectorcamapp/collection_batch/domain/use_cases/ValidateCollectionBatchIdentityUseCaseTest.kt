@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.collection_batch.domain.use_cases
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.collection_batch.domain.util.error.CollectionBatchFormError
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.core.domain.util.Result
@@ -14,6 +15,19 @@ class ValidateCollectionBatchIdentityUseCaseTest {
     private val useCase = ValidateCollectionBatchIdentityUseCase()
     private val editingId = UUID.fromString("00000000-0000-0000-0000-000000000010")
     private val otherId = UUID.fromString("00000000-0000-0000-0000-000000000011")
+
+    @Test
+    fun selectionsInDifferentOrderHaveTheSameIdentity() {
+        val draft = answer("").copy(value = FormAnswerValue.ListValue(listOf("A", "Other")), dataType = "multi-select")
+        val existing = draft.copy(value = FormAnswerValue.ListValue(listOf("Other", "A")))
+        val result = useCase(
+            listOf(question(1).copy(type = "multi-select")),
+            mapOf(1 to draft),
+            mapOf(otherId to mapOf(1 to existing)),
+            editingId,
+        )
+        assertThat(result).isEqualTo(Result.Error(CollectionBatchFormError.DUPLICATE_IDENTITY))
+    }
 
     @Test
     fun noIdentityQuestions_isSuccess() {
@@ -96,7 +110,7 @@ class ValidateCollectionBatchIdentityUseCaseTest {
     private fun answer(value: String) = FormAnswer(
         localId = UUID.randomUUID(),
         remoteId = null,
-        value = value,
+        value = FormAnswerValue.StringValue(value),
         dataType = "text",
         submittedAt = 0L,
     )

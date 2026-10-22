@@ -82,6 +82,7 @@ class LandingViewModelTest {
         notes = "",
         latitude = null,
         longitude = null,
+        gpsAccuracy = null,
         type = type,
     )
 
@@ -95,7 +96,9 @@ class LandingViewModelTest {
         healthCenter = "Test Center",
         isActive = true,
         name = null,
-        locationHierarchy = null
+        locationHierarchy = null,
+        latitude = null,
+        longitude = null
     )
 
     private fun initViewModel(

@@ -96,7 +96,11 @@ class IncompleteSessionScreenTest {
             villageName = "Village $siteId",
             houseNumber = "House #$siteId",
             healthCenter = "Health Center #$siteId",
-            isActive = true
+            isActive = true,
+            name = null,
+            locationHierarchy = null,
+            latitude = null,
+            longitude = null
         )
         return SessionAndSite(session = session, site = site)
     }
@@ -124,6 +128,7 @@ class IncompleteSessionScreenTest {
             notes = "",
             latitude = null,
             longitude = null,
+            gpsAccuracy = null,
             type = type
         )
 

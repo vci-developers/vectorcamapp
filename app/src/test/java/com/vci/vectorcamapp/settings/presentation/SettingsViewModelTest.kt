@@ -675,10 +675,11 @@ class SettingsViewModelTest {
             notes = "",
             latitude = null,
             longitude = null,
+            gpsAccuracy = null,
             type = SessionType.SURVEILLANCE,
         )
         coEvery { sessionRepository.getIncompleteSessionsAndSites() } returns listOf(
-            SessionAndSite(session, Site(1, null, null, null, null, null, null, true, "S", null))
+            SessionAndSite(session, Site(1, null, null, null, null, null, null, true, "S", null, null, null))
         )
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()

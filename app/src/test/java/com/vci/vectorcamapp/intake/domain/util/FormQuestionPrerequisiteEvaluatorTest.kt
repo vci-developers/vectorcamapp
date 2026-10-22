@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.intake.domain.util
 
 import com.google.common.truth.Truth.assertThat
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteExpression
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteValue
 import org.junit.Test
@@ -137,7 +138,35 @@ class FormQuestionPrerequisiteEvaluatorTest {
     private fun evaluate(
         expression: FormQuestionPrerequisiteExpression,
         vararg answers: Pair<Int, String>,
-    ): Boolean = FormQuestionPrerequisiteEvaluator.evaluate(expression, answers.toMap())
+    ): Boolean = FormQuestionPrerequisiteEvaluator.evaluate(
+        expression,
+        answers.toMap().mapValues { FormAnswerValue.StringValue(it.value) }
+    )
+
+    @Test
+    fun selectionsUseExactMembershipAndListEmptiness() {
+        val selections = mapOf(1 to FormAnswerValue.ListValue(listOf("Other reason")))
+        val containsOther = predicate(1, "contains", FormQuestionPrerequisiteValue.StringValue("Other"))
+        assertThat(FormQuestionPrerequisiteEvaluator.evaluate(containsOther, selections)).isFalse()
+        assertThat(
+            FormQuestionPrerequisiteEvaluator.evaluate(
+            containsOther,
+            mapOf(1 to FormAnswerValue.ListValue(listOf("Other")))
+        )
+        ).isTrue()
+        assertThat(
+            FormQuestionPrerequisiteEvaluator.evaluate(
+            predicate(1, "empty", null),
+            mapOf(1 to FormAnswerValue.ListValue(emptyList()))
+        )
+        ).isTrue()
+        assertThat(
+            FormQuestionPrerequisiteEvaluator.evaluate(
+            predicate(1, "not_empty", null),
+            selections
+        )
+        ).isTrue()
+    }
 
     private fun eq(questionId: Int, value: String) =
         predicate(questionId, "eq", FormQuestionPrerequisiteValue.StringValue(value))

@@ -120,6 +120,7 @@ class SessionRepositoryImplementationTest {
         notes = "",
         latitude = 0.1f,
         longitude = 0.2f,
+        gpsAccuracy = 5f,
         type = SessionType.SURVEILLANCE,
     )
 
@@ -136,10 +137,11 @@ class SessionRepositoryImplementationTest {
         createdAt = 3L,
         latitude = 0.1f,
         longitude = 0.2f,
+        gpsAccuracy = 5f,
         type = SessionType.SURVEILLANCE,
     )
 
-    private fun site() = Site(5, "D", null, null, "V", "1", null, true, "Site", null)
+    private fun site() = Site(5, "D", null, null, "V", "1", null, true, "Site", null, null, null)
 
     private fun siteEntity() = SiteEntity(
         id = 5,

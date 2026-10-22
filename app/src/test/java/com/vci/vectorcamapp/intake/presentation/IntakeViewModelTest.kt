@@ -10,6 +10,7 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.LocationType
 import com.vci.vectorcamapp.core.domain.model.Program
@@ -60,11 +61,14 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -113,7 +117,9 @@ class IntakeViewModelTest {
         healthCenter = "HC A",
         isActive = true,
         name = null,
-        locationHierarchy = null
+        locationHierarchy = null,
+        latitude = null,
+        longitude = null
     )
 
     @Before
@@ -277,7 +283,7 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(3) // initialValue, isLoading=true, isLoading=false (loaded)
+            skipItems(4)
 
             vm.onAction(IntakeAction.EnterHardwareId("DEVICE_001"))
             advanceUntilIdle()
@@ -293,7 +299,7 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(3)
+            skipItems(4)
 
             vm.onAction(IntakeAction.EnterNotes("Some field notes"))
             advanceUntilIdle()
@@ -310,7 +316,7 @@ class IntakeViewModelTest {
         val newDate = 1_700_000_000L
 
         vm.state.test {
-            skipItems(3)
+            skipItems(4)
 
             vm.onAction(IntakeAction.PickCollectionDate(newDate))
             advanceUntilIdle()
@@ -326,7 +332,7 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(3)
+            skipItems(4)
 
             vm.onAction(IntakeAction.UpdateCollectionMethod("Aspirator"))
             advanceUntilIdle()
@@ -342,7 +348,7 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(3)
+            skipItems(4)
 
             vm.onAction(IntakeAction.UpdateSpecimenCondition("Excellent"))
             advanceUntilIdle()
@@ -358,7 +364,7 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(3)
+            skipItems(4)
 
             vm.onAction(IntakeAction.SelectCollector(testCollector))
             advanceUntilIdle()
@@ -380,7 +386,7 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(3)
+            skipItems(4)
 
             vm.onAction(IntakeAction.SelectVillageName("Village A"))
             vm.onAction(IntakeAction.SelectHouseNumber("123"))
@@ -400,7 +406,7 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(3)
+            skipItems(4)
 
             vm.onAction(IntakeAction.SelectHouseNumber("456"))
             vm.onAction(IntakeAction.SelectVillageName("Village B"))
@@ -418,7 +424,7 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(3)
+            skipItems(4)
 
             vm.onAction(IntakeAction.SelectHouseNumber("789"))
             advanceUntilIdle()
@@ -438,7 +444,7 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(3)
+            skipItems(4)
 
             vm.onAction(IntakeAction.ShowCollectionMethodTooltipDialog)
             advanceUntilIdle()
@@ -454,7 +460,7 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(3)
+            skipItems(4)
 
             // Show first so the StateFlow value is 'true', then Hide changes it to 'false'.
             // Dispatching both together would cancel each other out (false → false),
@@ -481,7 +487,7 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(3)
+            skipItems(4)
 
             collectorsFlow.value = listOf(testCollector)
             advanceUntilIdle()
@@ -494,6 +500,81 @@ class IntakeViewModelTest {
 
     // ========================================
     // G. Location Retry
+    @Test
+    fun updateLocation_replacesNewSessionCoordinatesWithFreshResult() = runTest {
+        val original = mockk<Location>()
+        every { original.latitude } returns 1.25
+        every { original.longitude } returns 32.5
+        every { original.accuracy } returns 4.8f
+        val updated = mockk<Location>()
+        every { updated.latitude } returns 2.5
+        every { updated.longitude } returns 33.75
+        every { updated.accuracy } returns 3f
+        coEvery { locationRepository.getCurrentLocation() } returns Result.Success(original)
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        assertThat(vm.state.value.session.latitude).isEqualTo(1.25f)
+        val pendingUpdate = CompletableDeferred<Result<Location, IntakeError>>()
+        coEvery { locationRepository.getCurrentLocation() } coAnswers { pendingUpdate.await() }
+        vm.onAction(IntakeAction.RetryLocation)
+        runCurrent()
+        assertThat(vm.state.value.session.latitude).isNull()
+        assertThat(vm.state.value.session.longitude).isNull()
+        assertThat(vm.state.value.session.gpsAccuracy).isNull()
+        pendingUpdate.complete(Result.Success(updated))
+        advanceUntilIdle()
+        coVerify(exactly = 2) { locationRepository.getCurrentLocation() }
+        assertThat(vm.state.value.session.latitude).isEqualTo(2.5f)
+        assertThat(vm.state.value.session.longitude).isEqualTo(33.75f)
+        assertThat(vm.state.value.session.gpsAccuracy).isEqualTo(3f)
+    }
+
+    @Test
+    fun resumedSession_preservesCoordinatesAndIgnoresRetry() = runTest {
+        val session = sampleSession()
+        coEvery { currentSessionCache.getSession() } returns session
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        assertThat(vm.state.value.canUpdateLocation).isFalse()
+        assertThat(vm.state.value.session.latitude).isEqualTo(session.latitude)
+        assertThat(vm.state.value.session.longitude).isEqualTo(session.longitude)
+        vm.onAction(IntakeAction.RetryLocation)
+        advanceUntilIdle()
+        coVerify(exactly = 0) { locationRepository.getCurrentLocation() }
+        assertThat(vm.state.value.session.latitude).isEqualTo(session.latitude)
+        assertThat(vm.state.value.session.longitude).isEqualTo(session.longitude)
+    }
+
+    @Test
+    fun resumedSession_missingCoordinatesFetchesAndAllowsUpdates() = runTest {
+        val location = mockk<Location>()
+        every { location.latitude } returns 2.5
+        every { location.longitude } returns 33.75
+        every { location.accuracy } returns 3f
+        coEvery { locationRepository.getCurrentLocation() } returns Result.Success(location)
+        for ((index, session) in listOf(
+            sampleSession().copy(latitude = null, longitude = null),
+            sampleSession().copy(latitude = null),
+            sampleSession().copy(longitude = null)
+        ).withIndex()) {
+            coEvery { currentSessionCache.getSession() } returns session
+            val vm = makeViewModel()
+            backgroundScope.launch { vm.state.collect {} }
+            advanceUntilIdle()
+            assertThat(vm.state.value.canUpdateLocation).isTrue()
+            coVerify(exactly = index * 2 + 1) { locationRepository.getCurrentLocation() }
+            assertThat(vm.state.value.session.latitude).isEqualTo(2.5f)
+            assertThat(vm.state.value.session.longitude).isEqualTo(33.75f)
+            vm.onAction(IntakeAction.RetryLocation)
+            advanceUntilIdle()
+            coVerify(exactly = (index + 1) * 2) { locationRepository.getCurrentLocation() }
+            assertThat(vm.state.value.session.latitude).isEqualTo(2.5f)
+            assertThat(vm.state.value.session.longitude).isEqualTo(33.75f)
+            assertThat(vm.state.value.locationError).isNull()
+        }
+    }
     // ========================================
 
     @Test
@@ -508,15 +589,15 @@ class IntakeViewModelTest {
 
         assertThat(vm.state.value.locationError).isEqualTo(IntakeError.LOCATION_GPS_TIMEOUT)
 
-        // Switch mock to PERMISSION_DENIED so the retry getLocation() calls emitError()
-        // instead of setting locationError back — leaving locationError = null after RetryLocation.
-        coEvery { locationRepository.getCurrentLocation() } returns Result.Error(IntakeError.LOCATION_PERMISSION_DENIED)
+        val location = mockk<Location>()
+        every { location.latitude } returns 1.25
+        every { location.longitude } returns 32.5
+        every { location.accuracy } returns 4.8f
+        coEvery { locationRepository.getCurrentLocation() } returns Result.Success(location)
 
         vm.onAction(IntakeAction.RetryLocation)
         advanceUntilIdle()
 
-        // RetryLocation clears locationError at the start; the subsequent getLocation() with
-        // PERMISSION_DENIED calls emitError() (no state update), so locationError stays null.
         assertThat(vm.state.value.locationError).isNull()
     }
 
@@ -525,6 +606,7 @@ class IntakeViewModelTest {
         val location = mockk<Location>()
         every { location.latitude } returns 1.25
         every { location.longitude } returns 32.5
+        every { location.accuracy } returns 4.8f
         coEvery { locationRepository.getCurrentLocation() } returns Result.Success(location)
         val vm = makeViewModel()
         backgroundScope.launch { vm.state.collect {} }
@@ -532,24 +614,39 @@ class IntakeViewModelTest {
 
         assertThat(vm.state.value.session.latitude).isEqualTo(1.25f)
         assertThat(vm.state.value.session.longitude).isEqualTo(32.5f)
+        assertThat(vm.state.value.session.gpsAccuracy).isEqualTo(4.8f)
+        assertThat(vm.state.value.canUpdateLocation).isTrue()
+        coVerify(exactly = 1) { locationRepository.getCurrentLocation() }
 
         coEvery { locationRepository.getCurrentLocation() } throws SecurityException("denied")
         vm.onAction(IntakeAction.RetryLocation)
         advanceUntilIdle()
         coVerify { errorMessageEmitter.emit(IntakeError.LOCATION_PERMISSION_DENIED, any()) }
+        assertThat(vm.state.value.locationError).isEqualTo(IntakeError.LOCATION_PERMISSION_DENIED)
+        assertThat(vm.state.value.session.latitude).isNull()
+        assertThat(vm.state.value.session.longitude).isNull()
+        assertThat(vm.state.value.session.gpsAccuracy).isNull()
 
         coEvery { locationRepository.getCurrentLocation() } throws IllegalStateException("gps")
         vm.onAction(IntakeAction.RetryLocation)
         advanceUntilIdle()
         coVerify { errorMessageEmitter.emit(IntakeError.UNKNOWN_ERROR, any()) }
+        assertThat(vm.state.value.locationError).isEqualTo(IntakeError.UNKNOWN_ERROR)
+        assertThat(vm.state.value.session.latitude).isNull()
+        assertThat(vm.state.value.session.longitude).isNull()
+        assertThat(vm.state.value.session.gpsAccuracy).isNull()
 
         coEvery { locationRepository.getCurrentLocation() } coAnswers {
-            kotlinx.coroutines.delay(31_000)
+            delay(31_000)
             Result.Success(location)
         }
         vm.onAction(IntakeAction.RetryLocation)
         advanceUntilIdle()
         assertThat(vm.state.value.locationError).isEqualTo(IntakeError.LOCATION_GPS_TIMEOUT)
+        coVerify(exactly = 4) { locationRepository.getCurrentLocation() }
+        assertThat(vm.state.value.session.latitude).isNull()
+        assertThat(vm.state.value.session.longitude).isNull()
+        assertThat(vm.state.value.session.gpsAccuracy).isNull()
     }
 
     @Test
@@ -583,10 +680,10 @@ class IntakeViewModelTest {
         vm.onAction(IntakeAction.SelectLocationTypeSiteOption(2, "12"))
         vm.onAction(IntakeAction.SelectLocationTypeSiteOption(1, "Jinja"))
         vm.onAction(IntakeAction.SelectLocationTypeSiteOption(99, "ignored"))
-        vm.onAction(IntakeAction.UpdateFormAnswer(2, "true"))
-        vm.onAction(IntakeAction.UpdateFormAnswer(3, "note"))
-        vm.onAction(IntakeAction.UpdateFormAnswer(1, "no"))
-        vm.onAction(IntakeAction.UpdateFormAnswer(44, "missing"))
+        vm.onAction(IntakeAction.UpdateFormAnswer(2, FormAnswerValue.StringValue("true")))
+        vm.onAction(IntakeAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("note")))
+        vm.onAction(IntakeAction.UpdateFormAnswer(1, FormAnswerValue.StringValue("no")))
+        vm.onAction(IntakeAction.UpdateFormAnswer(44, FormAnswerValue.StringValue("missing")))
         vm.onAction(IntakeAction.EnterNumPeopleSleptInHouse("abc"))
         advanceUntilIdle()
 
@@ -596,8 +693,36 @@ class IntakeViewModelTest {
         assertThat(form.llinBrand).isEqualTo("OLYSET Net")
         assertThat(vm.state.value.siteSelectionsByLocationTypeId).containsEntry(1, "Jinja")
         assertThat(vm.state.value.siteSelectionsByLocationTypeId).doesNotContainKey(2)
-        assertThat(vm.state.value.formAnswersByQuestionId.getValue(2).value).isEqualTo("false")
-        assertThat(vm.state.value.formAnswersByQuestionId.getValue(3).value).isEqualTo("")
+        assertThat(
+            vm.state.value.formAnswersByQuestionId.getValue(2).value
+        ).isEqualTo(FormAnswerValue.StringValue("false"))
+        assertThat(vm.state.value.formAnswersByQuestionId.getValue(3).value).isEqualTo(FormAnswerValue.StringValue(""))
+    }
+
+    @Test
+    fun deselectingOtherClearsItsIntakeFollowUp() = runTest {
+        val requiresOther = FormQuestionPrerequisiteExpression.Predicate(
+            1,
+            "contains",
+            FormQuestionPrerequisiteValue.StringValue("Other"),
+        )
+        every { programFormWorkflow.sessionFormQuestions } returns listOf(
+            question(1, "multi-select").copy(options = listOf("A", "Other")),
+            question(2, "text", requiresOther),
+        )
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        vm.onAction(IntakeAction.UpdateFormAnswer(1, FormAnswerValue.ListValue(listOf("Other"))))
+        advanceUntilIdle()
+        vm.onAction(IntakeAction.UpdateFormAnswer(2, FormAnswerValue.StringValue("details")))
+        advanceUntilIdle()
+        assertThat(vm.state.value.formAnswersByQuestionId.getValue(2).value)
+            .isEqualTo(FormAnswerValue.StringValue("details"))
+        vm.onAction(IntakeAction.UpdateFormAnswer(1, FormAnswerValue.ListValue(emptyList())))
+        advanceUntilIdle()
+        assertThat(vm.state.value.formAnswersByQuestionId.getValue(2).value)
+            .isEqualTo(FormAnswerValue.StringValue(""))
     }
 
     @Test
@@ -846,6 +971,117 @@ class IntakeViewModelTest {
         assertThat(vm.state.value.surveillanceForm).isEqualTo(surveillanceForm())
     }
 
+    @Test
+    fun legacyCoordinates_followHouseSelectionAndClearOnParentChanges() = runTest {
+        val site = testSite.copy(latitude = 1f, longitude = 2f)
+        val otherVillageSite = site.copy(id = 2, villageName = "Village B", latitude = 3f)
+        val otherDistrictSite = site.copy(id = 3, district = "District B", latitude = 4f)
+        val missingLatitudeSite = site.copy(id = 4, houseNumber = "102", latitude = null)
+        val missingLongitudeSite = site.copy(id = 5, houseNumber = "103", longitude = null)
+        every { siteRepository.observeAllSitesByProgramId(any()) } returns MutableStateFlow(
+            listOf(otherVillageSite, otherDistrictSite, missingLatitudeSite, missingLongitudeSite, site)
+        )
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isNull()
+        vm.onAction(IntakeAction.SelectDistrict("District A"))
+        vm.onAction(IntakeAction.SelectVillageName("Village A"))
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isNull()
+        vm.onAction(IntakeAction.SelectHouseNumber("101"))
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(site)
+        vm.onAction(IntakeAction.SelectVillageName("Village B"))
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isNull()
+        vm.onAction(IntakeAction.SelectHouseNumber("101"))
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(otherVillageSite)
+        vm.onAction(IntakeAction.SelectDistrict("District B"))
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isNull()
+        vm.onAction(IntakeAction.SelectVillageName("Village A"))
+        vm.onAction(IntakeAction.SelectHouseNumber("101"))
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(otherDistrictSite)
+        vm.onAction(IntakeAction.SelectDistrict("District A"))
+        vm.onAction(IntakeAction.SelectVillageName("Village A"))
+        for (houseNumber in listOf("102", "103", "missing")) {
+            vm.onAction(IntakeAction.SelectHouseNumber(houseNumber))
+            advanceUntilIdle()
+            assertThat(vm.state.value.selectedSiteWithCoordinates).isNull()
+        }
+    }
+
+    @Test
+    fun legacyCoordinates_restoreSavedHouse() = runTest {
+        val site = testSite.copy(latitude = 1f, longitude = 2f)
+        coEvery { currentSessionCache.getSession() } returns sampleSession()
+        coEvery { currentSessionCache.getSiteId() } returns site.id
+        every { siteRepository.observeAllSitesByProgramId(any()) } returns MutableStateFlow(listOf(site))
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(site)
+    }
+
+    @Test
+    fun legacyCoordinates_cachedParentsDoNotSelectHouse() = runTest {
+        val site = testSite.copy(latitude = 1f, longitude = 2f)
+        every { siteRepository.observeAllSitesByProgramId(any()) } returns MutableStateFlow(listOf(site))
+        coEvery { defaultIntakeFieldsCache.getDefaultIntakeFields() } returns DefaultIntakeFieldsCacheDto(
+            district = "District A",
+            villageName = "Village A"
+        )
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedDistrict).isEqualTo("District A")
+        assertThat(vm.state.value.selectedVillageName).isEqualTo("Village A")
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isNull()
+    }
+
+    @Test
+    fun hierarchyCoordinates_useDeepestSelectedSiteWithAncestorFallback() = runTest {
+        val village = testSite.copy(
+            district = null,
+            villageName = null,
+            houseNumber = null,
+            locationHierarchy = mapOf("Village" to "Kampala"),
+            latitude = 1f,
+            longitude = 2f
+        )
+        val house = village.copy(
+            id = 2,
+            locationHierarchy = mapOf("Village" to "Kampala", "House" to "12"),
+            latitude = 3f
+        )
+        val houseWithoutCoordinates = house.copy(
+            id = 3,
+            locationHierarchy = mapOf("Village" to "Kampala", "House" to "13"),
+            longitude = null
+        )
+        every { siteRepository.observeAllSitesByProgramId(any()) } returns MutableStateFlow(
+            listOf(house, houseWithoutCoordinates, village)
+        )
+        every { locationTypeRepository.observeAllLocationTypesByProgramId(any()) } returns MutableStateFlow(
+            listOf(LocationType(1, "Village", 1), LocationType(2, "House", 2))
+        )
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isNull()
+        vm.onAction(IntakeAction.SelectLocationTypeSiteOption(1, "Kampala"))
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(village)
+        vm.onAction(IntakeAction.SelectLocationTypeSiteOption(2, "12"))
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(house)
+        vm.onAction(IntakeAction.SelectLocationTypeSiteOption(2, "13"))
+        advanceUntilIdle()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(village)
+    }
     private fun fillCollectorAndMethod(vm: IntakeViewModel) {
         collectorsFlow.value = listOf(testCollector)
         vm.onAction(IntakeAction.SelectCollector(testCollector))
@@ -898,6 +1134,7 @@ class IntakeViewModelTest {
         notes = "",
         latitude = 1f,
         longitude = 2f,
+        gpsAccuracy = null,
         type = SessionType.SURVEILLANCE,
     )
 }

@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.intake.domain.use_cases
 
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import com.vci.vectorcamapp.core.domain.util.Result
@@ -41,7 +42,7 @@ class ValidateFormAnswersUseCaseTest {
         questionId to FormAnswer(
             localId = UUID.randomUUID(),
             remoteId = null,
-            value = value,
+            value = FormAnswerValue.StringValue(value),
             dataType = "text",
             submittedAt = System.currentTimeMillis()
         )
@@ -54,6 +55,48 @@ class ValidateFormAnswersUseCaseTest {
     }
 
     // region a - Required field validation
+
+    @Test
+    fun multiSelect_validatesRequiredOptionsAndFollowUpVisibility() {
+        val selection = question(1, "multi-select", required = true, options = listOf("A", "Other"))
+        val followUp = question(
+            2,
+            required = true,
+            prerequisite = FormQuestionPrerequisiteExpression.Predicate(
+            questionId = 1,
+            operator = "contains",
+            value = FormQuestionPrerequisiteValue.StringValue("Other"),
+        )
+        )
+        fun validate(values: List<String>) = useCase(
+            listOf(selection, followUp),
+            mapOf(answer(1, "").let { (id, answer) -> id to answer.copy(value = FormAnswerValue.ListValue(values)) })
+        )
+        assertTrue(validate(listOf("A"))[1] is Result.Success)
+        assertTrue(validate(listOf("A"))[2] is Result.Success)
+        assertTrue(validate(listOf("Other"))[2] is Result.Error)
+        assertTrue(validate(emptyList())[1] is Result.Error)
+        assertTrue(validate(listOf("invalid"))[1] is Result.Error)
+        assertTrue(validate(listOf("A", "A"))[1] is Result.Error)
+    }
+
+    @Test
+    fun qrField_acceptsPayloadWithoutHardwareIdRestrictions() {
+        val payload = "https://example.com/标本/" + "x".repeat(250)
+        val questions = listOf(question(id = 1, type = "qr", required = true))
+        assertTrue(useCase(questions, mapOf(answer(1, payload)))[1] is Result.Success)
+    }
+
+    @Test
+    fun qrField_requiredBlankIsInvalid_optionalBlankIsValid() {
+        val questions = listOf(
+            question(id = 1, type = "qr", required = true),
+            question(id = 2, type = "qr"),
+        )
+        val results = useCase(questions, mapOf(answer(1, "  "), answer(2, "")))
+        assertEquals(FormValidationError.INVALID_FORM_ANSWER, (results[1] as Result.Error).error)
+        assertTrue(results[2] is Result.Success)
+    }
 
     @Test
     fun requiredField_withAnswer_returnsSuccess() {
@@ -211,7 +254,7 @@ class ValidateFormAnswersUseCaseTest {
         // Question 1 answered with "no" → prerequisite for question 2 fails → question 2 skipped
         val answers = mapOf(answer(1, "no"))
         val result = useCase(questions, answers)
-        assertTrue(result[1] is Result.Success) // question 1 answered "no" → non-blank, type=text → success
+        assertTrue(result[1] is Result.Success) // question 1 answered "no" → non-blank, type=value → success
         assertTrue(result[2] is Result.Success) // question 2 is skipped because prerequisite not met
     }
 
