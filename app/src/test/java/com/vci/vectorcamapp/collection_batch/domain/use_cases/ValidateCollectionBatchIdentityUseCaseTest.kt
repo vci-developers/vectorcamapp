@@ -98,6 +98,7 @@ class ValidateCollectionBatchIdentityUseCaseTest {
     private fun question(id: Int, identity: Boolean = true) = FormQuestion(
         id = id,
         label = "q$id",
+        questionKey = null,
         type = "text",
         required = true,
         prerequisite = null,

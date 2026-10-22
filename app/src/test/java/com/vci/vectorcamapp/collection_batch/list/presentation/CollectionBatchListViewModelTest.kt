@@ -354,8 +354,8 @@ class CollectionBatchListViewModelTest {
         coEvery {
             formQuestionRepository.getQuestionsByFormIdAndScope(3, FormQuestionScope.SESSION_UNIT)
         } returns listOf(
-            FormQuestion(1, "Village", "text", false, null, null, 1, FormQuestionScope.SESSION_UNIT, true),
-            FormQuestion(2, "House", "text", false, null, null, 2, FormQuestionScope.SESSION_UNIT, true),
+            FormQuestion(1, "Village", null, "text", false, null, null, 1, FormQuestionScope.SESSION_UNIT, true),
+            FormQuestion(2, "House", null, "text", false, null, null, 2, FormQuestionScope.SESSION_UNIT, true),
         )
     }
 

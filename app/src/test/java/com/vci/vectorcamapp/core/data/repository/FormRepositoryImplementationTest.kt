@@ -89,6 +89,7 @@ class FormRepositoryImplementationTest {
                 id = 1,
                 formId = 3,
                 label = "Village",
+                questionKey = "village",
                 type = "text",
                 answerScope = FormQuestionScope.SESSION_UNIT,
                 isUnitIdentityComponent = true,
@@ -200,6 +201,7 @@ class FormRepositoryImplementationTest {
     private fun sampleQuestion() = FormQuestion(
         id = 1,
         label = "Village",
+        questionKey = "village",
         type = "text",
         required = false,
         prerequisite = null,
