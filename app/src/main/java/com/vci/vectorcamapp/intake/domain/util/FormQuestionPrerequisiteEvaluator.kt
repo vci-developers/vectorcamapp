@@ -1,8 +1,8 @@
 package com.vci.vectorcamapp.intake.domain.util
 
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteExpression
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteValue
-import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 
 object FormQuestionPrerequisiteEvaluator {
     fun evaluate(
@@ -91,5 +91,4 @@ object FormQuestionPrerequisiteEvaluator {
             else -> false
         }
     }
-
 }

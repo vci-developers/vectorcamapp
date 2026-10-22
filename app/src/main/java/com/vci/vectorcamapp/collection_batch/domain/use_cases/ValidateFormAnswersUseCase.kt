@@ -27,19 +27,26 @@ class ValidateFormAnswersUseCase @Inject constructor() {
 
             val answer = formAnswersByQuestionId[question.id]?.value ?: FormAnswerValue.StringValue("")
 
-            val formAnswerResult = if (isValidAnswer(question, answer)) Result.Success(Unit)
-            else Result.Error(CollectionBatchFormError.INVALID_FORM_ANSWER)
+            val formAnswerResult = if (isValidAnswer(question, answer)) {
+                Result.Success(Unit)
+            } else {
+                Result.Error(CollectionBatchFormError.INVALID_FORM_ANSWER)
+            }
 
             question.id to formAnswerResult
         }
     }
     private fun isValidAnswer(question: FormQuestion, value: FormAnswerValue): Boolean {
         if (question.type == "multi-select") {
-            if (value is FormAnswerValue.StringValue && value.value.isBlank()) return !question.required
-            val selections = (value as? FormAnswerValue.ListValue)?.value ?: return false
-            return (!question.required || selections.isNotEmpty()) &&
-                selections.distinct().size == selections.size &&
-                selections.all { it in question.options.orEmpty() }
+            return when (value) {
+                is FormAnswerValue.StringValue -> value.value.isBlank() && !question.required
+                is FormAnswerValue.ListValue -> {
+                    val selections = value.value
+                    (!question.required || selections.isNotEmpty()) &&
+                        selections.distinct().size == selections.size &&
+                        selections.all { it in question.options.orEmpty() }
+                }
+            }
         }
         val answer = (value as? FormAnswerValue.StringValue)?.value?.trim() ?: return false
         if (answer.isBlank()) return !question.required

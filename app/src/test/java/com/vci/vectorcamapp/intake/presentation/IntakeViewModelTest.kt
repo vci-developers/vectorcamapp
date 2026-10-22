@@ -1,7 +1,5 @@
 package com.vci.vectorcamapp.intake.presentation
 
-import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
-
 import android.location.Location
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
@@ -12,6 +10,7 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Collector
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.LocationType
 import com.vci.vectorcamapp.core.domain.model.Program
@@ -694,14 +693,18 @@ class IntakeViewModelTest {
         assertThat(form.llinBrand).isEqualTo("OLYSET Net")
         assertThat(vm.state.value.siteSelectionsByLocationTypeId).containsEntry(1, "Jinja")
         assertThat(vm.state.value.siteSelectionsByLocationTypeId).doesNotContainKey(2)
-        assertThat(vm.state.value.formAnswersByQuestionId.getValue(2).value).isEqualTo(FormAnswerValue.StringValue("false"))
+        assertThat(
+            vm.state.value.formAnswersByQuestionId.getValue(2).value
+        ).isEqualTo(FormAnswerValue.StringValue("false"))
         assertThat(vm.state.value.formAnswersByQuestionId.getValue(3).value).isEqualTo(FormAnswerValue.StringValue(""))
     }
 
     @Test
     fun deselectingOtherClearsItsIntakeFollowUp() = runTest {
         val requiresOther = FormQuestionPrerequisiteExpression.Predicate(
-            1, "contains", FormQuestionPrerequisiteValue.StringValue("Other"),
+            1,
+            "contains",
+            FormQuestionPrerequisiteValue.StringValue("Other"),
         )
         every { programFormWorkflow.sessionFormQuestions } returns listOf(
             question(1, "multi-select").copy(options = listOf("A", "Other")),

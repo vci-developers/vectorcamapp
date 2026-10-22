@@ -13,14 +13,7 @@ val MIGRATION_34_35_STORE_FORM_ANSWER_VALUE_AS_JSON = object : Migration(34, 35)
                 while (cursor.moveToNext()) {
                     val storedValue = cursor.getString(1)
                     // Scalars were raw text; only multi-select answers were already JSON arrays.
-                    val value = if (cursor.getString(2) == "multi-select") {
-                        if (storedValue.isBlank()) FormAnswerValue.ListValue(emptyList())
-                        else converter.toFormAnswerValue(storedValue).also {
-                            require(it is FormAnswerValue.ListValue) { "Expected multi-select array" }
-                        }
-                    } else {
-                        FormAnswerValue.StringValue(storedValue)
-                    }
+                    val value = legacyFormAnswerValue(storedValue, cursor.getString(2), converter)
                     update.bindString(1, converter.fromFormAnswerValue(value))
                     update.bindString(2, cursor.getString(0))
                     update.executeUpdateDelete()
@@ -28,4 +21,15 @@ val MIGRATION_34_35_STORE_FORM_ANSWER_VALUE_AS_JSON = object : Migration(34, 35)
             }
         }
     }
+}
+private fun legacyFormAnswerValue(
+    storedValue: String,
+    dataType: String,
+    converter: FormAnswerValueConverter,
+): FormAnswerValue {
+    if (dataType != "multi-select") return FormAnswerValue.StringValue(storedValue)
+    if (storedValue.isBlank()) return FormAnswerValue.ListValue(emptyList())
+    val value = converter.toFormAnswerValue(storedValue)
+    require(value is FormAnswerValue.ListValue) { "Expected multi-select array" }
+    return value
 }

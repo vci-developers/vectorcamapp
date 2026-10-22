@@ -59,11 +59,15 @@ class ValidateFormAnswersUseCaseTest {
     @Test
     fun multiSelect_validatesRequiredOptionsAndFollowUpVisibility() {
         val selection = question(1, "multi-select", required = true, options = listOf("A", "Other"))
-        val followUp = question(2, required = true, prerequisite = FormQuestionPrerequisiteExpression.Predicate(
+        val followUp = question(
+            2,
+            required = true,
+            prerequisite = FormQuestionPrerequisiteExpression.Predicate(
             questionId = 1,
             operator = "contains",
             value = FormQuestionPrerequisiteValue.StringValue("Other"),
-        ))
+        )
+        )
         fun validate(values: List<String>) = useCase(
             listOf(selection, followUp),
             mapOf(answer(1, "").let { (id, answer) -> id to answer.copy(value = FormAnswerValue.ListValue(values)) })

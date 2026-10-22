@@ -260,13 +260,19 @@ class CollectionBatchFormViewModelTest {
             awaitItem()
 
             viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(2, FormAnswerValue.StringValue("true")))
-            assertThat(awaitItem().formAnswersByQuestionId.getValue(2).value).isEqualTo(FormAnswerValue.StringValue("true"))
+            assertThat(
+                awaitItem().formAnswersByQuestionId.getValue(2).value
+            ).isEqualTo(FormAnswerValue.StringValue("true"))
             viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("note")))
-            assertThat(awaitItem().formAnswersByQuestionId.getValue(3).value).isEqualTo(FormAnswerValue.StringValue("note"))
+            assertThat(
+                awaitItem().formAnswersByQuestionId.getValue(3).value
+            ).isEqualTo(FormAnswerValue.StringValue("note"))
 
             viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(1, FormAnswerValue.StringValue("no")))
             val cleared = awaitItem()
-            assertThat(cleared.formAnswersByQuestionId.getValue(2).value).isEqualTo(FormAnswerValue.StringValue("false"))
+            assertThat(
+                cleared.formAnswersByQuestionId.getValue(2).value
+            ).isEqualTo(FormAnswerValue.StringValue("false"))
             assertThat(cleared.formAnswersByQuestionId.getValue(3).value).isEqualTo(FormAnswerValue.StringValue(""))
 
             viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(99, FormAnswerValue.StringValue("ignored")))
@@ -447,11 +453,13 @@ class CollectionBatchFormViewModelTest {
             operator = "contains",
             value = FormQuestionPrerequisiteValue.StringValue("Other"),
         )
-        stubForm(listOf(
+        stubForm(
+            listOf(
             question(1, type = "multi-select").copy(options = listOf("A", "Other")),
             question(2, prerequisite = requiresOther),
             question(3, type = "multi-select", prerequisite = requiresOther).copy(options = listOf("B")),
-        ))
+        )
+        )
         initViewModel()
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()

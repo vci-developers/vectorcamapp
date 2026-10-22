@@ -32,13 +32,15 @@ object FormAnswerValueSerializer : KSerializer<FormAnswerValue> {
                 if (!element.isString) throw SerializationException("Expected an answer string")
                 FormAnswerValue.StringValue(element.content)
             }
-            is JsonArray -> FormAnswerValue.ListValue(element.map { item ->
+            is JsonArray -> FormAnswerValue.ListValue(
+                element.map { item ->
                 val text = item as? JsonPrimitive
                 if (text == null || !text.isString) {
                     throw SerializationException("Expected string selections")
                 }
                 text.content
-            })
+            }
+            )
             else -> throw SerializationException("Expected an answer string or string array")
         }
     }

@@ -48,18 +48,30 @@ fun CompleteSessionForm(
                 iconDescription = stringResource(R.string.complete_session_content_description_cloud_upload)
             ) {
                 Text(
-                    text = stringResource(R.string.complete_session_label_created_at, dateTimeFormatter.format(session.createdAt)),
+                    text = stringResource(
+                        R.string.complete_session_label_created_at,
+                        dateTimeFormatter.format(session.createdAt)
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
                 Text(
-                    text = stringResource(R.string.complete_session_label_completed_at, dateTimeFormatter.format(session.completedAt)),
+                    text = stringResource(
+                        R.string.complete_session_label_completed_at,
+                        dateTimeFormatter.format(session.completedAt)
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
-                InfoPill(text = stringResource(R.string.complete_session_label_session_type, session.type.displayText(context)), color = MaterialTheme.colors.info)
+                InfoPill(
+                    text = stringResource(
+                        R.string.complete_session_label_session_type,
+                        session.type.displayText(context)
+                    ),
+                    color = MaterialTheme.colors.info
+                )
             }
 
             CompleteSessionFormTile(
@@ -68,19 +80,29 @@ fun CompleteSessionForm(
                 iconDescription = stringResource(R.string.complete_session_content_description_information)
             ) {
                 Text(
-                    text = stringResource(R.string.complete_session_label_collector, session.collectorName, session.collectorTitle),
+                    text = stringResource(
+                        R.string.complete_session_label_collector,
+                        session.collectorName,
+                        session.collectorTitle
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
                 Text(
-                    text = stringResource(R.string.complete_session_label_hardware_id, session.hardwareId ?: stringResource(R.string.complete_session_label_not_provided)),
+                    text = stringResource(
+                        R.string.complete_session_label_hardware_id,
+                        session.hardwareId ?: stringResource(R.string.complete_session_label_not_provided)
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
 
                 Text(
-                    text = stringResource(R.string.complete_session_label_collection_date, dateFormatter.format(session.collectionDate)),
+                    text = stringResource(
+                        R.string.complete_session_label_collection_date,
+                        dateFormatter.format(session.collectionDate)
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
@@ -92,7 +114,10 @@ fun CompleteSessionForm(
                 )
 
                 Text(
-                    text = stringResource(R.string.complete_session_label_specimen_condition, session.specimenCondition),
+                    text = stringResource(
+                        R.string.complete_session_label_specimen_condition,
+                        session.specimenCondition
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colors.textPrimary
                 )
@@ -179,7 +204,11 @@ fun CompleteSessionForm(
                                 else -> formAnswer.value.displayText()
                             }
                             Text(
-                                text = stringResource(R.string.complete_session_label_detail, formQuestion.label, displayValue),
+                                text = stringResource(
+                                    R.string.complete_session_label_detail,
+                                    formQuestion.label,
+                                    displayValue
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colors.textPrimary,
                             )
@@ -201,7 +230,10 @@ fun CompleteSessionForm(
                     iconDescription = stringResource(R.string.complete_session_content_description_clipboard)
                 ) {
                     Text(
-                        text = stringResource(R.string.complete_session_label_num_people_house, it.numPeopleSleptInHouse),
+                        text = stringResource(
+                            R.string.complete_session_label_num_people_house,
+                            it.numPeopleSleptInHouse
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
@@ -233,7 +265,16 @@ fun CompleteSessionForm(
                     }
 
                     Text(
-                        text = stringResource(R.string.complete_session_label_irs_conducted, if (it.wasIrsConducted) stringResource(R.string.complete_session_label_yes) else stringResource(R.string.complete_session_label_no)),
+                        text = stringResource(
+                            R.string.complete_session_label_irs_conducted,
+                            if (it.wasIrsConducted) {
+                                stringResource(
+                                    R.string.complete_session_label_yes
+                                )
+                            } else {
+                                stringResource(R.string.complete_session_label_no)
+                            }
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colors.textPrimary
                     )
@@ -270,7 +311,10 @@ fun CompleteSessionForm(
 
                     it.numPeopleSleptUnderLlin?.let { numPeopleSleptUnderLlin ->
                         Text(
-                            text = stringResource(R.string.complete_session_label_num_people_llin, numPeopleSleptUnderLlin),
+                            text = stringResource(
+                                R.string.complete_session_label_num_people_llin,
+                                numPeopleSleptUnderLlin
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colors.textPrimary
                         )
@@ -325,7 +369,11 @@ fun CompleteSessionForm(
                                 else -> formAnswer.value.displayText()
                             }
                             Text(
-                                text = stringResource(R.string.complete_session_label_detail, formQuestion.label, displayValue),
+                                text = stringResource(
+                                    R.string.complete_session_label_detail,
+                                    formQuestion.label,
+                                    displayValue
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colors.textPrimary,
                             )

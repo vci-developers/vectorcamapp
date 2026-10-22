@@ -114,9 +114,10 @@ fun MultiSelectField(
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
-private fun MultiSelectFieldPreview() {
+fun MultiSelectFieldPreview() {
     VectorcamappTheme {
         Column(modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)) {
             MultiSelectField(

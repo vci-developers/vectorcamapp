@@ -1,7 +1,5 @@
 package com.vci.vectorcamapp.collection_batch.form.presentation
 
-import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
-
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
@@ -10,6 +8,7 @@ import com.vci.vectorcamapp.collection_batch.domain.util.error.CollectionBatchFo
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.SessionUnit
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
@@ -82,7 +81,9 @@ class CollectionBatchFormViewModel @Inject constructor(
     }.onStart {
         loadFormDetails()
     }.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), CollectionBatchFormState()
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        CollectionBatchFormState()
     )
 
     private val _events = Channel<CollectionBatchFormEvent>()
@@ -135,7 +136,8 @@ class CollectionBatchFormViewModel @Inject constructor(
 
                     val formAnswersResult =
                         collectionBatchFormValidationUseCases.validateFormAnswers(
-                            formQuestions, formAnswersByQuestionId,
+                            formQuestions,
+                            formAnswersByQuestionId,
                         )
 
                     _state.update {
@@ -180,7 +182,10 @@ class CollectionBatchFormViewModel @Inject constructor(
 
                             for ((questionId, answer) in formAnswersByQuestionId) {
                                 formAnswerRepository.upsertFormAnswer(
-                                    answer, sessionId, draftSessionUnitId, questionId,
+                                    answer,
+                                    sessionId,
+                                    draftSessionUnitId,
+                                    questionId,
                                 ).onError { error ->
                                     emitError(error)
                                     return@runAsTransaction false
@@ -232,13 +237,15 @@ class CollectionBatchFormViewModel @Inject constructor(
                     isLoading = false,
                     formQuestions = formQuestions,
                     formAnswersByQuestionId = formQuestions.associate { question ->
-                        question.id to (savedFormAnswers[question.id] ?: FormAnswer(
+                        question.id to (
+                            savedFormAnswers[question.id] ?: FormAnswer(
                             localId = UUID.randomUUID(),
                             remoteId = null,
                             value = FormAnswerValue.emptyFor(question.type),
                             dataType = question.type,
                             submittedAt = 0L
-                        ))
+                        )
+                        )
                     },
                 )
             }

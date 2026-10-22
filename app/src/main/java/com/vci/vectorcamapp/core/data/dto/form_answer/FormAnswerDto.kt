@@ -1,7 +1,7 @@
 package com.vci.vectorcamapp.core.data.dto.form_answer
 
-import com.vci.vectorcamapp.core.data.dto.serializers.UuidSerializer
 import com.vci.vectorcamapp.core.data.dto.serializers.FormAnswerValueSerializer
+import com.vci.vectorcamapp.core.data.dto.serializers.UuidSerializer
 import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import kotlinx.serialization.Serializable
 import java.util.UUID

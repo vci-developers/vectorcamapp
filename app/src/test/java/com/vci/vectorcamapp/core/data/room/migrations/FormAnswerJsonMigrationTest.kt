@@ -56,6 +56,9 @@ class FormAnswerJsonMigrationTest {
         assertThat(converter.toFormAnswerValue(migrated.getValue("7")))
             .isEqualTo(FormAnswerValue.ListValue(emptyList()))
         verify { db.compileStatement("UPDATE `form_answer` SET `value` = ? WHERE `localId` = ?") }
-        verify { statement.close(); cursor.close() }
+        verify {
+            statement.close()
+            cursor.close()
+        }
     }
 }

@@ -25,7 +25,9 @@ class ValidateFormAnswersUseCaseTest {
         ).getValue(1)
         assertThat(validate(listOf("A", "Other"))).isEqualTo(Result.Success(Unit))
         assertThat(validate(emptyList())).isEqualTo(Result.Error(CollectionBatchFormError.INVALID_FORM_ANSWER))
-        assertThat(validate(listOf("Other reason"))).isEqualTo(Result.Error(CollectionBatchFormError.INVALID_FORM_ANSWER))
+        assertThat(
+            validate(listOf("Other reason"))
+        ).isEqualTo(Result.Error(CollectionBatchFormError.INVALID_FORM_ANSWER))
         assertThat(validate(listOf("A", "A"))).isEqualTo(Result.Error(CollectionBatchFormError.INVALID_FORM_ANSWER))
     }
 
