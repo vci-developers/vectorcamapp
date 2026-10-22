@@ -520,13 +520,13 @@ class IntakeViewModelTest {
         runCurrent()
         assertThat(vm.state.value.session.latitude).isNull()
         assertThat(vm.state.value.session.longitude).isNull()
-        assertThat(vm.state.value.locationAccuracyMeters).isNull()
+        assertThat(vm.state.value.session.gpsAccuracy).isNull()
         pendingUpdate.complete(Result.Success(updated))
         advanceUntilIdle()
         coVerify(exactly = 2) { locationRepository.getCurrentLocation() }
         assertThat(vm.state.value.session.latitude).isEqualTo(2.5f)
         assertThat(vm.state.value.session.longitude).isEqualTo(33.75f)
-        assertThat(vm.state.value.locationAccuracyMeters).isEqualTo(3f)
+        assertThat(vm.state.value.session.gpsAccuracy).isEqualTo(3f)
     }
 
     @Test
@@ -613,7 +613,7 @@ class IntakeViewModelTest {
 
         assertThat(vm.state.value.session.latitude).isEqualTo(1.25f)
         assertThat(vm.state.value.session.longitude).isEqualTo(32.5f)
-        assertThat(vm.state.value.locationAccuracyMeters).isEqualTo(4.8f)
+        assertThat(vm.state.value.session.gpsAccuracy).isEqualTo(4.8f)
         assertThat(vm.state.value.canUpdateLocation).isTrue()
         coVerify(exactly = 1) { locationRepository.getCurrentLocation() }
 
@@ -624,7 +624,7 @@ class IntakeViewModelTest {
         assertThat(vm.state.value.locationError).isEqualTo(IntakeError.LOCATION_PERMISSION_DENIED)
         assertThat(vm.state.value.session.latitude).isNull()
         assertThat(vm.state.value.session.longitude).isNull()
-        assertThat(vm.state.value.locationAccuracyMeters).isNull()
+        assertThat(vm.state.value.session.gpsAccuracy).isNull()
 
         coEvery { locationRepository.getCurrentLocation() } throws IllegalStateException("gps")
         vm.onAction(IntakeAction.RetryLocation)
@@ -633,7 +633,7 @@ class IntakeViewModelTest {
         assertThat(vm.state.value.locationError).isEqualTo(IntakeError.UNKNOWN_ERROR)
         assertThat(vm.state.value.session.latitude).isNull()
         assertThat(vm.state.value.session.longitude).isNull()
-        assertThat(vm.state.value.locationAccuracyMeters).isNull()
+        assertThat(vm.state.value.session.gpsAccuracy).isNull()
 
         coEvery { locationRepository.getCurrentLocation() } coAnswers {
             delay(31_000)
@@ -645,7 +645,7 @@ class IntakeViewModelTest {
         coVerify(exactly = 4) { locationRepository.getCurrentLocation() }
         assertThat(vm.state.value.session.latitude).isNull()
         assertThat(vm.state.value.session.longitude).isNull()
-        assertThat(vm.state.value.locationAccuracyMeters).isNull()
+        assertThat(vm.state.value.session.gpsAccuracy).isNull()
     }
 
     @Test
@@ -1105,6 +1105,7 @@ class IntakeViewModelTest {
         notes = "",
         latitude = 1f,
         longitude = 2f,
+        gpsAccuracy = null,
         type = SessionType.SURVEILLANCE,
     )
 }

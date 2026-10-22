@@ -20,6 +20,7 @@ fun SessionEntity.toDomain(): Session {
         notes = this.notes,
         latitude = this.latitude,
         longitude = this.longitude,
+        gpsAccuracy = this.gpsAccuracy,
         type = this.type,
     )
 }
@@ -42,6 +43,7 @@ fun Session.toEntity(siteId: Int): SessionEntity {
         notes = this.notes,
         latitude = this.latitude,
         longitude = this.longitude,
+        gpsAccuracy = this.gpsAccuracy,
         type = this.type,
     )
 }

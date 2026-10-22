@@ -82,6 +82,7 @@ class LandingViewModelTest {
         notes = "",
         latitude = null,
         longitude = null,
+        gpsAccuracy = null,
         type = type,
     )
 

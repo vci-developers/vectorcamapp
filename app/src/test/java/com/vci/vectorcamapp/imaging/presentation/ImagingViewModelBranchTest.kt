@@ -87,6 +87,7 @@ class ImagingViewModelBranchTest {
         notes = "",
         latitude = null,
         longitude = null,
+        gpsAccuracy = null,
         type = SessionType.SURVEILLANCE,
     )
 

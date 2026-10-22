@@ -391,6 +391,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 notes = localSession.notes,
                 latitude = localSession.latitude,
                 longitude = localSession.longitude,
+                gpsAccuracy = localSession.gpsAccuracy,
                 type = localSession.type,
                 expectedSpecimens = expectedSpecimens,
                 siteId = localSiteId,
@@ -433,6 +434,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 notes = remoteSessionDto.notes,
                 latitude = remoteSessionDto.latitude,
                 longitude = remoteSessionDto.longitude,
+                gpsAccuracy = remoteSessionDto.gpsAccuracy,
                 type = remoteSessionDto.type,
             )
 
