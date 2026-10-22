@@ -298,5 +298,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest) // Debugging Compose manifest tests
 }
 
-apply(from = "jacoco.gradle.kts")
+// file() avoids an AGP 9 lint crash on string-path script plugins.
+apply(from = file("jacoco.gradle.kts"))
 
