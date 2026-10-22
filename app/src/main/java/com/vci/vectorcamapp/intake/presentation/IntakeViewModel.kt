@@ -1,6 +1,8 @@
 package com.vci.vectorcamapp.intake.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import android.location.Location
+import kotlinx.coroutines.CancellationException
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
@@ -74,7 +76,10 @@ class IntakeViewModel @Inject constructor(
 
     companion object {
         private const val LOCATION_TIMEOUT_MS = 30000L
+        private const val SITE_RADIUS_METERS = 2000f
     }
+    // Live verification is separate from the session's original collection location.
+    private var verificationLocation: Location? = null
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
@@ -106,6 +111,31 @@ class IntakeViewModel @Inject constructor(
 
     fun onAction(action: IntakeAction) {
         viewModelScope.launch {
+            // A saved session's collection site and coordinates are historical, not the imaging location.
+            if (_state.value.isResumingSession && when (action) {
+                    IntakeAction.RetryLocation, is IntakeAction.SelectDistrict,
+                    is IntakeAction.SelectVillageName, is IntakeAction.SelectHouseNumber,
+                    is IntakeAction.SelectLocationTypeSiteOption -> true
+                    else -> false
+                }) return@launch
+            val requiresSiteProximity = when (action) {
+                IntakeAction.SubmitIntakeForm,
+                is IntakeAction.UpdateFormAnswer,
+                is IntakeAction.EnterNumPeopleSleptInHouse,
+                is IntakeAction.ToggleIrsConducted,
+                is IntakeAction.EnterMonthsSinceIrs,
+                is IntakeAction.EnterNumLlinsAvailable,
+                is IntakeAction.SelectLlinType,
+                is IntakeAction.SelectLlinBrand,
+                is IntakeAction.EnterNumPeopleSleptUnderLlin,
+                is IntakeAction.EnterNumChildrenUnder5,
+                is IntakeAction.ToggleHasPregnantWoman -> true
+                else -> false
+            }
+            if (requiresSiteProximity && !_state.value.canFillForm) {
+                emitError(IntakeError.SITE_PROXIMITY_REQUIRED)
+                return@launch
+            }
             when (action) {
                 IntakeAction.ReturnToPreviousScreen -> {
                     currentSessionCache.clearSession()
@@ -113,6 +143,20 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 IntakeAction.SubmitIntakeForm -> {
+                    if (!_state.value.hasHouseholdHeadConsent) {
+                        emitError(IntakeError.CONSENT_REQUIRED)
+                        return@launch
+                    }
+                    getLocation()
+                    if (!_state.value.canFillForm) {
+                        emitError(IntakeError.SITE_PROXIMITY_REQUIRED)
+                        return@launch
+                    }
+                    // Consent may have changed while the GPS request was in flight.
+                    if (!_state.value.hasHouseholdHeadConsent) {
+                        emitError(IntakeError.CONSENT_REQUIRED)
+                        return@launch
+                    }
                     val session = _state.value.session
                     val surveillanceForm = _state.value.surveillanceForm
 
@@ -390,7 +434,7 @@ class IntakeViewModel @Inject constructor(
                                 allLocationTypes = it.allLocationTypesInProgram,
                                 siteSelectionsByLocationTypeId = updatedSiteSelections
                             )
-                        )
+                        ).withSiteProximity()
                     }
                 }
 
@@ -401,7 +445,7 @@ class IntakeViewModel @Inject constructor(
                             selectedVillageName = "",
                             selectedHouseNumber = "",
                             selectedSiteWithCoordinates = null
-                        )
+                        ).withSiteProximity()
                     }
                 }
 
@@ -412,7 +456,7 @@ class IntakeViewModel @Inject constructor(
                             selectedHouseNumber = "",
                             selectedSiteWithCoordinates = null
 
-                        )
+                        ).withSiteProximity()
                     }
                 }
 
@@ -428,7 +472,7 @@ class IntakeViewModel @Inject constructor(
                                 selectedVillageName = it.selectedVillageName,
                                 selectedHouseNumber = action.houseNumber
                             )
-                        )
+                        ).withSiteProximity()
                     }
                 }
 
@@ -635,23 +679,15 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 is IntakeAction.RetryLocation -> {
-                    if (_state.value.isLoading || !_state.value.canUpdateLocation) return@launch
+                    if (_state.value.isLoading || _state.value.isCheckingLocation) return@launch
                     _state.update {
                         it.copy(
-                            session = it.session.copy(latitude = null, longitude = null, gpsAccuracy = null),
                             locationError = null
                         )
                     }
                     getLocation()
                 }
 
-                is IntakeAction.ShowCollectionMethodTooltipDialog -> {
-                    _state.update { it.copy(isCollectionMethodTooltipVisible = true) }
-                }
-
-                is IntakeAction.HideCollectionMethodTooltipDialog -> {
-                    _state.update { it.copy(isCollectionMethodTooltipVisible = false) }
-                }
 
                 is IntakeAction.RegisterMissingCollector -> {
                     val name = _state.value.session.collectorName
@@ -799,7 +835,8 @@ class IntakeViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         session = effectiveSession,
-                        canUpdateLocation = effectiveSession.latitude == null || effectiveSession.longitude == null,
+                        isResumingSession = currentSession != null,
+                        canUpdateLocation = currentSession == null,
                         surveillanceForm = currentSavedSurveillanceForm
                             ?: programFormWorkflow.surveillanceForm,
                         form = programFormWorkflow.form,
@@ -832,7 +869,7 @@ class IntakeViewModel @Inject constructor(
                         selectedHouseNumber = validatedHouseNumber,
                         isCurrentCollectorMissing = isCollectorMissing,
                         isCollectionMethodLocked = isCollectionMethodLocked,
-                    )
+                    ).withSiteProximity()
                 }
             }.first()
 
@@ -841,8 +878,10 @@ class IntakeViewModel @Inject constructor(
     }
 
     private suspend fun getLocation() {
-        if (!_state.value.canUpdateLocation) return
-        if (_state.value.session.latitude == null || _state.value.session.longitude == null) {
+        if (_state.value.isResumingSession || _state.value.isCheckingLocation) return
+        verificationLocation = null
+        _state.update { it.copy(isCheckingLocation = true).withSiteProximity() }
+        try {
             val locationResult = try {
                 withTimeout(LOCATION_TIMEOUT_MS) {
                     locationRepository.getCurrentLocation()
@@ -851,21 +890,24 @@ class IntakeViewModel @Inject constructor(
                 Result.Error(IntakeError.LOCATION_PERMISSION_DENIED)
             } catch (e: TimeoutCancellationException) {
                 Result.Error(IntakeError.LOCATION_GPS_TIMEOUT)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 IntakeErrorLogger.logLocationFetchFailed(e)
                 Result.Error(IntakeError.UNKNOWN_ERROR)
             }
 
             locationResult.onSuccess { location ->
+                verificationLocation = location
                 _state.update {
                     it.copy(
-                        session = it.session.copy(
+                        session = if (it.canUpdateLocation) it.session.copy(
                             latitude = location.latitude.toFloat(),
                             longitude = location.longitude.toFloat(),
                             gpsAccuracy = location.accuracy,
-                        ),
+                        ) else it.session,
                         locationError = null
-                    )
+                    ).withSiteProximity()
                 }
             }.onError { error ->
                 _state.update { it.copy(locationError = error) }
@@ -873,7 +915,31 @@ class IntakeViewModel @Inject constructor(
                     emitError(error)
                 }
             }
+        } finally {
+            _state.update { it.copy(isCheckingLocation = false) }
         }
+    }
+    private fun IntakeState.withSiteProximity(): IntakeState {
+        val location = verificationLocation
+        val collectionLatitude = if (isResumingSession) session.latitude?.toDouble() else location?.latitude
+        val collectionLongitude = if (isResumingSession) session.longitude?.toDouble() else location?.longitude
+        val latitude = selectedSiteWithCoordinates?.latitude?.toDouble()
+        val longitude = selectedSiteWithCoordinates?.longitude?.toDouble()
+        val distance = if (
+            collectionLatitude != null && collectionLongitude != null && latitude != null && longitude != null &&
+            collectionLatitude.isFinite() && collectionLatitude in -90.0..90.0 &&
+            collectionLongitude.isFinite() && collectionLongitude in -180.0..180.0 &&
+            latitude.isFinite() && latitude in -90.0..90.0 &&
+            longitude.isFinite() && longitude in -180.0..180.0
+        ) {
+            val results = FloatArray(1)
+            Location.distanceBetween(collectionLatitude, collectionLongitude, latitude, longitude, results)
+            results[0].takeIf { it.isFinite() && it >= 0f }
+        } else null
+        return copy(
+            distanceToSiteMeters = distance,
+            isWithinSiteRadius = distance != null && distance <= SITE_RADIUS_METERS
+        )
     }
 
     private fun normalizeNumericInput(oldValue: Int?, newValue: String): String {

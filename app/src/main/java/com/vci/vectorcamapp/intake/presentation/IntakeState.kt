@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.intake.presentation
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.LocationType
 import com.vci.vectorcamapp.core.domain.model.Session
@@ -16,6 +17,10 @@ import java.util.UUID
 data class IntakeState(
     val isLoading: Boolean = false,
     val canUpdateLocation: Boolean = false,
+    val isResumingSession: Boolean = false,
+    val isCheckingLocation: Boolean = false,
+    val distanceToSiteMeters: Float? = null,
+    val isWithinSiteRadius: Boolean = false,
     val allCollectors: List<Collector> = emptyList(),
     val isCurrentCollectorMissing: Boolean = false,
     val isCollectionMethodLocked: Boolean = false,
@@ -68,5 +73,17 @@ data class IntakeState(
         locationTypeSiteSelections = emptyMap(),
         formAnswerErrors = emptyMap(),
     ),
-    val isCollectionMethodTooltipVisible: Boolean = false,
-)
+) {
+    companion object {
+        // TODO: Replace this demo-only ID with the stable question key when mobile supports it.
+        private const val HOUSEHOLD_HEAD_CONSENT_QUESTION_ID = 1956
+    }
+    val hasHouseholdHeadConsent: Boolean
+        get() = formQuestions.any {
+            it.id == HOUSEHOLD_HEAD_CONSENT_QUESTION_ID && it.type == "boolean"
+        } && formAnswersByQuestionId[HOUSEHOLD_HEAD_CONSENT_QUESTION_ID]?.value ==
+            FormAnswerValue.StringValue("true")
+    val canFillForm: Boolean
+        get() = !isLoading && (isResumingSession ||
+            (!isCheckingLocation && locationError == null && isWithinSiteRadius))
+}

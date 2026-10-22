@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.intake.presentation
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -105,7 +106,7 @@ class IntakeScreenTest {
     ) {
         composeRule.activity.setContent {
             VectorcamappTheme {
-                androidx.compose.material3.Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     IntakeScreen(
                         state = state,
                         onAction = { onAction?.invoke(it) },
@@ -219,22 +220,10 @@ class IntakeScreenTest {
     }
 
     @Test
-    fun intakeUi_e02_collectionMethodTooltipLink_visible() {
-        launchIntakeScreen(state = IntakeState(session = makeSession()))
+    fun intakeUi_e02_collectionMethodTooltipLink_notShown() {
+        launchIntakeScreen(state = IntakeState(session = makeSession(), isWithinSiteRadius = true))
         composeRule.onNodeWithText("Tap to learn more about collection methods")
-            .assertIsDisplayed()
-            .assertHasClickAction()
-    }
-
-    @Test
-    fun intakeUi_e03_collectionMethodTooltipLink_invokesShowTooltipAction() {
-        var lastAction: IntakeAction? = null
-        launchIntakeScreen(
-            state = IntakeState(session = makeSession()),
-            onAction = { lastAction = it }
-        )
-        composeRule.onNodeWithText("Tap to learn more about collection methods").performClick()
-        assert(lastAction == IntakeAction.ShowCollectionMethodTooltipDialog)
+            .assertDoesNotExist()
     }
 
     // =========================

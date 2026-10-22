@@ -294,7 +294,7 @@ class IntakeValidationUseCasesTest {
     @Test
     fun collectionMethod_standardMethod_returnsSuccess() {
         val result = ValidateCollectionMethodUseCase()(
-            IntakeDropdownOptions.CollectionMethodOption.CDC_LIGHT_TRAP.label
+            IntakeDropdownOptions.CollectionMethodOption.PROKOPACK_ASPIRATOR.label
         )
         assertTrue(result is Result.Success)
     }

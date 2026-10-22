@@ -61,6 +61,10 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import io.mockk.verify
+import org.junit.After
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -118,12 +122,16 @@ class IntakeViewModelTest {
         isActive = true,
         name = null,
         locationHierarchy = null,
-        latitude = null,
-        longitude = null
+        latitude = 0f,
+        longitude = 0f
     )
 
     @Before
     fun setUp() {
+        mockkStatic(Location::class)
+        every { Location.distanceBetween(any(), any(), any(), any(), any()) } answers {
+            lastArg<FloatArray>()[0] = 1000f
+        }
         errorMessageEmitter = mockk(relaxed = true)
         coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
 
@@ -144,7 +152,7 @@ class IntakeViewModelTest {
         programFormWorkflow = mockk(relaxed = true)
         every { programFormWorkflow.surveillanceForm } returns null
         every { programFormWorkflow.form } returns null
-        every { programFormWorkflow.sessionFormQuestions } returns emptyList()
+        every { programFormWorkflow.sessionFormQuestions } returns listOf(question(1956, "boolean"))
 
         programFormWorkflowFactory = mockk()
         coEvery { programFormWorkflowFactory.create(any(), any()) } returns programFormWorkflow
@@ -160,6 +168,7 @@ class IntakeViewModelTest {
         coEvery { deviceCache.getProgramId() } returns testProgramId
         coEvery { programRepository.getProgramById(testProgramId) } returns testProgram
         coEvery { currentSessionCache.getSession() } returns null
+        coEvery { currentSessionCache.getSiteId() } returns testSite.id
         coEvery { defaultIntakeFieldsCache.getDefaultIntakeFields() } returns null
         coEvery { formAnswerRepository.getSessionScopedFormAnswers(any()) } returns emptyMap()
 
@@ -167,7 +176,11 @@ class IntakeViewModelTest {
         every { surveillanceFormRepository.observeSurveillanceFormBySessionId(any()) } returns flowOf(null)
         every { locationTypeRepository.observeAllLocationTypesByProgramId(any()) } returns MutableStateFlow(emptyList())
 
-        coEvery { locationRepository.getCurrentLocation() } returns Result.Error(IntakeError.LOCATION_PERMISSION_DENIED)
+        val defaultLocation = mockk<Location>()
+        every { defaultLocation.latitude } returns 0.0
+        every { defaultLocation.longitude } returns 0.0
+        every { defaultLocation.accuracy } returns 5f
+        coEvery { locationRepository.getCurrentLocation() } returns Result.Success(defaultLocation)
 
         intakeValidationUseCases = IntakeValidationUseCases(
             validateCollector = ValidateCollectorUseCase(),
@@ -219,6 +232,106 @@ class IntakeViewModelTest {
         coEvery { transactionHelper.runAsTransaction<Boolean>(any()) } coAnswers {
             firstArg<suspend () -> Boolean>().invoke()
         }
+    }
+    @After
+    fun tearDown() {
+        unmockkStatic(Location::class)
+    }
+    @Test
+    fun consent_requiresExplicitTrueAndDoesNotLockFormEditing() = runTest {
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        runCurrent()
+        assertThat(vm.state.value.canFillForm).isTrue()
+        assertThat(vm.state.value.hasHouseholdHeadConsent).isFalse()
+        vm.onAction(IntakeAction.SubmitIntakeForm)
+        runCurrent()
+        coVerify { errorMessageEmitter.emit(IntakeError.CONSENT_REQUIRED, any()) }
+        coVerify(exactly = 0) { sessionRepository.upsertSession(any(), any()) }
+        coVerify(exactly = 1) { locationRepository.getCurrentLocation() }
+        for (value in listOf(
+            FormAnswerValue.StringValue("true"),
+            FormAnswerValue.StringValue("false"),
+            FormAnswerValue.StringValue("TRUE"),
+            FormAnswerValue.ListValue(listOf("true"))
+        )) {
+            vm.onAction(IntakeAction.UpdateFormAnswer(1956, value))
+            runCurrent()
+            assertThat(vm.state.value.hasHouseholdHeadConsent)
+                .isEqualTo(value == FormAnswerValue.StringValue("true"))
+            assertThat(vm.state.value.canFillForm).isTrue()
+        }
+    }
+    @Test
+    fun consent_missingQuestionFailsClosed() = runTest {
+        every { programFormWorkflow.sessionFormQuestions } returns emptyList()
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        runCurrent()
+        assertThat(vm.state.value.hasHouseholdHeadConsent).isFalse()
+        vm.onAction(IntakeAction.SubmitIntakeForm)
+        runCurrent()
+        coVerify { errorMessageEmitter.emit(IntakeError.CONSENT_REQUIRED, any()) }
+        coVerify(exactly = 0) { sessionRepository.upsertSession(any(), any()) }
+    }
+    @Test
+    fun proximity_usesAndroidDistanceAndIncludesTwoKmBoundary() = runTest {
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        runCurrent()
+        assertThat(vm.state.value.canFillForm).isTrue()
+        verify {
+            Location.distanceBetween(0.0, 0.0, 0.0, 0.0, any())
+        }
+        for ((distance, allowed) in listOf(2000f to true, 2000.1f to false, Float.NaN to false)) {
+            every { Location.distanceBetween(any(), any(), any(), any(), any()) } answers {
+                lastArg<FloatArray>()[0] = distance
+            }
+            vm.onAction(IntakeAction.RetryLocation)
+            runCurrent()
+            assertThat(vm.state.value.canFillForm).isEqualTo(allowed)
+        }
+    }
+    @Test
+    fun proximity_allowsGeneralFieldsButBlocksSurveillanceAndCreationOutsideRadius() = runTest {
+        every { Location.distanceBetween(any(), any(), any(), any(), any()) } answers {
+            lastArg<FloatArray>()[0] = 2100f
+        }
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        runCurrent()
+        vm.onAction(IntakeAction.EnterNotes("allowed"))
+        vm.onAction(IntakeAction.EnterHardwareId("HW-KENYA"))
+        vm.onAction(IntakeAction.SelectCollector(testCollector))
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("true")))
+        vm.onAction(IntakeAction.SubmitIntakeForm)
+        runCurrent()
+        assertThat(vm.state.value.canFillForm).isFalse()
+        assertThat(vm.state.value.session.notes).isEqualTo("allowed")
+        assertThat(vm.state.value.session.hardwareId).isEqualTo("HW-KENYA")
+        assertThat(vm.state.value.session.collectorName).isEqualTo(testCollector.name)
+        assertThat(vm.state.value.hasHouseholdHeadConsent).isFalse()
+        coVerify(exactly = 0) { sessionRepository.upsertSession(any(), any()) }
+    }
+    @Test
+    fun proximity_submissionChecksFreshGpsAndSiteChangesRelock() = runTest {
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        runCurrent()
+        assertThat(vm.state.value.canFillForm).isTrue()
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("true")))
+        runCurrent()
+        every { Location.distanceBetween(any(), any(), any(), any(), any()) } answers {
+            lastArg<FloatArray>()[0] = 2100f
+        }
+        vm.onAction(IntakeAction.SubmitIntakeForm)
+        runCurrent()
+        assertThat(vm.state.value.canFillForm).isFalse()
+        coVerify(exactly = 2) { locationRepository.getCurrentLocation() }
+        coVerify(exactly = 0) { sessionRepository.upsertSession(any(), any()) }
+        vm.onAction(IntakeAction.SelectDistrict("Another district"))
+        runCurrent()
+        assertThat(vm.state.value.distanceToSiteMeters).isNull()
     }
 
     // ========================================
@@ -435,48 +548,6 @@ class IntakeViewModelTest {
         }
     }
 
-    // ========================================
-    // E. Tooltip Visibility
-    // ========================================
-
-    @Test
-    fun intakeVm_e01_showCollectionMethodTooltip_setsVisible() = runTest {
-        val vm = makeViewModel()
-
-        vm.state.test {
-            skipItems(4)
-
-            vm.onAction(IntakeAction.ShowCollectionMethodTooltipDialog)
-            advanceUntilIdle()
-
-            val s = awaitItem()
-            assertThat(s.isCollectionMethodTooltipVisible).isTrue()
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun intakeVm_e02_hideCollectionMethodTooltip_clearsVisible() = runTest {
-        val vm = makeViewModel()
-
-        vm.state.test {
-            skipItems(4)
-
-            // Show first so the StateFlow value is 'true', then Hide changes it to 'false'.
-            // Dispatching both together would cancel each other out (false → false),
-            // causing StateFlow to deduplicate and emit nothing.
-            vm.onAction(IntakeAction.ShowCollectionMethodTooltipDialog)
-            advanceUntilIdle()
-            skipItems(1) // consume the intermediate 'true' emission
-
-            vm.onAction(IntakeAction.HideCollectionMethodTooltipDialog)
-            advanceUntilIdle()
-
-            val s = awaitItem()
-            assertThat(s.isCollectionMethodTooltipVisible).isFalse()
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
 
     // ========================================
     // F. Collectors Flow
@@ -519,9 +590,8 @@ class IntakeViewModelTest {
         coEvery { locationRepository.getCurrentLocation() } coAnswers { pendingUpdate.await() }
         vm.onAction(IntakeAction.RetryLocation)
         runCurrent()
-        assertThat(vm.state.value.session.latitude).isNull()
-        assertThat(vm.state.value.session.longitude).isNull()
-        assertThat(vm.state.value.session.gpsAccuracy).isNull()
+        assertThat(vm.state.value.distanceToSiteMeters).isNull()
+        assertThat(vm.state.value.canFillForm).isFalse()
         pendingUpdate.complete(Result.Success(updated))
         advanceUntilIdle()
         coVerify(exactly = 2) { locationRepository.getCurrentLocation() }
@@ -531,47 +601,79 @@ class IntakeViewModelTest {
     }
 
     @Test
-    fun resumedSession_preservesCoordinatesAndIgnoresRetry() = runTest {
+    fun resumedSession_usesStoredLocationAndIgnoresGpsAndSiteUpdates() = runTest {
         val session = sampleSession()
         coEvery { currentSessionCache.getSession() } returns session
         val vm = makeViewModel()
         backgroundScope.launch { vm.state.collect {} }
         advanceUntilIdle()
         assertThat(vm.state.value.canUpdateLocation).isFalse()
+        assertThat(vm.state.value.isResumingSession).isTrue()
+        assertThat(vm.state.value.canFillForm).isTrue()
         assertThat(vm.state.value.session.latitude).isEqualTo(session.latitude)
         assertThat(vm.state.value.session.longitude).isEqualTo(session.longitude)
         vm.onAction(IntakeAction.RetryLocation)
+        vm.onAction(IntakeAction.SelectDistrict("Changed"))
         advanceUntilIdle()
         coVerify(exactly = 0) { locationRepository.getCurrentLocation() }
+        assertThat(vm.state.value.selectedDistrict).isEqualTo("District A")
         assertThat(vm.state.value.session.latitude).isEqualTo(session.latitude)
         assertThat(vm.state.value.session.longitude).isEqualTo(session.longitude)
     }
 
     @Test
-    fun resumedSession_missingCoordinatesFetchesAndAllowsUpdates() = runTest {
+    fun resumedSession_submitsWithoutGpsEvenOutsideRadius() = runTest {
+        val session = sampleSession()
+        coEvery { currentSessionCache.getSession() } returns session
+        coEvery { currentSessionCache.getSiteId() } returns testSite.id
+        every { Location.distanceBetween(any(), any(), any(), any(), any()) } answers {
+            lastArg<FloatArray>()[0] = 5000f
+        }
+        runTransactions()
+        coEvery { sessionRepository.upsertSession(any(), any()) } returns Result.Success(Unit)
+        coEvery { formAnswerRepository.upsertFormAnswer(any(), any(), any(), any()) } returns Result.Success(Unit)
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        fillCollectorAndMethod(vm)
+        advanceUntilIdle()
+        assertThat(vm.state.value.isWithinSiteRadius).isFalse()
+        assertThat(vm.state.value.canFillForm).isTrue()
+        vm.events.test {
+            vm.onAction(IntakeAction.SubmitIntakeForm)
+            assertThat(awaitItem()).isEqualTo(IntakeEvent.NavigateAfterIntake(Destination.Imaging(null)))
+            cancelAndIgnoreRemainingEvents()
+        }
+        coVerify(exactly = 0) { locationRepository.getCurrentLocation() }
+        assertThat(vm.state.value.session.latitude).isEqualTo(session.latitude)
+        assertThat(vm.state.value.session.longitude).isEqualTo(session.longitude)
+    }
+    @Test
+    fun resumedSession_missingCoordinatesDoesNotReplaceHistoricalLocation() = runTest {
         val location = mockk<Location>()
         every { location.latitude } returns 2.5
         every { location.longitude } returns 33.75
         every { location.accuracy } returns 3f
         coEvery { locationRepository.getCurrentLocation() } returns Result.Success(location)
-        for ((index, session) in listOf(
+        for (session in listOf(
             sampleSession().copy(latitude = null, longitude = null),
             sampleSession().copy(latitude = null),
             sampleSession().copy(longitude = null)
-        ).withIndex()) {
+        )) {
             coEvery { currentSessionCache.getSession() } returns session
             val vm = makeViewModel()
             backgroundScope.launch { vm.state.collect {} }
             advanceUntilIdle()
-            assertThat(vm.state.value.canUpdateLocation).isTrue()
-            coVerify(exactly = index * 2 + 1) { locationRepository.getCurrentLocation() }
-            assertThat(vm.state.value.session.latitude).isEqualTo(2.5f)
-            assertThat(vm.state.value.session.longitude).isEqualTo(33.75f)
+            assertThat(vm.state.value.canUpdateLocation).isFalse()
+            assertThat(vm.state.value.canFillForm).isTrue()
+            coVerify(exactly = 0) { locationRepository.getCurrentLocation() }
+            assertThat(vm.state.value.session.latitude).isEqualTo(session.latitude)
+            assertThat(vm.state.value.session.longitude).isEqualTo(session.longitude)
             vm.onAction(IntakeAction.RetryLocation)
             advanceUntilIdle()
-            coVerify(exactly = (index + 1) * 2) { locationRepository.getCurrentLocation() }
-            assertThat(vm.state.value.session.latitude).isEqualTo(2.5f)
-            assertThat(vm.state.value.session.longitude).isEqualTo(33.75f)
+            coVerify(exactly = 0) { locationRepository.getCurrentLocation() }
+            assertThat(vm.state.value.session.latitude).isEqualTo(session.latitude)
+            assertThat(vm.state.value.session.longitude).isEqualTo(session.longitude)
             assertThat(vm.state.value.locationError).isNull()
         }
     }
@@ -623,18 +725,16 @@ class IntakeViewModelTest {
         advanceUntilIdle()
         coVerify { errorMessageEmitter.emit(IntakeError.LOCATION_PERMISSION_DENIED, any()) }
         assertThat(vm.state.value.locationError).isEqualTo(IntakeError.LOCATION_PERMISSION_DENIED)
-        assertThat(vm.state.value.session.latitude).isNull()
-        assertThat(vm.state.value.session.longitude).isNull()
-        assertThat(vm.state.value.session.gpsAccuracy).isNull()
+        assertThat(vm.state.value.distanceToSiteMeters).isNull()
+        assertThat(vm.state.value.canFillForm).isFalse()
 
         coEvery { locationRepository.getCurrentLocation() } throws IllegalStateException("gps")
         vm.onAction(IntakeAction.RetryLocation)
         advanceUntilIdle()
         coVerify { errorMessageEmitter.emit(IntakeError.UNKNOWN_ERROR, any()) }
         assertThat(vm.state.value.locationError).isEqualTo(IntakeError.UNKNOWN_ERROR)
-        assertThat(vm.state.value.session.latitude).isNull()
-        assertThat(vm.state.value.session.longitude).isNull()
-        assertThat(vm.state.value.session.gpsAccuracy).isNull()
+        assertThat(vm.state.value.distanceToSiteMeters).isNull()
+        assertThat(vm.state.value.canFillForm).isFalse()
 
         coEvery { locationRepository.getCurrentLocation() } coAnswers {
             delay(31_000)
@@ -644,9 +744,8 @@ class IntakeViewModelTest {
         advanceUntilIdle()
         assertThat(vm.state.value.locationError).isEqualTo(IntakeError.LOCATION_GPS_TIMEOUT)
         coVerify(exactly = 4) { locationRepository.getCurrentLocation() }
-        assertThat(vm.state.value.session.latitude).isNull()
-        assertThat(vm.state.value.session.longitude).isNull()
-        assertThat(vm.state.value.session.gpsAccuracy).isNull()
+        assertThat(vm.state.value.distanceToSiteMeters).isNull()
+        assertThat(vm.state.value.canFillForm).isFalse()
     }
 
     @Test
@@ -789,6 +888,8 @@ class IntakeViewModelTest {
         backgroundScope.launch { vm.state.collect {} }
         advanceUntilIdle()
 
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("true")))
+        advanceUntilIdle()
         vm.onAction(IntakeAction.SubmitIntakeForm)
         advanceUntilIdle()
 
@@ -808,10 +909,12 @@ class IntakeViewModelTest {
         backgroundScope.launch { vm.state.collect {} }
         advanceUntilIdle()
         vm.onAction(IntakeAction.SelectHouseNumber("101"))
-        vm.onAction(IntakeAction.UpdateCollectionMethod("CDC Light Trap (LTC)"))
+        vm.onAction(IntakeAction.UpdateCollectionMethod(IntakeDropdownOptions.CollectionMethodOption.PROKOPACK_ASPIRATOR.label))
         vm.onAction(IntakeAction.UpdateSpecimenCondition("Fresh"))
         advanceUntilIdle()
 
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("true")))
+        advanceUntilIdle()
         vm.onAction(IntakeAction.SubmitIntakeForm)
         advanceUntilIdle()
 
@@ -832,13 +935,14 @@ class IntakeViewModelTest {
         vm.onAction(IntakeAction.SubmitIntakeForm)
         advanceUntilIdle()
 
-        coVerify { errorMessageEmitter.emit(IntakeError.SITE_NOT_FOUND, any()) }
+        coVerify { errorMessageEmitter.emit(IntakeError.SITE_PROXIMITY_REQUIRED, any()) }
     }
 
     @Test
     fun intakeVm_i04_submit_districtSite_navigates() = runTest {
         runTransactions()
         coEvery { sessionRepository.upsertSession(any(), any()) } returns Result.Success(Unit)
+        coEvery { formAnswerRepository.upsertFormAnswer(any(), any(), any(), any()) } returns Result.Success(Unit)
         val vm = makeViewModel()
         backgroundScope.launch { vm.state.collect {} }
         advanceUntilIdle()
@@ -870,7 +974,8 @@ class IntakeViewModelTest {
             listOf(LocationType(1, "Village", 1), LocationType(2, "House", 2))
         )
         every { programFormWorkflow.surveillanceForm } returns surveillanceForm()
-        every { programFormWorkflow.sessionFormQuestions } returns listOf(question(1, "text"))
+        every { programFormWorkflow.sessionFormQuestions } returns
+            listOf(question(1, "text"), question(1956, "boolean"))
         runTransactions()
         coEvery { sessionRepository.upsertSession(any(), any()) } returns Result.Success(Unit)
         coEvery { surveillanceFormRepository.upsertSurveillanceForm(any(), any()) } returns Result.Success(Unit)
@@ -907,7 +1012,8 @@ class IntakeViewModelTest {
     @Test
     fun intakeVm_i06_submit_repositoryFailures_doNotNavigate() = runTest {
         every { programFormWorkflow.surveillanceForm } returns surveillanceForm()
-        every { programFormWorkflow.sessionFormQuestions } returns listOf(question(1, "text"))
+        every { programFormWorkflow.sessionFormQuestions } returns
+            listOf(question(1, "text"), question(1956, "boolean"))
         runTransactions()
         val vm = makeViewModel()
         backgroundScope.launch { vm.state.collect {} }
@@ -973,6 +1079,7 @@ class IntakeViewModelTest {
 
     @Test
     fun legacyCoordinates_followHouseSelectionAndClearOnParentChanges() = runTest {
+        coEvery { currentSessionCache.getSiteId() } returns null
         val site = testSite.copy(latitude = 1f, longitude = 2f)
         val otherVillageSite = site.copy(id = 2, villageName = "Village B", latitude = 3f)
         val otherDistrictSite = site.copy(id = 3, district = "District B", latitude = 4f)
@@ -1028,6 +1135,7 @@ class IntakeViewModelTest {
 
     @Test
     fun legacyCoordinates_cachedParentsDoNotSelectHouse() = runTest {
+        coEvery { currentSessionCache.getSiteId() } returns null
         val site = testSite.copy(latitude = 1f, longitude = 2f)
         every { siteRepository.observeAllSitesByProgramId(any()) } returns MutableStateFlow(listOf(site))
         coEvery { defaultIntakeFieldsCache.getDefaultIntakeFields() } returns DefaultIntakeFieldsCacheDto(
@@ -1044,6 +1152,7 @@ class IntakeViewModelTest {
 
     @Test
     fun hierarchyCoordinates_useDeepestSelectedSiteWithAncestorFallback() = runTest {
+        coEvery { currentSessionCache.getSiteId() } returns null
         val village = testSite.copy(
             district = null,
             villageName = null,
@@ -1083,9 +1192,10 @@ class IntakeViewModelTest {
         assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(village)
     }
     private fun fillCollectorAndMethod(vm: IntakeViewModel) {
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("true")))
         collectorsFlow.value = listOf(testCollector)
         vm.onAction(IntakeAction.SelectCollector(testCollector))
-        vm.onAction(IntakeAction.UpdateCollectionMethod("CDC Light Trap (LTC)"))
+        vm.onAction(IntakeAction.UpdateCollectionMethod(IntakeDropdownOptions.CollectionMethodOption.PROKOPACK_ASPIRATOR.label))
         vm.onAction(IntakeAction.UpdateSpecimenCondition("Fresh"))
     }
 

@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.intake.presentation
 
-import android.location.Location
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -46,12 +45,10 @@ import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
-import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
-import com.vci.vectorcamapp.intake.presentation.components.CollectionMethodTooltipRow
 import com.vci.vectorcamapp.intake.presentation.components.DynamicFormField
 import com.vci.vectorcamapp.intake.presentation.components.IntakeTile
 import com.vci.vectorcamapp.intake.presentation.components.PracticeSessionWarningBanner
@@ -319,42 +316,6 @@ fun IntakeScreen(
                     )
                 }
 
-                Tooltip(
-                    isVisible = state.isCollectionMethodTooltipVisible,
-                    onClick = { onAction(IntakeAction.ShowCollectionMethodTooltipDialog) },
-                    onDismiss = { onAction(IntakeAction.HideCollectionMethodTooltipDialog) },
-                    buttonText = stringResource(R.string.intake_action_learn_more_methods)
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.intake_title_collection_methods),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colors.textPrimary,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = MaterialTheme.dimensions.paddingSmall)
-                        )
-                        CollectionMethodTooltipRow(
-                            title = stringResource(R.string.intake_title_cdc_light_trap),
-                            description = stringResource(R.string.intake_body_cdc_light_trap),
-                            iconPainter = painterResource(id = R.drawable.ic_light_trap),
-                            iconDescription = stringResource(R.string.intake_content_description_cdc_light_trap),
-                        )
-                        CollectionMethodTooltipRow(
-                            title = stringResource(R.string.intake_title_human_landing_catch),
-                            description = stringResource(R.string.intake_body_human_landing_catch),
-                            iconPainter = painterResource(id = R.drawable.ic_human),
-                            iconDescription = stringResource(R.string.intake_content_description_human_landing_catch)
-                        )
-                        CollectionMethodTooltipRow(
-                            title = stringResource(R.string.intake_title_pyrethrum_spray_catch),
-                            description = stringResource(R.string.intake_body_pyrethrum_spray_catch),
-                            iconPainter = painterResource(id = R.drawable.ic_spray),
-                            iconDescription = stringResource(R.string.intake_content_description_pyrethrum_spray_catch)
-                        )
-                    }
-                }
 
                 if (isOtherCollectionMethod) {
                     TextEntryField(
@@ -432,6 +393,7 @@ fun IntakeScreen(
                 if (state.allSitesInProgram.any { !it.district.isNullOrBlank() }) {
                     DropdownField(
                         label = stringResource(R.string.intake_label_district),
+                        enabled = !state.isResumingSession,
                         required = true,
                         options = state.allSitesInProgram.mapNotNull { it.district }.distinct(),
                         selectedOption = state.selectedDistrict,
@@ -448,6 +410,7 @@ fun IntakeScreen(
                     if (state.selectedDistrict.isNotBlank()) {
                         DropdownField(
                             label = stringResource(R.string.intake_label_village_name),
+                            enabled = !state.isResumingSession,
                             required = true,
                             options = state.allSitesInProgram.filter { it.district == state.selectedDistrict }
                                 .mapNotNull { it.villageName }.distinct(),
@@ -468,6 +431,7 @@ fun IntakeScreen(
                     if (state.selectedVillageName.isNotBlank()) {
                         DropdownField(
                             label = stringResource(R.string.intake_label_house_number),
+                            enabled = !state.isResumingSession,
                             required = true,
                             options = state.allSitesInProgram.filter {
                                 it.district == state.selectedDistrict && it.villageName == state.selectedVillageName
@@ -508,6 +472,7 @@ fun IntakeScreen(
 
                             DropdownField(
                                 label = locationType.name,
+                                enabled = !state.isResumingSession,
                                 required = true,
                                 options = availableOptions,
                                 selectedOption = state.siteSelectionsByLocationTypeId[locationType.id],
@@ -532,35 +497,14 @@ fun IntakeScreen(
                 }
 
                 val site = state.selectedSiteWithCoordinates
-                val collectionLatitude = state.session.latitude
-                val collectionLongitude = state.session.longitude
-                val siteLatitude = site?.latitude
-                val siteLongitude = site?.longitude
-                val distanceToSiteMeters = remember(
-                    collectionLatitude,
-                    collectionLongitude,
-                    siteLatitude,
-                    siteLongitude
-                ) {
-                    if (listOf(
-                            collectionLatitude,
-                            collectionLongitude,
-                            siteLatitude,
-                            siteLongitude
-                        ).any { it == null }
-                    ) {
-                        null
-                    } else {
-                        val results = FloatArray(1)
-                        Location.distanceBetween(
-                            requireNotNull(collectionLatitude).toDouble(),
-                            requireNotNull(collectionLongitude).toDouble(),
-                            requireNotNull(siteLatitude).toDouble(),
-                            requireNotNull(siteLongitude).toDouble(),
-                            results
-                        )
-                        results[0]
-                    }
+                val distanceToSiteMeters = state.distanceToSiteMeters
+                if (state.canUpdateLocation) {
+                    ActionButton(
+                        label = stringResource(R.string.intake_action_update_location),
+                        onClick = { onAction(IntakeAction.RetryLocation) },
+                        enabled = !state.isLoading && !state.isCheckingLocation,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
                 val locations = listOfNotNull(
                     Triple(R.string.intake_label_collection_location, state.session.latitude, state.session.longitude),
@@ -665,14 +609,6 @@ fun IntakeScreen(
                                                 )
                                             }
                                         }
-                                        if (index == 0 && state.canUpdateLocation) {
-                                            ActionButton(
-                                                label = stringResource(R.string.intake_action_update_location),
-                                                onClick = { onAction(IntakeAction.RetryLocation) },
-                                                enabled = !state.isLoading,
-                                                modifier = Modifier.fillMaxWidth()
-                                            )
-                                        }
                                     }
                                 }
                                 !state.canUpdateLocation && !state.isLoading -> {
@@ -682,27 +618,7 @@ fun IntakeScreen(
                                         color = MaterialTheme.colors.textSecondary
                                     )
                                 }
-                                state.locationError != null -> {
-                                    Column(
-                                        verticalArrangement = Arrangement.spacedBy(
-                                            MaterialTheme.dimensions.spacingExtraSmall
-                                        )
-                                    ) {
-                                        Text(
-                                            text = stringResource(
-                                                R.string.intake_body_location_error,
-                                                state.locationError.toString(context)
-                                            ),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colors.error
-                                        )
-                                        ActionButton(
-                                            label = stringResource(R.string.intake_action_retry_location),
-                                            onClick = { onAction(IntakeAction.RetryLocation) },
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    }
-                                }
+                                state.locationError != null -> Unit
                                 else -> {
                                     Row(
                                         horizontalArrangement = Arrangement.spacedBy(
@@ -729,7 +645,7 @@ fun IntakeScreen(
             }
         }
 
-        if (state.form != null) {
+        if (state.canFillForm && state.form != null) {
             item {
                 IntakeTile(
                     title = state.form.name,
@@ -756,7 +672,7 @@ fun IntakeScreen(
                     }
                 }
             }
-        } else {
+        } else if (state.canFillForm) {
             state.surveillanceForm?.let { surveillanceForm ->
                 item {
                     IntakeTile(
@@ -925,9 +841,36 @@ fun IntakeScreen(
         }
 
         item {
+            val gateMessage = when {
+                state.isLoading -> null
+                state.isCheckingLocation -> R.string.intake_body_getting_location
+                !state.isResumingSession && state.locationError != null -> R.string.intake_body_location_error
+                !state.isResumingSession && state.distanceToSiteMeters != null && !state.isWithinSiteRadius ->
+                    R.string.intake_body_outside_site_radius
+                !state.canFillForm -> R.string.intake_error_site_proximity_required
+                !state.hasHouseholdHeadConsent -> R.string.intake_error_consent_required
+                else -> null
+            }
+            if (gateMessage != null) {
+                Text(
+                    text = when (gateMessage) {
+                        R.string.intake_body_location_error -> stringResource(
+                            gateMessage, requireNotNull(state.locationError).toString(context)
+                        )
+                        R.string.intake_body_outside_site_radius -> stringResource(
+                            gateMessage, requireNotNull(state.distanceToSiteMeters) / 1000
+                        )
+                        else -> stringResource(gateMessage)
+                    },
+                    color = if (state.isCheckingLocation) MaterialTheme.colors.textSecondary
+                        else MaterialTheme.colors.error,
+                    modifier = Modifier.padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                )
+            }
             ActionButton(
                 label = stringResource(R.string.intake_action_begin_imaging, state.session.type.displayText(context)),
                 onClick = { onAction(IntakeAction.SubmitIntakeForm) },
+                enabled = state.canFillForm && state.hasHouseholdHeadConsent,
                 modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
             )
         }

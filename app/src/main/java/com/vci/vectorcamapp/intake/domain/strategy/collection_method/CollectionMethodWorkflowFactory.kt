@@ -9,7 +9,7 @@ import javax.inject.Inject
 class CollectionMethodWorkflowFactory @Inject constructor() {
     fun create(sessionId: UUID, collectionMethod: String): CollectionMethodWorkflow {
         return when (collectionMethod) {
-            IntakeDropdownOptions.CollectionMethodOption.HUMAN_LANDING_CATCH.label -> MultipleBatchWorkflow(sessionId)
+            IntakeDropdownOptions.CollectionMethodOption.PROKOPACK_ASPIRATOR.label -> MultipleBatchWorkflow(sessionId)
             else -> SingleBatchWorkflow()
         }
     }

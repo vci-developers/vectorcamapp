@@ -113,6 +113,8 @@ class ErrorExtensionsTest {
         IntakeError.COLLECTOR_SAVE_FAILED to R.string.intake_error_collector_save_failed,
         IntakeError.LOCATION_PERMISSION_DENIED to R.string.intake_error_location_permission_denied,
         IntakeError.LOCATION_GPS_TIMEOUT to R.string.intake_error_location_gps_timeout,
+        IntakeError.SITE_PROXIMITY_REQUIRED to R.string.intake_error_site_proximity_required,
+        IntakeError.CONSENT_REQUIRED to R.string.intake_error_consent_required,
         IntakeError.FORM_INVALID to R.string.intake_error_form_invalid,
         IntakeError.UNKNOWN_ERROR to R.string.intake_error_unknown_error,
         FormValidationError.BLANK_COLLECTOR to R.string.form_validation_error_blank_collector,

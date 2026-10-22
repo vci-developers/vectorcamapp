@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="intake_error_consent_required">Consent from the household head is required to proceed with collection.</string>
+    <string name="intake_error_site_proximity_required">Select a site and verify your GPS location within 2 km of its reference coordinates to fill out the form and create a session.</string>
+    <string name="intake_body_outside_site_radius">You are %1$.2f km from the reference site. Move within 2 km and update your location to continue.</string>
 
     <!-- Titles -->
     <string name="intake_title_screen">%1$s Intake</string>

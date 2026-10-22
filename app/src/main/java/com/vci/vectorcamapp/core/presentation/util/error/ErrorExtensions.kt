@@ -97,6 +97,8 @@ fun Error.toString(context: Context): String {
             IntakeError.COLLECTOR_SAVE_FAILED -> R.string.intake_error_collector_save_failed
             IntakeError.LOCATION_PERMISSION_DENIED -> R.string.intake_error_location_permission_denied
             IntakeError.LOCATION_GPS_TIMEOUT -> R.string.intake_error_location_gps_timeout
+            IntakeError.SITE_PROXIMITY_REQUIRED -> R.string.intake_error_site_proximity_required
+            IntakeError.CONSENT_REQUIRED -> R.string.intake_error_consent_required
             IntakeError.FORM_INVALID -> R.string.intake_error_form_invalid
             IntakeError.UNKNOWN_ERROR -> R.string.intake_error_unknown_error
         }

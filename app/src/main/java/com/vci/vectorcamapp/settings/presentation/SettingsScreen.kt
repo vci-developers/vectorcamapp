@@ -68,11 +68,11 @@ fun SettingsScreen(
     ) {
         item {
             SettingsSection(title = stringResource(R.string.settings_title_actions)) {
-                SettingsActionTile(
-                    title = stringResource(R.string.settings_title_start_data_collection),
-                    onClick = { onAction(SettingsAction.StartNewDataCollectionSession) },
-                    modifier = modifier
-                )
+//                SettingsActionTile(
+//                    title = stringResource(R.string.settings_title_start_data_collection),
+//                    onClick = { onAction(SettingsAction.StartNewDataCollectionSession) },
+//                    modifier = modifier
+//                )
 
                 SettingsActionTile(
                     title = stringResource(R.string.settings_title_start_practice),
