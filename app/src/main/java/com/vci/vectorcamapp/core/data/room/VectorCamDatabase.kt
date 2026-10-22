@@ -57,7 +57,7 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
         FormQuestionEntity::class,
         FormAnswerEntity::class
     ],
-    version = 35,
+    version = 36,
 )
 @TypeConverters(
     UuidConverter::class,

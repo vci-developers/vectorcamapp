@@ -1109,6 +1109,7 @@ class IntakeViewModelTest {
     ) = FormQuestion(
         id = id,
         label = "q$id",
+        questionKey = null,
         type = type,
         required = false,
         prerequisite = prerequisite,

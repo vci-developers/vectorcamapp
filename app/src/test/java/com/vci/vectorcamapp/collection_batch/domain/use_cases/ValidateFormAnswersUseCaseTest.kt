@@ -124,6 +124,7 @@ class ValidateFormAnswersUseCaseTest {
     ) = FormQuestion(
         id = id,
         label = "q$id",
+        questionKey = null,
         type = type,
         required = required,
         prerequisite = prerequisite,
