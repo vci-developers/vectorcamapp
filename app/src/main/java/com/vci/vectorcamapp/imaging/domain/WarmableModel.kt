@@ -17,4 +17,11 @@ interface WarmableModel : Closeable {
 
     /** Frees the built model. A later [warm] rebuilds it. */
     fun release()
+
+    /**
+     * Rebuilds a model that is already in memory when its file changed, and picks up a new class
+     * list without a process restart. No-op when the model is cold; the next [warm] reads the
+     * latest source.
+     */
+    fun refresh() {}
 }

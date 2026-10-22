@@ -37,6 +37,7 @@ import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
 import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
+import com.vci.vectorcamapp.imaging.domain.util.InferenceClassLabels
 import com.vci.vectorcamapp.imaging.presentation.enums.CaptureStage
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import com.vci.vectorcamapp.navigation.Destination
@@ -522,30 +523,45 @@ class ImagingViewModel @Inject constructor(
                                             )
                                             val totalInferenceDurationMs = System.currentTimeMillis() - inferenceStartedAt
 
-                                            val speciesIndex =
-                                                speciesResult?.logits?.let { logits ->
+                                            val speciesLabel = InferenceClassLabels.predictedLabel(
+                                                index = speciesResult?.logits?.let { logits ->
                                                     logits.indexOf(logits.max())
-                                                }
-                                            var sexIndex = sexResult?.logits?.let { logits ->
-                                                logits.indexOf(logits.max())
-                                            }
-                                            var abdomenStatusIndex =
-                                                abdomenStatusResult?.logits?.let { logits ->
+                                                },
+                                                downloadedClasses = speciesResult?.classLabels,
+                                            ) { SpeciesLabel.entries.getOrNull(it)?.wireValue }
+                                            var sexLabel = InferenceClassLabels.predictedLabel(
+                                                index = sexResult?.logits?.let { logits ->
                                                     logits.indexOf(logits.max())
-                                                }
+                                                },
+                                                downloadedClasses = sexResult?.classLabels,
+                                            ) { SexLabel.entries.getOrNull(it)?.wireValue }
+                                            var abdomenLabel = InferenceClassLabels.predictedLabel(
+                                                index = abdomenStatusResult?.logits?.let { logits ->
+                                                    logits.indexOf(logits.max())
+                                                },
+                                                downloadedClasses = abdomenStatusResult?.classLabels,
+                                            ) { AbdomenStatusLabel.entries.getOrNull(it)?.wireValue }
 
-                                            if (speciesResult?.logits == null || speciesIndex == SpeciesLabel.NON_MOSQUITO.ordinal) {
+                                            if (
+                                                speciesResult?.logits == null ||
+                                                InferenceClassLabels.matchesWireValue(
+                                                    speciesLabel,
+                                                    SpeciesLabel.NON_MOSQUITO.wireValue,
+                                                )
+                                            ) {
                                                 sexResult = null
-                                                sexIndex = null
+                                                sexLabel = null
                                             }
-                                            if (sexResult?.logits == null || sexIndex == SexLabel.MALE.ordinal) {
+                                            if (
+                                                sexResult?.logits == null ||
+                                                InferenceClassLabels.matchesWireValue(
+                                                    sexLabel,
+                                                    SexLabel.MALE.wireValue,
+                                                )
+                                            ) {
                                                 abdomenStatusResult = null
-                                                abdomenStatusIndex = null
+                                                abdomenLabel = null
                                             }
-
-                                            val speciesLabel = speciesIndex?.let { SpeciesLabel.entries[it].wireValue }
-                                            val sexLabel = sexIndex?.let { SexLabel.entries[it].wireValue }
-                                            val abdomenLabel = abdomenStatusIndex?.let { AbdomenStatusLabel.entries[it].wireValue }
 
                                             VectorCamAnalytics.logEvent(
                                                 "imaging_specimen_inference_completed",

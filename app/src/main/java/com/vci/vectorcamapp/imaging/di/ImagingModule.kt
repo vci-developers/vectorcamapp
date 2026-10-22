@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizer
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.vci.vectorcamapp.imaging.data.InferenceModelResolver
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenClassifier
 import com.vci.vectorcamapp.imaging.data.TfLiteSpecimenDetector
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
@@ -37,43 +38,57 @@ object ImagingModule {
     @Provides
     @Singleton
     @Detector
-    fun provideSpecimenDetector(@ApplicationContext context: Context): SpecimenDetector {
-        return TfLiteSpecimenDetector(context)
+    fun provideSpecimenDetector(
+        @ApplicationContext context: Context,
+        inferenceModelResolver: InferenceModelResolver,
+    ): SpecimenDetector {
+        return TfLiteSpecimenDetector(context) {
+            inferenceModelResolver.resolve({ it.detect }, "detect.tflite")
+        }
     }
 
     @Provides
     @Singleton
     @SpeciesClassifier
-    fun provideSpeciesClassifier(@ApplicationContext context: Context): SpecimenClassifier {
+    fun provideSpeciesClassifier(
+        @ApplicationContext context: Context,
+        inferenceModelResolver: InferenceModelResolver,
+    ): SpecimenClassifier {
         return TfLiteSpecimenClassifier(
-            context,
-            "species.tflite",
-            "LiteRTSpeciesClassifierThread",
-            expectedNumClasses = SpeciesLabel.entries.size,
+            context = context,
+            threadName = "LiteRTSpeciesClassifierThread",
+            bundledClassCount = SpeciesLabel.entries.size,
+            resolveModel = { inferenceModelResolver.resolve({ it.species }, "species.tflite") },
         )
     }
 
     @Provides
     @Singleton
     @SexClassifier
-    fun provideSexClassifier(@ApplicationContext context: Context): SpecimenClassifier {
+    fun provideSexClassifier(
+        @ApplicationContext context: Context,
+        inferenceModelResolver: InferenceModelResolver,
+    ): SpecimenClassifier {
         return TfLiteSpecimenClassifier(
-            context,
-            "sex.tflite",
-            "LiteRTSexClassifierThread",
-            expectedNumClasses = SexLabel.entries.size,
+            context = context,
+            threadName = "LiteRTSexClassifierThread",
+            bundledClassCount = SexLabel.entries.size,
+            resolveModel = { inferenceModelResolver.resolve({ it.sex }, "sex.tflite") },
         )
     }
 
     @Provides
     @Singleton
     @AbdomenStatusClassifier
-    fun provideAbdomenStatusClassifier(@ApplicationContext context: Context): SpecimenClassifier {
+    fun provideAbdomenStatusClassifier(
+        @ApplicationContext context: Context,
+        inferenceModelResolver: InferenceModelResolver,
+    ): SpecimenClassifier {
         return TfLiteSpecimenClassifier(
-            context,
-            "abdomen_status.tflite",
-            "LiteRTAbdomenStatusClassifierThread",
-            expectedNumClasses = AbdomenStatusLabel.entries.size,
+            context = context,
+            threadName = "LiteRTAbdomenStatusClassifierThread",
+            bundledClassCount = AbdomenStatusLabel.entries.size,
+            resolveModel = { inferenceModelResolver.resolve({ it.abdomenStatus }, "abdomen_status.tflite") },
         )
     }
 }

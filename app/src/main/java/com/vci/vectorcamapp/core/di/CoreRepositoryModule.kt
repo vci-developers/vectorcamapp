@@ -6,6 +6,7 @@ import com.vci.vectorcamapp.core.data.repository.FormQuestionRepositoryImplement
 import com.vci.vectorcamapp.core.data.repository.FormRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.InferenceResultRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.LocationTypeRepositoryImplementation
+import com.vci.vectorcamapp.core.data.repository.ProgramModelRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.ProgramRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SessionRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SessionUnitRepositoryImplementation
@@ -20,6 +21,7 @@ import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
+import com.vci.vectorcamapp.core.domain.repository.ProgramModelRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
@@ -91,6 +93,12 @@ abstract class CoreRepositoryModule {
     abstract fun bindProgramRepository(
         programRepositoryImplementation: ProgramRepositoryImplementation
     ): ProgramRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindProgramModelRepository(
+        programModelRepositoryImplementation: ProgramModelRepositoryImplementation
+    ): ProgramModelRepository
 
     @Binds
     @Singleton

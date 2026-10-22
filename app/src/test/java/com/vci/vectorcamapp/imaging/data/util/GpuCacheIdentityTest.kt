@@ -69,5 +69,12 @@ class GpuCacheIdentityTest {
             "detect.tflite",
             GpuCacheIdentity.programCacheKey("detect.tflite", null),
         )
+        assertEquals(
+            "/data/models/species.tflite#gpu-fp32@12345-1700",
+            GpuCacheIdentity.programCacheKey(
+                "/data/models/species.tflite#gpu-fp32",
+                "12345-1700",
+            ),
+        )
     }
 }

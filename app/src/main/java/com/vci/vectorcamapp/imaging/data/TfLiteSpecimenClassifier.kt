@@ -7,6 +7,7 @@ import android.os.HandlerThread
 import com.google.ai.edge.litert.CompiledModel
 import com.google.ai.edge.litert.TensorBuffer
 import com.vci.vectorcamapp.core.domain.model.results.ClassifierResult
+import com.vci.vectorcamapp.core.logging.ProgramModelLog
 import com.vci.vectorcamapp.imaging.data.util.ClassifierAcceleratorSelector
 import com.vci.vectorcamapp.imaging.domain.SpecimenClassifier
 import kotlinx.coroutines.CompletableDeferred
@@ -24,9 +25,9 @@ import kotlin.math.max
 
 class TfLiteSpecimenClassifier(
     private val context: Context,
-    private val filePath: String,
     threadName: String,
-    private val expectedNumClasses: Int,
+    private val bundledClassCount: Int,
+    private val resolveModel: () -> ResolvedInferenceModel,
 ) : SpecimenClassifier {
 
     private enum class TensorLayout { NCHW, NHWC }
@@ -44,6 +45,13 @@ class TfLiteSpecimenClassifier(
     private val stateLock = Any()
     private var warmUp: CompletableDeferred<Boolean>? = null
     private var isClosed = false
+    private var filePath: String = ""
+    private var expectedNumClasses: Int = bundledClassCount
+    private var loadedPath: String? = null
+    private var loadedFileFingerprint: String? = null
+
+    @Volatile
+    private var activeClassLabels: List<String> = emptyList()
 
     // Read from outside the handler thread by the shape getters.
     @Volatile
@@ -53,7 +61,7 @@ class TfLiteSpecimenClassifier(
     private var inputTensorWidth = DEFAULT_TENSOR_SIZE
 
     @Volatile
-    private var outputNumClasses = expectedNumClasses
+    private var outputNumClasses = bundledClassCount
 
     override fun getInputTensorShape(): Pair<Int, Int> = inputTensorHeight to inputTensorWidth
 
@@ -131,7 +139,8 @@ class TfLiteSpecimenClassifier(
                     continuation.resume(
                         ClassifierResult(
                             logits = logits,
-                            inferenceDuration = System.currentTimeMillis() - startTime
+                            inferenceDuration = System.currentTimeMillis() - startTime,
+                            classLabels = activeClassLabels,
                         )
                     )
                 } catch (e: Exception) {
@@ -143,6 +152,29 @@ class TfLiteSpecimenClassifier(
                 }
             }
         }
+    }
+
+    override fun refresh() {
+        val resolved = resolveModel()
+        val rebuild = synchronized(stateLock) {
+            if (isClosed || warmUp == null) return
+            if (loadedPath == resolved.path && loadedFileFingerprint == resolved.fileFingerprint) {
+                val labels = classLabelsFor(resolved)
+                if (labels != activeClassLabels) {
+                    activeClassLabels = labels
+                    ProgramModelLog.i(
+                        "Imaging class list updated path=%s classes=%s",
+                        resolved.path,
+                        labels.joinToString().ifEmpty { "(bundled order)" },
+                    )
+                }
+                return
+            }
+            warmUp = null
+            handler.post { releaseModel() }
+            true
+        }
+        if (rebuild) startWarmUp()
     }
 
     override fun release() {
@@ -175,8 +207,51 @@ class TfLiteSpecimenClassifier(
     }
 
     private fun initializeModel(): Boolean {
-        if (model != null) return true
+        val resolved = resolveModel()
+        if (
+            model != null &&
+            loadedPath == resolved.path &&
+            loadedFileFingerprint == resolved.fileFingerprint
+        ) {
+            activeClassLabels = classLabelsFor(resolved)
+            return true
+        }
+        if (model != null) releaseModel()
 
+        filePath = resolved.path
+        expectedNumClasses = expectedClassCount(resolved)
+        activeClassLabels = classLabelsFor(resolved)
+        loadedPath = resolved.path
+        loadedFileFingerprint = resolved.fileFingerprint
+        ProgramModelLog.i(
+            "Imaging loading path=%s downloaded=%s classes=%s",
+            filePath,
+            resolved.downloaded,
+            activeClassLabels.joinToString().ifEmpty { "(bundled order)" },
+        )
+
+        val built = compileSelectedModel()
+        if (!built) {
+            loadedPath = null
+            loadedFileFingerprint = null
+            activeClassLabels = emptyList()
+        }
+        return built
+    }
+
+    private fun classLabelsFor(resolved: ResolvedInferenceModel): List<String> {
+        if (!resolved.downloaded) return emptyList()
+        return resolved.classLabels
+    }
+
+    private fun expectedClassCount(resolved: ResolvedInferenceModel): Int {
+        if (resolved.downloaded && resolved.classLabels.isNotEmpty()) {
+            return resolved.classLabels.size
+        }
+        return bundledClassCount
+    }
+
+    private fun compileSelectedModel(): Boolean {
         val selection = try {
             ClassifierAcceleratorSelector.selectModel(
                 context = context,

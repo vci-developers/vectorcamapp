@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,6 +33,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
+import com.vci.vectorcamapp.core.presentation.util.FileSizeFormatter
 import com.vci.vectorcamapp.core.presentation.util.date.rememberDateFormatter
 import com.vci.vectorcamapp.core.presentation.util.locale.SupportedLanguage
 import com.vci.vectorcamapp.settings.presentation.components.CollectorDialog
@@ -42,6 +44,9 @@ import com.vci.vectorcamapp.settings.presentation.components.SettingsSection
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
+import java.text.SimpleDateFormat
+import java.util.Locale
+import kotlin.math.roundToInt
 
 @Composable
 fun SettingsScreen(
@@ -140,7 +145,11 @@ fun SettingsScreen(
                                     .alpha(if (state.isConnectedToInternet) 1f else 0.5f)
                             ) {
                                 ActionButton(
-                                    label = if (state.isSyncingData) stringResource(R.string.settings_action_syncing) else stringResource(R.string.settings_action_resync),
+                                    label = when {
+                                        state.modelDownloadProgress != null -> "Downloading Model..."
+                                        state.isSyncingData -> stringResource(R.string.settings_action_syncing)
+                                        else -> stringResource(R.string.settings_action_resync)
+                                    },
                                     onClick = {
                                         if (state.isConnectedToInternet && !state.isSyncingData) {
                                             onAction(SettingsAction.ResyncProgramData)
@@ -150,7 +159,7 @@ fun SettingsScreen(
                                 )
                             }
 
-                            if (state.isSyncingData) {
+                            if (state.isSyncingData && state.modelDownloadProgress == null) {
                                 CircularProgressIndicator(
                                     modifier = Modifier
                                         .padding(start = MaterialTheme.dimensions.paddingMedium)
@@ -159,6 +168,41 @@ fun SettingsScreen(
                                 )
                             }
                         }
+
+                        val downloadProgress = state.modelDownloadProgress
+                        if (downloadProgress != null) {
+                            val percent = (downloadProgress * 100).roundToInt().coerceIn(0, 100)
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                LinearProgressIndicator(
+                                    progress = { downloadProgress.coerceIn(0f, 1f) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = MaterialTheme.colors.primary,
+                                    trackColor = MaterialTheme.colors.primary.copy(alpha = 0.2f),
+                                )
+                                Text(
+                                    text = if (state.modelDownloadTotalBytes > 0L) {
+                                        "Downloading ML model… $percent% " +
+                                            "(${FileSizeFormatter.format(state.modelDownloadBytes)} / " +
+                                            "${FileSizeFormatter.format(state.modelDownloadTotalBytes)})"
+                                    } else {
+                                        "Downloading ML model… $percent%"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colors.textSecondary
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = state.localModelIds?.let { ids ->
+                                "ML models downloaded: $ids"
+                            } ?: "ML model: using bundled assets",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colors.textSecondary
+                        )
                     }
                 }
             }

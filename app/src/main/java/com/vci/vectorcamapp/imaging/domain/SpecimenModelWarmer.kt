@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.imaging.domain
 
+import com.vci.vectorcamapp.core.domain.ProgramModelChangeNotifier
 import com.vci.vectorcamapp.imaging.di.AbdomenStatusClassifier
 import com.vci.vectorcamapp.imaging.di.Detector
 import com.vci.vectorcamapp.imaging.di.SexClassifier
@@ -35,6 +36,7 @@ class SpecimenModelWarmer @Inject constructor(
     @SpeciesClassifier speciesClassifier: SpecimenClassifier,
     @SexClassifier sexClassifier: SpecimenClassifier,
     @AbdomenStatusClassifier abdomenStatusClassifier: SpecimenClassifier,
+    programModelChangeNotifier: ProgramModelChangeNotifier,
 ) {
 
     private val models: List<WarmableModel> = listOf(
@@ -43,6 +45,10 @@ class SpecimenModelWarmer @Inject constructor(
         sexClassifier,
         abdomenStatusClassifier,
     )
+
+    init {
+        programModelChangeNotifier.addListener { models.forEach { it.refresh() } }
+    }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
