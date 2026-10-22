@@ -169,14 +169,14 @@ fun CompleteSessionForm(
                     iconDescription = stringResource(R.string.complete_session_content_description_clipboard),
                 ) {
                     val visibleFormAnswersAndQuestions = sessionScopedFormAnswersAndQuestions
-                        .filter { (formAnswer, _) -> formAnswer.value.isNotBlank() }
+                        .filter { (formAnswer, _) -> !formAnswer.value.isEmpty }
 
                     if (visibleFormAnswersAndQuestions.isNotEmpty()) {
                         visibleFormAnswersAndQuestions.forEach { (formAnswer, formQuestion) ->
                             val displayValue = when (formQuestion.type) {
-                                "date" -> formAnswer.value.toLongOrNull()
-                                    ?.let { dateFormatter.format(it) } ?: formAnswer.value
-                                else -> formAnswer.value
+                                "date" -> formAnswer.value.displayText().toLongOrNull()
+                                    ?.let { dateFormatter.format(it) } ?: formAnswer.value.displayText()
+                                else -> formAnswer.value.displayText()
                             }
                             Text(
                                 text = stringResource(R.string.complete_session_label_detail, formQuestion.label, displayValue),
@@ -304,7 +304,7 @@ fun CompleteSessionForm(
                 val visibleFormAnswersAndQuestions =
                     sessionUnitAnswersAndQuestionsByUnitId[sessionUnit.localId]
                         .orEmpty()
-                        .filter { (formAnswer, _) -> formAnswer.value.isNotBlank() }
+                        .filter { (formAnswer, _) -> !formAnswer.value.isEmpty }
 
                 CompleteSessionFormTile(
                     title = title,
@@ -320,9 +320,9 @@ fun CompleteSessionForm(
                     } else {
                         visibleFormAnswersAndQuestions.forEach { (formAnswer, formQuestion) ->
                             val displayValue = when (formQuestion.type) {
-                                "date" -> formAnswer.value.toLongOrNull()
-                                    ?.let { dateFormatter.format(it) } ?: formAnswer.value
-                                else -> formAnswer.value
+                                "date" -> formAnswer.value.displayText().toLongOrNull()
+                                    ?.let { dateFormatter.format(it) } ?: formAnswer.value.displayText()
+                                else -> formAnswer.value.displayText()
                             }
                             Text(
                                 text = stringResource(R.string.complete_session_label_detail, formQuestion.label, displayValue),

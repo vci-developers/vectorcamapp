@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.intake.domain.use_cases
 
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
@@ -12,40 +13,42 @@ class ValidateFormAnswersUseCase @Inject constructor() {
         formQuestions: List<FormQuestion>,
         formAnswers: Map<Int, FormAnswer>
     ): Map<Int, Result<Unit, FormValidationError>> {
-        val answerMap = formAnswers.mapValues { (_, answer) -> answer.value.trim() }
+        val answerMap = formAnswers.mapValues { (_, answer) ->
+            when (val value = answer.value) {
+                is FormAnswerValue.StringValue -> value.copy(value = value.value.trim())
+                is FormAnswerValue.ListValue -> value
+            }
+        }
 
         return formQuestions.associate { question ->
             if (!FormQuestionPrerequisiteEvaluator.evaluate(question.prerequisite, answerMap)) {
                 return@associate question.id to Result.Success(Unit)
             }
 
-            val answer = formAnswers[question.id]?.value.orEmpty().trim()
+            val answer = formAnswers[question.id]?.value ?: FormAnswerValue.StringValue("")
 
-            val formAnswerResult = when {
-                question.required && answer.isBlank() -> Result.Error(FormValidationError.INVALID_FORM_ANSWER)
-
-                answer.isBlank() -> Result.Success(Unit)
-
-                else -> when (question.type) {
-                    "number" -> {
-                        if (answer.toDoubleOrNull() == null || answer.startsWith(".") || answer.endsWith(".")) {
-                            Result.Error(FormValidationError.INVALID_FORM_ANSWER)
-                        } else Result.Success(Unit)
-                    }
-
-                    "boolean" -> if (answer != "true" && answer != "false") {
-                        Result.Error(FormValidationError.INVALID_FORM_ANSWER)
-                    } else Result.Success(Unit)
-
-                    "select" -> if (question.options != null && answer !in question.options) {
-                        Result.Error(FormValidationError.INVALID_FORM_ANSWER)
-                    } else Result.Success(Unit)
-
-                    else -> Result.Success(Unit)
-                }
-            }
+            val formAnswerResult = if (isValidAnswer(question, answer)) Result.Success(Unit)
+            else Result.Error(FormValidationError.INVALID_FORM_ANSWER)
 
             question.id to formAnswerResult
+        }
+    }
+    private fun isValidAnswer(question: FormQuestion, value: FormAnswerValue): Boolean {
+        if (question.type == "multi-select") {
+            if (value is FormAnswerValue.StringValue && value.value.isBlank()) return !question.required
+            val selections = (value as? FormAnswerValue.ListValue)?.value ?: return false
+            return (!question.required || selections.isNotEmpty()) &&
+                selections.distinct().size == selections.size &&
+                selections.all { it in question.options.orEmpty() }
+        }
+        val answer = (value as? FormAnswerValue.StringValue)?.value?.trim() ?: return false
+        if (answer.isBlank()) return !question.required
+        return when (question.type) {
+            "number" -> answer.toDoubleOrNull() != null &&
+                !answer.startsWith(".") && !answer.endsWith(".")
+            "boolean" -> answer == "true" || answer == "false"
+            "select" -> question.options == null || answer in question.options
+            else -> true
         }
     }
 }

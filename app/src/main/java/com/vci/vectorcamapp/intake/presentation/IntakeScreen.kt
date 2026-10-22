@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.intake.presentation
 
+
 import android.location.Location
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -745,7 +746,7 @@ fun IntakeScreen(
                         ) {
                             DynamicFormField(
                                 question = question,
-                                value = state.formAnswersByQuestionId[question.id]?.value.orEmpty(),
+                                    value = state.formAnswersByQuestionId.getValue(question.id).value,
                                 error = state.intakeErrors.formAnswerErrors[question.id],
                                 onValueChange = {
                                     onAction(IntakeAction.UpdateFormAnswer(question.id, it))

@@ -1,5 +1,7 @@
 package com.vci.vectorcamapp.intake.presentation
 
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
+
 import android.location.Location
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
@@ -679,10 +681,10 @@ class IntakeViewModelTest {
         vm.onAction(IntakeAction.SelectLocationTypeSiteOption(2, "12"))
         vm.onAction(IntakeAction.SelectLocationTypeSiteOption(1, "Jinja"))
         vm.onAction(IntakeAction.SelectLocationTypeSiteOption(99, "ignored"))
-        vm.onAction(IntakeAction.UpdateFormAnswer(2, "true"))
-        vm.onAction(IntakeAction.UpdateFormAnswer(3, "note"))
-        vm.onAction(IntakeAction.UpdateFormAnswer(1, "no"))
-        vm.onAction(IntakeAction.UpdateFormAnswer(44, "missing"))
+        vm.onAction(IntakeAction.UpdateFormAnswer(2, FormAnswerValue.StringValue("true")))
+        vm.onAction(IntakeAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("note")))
+        vm.onAction(IntakeAction.UpdateFormAnswer(1, FormAnswerValue.StringValue("no")))
+        vm.onAction(IntakeAction.UpdateFormAnswer(44, FormAnswerValue.StringValue("missing")))
         vm.onAction(IntakeAction.EnterNumPeopleSleptInHouse("abc"))
         advanceUntilIdle()
 
@@ -692,8 +694,32 @@ class IntakeViewModelTest {
         assertThat(form.llinBrand).isEqualTo("OLYSET Net")
         assertThat(vm.state.value.siteSelectionsByLocationTypeId).containsEntry(1, "Jinja")
         assertThat(vm.state.value.siteSelectionsByLocationTypeId).doesNotContainKey(2)
-        assertThat(vm.state.value.formAnswersByQuestionId.getValue(2).value).isEqualTo("false")
-        assertThat(vm.state.value.formAnswersByQuestionId.getValue(3).value).isEqualTo("")
+        assertThat(vm.state.value.formAnswersByQuestionId.getValue(2).value).isEqualTo(FormAnswerValue.StringValue("false"))
+        assertThat(vm.state.value.formAnswersByQuestionId.getValue(3).value).isEqualTo(FormAnswerValue.StringValue(""))
+    }
+
+    @Test
+    fun deselectingOtherClearsItsIntakeFollowUp() = runTest {
+        val requiresOther = FormQuestionPrerequisiteExpression.Predicate(
+            1, "contains", FormQuestionPrerequisiteValue.StringValue("Other"),
+        )
+        every { programFormWorkflow.sessionFormQuestions } returns listOf(
+            question(1, "multi-select").copy(options = listOf("A", "Other")),
+            question(2, "text", requiresOther),
+        )
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        vm.onAction(IntakeAction.UpdateFormAnswer(1, FormAnswerValue.ListValue(listOf("Other"))))
+        advanceUntilIdle()
+        vm.onAction(IntakeAction.UpdateFormAnswer(2, FormAnswerValue.StringValue("details")))
+        advanceUntilIdle()
+        assertThat(vm.state.value.formAnswersByQuestionId.getValue(2).value)
+            .isEqualTo(FormAnswerValue.StringValue("details"))
+        vm.onAction(IntakeAction.UpdateFormAnswer(1, FormAnswerValue.ListValue(emptyList())))
+        advanceUntilIdle()
+        assertThat(vm.state.value.formAnswersByQuestionId.getValue(2).value)
+            .isEqualTo(FormAnswerValue.StringValue(""))
     }
 
     @Test

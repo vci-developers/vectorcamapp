@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
+import com.vci.vectorcamapp.core.presentation.components.form.MultiSelectField
 import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
@@ -19,19 +21,30 @@ import com.vci.vectorcamapp.ui.extensions.colors
 @Composable
 fun DynamicFormField(
     question: FormQuestion,
-    value: String,
-    onValueChange: (String) -> Unit,
+    value: FormAnswerValue,
+    onValueChange: (FormAnswerValue) -> Unit,
     modifier: Modifier = Modifier,
     error: Error? = null,
 ) {
     val label = question.label
+    val text = (value as? FormAnswerValue.StringValue)?.value.orEmpty()
+    val onTextChange: (String) -> Unit = { onValueChange(FormAnswerValue.StringValue(it)) }
     when (question.type) {
+        "multi-select" -> MultiSelectField(
+            label = label,
+            required = question.required,
+            options = question.options.orEmpty(),
+            selectedValues = (value as? FormAnswerValue.ListValue)?.value.orEmpty(),
+            onSelectionChange = { onValueChange(FormAnswerValue.ListValue(it)) },
+            error = error,
+            modifier = modifier,
+        )
         "qr" -> {
             QrCodeField(
                 label = label,
                 required = question.required,
-                value = value,
-                onValueChange = onValueChange,
+                value = text,
+                onValueChange = onTextChange,
                 error = error,
                 modifier = modifier,
             )
@@ -41,8 +54,8 @@ fun DynamicFormField(
             TextEntryField(
                 label = label,
                 required = question.required,
-                value = value,
-                onValueChange = onValueChange,
+                value = text,
+                onValueChange = onTextChange,
                 singleLine = true,
                 error = error,
                 modifier = modifier
@@ -53,10 +66,10 @@ fun DynamicFormField(
             TextEntryField(
                 label = label,
                 required = question.required,
-                value = value,
+                value = text,
                 onValueChange = { newValue ->
                     if (newValue.isEmpty() || newValue.matches(Regex("^\\d+\\.?\\d{0,2}$"))) {
-                        onValueChange(newValue)
+                        onTextChange(newValue)
                     }
                 },
                 singleLine = true,
@@ -70,8 +83,8 @@ fun DynamicFormField(
             ToggleField(
                 label = label,
                 required = question.required,
-                checked = value.toBooleanStrictOrNull() ?: false,
-                onCheckedChange = { onValueChange(it.toString()) }
+                checked = text.toBooleanStrictOrNull() ?: false,
+                onCheckedChange = { onTextChange(it.toString()) }
             )
         }
 
@@ -79,8 +92,8 @@ fun DynamicFormField(
             DatePickerField(
                 label = label,
                 required = question.required,
-                selectedDateInMillis = value.toLongOrNull(),
-                onDateSelected = { onValueChange(it.toString()) },
+                selectedDateInMillis = text.toLongOrNull(),
+                onDateSelected = { onTextChange(it.toString()) },
                 error = error,
                 modifier = modifier.fillMaxWidth()
             )
@@ -92,8 +105,8 @@ fun DynamicFormField(
                 label = label,
                 required = question.required,
                 options = options,
-                selectedOption = options.firstOrNull { it == value },
-                onOptionSelected = onValueChange,
+                selectedOption = options.firstOrNull { it == text },
+                onOptionSelected = onTextChange,
                 error = error,
                 modifier = modifier.fillMaxWidth()
             ) { option ->

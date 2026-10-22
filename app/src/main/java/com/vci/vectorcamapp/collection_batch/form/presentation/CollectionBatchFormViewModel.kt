@@ -1,5 +1,7 @@
 package com.vci.vectorcamapp.collection_batch.form.presentation
 
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
+
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
@@ -116,10 +118,7 @@ class CollectionBatchFormViewModel @Inject constructor(
                                 )
                             ) {
                                 updatedAnswers[question.id]?.let { answer ->
-                                    val defaultValue = when (question.type) {
-                                        "boolean" -> "false"
-                                        else -> ""
-                                    }
+                                    val defaultValue = FormAnswerValue.emptyFor(question.type)
                                     updatedAnswers[question.id] = answer.copy(value = defaultValue)
                                     answerMap[question.id] = defaultValue
                                 }
@@ -236,9 +235,7 @@ class CollectionBatchFormViewModel @Inject constructor(
                         question.id to (savedFormAnswers[question.id] ?: FormAnswer(
                             localId = UUID.randomUUID(),
                             remoteId = null,
-                            value = when (question.type) {
-                                "boolean" -> "false"; else -> ""
-                            },
+                            value = FormAnswerValue.emptyFor(question.type),
                             dataType = question.type,
                             submittedAt = 0L
                         ))
