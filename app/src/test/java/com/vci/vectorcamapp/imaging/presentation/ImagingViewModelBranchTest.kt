@@ -38,6 +38,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -49,6 +50,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.io.OutputStream
+import java.lang.reflect.Field
 import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -165,7 +167,7 @@ class ImagingViewModelBranchTest {
 
         assertThat(viewModel.state.value.isCameraReady).isTrue()
         assertThat(viewModel.state.value.currentSpecimen.id).isEqualTo("ABC123")
-        io.mockk.verify { frame.close() }
+        verify { frame.close() }
     }
 
     @Test
@@ -208,7 +210,7 @@ class ImagingViewModelBranchTest {
         advanceUntilIdle()
 
         coVerify(exactly = 0) { inferenceRepository.readSpecimenId(any()) }
-        io.mockk.verify { frame.close() }
+        verify { frame.close() }
     }
 
     @Test
@@ -416,9 +418,9 @@ class ImagingViewModelBranchTest {
         theUnsafeField.isAccessible = true
         val unsafe = theUnsafeField.get(null)
         val emptyField = Uri::class.java.getDeclaredField("EMPTY")
-        val base = unsafeClass.getMethod("staticFieldBase", java.lang.reflect.Field::class.java)
+        val base = unsafeClass.getMethod("staticFieldBase", Field::class.java)
             .invoke(unsafe, emptyField)
-        val offset = unsafeClass.getMethod("staticFieldOffset", java.lang.reflect.Field::class.java)
+        val offset = unsafeClass.getMethod("staticFieldOffset", Field::class.java)
             .invoke(unsafe, emptyField) as Long
         unsafeClass.getMethod(
             "putObject",

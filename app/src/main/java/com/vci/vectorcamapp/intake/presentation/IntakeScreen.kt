@@ -17,6 +17,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +65,42 @@ fun IntakeScreen(
 ) {
     val context = LocalContext.current
     var isBarcodeScannerVisible by remember { mutableStateOf(false) }
+    val showSurveillanceForm = state.canFillForm || state.isSubmitting
+    if (state.isSubmitting) {
+        AlertDialog(
+            onDismissRequest = {},
+            containerColor = MaterialTheme.colors.cardBackground,
+            shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium),
+            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+            confirmButton = {},
+            title = {
+                Text(
+                    text = stringResource(
+                        if (state.isCheckingLocation) R.string.intake_title_confirming_location
+                        else R.string.intake_title_saving_collection
+                    ),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colors.textPrimary,
+                )
+            },
+            text = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colors.secondary,
+                        modifier = Modifier.size(MaterialTheme.dimensions.iconSizeLarge),
+                    )
+                    Text(
+                        text = stringResource(R.string.intake_body_please_wait),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colors.textSecondary,
+                    )
+                }
+            },
+        )
+    }
 
     BackHandler {
         onAction(IntakeAction.ReturnToPreviousScreen)
@@ -645,7 +683,7 @@ fun IntakeScreen(
             }
         }
 
-        if (state.canFillForm && state.form != null) {
+        if (showSurveillanceForm && state.form != null) {
             item {
                 IntakeTile(
                     title = state.form.name,
@@ -672,7 +710,7 @@ fun IntakeScreen(
                     }
                 }
             }
-        } else if (state.canFillForm) {
+        } else if (showSurveillanceForm) {
             state.surveillanceForm?.let { surveillanceForm ->
                 item {
                     IntakeTile(
@@ -842,7 +880,7 @@ fun IntakeScreen(
 
         item {
             val gateMessage = when {
-                state.isLoading -> null
+                state.isLoading || state.isSubmitting -> null
                 state.isCheckingLocation -> R.string.intake_body_getting_location
                 !state.isResumingSession && state.locationError != null -> R.string.intake_body_location_error
                 !state.isResumingSession && state.distanceToSiteMeters != null && !state.isWithinSiteRadius ->
@@ -868,7 +906,11 @@ fun IntakeScreen(
                 )
             }
             ActionButton(
-                label = stringResource(R.string.intake_action_begin_imaging, state.session.type.displayText(context)),
+                label = if (!state.isResumingSession) {
+                    stringResource(R.string.intake_action_save_collection)
+                } else {
+                    stringResource(R.string.intake_action_begin_imaging, state.session.type.displayText(context))
+                },
                 onClick = { onAction(IntakeAction.SubmitIntakeForm) },
                 enabled = state.canFillForm && state.hasHouseholdHeadConsent,
                 modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)

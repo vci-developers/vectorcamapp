@@ -1,4 +1,5 @@
 package com.vci.vectorcamapp.collection_batch.list.presentation
+import com.vci.vectorcamapp.program.kenya.presentation.HouseholdBanner
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -55,6 +56,12 @@ fun CollectionBatchListScreen(
                 )
             },
         ) {
+            item {
+                HouseholdBanner(
+                    state.householdNumber,
+                    Modifier.padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+                )
+            }
             if (state.sessionUnits.isEmpty()) {
                 item {
                     Text(

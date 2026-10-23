@@ -1,4 +1,5 @@
 package com.vci.vectorcamapp.collection_batch.list.presentation
+import com.vci.vectorcamapp.program.kenya.domain.GetHouseholdNumberUseCase
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -48,6 +49,7 @@ class CollectionBatchListViewModel @Inject constructor(
     errorMessageEmitter: ErrorMessageEmitter
 ) : CoreViewModel(errorMessageEmitter) {
 
+    private val getHouseholdNumber = GetHouseholdNumberUseCase(formRepository)
     private val destination = savedStateHandle.toRoute<Destination.CollectionBatchList>()
     private val sessionId: UUID = UUID.fromString(destination.sessionId)
 
@@ -67,6 +69,7 @@ class CollectionBatchListViewModel @Inject constructor(
 
         state.copy(
             isLoading = false,
+            householdNumber = getHouseholdNumber(sessionId),
             sessionUnits = sessionUnits,
             specimenCountsBySessionUnitId = sessionUnits.associate { sessionUnit ->
                 sessionUnit.localId to sessionUnitRepository.countSpecimensForSessionUnit(sessionUnit.localId)

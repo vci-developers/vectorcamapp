@@ -49,7 +49,7 @@
     <string name="search_action_learn_more">Tap to learn more about searching</string>
 
     <!-- Shared Component Labels -->
-    <string name="core_label_select">Select</string>
+    <string name="core_label_select">Select an option</string>
     <string name="core_label_select_date">Select a date</string>
     <string name="core_action_done">Done</string>
     <string name="core_label_required_indicator" translatable="false">" *"</string>

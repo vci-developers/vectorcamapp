@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.intake.presentation
 import com.vci.vectorcamapp.program.kenya.domain.KenyaFormRules
+import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions
 
 import androidx.lifecycle.SavedStateHandle
 import android.location.Location
@@ -77,7 +78,6 @@ class IntakeViewModel @Inject constructor(
 
     companion object {
         private const val LOCATION_TIMEOUT_MS = 30000L
-        private const val SITE_RADIUS_METERS = 2000f
     }
     // Live verification is separate from the session's original collection location.
     private var verificationLocation: Location? = null
@@ -112,6 +112,7 @@ class IntakeViewModel @Inject constructor(
 
     fun onAction(action: IntakeAction) {
         viewModelScope.launch {
+            if (_state.value.isSubmitting) return@launch
             // A saved session's collection site and coordinates are historical, not the imaging location.
             if (_state.value.isResumingSession && when (action) {
                     IntakeAction.RetryLocation, is IntakeAction.SelectDistrict,
@@ -148,6 +149,8 @@ class IntakeViewModel @Inject constructor(
                         emitError(IntakeError.CONSENT_REQUIRED)
                         return@launch
                     }
+                    _state.update { it.copy(isSubmitting = true) }
+                    try {
                     getLocation()
                     if (!_state.value.canFillForm) {
                         emitError(IntakeError.SITE_PROXIMITY_REQUIRED)
@@ -354,7 +357,11 @@ class IntakeViewModel @Inject constructor(
                         }
 
                         if (success) {
-                            currentSessionCache.saveSession(session, selectedSite.id)
+                            if (_state.value.isResumingSession) {
+                                currentSessionCache.saveSession(session, selectedSite.id)
+                            } else {
+                                currentSessionCache.clearSession()
+                            }
 
                             val allLocationTypes = _state.value.allLocationTypesInProgram
                             val locationSelectionsToCache = if (allLocationTypes.isNotEmpty()) {
@@ -378,9 +385,16 @@ class IntakeViewModel @Inject constructor(
                                 session.localId, session.collectionMethod
                             )
                             _events.send(
-                                IntakeEvent.NavigateAfterIntake(collectionMethodWorkflow.postIntakeDestination)
+                                if (_state.value.isResumingSession) {
+                                    IntakeEvent.NavigateAfterIntake(collectionMethodWorkflow.postIntakeDestination)
+                                } else {
+                                    IntakeEvent.NavigateHomeAfterCollectionSaved
+                                }
                             )
                         }
+                    }
+                    } finally {
+                        _state.update { it.copy(isSubmitting = false) }
                     }
                 }
 
@@ -764,6 +778,8 @@ class IntakeViewModel @Inject constructor(
             val effectiveSession = currentSession ?: _state.value.session.copy(
                 type = resolvedSessionType,
                 hardwareId = cachedDefaultHardwareId,
+                collectionMethod = IntakeDropdownOptions.CollectionMethodOption.PROKOPACK_ASPIRATOR.label,
+                specimenCondition = IntakeDropdownOptions.SpecimenConditionOption.FRESH.label,
                 collectorName = cachedCollectorName,
                 collectorTitle = cachedCollectorTitle,
                 collectorLastTrainedOn = cachedCollectorLastTrainedOn
@@ -943,7 +959,7 @@ class IntakeViewModel @Inject constructor(
         } else null
         return copy(
             distanceToSiteMeters = distance,
-            isWithinSiteRadius = distance != null && distance <= SITE_RADIUS_METERS
+            isWithinSiteRadius = KenyaFormRules.isWithinSiteRadius(distance)
         )
     }
 

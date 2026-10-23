@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="form_validation_error_inconsistent_people_counts">Complete all three counts. The total must equal the number who slept under an LLIN plus the number who did not.</string>
+    <string name="collection_batch_form_error_cup_not_recorded_indoors">No cup was scanned during collection indoors. Please check the collection form.</string>
+    <string name="collection_batch_form_error_cup_not_recorded_outdoors">No cup was scanned during collection outdoors. Please check the collection form.</string>
+    <string name="collection_batch_form_error_cup_not_recorded_animal_shelter">No cup was scanned during collection at the animal shelter. Please check the collection form.</string>
+    <string name="collection_batch_form_error_cup_not_recorded">No cup was scanned during collection for this location. Please check the collection form.</string>
+    <string name="collection_batch_form_error_recorded_cup_code">The code entered during collection was %1$s. Please check the label on your cup.</string>
+    <string name="form_validation_error_invalid_cup_location">Please scan the cup labelled for this collection location.</string>
+    <string name="form_validation_error_cup_indoors">Please scan the cup labelled IN for indoors.</string>
+    <string name="form_validation_error_cup_outdoors">Please scan the cup labelled OUT for outdoors.</string>
+    <string name="form_validation_error_cup_animal_shelter">Please scan the cup labelled ANS for animal shelter.</string>
+    <string name="collection_batch_form_error_cup_code_mismatch">Scan the same cup recorded for this location during household collection. Its original scan must be saved in this session.</string>
+    <string name="form_validation_error_inconsistent_people_counts">Please check your numbers. People who slept under a net + people who did not must equal the total number of people.</string>
 
     <!-- Error Fallback -->
     <string name="error_fallback">An unknown error occurred. Please try again or contact support if the issue persists.</string>

@@ -41,6 +41,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.lang.reflect.Field
 import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -137,9 +138,9 @@ class ImagingViewModelTest {
         val unsafe = theUnsafeField.get(null)!!
 
         val emptyField = Uri::class.java.getDeclaredField("EMPTY")
-        val base = unsafeClass.getMethod("staticFieldBase", java.lang.reflect.Field::class.java)
+        val base = unsafeClass.getMethod("staticFieldBase", Field::class.java)
             .invoke(unsafe, emptyField)
-        val offset = unsafeClass.getMethod("staticFieldOffset", java.lang.reflect.Field::class.java)
+        val offset = unsafeClass.getMethod("staticFieldOffset", Field::class.java)
             .invoke(unsafe, emptyField) as Long
         unsafeClass.getMethod("putObject", Any::class.java, Long::class.javaPrimitiveType, Any::class.java)
             .invoke(unsafe, base, offset, value)

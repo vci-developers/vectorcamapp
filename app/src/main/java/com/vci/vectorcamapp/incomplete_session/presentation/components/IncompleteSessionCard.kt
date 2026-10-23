@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.incomplete_session.presentation.components
 
 import androidx.compose.foundation.background
+import com.vci.vectorcamapp.program.kenya.presentation.HouseholdBanner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +37,8 @@ fun IncompleteSessionCard(
     sessionAndSite: SessionAndSite,
     onClick: () -> Unit,
     onDelete: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    householdNumber: String? = null,
 ) {
     val context = LocalContext.current
 
@@ -92,6 +94,7 @@ fun IncompleteSessionCard(
                         }
                     }
 
+                    HouseholdBanner(householdNumber)
                     InfoPill(text = stringResource(R.string.incomplete_session_label_session_type, sessionAndSite.session.type.displayText(context)), color = MaterialTheme.colors.info, modifier = Modifier.testTag(IncompleteSessionTestTags.CARD_TYPE_PILL))
                 }
 

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="intake_title_confirming_location">Confirmando ubicación…</string>
+    <string name="intake_title_saving_collection">Guardando recolección…</string>
+    <string name="intake_body_please_wait">Espera un momento, por favor.</string>
+    <string name="intake_action_save_collection">Guardar recolección y volver al inicio</string>
     <string name="intake_error_consent_required">Se requiere el consentimiento de la persona responsable del hogar para continuar con la recolección.</string>
     <string name="intake_error_site_proximity_required">Seleccione un sitio y verifique que su ubicación GPS esté dentro del radio de 2 km de sus coordenadas de referencia para completar el formulario y crear una sesión.</string>
     <string name="intake_body_outside_site_radius">Está a %1$.2f km del sitio de referencia. Acérquese al radio de 2 km y actualice su ubicación para continuar.</string>

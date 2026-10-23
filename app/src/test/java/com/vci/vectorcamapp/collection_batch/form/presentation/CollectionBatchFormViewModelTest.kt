@@ -98,6 +98,73 @@ class CollectionBatchFormViewModelTest {
     }
 
     @Test
+    fun cupRescanMismatchBlocksSavingAndMatchingRescanAllowsImaging() = runTest {
+        val rescan = question(3, type = "qr", required = true).copy(questionKey = "scan_cup_id_for_indoors")
+        stubForm(listOf(rescan))
+        coEvery {
+            formQuestionRepository.getQuestionsByFormIdAndScope(3, FormQuestionScope.SESSION)
+        } returns listOf(
+            question(1, type = "multi-select").copy(
+                questionKey = "where_is_mosquito_collection_taking_place", answerScope = FormQuestionScope.SESSION
+            ),
+            question(2, type = "qr").copy(
+                questionKey = "scan_cup_id_for_indoors_2", answerScope = FormQuestionScope.SESSION
+            ),
+        )
+        coEvery { formAnswerRepository.getSessionScopedFormAnswers(sessionId) } returns mapOf(
+            1 to answer("").copy(value = FormAnswerValue.ListValue(listOf("Indoors"))),
+            2 to answer("GP01-IN-CUP01", "qr"),
+        )
+        initViewModel()
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.expectedCupCodesByQuestionId[3]).isEqualTo("GP01-IN-CUP01")
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("GP01-IN-CUP02")))
+        advanceUntilIdle()
+        viewModel.onAction(CollectionBatchFormAction.SubmitSessionUnitForm)
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.collectionBatchFormErrors.formAnswerErrors[3])
+            .isEqualTo(CollectionBatchFormError.CUP_CODE_MISMATCH)
+        coVerify(exactly = 0) { sessionUnitRepository.upsertSessionUnit(any(), any()) }
+        coVerify(exactly = 0) { formAnswerRepository.upsertFormAnswer(any(), any(), any(), any()) }
+        coEvery { sessionUnitRepository.getSessionUnitById(any()) } returns null
+        coEvery { sessionUnitRepository.upsertSessionUnit(any(), any()) } returns Result.Success(Unit)
+        coEvery { formAnswerRepository.upsertFormAnswer(any(), any(), any(), any()) } returns Result.Success(Unit)
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("GP01-IN-CUP01")))
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.collectionBatchFormErrors.formAnswerErrors[3])
+            .isEqualTo(CollectionBatchFormError.CUP_CODE_MISMATCH)
+        viewModel.events.test {
+            viewModel.onAction(CollectionBatchFormAction.SubmitSessionUnitForm)
+            assertThat(awaitItem()).isInstanceOf(CollectionBatchFormEvent.NavigateToImagingScreen::class.java)
+            cancelAndIgnoreRemainingEvents()
+        }
+        assertThat(viewModel.state.value.collectionBatchFormErrors.formAnswerErrors[3]).isNull()
+        coVerify(exactly = 3) { formAnswerRepository.getSessionScopedFormAnswers(sessionId) }
+        coVerify(exactly = 1) { sessionUnitRepository.upsertSessionUnit(any(), sessionId) }
+    }
+    @Test
+    fun missingOriginalCupWarnsBeforeContinueAndBlocksSaving() = runTest {
+        val rescan = question(3, type = "qr", required = true).copy(
+            questionKey = "scan_cup_id_for_indoors"
+        )
+        stubForm(listOf(rescan))
+        coEvery { formAnswerRepository.getSessionScopedFormAnswers(sessionId) } returns emptyMap()
+        initViewModel()
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.expectedCupCodesByQuestionId).containsKey(3)
+        assertThat(viewModel.state.value.expectedCupCodesByQuestionId[3]).isNull()
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("GP01-IN-CUP01")))
+        advanceUntilIdle()
+        viewModel.onAction(CollectionBatchFormAction.SubmitSessionUnitForm)
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.collectionBatchFormErrors.formAnswerErrors[3])
+            .isEqualTo(CollectionBatchFormError.CUP_NOT_RECORDED)
+        coVerify(exactly = 0) { sessionUnitRepository.upsertSessionUnit(any(), any()) }
+        coVerify(exactly = 0) { formAnswerRepository.upsertFormAnswer(any(), any(), any(), any()) }
+    }
+    @Test
     fun missingProgramId_finishesLoadingWithNoQuestions() = runTest {
         coEvery { deviceCache.getProgramId() } returns null
         initViewModel()
@@ -434,6 +501,7 @@ class CollectionBatchFormViewModelTest {
                 validateCollectionBatchIdentity = ValidateCollectionBatchIdentityUseCase(),
             ),
             errorMessageEmitter = errorMessageEmitter,
+            getHouseholdNumber = mockk(relaxed = true),
         ).also { it.transactionHelper = transactionHelper }
     }
 

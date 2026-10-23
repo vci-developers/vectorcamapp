@@ -9,6 +9,9 @@ import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
 import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
+import com.vci.vectorcamapp.core.domain.model.FormQuestion
+import com.vci.vectorcamapp.program.kenya.domain.KenyaFormRules
+import com.vci.vectorcamapp.program.kenya.domain.GetHouseholdNumberUseCase
 import com.vci.vectorcamapp.core.domain.model.SessionUnit
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
@@ -46,7 +49,8 @@ class CollectionBatchFormViewModel @Inject constructor(
     private val programFormWorkflowFactory: ProgramFormWorkflowFactory,
     private val formAnswerRepository: FormAnswerRepository,
     private val collectionBatchFormValidationUseCases: CollectionBatchFormValidationUseCases,
-    errorMessageEmitter: ErrorMessageEmitter
+    errorMessageEmitter: ErrorMessageEmitter,
+    private val getHouseholdNumber: GetHouseholdNumberUseCase,
 ) : CoreViewModel(errorMessageEmitter) {
 
     @Inject
@@ -57,6 +61,8 @@ class CollectionBatchFormViewModel @Inject constructor(
     private val sessionUnitId: UUID? = destination.sessionUnitId?.let(UUID::fromString)
 
     private val draftSessionUnitId: UUID = sessionUnitId ?: UUID.randomUUID()
+    private var sessionFormQuestions: List<FormQuestion> = emptyList()
+    private var sessionFormAnswers: Map<Int, FormAnswer> = emptyMap()
 
     private val _state = MutableStateFlow(CollectionBatchFormState())
     private val _existingAnswersBySessionUnitId =
@@ -74,6 +80,9 @@ class CollectionBatchFormViewModel @Inject constructor(
                 editingSessionUnitId = draftSessionUnitId,
             ).errorOrNull()
         state.copy(
+            expectedCupCodesByQuestionId = KenyaFormRules.expectedCupCodes(
+                sessionFormQuestions, sessionFormAnswers, state.formQuestions, state.formAnswersByQuestionId
+            ),
             collectionBatchFormErrors = state.collectionBatchFormErrors.copy(
                 duplicateIdentity = duplicateIdentity
             )
@@ -126,11 +135,14 @@ class CollectionBatchFormViewModel @Inject constructor(
                             }
                         }
 
-                        it.copy(formAnswersByQuestionId = updatedAnswers)
+                        it.copy(
+                            formAnswersByQuestionId = updatedAnswers,
+                        )
                     }
                 }
 
                 CollectionBatchFormAction.SubmitSessionUnitForm -> {
+                    if (_state.value.isLoading) return@launch
                     val formQuestions = _state.value.formQuestions
                     val formAnswersByQuestionId = _state.value.formAnswersByQuestionId
 
@@ -138,10 +150,23 @@ class CollectionBatchFormViewModel @Inject constructor(
                         collectionBatchFormValidationUseCases.validateFormAnswers(
                             formQuestions,
                             formAnswersByQuestionId,
-                        )
+                        ).toMutableMap()
+                    sessionFormAnswers = formAnswerRepository.getSessionScopedFormAnswers(sessionId)
+                    val expectedCodes = KenyaFormRules.expectedCupCodes(
+                        sessionFormQuestions, sessionFormAnswers, formQuestions, formAnswersByQuestionId
+                    )
+                    expectedCodes.forEach { (questionId, expected) ->
+                        val actual = (formAnswersByQuestionId[questionId]?.value as? FormAnswerValue.StringValue)?.value
+                        if (expected == null) {
+                            formAnswersResult[questionId] = Result.Error(CollectionBatchFormError.CUP_NOT_RECORDED)
+                        } else if (actual != expected && formAnswersResult[questionId] !is Result.Error) {
+                            formAnswersResult[questionId] = Result.Error(CollectionBatchFormError.CUP_CODE_MISMATCH)
+                        }
+                    }
 
                     _state.update {
                         it.copy(
+                            expectedCupCodesByQuestionId = expectedCodes,
                             collectionBatchFormErrors = it.collectionBatchFormErrors.copy(
                                 formAnswerErrors = formAnswersResult.mapValues { (_, result) -> result.errorOrNull() },
                             )
@@ -225,17 +250,20 @@ class CollectionBatchFormViewModel @Inject constructor(
                 return@launch
             }
 
-            val formQuestions = programFormWorkflowFactory
-                .create(sessionType, program)
-                .sessionUnitFormQuestions
+            val workflow = programFormWorkflowFactory.create(sessionType, program)
+            sessionFormQuestions = workflow.sessionFormQuestions
+            val formQuestions = workflow.sessionUnitFormQuestions
 
             val savedFormAnswers =
                 formAnswerRepository.getSessionUnitScopedFormAnswers(draftSessionUnitId)
+            val householdNumber = getHouseholdNumber(sessionId)
+            sessionFormAnswers = formAnswerRepository.getSessionScopedFormAnswers(sessionId)
 
             _state.update {
                 it.copy(
                     isLoading = false,
                     formQuestions = formQuestions,
+                    householdNumber = householdNumber,
                     formAnswersByQuestionId = formQuestions.associate { question ->
                         question.id to (
                             savedFormAnswers[question.id] ?: FormAnswer(

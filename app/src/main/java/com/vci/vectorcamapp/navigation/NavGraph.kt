@@ -126,6 +126,8 @@ fun NavGraph(startDestination: Destination) {
             ObserveAsEvents(events = viewModel.events) { event ->
                 when (event) {
                     is IntakeEvent.NavigateAfterIntake -> navController.navigate(event.destination)
+                    IntakeEvent.NavigateHomeAfterCollectionSaved ->
+                        navController.popBackStack(Destination.Landing, false)
 
                     IntakeEvent.NavigateBackToPreviousScreen -> navController.popBackStack()
 

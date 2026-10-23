@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="intake_title_confirming_location">Confirmation du lieu…</string>
+    <string name="intake_title_saving_collection">Enregistrement de la collecte…</string>
+    <string name="intake_body_please_wait">Veuillez patienter un instant.</string>
+    <string name="intake_action_save_collection">Enregistrer la collecte et revenir à l’accueil</string>
     <string name="intake_error_consent_required">Le consentement du chef de ménage est nécessaire pour poursuivre la collecte.</string>
     <string name="intake_error_site_proximity_required">Sélectionnez un site et vérifiez votre position GPS dans un rayon de 2 km de ses coordonnées de référence pour remplir le formulaire et créer une session.</string>
     <string name="intake_body_outside_site_radius">Vous êtes à %1$.2f km du site de référence. Rapprochez-vous dans un rayon de 2 km et actualisez votre position pour continuer.</string>

@@ -31,6 +31,8 @@ class ValidateFormAnswersUseCase @Inject constructor() {
 
             val formAnswerResult = if (question.id in invalidBreakdownIds) {
                 Result.Error(FormValidationError.INCONSISTENT_PEOPLE_COUNTS)
+            } else if (!KenyaFormRules.hasValidCupLocation(question, answer)) {
+                Result.Error(FormValidationError.INVALID_CUP_LOCATION)
             } else if (isValidAnswer(question, answer) &&
                 KenyaFormRules.isWithinNumberLimit(question, answer)) {
                 Result.Success(Unit)

@@ -72,7 +72,8 @@ class IncompleteSessionViewModelTest {
             sessionRepository = sessionRepository,
             currentSessionCache = currentSessionCache,
             cameraRepository = cameraRepository,
-            errorMessageEmitter = errorMessageEmitter
+            errorMessageEmitter = errorMessageEmitter,
+            getHouseholdNumber = mockk(relaxed = true),
         )
     }
 

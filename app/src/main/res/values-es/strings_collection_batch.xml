@@ -13,9 +13,9 @@
     <string name="collection_batch_body_subtitle">Crea y edita los lotes de recolección aquí</string>
     <string name="collection_batch_body_form_subtitle">Completa la información a continuación</string>
     <string name="collection_batch_body_empty">Aún no hay lotes de recolección.\nToca el botón + de abajo para agregar uno.</string>
-    <string name="collection_batch_body_save_or_submit">¿Deseas guardar esta sesión para más tarde o enviarla ahora?</string>
-    <string name="collection_batch_body_confirm_save">¿Seguro que deseas guardar la sesión y salir?</string>
-    <string name="collection_batch_body_confirm_submit">¿Seguro que deseas enviar la sesión?</string>
+    <string name="collection_batch_body_save_or_submit">¿Aún no has terminado? Elige Guardar para después. Puedes volver a abrir esta sesión para hacer cambios o seguir tomando imágenes.\n\n¿Ya terminaste? Elige Enviar sesión. Después de enviarla, no podrás hacer cambios ni añadir más imágenes.</string>
+    <string name="collection_batch_body_confirm_save">¿Guardar tu progreso y volver al inicio? Puedes volver a abrir esta sesión más tarde para hacer cambios o seguir tomando imágenes.</string>
+    <string name="collection_batch_body_confirm_submit">¿Enviar esta sesión? Después de enviarla, no podrás hacer cambios ni añadir más imágenes. Si aún tienes trabajo pendiente, vuelve atrás y elige Guardar para después.</string>
     <string name="collection_batch_body_warning_zero">Advertencia: Estás a punto de enviar una sesión con cero lotes de recolección.</string>
 
     <!-- Labels -->
@@ -25,9 +25,9 @@
 
     <!-- Actions -->
     <string name="collection_batch_action_continue">Continuar a la captura de imágenes</string>
-    <string name="collection_batch_action_exit_dialog_submit">Enviar</string>
+    <string name="collection_batch_action_exit_dialog_submit">Enviar sesión</string>
     <string name="collection_batch_action_exit_dialog_confirm">Sí, confirmar</string>
-    <string name="collection_batch_action_exit_dialog_save">Guardar</string>
+    <string name="collection_batch_action_exit_dialog_save">Guardar para después</string>
     <string name="collection_batch_action_exit_dialog_back">Atrás</string>
 
     <!-- Content Descriptions -->

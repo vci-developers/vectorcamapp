@@ -39,7 +39,7 @@
     <string name="search_action_learn_more">Appuie pour en savoir plus sur la recherche</string>
 
     <!-- Shared Component Labels -->
-    <string name="core_label_select">Sélectionner</string>
+    <string name="core_label_select">Sélectionnez une option</string>
     <string name="core_label_select_date">Sélectionne une date</string>
     <string name="core_action_done">Terminé</string>
 

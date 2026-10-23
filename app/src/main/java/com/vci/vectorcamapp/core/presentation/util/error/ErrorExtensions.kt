@@ -121,11 +121,15 @@ fun Error.toString(context: Context): String {
             FormValidationError.INVALID_NUM_CHILDREN_UNDER_5 -> R.string.form_validation_error_invalid_num_children_under_5
             FormValidationError.INVALID_FORM_ANSWER -> R.string.form_validation_error_invalid_form_answer
             FormValidationError.INCONSISTENT_PEOPLE_COUNTS -> R.string.form_validation_error_inconsistent_people_counts
+            FormValidationError.INVALID_CUP_LOCATION -> R.string.form_validation_error_invalid_cup_location
         }
 
         is CollectionBatchFormError -> when (this) {
             CollectionBatchFormError.FORM_INVALID -> R.string.collection_batch_form_error_form_invalid
             CollectionBatchFormError.INVALID_FORM_ANSWER -> R.string.collection_batch_form_error_invalid_form_answer
+            CollectionBatchFormError.CUP_CODE_MISMATCH -> R.string.collection_batch_form_error_cup_code_mismatch
+            CollectionBatchFormError.CUP_NOT_RECORDED -> R.string.collection_batch_form_error_cup_not_recorded
+            CollectionBatchFormError.INVALID_CUP_LOCATION -> R.string.form_validation_error_invalid_cup_location
             CollectionBatchFormError.DUPLICATE_IDENTITY -> R.string.collection_batch_form_error_duplicate_identity
             CollectionBatchFormError.UNKNOWN_ERROR -> R.string.collection_batch_form_error_unknown_error
         }

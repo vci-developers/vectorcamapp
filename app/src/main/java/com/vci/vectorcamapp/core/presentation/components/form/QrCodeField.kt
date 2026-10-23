@@ -25,6 +25,7 @@ fun QrCodeField(
     modifier: Modifier = Modifier,
     required: Boolean = false,
     error: Error? = null,
+    showErrorMessage: Boolean = true,
 ) {
     var scannerVisible by rememberSaveable { mutableStateOf(false) }
 
@@ -34,6 +35,7 @@ fun QrCodeField(
         onValueChange = onValueChange,
         required = required,
         error = error,
+        showErrorMessage = showErrorMessage,
         singleLine = true,
         modifier = modifier.fillMaxWidth(),
         trailingIcon = {

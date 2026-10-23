@@ -18,7 +18,10 @@ import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
-fun DuplicateIdentityWarningBanner(modifier: Modifier = Modifier) {
+fun DuplicateIdentityWarningBanner(
+    modifier: Modifier = Modifier,
+    message: String = stringResource(R.string.collection_batch_form_error_duplicate_identity),
+) {
     Surface(
         modifier = modifier,
         shape = MaterialTheme.shapes.medium,
@@ -36,7 +39,7 @@ fun DuplicateIdentityWarningBanner(modifier: Modifier = Modifier) {
                 modifier = Modifier.size(MaterialTheme.dimensions.iconSizeMedium),
             )
             Text(
-                text = stringResource(R.string.collection_batch_form_error_duplicate_identity),
+                text = message,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onErrorContainer,
             )

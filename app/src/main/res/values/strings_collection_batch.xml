@@ -13,9 +13,9 @@
     <string name="collection_batch_body_subtitle">Create and edit collection batches here</string>
     <string name="collection_batch_body_form_subtitle">Fill out the information below</string>
     <string name="collection_batch_body_empty">No collection batches yet.\nTap the + button below to add one.</string>
-    <string name="collection_batch_body_save_or_submit">Would you like to save this session for later, or submit it now?</string>
-    <string name="collection_batch_body_confirm_save">Are you sure you want to save the session and exit?</string>
-    <string name="collection_batch_body_confirm_submit">Are you sure you want to submit the session?</string>
+    <string name="collection_batch_body_save_or_submit">Not finished? Choose Save for later. You can reopen this session to make changes or continue imaging.\n\nFinished? Choose Submit session. After submitting, you cannot make changes or add more images.</string>
+    <string name="collection_batch_body_confirm_save">Save your progress and return home? You can reopen this session later to make changes or continue imaging.</string>
+    <string name="collection_batch_body_confirm_submit">Submit this session? After submitting, you cannot make changes or add more images. If you still have work to do, go back and choose Save for later.</string>
     <string name="collection_batch_body_warning_zero">Warning: You are about to submit a session with zero collection batches.</string>
 
     <!-- Labels -->
@@ -25,9 +25,9 @@
 
     <!-- Actions -->
     <string name="collection_batch_action_continue">Continue to Imaging</string>
-    <string name="collection_batch_action_exit_dialog_submit">Submit</string>
+    <string name="collection_batch_action_exit_dialog_submit">Submit session</string>
     <string name="collection_batch_action_exit_dialog_confirm">Yes, Confirm</string>
-    <string name="collection_batch_action_exit_dialog_save">Save</string>
+    <string name="collection_batch_action_exit_dialog_save">Save for later</string>
     <string name="collection_batch_action_exit_dialog_back">Back</string>
 
     <!-- Content Descriptions -->

@@ -1,4 +1,7 @@
 package com.vci.vectorcamapp.collection_batch.form.presentation
+import com.vci.vectorcamapp.program.kenya.presentation.HouseholdBanner
+import com.vci.vectorcamapp.program.kenya.domain.KenyaFormRules
+import com.vci.vectorcamapp.core.domain.model.FormQuestion
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.collection_batch.form.presentation.components.CollectionBatchFormTile
+import com.vci.vectorcamapp.collection_batch.domain.util.error.CollectionBatchFormError
 import com.vci.vectorcamapp.collection_batch.form.presentation.components.DuplicateIdentityWarningBanner
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
@@ -46,6 +50,12 @@ fun CollectionBatchFormScreen(
         },
         modifier = modifier
     ) {
+        item {
+            HouseholdBanner(
+                state.householdNumber,
+                Modifier.padding(horizontal = MaterialTheme.dimensions.paddingMedium)
+            )
+        }
         if (identityQuestions.isNotEmpty()) {
             item {
                 CollectionBatchFormTile(
@@ -76,6 +86,15 @@ fun CollectionBatchFormScreen(
                     if (state.collectionBatchFormErrors.duplicateIdentity != null) {
                         DuplicateIdentityWarningBanner(modifier = Modifier.fillMaxWidth())
                     }
+                    state.formQuestions.filter {
+                        state.expectedCupCodesByQuestionId.containsKey(it.id) &&
+                            state.expectedCupCodesByQuestionId[it.id] == null
+                    }.forEach { question ->
+                        DuplicateIdentityWarningBanner(
+                            modifier = Modifier.fillMaxWidth(),
+                            message = missingCupMessage(question),
+                        )
+                    }
                 }
             }
         }
@@ -102,6 +121,13 @@ fun CollectionBatchFormScreen(
                                     )
                                 },
                                 error = state.collectionBatchFormErrors.formAnswerErrors[question.id],
+                                errorMessage = if (state.collectionBatchFormErrors.formAnswerErrors[question.id] ==
+                                    CollectionBatchFormError.CUP_NOT_RECORDED) {
+                                    missingCupMessage(question)
+                                } else state.expectedCupCodesByQuestionId[question.id]?.takeIf {
+                                    state.collectionBatchFormErrors.formAnswerErrors[question.id] ==
+                                        CollectionBatchFormError.CUP_CODE_MISMATCH
+                                }?.let { stringResource(R.string.collection_batch_form_error_recorded_cup_code, it) },
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
@@ -122,3 +148,12 @@ fun CollectionBatchFormScreen(
         }
     }
 }
+@Composable
+private fun missingCupMessage(question: FormQuestion): String = stringResource(
+    when (KenyaFormRules.cupLocationToken(question)) {
+        "IN" -> R.string.collection_batch_form_error_cup_not_recorded_indoors
+        "OUT" -> R.string.collection_batch_form_error_cup_not_recorded_outdoors
+        "ANS" -> R.string.collection_batch_form_error_cup_not_recorded_animal_shelter
+        else -> R.string.collection_batch_form_error_cup_not_recorded
+    }
+)

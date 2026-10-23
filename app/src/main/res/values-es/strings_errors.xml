@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="form_validation_error_inconsistent_people_counts">Complete las tres cantidades. El total debe ser igual al número de personas que durmieron bajo un mosquitero LLIN más el número de las que no lo hicieron.</string>
+    <string name="collection_batch_form_error_cup_not_recorded_indoors">No se escaneó ningún vaso durante la recolección en el interior. Por favor, revisa el formulario de recolección.</string>
+    <string name="collection_batch_form_error_cup_not_recorded_outdoors">No se escaneó ningún vaso durante la recolección en el exterior. Por favor, revisa el formulario de recolección.</string>
+    <string name="collection_batch_form_error_cup_not_recorded_animal_shelter">No se escaneó ningún vaso durante la recolección en el refugio de animales. Por favor, revisa el formulario de recolección.</string>
+    <string name="collection_batch_form_error_cup_not_recorded">No se escaneó ningún vaso durante la recolección para este lugar. Por favor, revisa el formulario de recolección.</string>
+    <string name="collection_batch_form_error_recorded_cup_code">El código introducido durante la recolección fue %1$s. Por favor, revisa la etiqueta del vaso.</string>
+    <string name="form_validation_error_invalid_cup_location">Escanea el vaso etiquetado para este lugar de recolección.</string>
+    <string name="form_validation_error_cup_indoors">Escanea el vaso etiquetado IN para interior.</string>
+    <string name="form_validation_error_cup_outdoors">Escanea el vaso etiquetado OUT para exterior.</string>
+    <string name="form_validation_error_cup_animal_shelter">Escanea el vaso etiquetado ANS para refugio de animales.</string>
+    <string name="collection_batch_form_error_cup_code_mismatch">Escanee el mismo recipiente registrado para este lugar durante la recolección en el hogar. El escaneo original debe estar guardado en esta sesión.</string>
+    <string name="form_validation_error_inconsistent_people_counts">Por favor, revisa los números. Las personas que durmieron bajo un mosquitero + las que no lo hicieron deben sumar el total de personas.</string>
 
     <!-- Error Fallback -->
     <string name="error_fallback">Ocurrió un error desconocido. Vuelve a intentarlo o contacta con soporte si el problema persiste.</string>

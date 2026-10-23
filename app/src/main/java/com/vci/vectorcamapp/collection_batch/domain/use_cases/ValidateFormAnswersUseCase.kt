@@ -28,7 +28,9 @@ class ValidateFormAnswersUseCase @Inject constructor() {
 
             val answer = formAnswersByQuestionId[question.id]?.value ?: FormAnswerValue.StringValue("")
 
-            val formAnswerResult = if (isValidAnswer(question, answer) &&
+            val formAnswerResult = if (!KenyaFormRules.hasValidCupLocation(question, answer)) {
+                Result.Error(CollectionBatchFormError.INVALID_CUP_LOCATION)
+            } else if (isValidAnswer(question, answer) &&
                 KenyaFormRules.isWithinNumberLimit(question, answer)) {
                 Result.Success(Unit)
             } else {

@@ -238,6 +238,26 @@ class IntakeViewModelTest {
         unmockkStatic(Location::class)
     }
     @Test
+    fun newSession_defaultsToProkopackAndFresh() = runTest {
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        assertThat(vm.state.value.session.collectionMethod)
+            .isEqualTo(IntakeDropdownOptions.CollectionMethodOption.PROKOPACK_ASPIRATOR.label)
+        assertThat(vm.state.value.session.specimenCondition)
+            .isEqualTo(IntakeDropdownOptions.SpecimenConditionOption.FRESH.label)
+    }
+    @Test
+    fun resumedSession_preservesSavedMethodAndCondition() = runTest {
+        val saved = sampleSession().copy(collectionMethod = "Other method", specimenCondition = "Dessicated")
+        coEvery { currentSessionCache.getSession() } returns saved
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        assertThat(vm.state.value.session.collectionMethod).isEqualTo(saved.collectionMethod)
+        assertThat(vm.state.value.session.specimenCondition).isEqualTo(saved.specimenCondition)
+    }
+    @Test
     fun kenyaNumberLimit_rejectsOverLimitUpdatesAndAllowsClearing() = runTest {
         every { programFormWorkflow.sessionFormQuestions } returns listOf(
             question(42, "number", questionKey = "how_many_people_slept_in_this_house_last_night")
@@ -398,6 +418,32 @@ class IntakeViewModelTest {
     // ========================================
     // A. Initialization & Loading
     // ========================================
+    @Test
+    fun submission_blocksRepeatActionsAndClearsProgressAfterLocationFailure() = runTest {
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        runCurrent()
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("true")))
+        runCurrent()
+        val originalAnswers = vm.state.value.formAnswersByQuestionId
+        val pendingLocation = CompletableDeferred<Result<Location, IntakeError>>()
+        coEvery { locationRepository.getCurrentLocation() } coAnswers { pendingLocation.await() }
+        vm.onAction(IntakeAction.SubmitIntakeForm)
+        runCurrent()
+        assertThat(vm.state.value.isSubmitting).isTrue()
+        assertThat(vm.state.value.isCheckingLocation).isTrue()
+        vm.onAction(IntakeAction.SubmitIntakeForm)
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("false")))
+        runCurrent()
+        assertThat(vm.state.value.formAnswersByQuestionId).isEqualTo(originalAnswers)
+        coVerify(exactly = 2) { locationRepository.getCurrentLocation() }
+        pendingLocation.complete(Result.Error(IntakeError.LOCATION_GPS_TIMEOUT))
+        runCurrent()
+        assertThat(vm.state.value.isSubmitting).isFalse()
+        assertThat(vm.state.value.isCheckingLocation).isFalse()
+        assertThat(vm.state.value.formAnswersByQuestionId).isEqualTo(originalAnswers)
+        coVerify(exactly = 0) { sessionRepository.upsertSession(any(), any()) }
+    }
 
     @Test
     fun intakeVm_a01_noProgramId_emitsError_andNavigatesBack() = runTest {
@@ -706,6 +752,7 @@ class IntakeViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
         coVerify(exactly = 0) { locationRepository.getCurrentLocation() }
+        coVerify(exactly = 1) { currentSessionCache.saveSession(any(), testSite.id) }
         assertThat(vm.state.value.session.latitude).isEqualTo(session.latitude)
         assertThat(vm.state.value.session.longitude).isEqualTo(session.longitude)
     }
@@ -1000,7 +1047,7 @@ class IntakeViewModelTest {
     }
 
     @Test
-    fun intakeVm_i04_submit_districtSite_navigates() = runTest {
+    fun intakeVm_i04_submit_districtSite_savesAndReturnsHome() = runTest {
         runTransactions()
         coEvery { sessionRepository.upsertSession(any(), any()) } returns Result.Success(Unit)
         coEvery { formAnswerRepository.upsertFormAnswer(any(), any(), any(), any()) } returns Result.Success(Unit)
@@ -1015,10 +1062,12 @@ class IntakeViewModelTest {
 
         vm.events.test {
             vm.onAction(IntakeAction.SubmitIntakeForm)
-            assertThat(awaitItem()).isEqualTo(IntakeEvent.NavigateAfterIntake(Destination.Imaging(null)))
+            assertThat(awaitItem()).isEqualTo(IntakeEvent.NavigateHomeAfterCollectionSaved)
             cancelAndIgnoreRemainingEvents()
         }
-        coVerify { currentSessionCache.saveSession(any(), testSite.id) }
+        coVerify { currentSessionCache.clearSession() }
+        coVerify(exactly = 0) { currentSessionCache.saveSession(any(), any()) }
+        coVerify { sessionRepository.upsertSession(any(), testSite.id) }
         coVerify { defaultIntakeFieldsCache.saveDefaultIntakeFields(any(), any(), any(), any(), any(), any(), any()) }
     }
 
@@ -1052,7 +1101,7 @@ class IntakeViewModelTest {
 
         vm.events.test {
             vm.onAction(IntakeAction.SubmitIntakeForm)
-            assertThat(awaitItem()).isEqualTo(IntakeEvent.NavigateAfterIntake(Destination.Imaging(null)))
+            assertThat(awaitItem()).isEqualTo(IntakeEvent.NavigateHomeAfterCollectionSaved)
             cancelAndIgnoreRemainingEvents()
         }
         coVerify { surveillanceFormRepository.upsertSurveillanceForm(any(), any()) }

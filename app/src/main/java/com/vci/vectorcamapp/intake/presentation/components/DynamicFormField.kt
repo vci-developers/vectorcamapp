@@ -6,6 +6,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.intake.domain.util.FormValidationError
+import com.vci.vectorcamapp.collection_batch.domain.util.error.CollectionBatchFormError
 import androidx.compose.ui.text.input.KeyboardType
 import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
@@ -26,6 +30,7 @@ fun DynamicFormField(
     onValueChange: (FormAnswerValue) -> Unit,
     modifier: Modifier = Modifier,
     error: Error? = null,
+    errorMessage: String? = null,
 ) {
     val label = question.label
     val text = (value as? FormAnswerValue.StringValue)?.value.orEmpty()
@@ -41,14 +46,32 @@ fun DynamicFormField(
             modifier = modifier,
         )
         "qr" -> {
+            val locationError = error == FormValidationError.INVALID_CUP_LOCATION ||
+                error == CollectionBatchFormError.INVALID_CUP_LOCATION
+            val locationMessage = if (locationError) {
+                when (KenyaFormRules.cupLocationToken(question)) {
+                    "IN" -> R.string.form_validation_error_cup_indoors
+                    "OUT" -> R.string.form_validation_error_cup_outdoors
+                    "ANS" -> R.string.form_validation_error_cup_animal_shelter
+                    else -> null
+                }
+            } else null
             QrCodeField(
                 label = label,
                 required = question.required,
                 value = text,
                 onValueChange = onTextChange,
                 error = error,
+                showErrorMessage = locationMessage == null && errorMessage == null,
                 modifier = modifier,
             )
+            if (errorMessage != null || locationMessage != null) {
+                Text(
+                    text = errorMessage ?: stringResource(requireNotNull(locationMessage)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colors.error,
+                )
+            }
         }
 
         "text" -> {

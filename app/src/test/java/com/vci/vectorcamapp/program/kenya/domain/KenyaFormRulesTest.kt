@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.program.kenya.domain
 import com.google.common.truth.Truth.assertThat
+import com.vci.vectorcamapp.collection_batch.domain.util.error.CollectionBatchFormError
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
 import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
@@ -13,6 +14,97 @@ import org.junit.Test
 import java.util.UUID
 import com.vci.vectorcamapp.collection_batch.domain.use_cases.ValidateFormAnswersUseCase as ValidateBatchAnswers
 class KenyaFormRulesTest {
+    @Test
+    fun expectedCupCodesOnlyIncludeSelectedLocationAndDistinguishMissingOriginal() {
+        val selection = question("where_is_mosquito_collection_taking_place_2").copy(
+            id = 10, type = "select"
+        )
+        val scan = question("scan_cup_id_for_indoors").copy(
+            id = 11, type = "qr",
+            prerequisite = FormQuestionPrerequisiteExpression.Predicate(
+                10, "eq", FormQuestionPrerequisiteValue.StringValue("Indoors")
+            )
+        )
+        fun expected(location: String) = KenyaFormRules.expectedCupCodes(
+            emptyList(), emptyMap(), listOf(selection, scan),
+            mapOf(10 to answers(location).getValue(1))
+        )
+        assertThat(expected("")).isEmpty()
+        assertThat(expected("Indoors")).containsExactly(11, null)
+        assertThat(expected("Outdoors")).isEmpty()
+    }
+    @Test
+    fun cupLocationTokensAreCheckedForBothOriginalsAndRescans() {
+        listOf("indoors" to "IN", "outdoors" to "OUT", "animal_shelter" to "ANS")
+            .forEach { (suffix, token) ->
+                listOf("scan_cup_id_for_$suffix", "scan_cup_id_for_${suffix}_2")
+                    .forEach { key ->
+                        val field = question(key).copy(id = 1, type = "qr")
+                        val valid = answers("GP01-$token-CUP01")
+                        assertThat(KenyaFormRules.hasValidCupLocation(field, valid.getValue(1).value)).isTrue()
+                        assertThat(ValidateFormAnswersUseCase()(listOf(field), valid)[1])
+                            .isInstanceOf(Result.Success::class.java)
+                        assertThat(ValidateBatchAnswers()(listOf(field), valid)[1])
+                            .isInstanceOf(Result.Success::class.java)
+                        listOf("", "GP01-X${token}-CUP01", "GP01-${token}X-CUP01",
+                            "GP01-${token.lowercase()}-CUP01", "GP01-$token-CUP01-EXTRA",
+                            "GP01-CUP01-$token", "-$token-CUP01", "GP01-$token-")
+                            .forEach { code ->
+                                val invalid = answers(code)
+                                assertThat(KenyaFormRules.hasValidCupLocation(field, invalid.getValue(1).value))
+                                    .isFalse()
+                                assertThat(ValidateFormAnswersUseCase()(listOf(field), invalid)[1])
+                                    .isEqualTo(Result.Error(FormValidationError.INVALID_CUP_LOCATION))
+                                assertThat(ValidateBatchAnswers()(listOf(field), invalid)[1])
+                                    .isEqualTo(Result.Error(
+                                        CollectionBatchFormError.INVALID_CUP_LOCATION
+                                    ))
+                            }
+                    }
+            }
+        assertThat(KenyaFormRules.hasValidCupLocation(question("unrelated"), value("anything"))).isTrue()
+    }
+    @Test
+    fun siteRadiusIsInclusiveAndRejectsUnverifiableDistances() {
+        listOf(0f, 1999f, 2000f).forEach {
+            assertThat(KenyaFormRules.isWithinSiteRadius(it)).isTrue()
+        }
+        listOf(null, -1f, 2000.1f, Float.NaN, Float.POSITIVE_INFINITY).forEach {
+            assertThat(KenyaFormRules.isWithinSiteRadius(it)).isFalse()
+        }
+    }
+    @Test
+    fun cupRescansMatchOnlyTheirSelectedLocationAndCurrentSessionOriginal() {
+        listOf("indoors" to "Indoors", "outdoors" to "Outdoors", "animal_shelter" to "Animal Shelter")
+            .forEach { (suffix, location) ->
+                val selection = question("where_is_mosquito_collection_taking_place").copy(id = 1, type = "multi-select")
+                val original = question("scan_cup_id_for_${suffix}_2").copy(id = 2, type = "qr")
+                val rescan = question("scan_cup_id_for_$suffix").copy(id = 3, type = "qr",
+                    answerScope = FormQuestionScope.SESSION_UNIT)
+                val sessionAnswers = mapOf(
+                    1 to answers("")[1]!!.copy(value = FormAnswerValue.ListValue(listOf(location))),
+                    2 to answers("GP01-IN-CUP01")[1]!!,
+                )
+                fun validate(actual: String, saved: Map<Int, FormAnswer> = sessionAnswers) =
+                    KenyaFormRules.mismatchedCupQuestionIds(
+                        listOf(selection, original), saved, listOf(rescan),
+                        mapOf(3 to answers(actual)[1]!!)
+                    )
+                assertThat(validate("GP01-IN-CUP01")).isEmpty()
+                listOf("", "GP01-IN-CUP02", "gp01-in-cup01", " GP01-IN-CUP01").forEach {
+                    assertThat(validate(it)).containsExactly(3)
+                }
+                assertThat(validate("GP01-IN-CUP01", sessionAnswers - 2)).containsExactly(3)
+                assertThat(validate("GP01-IN-CUP01", sessionAnswers - 1)).containsExactly(3)
+                assertThat(validate("GP01-IN-CUP01", emptyMap())).containsExactly(3)
+                val hidden = rescan.copy(prerequisite = FormQuestionPrerequisiteExpression.Predicate(
+                    99, "eq", FormQuestionPrerequisiteValue.StringValue("Outdoors")
+                ))
+                assertThat(KenyaFormRules.mismatchedCupQuestionIds(
+                    listOf(selection, original), sessionAnswers, listOf(hidden), emptyMap()
+                )).isEmpty()
+            }
+    }
     private val breakdownKeys = listOf(
         listOf(
             "how_many_people_slept_in_this_house_last_night",

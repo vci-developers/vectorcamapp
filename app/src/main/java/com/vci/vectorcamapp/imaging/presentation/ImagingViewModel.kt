@@ -93,7 +93,7 @@ class ImagingViewModel @Inject constructor(
     lateinit var imagingWorkflowFactory: ImagingWorkflowFactory
     private lateinit var imagingWorkflow: ImagingWorkflow
 
-    // ── Analytics timing fields ───────────────────────────────────────────────
+    // Analytics timing fields
     private var sessionStartedAt: Long = 0L
     private var captureStartedAt: Long = 0L
     private var inferenceStartedAt: Long = 0L

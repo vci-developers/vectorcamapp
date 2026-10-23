@@ -19,6 +19,7 @@ data class IntakeState(
     val canUpdateLocation: Boolean = false,
     val isResumingSession: Boolean = false,
     val isCheckingLocation: Boolean = false,
+    val isSubmitting: Boolean = false,
     val distanceToSiteMeters: Float? = null,
     val isWithinSiteRadius: Boolean = false,
     val allCollectors: List<Collector> = emptyList(),

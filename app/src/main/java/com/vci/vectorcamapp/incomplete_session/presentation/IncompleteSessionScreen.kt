@@ -91,6 +91,7 @@ fun IncompleteSessionScreen(
         ) { index, sessionAndSite ->
             IncompleteSessionCard(
                 sessionAndSite = sessionAndSite,
+                householdNumber = state.householdNumbersBySessionId[sessionAndSite.session.localId],
                 onClick = { onAction(IncompleteSessionAction.ResumeSession(sessionAndSite.session.localId)) },
                 onDelete = { onAction(IncompleteSessionAction.DeleteSession(sessionAndSite.session.localId)) },
                 modifier = Modifier.testTag("${IncompleteSessionTestTags.CARD_PREFIX}-$index")

@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.incomplete_session.presentation
 
 import android.content.Context
+import com.vci.vectorcamapp.program.kenya.domain.GetHouseholdNumberUseCase
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
@@ -31,6 +32,7 @@ class IncompleteSessionViewModel @Inject constructor(
     private val currentSessionCache: CurrentSessionCache,
     private val cameraRepository: CameraRepository,
     errorMessageEmitter: ErrorMessageEmitter,
+    private val getHouseholdNumber: GetHouseholdNumberUseCase,
 ) : CoreViewModel(errorMessageEmitter) {
 
     private val _incompleteSessionsAndSites = sessionRepository.observeIncompleteSessionsAndSites()
@@ -38,6 +40,9 @@ class IncompleteSessionViewModel @Inject constructor(
     private val _state = MutableStateFlow(IncompleteSessionState())
 
     val state = combine(_incompleteSessionsAndSites, _state) { incompleteSessionsAndSites, currentState ->
+        val householdNumbers = incompleteSessionsAndSites.mapNotNull { entry ->
+            getHouseholdNumber(entry.session.localId)?.let { entry.session.localId to it }
+        }.toMap()
         val filteredSessions = if (currentState.searchQuery.isBlank()) {
             incompleteSessionsAndSites
         } else {
@@ -46,6 +51,7 @@ class IncompleteSessionViewModel @Inject constructor(
                 val site = sessionAndSite.site
                 val fieldsForSearch = buildList {
                     add(session.collectorName)
+                    add(householdNumbers[session.localId])
                     add(session.collectorTitle)
                     add(session.type.name)
                     add(session.type.displayText(context))
@@ -63,7 +69,7 @@ class IncompleteSessionViewModel @Inject constructor(
                 SearchUtils.matchesQuery(currentState.searchQuery, fieldsForSearch)
             }
         }
-        currentState.copy(sessionAndSites = filteredSessions)
+        currentState.copy(sessionAndSites = filteredSessions, householdNumbersBySessionId = householdNumbers)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), IncompleteSessionState())
 
     private val _events = Channel<IncompleteSessionEvent>()
