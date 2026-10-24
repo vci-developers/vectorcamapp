@@ -168,7 +168,7 @@ class RegistrationViewModel @Inject constructor(
                             "has_selected_program" to (selectedProgram != null),
                             "collector_name_present" to collector.name.isNotBlank(),
                             "collector_title_present" to collector.title.isNotBlank(),
-                            "collector_last_trained_on_present" to (collector.lastTrainedOn != null)
+                            "collector_last_trained_on_present" to (collector.lastTrainedOn != 0L)
                         )
                     )
 
