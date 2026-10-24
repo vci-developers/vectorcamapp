@@ -38,7 +38,8 @@ fun TextEntryField(
     maxCharacters: Int = 200,
     showErrorMessage: Boolean = true,
     required: Boolean = false,
-    trailingIcon: @Composable (() -> Unit)? = null
+    trailingIcon: @Composable (() -> Unit)? = null,
+    prefix: String? = null,
 ) {
     val context = LocalContext.current
 
@@ -92,6 +93,9 @@ fun TextEntryField(
                 )
             ),
             trailingIcon = trailingIcon,
+            prefix = prefix?.let { text ->
+                { Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colors.textSecondary) }
+            },
             modifier = modifier
                 .fillMaxWidth()
                 .background(

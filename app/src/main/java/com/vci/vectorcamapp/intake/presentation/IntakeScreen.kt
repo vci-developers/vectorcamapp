@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.program.kenya.domain.KenyaFormRules
 import com.vci.vectorcamapp.core.domain.model.Collector
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
@@ -700,6 +701,11 @@ fun IntakeScreen(
                         ) {
                             DynamicFormField(
                                 question = question,
+                                householdPrefix = KenyaFormRules.householdPrefix(
+                                    state.siteSelectionsByLocationTypeId.values +
+                                        listOf(state.selectedVillageName, state.selectedHouseNumber) +
+                                        listOfNotNull(state.selectedSiteWithCoordinates?.name)
+                                ),
                                     value = state.formAnswersByQuestionId.getValue(question.id).value,
                                 error = state.intakeErrors.formAnswerErrors[question.id],
                                 onValueChange = {

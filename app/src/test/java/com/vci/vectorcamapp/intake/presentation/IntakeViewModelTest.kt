@@ -72,6 +72,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -220,11 +221,11 @@ class IntakeViewModelTest {
             collectorRepository = collectorRepository,
             programRepository = programRepository,
             formAnswerRepository = formAnswerRepository,
+            programFormWorkflowFactory = programFormWorkflowFactory,
+            collectionMethodWorkflowFactory = collectionMethodWorkflowFactory,
             errorMessageEmitter = errorMessageEmitter,
         ).also { vm ->
             vm.transactionHelper = transactionHelper
-            vm.programFormWorkflowFactory = programFormWorkflowFactory
-            vm.collectionMethodWorkflowFactory = collectionMethodWorkflowFactory
         }
     }
 
@@ -232,6 +233,26 @@ class IntakeViewModelTest {
         coEvery { transactionHelper.runAsTransaction<Boolean>(any()) } coAnswers {
             firstArg<suspend () -> Boolean>().invoke()
         }
+    }
+    @Test
+    fun draftSurvivesStateResubscriptionAfterScreenLock() = runTest {
+        val vm = makeViewModel()
+        val subscription = backgroundScope.launch { vm.state.collect {} }
+        runCurrent()
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("true")))
+        runCurrent()
+        val draft = vm.state.value
+        assertThat(draft.hasHouseholdHeadConsent).isTrue()
+        subscription.cancel()
+        runCurrent()
+        advanceTimeBy(6000)
+        runCurrent()
+        backgroundScope.launch { vm.state.collect {} }
+        runCurrent()
+        assertThat(vm.state.value.formAnswersByQuestionId).isEqualTo(draft.formAnswersByQuestionId)
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(draft.selectedSiteWithCoordinates)
+        coVerify(exactly = 1) { programFormWorkflowFactory.create(any(), any()) }
+        coVerify(exactly = 1) { locationRepository.getCurrentLocation() }
     }
     @After
     fun tearDown() {
@@ -503,7 +524,8 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(4)
+            runCurrent()
+            expectMostRecentItem()
 
             vm.onAction(IntakeAction.EnterHardwareId("DEVICE_001"))
             advanceUntilIdle()
@@ -519,7 +541,8 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(4)
+            runCurrent()
+            expectMostRecentItem()
 
             vm.onAction(IntakeAction.EnterNotes("Some field notes"))
             advanceUntilIdle()
@@ -536,7 +559,8 @@ class IntakeViewModelTest {
         val newDate = 1_700_000_000L
 
         vm.state.test {
-            skipItems(4)
+            runCurrent()
+            expectMostRecentItem()
 
             vm.onAction(IntakeAction.PickCollectionDate(newDate))
             advanceUntilIdle()
@@ -552,7 +576,8 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(4)
+            runCurrent()
+            expectMostRecentItem()
 
             vm.onAction(IntakeAction.UpdateCollectionMethod("Aspirator"))
             advanceUntilIdle()
@@ -568,7 +593,8 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(4)
+            runCurrent()
+            expectMostRecentItem()
 
             vm.onAction(IntakeAction.UpdateSpecimenCondition("Excellent"))
             advanceUntilIdle()
@@ -584,7 +610,8 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(4)
+            runCurrent()
+            expectMostRecentItem()
 
             vm.onAction(IntakeAction.SelectCollector(testCollector))
             advanceUntilIdle()
@@ -606,7 +633,8 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(4)
+            runCurrent()
+            expectMostRecentItem()
 
             vm.onAction(IntakeAction.SelectVillageName("Village A"))
             vm.onAction(IntakeAction.SelectHouseNumber("123"))
@@ -626,7 +654,8 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(4)
+            runCurrent()
+            expectMostRecentItem()
 
             vm.onAction(IntakeAction.SelectHouseNumber("456"))
             vm.onAction(IntakeAction.SelectVillageName("Village B"))
@@ -644,7 +673,8 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(4)
+            runCurrent()
+            expectMostRecentItem()
 
             vm.onAction(IntakeAction.SelectHouseNumber("789"))
             advanceUntilIdle()
@@ -665,7 +695,8 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
 
         vm.state.test {
-            skipItems(4)
+            runCurrent()
+            expectMostRecentItem()
 
             collectorsFlow.value = listOf(testCollector)
             advanceUntilIdle()

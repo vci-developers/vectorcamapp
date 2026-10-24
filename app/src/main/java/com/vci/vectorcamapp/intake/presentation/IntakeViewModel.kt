@@ -48,7 +48,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -73,6 +72,8 @@ class IntakeViewModel @Inject constructor(
     private val collectorRepository: CollectorRepository,
     private val programRepository: ProgramRepository,
     private val formAnswerRepository: FormAnswerRepository,
+    private val programFormWorkflowFactory: ProgramFormWorkflowFactory,
+    private val collectionMethodWorkflowFactory: CollectionMethodWorkflowFactory,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
 
@@ -85,12 +86,8 @@ class IntakeViewModel @Inject constructor(
     @Inject
     lateinit var transactionHelper: TransactionHelper
 
-    @Inject
-    lateinit var programFormWorkflowFactory: ProgramFormWorkflowFactory
     private lateinit var programFormWorkflow: ProgramFormWorkflow
 
-    @Inject
-    lateinit var collectionMethodWorkflowFactory: CollectionMethodWorkflowFactory
     private lateinit var collectionMethodWorkflow: CollectionMethodWorkflow
 
     private val _allCollectors = collectorRepository.observeAllCollectors()
@@ -99,8 +96,6 @@ class IntakeViewModel @Inject constructor(
     private val _state = MutableStateFlow(IntakeState())
     val state = combine(_allCollectors, _state) { allCollectors, state ->
         state.copy(allCollectors = allCollectors)
-    }.onStart {
-        loadFormDetails()
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000L),
@@ -109,6 +104,9 @@ class IntakeViewModel @Inject constructor(
 
     private val _events = Channel<IntakeEvent>()
     val events = _events.receiveAsFlow()
+    init {
+        loadFormDetails()
+    }
 
     fun onAction(action: IntakeAction) {
         viewModelScope.launch {
@@ -342,8 +340,15 @@ class IntakeViewModel @Inject constructor(
 
                             val formAnswers = _state.value.formAnswersByQuestionId
                             for ((questionId, answer) in formAnswers) {
+                                val question = _state.value.formQuestions.find { it.id == questionId }
+                                val savedAnswer = if (question != null && KenyaFormRules.isHouseholdNumber(question)) {
+                                    val number = (answer.value as? FormAnswerValue.StringValue)?.value.orEmpty()
+                                    answer.copy(value = FormAnswerValue.StringValue(
+                                        if (number.isEmpty()) number else number.padStart(2, '0')
+                                    ))
+                                } else answer
                                 formAnswerRepository.upsertFormAnswer(
-                                    answer,
+                                    savedAnswer,
                                     session.localId,
                                     null,
                                     questionId
@@ -653,6 +658,10 @@ class IntakeViewModel @Inject constructor(
 
                 is IntakeAction.UpdateFormAnswer -> {
                     val question = _state.value.formQuestions.find { it.id == action.questionId }
+                    if (question != null && KenyaFormRules.isHouseholdNumber(question)) {
+                        val number = (action.value as? FormAnswerValue.StringValue)?.value ?: return@launch
+                        if (number.length > 2 || number.any { it !in '0'..'9' }) return@launch
+                    }
                     if (question != null && !KenyaFormRules.isWithinNumberLimit(question, action.value)) {
                         return@launch
                     }

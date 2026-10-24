@@ -6,7 +6,7 @@
     <string name="collection_batch_form_error_cup_not_recorded">No se escaneó ningún vaso durante la recolección para este lugar. Por favor, revisa el formulario de recolección.</string>
     <string name="collection_batch_form_error_recorded_cup_code">El código introducido durante la recolección fue %1$s. Por favor, revisa la etiqueta del vaso.</string>
     <string name="form_validation_error_invalid_cup_location">Escanea el vaso etiquetado para este lugar de recolección.</string>
-    <string name="form_validation_error_cup_indoors">Escanea el vaso etiquetado IN para interior.</string>
+    <string name="form_validation_error_cup_indoors">Escanea el vaso etiquetado IND para interior.</string>
     <string name="form_validation_error_cup_outdoors">Escanea el vaso etiquetado OUT para exterior.</string>
     <string name="form_validation_error_cup_animal_shelter">Escanea el vaso etiquetado ANS para refugio de animales.</string>
     <string name="collection_batch_form_error_cup_code_mismatch">Escanee el mismo recipiente registrado para este lugar durante la recolección en el hogar. El escaneo original debe estar guardado en esta sesión.</string>

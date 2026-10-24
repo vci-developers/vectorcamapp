@@ -6,6 +6,16 @@ import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 /** Program-specific exceptions to the backend-defined form, centralized for this release. */
 object KenyaFormRules {
     const val HOUSEHOLD_NUMBER_KEY = "assign_this_household_a_number"
+    fun householdPrefix(selectedLocations: Collection<String>): String? =
+        selectedLocations.mapNotNull { Regex("\\bGP\\s*(\\d{1,2})\\b", RegexOption.IGNORE_CASE).find(it) }
+            .map { "GP${it.groupValues[1].padStart(2, '0')}-" }
+            .distinct().singleOrNull()
+    fun isHouseholdNumber(question: FormQuestion): Boolean = question.questionKey == HOUSEHOLD_NUMBER_KEY
+    fun isValidHouseholdNumber(question: FormQuestion, value: FormAnswerValue): Boolean {
+        if (!isHouseholdNumber(question)) return true
+        val number = (value as? FormAnswerValue.StringValue)?.value ?: return false
+        return number.matches(Regex("[0-9]{1,2}")) || (number.isEmpty() && !question.required)
+    }
     private const val SITE_RADIUS_METERS = 2000f
     fun isWithinSiteRadius(distanceMeters: Float?): Boolean =
         distanceMeters != null && distanceMeters.isFinite() &&
@@ -17,7 +27,7 @@ object KenyaFormRules {
         "scan_cup_id_for_animal_shelter" to ("scan_cup_id_for_animal_shelter_2" to "Animal Shelter"),
     )
     private val cupLocationTokens = mapOf(
-        "Indoors" to "IN",
+        "Indoors" to "IND",
         "Outdoors" to "OUT",
         "Animal Shelter" to "ANS",
     )

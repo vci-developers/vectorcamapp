@@ -151,7 +151,7 @@ fun CollectionBatchFormScreen(
 @Composable
 private fun missingCupMessage(question: FormQuestion): String = stringResource(
     when (KenyaFormRules.cupLocationToken(question)) {
-        "IN" -> R.string.collection_batch_form_error_cup_not_recorded_indoors
+        "IND" -> R.string.collection_batch_form_error_cup_not_recorded_indoors
         "OUT" -> R.string.collection_batch_form_error_cup_not_recorded_outdoors
         "ANS" -> R.string.collection_batch_form_error_cup_not_recorded_animal_shelter
         else -> R.string.collection_batch_form_error_cup_not_recorded

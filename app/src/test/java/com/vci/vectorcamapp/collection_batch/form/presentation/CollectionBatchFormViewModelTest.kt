@@ -43,6 +43,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -113,13 +115,13 @@ class CollectionBatchFormViewModelTest {
         )
         coEvery { formAnswerRepository.getSessionScopedFormAnswers(sessionId) } returns mapOf(
             1 to answer("").copy(value = FormAnswerValue.ListValue(listOf("Indoors"))),
-            2 to answer("GP01-IN-CUP01", "qr"),
+            2 to answer("GP01-IND-CUP01", "qr"),
         )
         initViewModel()
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
-        assertThat(viewModel.state.value.expectedCupCodesByQuestionId[3]).isEqualTo("GP01-IN-CUP01")
-        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("GP01-IN-CUP02")))
+        assertThat(viewModel.state.value.expectedCupCodesByQuestionId[3]).isEqualTo("GP01-IND-CUP01")
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("GP01-IND-CUP02")))
         advanceUntilIdle()
         viewModel.onAction(CollectionBatchFormAction.SubmitSessionUnitForm)
         advanceUntilIdle()
@@ -130,7 +132,7 @@ class CollectionBatchFormViewModelTest {
         coEvery { sessionUnitRepository.getSessionUnitById(any()) } returns null
         coEvery { sessionUnitRepository.upsertSessionUnit(any(), any()) } returns Result.Success(Unit)
         coEvery { formAnswerRepository.upsertFormAnswer(any(), any(), any(), any()) } returns Result.Success(Unit)
-        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("GP01-IN-CUP01")))
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("GP01-IND-CUP01")))
         advanceUntilIdle()
         assertThat(viewModel.state.value.collectionBatchFormErrors.formAnswerErrors[3])
             .isEqualTo(CollectionBatchFormError.CUP_CODE_MISMATCH)
@@ -155,7 +157,7 @@ class CollectionBatchFormViewModelTest {
         advanceUntilIdle()
         assertThat(viewModel.state.value.expectedCupCodesByQuestionId).containsKey(3)
         assertThat(viewModel.state.value.expectedCupCodesByQuestionId[3]).isNull()
-        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("GP01-IN-CUP01")))
+        viewModel.onAction(CollectionBatchFormAction.UpdateFormAnswer(3, FormAnswerValue.StringValue("GP01-IND-CUP01")))
         advanceUntilIdle()
         viewModel.onAction(CollectionBatchFormAction.SubmitSessionUnitForm)
         advanceUntilIdle()
@@ -163,6 +165,27 @@ class CollectionBatchFormViewModelTest {
             .isEqualTo(CollectionBatchFormError.CUP_NOT_RECORDED)
         coVerify(exactly = 0) { sessionUnitRepository.upsertSessionUnit(any(), any()) }
         coVerify(exactly = 0) { formAnswerRepository.upsertFormAnswer(any(), any(), any(), any()) }
+    }
+    @Test
+    fun draftSurvivesStateResubscriptionAfterScreenLock() = runTest {
+        stubForm(listOf(question(1)))
+        initViewModel()
+        val subscription = backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        viewModel.onAction(
+            CollectionBatchFormAction.UpdateFormAnswer(1, FormAnswerValue.StringValue("draft"))
+        )
+        runCurrent()
+        val draft = viewModel.state.value.formAnswersByQuestionId
+        assertThat(draft[1]?.value).isEqualTo(FormAnswerValue.StringValue("draft"))
+        subscription.cancel()
+        runCurrent()
+        advanceTimeBy(6000)
+        runCurrent()
+        backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        assertThat(viewModel.state.value.formAnswersByQuestionId).isEqualTo(draft)
+        coVerify(exactly = 1) { deviceCache.getProgramId() }
     }
     @Test
     fun missingProgramId_finishesLoadingWithNoQuestions() = runTest {

@@ -35,7 +35,7 @@ class KenyaFormRulesTest {
     }
     @Test
     fun cupLocationTokensAreCheckedForBothOriginalsAndRescans() {
-        listOf("indoors" to "IN", "outdoors" to "OUT", "animal_shelter" to "ANS")
+        listOf("indoors" to "IND", "outdoors" to "OUT", "animal_shelter" to "ANS")
             .forEach { (suffix, token) ->
                 listOf("scan_cup_id_for_$suffix", "scan_cup_id_for_${suffix}_2")
                     .forEach { key ->
@@ -63,6 +63,25 @@ class KenyaFormRulesTest {
                     }
             }
         assertThat(KenyaFormRules.hasValidCupLocation(question("unrelated"), value("anything"))).isTrue()
+        assertThat(KenyaFormRules.hasValidCupLocation(
+            question("scan_cup_id_for_indoors").copy(type = "qr"), value("GP01-IN-CUP01")
+        )).isFalse()
+    }
+    @Test
+    fun householdNumbersAndGpPrefixes() {
+        val field = question(KenyaFormRules.HOUSEHOLD_NUMBER_KEY).copy(type = "text", required = true)
+        listOf("1", "01", "99").forEach {
+            assertThat(KenyaFormRules.isValidHouseholdNumber(field, value(it))).isTrue()
+        }
+        listOf("", "123", "GP01-01", "ab", "-1").forEach {
+            assertThat(KenyaFormRules.isValidHouseholdNumber(field, value(it))).isFalse()
+            assertThat(ValidateFormAnswersUseCase()(listOf(field), mapOf(
+                field.id to answers(it).getValue(1)
+            ))[field.id]).isInstanceOf(Result.Error::class.java)
+        }
+        assertThat(KenyaFormRules.householdPrefix(listOf("GP03"))).isEqualTo("GP03-")
+        assertThat(KenyaFormRules.householdPrefix(listOf("Sentinel GP7", "County"))).isEqualTo("GP07-")
+        assertThat(KenyaFormRules.householdPrefix(listOf("County"))).isNull()
     }
     @Test
     fun siteRadiusIsInclusiveAndRejectsUnverifiableDistances() {

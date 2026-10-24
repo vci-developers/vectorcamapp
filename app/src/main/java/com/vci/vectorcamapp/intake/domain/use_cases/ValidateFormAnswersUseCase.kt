@@ -34,6 +34,7 @@ class ValidateFormAnswersUseCase @Inject constructor() {
             } else if (!KenyaFormRules.hasValidCupLocation(question, answer)) {
                 Result.Error(FormValidationError.INVALID_CUP_LOCATION)
             } else if (isValidAnswer(question, answer) &&
+                KenyaFormRules.isValidHouseholdNumber(question, answer) &&
                 KenyaFormRules.isWithinNumberLimit(question, answer)) {
                 Result.Success(Unit)
             } else {

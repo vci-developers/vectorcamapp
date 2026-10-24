@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -87,8 +86,6 @@ class CollectionBatchFormViewModel @Inject constructor(
                 duplicateIdentity = duplicateIdentity
             )
         )
-    }.onStart {
-        loadFormDetails()
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -97,6 +94,9 @@ class CollectionBatchFormViewModel @Inject constructor(
 
     private val _events = Channel<CollectionBatchFormEvent>()
     val events = _events.receiveAsFlow()
+    init {
+        loadFormDetails()
+    }
 
     fun onAction(action: CollectionBatchFormAction) {
         viewModelScope.launch {

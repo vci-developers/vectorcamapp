@@ -6,7 +6,7 @@
     <string name="collection_batch_form_error_cup_not_recorded">Aucun gobelet n’a été scanné pendant la collecte pour ce lieu. Veuillez vérifier le formulaire de collecte.</string>
     <string name="collection_batch_form_error_recorded_cup_code">Le code saisi pendant la collecte était %1$s. Veuillez vérifier l’étiquette de votre gobelet.</string>
     <string name="form_validation_error_invalid_cup_location">Veuillez scanner le gobelet étiqueté pour ce lieu de collecte.</string>
-    <string name="form_validation_error_cup_indoors">Veuillez scanner le gobelet étiqueté IN pour intérieur.</string>
+    <string name="form_validation_error_cup_indoors">Veuillez scanner le gobelet étiqueté IND pour intérieur.</string>
     <string name="form_validation_error_cup_outdoors">Veuillez scanner le gobelet étiqueté OUT pour extérieur.</string>
     <string name="form_validation_error_cup_animal_shelter">Veuillez scanner le gobelet étiqueté ANS pour abri pour animaux.</string>
     <string name="collection_batch_form_error_cup_code_mismatch">Scannez le même gobelet enregistré pour ce lieu lors de la collecte au domicile. Le scan initial doit être enregistré dans cette session.</string>

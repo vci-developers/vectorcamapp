@@ -31,10 +31,28 @@ fun DynamicFormField(
     modifier: Modifier = Modifier,
     error: Error? = null,
     errorMessage: String? = null,
+    householdPrefix: String? = null,
 ) {
     val label = question.label
     val text = (value as? FormAnswerValue.StringValue)?.value.orEmpty()
     val onTextChange: (String) -> Unit = { onValueChange(FormAnswerValue.StringValue(it)) }
+    if (KenyaFormRules.isHouseholdNumber(question)) {
+        TextEntryField(
+            label = label,
+            required = question.required,
+            value = text,
+            onValueChange = { newValue ->
+                if (newValue.length <= 2 && newValue.all { it in '0'..'9' }) onTextChange(newValue)
+            },
+            prefix = householdPrefix,
+            maxCharacters = 2,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+            singleLine = true,
+            error = error,
+            modifier = modifier,
+        )
+        return
+    }
     when (question.type) {
         "multi-select" -> MultiSelectField(
             label = label,
@@ -50,7 +68,7 @@ fun DynamicFormField(
                 error == CollectionBatchFormError.INVALID_CUP_LOCATION
             val locationMessage = if (locationError) {
                 when (KenyaFormRules.cupLocationToken(question)) {
-                    "IN" -> R.string.form_validation_error_cup_indoors
+                    "IND" -> R.string.form_validation_error_cup_indoors
                     "OUT" -> R.string.form_validation_error_cup_outdoors
                     "ANS" -> R.string.form_validation_error_cup_animal_shelter
                     else -> null

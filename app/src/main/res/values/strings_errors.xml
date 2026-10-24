@@ -6,7 +6,7 @@
     <string name="collection_batch_form_error_cup_not_recorded">No cup was scanned during collection for this location. Please check the collection form.</string>
     <string name="collection_batch_form_error_recorded_cup_code">The code entered during collection was %1$s. Please check the label on your cup.</string>
     <string name="form_validation_error_invalid_cup_location">Please scan the cup labelled for this collection location.</string>
-    <string name="form_validation_error_cup_indoors">Please scan the cup labelled IN for indoors.</string>
+    <string name="form_validation_error_cup_indoors">Please scan the cup labelled IND for indoors.</string>
     <string name="form_validation_error_cup_outdoors">Please scan the cup labelled OUT for outdoors.</string>
     <string name="form_validation_error_cup_animal_shelter">Please scan the cup labelled ANS for animal shelter.</string>
     <string name="collection_batch_form_error_cup_code_mismatch">Scan the same cup recorded for this location during household collection. Its original scan must be saved in this session.</string>
