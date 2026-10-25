@@ -811,7 +811,9 @@ class IntakeViewModel @Inject constructor(
                 } ?: flowOf<SurveillanceForm?>(null),
                 collectorRepository.observeAllCollectors(),
                 locationTypeRepository.observeAllLocationTypesByProgramId(programId)
-            ) { currentAllSites, currentSavedSurveillanceForm, currentAllCollectors, currentAllLocationTypes ->
+            ) { allSites, currentSavedSurveillanceForm, currentAllCollectors, currentAllLocationTypes ->
+                // Keep historical sites available on resume, but exclude them from new collection.
+                val currentAllSites = if (currentSession == null) allSites.filter { it.isActive } else allSites
 
                 val validatedSite = currentAllSites.find { it.id == currentSessionSiteId }
                 val validatedSiteSelectionsByLocationTypeId = when {

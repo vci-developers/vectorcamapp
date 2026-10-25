@@ -24,6 +24,7 @@
     <!-- Specimen Species (classifier labels; the English value is what gets stored/uploaded) -->
     <string name="species_anopheles_funestus" translatable="false">Anopheles funestus</string>
     <string name="species_anopheles_gambiae" translatable="false">Anopheles gambiae</string>
+    <string name="species_anopheles_stephensi" translatable="false">Anopheles stephensi</string>
     <string name="species_anopheles_other">Anopheles other</string>
     <string name="species_culex" translatable="false">Culex</string>
     <string name="species_aedes" translatable="false">Aedes</string>

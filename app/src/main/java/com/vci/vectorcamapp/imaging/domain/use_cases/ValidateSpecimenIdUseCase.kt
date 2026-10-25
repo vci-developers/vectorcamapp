@@ -38,8 +38,15 @@ class ValidateSpecimenIdUseCase @Inject constructor() {
     }
 
     operator fun invoke(
-        specimenId: String, shouldAutoCorrect: Boolean
+        specimenId: String, shouldAutoCorrect: Boolean, requireKenyaPrefix: Boolean = false
     ): Result<String, ImagingError> {
+        if (requireKenyaPrefix) {
+            return if (specimenId.startsWith("KE") && specimenId.length == SPECIMEN_ID_LENGTH) {
+                Result.Success(specimenId)
+            } else {
+                Result.Error(ImagingError.INVALID_SPECIMEN_ID)
+            }
+        }
         val cleanedSpecimenId = specimenId.trim().replace(" ", "").uppercase()
 
         if (cleanedSpecimenId.length != SPECIMEN_ID_LENGTH || !cleanedSpecimenId.all { it.isLetterOrDigit() }) {

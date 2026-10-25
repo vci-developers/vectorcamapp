@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.core.presentation.components.camera
 
 import androidx.camera.core.SurfaceRequest
+import androidx.camera.core.CameraSelector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +47,8 @@ fun BarcodeScannerDialog(
     modifier: Modifier = Modifier,
     qrOnly: Boolean = false,
     transformValue: (String) -> String? = { it.takeIf(String::isNotBlank) },
+    cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
+    onCameraReleased: () -> Unit = {},
 ) {
     var surfaceRequest by remember { mutableStateOf<SurfaceRequest?>(null) }
 
@@ -54,6 +57,8 @@ fun BarcodeScannerDialog(
         onSurfaceRequest = { request -> surfaceRequest = request },
         qrOnly = qrOnly,
         transformValue = transformValue,
+        cameraSelector = cameraSelector,
+        onCameraReleased = onCameraReleased,
     )
 
     Dialog(

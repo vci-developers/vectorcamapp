@@ -737,7 +737,61 @@ class IntakeViewModelTest {
         assertThat(vm.state.value.session.longitude).isEqualTo(33.75f)
         assertThat(vm.state.value.session.gpsAccuracy).isEqualTo(3f)
     }
-
+    @Test
+    fun newSession_onlyOffersActiveSitesAndIgnoresInactiveCachedSite() = runTest {
+        val inactiveSite = testSite.copy(isActive = false)
+        val activeSite = testSite.copy(
+            id = 2,
+            district = "Active district",
+            villageName = "Active village",
+            houseNumber = "02",
+        )
+        every { siteRepository.observeAllSitesByProgramId(any()) } returns
+            MutableStateFlow(listOf(inactiveSite, activeSite))
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        assertThat(vm.state.value.allSitesInProgram).containsExactly(activeSite)
+        assertThat(vm.state.value.selectedDistrict).isEmpty()
+        assertThat(vm.state.value.selectedVillageName).isEmpty()
+        assertThat(vm.state.value.selectedHouseNumber).isEmpty()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isNull()
+    }
+    @Test
+    fun newSession_withOnlyInactiveSitesHasNoSelectableSites() = runTest {
+        every { siteRepository.observeAllSitesByProgramId(any()) } returns
+            MutableStateFlow(listOf(testSite.copy(isActive = false)))
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        assertThat(vm.state.value.allSitesInProgram).isEmpty()
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isNull()
+        assertThat(vm.state.value.canFillForm).isFalse()
+    }
+    @Test
+    fun resumedSession_restoresInactiveHierarchicalSite() = runTest {
+        val inactiveSite = testSite.copy(
+            district = null,
+            villageName = null,
+            houseNumber = null,
+            isActive = false,
+            locationHierarchy = mapOf("Village" to "Kampala", "House" to "12"),
+        )
+        every { siteRepository.observeAllSitesByProgramId(any()) } returns
+            MutableStateFlow(listOf(inactiveSite))
+        every { locationTypeRepository.observeAllLocationTypesByProgramId(any()) } returns
+            MutableStateFlow(listOf(LocationType(1, "Village", 1), LocationType(2, "House", 2)))
+        coEvery { currentSessionCache.getSession() } returns sampleSession()
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        assertThat(vm.state.value.allSitesInProgram).containsExactly(inactiveSite)
+        assertThat(vm.state.value.siteSelectionsByLocationTypeId)
+            .containsExactly(1, "Kampala", 2, "12")
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(inactiveSite)
+        assertThat(vm.state.value.canFillForm).isTrue()
+        coVerify(exactly = 0) { locationRepository.getCurrentLocation() }
+    }
     @Test
     fun resumedSession_usesStoredLocationAndIgnoresGpsAndSiteUpdates() = runTest {
         val session = sampleSession()
@@ -761,6 +815,8 @@ class IntakeViewModelTest {
 
     @Test
     fun resumedSession_submitsWithoutGpsEvenOutsideRadius() = runTest {
+        every { siteRepository.observeAllSitesByProgramId(any()) } returns
+            MutableStateFlow(listOf(testSite.copy(isActive = false)))
         val session = sampleSession()
         coEvery { currentSessionCache.getSession() } returns session
         coEvery { currentSessionCache.getSiteId() } returns testSite.id
@@ -777,6 +833,7 @@ class IntakeViewModelTest {
         advanceUntilIdle()
         assertThat(vm.state.value.isWithinSiteRadius).isFalse()
         assertThat(vm.state.value.canFillForm).isTrue()
+        assertThat(vm.state.value.allSitesInProgram.single().isActive).isFalse()
         vm.events.test {
             vm.onAction(IntakeAction.SubmitIntakeForm)
             assertThat(awaitItem()).isEqualTo(IntakeEvent.NavigateAfterIntake(Destination.Imaging(null)))
@@ -1105,12 +1162,15 @@ class IntakeViewModelTest {
     @Test
     fun intakeVm_i05_submit_hierarchySite_persistsSurveillanceFormAndAnswers() = runTest {
         val hierarchySite = testSite.copy(
+            id = 2,
             district = null,
             villageName = null,
             houseNumber = null,
             locationHierarchy = mapOf("Village" to "Kampala", "House" to "12"),
         )
-        every { siteRepository.observeAllSitesByProgramId(any()) } returns MutableStateFlow(listOf(hierarchySite))
+        every { siteRepository.observeAllSitesByProgramId(any()) } returns MutableStateFlow(
+            listOf(testSite.copy(isActive = false), hierarchySite)
+        )
         every { locationTypeRepository.observeAllLocationTypesByProgramId(any()) } returns MutableStateFlow(
             listOf(LocationType(1, "Village", 1), LocationType(2, "House", 2))
         )
@@ -1125,10 +1185,13 @@ class IntakeViewModelTest {
         val vm = makeViewModel()
         backgroundScope.launch { vm.state.collect {} }
         advanceUntilIdle()
-        fillCollectorAndMethod(vm)
         vm.onAction(IntakeAction.SelectLocationTypeSiteOption(1, "Kampala"))
         vm.onAction(IntakeAction.SelectLocationTypeSiteOption(2, "12"))
         advanceUntilIdle()
+        fillCollectorAndMethod(vm)
+        advanceUntilIdle()
+        assertThat(vm.state.value.allSitesInProgram).containsExactly(hierarchySite)
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(hierarchySite)
 
         vm.events.test {
             vm.onAction(IntakeAction.SubmitIntakeForm)
@@ -1136,6 +1199,7 @@ class IntakeViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
         coVerify { surveillanceFormRepository.upsertSurveillanceForm(any(), any()) }
+        coVerify { sessionRepository.upsertSession(any(), hierarchySite.id) }
         coVerify { formAnswerRepository.upsertFormAnswer(any(), any(), isNull(), 1) }
         coVerify {
             defaultIntakeFieldsCache.saveDefaultIntakeFields(

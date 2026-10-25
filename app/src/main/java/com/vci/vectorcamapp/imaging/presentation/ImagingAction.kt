@@ -6,6 +6,7 @@ import androidx.compose.ui.geometry.Offset
 import com.vci.vectorcamapp.imaging.domain.model.CameraMetadata
 
 sealed interface ImagingAction {
+    data class ConfirmScannedSpecimenId(val specimenId: String) : ImagingAction
     data class CorrectSpecimenId(val specimenId: String) : ImagingAction
     data class ProcessFrame(val frame: ImageProxy) : ImagingAction
     data object SaveSessionProgress : ImagingAction

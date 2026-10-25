@@ -1,8 +1,13 @@
 package com.vci.vectorcamapp.core.presentation.components.camera
 
+import android.util.Size
 import android.view.Surface
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.CameraSelector
 import androidx.camera.core.SurfaceRequest
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.mlkit.vision.MlKitAnalyzer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,6 +32,8 @@ internal fun BindBarcodeScanner(
     onSurfaceRequest: (SurfaceRequest) -> Unit,
     qrOnly: Boolean,
     transformValue: (String) -> String?,
+    cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
+    onCameraReleased: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -35,17 +42,31 @@ internal fun BindBarcodeScanner(
     val onBarcodeScannedState = rememberUpdatedState(onBarcodeScanned)
     val onSurfaceRequestState = rememberUpdatedState(onSurfaceRequest)
     val transformValueState = rememberUpdatedState(transformValue)
+    val onCameraReleasedState = rememberUpdatedState(onCameraReleased)
 
-    LaunchedEffect(lifecycleOwner, rotation, qrOnly) {
+    LaunchedEffect(lifecycleOwner, rotation, qrOnly, cameraSelector) {
         val options = BarcodeScannerOptions.Builder().apply {
             if (qrOnly) setBarcodeFormats(Barcode.FORMAT_QR_CODE)
         }.build()
         val barcodeScanner = BarcodeScanning.getClient(options)
         val delivered = AtomicBoolean(false)
+        val resolutionSelector = if (cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA) {
+            ResolutionSelector.Builder()
+                .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+                .setResolutionStrategy(
+                    ResolutionStrategy(
+                        Size(1920, 1440),
+                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
+                    )
+                )
+                .build()
+        } else {
+            defaultCameraResolutionSelector()
+        }
         val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .setTargetRotation(rotation)
-            .setResolutionSelector(defaultCameraResolutionSelector())
+            .setResolutionSelector(resolutionSelector)
             .build()
         val mainExecutor = ContextCompat.getMainExecutor(context)
         imageAnalysis.setAnalyzer(
@@ -76,7 +97,9 @@ internal fun BindBarcodeScanner(
                 rotation = rotation,
                 onSurfaceRequest = { request -> onSurfaceRequestState.value(request) },
                 additionalUseCases = listOf(imageAnalysis),
+                cameraSelector = cameraSelector,
             )
+            Timber.d("Barcode scanner analysis resolution: %s", imageAnalysis.resolutionInfo?.resolution)
             awaitCancellation()
         } catch (exception: ExecutionException) {
             Timber.e(exception, "Could not open the barcode scanner camera")
@@ -93,6 +116,7 @@ internal fun BindBarcodeScanner(
                     unbindCamera(context)
                 } finally {
                     barcodeScanner.close()
+                    onCameraReleasedState.value()
                 }
             }
         }

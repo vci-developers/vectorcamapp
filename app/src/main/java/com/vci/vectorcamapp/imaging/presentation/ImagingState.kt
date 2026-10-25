@@ -15,6 +15,7 @@ import com.vci.vectorcamapp.imaging.presentation.enums.CaptureStage
 import java.util.UUID
 
 data class ImagingState(
+    val confirmedScannedSpecimenId: String? = null,
     val isLoading: Boolean = false,
     val captureStage: CaptureStage? = null,
     val capturePreviewBitmap: Bitmap? = null,

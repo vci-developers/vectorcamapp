@@ -10,6 +10,8 @@ fun SpeciesLabel.displayText(context: Context): String {
     val resId = when (this) {
         SpeciesLabel.ANOPHELES_FUNESTUS -> R.string.species_anopheles_funestus
         SpeciesLabel.ANOPHELES_GAMBIAE -> R.string.species_anopheles_gambiae
+        SpeciesLabel.ANOPHELES_STEPHENSI ->
+            R.string.species_anopheles_stephensi
         SpeciesLabel.ANOPHELES_OTHER -> R.string.species_anopheles_other
         SpeciesLabel.CULEX -> R.string.species_culex
         SpeciesLabel.AEDES -> R.string.species_aedes

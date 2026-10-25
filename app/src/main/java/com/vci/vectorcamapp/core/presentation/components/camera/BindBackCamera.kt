@@ -26,6 +26,7 @@ suspend fun bindBackCamera(
     rotation: Int,
     onSurfaceRequest: (SurfaceRequest) -> Unit,
     additionalUseCases: List<UseCase> = emptyList(),
+    cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
 ): Camera {
     val provider = withContext(Dispatchers.IO) {
         ProcessCameraProvider.getInstance(context).get()
@@ -45,7 +46,7 @@ suspend fun bindBackCamera(
     provider.unbindAll()
     return provider.bindToLifecycle(
         lifecycleOwner,
-        CameraSelector.DEFAULT_BACK_CAMERA,
+        cameraSelector,
         useCaseGroupBuilder.build(),
     )
 }

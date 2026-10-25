@@ -181,7 +181,27 @@ class ImagingViewModel @Inject constructor(
                     _state.update { it.copy(focusPoint = null, isManualFocusing = false) }
                 }
 
+                is ImagingAction.ConfirmScannedSpecimenId -> {
+                    validateSpecimenIdUseCase(
+                        action.specimenId,
+                        shouldAutoCorrect = false,
+                        requireKenyaPrefix = true,
+                    )
+                        .onSuccess { id ->
+                            _state.update {
+                                it.copy(
+                                    confirmedScannedSpecimenId = id,
+                                    currentSpecimen = it.currentSpecimen.copy(id = id),
+                                    specimenIdError = null,
+                                )
+                            }
+                        }.onError { error ->
+                            _state.update { it.copy(specimenIdError = error) }
+                            emitError(error)
+                        }
+                }
                 is ImagingAction.CorrectSpecimenId -> {
+                    if (_state.value.confirmedScannedSpecimenId != null) return@launch
                     VectorCamAnalytics.logEvent(
                         "imaging_specimen_id_corrected",
                         mapOf(
@@ -216,17 +236,21 @@ class ImagingViewModel @Inject constructor(
                         if (_state.value.captureStage == null) {
                             val bitmap = action.frame.toUprightBitmap()
 
-                            val specimenId = inferenceRepository.readSpecimenId(bitmap)
-                            validateSpecimenIdUseCase(
-                                specimenId,
-                                shouldAutoCorrect = true
-                            ).onSuccess { correctedSpecimenId ->
-                                _state.update {
-                                    it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
-                                }
-                            }.onError {
-                                _state.update {
-                                    it.copy(currentSpecimen = it.currentSpecimen.copy(id = ""))
+                            if (_state.value.confirmedScannedSpecimenId == null) {
+                                val specimenId = inferenceRepository.readSpecimenId(bitmap)
+                                validateSpecimenIdUseCase(
+                                    specimenId,
+                                    shouldAutoCorrect = true
+                                ).onSuccess { correctedSpecimenId ->
+                                    _state.update {
+                                        if (it.confirmedScannedSpecimenId != null) it
+                                        else it.copy(currentSpecimen = it.currentSpecimen.copy(id = correctedSpecimenId))
+                                    }
+                                }.onError {
+                                    _state.update {
+                                        if (it.confirmedScannedSpecimenId != null) it
+                                        else it.copy(currentSpecimen = it.currentSpecimen.copy(id = ""))
+                                    }
                                 }
                             }
 
@@ -628,7 +652,7 @@ class ImagingViewModel @Inject constructor(
                         "imaging_image_retake_clicked",
                         mapOf("had_inference_result" to (_state.value.currentInferenceResult != null))
                     )
-                    clearStateFields()
+                    clearStateFields(keepScannedId = true)
                 }
 
                 is ImagingAction.TogglePackagingConfirmation -> {
@@ -652,7 +676,9 @@ class ImagingViewModel @Inject constructor(
                     }
 
                     val specimenId = when (val validationResult = validateSpecimenIdUseCase(
-                        _state.value.currentSpecimen.id, shouldAutoCorrect = false
+                        _state.value.confirmedScannedSpecimenId ?: _state.value.currentSpecimen.id,
+                        shouldAutoCorrect = false,
+                        requireKenyaPrefix = _state.value.confirmedScannedSpecimenId != null,
                     )) {
                         is Result.Success -> {
                             _state.update { it.copy(specimenIdError = null) }
@@ -808,11 +834,13 @@ class ImagingViewModel @Inject constructor(
         }
     }
 
-    private fun clearStateFields() {
+    private fun clearStateFields(keepScannedId: Boolean = false) {
         _state.update {
             it.copy(
+                confirmedScannedSpecimenId = it.confirmedScannedSpecimenId.takeIf { keepScannedId },
                 currentSpecimen = it.currentSpecimen.copy(
-                    id = "", remoteId = null, shouldProcessFurther = false
+                    id = it.confirmedScannedSpecimenId.takeIf { keepScannedId }.orEmpty(),
+                    remoteId = null, shouldProcessFurther = false
                 ),
                 currentSpecimenImage = it.currentSpecimenImage.copy(
                     localId = "",

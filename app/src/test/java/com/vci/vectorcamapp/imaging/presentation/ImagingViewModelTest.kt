@@ -178,6 +178,32 @@ class ImagingViewModelTest {
     // ========================================
     // A. Initialization & Loading
     // ========================================
+    @Test
+    fun confirmedScanSetsSpecimenIdAndSurvivesRetake() = runTest {
+        initViewModel()
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+        viewModel.onAction(ImagingAction.ConfirmScannedSpecimenId("ABC123"))
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.confirmedScannedSpecimenId).isNull()
+        viewModel.onAction(ImagingAction.ConfirmScannedSpecimenId("KE-123456"))
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.confirmedScannedSpecimenId).isNull()
+        viewModel.onAction(ImagingAction.ConfirmScannedSpecimenId("KE123"))
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.confirmedScannedSpecimenId).isNull()
+        viewModel.onAction(ImagingAction.ConfirmScannedSpecimenId("KE1234"))
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.currentSpecimen.id).isEqualTo("KE1234")
+        assertThat(viewModel.state.value.confirmedScannedSpecimenId).isEqualTo("KE1234")
+        viewModel.onAction(ImagingAction.CorrectSpecimenId("XYZ789"))
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.currentSpecimen.id).isEqualTo("KE1234")
+        viewModel.onAction(ImagingAction.RetakeImage)
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.currentSpecimen.id).isEqualTo("KE1234")
+        assertThat(viewModel.state.value.confirmedScannedSpecimenId).isEqualTo("KE1234")
+    }
 
     @Test
     fun imagingVm_a01_withValidSession_stateHasCorrectSessionType() = runTest {

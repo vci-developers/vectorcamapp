@@ -3,6 +3,7 @@ package com.vci.vectorcamapp.imaging.presentation
 import android.view.Surface
 import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.Camera
+import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.SurfaceRequest
@@ -70,6 +71,9 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
 import com.vci.vectorcamapp.core.presentation.components.camera.bindBackCamera
+import com.vci.vectorcamapp.core.presentation.components.camera.BindBarcodeScanner
+import com.vci.vectorcamapp.core.presentation.components.camera.CameraPreview
+import com.vci.vectorcamapp.core.presentation.components.camera.unbindCamera
 import com.vci.vectorcamapp.core.presentation.components.empty.EmptySpace
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
@@ -87,15 +91,149 @@ import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 import com.vci.vectorcamapp.ui.theme.VectorcamappTheme
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
 
 @Composable
 fun ImagingScreen(
     state: ImagingState, onAction: (ImagingAction) -> Unit, modifier: Modifier = Modifier
 ) {
+    // Temporary prototype: confirmed codes use the existing specimen persistence path.
+    var scanning by remember { mutableStateOf(state.confirmedScannedSpecimenId == null) }
+    var cameraReleased by remember { mutableStateOf(state.confirmedScannedSpecimenId != null) }
+    var rearCameraReleased by remember { mutableStateOf(true) }
+    var tubeId by remember { mutableStateOf<String?>(null) }
+    var scannerSurface by remember { mutableStateOf<SurfaceRequest?>(null) }
+    LaunchedEffect(state.confirmedScannedSpecimenId) {
+        if (state.confirmedScannedSpecimenId != null) {
+            tubeId = null
+            scanning = false
+            rearCameraReleased = false
+        } else if (tubeId == null) {
+            scanning = true
+        }
+    }
+    RearCameraImagingScreen(
+        state = state,
+        onAction = onAction,
+        modifier = modifier.fillMaxSize(),
+        rearCameraEnabled = cameraReleased && state.confirmedScannedSpecimenId != null,
+        onCameraReleased = { rearCameraReleased = true },
+        scannerPreview = if (state.confirmedScannedSpecimenId == null) {
+            {
+                CameraPreview(
+                    surfaceRequest = scannerSurface,
+                    modifier = Modifier.fillMaxSize(),
+                    overlay = {
+                        Text(
+                            text = "Hold the tube barcode in front of the front camera.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.buttonText,
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                                .background(MaterialTheme.colors.overlayColor)
+                                .padding(MaterialTheme.dimensions.paddingMedium),
+                        )
+                    },
+                )
+            }
+        } else null,
+    )
+    if (scanning && rearCameraReleased) {
+        BindBarcodeScanner(
+            onSurfaceRequest = { scannerSurface = it },
+            qrOnly = false,
+            transformValue = { it.takeIf(String::isNotBlank) },
+            onBarcodeScanned = {
+                tubeId = it
+                scanning = false
+            },
+            cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA,
+            onCameraReleased = { cameraReleased = true },
+        )
+    } else if (!scanning && cameraReleased && tubeId != null) {
+        AlertDialog(
+            onDismissRequest = {},
+            containerColor = MaterialTheme.colors.cardBackground,
+            shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium),
+            title = {
+                Text(
+                    "Confirm specimen ID",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colors.textPrimary,
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingMedium),
+                ) {
+                    Text(
+                        "Please check the ID against the tube label.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colors.textSecondary,
+                    )
+                    Surface(
+                        color = MaterialTheme.colors.appBackground,
+                        shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            tubeId.orEmpty(),
+                            modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colors.textPrimary,
+                        )
+                    }
+                    if (state.specimenIdError != null) {
+                        Text("Please scan a six-character specimen ID that starts with KE.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colors.error)
+                    }
+                }
+            },
+            confirmButton = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    ActionButton(
+                        label = "Confirm & continue",
+                        onClick = {
+                            onAction(ImagingAction.ConfirmScannedSpecimenId(tubeId.orEmpty()))
+                        },
+                    )
+                    TextButton(onClick = {
+                        cameraReleased = false
+                        scannerSurface = null
+                        tubeId = null
+                        scanning = true
+                    }) {
+                        Text(
+                            "Scan again",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colors.textPrimary,
+                        )
+                    }
+                }
+            },
+        )
+    }
+}
+@Composable
+private fun RearCameraImagingScreen(
+    state: ImagingState,
+    onAction: (ImagingAction) -> Unit,
+    modifier: Modifier = Modifier,
+    rearCameraEnabled: Boolean,
+    scannerPreview: (@Composable () -> Unit)?,
+    onCameraReleased: () -> Unit,
+) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val scope = rememberCoroutineScope()
+    val onCameraReleasedState = rememberUpdatedState(onCameraReleased)
 
     var surfaceRequest by remember { mutableStateOf<SurfaceRequest?>(null) }
     var imageCaptureUseCase by remember { mutableStateOf<ImageCapture?>(null) }
@@ -117,7 +255,8 @@ fun ImagingScreen(
 
     val rotation = view.display?.rotation ?: Surface.ROTATION_0
 
-    LaunchedEffect(lifecycleOwner, rotation) {
+    LaunchedEffect(lifecycleOwner, rotation, rearCameraEnabled) {
+        if (!rearCameraEnabled) return@LaunchedEffect
         val imageCaptureBuilder = ImageCapture.Builder()
             // .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
             .setTargetRotation(rotation)
@@ -155,8 +294,23 @@ fun ImagingScreen(
             )
             imageCaptureUseCase = imageCapture
             camera = boundCamera
+            awaitCancellation()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             e.printStackTrace()
+        } finally {
+            withContext(NonCancellable) {
+                imageCaptureUseCase = null
+                camera = null
+                surfaceRequest = null
+                imageAnalysis.clearAnalyzer()
+                try {
+                    unbindCamera(context)
+                } finally {
+                    onCameraReleasedState.value()
+                }
+            }
         }
     }
 
@@ -733,7 +887,9 @@ fun ImagingScreen(
                                     .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                LiveCameraPreview(
+                                if (scannerPreview != null) {
+                                    scannerPreview()
+                                } else LiveCameraPreview(
                                     surfaceRequest = surfaceRequest,
                                     camera = camera,
                                     inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
@@ -829,7 +985,8 @@ fun ImagingScreen(
                                                 }
                                             },
                                             iconPainter = painterResource(id = R.drawable.ic_camera),
-                                            enabled = (state.captureStage == null && state.isCameraReady),
+                                            enabled = rearCameraEnabled && imageCaptureUseCase != null &&
+                                                state.captureStage == null && state.isCameraReady,
                                             modifier = Modifier.fillMaxWidth()
                                         )
                                     }
