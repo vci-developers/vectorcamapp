@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.core.presentation.components.camera
 
-import android.util.Size
 import android.view.Surface
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.CameraSelector
@@ -19,6 +18,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.withContext
@@ -34,6 +35,7 @@ internal fun BindBarcodeScanner(
     transformValue: (String) -> String?,
     cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
     onCameraReleased: () -> Unit = {},
+    transformRecognizedText: ((String) -> String?)? = null,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -43,22 +45,23 @@ internal fun BindBarcodeScanner(
     val onSurfaceRequestState = rememberUpdatedState(onSurfaceRequest)
     val transformValueState = rememberUpdatedState(transformValue)
     val onCameraReleasedState = rememberUpdatedState(onCameraReleased)
+    val transformRecognizedTextState = rememberUpdatedState(transformRecognizedText)
+    val recognizeText = transformRecognizedText != null
 
-    LaunchedEffect(lifecycleOwner, rotation, qrOnly, cameraSelector) {
+    LaunchedEffect(lifecycleOwner, rotation, qrOnly, cameraSelector, recognizeText) {
         val options = BarcodeScannerOptions.Builder().apply {
             if (qrOnly) setBarcodeFormats(Barcode.FORMAT_QR_CODE)
         }.build()
         val barcodeScanner = BarcodeScanning.getClient(options)
+        val textRecognizer = if (recognizeText) {
+            TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        } else null
         val delivered = AtomicBoolean(false)
         val resolutionSelector = if (cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA) {
             ResolutionSelector.Builder()
                 .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
-                .setResolutionStrategy(
-                    ResolutionStrategy(
-                        Size(1920, 1440),
-                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
-                    )
-                )
+                .setResolutionStrategy(ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY)
+                .setAllowedResolutionMode(ResolutionSelector.PREFER_HIGHER_RESOLUTION_OVER_CAPTURE_RATE)
                 .build()
         } else {
             defaultCameraResolutionSelector()
@@ -72,18 +75,23 @@ internal fun BindBarcodeScanner(
         imageAnalysis.setAnalyzer(
             mainExecutor,
             MlKitAnalyzer(
-                listOf(barcodeScanner),
+                listOfNotNull(barcodeScanner, textRecognizer),
                 ImageAnalysis.COORDINATE_SYSTEM_ORIGINAL,
                 mainExecutor,
             ) { result ->
-                if (delivered.get() || result.getThrowable(barcodeScanner) != null) {
+                if (delivered.get()) {
                     return@MlKitAnalyzer
                 }
-                val value = result.getValue(barcodeScanner)
-                    .orEmpty()
-                    .firstNotNullOfOrNull { barcode ->
-                        barcode.rawValue?.let { transformValueState.value(it) }
-                    }
+                // MlKitAnalyzer completes both detectors for this frame before this callback.
+                val barcodeValues = if (result.getThrowable(barcodeScanner) == null) {
+                    result.getValue(barcodeScanner).orEmpty().mapNotNull { it.rawValue }
+                } else emptyList()
+                val text = textRecognizer?.let { recognizer ->
+                    if (result.getThrowable(recognizer) == null) result.getValue(recognizer)?.text else null
+                }
+                val value = selectScanValue(
+                    barcodeValues, text, transformValueState.value, transformRecognizedTextState.value
+                )
                 if (value != null && delivered.compareAndSet(false, true)) {
                     onBarcodeScannedState.value(value)
                 }
@@ -116,6 +124,7 @@ internal fun BindBarcodeScanner(
                     unbindCamera(context)
                 } finally {
                     barcodeScanner.close()
+                    textRecognizer?.close()
                     onCameraReleasedState.value()
                 }
             }

@@ -1,4 +1,5 @@
 package com.vci.vectorcamapp.imaging.presentation
+import com.vci.vectorcamapp.imaging.domain.use_cases.extractPrintedSpecimenId
 
 import android.view.Surface
 import androidx.camera.camera2.interop.Camera2Interop
@@ -144,7 +145,10 @@ fun ImagingScreen(
         BindBarcodeScanner(
             onSurfaceRequest = { scannerSurface = it },
             qrOnly = false,
-            transformValue = { it.takeIf(String::isNotBlank) },
+            transformValue = { value ->
+                value.takeIf { it.startsWith("KE") && it.length == 6 }
+            },
+            transformRecognizedText = ::extractPrintedSpecimenId,
             onBarcodeScanned = {
                 tubeId = it
                 scanning = false
