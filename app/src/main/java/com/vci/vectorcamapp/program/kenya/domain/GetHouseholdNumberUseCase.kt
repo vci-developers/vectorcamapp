@@ -12,7 +12,7 @@ class GetHouseholdNumberUseCase @Inject constructor(
     suspend operator fun invoke(sessionId: UUID): String? =
         formRepository.getFormsWithFormAnswersAndQuestionsBySessionId(sessionId)
             .flatMap { it.formAnswersAndQuestions }
-            .singleOrNull { it.question.questionKey == KenyaFormRules.HOUSEHOLD_NUMBER_KEY }
+            .singleOrNull { KenyaFormRules.isHouseholdNumber(it.question) }
             ?.answer?.value?.let { (it as? FormAnswerValue.StringValue)?.value }
             ?.trim()?.takeIf { it.isNotEmpty() }
 }

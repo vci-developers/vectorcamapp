@@ -37,6 +37,16 @@ class GetHouseholdNumberUseCaseTest {
     }
  
     @Test
+    fun historicalHouseholdKeyRemainsReadable() = runTest {
+        givenAnswers(answer("assign_this_household_a_number", "07"))
+        assertThat(lookup(sessionId)).isEqualTo("07")
+        givenAnswers(
+            answer("household_number", "01"),
+            answer("assign_this_household_a_number", "02"),
+        )
+        assertThat(lookup(sessionId)).isNull()
+    }
+    @Test
     fun missingBlankOrDuplicateIdentifiersAreNotDisplayed() = runTest {
         givenAnswers(answer(null, "wrong"))
         assertThat(lookup(sessionId)).isNull()

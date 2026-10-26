@@ -15,6 +15,82 @@ import java.util.UUID
 import com.vci.vectorcamapp.collection_batch.domain.use_cases.ValidateFormAnswersUseCase as ValidateBatchAnswers
 class KenyaFormRulesTest {
     @Test
+    fun publishedConsentAndHouseholdKeysAreRecognized() {
+        val consent = question("collection_consent").copy(id = 258, type = "boolean")
+        assertThat(KenyaFormRules.hasHouseholdHeadConsent(
+            listOf(consent), mapOf(258 to answers("true").getValue(1))
+        )).isTrue()
+        assertThat(KenyaFormRules.hasHouseholdHeadConsent(
+            listOf(consent), mapOf(258 to answers("false").getValue(1))
+        )).isFalse()
+        assertThat(KenyaFormRules.hasHouseholdHeadConsent(listOf(consent), emptyMap())).isFalse()
+        val legacyConsent = consent.copy(
+            id = 2039, questionKey = "did_the_household_head_or_an_adult_grant_the_con"
+        )
+        assertThat(KenyaFormRules.hasHouseholdHeadConsent(
+            listOf(consent, legacyConsent), mapOf(258 to answers("true").getValue(1))
+        )).isFalse()
+        listOf("household_number", "assign_this_household_a_number").forEach { key ->
+            assertThat(KenyaFormRules.isHouseholdNumber(question(key))).isTrue()
+        }
+    }
+    @Test
+    fun publishedNumberKeysEnforceLimitsAndBothBreakdowns() {
+        listOf("llins_in_use", "conventional_nets_in_use", "people_slept_indoors", "people_slept_outdoors")
+            .forEach { key ->
+                assertThat(KenyaFormRules.isWithinNumberLimit(question(key), value("30"))).isTrue()
+                assertThat(KenyaFormRules.isWithinNumberLimit(question(key), value("31"))).isFalse()
+            }
+        listOf("indoors", "outdoors").forEach { location ->
+            val fields = listOf(
+                "people_slept_$location",
+                "people_slept_${location}_under_llin",
+                "people_slept_${location}_without_llin",
+            ).mapIndexed { index, key -> question(key).copy(id = index + 1) }
+            assertThat(KenyaFormRules.invalidCountBreakdownQuestionIds(fields, answers("5", "2", "3")))
+                .isEmpty()
+            assertThat(KenyaFormRules.invalidCountBreakdownQuestionIds(fields, answers("6", "2", "3")))
+                .containsExactly(1, 2, 3)
+        }
+    }
+    @Test
+    fun publishedCupKeysEnforceLocationAndMatchOriginals() {
+        listOf(
+            Triple("indoors", "Indoors", "IND"),
+            Triple("outdoors", "Outdoors", "OUT"),
+            Triple("animal_shelter", "Animal Shelter", "ANS"),
+        ).forEach { (suffix, location, token) ->
+            val selection = question("collection_locations").copy(id = 289, type = "multi-select")
+            val original = question("collection_cup_id_$suffix").copy(id = 290, type = "qr")
+            val rescan = question("batch_cup_id_$suffix").copy(
+                id = 294, type = "qr", answerScope = FormQuestionScope.SESSION_UNIT
+            )
+            val code = "GP01-$token-CUP01"
+            listOf(original, rescan).forEach { field ->
+                assertThat(KenyaFormRules.hasValidCupLocation(field, value(code))).isTrue()
+                assertThat(KenyaFormRules.hasValidCupLocation(field, value("GP01-INVALID-CUP01"))).isFalse()
+            }
+            val saved = mapOf(
+                289 to answers("").getValue(1).copy(value = FormAnswerValue.ListValue(listOf(location))),
+                290 to answers(code).getValue(1),
+            )
+            assertThat(KenyaFormRules.expectedCupCodes(
+                listOf(selection, original), saved, listOf(rescan), emptyMap()
+            )).containsExactly(294, code)
+            assertThat(KenyaFormRules.mismatchedCupQuestionIds(
+                listOf(selection, original), saved, listOf(rescan),
+                mapOf(294 to answers(code).getValue(1))
+            )).isEmpty()
+            assertThat(KenyaFormRules.mismatchedCupQuestionIds(
+                listOf(selection, original), saved, listOf(rescan),
+                mapOf(294 to answers("GP01-$token-CUP02").getValue(1))
+            )).containsExactly(294)
+            assertThat(KenyaFormRules.expectedCupCodes(
+                listOf(selection, original), saved - 290, listOf(rescan), emptyMap()
+            )).containsExactly(294, null)
+        }
+    }
+    @Test
     fun expectedCupCodesOnlyIncludeSelectedLocationAndDistinguishMissingOriginal() {
         val selection = question("where_is_mosquito_collection_taking_place_2").copy(
             id = 10, type = "select"
