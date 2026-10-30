@@ -19,7 +19,6 @@ import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
-import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
@@ -31,7 +30,6 @@ import com.vci.vectorcamapp.intake.domain.strategy.program_form.ProgramFormWorkf
 import com.vci.vectorcamapp.intake.domain.strategy.program_form.ProgramFormWorkflowFactory
 import com.vci.vectorcamapp.intake.domain.use_cases.IntakeValidationUseCases
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
-import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.domain.util.SiteSelectionResolver
 import com.vci.vectorcamapp.intake.logging.IntakeErrorLogger
@@ -112,230 +110,29 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 IntakeAction.SubmitIntakeForm -> {
-                    val session = _state.value.session
-                    val surveillanceForm = _state.value.surveillanceForm
-
-                    val collectorValidationResult = intakeValidationUseCases.validateCollector(
-                        session.collectorName,
-                        session.collectorTitle
-                    )
-
-                    var districtResult: Result<Unit, FormValidationError> = Result.Success(Unit)
-                    var villageNameResult: Result<Unit, FormValidationError> = Result.Success(Unit)
-                    var houseNumberResult: Result<Unit, FormValidationError> = Result.Success(Unit)
-                    if (_state.value.allSitesInProgram.any { !it.district.isNullOrBlank() }) {
-                        districtResult =
-                            intakeValidationUseCases.validateDistrict(_state.value.selectedDistrict)
-                        villageNameResult =
-                            intakeValidationUseCases.validateVillageName(_state.value.selectedVillageName)
-                        houseNumberResult =
-                            intakeValidationUseCases.validateHouseNumber(_state.value.selectedHouseNumber)
-                    }
-
-                    val locationTypeSiteSelections =
-                        _state.value.allLocationTypesInProgram.associate { locationType ->
-                            val selection =
-                                _state.value.siteSelectionsByLocationTypeId[locationType.id]
-                            val error = if (selection.isNullOrBlank()) {
-                                FormValidationError.BLANK_LOCATION_TYPE_SELECTION
-                            } else {
-                                null
-                            }
-                            locationType.id to error
-                        }
-
-                    val llinTypeResult = surveillanceForm?.llinType?.let {
-                        intakeValidationUseCases.validateLlinType(
-                            it
-                        )
-                    }
-                    val llinBrandResult = surveillanceForm?.llinBrand?.let {
-                        intakeValidationUseCases.validateLlinBrand(
-                            it
-                        )
-                    }
-                    val collectionDateResult =
-                        intakeValidationUseCases.validateCollectionDate(session.collectionDate)
-                    val collectionMethodResult =
-                        intakeValidationUseCases.validateCollectionMethod(session.collectionMethod)
-                    val specimenConditionResult =
-                        intakeValidationUseCases.validateSpecimenCondition(session.specimenCondition)
-                    val numPeopleSleptInHouseResult = surveillanceForm?.let {
-                        intakeValidationUseCases.validateNumPeopleSleptInHouse(it.numPeopleSleptInHouse)
-                    }
-
-                    val monthsSinceIrsResult =
-                        surveillanceForm?.takeIf { it.wasIrsConducted && it.monthsSinceIrs != null }
-                            ?.let {
-                                it.monthsSinceIrs?.let { months ->
-                                    intakeValidationUseCases.validateMonthsSinceIrs(
-                                        months
-                                    )
-                                }
-                            }
-
-                    val numLlinsAvailableResult = surveillanceForm?.let {
-                        intakeValidationUseCases.validateNumLlinsAvailable(it.numLlinsAvailable)
-                    }
-
-                    val numPeopleSleptUnderLlinResult =
-                        surveillanceForm?.numPeopleSleptUnderLlin?.let {
-                            intakeValidationUseCases.validateNumPeopleSleptUnderLlin(it)
-                        }
-
-                    val numChildrenUnder5Result = surveillanceForm?.let {
-                        intakeValidationUseCases.validateNumChildrenUnder5(it.numChildrenUnder5)
-                    }
-
-                    val formAnswersResult = intakeValidationUseCases.validateFormAnswersUseCase(
-                        _state.value.formQuestions,
-                        _state.value.formAnswersByQuestionId
-                    )
-
-                    _state.update {
-                        it.copy(
-                            intakeErrors = it.intakeErrors.copy(
-                                collector = collectorValidationResult.errorOrNull(),
-                                district = districtResult.errorOrNull(),
-                                villageName = villageNameResult.errorOrNull(),
-                                houseNumber = houseNumberResult.errorOrNull(),
-                                llinType = llinTypeResult?.errorOrNull(),
-                                llinBrand = llinBrandResult?.errorOrNull(),
-                                collectionDate = collectionDateResult.errorOrNull(),
-                                collectionMethod = collectionMethodResult.errorOrNull(),
-                                specimenCondition = specimenConditionResult.errorOrNull(),
-                                monthsSinceIrs = monthsSinceIrsResult?.errorOrNull(),
-                                numLlinsAvailable = numLlinsAvailableResult?.errorOrNull(),
-                                numPeopleSleptUnderLlin = numPeopleSleptUnderLlinResult?.errorOrNull(),
-                                numPeopleSleptInHouse = numPeopleSleptInHouseResult?.errorOrNull(),
-                                numChildrenUnder5 = numChildrenUnder5Result?.errorOrNull(),
-                                locationTypeSiteSelections = locationTypeSiteSelections,
-                                formAnswerErrors = formAnswersResult.mapValues { (_, result) -> result.errorOrNull() }
-                            )
-                        )
-                    }
-
-                    val hasFieldError = listOf(
-                        collectorValidationResult,
-                        districtResult,
-                        villageNameResult,
-                        houseNumberResult,
-                        llinTypeResult,
-                        llinBrandResult,
-                        collectionDateResult,
-                        collectionMethodResult,
-                        specimenConditionResult,
-                        monthsSinceIrsResult,
-                        numLlinsAvailableResult,
-                        numPeopleSleptInHouseResult,
-                        numPeopleSleptUnderLlinResult,
-                        numChildrenUnder5Result
-                    ).any { it is Result.Error }
-                    val hasLocationTypeSiteSelectionError =
-                        locationTypeSiteSelections.values.any { it != null }
-                    val hasFormAnswersError = formAnswersResult.values.any { it is Result.Error }
-
-                    if (hasFieldError || hasLocationTypeSiteSelectionError || hasFormAnswersError) {
-                        emitError(IntakeError.FORM_INVALID)
-                    } else if (state.value.isCurrentCollectorMissing) {
-                        emitError(IntakeError.MISSING_COLLECTOR)
-                    } else {
-                        val selectedSite =
-                            if (_state.value.allSitesInProgram.any { !it.district.isNullOrBlank() }) {
-                                _state.value.allSitesInProgram.find {
-                                    it.district == _state.value.selectedDistrict && it.villageName == _state.value.selectedVillageName && it.houseNumber == _state.value.selectedHouseNumber
-                                }
-                            } else {
-                                _state.value.allSitesInProgram.find { site ->
-                                    val locationHierarchy =
-                                        site.locationHierarchy ?: return@find false
-                                    _state.value.siteSelectionsByLocationTypeId.all { (locationTypeId, selectedLocationTypeSite) ->
-                                        val locationTypeName =
-                                            _state.value.allLocationTypesInProgram.find { it.id == locationTypeId }?.name
-                                        locationHierarchy[locationTypeName] == selectedLocationTypeSite
-                                    }
-                                }
-                            }
-
-                        if (selectedSite == null) {
-                            emitError(IntakeError.SITE_NOT_FOUND)
-                            IntakeErrorLogger.logSiteNotFound(Exception(IntakeError.SITE_NOT_FOUND.name))
-                            return@launch
-                        }
-
-                        val success = transactionHelper.runAsTransaction {
-                            val sessionResult =
-                                sessionRepository.upsertSession(session, selectedSite.id)
-                            sessionResult.onError { error ->
-                                emitError(error)
-                                IntakeErrorLogger.logSessionUpsertFailed(
-                                    Exception(error.name),
-                                    session.localId,
-                                    selectedSite.id
-                                )
-                                return@runAsTransaction false
-                            }
-
-                            val surveillanceFormResult = surveillanceForm?.let {
-                                surveillanceFormRepository.upsertSurveillanceForm(
-                                    surveillanceForm, session.localId
-                                )
-                            } ?: Result.Success(Unit)
-
-                            surveillanceFormResult.onError { error ->
-                                emitError(error)
-                                IntakeErrorLogger.logSurveillanceFormUpsertFailed(
-                                    Exception(error.name),
-                                    session.localId
-                                )
-                                return@runAsTransaction false
-                            }
-
-                            val formAnswers = _state.value.formAnswersByQuestionId
-                            for ((questionId, answer) in formAnswers) {
-                                formAnswerRepository.upsertFormAnswer(
-                                    answer,
-                                    session.localId,
-                                    null,
-                                    questionId
-                                ).onError { error ->
-                                    emitError(error)
-                                    return@runAsTransaction false
-                                }
-                            }
-
-                            true
-                        }
-
-                        if (success) {
-                            currentSessionCache.saveSession(session, selectedSite.id)
-
-                            val allLocationTypes = _state.value.allLocationTypesInProgram
-                            val locationSelectionsToCache = if (allLocationTypes.isNotEmpty()) {
-                                val lowestLevelId = allLocationTypes.last().id
-                                _state.value.siteSelectionsByLocationTypeId.filterKeys { it != lowestLevelId }
-                            } else {
-                                emptyMap()
-                            }
-
-                            defaultIntakeFieldsCache.saveDefaultIntakeFields(
-                                collectorName = session.collectorName,
-                                collectorTitle = session.collectorTitle,
-                                collectorLastTrainedOn = session.collectorLastTrainedOn,
-                                hardwareId = session.hardwareId,
-                                district = _state.value.selectedDistrict,
-                                villageName = _state.value.selectedVillageName,
-                                locationSelections = locationSelectionsToCache
-                            )
-
+                    IntakeSubmission(
+                        validation = intakeValidationUseCases,
+                        transactions = transactionHelper,
+                        sessions = sessionRepository,
+                        surveillanceForms = surveillanceFormRepository,
+                        formAnswers = formAnswerRepository,
+                        sessionCache = currentSessionCache,
+                        defaultFields = defaultIntakeFieldsCache,
+                    ).submit(
+                        currentState = { _state.value },
+                        isCurrentCollectorMissing = { state.value.isCurrentCollectorMissing },
+                        updateState = { transform -> _state.update(transform) },
+                        reportError = { emitError(it) },
+                        onSubmitted = { session ->
                             collectionMethodWorkflow = collectionMethodWorkflowFactory.create(
-                                session.localId, session.collectionMethod
+                                session.localId,
+                                session.collectionMethod,
                             )
                             _events.send(
-                                IntakeEvent.NavigateAfterIntake(collectionMethodWorkflow.postIntakeDestination)
+                                IntakeEvent.NavigateAfterIntake(collectionMethodWorkflow.postIntakeDestination),
                             )
-                        }
-                    }
+                        },
+                    )
                 }
 
                 is IntakeAction.SelectCollector -> {
