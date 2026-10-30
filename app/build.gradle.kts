@@ -170,13 +170,13 @@ android {
         }
     }
 
-    room {
-        schemaDirectory("$projectDir/schemas")
-    }
-
     sourceSets.named("androidTest") {
         assets.directories += "$projectDir/schemas"
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 kotlin {
