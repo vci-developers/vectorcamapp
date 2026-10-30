@@ -10,36 +10,8 @@ import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
 import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField
 import com.vci.vectorcamapp.core.presentation.components.form.ToggleField
 import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions
-import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.intake.presentation.IntakeAction
 import com.vci.vectorcamapp.intake.presentation.IntakeState
-
-@Composable
-internal fun IntakeProgramFormSection(
-    state: IntakeState,
-    onAction: (IntakeAction) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val form = state.form ?: return
-    IntakeTile(
-        title = form.name,
-        iconPainter = painterResource(id = R.drawable.ic_clipboard),
-        iconDescription = stringResource(R.string.intake_content_description_surveillance_form),
-        modifier = modifier,
-    ) {
-        val answerMap = state.formAnswersByQuestionId.mapValues { (_, answer) -> answer.value }
-        state.formQuestions.forEach { question ->
-            if (FormQuestionPrerequisiteEvaluator.evaluate(question.prerequisite, answerMap)) {
-                DynamicFormField(
-                    question = question,
-                    value = state.formAnswersByQuestionId[question.id]?.value.orEmpty(),
-                    error = state.intakeErrors.formAnswerErrors[question.id],
-                    onValueChange = { onAction(IntakeAction.UpdateFormAnswer(question.id, it)) },
-                )
-            }
-        }
-    }
-}
 
 @Composable
 internal fun IntakeSurveillanceFormSection(
@@ -151,28 +123,6 @@ private fun LlinFields(
             onValueChange = { onAction(IntakeAction.EnterNumPeopleSleptUnderLlin(it)) },
             singleLine = true,
             error = state.intakeErrors.numPeopleSleptUnderLlin,
-        )
-    }
-}
-
-@Composable
-internal fun IntakeNotesSection(
-    state: IntakeState,
-    onAction: (IntakeAction) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    IntakeTile(
-        title = stringResource(R.string.intake_title_additional_notes),
-        iconPainter = painterResource(id = R.drawable.ic_notes),
-        iconDescription = stringResource(R.string.intake_content_description_additional_notes),
-        modifier = modifier,
-    ) {
-        TextEntryField(
-            label = stringResource(R.string.intake_label_notes),
-            value = state.session.notes,
-            onValueChange = { onAction(IntakeAction.EnterNotes(it)) },
-            placeholder = stringResource(R.string.intake_placeholder_notes),
-            maxCharacters = 1000,
         )
     }
 }
