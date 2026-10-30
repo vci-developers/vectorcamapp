@@ -37,6 +37,8 @@ import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.locale.AppLocaleManager
 import com.vci.vectorcamapp.core.presentation.util.locale.SupportedLanguage
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
@@ -67,6 +69,7 @@ class SettingsViewModelTest {
     private lateinit var collectorRepository: CollectorRepository
     private lateinit var collectorValidationUseCases: CollectorValidationUseCases
     private lateinit var errorMessageEmitter: ErrorMessageEmitter
+    private lateinit var successMessageEmitter: SuccessMessageEmitter
     private lateinit var viewModel: SettingsViewModel
 
     // New constructor params — relaxed mocks (not exercised by existing tests)
@@ -95,6 +98,8 @@ class SettingsViewModelTest {
     fun setUp() {
         errorMessageEmitter = mockk(relaxed = true)
         coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
+        successMessageEmitter = mockk(relaxed = true)
+        coEvery { successMessageEmitter.emit(any(), any()) } returns Unit
 
         deviceCache = mockk(relaxed = true)
         programRepository = mockk(relaxed = true)
@@ -153,7 +158,7 @@ class SettingsViewModelTest {
         appLocaleManager = appLocaleManager,
         connectivityObserver = connectivityObserver,
         errorMessageEmitter = errorMessageEmitter,
-    )
+    ).also { it.successMessageEmitter = successMessageEmitter }
 
     // ========================================
     // A. Initialization & Loading
@@ -655,6 +660,7 @@ class SettingsViewModelTest {
             )
         }
         assertThat(viewModel.state.value.isSyncingData).isFalse()
+        coVerify { successMessageEmitter.emit(SuccessMessage.PROGRAM_DATA_DOWNLOADED, any()) }
     }
 
     @Test

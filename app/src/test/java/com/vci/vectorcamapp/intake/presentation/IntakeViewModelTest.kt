@@ -29,6 +29,8 @@ import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteExpression
 import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteValue
@@ -95,6 +97,7 @@ class IntakeViewModelTest {
     private lateinit var formAnswerRepository: FormAnswerRepository
     private lateinit var intakeValidationUseCases: IntakeValidationUseCases
     private lateinit var errorMessageEmitter: ErrorMessageEmitter
+    private lateinit var successMessageEmitter: SuccessMessageEmitter
     private lateinit var transactionHelper: TransactionHelper
     private lateinit var programFormWorkflowFactory: ProgramFormWorkflowFactory
     private lateinit var programFormWorkflow: ProgramFormWorkflow
@@ -125,6 +128,8 @@ class IntakeViewModelTest {
     fun setUp() {
         errorMessageEmitter = mockk(relaxed = true)
         coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
+        successMessageEmitter = mockk(relaxed = true)
+        coEvery { successMessageEmitter.emit(any(), any()) } returns Unit
 
         deviceCache = mockk(relaxed = true)
         currentSessionCache = mockk(relaxed = true)
@@ -209,6 +214,7 @@ class IntakeViewModelTest {
             errorMessageEmitter = errorMessageEmitter,
         ).also { vm ->
             vm.transactionHelper = transactionHelper
+            vm.successMessageEmitter = successMessageEmitter
             vm.programFormWorkflowFactory = programFormWorkflowFactory
             vm.collectionMethodWorkflowFactory = collectionMethodWorkflowFactory
         }
@@ -826,6 +832,7 @@ class IntakeViewModelTest {
         }
         coVerify { currentSessionCache.saveSession(any(), testSite.id) }
         coVerify { defaultIntakeFieldsCache.saveDefaultIntakeFields(any(), any(), any(), any(), any(), any(), any()) }
+        coVerify { successMessageEmitter.emit(SuccessMessage.SESSION_CREATED, any()) }
     }
 
     @Test

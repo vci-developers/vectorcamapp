@@ -11,6 +11,8 @@ import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.ui.extensions.displayText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,6 +41,9 @@ class CompleteSessionListViewModel @Inject constructor(
     private val workManagerRepository: WorkManagerRepository,
     errorMessageEmitter: ErrorMessageEmitter,
 ) : CoreViewModel(errorMessageEmitter) {
+
+    @Inject
+    lateinit var successMessageEmitter: SuccessMessageEmitter
 
     private val _state = MutableStateFlow(CompleteSessionListState())
 
@@ -123,6 +128,7 @@ class CompleteSessionListViewModel @Inject constructor(
                 is CompleteSessionListAction.UploadAllPendingSessions -> {
                     val completeSessionsAndSites =
                         sessionRepository.observeCompleteSessionsAndSites().first()
+                    var didEnqueueUpload = false
                     for (sessionAndSite in completeSessionsAndSites) {
                         val session = sessionAndSite.session
                         val site = sessionAndSite.site
@@ -142,6 +148,10 @@ class CompleteSessionListViewModel @Inject constructor(
                         if (isSessionUploaded && areSpecimensUploaded) continue
 
                         workManagerRepository.enqueueSessionUpload(session.localId, site.id)
+                        didEnqueueUpload = true
+                    }
+                    if (didEnqueueUpload) {
+                        successMessageEmitter.emit(SuccessMessage.SESSION_DATA_RECORDED)
                     }
                 }
 

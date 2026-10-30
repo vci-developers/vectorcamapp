@@ -51,6 +51,7 @@
     <string name="core_content_description_tooltip">Ícono de ayuda</string>
     <string name="core_content_description_pill">Ícono de etiqueta</string>
     <string name="core_content_description_error">Error</string>
+    <string name="core_content_description_success">Éxito</string>
     <string name="core_content_description_dismiss">Ícono para descartar</string>
 
     <!-- Capture Animation -->
@@ -84,5 +85,10 @@
     <string name="upload_service_preparing">Preparando la subida…</string>
     <string name="upload_service_waiting">Esperando conexión de red…</string>
     <string name="upload_service_running">La subida se está ejecutando en segundo plano…</string>
+
+    <!-- Success feedback -->
+    <string name="success_program_data_downloaded">Los datos del programa se descargaron correctamente.</string>
+    <string name="success_session_created">Sesión creada correctamente.</string>
+    <string name="success_session_data_recorded">Todos los datos se registraron correctamente.</string>
 
 </resources>
