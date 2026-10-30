@@ -27,6 +27,8 @@ import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel
@@ -82,6 +84,9 @@ class ImagingViewModel @Inject constructor(
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
+
+    @Inject
+    lateinit var successMessageEmitter: SuccessMessageEmitter
 
     @Inject
     lateinit var imagingWorkflowFactory: ImagingWorkflowFactory
@@ -333,6 +338,7 @@ class ImagingViewModel @Inject constructor(
                         workRepository.enqueueSessionUpload(
                             currentSession.localId, currentSessionSiteId
                         )
+                        successMessageEmitter.emit(SuccessMessage.SESSION_DATA_RECORDED)
                         currentSessionCache.clearSession()
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
                     }

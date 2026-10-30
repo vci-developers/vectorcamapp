@@ -24,6 +24,8 @@ import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.navigation.Destination
 import io.mockk.coEvery
@@ -61,6 +63,7 @@ class CollectionBatchListViewModelTest {
     private lateinit var formQuestionRepository: FormQuestionRepository
     private lateinit var formAnswerRepository: FormAnswerRepository
     private lateinit var workManagerRepository: WorkManagerRepository
+    private lateinit var successMessageEmitter: SuccessMessageEmitter
     private lateinit var viewModel: CollectionBatchListViewModel
 
     private val sessionUnits = MutableStateFlow<List<SessionUnit>>(emptyList())
@@ -80,6 +83,8 @@ class CollectionBatchListViewModelTest {
         formQuestionRepository = mockk(relaxed = true)
         formAnswerRepository = mockk(relaxed = true)
         workManagerRepository = mockk(relaxed = true)
+        successMessageEmitter = mockk(relaxed = true)
+        coEvery { successMessageEmitter.emit(any(), any()) } returns Unit
         every { sessionUnitRepository.observeSessionUnitsForSession(sessionId) } returns sessionUnits
         every { formAnswerRepository.observeSessionUnitScopedFormAnswersBySessionId(sessionId) } returns answersByUnit
         coEvery { specimenImageRepository.getTotalCountForSession(sessionId) } returns 6
@@ -297,6 +302,7 @@ class CollectionBatchListViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
         coVerify { workManagerRepository.enqueueSessionUpload(sessionId, 4) }
+        coVerify { successMessageEmitter.emit(SuccessMessage.SESSION_DATA_RECORDED, any()) }
         coVerify { currentSessionCache.clearSession() }
     }
 
@@ -343,7 +349,7 @@ class CollectionBatchListViewModelTest {
             formAnswerRepository = formAnswerRepository,
             workManagerRepository = workManagerRepository,
             errorMessageEmitter = mockk(relaxed = true),
-        )
+        ).also { it.successMessageEmitter = successMessageEmitter }
     }
 
     private fun stubIdentityQuestions() {

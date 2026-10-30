@@ -19,6 +19,8 @@ import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -47,6 +49,9 @@ class CollectionBatchListViewModel @Inject constructor(
     private val workManagerRepository: WorkManagerRepository,
     errorMessageEmitter: ErrorMessageEmitter
 ) : CoreViewModel(errorMessageEmitter) {
+
+    @Inject
+    lateinit var successMessageEmitter: SuccessMessageEmitter
 
     private val destination = savedStateHandle.toRoute<Destination.CollectionBatchList>()
     private val sessionId: UUID = UUID.fromString(destination.sessionId)
@@ -186,6 +191,7 @@ class CollectionBatchListViewModel @Inject constructor(
                         workManagerRepository.enqueueSessionUpload(
                             currentSession.localId, currentSessionSiteId
                         )
+                        successMessageEmitter.emit(SuccessMessage.SESSION_DATA_RECORDED)
                         currentSessionCache.clearSession()
                         _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
                     }

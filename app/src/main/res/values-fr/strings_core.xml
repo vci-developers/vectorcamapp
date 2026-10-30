@@ -51,6 +51,7 @@
     <string name="core_content_description_tooltip">Icône d\'aide</string>
     <string name="core_content_description_pill">Icône d\'étiquette</string>
     <string name="core_content_description_error">Erreur</string>
+    <string name="core_content_description_success">Succès</string>
     <string name="core_content_description_dismiss">Icône pour fermer</string>
 
     <!-- Capture Animation -->
@@ -84,5 +85,10 @@
     <string name="upload_service_preparing">Préparation de l\'envoi…</string>
     <string name="upload_service_waiting">En attente d\'une connexion réseau…</string>
     <string name="upload_service_running">L\'envoi s\'exécute en arrière-plan…</string>
+
+    <!-- Success feedback -->
+    <string name="success_program_data_downloaded">Les données du programme ont été téléchargées.</string>
+    <string name="success_session_created">Session créée avec succès.</string>
+    <string name="success_session_data_recorded">Toutes les données ont été enregistrées.</string>
 
 </resources>

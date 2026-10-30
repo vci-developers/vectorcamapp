@@ -13,6 +13,8 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -41,6 +43,7 @@ class CompleteSessionListViewModelTest {
     private lateinit var specimenImageRepository: SpecimenImageRepository
     private lateinit var workManagerRepository: WorkManagerRepository
     private lateinit var errorMessageEmitter: ErrorMessageEmitter
+    private lateinit var successMessageEmitter: SuccessMessageEmitter
 
     private lateinit var completeSessionsFlow: MutableStateFlow<List<SessionAndSite>>
 
@@ -90,6 +93,8 @@ class CompleteSessionListViewModelTest {
         workManagerRepository = mockk(relaxed = true)
         errorMessageEmitter = mockk(relaxed = true)
         coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
+        successMessageEmitter = mockk(relaxed = true)
+        coEvery { successMessageEmitter.emit(any(), any()) } returns Unit
 
         completeSessionsFlow = MutableStateFlow(emptyList())
         every { sessionRepository.observeCompleteSessionsAndSites() } returns completeSessionsFlow
@@ -108,7 +113,7 @@ class CompleteSessionListViewModelTest {
         specimenImageRepository = specimenImageRepository,
         workManagerRepository = workManagerRepository,
         errorMessageEmitter = errorMessageEmitter,
-    )
+    ).also { it.successMessageEmitter = successMessageEmitter }
 
     // ========================================
     // A. Navigation Events
@@ -253,6 +258,7 @@ class CompleteSessionListViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { workManagerRepository.enqueueSessionUpload(testSessionId, testSite.id) }
+        coVerify(exactly = 1) { successMessageEmitter.emit(SuccessMessage.SESSION_DATA_RECORDED, any()) }
     }
 
     // ========================================

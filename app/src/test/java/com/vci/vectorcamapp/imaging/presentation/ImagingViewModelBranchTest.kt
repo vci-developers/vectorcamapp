@@ -22,6 +22,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
@@ -141,6 +142,7 @@ class ImagingViewModelBranchTest {
             errorMessageEmitter = errorMessageEmitter,
         ).also {
             it.transactionHelper = transactionHelper
+            it.successMessageEmitter = mockk<SuccessMessageEmitter>(relaxed = true)
             it.imagingWorkflowFactory = factory
         }
     }

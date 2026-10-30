@@ -14,6 +14,8 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
@@ -58,6 +60,7 @@ class ImagingViewModelTest {
     private lateinit var inferenceRepository: InferenceRepository
     private lateinit var workRepository: WorkManagerRepository
     private lateinit var errorMessageEmitter: ErrorMessageEmitter
+    private lateinit var successMessageEmitter: SuccessMessageEmitter
     private lateinit var transactionHelper: TransactionHelper
     private lateinit var imagingWorkflowFactory: ImagingWorkflowFactory
     private lateinit var imagingWorkflow: ImagingWorkflow
@@ -102,6 +105,8 @@ class ImagingViewModelTest {
 
         errorMessageEmitter = mockk(relaxed = true)
         coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
+        successMessageEmitter = mockk(relaxed = true)
+        coEvery { successMessageEmitter.emit(any(), any()) } returns Unit
 
         currentSessionCache = mockk(relaxed = true)
         sessionRepository = mockk(relaxed = true)
@@ -170,6 +175,7 @@ class ImagingViewModelTest {
             errorMessageEmitter = errorMessageEmitter,
         ).also { vm ->
             vm.transactionHelper = transactionHelper
+            vm.successMessageEmitter = successMessageEmitter
             vm.imagingWorkflowFactory = imagingWorkflowFactory
         }
     }
@@ -563,6 +569,7 @@ class ImagingViewModelTest {
 
         coVerify(exactly = 1) { sessionRepository.markSessionAsComplete(testSessionId) }
         coVerify(exactly = 1) { workRepository.enqueueSessionUpload(testSessionId, 42) }
+        coVerify(exactly = 1) { successMessageEmitter.emit(SuccessMessage.SESSION_DATA_RECORDED, any()) }
         coVerify(exactly = 1) { currentSessionCache.clearSession() }
     }
 
