@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.ui.extensions
 
+import android.graphics.Paint
 import android.graphics.RectF
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -11,15 +12,14 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 
 fun Modifier.customShadow(
     color: Color = Color.Black,
@@ -49,7 +49,7 @@ private fun DrawScope.drawCustomShadow(
     cornerRadius: Dp,
     spread: Dp
 ) {
-    val shadowPaint = Paint().asFrameworkPaint().apply {
+    val shadowPaint = Paint().apply {
         isAntiAlias = true
         this.color = android.graphics.Color.TRANSPARENT
         setShadowLayer(
@@ -87,7 +87,7 @@ fun Modifier.zoomPanGesture(
     val scale = remember { mutableFloatStateOf(1f) }
     val offset = remember { mutableStateOf(Offset.Zero) }
 
-    val state = rememberTransformableState { zoomChange, panChange, _ ->
+    val state = rememberTransformableState { _, zoomChange, panChange, _ ->
         val newScale = (scale.floatValue * zoomChange).coerceIn(minScale, maxScale)
         scale.floatValue = newScale
 

@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 val secretsProperties = Properties()
 val secretsFile = rootProject.file("secrets.properties")
@@ -8,13 +9,12 @@ if (secretsFile.exists()) {
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.dagger.hilt.android)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.google.firebase.crashlytics)
-    kotlin("plugin.serialization") version "2.0.21"
 }
 
 // Apply Google Services plugin only when google-services.json exists (e.g. local dev).
@@ -25,7 +25,7 @@ if (file("${project.projectDir}/google-services.json").exists()) {
 
 android {
     namespace = "com.vci.vectorcamapp"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.vci.vectorcamapp"
@@ -147,15 +147,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
-        // LiteRT 2.1.x ships Kotlin 2.3 metadata; ABI is compatible with Kotlin 2.0.x.
-        freeCompilerArgs += listOf("-Xskip-metadata-version-check")
-    }
-
     buildFeatures {
         buildConfig = true
         compose = true
+        // AGP 9 turns resValues off unless a module opts in. Flavors use resValue for the app name.
+        resValues = true
     }
 
     lint {
@@ -174,12 +170,18 @@ android {
         }
     }
 
-    room {
-        schemaDirectory("$projectDir/schemas")
+    sourceSets.named("androidTest") {
+        assets.directories += "$projectDir/schemas"
     }
+}
 
-    sourceSets {
-        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
     }
 }
 
@@ -242,8 +244,9 @@ dependencies {
     // Open CV Library
     implementation(libs.opencv)
 
-    // LiteRT Library (CompiledModel API; GPU accelerator is built into the Kotlin package)
+    // LiteRT CompiledModel API. GPU support ships as a separate artifact from 2.3.0.
     implementation(libs.litert)
+    implementation(libs.litert.gpu)
 
     // Room Database Dependencies
     implementation(libs.androidx.room.runtime)
@@ -295,5 +298,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest) // Debugging Compose manifest tests
 }
 
-apply(from = "jacoco.gradle.kts")
+// file() avoids an AGP 9 lint crash on string-path script plugins.
+apply(from = file("jacoco.gradle.kts"))
 
