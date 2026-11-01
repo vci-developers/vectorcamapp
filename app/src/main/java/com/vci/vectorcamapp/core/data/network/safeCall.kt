@@ -22,20 +22,20 @@ suspend inline fun <reified T> safeCall(
         execute()
     } catch (e: UnresolvedAddressException) {
         e.printStackTrace()
-        rememberTransportFailure(e)
+        rememberTransportFailure(e, NetworkError.NO_INTERNET)
         return Result.Error(NetworkError.NO_INTERNET)
     } catch (e: UnknownHostException) {
         e.printStackTrace()
-        rememberTransportFailure(e)
+        rememberTransportFailure(e, NetworkError.NO_INTERNET)
         return Result.Error(NetworkError.NO_INTERNET)
     } catch (e: SerializationException) {
         e.printStackTrace()
-        rememberTransportFailure(e)
+        rememberTransportFailure(e, NetworkError.SERIALIZATION_ERROR)
         return Result.Error(NetworkError.SERIALIZATION_ERROR)
     } catch (e: Exception) {
         coroutineContext.ensureActive()
         e.printStackTrace()
-        rememberTransportFailure(e)
+        rememberTransportFailure(e, NetworkError.UNKNOWN_ERROR)
         return Result.Error(NetworkError.UNKNOWN_ERROR)
     }
 
@@ -52,23 +52,35 @@ internal suspend fun clearUploadExchange() {
 }
 
 @PublishedApi
-internal suspend fun rememberTransportFailure(error: Throwable) {
-    val trace = coroutineContext[UploadTrace] ?: return
-    trace.failureCause = error
-    trace.lastExchange = UploadHttpExchange(
+internal suspend fun rememberTransportFailure(error: Throwable, networkError: NetworkError) {
+    val trace = coroutineContext[UploadTrace]
+    val responseBody = UploadFailureReport.truncate(error.stackTraceToString())
+    trace?.failureCause = error
+    trace?.lastExchange = UploadHttpExchange(
         method = "UNKNOWN",
         endpoint = "(request failed before a response)",
         requestBody = "(unavailable)",
         statusCode = null,
-        responseBody = UploadFailureReport.truncate(error.stackTraceToString()),
+        responseBody = responseBody,
+    )
+    ApiErrorLogger.record(
+        method = "UNKNOWN",
+        route = "(request failed before a response)",
+        httpCode = null,
+        responseBody = error.message ?: responseBody,
+        networkError = networkError,
+        sessionId = trace?.sessionId,
     )
 }
 
 @PublishedApi
 internal suspend fun rememberHttpFailure(response: HttpResponse, error: NetworkError) {
-    val trace = coroutineContext[UploadTrace] ?: return
+    val request = response.call.request
+    val route = ApiErrorLogger.route(request.url)
+    val method = request.method.value
+    val httpCode = response.status.value
     val requestBody = try {
-        UploadFailureReport.outgoingContent(response.call.request.content)
+        UploadFailureReport.outgoingContent(request.content)
     } catch (expected: CancellationException) {
         throw expected
     } catch (expected: Exception) {
@@ -81,13 +93,22 @@ internal suspend fun rememberHttpFailure(response: HttpResponse, error: NetworkE
     } catch (expected: Exception) {
         "(unreadable response body: ${expected.message})"
     }
-    trace.lastExchange = UploadHttpExchange(
-        method = response.call.request.method.value,
-        endpoint = response.call.request.url.toString(),
+    val trace = coroutineContext[UploadTrace]
+    trace?.lastExchange = UploadHttpExchange(
+        method = method,
+        endpoint = route,
         requestBody = UploadFailureReport.truncate(requestBody),
-        statusCode = response.status.value,
+        statusCode = httpCode,
         responseBody = UploadFailureReport.truncate(
             responseBody + " networkError=${error.name}",
         ),
+    )
+    ApiErrorLogger.record(
+        method = method,
+        route = route,
+        httpCode = httpCode,
+        responseBody = responseBody,
+        networkError = error,
+        sessionId = trace?.sessionId,
     )
 }
