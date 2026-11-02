@@ -7,10 +7,16 @@ import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-abstract class CoreViewModel(
-    private val errorMessageEmitter: ErrorMessageEmitter
-) : ViewModel() {
+abstract class CoreViewModel : ViewModel() {
+
+    /**
+     * Field-injected so every screen shares one emitter without another constructor parameter.
+     * Hilt sets this after construction, before the ViewModel is used.
+     */
+    @Inject
+    lateinit var errorMessageEmitter: ErrorMessageEmitter
 
     /**
      * Emits a user-visible error snackbar AND fires a generic GA4 `error_emitted` event.

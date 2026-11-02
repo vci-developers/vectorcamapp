@@ -29,7 +29,6 @@ import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.locale.AppLocaleManager
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
@@ -67,8 +66,7 @@ class SettingsViewModel @Inject constructor(
     private val currentSessionCache: CurrentSessionCache,
     private val appLocaleManager: AppLocaleManager,
     connectivityObserver: ConnectivityObserver,
-    errorMessageEmitter: ErrorMessageEmitter,
-) : CoreViewModel(errorMessageEmitter) {
+) : CoreViewModel() {
 
     @Inject
     lateinit var successMessageEmitter: SuccessMessageEmitter

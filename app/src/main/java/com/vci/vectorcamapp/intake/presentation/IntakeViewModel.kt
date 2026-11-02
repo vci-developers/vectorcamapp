@@ -22,7 +22,6 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.intake.domain.repository.LocationRepository
@@ -68,8 +67,7 @@ class IntakeViewModel @Inject constructor(
     private val collectorRepository: CollectorRepository,
     private val programRepository: ProgramRepository,
     private val formAnswerRepository: FormAnswerRepository,
-    errorMessageEmitter: ErrorMessageEmitter,
-) : CoreViewModel(errorMessageEmitter) {
+) : CoreViewModel() {
 
     companion object {
         private const val LOCATION_TIMEOUT_MS = 30000L

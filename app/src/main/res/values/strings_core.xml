@@ -100,6 +100,7 @@
     <!-- Success feedback -->
     <string name="success_program_data_downloaded">Program data downloaded successfully.</string>
     <string name="success_session_created">Session created successfully.</string>
-    <string name="success_session_data_recorded">All data are recorded successfully.</string>
+    <string name="success_session_data_saved">All session data was saved successfully.</string>
+    <string name="success_session_queued_for_submission">Session has been queued for submission.</string>
 
 </resources>

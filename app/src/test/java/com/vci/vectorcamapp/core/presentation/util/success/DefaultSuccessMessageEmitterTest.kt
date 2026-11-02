@@ -25,10 +25,10 @@ class DefaultSuccessMessageEmitterTest {
     @Test
     fun emit_dropsConsecutiveDuplicate() = runTest {
         emitter.messages.test {
-            emitter.emit(SuccessMessage.SESSION_DATA_RECORDED)
+            emitter.emit(SuccessMessage.SESSION_DATA_SAVED)
             awaitItem()
 
-            emitter.emit(SuccessMessage.SESSION_DATA_RECORDED)
+            emitter.emit(SuccessMessage.SESSION_DATA_SAVED)
             expectNoEvents()
 
             emitter.emit(SuccessMessage.SESSION_CREATED)

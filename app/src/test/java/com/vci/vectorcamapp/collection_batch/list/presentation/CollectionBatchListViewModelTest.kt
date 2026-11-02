@@ -271,6 +271,7 @@ class CollectionBatchListViewModelTest {
             assertThat(awaitItem()).isEqualTo(CollectionBatchListEvent.NavigateBackToLandingScreen)
             cancelAndIgnoreRemainingEvents()
         }
+        coVerify { successMessageEmitter.emit(SuccessMessage.SESSION_DATA_SAVED, any()) }
         coVerify { currentSessionCache.clearSession() }
         coVerify { specimenImageRepository.getTotalCountForSession(sessionId) }
     }
@@ -302,7 +303,7 @@ class CollectionBatchListViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
         coVerify { workManagerRepository.enqueueSessionUpload(sessionId, 4) }
-        coVerify { successMessageEmitter.emit(SuccessMessage.SESSION_DATA_RECORDED, any()) }
+        coVerify { successMessageEmitter.emit(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION, any()) }
         coVerify { currentSessionCache.clearSession() }
     }
 
@@ -348,8 +349,10 @@ class CollectionBatchListViewModelTest {
             formQuestionRepository = formQuestionRepository,
             formAnswerRepository = formAnswerRepository,
             workManagerRepository = workManagerRepository,
-            errorMessageEmitter = mockk(relaxed = true),
-        ).also { it.successMessageEmitter = successMessageEmitter }
+        ).also {
+            it.errorMessageEmitter = mockk(relaxed = true)
+            it.successMessageEmitter = successMessageEmitter
+        }
     }
 
     private fun stubIdentityQuestions() {

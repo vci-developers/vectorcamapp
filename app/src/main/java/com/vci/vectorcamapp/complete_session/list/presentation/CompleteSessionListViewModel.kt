@@ -10,10 +10,9 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
-import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.ui.extensions.displayText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -39,8 +38,7 @@ class CompleteSessionListViewModel @Inject constructor(
     private val specimenRepository: SpecimenRepository,
     private val specimenImageRepository: SpecimenImageRepository,
     private val workManagerRepository: WorkManagerRepository,
-    errorMessageEmitter: ErrorMessageEmitter,
-) : CoreViewModel(errorMessageEmitter) {
+) : CoreViewModel() {
 
     @Inject
     lateinit var successMessageEmitter: SuccessMessageEmitter
@@ -151,7 +149,7 @@ class CompleteSessionListViewModel @Inject constructor(
                         didEnqueueUpload = true
                     }
                     if (didEnqueueUpload) {
-                        successMessageEmitter.emit(SuccessMessage.SESSION_DATA_RECORDED)
+                        successMessageEmitter.emit(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION)
                     }
                 }
 

@@ -89,6 +89,7 @@
     <!-- Success feedback -->
     <string name="success_program_data_downloaded">Les données du programme ont été téléchargées.</string>
     <string name="success_session_created">Session créée avec succès.</string>
-    <string name="success_session_data_recorded">Toutes les données ont été enregistrées.</string>
+    <string name="success_session_data_saved">Toutes les données de la session ont été enregistrées avec succès.</string>
+    <string name="success_session_queued_for_submission">La session a été mise en file d\'attente pour soumission.</string>
 
 </resources>

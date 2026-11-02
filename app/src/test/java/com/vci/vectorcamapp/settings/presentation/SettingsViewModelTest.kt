@@ -37,10 +37,10 @@ import com.vci.vectorcamapp.core.domain.util.collector.CollectorValidationError
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.room.RoomDbError
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
-import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
-import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.locale.AppLocaleManager
 import com.vci.vectorcamapp.core.presentation.util.locale.SupportedLanguage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
 import io.mockk.coEvery
@@ -157,8 +157,10 @@ class SettingsViewModelTest {
         currentSessionCache = currentSessionCache,
         appLocaleManager = appLocaleManager,
         connectivityObserver = connectivityObserver,
-        errorMessageEmitter = errorMessageEmitter,
-    ).also { it.successMessageEmitter = successMessageEmitter }
+    ).also {
+        it.errorMessageEmitter = errorMessageEmitter
+        it.successMessageEmitter = successMessageEmitter
+    }
 
     // ========================================
     // A. Initialization & Loading

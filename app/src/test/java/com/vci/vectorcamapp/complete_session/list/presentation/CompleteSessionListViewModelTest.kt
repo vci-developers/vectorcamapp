@@ -112,8 +112,10 @@ class CompleteSessionListViewModelTest {
         specimenRepository = specimenRepository,
         specimenImageRepository = specimenImageRepository,
         workManagerRepository = workManagerRepository,
-        errorMessageEmitter = errorMessageEmitter,
-    ).also { it.successMessageEmitter = successMessageEmitter }
+    ).also {
+        it.errorMessageEmitter = errorMessageEmitter
+        it.successMessageEmitter = successMessageEmitter
+    }
 
     // ========================================
     // A. Navigation Events
@@ -258,7 +260,7 @@ class CompleteSessionListViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { workManagerRepository.enqueueSessionUpload(testSessionId, testSite.id) }
-        coVerify(exactly = 1) { successMessageEmitter.emit(SuccessMessage.SESSION_DATA_RECORDED, any()) }
+        coVerify(exactly = 1) { successMessageEmitter.emit(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION, any()) }
     }
 
     // ========================================

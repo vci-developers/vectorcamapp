@@ -18,7 +18,6 @@ import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.extensions.displayTextFor
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
@@ -55,8 +54,7 @@ class CompleteSessionDetailsViewModel @Inject constructor(
     private val formRepository: FormRepository,
     private val programRepository: ProgramRepository,
     private val deviceCache: DeviceCache,
-    errorMessageEmitter: ErrorMessageEmitter,
-) : CoreViewModel(errorMessageEmitter) {
+) : CoreViewModel() {
 
     private val sessionId: UUID? =
         savedStateHandle.get<String>("sessionId")

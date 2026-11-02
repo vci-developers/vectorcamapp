@@ -26,7 +26,6 @@ import com.vci.vectorcamapp.core.logging.crashlytics.Severity
 import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
@@ -77,8 +76,7 @@ class ImagingViewModel @Inject constructor(
     private val inferenceRepository: InferenceRepository,
     private val workRepository: WorkManagerRepository,
     private val validateSpecimenIdUseCase: ValidateSpecimenIdUseCase,
-    errorMessageEmitter: ErrorMessageEmitter,
-) : CoreViewModel(errorMessageEmitter) {
+) : CoreViewModel() {
     private val destination = savedStateHandle.toRoute<Destination.Imaging>()
     private val sessionUnitId: UUID? = destination.sessionUnitId?.let(UUID::fromString)
 
@@ -310,6 +308,7 @@ class ImagingViewModel @Inject constructor(
                             "total_duration_ms" to (System.currentTimeMillis() - sessionStartedAt)
                         )
                     )
+                    successMessageEmitter.emit(SuccessMessage.SESSION_DATA_SAVED)
                     currentSessionCache.clearSession()
                     _events.send(ImagingEvent.NavigateBackToLandingScreen)
                 }
@@ -338,7 +337,7 @@ class ImagingViewModel @Inject constructor(
                         workRepository.enqueueSessionUpload(
                             currentSession.localId, currentSessionSiteId
                         )
-                        successMessageEmitter.emit(SuccessMessage.SESSION_DATA_RECORDED)
+                        successMessageEmitter.emit(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION)
                         currentSessionCache.clearSession()
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
                     }

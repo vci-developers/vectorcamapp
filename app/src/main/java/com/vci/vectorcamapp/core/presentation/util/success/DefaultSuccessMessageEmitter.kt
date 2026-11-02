@@ -10,7 +10,9 @@ import javax.inject.Inject
 class DefaultSuccessMessageEmitter @Inject constructor() : SuccessMessageEmitter {
 
     private val _messages = MutableSharedFlow<SuccessData>(
-        replay = 0, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     override val messages = _messages.asSharedFlow()
 

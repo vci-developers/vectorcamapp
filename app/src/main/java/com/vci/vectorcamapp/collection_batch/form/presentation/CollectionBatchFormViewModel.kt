@@ -17,7 +17,6 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.intake.domain.strategy.program_form.ProgramFormWorkflowFactory
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.navigation.Destination
@@ -45,8 +44,7 @@ class CollectionBatchFormViewModel @Inject constructor(
     private val programFormWorkflowFactory: ProgramFormWorkflowFactory,
     private val formAnswerRepository: FormAnswerRepository,
     private val collectionBatchFormValidationUseCases: CollectionBatchFormValidationUseCases,
-    errorMessageEmitter: ErrorMessageEmitter
-) : CoreViewModel(errorMessageEmitter) {
+) : CoreViewModel() {
 
     @Inject
     lateinit var transactionHelper: TransactionHelper

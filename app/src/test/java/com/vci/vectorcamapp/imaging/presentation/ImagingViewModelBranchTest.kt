@@ -139,8 +139,8 @@ class ImagingViewModelBranchTest {
             inferenceRepository = inferenceRepository,
             workRepository = workRepository,
             validateSpecimenIdUseCase = ValidateSpecimenIdUseCase(),
-            errorMessageEmitter = errorMessageEmitter,
         ).also {
+            it.errorMessageEmitter = errorMessageEmitter
             it.transactionHelper = transactionHelper
             it.successMessageEmitter = mockk<SuccessMessageEmitter>(relaxed = true)
             it.imagingWorkflowFactory = factory

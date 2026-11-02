@@ -18,7 +18,6 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.navigation.Destination
@@ -47,8 +46,7 @@ class CollectionBatchListViewModel @Inject constructor(
     private val formQuestionRepository: FormQuestionRepository,
     private val formAnswerRepository: FormAnswerRepository,
     private val workManagerRepository: WorkManagerRepository,
-    errorMessageEmitter: ErrorMessageEmitter
-) : CoreViewModel(errorMessageEmitter) {
+) : CoreViewModel() {
 
     @Inject
     lateinit var successMessageEmitter: SuccessMessageEmitter
@@ -150,53 +148,58 @@ class CollectionBatchListViewModel @Inject constructor(
                     actionToConfirm?.let { onAction(it) }
                 }
 
-                CollectionBatchListAction.SaveSessionProgress -> {
-                    val stateSnapshot = _state.value
-                    VectorCamAnalytics.logEvent(
-                        "collection_batch_list_save_progress_clicked",
-                        mapOf(
-                            "session_id" to sessionId.toString(),
-                            "unit_count" to stateSnapshot.sessionUnits.size,
-                            "specimen_count" to stateSnapshot.specimenCountsBySessionUnitId.values.sum(),
-                            "image_count" to specimenImageRepository.getTotalCountForSession(sessionId)
-                        )
-                    )
-                    _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
-                    currentSessionCache.clearSession()
-                    _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
-                }
+                CollectionBatchListAction.SaveSessionProgress -> saveSessionProgress()
 
-                CollectionBatchListAction.ConfirmSubmitSession -> {
-                    val stateSnapshot = _state.value
-                    VectorCamAnalytics.logEvent(
-                        "collection_batch_list_submit_confirmed",
-                        mapOf(
-                            "session_id" to sessionId.toString(),
-                            "unit_count" to stateSnapshot.sessionUnits.size,
-                            "specimen_count" to stateSnapshot.specimenCountsBySessionUnitId.values.sum(),
-                            "image_count" to specimenImageRepository.getTotalCountForSession(sessionId)
-                        )
-                    )
-                    _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
-                    val currentSession = currentSessionCache.getSession()
-                    val currentSessionSiteId = currentSessionCache.getSiteId()
-
-                    if (currentSession == null || currentSessionSiteId == null) {
-                        _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
-                        return@launch
-                    }
-
-                    val success = sessionRepository.markSessionAsComplete(currentSession.localId)
-                    if (success) {
-                        workManagerRepository.enqueueSessionUpload(
-                            currentSession.localId, currentSessionSiteId
-                        )
-                        successMessageEmitter.emit(SuccessMessage.SESSION_DATA_RECORDED)
-                        currentSessionCache.clearSession()
-                        _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
-                    }
-                }
+                CollectionBatchListAction.ConfirmSubmitSession -> confirmSubmitSession()
             }
+        }
+    }
+
+    private suspend fun saveSessionProgress() {
+        val stateSnapshot = _state.value
+        VectorCamAnalytics.logEvent(
+            "collection_batch_list_save_progress_clicked",
+            mapOf(
+                "session_id" to sessionId.toString(),
+                "unit_count" to stateSnapshot.sessionUnits.size,
+                "specimen_count" to stateSnapshot.specimenCountsBySessionUnitId.values.sum(),
+                "image_count" to specimenImageRepository.getTotalCountForSession(sessionId)
+            )
+        )
+        _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
+        successMessageEmitter.emit(SuccessMessage.SESSION_DATA_SAVED)
+        currentSessionCache.clearSession()
+        _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
+    }
+
+    private suspend fun confirmSubmitSession() {
+        val stateSnapshot = _state.value
+        VectorCamAnalytics.logEvent(
+            "collection_batch_list_submit_confirmed",
+            mapOf(
+                "session_id" to sessionId.toString(),
+                "unit_count" to stateSnapshot.sessionUnits.size,
+                "specimen_count" to stateSnapshot.specimenCountsBySessionUnitId.values.sum(),
+                "image_count" to specimenImageRepository.getTotalCountForSession(sessionId)
+            )
+        )
+        _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
+        val currentSession = currentSessionCache.getSession()
+        val currentSessionSiteId = currentSessionCache.getSiteId()
+
+        if (currentSession == null || currentSessionSiteId == null) {
+            _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
+            return
+        }
+
+        val success = sessionRepository.markSessionAsComplete(currentSession.localId)
+        if (success) {
+            workManagerRepository.enqueueSessionUpload(
+                currentSession.localId, currentSessionSiteId
+            )
+            successMessageEmitter.emit(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION)
+            currentSessionCache.clearSession()
+            _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
         }
     }
 

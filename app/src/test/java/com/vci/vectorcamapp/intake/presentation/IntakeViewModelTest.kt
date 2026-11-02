@@ -211,8 +211,8 @@ class IntakeViewModelTest {
             collectorRepository = collectorRepository,
             programRepository = programRepository,
             formAnswerRepository = formAnswerRepository,
-            errorMessageEmitter = errorMessageEmitter,
         ).also { vm ->
+            vm.errorMessageEmitter = errorMessageEmitter
             vm.transactionHelper = transactionHelper
             vm.successMessageEmitter = successMessageEmitter
             vm.programFormWorkflowFactory = programFormWorkflowFactory
