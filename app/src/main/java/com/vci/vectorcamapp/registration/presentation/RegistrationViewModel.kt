@@ -26,10 +26,9 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
-import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
+import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.registration.domain.util.RegistrationError
 import com.vci.vectorcamapp.registration.logging.RegistrationErrorLogger
 import com.vci.vectorcamapp.registration.presentation.model.RegistrationErrors
@@ -63,8 +62,7 @@ class RegistrationViewModel @Inject constructor(
     private val formRepository: FormRepository,
     private val formQuestionRepository: FormQuestionRepository,
     connectivityObserver: ConnectivityObserver,
-    errorMessageEmitter: ErrorMessageEmitter,
-) : CoreViewModel(errorMessageEmitter) {
+) : CoreViewModel() {
 
     private val _isConnectedToInternet = connectivityObserver.isConnected
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
@@ -168,7 +166,7 @@ class RegistrationViewModel @Inject constructor(
                             "has_selected_program" to (selectedProgram != null),
                             "collector_name_present" to collector.name.isNotBlank(),
                             "collector_title_present" to collector.title.isNotBlank(),
-                            "collector_last_trained_on_present" to (collector.lastTrainedOn != null)
+                            "collector_last_trained_on_present" to (collector.lastTrainedOn != 0L)
                         )
                     )
 

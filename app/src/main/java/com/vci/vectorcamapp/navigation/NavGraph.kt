@@ -1,9 +1,16 @@
 package com.vci.vectorcamapp.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,6 +33,7 @@ import com.vci.vectorcamapp.complete_session.list.presentation.CompleteSessionLi
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.logging.analytics.analyticsScreenName
 import com.vci.vectorcamapp.core.presentation.components.scaffold.BaseScaffold
+import com.vci.vectorcamapp.core.presentation.components.scaffold.SuccessSnackbarHost
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
 import com.vci.vectorcamapp.imaging.presentation.ImagingEvent
 import com.vci.vectorcamapp.imaging.presentation.ImagingScreen
@@ -46,6 +54,7 @@ import com.vci.vectorcamapp.registration.presentation.RegistrationViewModel
 import com.vci.vectorcamapp.settings.presentation.SettingsEvent
 import com.vci.vectorcamapp.settings.presentation.SettingsScreen
 import com.vci.vectorcamapp.settings.presentation.SettingsViewModel
+import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
 fun NavGraph(startDestination: Destination) {
@@ -56,8 +65,11 @@ fun NavGraph(startDestination: Destination) {
         currentEntry?.analyticsScreenName()?.let { VectorCamAnalytics.screenView(it) }
     }
 
+    Box(modifier = Modifier.fillMaxSize()) {
     NavHost(
-        navController = navController, startDestination = startDestination
+        navController = navController,
+        startDestination = startDestination,
+        modifier = Modifier.fillMaxSize()
     ) {
         composable<Destination.Registration> {
             val viewModel = hiltViewModel<RegistrationViewModel>()
@@ -312,5 +324,13 @@ fun NavGraph(startDestination: Destination) {
                 )
             }
         }
+    }
+
+        SuccessSnackbarHost(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .padding(top = MaterialTheme.dimensions.paddingMedium)
+        )
     }
 }

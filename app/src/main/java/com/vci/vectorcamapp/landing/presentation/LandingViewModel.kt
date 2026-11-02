@@ -7,7 +7,6 @@ import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.landing.domain.util.LandingError
 import com.vci.vectorcamapp.landing.logging.LandingErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,8 +29,7 @@ class LandingViewModel @Inject constructor(
     private val currentSessionCache: CurrentSessionCache,
     private val programRepository: ProgramRepository,
     sessionRepository: SessionRepository,
-    errorMessageEmitter: ErrorMessageEmitter,
-) : CoreViewModel(errorMessageEmitter) {
+) : CoreViewModel() {
 
     private val _incompleteSessionsCount = sessionRepository.observeIncompleteSessionsAndSites()
         .map { it.size }

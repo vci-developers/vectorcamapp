@@ -24,6 +24,8 @@ import androidx.window.layout.WindowMetricsCalculator
 import com.vci.vectorcamapp.core.presentation.util.ObserveAsEvents
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.error.LocalErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.LocalSuccessMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.main.presentation.MainAction
 import com.vci.vectorcamapp.main.presentation.MainEvent
 import com.vci.vectorcamapp.main.presentation.MainViewModel
@@ -40,6 +42,9 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var errorMessageEmitter: ErrorMessageEmitter
+
+    @Inject
+    lateinit var successMessageEmitter: SuccessMessageEmitter
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -67,7 +72,10 @@ class MainActivity : AppCompatActivity() {
         val windowType = getWindowType(widthDp)
 
         setContent {
-            CompositionLocalProvider(LocalErrorMessageEmitter provides errorMessageEmitter) {
+            CompositionLocalProvider(
+                LocalErrorMessageEmitter provides errorMessageEmitter,
+                LocalSuccessMessageEmitter provides successMessageEmitter,
+            ) {
                 VectorcamappTheme(windowType = windowType) {
             
                 val state by viewModel.state.collectAsState()
