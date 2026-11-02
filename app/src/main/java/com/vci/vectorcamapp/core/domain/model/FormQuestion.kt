@@ -6,6 +6,7 @@ import com.vci.vectorcamapp.intake.domain.model.FormQuestionPrerequisiteExpressi
 data class FormQuestion(
     val id: Int,
     val label: String,
+    val questionKey: String?,
     val type: String,
     val required: Boolean,
     val prerequisite: FormQuestionPrerequisiteExpression?,

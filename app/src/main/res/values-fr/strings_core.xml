@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Barcode Scanner -->
+    <string name="core_title_scan_qr_code">Scanner un code QR</string>
+    <string name="core_body_scan_qr_code">Pointez la caméra vers le code QR.</string>
+    <string name="core_content_description_close_scanner">Fermer le scanner</string>
 
     <!-- Upload Status -->
     <string name="upload_status_completed">Terminé</string>

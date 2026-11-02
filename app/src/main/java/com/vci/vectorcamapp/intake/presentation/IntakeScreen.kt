@@ -24,9 +24,9 @@ import androidx.compose.ui.unit.dp
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
 import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
+import com.vci.vectorcamapp.core.presentation.components.camera.BarcodeScannerDialog
 import com.vci.vectorcamapp.core.presentation.components.header.ScreenHeader
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
-import com.vci.vectorcamapp.intake.presentation.components.HardwareIdBarcodeScannerDialog
 import com.vci.vectorcamapp.intake.presentation.components.IntakeGeneralInfoSection
 import com.vci.vectorcamapp.intake.presentation.components.IntakeGeographicalInfoSection
 import com.vci.vectorcamapp.intake.presentation.components.IntakeNotesSection
@@ -116,12 +116,20 @@ fun IntakeScreen(
     }
 
     if (isBarcodeScannerVisible) {
-        HardwareIdBarcodeScannerDialog(
+        BarcodeScannerDialog(
+            title = stringResource(R.string.intake_title_scan_hardware_id),
+            description = stringResource(R.string.intake_body_scan_hardware_id),
             onBarcodeScanned = { hardwareId ->
                 onAction(IntakeAction.EnterHardwareId(hardwareId))
                 isBarcodeScannerVisible = false
             },
             onDismiss = { isBarcodeScannerVisible = false },
+            transformValue = { value ->
+                value.trim().takeIf { trimmed ->
+                    trimmed.isNotEmpty() && trimmed.length <= MAX_HARDWARE_ID_LENGTH &&
+                        trimmed.all { it.code <= MAX_HARDWARE_ID_CHARACTER_CODE || it.isWhitespace() }
+                }
+            },
         )
     }
 }
@@ -135,6 +143,9 @@ private fun PracticeWarning(top: Dp, bottom: Dp) {
             .padding(top = top, bottom = bottom),
     )
 }
+
+private const val MAX_HARDWARE_ID_LENGTH = 200
+private const val MAX_HARDWARE_ID_CHARACTER_CODE = 255
 
 @PreviewLightDark
 @Composable

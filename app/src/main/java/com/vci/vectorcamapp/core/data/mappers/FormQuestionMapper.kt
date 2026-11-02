@@ -16,6 +16,7 @@ fun FormQuestionEntity.toDomain(): FormQuestion {
     return FormQuestion(
         id = this.id,
         label = this.label,
+        questionKey = this.questionKey,
         type = this.type,
         required = this.required,
         prerequisite = this.prerequisite,
@@ -32,6 +33,7 @@ fun FormQuestion.toEntity(formId: Int, parentId: Int?): FormQuestionEntity {
         formId = formId,
         parentId = parentId,
         label = this.label,
+        questionKey = this.questionKey,
         type = this.type,
         required = this.required,
         prerequisite = this.prerequisite,
@@ -46,6 +48,7 @@ fun FormQuestionDto.toDomain(): FormQuestion {
     return FormQuestion(
         id = this.id,
         label = this.label,
+        questionKey = this.questionKey,
         type = this.type,
         required = this.required,
         prerequisite = this.prerequisite?.toDomain(),

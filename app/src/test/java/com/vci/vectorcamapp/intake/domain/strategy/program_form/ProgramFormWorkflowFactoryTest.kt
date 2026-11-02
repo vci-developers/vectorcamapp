@@ -137,6 +137,7 @@ class ProgramFormWorkflowFactoryTest {
     private fun question(id: Int, identity: Boolean = false) = FormQuestion(
         id = id,
         label = "q$id",
+        questionKey = null,
         type = "text",
         required = false,
         prerequisite = null,

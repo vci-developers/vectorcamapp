@@ -1,4 +1,4 @@
-package com.vci.vectorcamapp.intake.presentation.components
+package com.vci.vectorcamapp.core.presentation.components.camera
 
 import androidx.camera.core.SurfaceRequest
 import androidx.compose.foundation.background
@@ -34,21 +34,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.presentation.components.camera.CameraPreview
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
 
 @Composable
-fun HardwareIdBarcodeScannerDialog(
+fun BarcodeScannerDialog(
+    title: String,
+    description: String,
     onBarcodeScanned: (String) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    qrOnly: Boolean = false,
+    transformValue: (String) -> String? = { it.takeIf(String::isNotBlank) },
 ) {
     var surfaceRequest by remember { mutableStateOf<SurfaceRequest?>(null) }
 
-    BindHardwareIdBarcodeScanner(
+    BindBarcodeScanner(
         onBarcodeScanned = onBarcodeScanned,
         onSurfaceRequest = { request -> surfaceRequest = request },
+        qrOnly = qrOnly,
+        transformValue = transformValue,
     )
 
     Dialog(
@@ -72,7 +77,7 @@ fun HardwareIdBarcodeScannerDialog(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = stringResource(R.string.intake_title_scan_hardware_id),
+                        text = title,
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colors.textPrimary,
                         fontWeight = FontWeight.Bold,
@@ -81,14 +86,14 @@ fun HardwareIdBarcodeScannerDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             painter = painterResource(R.drawable.ic_close),
-                            contentDescription = stringResource(R.string.intake_content_description_close_scanner),
+                            contentDescription = stringResource(R.string.core_content_description_close_scanner),
                             tint = MaterialTheme.colors.icon,
                         )
                     }
                 }
 
                 Text(
-                    text = stringResource(R.string.intake_body_scan_hardware_id),
+                    text = description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colors.textSecondary,
                 )

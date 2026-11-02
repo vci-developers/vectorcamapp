@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.model.Session
@@ -353,15 +354,15 @@ class CollectionBatchListViewModelTest {
         coEvery {
             formQuestionRepository.getQuestionsByFormIdAndScope(3, FormQuestionScope.SESSION_UNIT)
         } returns listOf(
-            FormQuestion(1, "Village", "text", false, null, null, 1, FormQuestionScope.SESSION_UNIT, true),
-            FormQuestion(2, "House", "text", false, null, null, 2, FormQuestionScope.SESSION_UNIT, true),
+            FormQuestion(1, "Village", null, "text", false, null, null, 1, FormQuestionScope.SESSION_UNIT, true),
+            FormQuestion(2, "House", null, "text", false, null, null, 2, FormQuestionScope.SESSION_UNIT, true),
         )
     }
 
     private fun answer(value: String) = FormAnswer(
         localId = UUID.randomUUID(),
         remoteId = null,
-        value = value,
+        value = FormAnswerValue.StringValue(value),
         dataType = "text",
         submittedAt = 0L,
     )

@@ -10,6 +10,7 @@ data class FormQuestionDto(
     val formId: Int = -1,
     val parentId: Int? = null,
     val label: String = "",
+    val questionKey: String? = null,
     val type: String = "",
     val required: Boolean = false,
     val prerequisite: FormQuestionPrerequisiteExpressionDto? = null,
