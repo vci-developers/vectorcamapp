@@ -128,8 +128,7 @@ class CompleteSessionDetailsViewModelTest {
             formRepository = formRepository,
             programRepository = programRepository,
             deviceCache = deviceCache,
-            errorMessageEmitter = errorMessageEmitter,
-        )
+        ).also { it.errorMessageEmitter = errorMessageEmitter }
     }
 
     // ========================================
@@ -181,8 +180,7 @@ class CompleteSessionDetailsViewModelTest {
             formRepository = formRepository,
             programRepository = programRepository,
             deviceCache = deviceCache,
-            errorMessageEmitter = errorMessageEmitter,
-        )
+        ).also { it.errorMessageEmitter = errorMessageEmitter }
 
         vm.state.test {
             awaitItem()

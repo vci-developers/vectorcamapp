@@ -47,8 +47,7 @@ class MainViewModelTest {
     private fun initViewModel() {
         viewModel = MainViewModel(
             deviceCache = deviceCache,
-            errorMessageEmitter = errorMessageEmitter
-        )
+        ).also { it.errorMessageEmitter = errorMessageEmitter }
     }
 
     // ========================================

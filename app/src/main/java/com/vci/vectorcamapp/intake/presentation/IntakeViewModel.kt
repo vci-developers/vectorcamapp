@@ -23,7 +23,7 @@ import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
 import com.vci.vectorcamapp.intake.domain.repository.LocationRepository
 import com.vci.vectorcamapp.intake.domain.strategy.collection_method.CollectionMethodWorkflow
 import com.vci.vectorcamapp.intake.domain.strategy.collection_method.CollectionMethodWorkflowFactory
@@ -67,8 +67,7 @@ class IntakeViewModel @Inject constructor(
     private val collectorRepository: CollectorRepository,
     private val programRepository: ProgramRepository,
     private val formAnswerRepository: FormAnswerRepository,
-    errorMessageEmitter: ErrorMessageEmitter,
-) : CoreViewModel(errorMessageEmitter) {
+) : CoreViewModel() {
 
     companion object {
         private const val LOCATION_TIMEOUT_MS = 30000L
@@ -129,6 +128,7 @@ class IntakeViewModel @Inject constructor(
                                 session.localId,
                                 session.collectionMethod,
                             )
+                            emitSuccess(SuccessMessage.SESSION_CREATED)
                             _events.send(
                                 IntakeEvent.NavigateAfterIntake(collectionMethodWorkflow.postIntakeDestination),
                             )

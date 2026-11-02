@@ -136,8 +136,7 @@ class RegistrationViewModelTest {
             formRepository = formRepository,
             formQuestionRepository = formQuestionRepository,
             connectivityObserver = connectivityObserver,
-            errorMessageEmitter = errorMessageEmitter,
-        )
+        ).also { it.errorMessageEmitter = errorMessageEmitter }
     }
 
     // ========================================
@@ -443,8 +442,7 @@ class RegistrationViewModelTest {
             formRepository = formRepository,
             formQuestionRepository = formQuestionRepository,
             connectivityObserver = connectivityObserver,
-            errorMessageEmitter = errorMessageEmitter,
-        )
+        ).also { it.errorMessageEmitter = errorMessageEmitter }
 
         emptyRepoViewModel.onAction(RegistrationAction.ConfirmRegistration)
         advanceUntilIdle()

@@ -433,8 +433,10 @@ class CollectionBatchFormViewModelTest {
                 validateFormAnswers = ValidateFormAnswersUseCase(),
                 validateCollectionBatchIdentity = ValidateCollectionBatchIdentityUseCase(),
             ),
-            errorMessageEmitter = errorMessageEmitter,
-        ).also { it.transactionHelper = transactionHelper }
+        ).also {
+            it.errorMessageEmitter = errorMessageEmitter
+            it.transactionHelper = transactionHelper
+        }
     }
 
     private fun stubForm(questions: List<FormQuestion>) {
