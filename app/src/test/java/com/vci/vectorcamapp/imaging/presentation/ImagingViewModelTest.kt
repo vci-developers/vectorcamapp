@@ -196,12 +196,12 @@ class ImagingViewModelTest {
         advanceUntilIdle()
         assertThat(viewModel.state.value.currentSpecimen.id).isEqualTo("KE1234")
         assertThat(viewModel.state.value.confirmedScannedSpecimenId).isEqualTo("KE1234")
-        viewModel.onAction(ImagingAction.CorrectSpecimenId("XYZ789"))
+        viewModel.onAction(ImagingAction.CorrectSpecimenId("KE5678"))
         advanceUntilIdle()
-        assertThat(viewModel.state.value.currentSpecimen.id).isEqualTo("KE1234")
+        assertThat(viewModel.state.value.currentSpecimen.id).isEqualTo("KE5678")
         viewModel.onAction(ImagingAction.RetakeImage)
         advanceUntilIdle()
-        assertThat(viewModel.state.value.currentSpecimen.id).isEqualTo("KE1234")
+        assertThat(viewModel.state.value.currentSpecimen.id).isEqualTo("KE5678")
         assertThat(viewModel.state.value.confirmedScannedSpecimenId).isEqualTo("KE1234")
     }
 

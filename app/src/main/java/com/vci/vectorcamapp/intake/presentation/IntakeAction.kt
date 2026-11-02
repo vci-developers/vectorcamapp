@@ -8,6 +8,7 @@ import com.vci.vectorcamapp.intake.domain.model.IntakeDropdownOptions.LlinTypeOp
 sealed interface IntakeAction {
     data object ReturnToPreviousScreen : IntakeAction
     data object SubmitIntakeForm: IntakeAction
+    data object ConfirmSubmitWithoutConsent : IntakeAction
     data object RegisterMissingCollector : IntakeAction
     data class SelectCollector(val collector: Collector) : IntakeAction
     data class EnterHardwareId(val text: String): IntakeAction

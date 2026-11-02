@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,6 +67,37 @@ fun IntakeScreen(
 ) {
     val context = LocalContext.current
     var isBarcodeScannerVisible by remember { mutableStateOf(false) }
+    var showRefusalConfirmation by remember { mutableStateOf(false) }
+    if (showRefusalConfirmation && state.hasDeclinedConsent && !state.isSubmitting) {
+        AlertDialog(
+            onDismissRequest = { showRefusalConfirmation = false },
+            containerColor = MaterialTheme.colors.cardBackground,
+            shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusMedium),
+            title = {
+                Text(stringResource(R.string.intake_title_submit_household),
+                    color = MaterialTheme.colors.textPrimary)
+            },
+            text = {
+                Text(stringResource(R.string.intake_body_confirm_refusal),
+                    color = MaterialTheme.colors.textPrimary)
+            },
+            confirmButton = {
+                ActionButton(
+                    label = stringResource(R.string.intake_action_submit_household),
+                    onClick = {
+                        showRefusalConfirmation = false
+                        onAction(IntakeAction.ConfirmSubmitWithoutConsent)
+                    },
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = { showRefusalConfirmation = false }) {
+                    Text(stringResource(R.string.intake_action_keep_editing),
+                        color = MaterialTheme.colors.textPrimary)
+                }
+            },
+        )
+    }
     val showSurveillanceForm = state.canFillForm || state.isSubmitting
     if (state.isSubmitting) {
         AlertDialog(
@@ -892,7 +924,7 @@ fun IntakeScreen(
                 !state.isResumingSession && state.distanceToSiteMeters != null && !state.isWithinSiteRadius ->
                     R.string.intake_body_outside_site_radius
                 !state.canFillForm -> R.string.intake_error_site_proximity_required
-                !state.hasHouseholdHeadConsent -> R.string.intake_error_consent_required
+                !state.hasHouseholdHeadConsent && !state.hasDeclinedConsent -> R.string.intake_error_consent_required
                 else -> null
             }
             if (gateMessage != null) {
@@ -912,13 +944,18 @@ fun IntakeScreen(
                 )
             }
             ActionButton(
-                label = if (!state.isResumingSession) {
+                label = if (state.hasDeclinedConsent) {
+                    stringResource(R.string.intake_action_submit_household)
+                } else if (!state.isResumingSession) {
                     stringResource(R.string.intake_action_save_collection)
                 } else {
                     stringResource(R.string.intake_action_begin_imaging, state.session.type.displayText(context))
                 },
-                onClick = { onAction(IntakeAction.SubmitIntakeForm) },
-                enabled = state.canFillForm && state.hasHouseholdHeadConsent,
+                onClick = {
+                    if (state.hasDeclinedConsent) showRefusalConfirmation = true
+                    else onAction(IntakeAction.SubmitIntakeForm)
+                },
+                enabled = state.canFillForm && (state.hasHouseholdHeadConsent || state.hasDeclinedConsent),
                 modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium)
             )
         }

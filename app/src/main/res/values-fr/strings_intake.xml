@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="intake_action_submit_household">Envoyer la fiche du ménage</string>
+    <string name="intake_title_submit_household">Envoyer la fiche du ménage ?</string>
+    <string name="intake_body_confirm_refusal">Le consentement n’a pas été donné. Envoyer cette fiche et revenir à l’accueil ? Vous ne pourrez plus la modifier ni ajouter d’images.</string>
+    <string name="intake_action_keep_editing">Continuer à modifier</string>
     <string name="intake_title_confirming_location">Confirmation du lieu…</string>
     <string name="intake_title_saving_collection">Enregistrement de la collecte…</string>
     <string name="intake_body_please_wait">Veuillez patienter un instant.</string>

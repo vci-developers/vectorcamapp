@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="intake_action_submit_household">Enviar registro del hogar</string>
+    <string name="intake_title_submit_household">¿Enviar registro del hogar?</string>
+    <string name="intake_body_confirm_refusal">No se otorgó el consentimiento. ¿Enviar este registro y volver al inicio? No podrás realizar más cambios ni añadir imágenes.</string>
+    <string name="intake_action_keep_editing">Seguir editando</string>
     <string name="intake_title_confirming_location">Confirmando ubicación…</string>
     <string name="intake_title_saving_collection">Guardando recolección…</string>
     <string name="intake_body_please_wait">Espera un momento, por favor.</string>

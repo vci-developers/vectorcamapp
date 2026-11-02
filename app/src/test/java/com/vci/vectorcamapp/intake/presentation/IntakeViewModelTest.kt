@@ -1,4 +1,5 @@
 package com.vci.vectorcamapp.intake.presentation
+import com.vci.vectorcamapp.core.domain.model.FormAnswer
 
 import android.location.Location
 import androidx.lifecycle.SavedStateHandle
@@ -226,6 +227,7 @@ class IntakeViewModelTest {
             errorMessageEmitter = errorMessageEmitter,
         ).also { vm ->
             vm.transactionHelper = transactionHelper
+            vm.workManagerRepository = mockk(relaxed = true)
         }
     }
 
@@ -300,12 +302,79 @@ class IntakeViewModelTest {
             .isEqualTo(FormAnswerValue.StringValue(""))
     }
     @Test
-    fun consent_requiresExplicitTrueAndDoesNotLockFormEditing() = runTest {
+    fun refusal_requiresJustificationThenFinalizesAndQueuesUpload() = runTest {
+        val declined = FormQuestionPrerequisiteExpression.Predicate(
+            1956, "eq", FormQuestionPrerequisiteValue.BooleanValue(false),
+        )
+        every { programFormWorkflow.sessionFormQuestions } returns listOf(
+            question(1956, "boolean"),
+            question(99, "text", declined).copy(required = true),
+        )
+        runTransactions()
+        coEvery { sessionRepository.upsertSession(any(), any()) } returns Result.Success(Unit)
+        coEvery { sessionRepository.markSessionAsComplete(any()) } returns true
+        coEvery { formAnswerRepository.upsertFormAnswer(any(), any(), any(), any()) } returns Result.Success(Unit)
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        fillCollectorAndMethod(vm)
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("false")))
+        advanceUntilIdle()
+        vm.onAction(IntakeAction.ConfirmSubmitWithoutConsent)
+        advanceUntilIdle()
+        coVerify(exactly = 0) { sessionRepository.markSessionAsComplete(any()) }
+        vm.onAction(IntakeAction.UpdateFormAnswer(99, FormAnswerValue.StringValue("Household declined")))
+        advanceUntilIdle()
+        vm.events.test {
+            vm.onAction(IntakeAction.ConfirmSubmitWithoutConsent)
+            assertThat(awaitItem()).isEqualTo(IntakeEvent.NavigateHomeAfterCollectionSaved)
+            cancelAndIgnoreRemainingEvents()
+        }
+        coVerify(exactly = 1) { sessionRepository.markSessionAsComplete(vm.state.value.session.localId) }
+        coVerify(exactly = 1) {
+            vm.workManagerRepository.enqueueSessionUpload(vm.state.value.session.localId, testSite.id)
+        }
+        coVerify(exactly = 0) { currentSessionCache.saveSession(any(), any()) }
+    }
+    @Test
+    fun resumedSession_preservesSavedConsentRefusal() = runTest {
+        coEvery { currentSessionCache.getSession() } returns sampleSession()
+        coEvery { formAnswerRepository.getSessionScopedFormAnswers(any()) } returns mapOf(
+            1956 to FormAnswer(
+                localId = UUID.randomUUID(), remoteId = null,
+                value = FormAnswerValue.StringValue("false"), dataType = "boolean", submittedAt = 0L,
+            ),
+        )
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        assertThat(vm.state.value.hasDeclinedConsent).isTrue()
+        assertThat(vm.state.value.hasHouseholdHeadConsent).isFalse()
+    }
+    @Test
+    fun refusal_cannotBypassFreshProximityCheck() = runTest {
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("false")))
+        advanceUntilIdle()
+        every { Location.distanceBetween(any(), any(), any(), any(), any()) } answers {
+            lastArg<FloatArray>()[0] = 2001f
+        }
+        vm.onAction(IntakeAction.ConfirmSubmitWithoutConsent)
+        advanceUntilIdle()
+        coVerify(exactly = 0) { sessionRepository.upsertSession(any(), any()) }
+        coVerify(exactly = 0) { vm.workManagerRepository.enqueueSessionUpload(any(), any()) }
+    }
+    @Test
+    fun consent_defaultsToYesAndDoesNotLockFormEditing() = runTest {
         val vm = makeViewModel()
         backgroundScope.launch { vm.state.collect {} }
         runCurrent()
         assertThat(vm.state.value.canFillForm).isTrue()
-        assertThat(vm.state.value.hasHouseholdHeadConsent).isFalse()
+        assertThat(vm.state.value.hasHouseholdHeadConsent).isTrue()
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("false")))
+        runCurrent()
         vm.onAction(IntakeAction.SubmitIntakeForm)
         runCurrent()
         coVerify { errorMessageEmitter.emit(IntakeError.CONSENT_REQUIRED, any()) }
@@ -332,6 +401,8 @@ class IntakeViewModelTest {
         )
         val vm = makeViewModel()
         backgroundScope.launch { vm.state.collect {} }
+        runCurrent()
+        vm.onAction(IntakeAction.UpdateFormAnswer(42, FormAnswerValue.StringValue("")))
         runCurrent()
         vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("true")))
         runCurrent()
@@ -405,14 +476,14 @@ class IntakeViewModelTest {
         vm.onAction(IntakeAction.EnterNotes("allowed"))
         vm.onAction(IntakeAction.EnterHardwareId("HW-KENYA"))
         vm.onAction(IntakeAction.SelectCollector(testCollector))
-        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("true")))
+        vm.onAction(IntakeAction.UpdateFormAnswer(1956, FormAnswerValue.StringValue("false")))
         vm.onAction(IntakeAction.SubmitIntakeForm)
         runCurrent()
         assertThat(vm.state.value.canFillForm).isFalse()
         assertThat(vm.state.value.session.notes).isEqualTo("allowed")
         assertThat(vm.state.value.session.hardwareId).isEqualTo("HW-KENYA")
         assertThat(vm.state.value.session.collectorName).isEqualTo(testCollector.name)
-        assertThat(vm.state.value.hasHouseholdHeadConsent).isFalse()
+        assertThat(vm.state.value.hasHouseholdHeadConsent).isTrue()
         coVerify(exactly = 0) { sessionRepository.upsertSession(any(), any()) }
     }
     @Test
@@ -769,7 +840,7 @@ class IntakeViewModelTest {
         assertThat(vm.state.value.canFillForm).isFalse()
     }
     @Test
-    fun resumedSession_restoresInactiveHierarchicalSite() = runTest {
+    fun resumedSession_restoresInactiveHierarchicalSiteDespiteUnrelatedLegacySites() = runTest {
         val inactiveSite = testSite.copy(
             district = null,
             villageName = null,
@@ -778,7 +849,7 @@ class IntakeViewModelTest {
             locationHierarchy = mapOf("Village" to "Kampala", "House" to "12"),
         )
         every { siteRepository.observeAllSitesByProgramId(any()) } returns
-            MutableStateFlow(listOf(inactiveSite))
+            MutableStateFlow(listOf(testSite.copy(id = inactiveSite.id + 1), inactiveSite))
         every { locationTypeRepository.observeAllLocationTypesByProgramId(any()) } returns
             MutableStateFlow(listOf(LocationType(1, "Village", 1), LocationType(2, "House", 2)))
         coEvery { currentSessionCache.getSession() } returns sampleSession()
@@ -791,6 +862,17 @@ class IntakeViewModelTest {
         assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(inactiveSite)
         assertThat(vm.state.value.canFillForm).isTrue()
         coVerify(exactly = 0) { locationRepository.getCurrentLocation() }
+        runTransactions()
+        coEvery { sessionRepository.upsertSession(any(), any()) } returns Result.Success(Unit)
+        coEvery { formAnswerRepository.upsertFormAnswer(any(), any(), any(), any()) } returns Result.Success(Unit)
+        fillCollectorAndMethod(vm)
+        advanceUntilIdle()
+        vm.events.test {
+            vm.onAction(IntakeAction.SubmitIntakeForm)
+            assertThat(awaitItem()).isEqualTo(IntakeEvent.NavigateAfterIntake(Destination.Imaging(null)))
+            cancelAndIgnoreRemainingEvents()
+        }
+        coVerify(exactly = 1) { currentSessionCache.saveSession(any(), inactiveSite.id) }
     }
     @Test
     fun resumedSession_usesStoredLocationAndIgnoresGpsAndSiteUpdates() = runTest {
@@ -816,7 +898,16 @@ class IntakeViewModelTest {
     @Test
     fun resumedSession_submitsWithoutGpsEvenOutsideRadius() = runTest {
         every { siteRepository.observeAllSitesByProgramId(any()) } returns
-            MutableStateFlow(listOf(testSite.copy(isActive = false)))
+            MutableStateFlow(listOf(
+                testSite.copy(isActive = false),
+                testSite.copy(
+                    id = testSite.id + 1,
+                    district = null,
+                    villageName = null,
+                    houseNumber = null,
+                    locationHierarchy = mapOf("Village" to "Other"),
+                ),
+            ))
         val session = sampleSession()
         coEvery { currentSessionCache.getSession() } returns session
         coEvery { currentSessionCache.getSiteId() } returns testSite.id

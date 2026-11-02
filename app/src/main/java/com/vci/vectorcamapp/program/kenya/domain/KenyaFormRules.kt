@@ -108,6 +108,16 @@ object KenyaFormRules {
             expected == null || (batchAnswers[id]?.value as? FormAnswerValue.StringValue)?.value != expected
         }.keys
     private const val CONSENT_KEY = "collection_consent"
+    fun isConsentQuestion(question: FormQuestion): Boolean =
+        canonicalKey(question) == CONSENT_KEY && question.type == "boolean"
+    fun hasDeclinedConsent(
+        questions: List<FormQuestion>,
+        answers: Map<Int, FormAnswer>,
+    ): Boolean {
+        val question = questions.singleOrNull { canonicalKey(it) == CONSENT_KEY } ?: return false
+        return question.type == "boolean" &&
+            answers[question.id]?.value == FormAnswerValue.StringValue("false")
+    }
     private val numberMaximums = mapOf(
         "llins_in_use" to 30,
         "conventional_nets_in_use" to 30,

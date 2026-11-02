@@ -201,7 +201,6 @@ class ImagingViewModel @Inject constructor(
                         }
                 }
                 is ImagingAction.CorrectSpecimenId -> {
-                    if (_state.value.confirmedScannedSpecimenId != null) return@launch
                     VectorCamAnalytics.logEvent(
                         "imaging_specimen_id_corrected",
                         mapOf(
@@ -676,7 +675,7 @@ class ImagingViewModel @Inject constructor(
                     }
 
                     val specimenId = when (val validationResult = validateSpecimenIdUseCase(
-                        _state.value.confirmedScannedSpecimenId ?: _state.value.currentSpecimen.id,
+                        _state.value.currentSpecimen.id,
                         shouldAutoCorrect = false,
                         requireKenyaPrefix = _state.value.confirmedScannedSpecimenId != null,
                     )) {
@@ -839,7 +838,9 @@ class ImagingViewModel @Inject constructor(
             it.copy(
                 confirmedScannedSpecimenId = it.confirmedScannedSpecimenId.takeIf { keepScannedId },
                 currentSpecimen = it.currentSpecimen.copy(
-                    id = it.confirmedScannedSpecimenId.takeIf { keepScannedId }.orEmpty(),
+                    id = if (keepScannedId && it.confirmedScannedSpecimenId != null) {
+                        it.currentSpecimen.id
+                    } else "",
                     remoteId = null, shouldProcessFurther = false
                 ),
                 currentSpecimenImage = it.currentSpecimenImage.copy(

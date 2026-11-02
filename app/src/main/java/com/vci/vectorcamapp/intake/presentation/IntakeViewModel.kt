@@ -23,6 +23,7 @@ import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SiteRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
+import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
@@ -85,6 +86,8 @@ class IntakeViewModel @Inject constructor(
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
+    @Inject
+    lateinit var workManagerRepository: WorkManagerRepository
 
     private lateinit var programFormWorkflow: ProgramFormWorkflow
 
@@ -142,8 +145,9 @@ class IntakeViewModel @Inject constructor(
                     _events.send(IntakeEvent.NavigateBackToPreviousScreen)
                 }
 
-                IntakeAction.SubmitIntakeForm -> {
-                    if (!_state.value.hasHouseholdHeadConsent) {
+                IntakeAction.SubmitIntakeForm, IntakeAction.ConfirmSubmitWithoutConsent -> {
+                    val isRefusal = action == IntakeAction.ConfirmSubmitWithoutConsent
+                    if (if (isRefusal) !_state.value.hasDeclinedConsent else !_state.value.hasHouseholdHeadConsent) {
                         emitError(IntakeError.CONSENT_REQUIRED)
                         return@launch
                     }
@@ -155,7 +159,7 @@ class IntakeViewModel @Inject constructor(
                         return@launch
                     }
                     // Consent may have changed while the GPS request was in flight.
-                    if (!_state.value.hasHouseholdHeadConsent) {
+                    if (if (isRefusal) !_state.value.hasDeclinedConsent else !_state.value.hasHouseholdHeadConsent) {
                         emitError(IntakeError.CONSENT_REQUIRED)
                         return@launch
                     }
@@ -358,11 +362,16 @@ class IntakeViewModel @Inject constructor(
                                 }
                             }
 
-                            true
+                            if (isRefusal) {
+                                sessionRepository.markSessionAsComplete(session.localId)
+                            } else true
                         }
 
                         if (success) {
-                            if (_state.value.isResumingSession) {
+                            if (isRefusal) {
+                                workManagerRepository.enqueueSessionUpload(session.localId, selectedSite.id)
+                                currentSessionCache.clearSession()
+                            } else if (_state.value.isResumingSession) {
                                 currentSessionCache.saveSession(session, selectedSite.id)
                             } else {
                                 currentSessionCache.clearSession()
@@ -390,7 +399,7 @@ class IntakeViewModel @Inject constructor(
                                 session.localId, session.collectionMethod
                             )
                             _events.send(
-                                if (_state.value.isResumingSession) {
+                                if (_state.value.isResumingSession && !isRefusal) {
                                     IntakeEvent.NavigateAfterIntake(collectionMethodWorkflow.postIntakeDestination)
                                 } else {
                                     IntakeEvent.NavigateHomeAfterCollectionSaved
@@ -812,8 +821,13 @@ class IntakeViewModel @Inject constructor(
                 collectorRepository.observeAllCollectors(),
                 locationTypeRepository.observeAllLocationTypesByProgramId(programId)
             ) { allSites, currentSavedSurveillanceForm, currentAllCollectors, currentAllLocationTypes ->
-                // Keep historical sites available on resume, but exclude them from new collection.
-                val currentAllSites = if (currentSession == null) allSites.filter { it.isActive } else allSites
+                // A resumed session's locked site determines its location structure.
+                // Unrelated historical sites must not switch the UI or save path to legacy mode.
+                val currentAllSites = if (currentSession == null) {
+                    allSites.filter { it.isActive }
+                } else {
+                    allSites.filter { it.id == currentSessionSiteId }
+                }
 
                 val validatedSite = currentAllSites.find { it.id == currentSessionSiteId }
                 val validatedSiteSelectionsByLocationTypeId = when {
@@ -878,7 +892,9 @@ class IntakeViewModel @Inject constructor(
                                 savedFormAnswers[question.id] ?: FormAnswer(
                                 localId = UUID.randomUUID(),
                                 remoteId = null,
-                                value = FormAnswerValue.emptyFor(question.type),
+                                value = if (currentSession == null && KenyaFormRules.isConsentQuestion(question)) {
+                                    FormAnswerValue.StringValue("true")
+                                } else FormAnswerValue.emptyFor(question.type),
                                 dataType = question.type,
                                 submittedAt = 0L
                             )

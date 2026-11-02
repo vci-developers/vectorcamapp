@@ -77,6 +77,8 @@ data class IntakeState(
 ) {
     val hasHouseholdHeadConsent: Boolean
         get() = KenyaFormRules.hasHouseholdHeadConsent(formQuestions, formAnswersByQuestionId)
+    val hasDeclinedConsent: Boolean
+        get() = KenyaFormRules.hasDeclinedConsent(formQuestions, formAnswersByQuestionId)
     val canFillForm: Boolean
         get() = !isLoading && (isResumingSession ||
             (!isCheckingLocation && locationError == null && isWithinSiteRadius))

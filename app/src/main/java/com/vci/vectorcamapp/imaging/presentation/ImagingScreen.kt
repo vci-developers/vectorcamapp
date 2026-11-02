@@ -177,20 +177,16 @@ fun ImagingScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colors.textSecondary,
                     )
-                    Surface(
-                        color = MaterialTheme.colors.appBackground,
-                        shape = RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(
-                            tubeId.orEmpty(),
-                            modifier = Modifier.padding(MaterialTheme.dimensions.paddingMedium),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colors.textPrimary,
-                        )
-                    }
+                    TextEntryField(
+                        label = stringResource(R.string.imaging_label_specimen_id),
+                        value = tubeId.orEmpty(),
+                        onValueChange = { tubeId = it },
+                        singleLine = true,
+                        error = state.specimenIdError,
+                        showErrorMessage = false,
+                    )
                     if (state.specimenIdError != null) {
-                        Text("Please scan a six-character specimen ID that starts with KE.",
+                        Text("Please enter a six-character specimen ID that starts with KE.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colors.error)
                     }

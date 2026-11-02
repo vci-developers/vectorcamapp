@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="intake_action_submit_household">Submit household record</string>
+    <string name="intake_title_submit_household">Submit household record?</string>
+    <string name="intake_body_confirm_refusal">Consent was not provided. Submit this household record and return home? You will not be able to make further changes or add images.</string>
+    <string name="intake_action_keep_editing">Keep editing</string>
     <string name="intake_title_confirming_location">Confirming location…</string>
     <string name="intake_title_saving_collection">Saving collection…</string>
     <string name="intake_body_please_wait">Please wait a moment.</string>
