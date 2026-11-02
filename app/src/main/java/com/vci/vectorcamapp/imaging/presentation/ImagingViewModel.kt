@@ -3,7 +3,6 @@ package com.vci.vectorcamapp.imaging.presentation
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.material3.SnackbarDuration
-import androidx.core.graphics.createBitmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
@@ -38,6 +37,7 @@ import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
 import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
 import com.vci.vectorcamapp.imaging.presentation.enums.CaptureStage
+import com.vci.vectorcamapp.imaging.presentation.extensions.toReencodedJpeg
 import com.vci.vectorcamapp.imaging.presentation.extensions.toUprightBitmap
 import com.vci.vectorcamapp.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -56,12 +56,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.opencv.android.Utils.matToBitmap
-import org.opencv.core.Mat
-import org.opencv.core.MatOfByte
-import org.opencv.imgcodecs.Imgcodecs
-import org.opencv.imgproc.Imgproc
-import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import java.time.Instant
 import java.time.ZoneId
@@ -231,20 +225,7 @@ class ImagingViewModel @Inject constructor(
                             }
 
                             if (_state.value.shouldRunInference) {
-                                val jpegStream = ByteArrayOutputStream()
-                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
-                                val jpegByteArray = jpegStream.toByteArray()
-
-                                val bgrMatrix = Imgcodecs.imdecode(
-                                    MatOfByte(*jpegByteArray),
-                                    Imgcodecs.IMREAD_COLOR
-                                )
-                                val rgbaMatrix = Mat()
-                                Imgproc.cvtColor(bgrMatrix, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
-                                val jpegBitmap = createBitmap(rgbaMatrix.cols(), rgbaMatrix.rows())
-                                matToBitmap(rgbaMatrix, jpegBitmap)
-                                bgrMatrix.release()
-                                rgbaMatrix.release()
+                                val (_, jpegBitmap) = bitmap.toReencodedJpeg()
 
                                 val previewInferenceResults =
                                     inferenceRepository.detectSpecimen(jpegBitmap)
@@ -416,20 +397,7 @@ class ImagingViewModel @Inject constructor(
 
                             _state.update { it.copy(currentCameraMetadata = capturedMetadata) }
 
-                            val jpegStream = ByteArrayOutputStream()
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, jpegStream)
-                            val jpegByteArray = jpegStream.toByteArray()
-
-                            val bgrMatrix = Imgcodecs.imdecode(
-                                MatOfByte(*jpegByteArray),
-                                Imgcodecs.IMREAD_COLOR
-                            )
-                            val rgbaMatrix = Mat()
-                            Imgproc.cvtColor(bgrMatrix, rgbaMatrix, Imgproc.COLOR_BGR2RGBA)
-                            val jpegBitmap = createBitmap(rgbaMatrix.cols(), rgbaMatrix.rows())
-                            matToBitmap(rgbaMatrix, jpegBitmap)
-                            bgrMatrix.release()
-                            rgbaMatrix.release()
+                            val (jpegByteArray, jpegBitmap) = bitmap.toReencodedJpeg()
 
                             if (_state.value.shouldRunInference) {
                                 _state.update {
