@@ -1,11 +1,22 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+// AGP 9 ships Kotlin 2.2.10. This classpath selects the catalog Kotlin version instead.
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
+    }
+}
+
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.androidx.room) apply false
     alias(libs.plugins.google.dagger.hilt.android) apply false
     alias(libs.plugins.google.devtools.ksp) apply false
-    alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.google.gms.google.services) apply false
     alias(libs.plugins.google.firebase.crashlytics) apply false
     alias(libs.plugins.detekt)

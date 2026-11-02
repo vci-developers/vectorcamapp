@@ -72,8 +72,7 @@ class IncompleteSessionViewModelTest {
             sessionRepository = sessionRepository,
             currentSessionCache = currentSessionCache,
             cameraRepository = cameraRepository,
-            errorMessageEmitter = errorMessageEmitter
-        )
+        ).also { it.errorMessageEmitter = errorMessageEmitter }
     }
 
     @After
