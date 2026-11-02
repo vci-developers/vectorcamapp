@@ -523,9 +523,11 @@ class CollectionBatchFormViewModelTest {
                 validateFormAnswers = ValidateFormAnswersUseCase(),
                 validateCollectionBatchIdentity = ValidateCollectionBatchIdentityUseCase(),
             ),
-            errorMessageEmitter = errorMessageEmitter,
             getHouseholdNumber = mockk(relaxed = true),
-        ).also { it.transactionHelper = transactionHelper }
+        ).also {
+            it.errorMessageEmitter = errorMessageEmitter
+            it.transactionHelper = transactionHelper
+        }
     }
 
     private fun stubForm(questions: List<FormQuestion>) {

@@ -1,19 +1,25 @@
 package com.vci.vectorcamapp.imaging.presentation
 
+import android.net.Uri
 import androidx.compose.ui.geometry.Offset
+import androidx.lifecycle.SavedStateHandle
+import androidx.navigation.toRoute
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.model.Session
+import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
-import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
+import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.imaging.domain.repository.CameraRepository
 import com.vci.vectorcamapp.imaging.domain.repository.InferenceRepository
@@ -21,17 +27,13 @@ import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflow
 import com.vci.vectorcamapp.imaging.domain.strategy.ImagingWorkflowFactory
 import com.vci.vectorcamapp.imaging.domain.use_cases.ValidateSpecimenIdUseCase
 import com.vci.vectorcamapp.imaging.domain.util.ImagingError
-import android.net.Uri
-import androidx.lifecycle.SavedStateHandle
-import androidx.navigation.toRoute
-import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.navigation.Destination
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -59,6 +61,7 @@ class ImagingViewModelTest {
     private lateinit var inferenceRepository: InferenceRepository
     private lateinit var workRepository: WorkManagerRepository
     private lateinit var errorMessageEmitter: ErrorMessageEmitter
+    private lateinit var successMessageEmitter: SuccessMessageEmitter
     private lateinit var transactionHelper: TransactionHelper
     private lateinit var imagingWorkflowFactory: ImagingWorkflowFactory
     private lateinit var imagingWorkflow: ImagingWorkflow
@@ -103,6 +106,8 @@ class ImagingViewModelTest {
 
         errorMessageEmitter = mockk(relaxed = true)
         coEvery { errorMessageEmitter.emit(any(), any()) } returns Unit
+        successMessageEmitter = mockk(relaxed = true)
+        coEvery { successMessageEmitter.emit(any(), any()) } returns Unit
 
         currentSessionCache = mockk(relaxed = true)
         sessionRepository = mockk(relaxed = true)
@@ -168,9 +173,10 @@ class ImagingViewModelTest {
             inferenceRepository = inferenceRepository,
             workRepository = workRepository,
             validateSpecimenIdUseCase = ValidateSpecimenIdUseCase(),
-            errorMessageEmitter = errorMessageEmitter,
         ).also { vm ->
+            vm.errorMessageEmitter = errorMessageEmitter
             vm.transactionHelper = transactionHelper
+            vm.successMessageEmitter = successMessageEmitter
             vm.imagingWorkflowFactory = imagingWorkflowFactory
         }
     }
@@ -549,6 +555,7 @@ class ImagingViewModelTest {
             expectNoEvents()
         }
 
+        coVerify(exactly = 1) { successMessageEmitter.emit(SuccessMessage.SESSION_DATA_SAVED, any()) }
         coVerify(exactly = 1) { currentSessionCache.clearSession() }
     }
 
@@ -590,6 +597,7 @@ class ImagingViewModelTest {
 
         coVerify(exactly = 1) { sessionRepository.markSessionAsComplete(testSessionId) }
         coVerify(exactly = 1) { workRepository.enqueueSessionUpload(testSessionId, 42) }
+        coVerify(exactly = 1) { successMessageEmitter.emit(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION, any()) }
         coVerify(exactly = 1) { currentSessionCache.clearSession() }
     }
 

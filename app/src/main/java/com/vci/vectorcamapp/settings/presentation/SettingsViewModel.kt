@@ -29,8 +29,8 @@ import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
-import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
 import com.vci.vectorcamapp.core.presentation.util.locale.AppLocaleManager
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
 import com.vci.vectorcamapp.settings.domain.util.SettingsError
 import com.vci.vectorcamapp.settings.presentation.model.SettingsErrors
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -65,8 +65,7 @@ class SettingsViewModel @Inject constructor(
     private val currentSessionCache: CurrentSessionCache,
     private val appLocaleManager: AppLocaleManager,
     connectivityObserver: ConnectivityObserver,
-    errorMessageEmitter: ErrorMessageEmitter,
-) : CoreViewModel(errorMessageEmitter) {
+) : CoreViewModel() {
 
     val MAX_EDIT_DISTANCE = 2
 
@@ -329,6 +328,7 @@ class SettingsViewModel @Inject constructor(
                         locationSelections = emptyMap()
                     )
                 }
+                emitSuccess(SuccessMessage.PROGRAM_DATA_DOWNLOADED)
             } else {
                 emitError(SettingsError.DATA_SYNC_FAILED)
             }
