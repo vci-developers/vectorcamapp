@@ -12,7 +12,6 @@ import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.core.presentation.util.search.SearchUtils
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
-import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.ui.extensions.displayText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -39,9 +38,6 @@ class CompleteSessionListViewModel @Inject constructor(
     private val specimenImageRepository: SpecimenImageRepository,
     private val workManagerRepository: WorkManagerRepository,
 ) : CoreViewModel() {
-
-    @Inject
-    lateinit var successMessageEmitter: SuccessMessageEmitter
 
     private val _state = MutableStateFlow(CompleteSessionListState())
 
@@ -149,7 +145,7 @@ class CompleteSessionListViewModel @Inject constructor(
                         didEnqueueUpload = true
                     }
                     if (didEnqueueUpload) {
-                        successMessageEmitter.emit(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION)
+                        emitSuccess(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION)
                     }
                 }
 

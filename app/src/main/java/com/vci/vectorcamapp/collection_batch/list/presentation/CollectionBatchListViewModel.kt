@@ -19,7 +19,6 @@ import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
-import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -47,9 +46,6 @@ class CollectionBatchListViewModel @Inject constructor(
     private val formAnswerRepository: FormAnswerRepository,
     private val workManagerRepository: WorkManagerRepository,
 ) : CoreViewModel() {
-
-    @Inject
-    lateinit var successMessageEmitter: SuccessMessageEmitter
 
     private val destination = savedStateHandle.toRoute<Destination.CollectionBatchList>()
     private val sessionId: UUID = UUID.fromString(destination.sessionId)
@@ -167,7 +163,7 @@ class CollectionBatchListViewModel @Inject constructor(
             )
         )
         _state.update { it.copy(isSubmitDialogVisible = false, submissionPendingAction = null) }
-        successMessageEmitter.emit(SuccessMessage.SESSION_DATA_SAVED)
+        emitSuccess(SuccessMessage.SESSION_DATA_SAVED)
         currentSessionCache.clearSession()
         _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
     }
@@ -197,7 +193,7 @@ class CollectionBatchListViewModel @Inject constructor(
             workManagerRepository.enqueueSessionUpload(
                 currentSession.localId, currentSessionSiteId
             )
-            successMessageEmitter.emit(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION)
+            emitSuccess(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION)
             currentSessionCache.clearSession()
             _events.send(CollectionBatchListEvent.NavigateBackToLandingScreen)
         }

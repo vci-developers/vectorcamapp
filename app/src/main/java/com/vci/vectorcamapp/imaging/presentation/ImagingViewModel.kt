@@ -27,7 +27,6 @@ import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics
 import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
-import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.imaging.domain.enums.AbdomenStatusLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SexLabel
 import com.vci.vectorcamapp.imaging.domain.enums.SpeciesLabel
@@ -82,9 +81,6 @@ class ImagingViewModel @Inject constructor(
 
     @Inject
     lateinit var transactionHelper: TransactionHelper
-
-    @Inject
-    lateinit var successMessageEmitter: SuccessMessageEmitter
 
     @Inject
     lateinit var imagingWorkflowFactory: ImagingWorkflowFactory
@@ -308,7 +304,7 @@ class ImagingViewModel @Inject constructor(
                             "total_duration_ms" to (System.currentTimeMillis() - sessionStartedAt)
                         )
                     )
-                    successMessageEmitter.emit(SuccessMessage.SESSION_DATA_SAVED)
+                    emitSuccess(SuccessMessage.SESSION_DATA_SAVED)
                     currentSessionCache.clearSession()
                     _events.send(ImagingEvent.NavigateBackToLandingScreen)
                 }
@@ -337,7 +333,7 @@ class ImagingViewModel @Inject constructor(
                         workRepository.enqueueSessionUpload(
                             currentSession.localId, currentSessionSiteId
                         )
-                        successMessageEmitter.emit(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION)
+                        emitSuccess(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION)
                         currentSessionCache.clearSession()
                         _events.send(ImagingEvent.NavigateBackToLandingScreen)
                     }

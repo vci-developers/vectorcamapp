@@ -23,7 +23,6 @@ import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.CoreViewModel
 import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
-import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.intake.domain.repository.LocationRepository
 import com.vci.vectorcamapp.intake.domain.strategy.collection_method.CollectionMethodWorkflow
 import com.vci.vectorcamapp.intake.domain.strategy.collection_method.CollectionMethodWorkflowFactory
@@ -77,9 +76,6 @@ class IntakeViewModel @Inject constructor(
     lateinit var transactionHelper: TransactionHelper
 
     @Inject
-    lateinit var successMessageEmitter: SuccessMessageEmitter
-
-    @Inject
     lateinit var programFormWorkflowFactory: ProgramFormWorkflowFactory
     private lateinit var programFormWorkflow: ProgramFormWorkflow
 
@@ -131,7 +127,7 @@ class IntakeViewModel @Inject constructor(
                                 session.localId,
                                 session.collectionMethod,
                             )
-                            successMessageEmitter.emit(SuccessMessage.SESSION_CREATED)
+                            emitSuccess(SuccessMessage.SESSION_CREATED)
                             _events.send(
                                 IntakeEvent.NavigateAfterIntake(collectionMethodWorkflow.postIntakeDestination),
                             )
