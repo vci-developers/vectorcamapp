@@ -41,6 +41,7 @@ internal fun ColumnScope.LiveCapturePanel(
     state: ImagingState,
     onAction: (ImagingAction) -> Unit,
     cameraBinding: ImagingCameraBinding,
+    scannerPreview: (@Composable () -> Unit)? = null,
 ) {
     Box(
         modifier = Modifier
@@ -50,18 +51,22 @@ internal fun ColumnScope.LiveCapturePanel(
             .clip(RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)),
         contentAlignment = Alignment.Center,
     ) {
-        LiveCameraPreview(
-            surfaceRequest = cameraBinding.surfaceRequest,
-            camera = cameraBinding.camera,
-            inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
-            focusPoint = state.focusPoint,
-            onFocusAt = { onAction(ImagingAction.FocusAt(it)) },
-            onCancelFocus = { onAction(ImagingAction.CancelFocus) },
-            modifier = Modifier.fillMaxSize(),
-            isManualFocusing = state.isManualFocusing,
-            captureStage = state.captureStage,
-            capturePreviewBitmap = state.capturePreviewBitmap,
-        )
+        if (scannerPreview != null) {
+            scannerPreview()
+        } else {
+            LiveCameraPreview(
+                surfaceRequest = cameraBinding.surfaceRequest,
+                camera = cameraBinding.camera,
+                inferenceResults = if (state.shouldRunInference) state.previewInferenceResults else emptyList(),
+                focusPoint = state.focusPoint,
+                onFocusAt = { onAction(ImagingAction.FocusAt(it)) },
+                onCancelFocus = { onAction(ImagingAction.CancelFocus) },
+                modifier = Modifier.fillMaxSize(),
+                isManualFocusing = state.isManualFocusing,
+                captureStage = state.captureStage,
+                capturePreviewBitmap = state.capturePreviewBitmap,
+            )
+        }
     }
     Column(modifier = Modifier.height(MaterialTheme.dimensions.componentHeightExtraExtraExtraLarge)) {
         if (state.sessionType == SessionType.PRACTICE) {
@@ -111,7 +116,8 @@ internal fun ColumnScope.LiveCapturePanel(
                         }
                     },
                     iconPainter = painterResource(id = R.drawable.ic_camera),
-                    enabled = state.captureStage == null && state.isCameraReady,
+                    enabled = cameraBinding.imageCapture != null &&
+                        state.captureStage == null && state.isCameraReady,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

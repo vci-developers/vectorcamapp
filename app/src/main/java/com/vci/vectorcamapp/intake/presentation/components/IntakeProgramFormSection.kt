@@ -8,6 +8,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.intake.presentation.IntakeAction
 import com.vci.vectorcamapp.intake.presentation.IntakeState
+import com.vci.vectorcamapp.program.kenya.domain.KenyaFormRules
 
 @Composable
 internal fun IntakeProgramFormSection(
@@ -27,6 +28,11 @@ internal fun IntakeProgramFormSection(
             if (FormQuestionPrerequisiteEvaluator.evaluate(question.prerequisite, answerMap)) {
                 DynamicFormField(
                     question = question,
+                    householdPrefix = KenyaFormRules.householdPrefix(
+                        state.siteSelectionsByLocationTypeId.values +
+                            listOf(state.selectedVillageName, state.selectedHouseNumber) +
+                            listOfNotNull(state.selectedSiteWithCoordinates?.name)
+                    ),
                     value = state.formAnswersByQuestionId.getValue(question.id).value,
                     error = state.intakeErrors.formAnswerErrors[question.id],
                     onValueChange = { onAction(IntakeAction.UpdateFormAnswer(question.id, it)) },

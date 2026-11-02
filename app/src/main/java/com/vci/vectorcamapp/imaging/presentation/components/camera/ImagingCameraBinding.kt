@@ -23,9 +23,14 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.vci.vectorcamapp.core.presentation.components.camera.bindBackCamera
+import com.vci.vectorcamapp.core.presentation.components.camera.unbindCamera
 import com.vci.vectorcamapp.imaging.data.camera.CameraMetadataListenerImplementation
 import com.vci.vectorcamapp.imaging.presentation.ImagingAction
 import com.vci.vectorcamapp.imaging.presentation.SpecimenImageAnalyzer
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 internal class ImagingCameraBinding(
@@ -39,6 +44,8 @@ internal class ImagingCameraBinding(
 internal fun rememberImagingCameraBinding(
     isReviewing: Boolean,
     onAction: (ImagingAction) -> Unit,
+    isEnabled: Boolean = true,
+    onCameraReleased: () -> Unit = {},
 ): ImagingCameraBinding {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -50,6 +57,7 @@ internal fun rememberImagingCameraBinding(
     var camera by remember { mutableStateOf<Camera?>(null) }
     val metadataListener = remember { CameraMetadataListenerImplementation() }
     val reviewing by rememberUpdatedState(isReviewing)
+    val onCameraReleasedState = rememberUpdatedState(onCameraReleased)
     val analyzer = remember {
         SpecimenImageAnalyzer { frame ->
             if (!reviewing) {
@@ -60,7 +68,8 @@ internal fun rememberImagingCameraBinding(
         }
     }
 
-    LaunchedEffect(lifecycleOwner, rotation) {
+    LaunchedEffect(lifecycleOwner, rotation, isEnabled) {
+        if (!isEnabled) return@LaunchedEffect
         val imageCapture = buildImageCapture(rotation, metadataListener)
         val imageAnalysis = buildImageAnalysis(rotation)
         imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context), analyzer)
@@ -75,12 +84,18 @@ internal fun rememberImagingCameraBinding(
                 imageCaptureUseCase = imageCapture
                 camera = boundCamera
             },
+            onReleased = {
+                imageCaptureUseCase = null
+                camera = null
+                surfaceRequest = null
+                onCameraReleasedState.value()
+            },
         )
     }
 
     return ImagingCameraBinding(
         surfaceRequest = surfaceRequest,
-        imageCapture = imageCaptureUseCase,
+        imageCapture = imageCaptureUseCase.takeIf { isEnabled },
         camera = camera,
         metadataListener = metadataListener,
     )
@@ -114,6 +129,7 @@ private suspend fun bindCameraOrKeepScreen(
     imageAnalysis: ImageAnalysis,
     onSurfaceRequest: (SurfaceRequest) -> Unit,
     onBound: (Camera) -> Unit,
+    onReleased: () -> Unit,
 ) {
     try {
         val boundCamera = bindBackCamera(
@@ -124,8 +140,20 @@ private suspend fun bindCameraOrKeepScreen(
             additionalUseCases = listOf<UseCase>(imageCapture, imageAnalysis),
         )
         onBound(boundCamera)
+        awaitCancellation()
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Timber.e(e, "Failed to bind the imaging camera")
+    } finally {
+        withContext(NonCancellable) {
+            imageAnalysis.clearAnalyzer()
+            try {
+                unbindCamera(context)
+            } finally {
+                onReleased()
+            }
+        }
     }
 }
 

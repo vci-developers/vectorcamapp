@@ -45,6 +45,7 @@ internal fun ImagingCapturePage(
     scope: CoroutineScope,
     cameraBinding: ImagingCameraBinding,
     modifier: Modifier = Modifier,
+    scannerPreview: (@Composable () -> Unit)? = null,
 ) {
     if (state.showExitDialog) {
         ImagingExitDialog(state = state, onAction = onAction)
@@ -69,7 +70,12 @@ internal fun ImagingCapturePage(
             if (state.currentImageBytes != null) {
                 CapturedImageReview(state = state, onAction = onAction)
             } else {
-                LiveCapturePanel(state = state, onAction = onAction, cameraBinding = cameraBinding)
+                LiveCapturePanel(
+                    state = state,
+                    onAction = onAction,
+                    cameraBinding = cameraBinding,
+                    scannerPreview = scannerPreview,
+                )
             }
         }
     }

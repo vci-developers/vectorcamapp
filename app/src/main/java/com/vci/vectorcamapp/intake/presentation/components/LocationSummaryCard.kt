@@ -1,6 +1,5 @@
 package com.vci.vectorcamapp.intake.presentation.components
 
-import android.location.Location
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,16 +13,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.vci.vectorcamapp.R
-import com.vci.vectorcamapp.core.presentation.components.button.ActionButton
-import com.vci.vectorcamapp.core.presentation.util.error.toString
-import com.vci.vectorcamapp.intake.presentation.IntakeAction
 import com.vci.vectorcamapp.intake.presentation.IntakeState
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
@@ -31,34 +25,9 @@ import com.vci.vectorcamapp.ui.extensions.dimensions
 private const val METERS_PER_KILOMETER = 1000f
 
 @Composable
-internal fun rememberDistanceToSiteMeters(state: IntakeState): Float? {
-    val site = state.selectedSiteWithCoordinates
-    val collectionLatitude = state.session.latitude
-    val collectionLongitude = state.session.longitude
-    val siteLatitude = site?.latitude
-    val siteLongitude = site?.longitude
-    return remember(collectionLatitude, collectionLongitude, siteLatitude, siteLongitude) {
-        if (listOf(collectionLatitude, collectionLongitude, siteLatitude, siteLongitude).any { it == null }) {
-            null
-        } else {
-            val results = FloatArray(1)
-            Location.distanceBetween(
-                requireNotNull(collectionLatitude).toDouble(),
-                requireNotNull(collectionLongitude).toDouble(),
-                requireNotNull(siteLatitude).toDouble(),
-                requireNotNull(siteLongitude).toDouble(),
-                results,
-            )
-            results[0]
-        }
-    }
-}
-
-@Composable
 internal fun LocationSummaryCards(
     state: IntakeState,
     distanceToSiteMeters: Float?,
-    onAction: (IntakeAction) -> Unit,
 ) {
     val site = state.selectedSiteWithCoordinates
     val locations = listOfNotNull(
@@ -75,7 +44,6 @@ internal fun LocationSummaryCards(
             state = state,
             distanceToSiteMeters = distanceToSiteMeters,
             isCollectionLocation = index == 0,
-            onAction = onAction,
         )
     }
 }
@@ -88,7 +56,6 @@ private fun LocationSummaryCard(
     state: IntakeState,
     distanceToSiteMeters: Float?,
     isCollectionLocation: Boolean,
-    onAction: (IntakeAction) -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -115,7 +82,6 @@ private fun LocationSummaryCard(
                 state = state,
                 distanceToSiteMeters = distanceToSiteMeters,
                 isCollectionLocation = isCollectionLocation,
-                onAction = onAction,
             )
         }
     }
@@ -128,7 +94,6 @@ private fun LocationSummaryBody(
     state: IntakeState,
     distanceToSiteMeters: Float?,
     isCollectionLocation: Boolean,
-    onAction: (IntakeAction) -> Unit,
 ) {
     when {
         latitude != null && longitude != null -> CoordinatesBody(
@@ -137,14 +102,13 @@ private fun LocationSummaryBody(
             state = state,
             distanceToSiteMeters = distanceToSiteMeters,
             isCollectionLocation = isCollectionLocation,
-            onAction = onAction,
         )
         !state.canUpdateLocation && !state.isLoading -> Text(
             text = stringResource(R.string.intake_body_collection_location_not_recorded),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colors.textSecondary,
         )
-        state.locationError != null -> LocationErrorBody(state = state, onAction = onAction)
+        state.locationError != null -> Unit
         else -> LocationLoadingBody()
     }
 }
@@ -156,7 +120,6 @@ private fun CoordinatesBody(
     state: IntakeState,
     distanceToSiteMeters: Float?,
     isCollectionLocation: Boolean,
-    onAction: (IntakeAction) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)) {
         CoordinateRow(label = stringResource(R.string.intake_label_latitude), value = latitude.toString())
@@ -166,14 +129,6 @@ private fun CoordinatesBody(
                 CoordinateRow(
                     label = stringResource(R.string.intake_label_gps_accuracy),
                     value = stringResource(R.string.intake_value_gps_accuracy, gpsAccuracy),
-                )
-            }
-            if (state.canUpdateLocation) {
-                ActionButton(
-                    label = stringResource(R.string.intake_action_update_location),
-                    onClick = { onAction(IntakeAction.RetryLocation) },
-                    enabled = !state.isLoading,
-                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         } else {
@@ -212,29 +167,6 @@ private fun CoordinateRow(label: String, value: String) {
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colors.textPrimary,
-        )
-    }
-}
-
-@Composable
-private fun LocationErrorBody(
-    state: IntakeState,
-    onAction: (IntakeAction) -> Unit,
-) {
-    val context = LocalContext.current
-    Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingExtraSmall)) {
-        Text(
-            text = stringResource(
-                R.string.intake_body_location_error,
-                state.locationError?.toString(context).orEmpty(),
-            ),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colors.error,
-        )
-        ActionButton(
-            label = stringResource(R.string.intake_action_retry_location),
-            onClick = { onAction(IntakeAction.RetryLocation) },
-            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

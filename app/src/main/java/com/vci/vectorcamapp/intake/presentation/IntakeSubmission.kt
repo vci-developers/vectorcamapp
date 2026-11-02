@@ -3,12 +3,14 @@ package com.vci.vectorcamapp.intake.presentation
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DefaultIntakeFieldsCache
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
+import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.domain.util.Result
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
@@ -18,6 +20,7 @@ import com.vci.vectorcamapp.intake.domain.util.FormValidationError
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.logging.IntakeErrorLogger
 import com.vci.vectorcamapp.intake.presentation.model.IntakeErrors
+import com.vci.vectorcamapp.program.kenya.domain.KenyaFormRules
 
 internal class IntakeSubmission(
     private val validation: IntakeValidationUseCases,
@@ -27,12 +30,14 @@ internal class IntakeSubmission(
     private val formAnswers: FormAnswerRepository,
     private val sessionCache: CurrentSessionCache,
     private val defaultFields: DefaultIntakeFieldsCache,
+    private val workManager: WorkManagerRepository,
 ) {
     suspend fun submit(
         currentState: () -> IntakeState,
         isCurrentCollectorMissing: () -> Boolean,
         updateState: ((IntakeState) -> IntakeState) -> Unit,
         reportError: (Error) -> Unit,
+        isRefusal: Boolean = false,
         onSubmitted: suspend (Session) -> Unit,
     ) {
         val snapshot = currentState()
@@ -41,7 +46,7 @@ internal class IntakeSubmission(
         when {
             results.hasError() -> reportError(IntakeError.FORM_INVALID)
             isCurrentCollectorMissing() -> reportError(IntakeError.MISSING_COLLECTOR)
-            else -> persist(snapshot, currentState, reportError, onSubmitted)
+            else -> persist(snapshot, currentState, reportError, isRefusal, onSubmitted)
         }
     }
 
@@ -111,6 +116,7 @@ internal class IntakeSubmission(
         snapshot: IntakeState,
         currentState: () -> IntakeState,
         reportError: (Error) -> Unit,
+        isRefusal: Boolean,
         onSubmitted: suspend (Session) -> Unit,
     ) {
         val session = snapshot.session
@@ -119,9 +125,23 @@ internal class IntakeSubmission(
             IntakeErrorLogger.logSiteNotFound(Exception(IntakeError.SITE_NOT_FOUND.name))
             return
         }
-        val saved = saveIntake(session, snapshot.surveillanceForm, selectedSite, currentState, reportError)
+        val saved = saveIntake(
+            session,
+            snapshot.surveillanceForm,
+            selectedSite,
+            currentState,
+            reportError,
+            isRefusal,
+        )
         if (!saved) return
-        sessionCache.saveSession(session, selectedSite.id)
+        if (isRefusal) {
+            workManager.enqueueSessionUpload(session.localId, selectedSite.id)
+            sessionCache.clearSession()
+        } else if (snapshot.isResumingSession) {
+            sessionCache.saveSession(session, selectedSite.id)
+        } else {
+            sessionCache.clearSession()
+        }
         val latest = currentState()
         defaultFields.saveDefaultIntakeFields(
             collectorName = session.collectorName,
@@ -141,6 +161,7 @@ internal class IntakeSubmission(
         selectedSite: Site,
         currentState: () -> IntakeState,
         reportError: (Error) -> Unit,
+        isRefusal: Boolean,
     ): Boolean {
         return transactions.runAsTransaction {
             val sessionResult = sessions.upsertSession(session, selectedSite.id)
@@ -161,13 +182,25 @@ internal class IntakeSubmission(
                 IntakeErrorLogger.logSurveillanceFormUpsertFailed(Exception(error.name), session.localId)
                 return@runAsTransaction false
             }
-            for ((questionId, answer) in currentState().formAnswersByQuestionId) {
-                formAnswers.upsertFormAnswer(answer, session.localId, null, questionId).onError { error ->
+            val latest = currentState()
+            for ((questionId, answer) in latest.formAnswersByQuestionId) {
+                val question = latest.formQuestions.find { it.id == questionId }
+                val savedAnswer = if (question != null && KenyaFormRules.isHouseholdNumber(question)) {
+                    val number = (answer.value as? FormAnswerValue.StringValue)?.value.orEmpty()
+                    answer.copy(
+                        value = FormAnswerValue.StringValue(
+                            if (number.isEmpty()) number else number.padStart(2, '0'),
+                        ),
+                    )
+                } else {
+                    answer
+                }
+                formAnswers.upsertFormAnswer(savedAnswer, session.localId, null, questionId).onError { error ->
                     reportError(error)
                     return@runAsTransaction false
                 }
             }
-            true
+            if (isRefusal) sessions.markSessionAsComplete(session.localId) else true
         }
     }
 }
