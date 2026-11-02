@@ -164,6 +164,7 @@ class IntakeViewModelTest {
         coEvery { deviceCache.getProgramId() } returns testProgramId
         coEvery { programRepository.getProgramById(testProgramId) } returns testProgram
         coEvery { currentSessionCache.getSession() } returns null
+        coEvery { sessionRepository.getSessionById(any()) } returns null
         coEvery { defaultIntakeFieldsCache.getDefaultIntakeFields() } returns null
         coEvery { formAnswerRepository.getSessionScopedFormAnswers(any()) } returns emptyMap()
 
@@ -833,6 +834,28 @@ class IntakeViewModelTest {
         coVerify { currentSessionCache.saveSession(any(), testSite.id) }
         coVerify { defaultIntakeFieldsCache.saveDefaultIntakeFields(any(), any(), any(), any(), any(), any(), any()) }
         coVerify { successMessageEmitter.emit(SuccessMessage.SESSION_CREATED, any()) }
+    }
+
+    @Test
+    fun intakeVm_i04b_submit_resumedSession_navigatesWithoutCreatedMessage() = runTest {
+        val session = sampleSession()
+        collectorsFlow.value = listOf(testCollector)
+        coEvery { currentSessionCache.getSession() } returns session
+        coEvery { currentSessionCache.getSiteId() } returns testSite.id
+        coEvery { sessionRepository.getSessionById(session.localId) } returns session
+        runTransactions()
+        coEvery { sessionRepository.upsertSession(any(), any()) } returns Result.Success(Unit)
+
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+
+        vm.events.test {
+            vm.onAction(IntakeAction.SubmitIntakeForm)
+            assertThat(awaitItem()).isEqualTo(IntakeEvent.NavigateAfterIntake(Destination.Imaging(null)))
+            cancelAndIgnoreRemainingEvents()
+        }
+        coVerify(exactly = 0) { successMessageEmitter.emit(SuccessMessage.SESSION_CREATED, any()) }
     }
 
     @Test
