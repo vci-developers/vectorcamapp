@@ -110,6 +110,7 @@ class IntakeViewModel @Inject constructor(
                 }
 
                 IntakeAction.SubmitIntakeForm -> {
+                    val isNewSession = sessionRepository.getSessionById(_state.value.session.localId) == null
                     IntakeSubmission(
                         validation = intakeValidationUseCases,
                         transactions = transactionHelper,
@@ -128,7 +129,9 @@ class IntakeViewModel @Inject constructor(
                                 session.localId,
                                 session.collectionMethod,
                             )
-                            emitSuccess(SuccessMessage.SESSION_CREATED)
+                            if (isNewSession) {
+                                emitSuccess(SuccessMessage.SESSION_CREATED)
+                            }
                             _events.send(
                                 IntakeEvent.NavigateAfterIntake(collectionMethodWorkflow.postIntakeDestination),
                             )
