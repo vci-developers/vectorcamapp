@@ -35,7 +35,7 @@ workRuntimeKtx = "2.12.0"
 timber = "5.0.1"
 tusAndroidClient = "0.1.12"
 tusJavaClient = "0.5.1"
-detekt = "1.23.8"
+detekt = "2.0.0-alpha.6"
 lifecycleProcess = "2.11.0"
 
 [libraries]
@@ -118,5 +118,5 @@ google-gms-google-services = { id = "com.google.gms.google-services", version = 
 google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "3.0.8" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
 
