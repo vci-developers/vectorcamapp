@@ -21,6 +21,8 @@ import com.vci.vectorcamapp.core.data.dto.surveillance_form.SurveillanceFormDto
 import com.vci.vectorcamapp.core.data.mappers.toCameraMetadata
 import com.vci.vectorcamapp.core.data.mappers.toImageMetadataDto
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
+import com.vci.vectorcamapp.core.data.upload.logging.UploadErrorLogger
+import com.vci.vectorcamapp.core.data.upload.logging.UploadTrace
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
@@ -54,6 +56,7 @@ import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import java.util.UUID
 import androidx.work.ListenableWorker.Result as WorkerResult
@@ -92,29 +95,48 @@ class MetadataUploadWorker @AssistedInject constructor(
     private var notificationId = 1001
     private val notificationManager: NotificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private var activeTrace: UploadTrace? = null
 
     override suspend fun doWork(): WorkerResult {
+        val trace = UploadTrace(worker = "MetadataUploadWorker")
+        activeTrace = trace
+        return try {
+            withContext(trace) {
         val localSessionIdString = inputData.getString("session_id")
         val localSiteId = inputData.getInt("site_id", -1)
         if (localSessionIdString == null || localSiteId == -1) {
-            return retryOrFailure(context.getString(R.string.upload_error_invalid_request))
+            return@withContext retryOrFailure(
+                message = context.getString(R.string.upload_error_invalid_request),
+                detail = "Invalid metadata upload request sessionId=$localSessionIdString siteId=$localSiteId",
+            )
         }
 
         val localSessionId = try {
             UUID.fromString(localSessionIdString)
         } catch (e: IllegalArgumentException) {
-            return retryOrFailure(context.getString(R.string.upload_error_invalid_session_id))
+            return@withContext retryOrFailure(
+                message = context.getString(R.string.upload_error_invalid_session_id),
+                detail = "Invalid session id '$localSessionIdString'",
+                throwable = e,
+            )
         }
+        activeTrace?.sessionId = localSessionId.toString()
+        activeTrace?.siteId = localSiteId.toString()
 
         val localSession = sessionRepository.getSessionById(localSessionId)
         val localDevice = deviceCache.getDevice()
         val localProgramId = deviceCache.getProgramId()
+        activeTrace?.programId = localProgramId?.toString()
         if (localSession == null || localDevice == null || localProgramId == null) {
-            return retryOrFailure(context.getString(R.string.upload_error_device_session_not_found))
+            return@withContext retryOrFailure(
+                message = context.getString(R.string.upload_error_device_session_not_found),
+                detail = "Missing local data session=${localSession != null} device=${localDevice != null} " +
+                    "program=${localProgramId != null} deviceId=${localDevice?.id}",
+            )
         }
 
         val localProgram = programRepository.getProgramById(localProgramId)
-            ?: return retryOrFailure(context.getString(R.string.upload_error_program_not_found))
+            ?: return@withContext retryOrFailure(context.getString(R.string.upload_error_program_not_found))
 
         createNotificationChannel()
         notificationId = localSessionId.hashCode()
@@ -124,7 +146,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             val syncedDevice =
                 when (val syncDeviceResult = syncDeviceIfNeeded(localDevice, localProgramId)) {
                     is DomainResult.Success -> syncDeviceResult.data
-                    is DomainResult.Error -> return retryOrFailure(
+                    is DomainResult.Error -> return@withContext retryOrFailure(
                         syncDeviceResult.error.toString(context)
                     )
                 }
@@ -139,12 +161,12 @@ class MetadataUploadWorker @AssistedInject constructor(
                 localSession, localSiteId, syncedDevice.id, totalSpecimensForSession
             )) {
                 is DomainResult.Success -> syncSessionResult.data
-                is DomainResult.Error -> return retryOrFailure(
+                is DomainResult.Error -> return@withContext retryOrFailure(
                     syncSessionResult.error.toString(context)
                 )
             }
             if (syncedSession.remoteId == null) {
-                return retryOrFailure(context.getString(R.string.upload_error_session_not_found_server))
+                return@withContext retryOrFailure(context.getString(R.string.upload_error_session_not_found_server))
             }
 
             val syncedSessionUnitsByLocalId: Map<UUID, SessionUnit> =
@@ -160,7 +182,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                                     localSessionUnit.localId, syncSessionUnitResult.data
                                 )
 
-                                is DomainResult.Error -> return retryOrFailure(
+                                is DomainResult.Error -> return@withContext retryOrFailure(
                                     syncSessionUnitResult.error.toString(context)
                                 )
                             }
@@ -179,6 +201,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                     }.filterValues { it.isNotEmpty() }
 
                 if (sessionScopedFormAnswers.isNotEmpty() || sessionUnitScopedFormAnswersBySessionUnit.isNotEmpty()) {
+                    activeTrace?.step = "sync_form_answers"
                     when (val syncFormAnswersResult = syncFormAnswersIfNeeded(
                         sessionScopedFormAnswers,
                         sessionUnitScopedFormAnswersBySessionUnit,
@@ -187,7 +210,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                         syncedSession.remoteId,
                     )) {
                         is DomainResult.Success -> syncFormAnswersResult.data
-                        is DomainResult.Error -> return retryOrFailure(
+                        is DomainResult.Error -> return@withContext retryOrFailure(
                             syncFormAnswersResult.error.toString(context)
                         )
                     }
@@ -200,7 +223,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                         localSurveillanceForm, syncedSession.localId, syncedSession.remoteId
                     )) {
                         is DomainResult.Success -> syncSurveillanceFormResult.data
-                        is DomainResult.Error -> return retryOrFailure(
+                        is DomainResult.Error -> return@withContext retryOrFailure(
                             syncSurveillanceFormResult.error.toString(context)
                         )
                     }
@@ -231,6 +254,10 @@ class MetadataUploadWorker @AssistedInject constructor(
                     is DomainResult.Success -> syncSpecimenResult.data
                     is DomainResult.Error -> {
                         hasFailure = true
+                        logUploadFailure(
+                            reason = "Specimen metadata was not uploaded for ${specimenWithImagesAndInferenceResults.specimen.id}",
+                            networkError = syncSpecimenResult.error,
+                        )
                         specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
                             if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
                                 specimenImageRepository.updateSpecimenImage(
@@ -256,8 +283,12 @@ class MetadataUploadWorker @AssistedInject constructor(
                                 currentImageIndex = imageIndex,
                                 totalImagesForSpecimen = totalImagesForSpecimen
                             )
-                        }.onError {
+                        }.onError { error ->
                             hasFailure = true
+                            logUploadFailure(
+                                reason = "Specimen image metadata was not uploaded for ${specimenImage.localId}",
+                                networkError = error,
+                            )
                             specimenImageRepository.updateSpecimenImage(
                                 specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
                                 syncedSpecimen.id,
@@ -268,19 +299,30 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
             }
 
-            return if (hasFailure) {
+            return@withContext if (hasFailure) {
                 retryOrComplete()
             } else {
                 WorkerResult.success()
             }
         } catch (e: IOException) {
-            return retryOrFailure(context.getString(R.string.upload_error_lost_connection))
+            return@withContext retryOrFailure(
+                message = context.getString(R.string.upload_error_lost_connection),
+                throwable = e,
+            )
         } catch (e: Exception) {
-            return retryOrFailure(context.getString(R.string.upload_error_unknown))
+            return@withContext retryOrFailure(
+                message = context.getString(R.string.upload_error_unknown),
+                throwable = e,
+            )
         } finally {
             if (isStopped) {
+                logUploadFailure(reason = "Metadata upload worker was stopped before it finished")
                 resetInProgressUploads(localSession.localId)
             }
+        }
+            }
+        } finally {
+            activeTrace = null
         }
     }
 
@@ -309,7 +351,12 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
-    private fun retryOrFailure(message: String): WorkerResult {
+    private fun retryOrFailure(
+        message: String,
+        detail: String? = null,
+        throwable: Throwable? = null,
+    ): WorkerResult {
+        logUploadFailure(reason = detail ?: message, throwable = throwable)
         if (runAttemptCount < MAX_RETRIES) {
             showUploadRetryNotification(message)
             return WorkerResult.retry()
@@ -319,9 +366,39 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
+    private fun logUploadFailure(
+        reason: String,
+        networkError: NetworkError? = null,
+        throwable: Throwable? = null,
+    ) {
+        UploadErrorLogger.record(
+            trace = activeTrace,
+            reason = reason,
+            networkError = networkError?.name,
+            throwable = throwable,
+        )
+    }
+
+    private suspend fun refreshRecordedAppVersion(device: DeviceDto): DeviceDto {
+        return when (val refreshed = deviceDataSource.updateAppVersionIfStale(device)) {
+            is DomainResult.Success -> refreshed.data
+            is DomainResult.Error -> {
+                logUploadFailure(
+                    reason = "Failed to update app version for device ${device.deviceId}. " +
+                        "Session upload will continue and registration will not be repeated.",
+                    networkError = refreshed.error,
+                )
+                device
+            }
+        }
+    }
+
     private suspend fun syncDeviceIfNeeded(
         localDevice: Device, localProgramId: Int
     ): DomainResult<Device, NetworkError> {
+        activeTrace?.step = "sync_device"
+        activeTrace?.specimenId = null
+        activeTrace?.imageId = null
         return try {
             val localDeviceDto = DeviceDto(
                 deviceId = localDevice.id,
@@ -333,7 +410,7 @@ class MetadataUploadWorker @AssistedInject constructor(
 
             val remoteDeviceDto =
                 when (val remoteDeviceResult = deviceDataSource.getDeviceById(localDevice.id)) {
-                    is DomainResult.Success -> remoteDeviceResult.data
+                    is DomainResult.Success -> refreshRecordedAppVersion(remoteDeviceResult.data)
                     is DomainResult.Error -> {
                         when (remoteDeviceResult.error) {
                             NetworkError.NOT_FOUND -> {
@@ -359,14 +436,16 @@ class MetadataUploadWorker @AssistedInject constructor(
                 submittedAt = remoteDeviceDto.submittedAt
             )
 
-            if (remoteDeviceDto != localDeviceDto) {
+            if (remoteDeviceDto.copy(appVersion = null) != localDeviceDto) {
                 deviceCache.saveDevice(remoteDevice, remoteDeviceDto.programId)
             }
 
             DomainResult.Success(remoteDevice)
         } catch (e: IOException) {
+            activeTrace?.failureCause = e
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
+            activeTrace?.failureCause = e
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
@@ -374,6 +453,9 @@ class MetadataUploadWorker @AssistedInject constructor(
     private suspend fun syncSessionIfNeeded(
         localSession: Session, localSiteId: Int, syncedDeviceId: Int, expectedSpecimens: Int
     ): DomainResult<Session, NetworkError> {
+        activeTrace?.step = "sync_session"
+        activeTrace?.specimenId = null
+        activeTrace?.imageId = null
         return try {
             val localSessionDto = SessionDto(
                 sessionId = localSession.remoteId,
@@ -448,8 +530,10 @@ class MetadataUploadWorker @AssistedInject constructor(
 
             DomainResult.Success(remoteSession)
         } catch (e: IOException) {
+            activeTrace?.failureCause = e
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
+            activeTrace?.failureCause = e
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
@@ -459,6 +543,9 @@ class MetadataUploadWorker @AssistedInject constructor(
         syncedLocalSessionId: UUID,
         syncedRemoteSessionId: Int,
     ): DomainResult<SessionUnit, NetworkError> {
+        activeTrace?.step = "sync_session_unit"
+        activeTrace?.specimenId = null
+        activeTrace?.imageId = localSessionUnit.localId.toString()
         return try {
             val localSessionUnitDto = SessionUnitDto(
                 id = localSessionUnit.remoteId,
@@ -502,8 +589,10 @@ class MetadataUploadWorker @AssistedInject constructor(
 
             DomainResult.Success(remoteSessionUnit)
         } catch (e: IOException) {
+            activeTrace?.failureCause = e
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
+            activeTrace?.failureCause = e
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
@@ -513,6 +602,9 @@ class MetadataUploadWorker @AssistedInject constructor(
         syncedLocalSessionId: UUID,
         syncedRemoteSessionId: Int
     ): DomainResult<Unit, NetworkError> {
+        activeTrace?.step = "sync_surveillance_form"
+        activeTrace?.specimenId = null
+        activeTrace?.imageId = null
         return try {
             val localSurveillanceFormDto = SurveillanceFormDto(
                 sessionId = syncedRemoteSessionId,
@@ -576,8 +668,10 @@ class MetadataUploadWorker @AssistedInject constructor(
 
             DomainResult.Success(Unit)
         } catch (e: IOException) {
+            activeTrace?.failureCause = e
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
+            activeTrace?.failureCause = e
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
@@ -687,13 +781,20 @@ class MetadataUploadWorker @AssistedInject constructor(
                     return DomainResult.Error(NetworkError.CLIENT_ERROR)
                 }
             }
-
             DomainResult.Success(Unit)
         } catch (e: IOException) {
-            DomainResult.Error(NetworkError.NO_INTERNET)
+            tracedFailure(e, NetworkError.NO_INTERNET)
         } catch (e: Exception) {
-            DomainResult.Error(NetworkError.UNKNOWN_ERROR)
+            tracedFailure(e, NetworkError.UNKNOWN_ERROR)
         }
+    }
+
+    private fun <T> tracedFailure(
+        error: Throwable,
+        networkError: NetworkError,
+    ): DomainResult<T, NetworkError> {
+        activeTrace?.failureCause = error
+        return DomainResult.Error(networkError)
     }
 
     private suspend fun syncSpecimenIfNeeded(
@@ -704,6 +805,9 @@ class MetadataUploadWorker @AssistedInject constructor(
         syncedRemoteSessionUnitId: Int?,
         expectedImages: Int,
     ): DomainResult<Specimen, NetworkError> {
+        activeTrace?.step = "sync_specimen"
+        activeTrace?.specimenId = localSpecimen.id
+        activeTrace?.imageId = null
         return try {
             val localSpecimenDto = SpecimenDto(
                 id = localSpecimen.remoteId,
@@ -759,8 +863,10 @@ class MetadataUploadWorker @AssistedInject constructor(
 
             DomainResult.Success(remoteSpecimen)
         } catch (e: IOException) {
+            activeTrace?.failureCause = e
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
+            activeTrace?.failureCause = e
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }
@@ -771,6 +877,9 @@ class MetadataUploadWorker @AssistedInject constructor(
         syncedSpecimen: Specimen,
         syncedLocalSessionId: UUID
     ): DomainResult<Unit, NetworkError> {
+        activeTrace?.step = "sync_specimen_image"
+        activeTrace?.specimenId = syncedSpecimen.id
+        activeTrace?.imageId = localSpecimenImage.localId
         return try {
             specimenImageRepository.updateSpecimenImage(
                 localSpecimenImage.copy(metadataUploadStatus = UploadStatus.IN_PROGRESS),
@@ -904,8 +1013,10 @@ class MetadataUploadWorker @AssistedInject constructor(
             )
             DomainResult.Success(Unit)
         } catch (e: IOException) {
+            activeTrace?.failureCause = e
             DomainResult.Error(NetworkError.NO_INTERNET)
         } catch (e: Exception) {
+            activeTrace?.failureCause = e
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
     }

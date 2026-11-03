@@ -8,5 +8,6 @@ data class DeviceDto(
     val model: String = "",
     val registeredAt: Long = 0L,
     val submittedAt: Long? = null,
-    val programId: Int = -1
+    val programId: Int = -1,
+    val appVersion: String? = null,
 )

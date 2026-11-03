@@ -434,6 +434,7 @@
     <ID>ImportOrdering:safeCall.kt$import com.vci.vectorcamapp.core.domain.util.network.NetworkError import com.vci.vectorcamapp.core.domain.util.Result import io.ktor.client.statement.HttpResponse import io.ktor.util.network.UnresolvedAddressException import kotlinx.coroutines.ensureActive import kotlinx.serialization.SerializationException import java.net.UnknownHostException import kotlin.coroutines.coroutineContext</ID>
     <ID>LargeClass:ImagingViewModel.kt$ImagingViewModel : CoreViewModel</ID>
     <ID>LargeClass:IntakeViewModel.kt$IntakeViewModel : CoreViewModel</ID>
+    <ID>LargeClass:ImageUploadWorker.kt$ImageUploadWorker : CoroutineWorker</ID>
     <ID>LargeClass:MetadataUploadWorker.kt$MetadataUploadWorker : CoroutineWorker</ID>
     <ID>LongMethod:CapturedSpecimenTile.kt$@Composable fun CapturedSpecimenTile( specimen: Specimen, specimenImage: SpecimenImage, inferenceResult: InferenceResult?, modifier: Modifier = Modifier, badgeText: String? = null, )</ID>
     <ID>LongMethod:CollectionBatchFormViewModel.kt$CollectionBatchFormViewModel$fun onAction(action: CollectionBatchFormAction)</ID>

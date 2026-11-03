@@ -11,4 +11,5 @@ interface DeviceDataSource {
         device: Device, programId: Int
     ): Result<RegisterDeviceResponseDto, NetworkError>
     suspend fun getDeviceById(deviceId: Int): Result<DeviceDto, NetworkError>
+    suspend fun updateAppVersionIfStale(device: DeviceDto): Result<DeviceDto, NetworkError>
 }
