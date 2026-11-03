@@ -116,8 +116,7 @@ class LandingViewModelTest {
             currentSessionCache = sessionCache,
             programRepository = programRepository,
             sessionRepository = sessionRepository,
-            errorMessageEmitter = errorMessageEmitter
-        )
+        ).also { it.errorMessageEmitter = errorMessageEmitter }
     }
 
     // ========================================

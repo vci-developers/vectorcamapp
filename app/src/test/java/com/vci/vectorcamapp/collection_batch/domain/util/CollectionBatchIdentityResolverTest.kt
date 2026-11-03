@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.collection_batch.domain.util
 
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.enums.FormQuestionScope
 import org.junit.Test
@@ -51,6 +52,7 @@ class CollectionBatchIdentityResolverTest {
     ) = FormQuestion(
         id = id,
         label = label,
+        questionKey = null,
         type = "text",
         required = false,
         prerequisite = null,
@@ -63,7 +65,7 @@ class CollectionBatchIdentityResolverTest {
     private fun answer(value: String) = FormAnswer(
         localId = UUID.randomUUID(),
         remoteId = null,
-        value = value,
+        value = FormAnswerValue.StringValue(value),
         dataType = "text",
         submittedAt = 0L,
     )

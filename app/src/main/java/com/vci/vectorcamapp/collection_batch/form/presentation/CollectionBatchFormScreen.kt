@@ -55,12 +55,13 @@ fun CollectionBatchFormScreen(
                 ) {
                     identityQuestions.forEach { question ->
                         if (FormQuestionPrerequisiteEvaluator.evaluate(
-                                question.prerequisite, answerMap,
+                                question.prerequisite,
+                                answerMap,
                             )
                         ) {
                             DynamicFormField(
                                 question = question,
-                                value = state.formAnswersByQuestionId[question.id]?.value.orEmpty(),
+                                value = state.formAnswersByQuestionId.getValue(question.id).value,
                                 onValueChange = {
                                     onAction(
                                         CollectionBatchFormAction.UpdateFormAnswer(question.id, it)
@@ -88,12 +89,13 @@ fun CollectionBatchFormScreen(
                 ) {
                     otherQuestions.forEach { question ->
                         if (FormQuestionPrerequisiteEvaluator.evaluate(
-                                question.prerequisite, answerMap,
+                                question.prerequisite,
+                                answerMap,
                             )
                         ) {
                             DynamicFormField(
                                 question = question,
-                                value = state.formAnswersByQuestionId[question.id]?.value.orEmpty(),
+                                value = state.formAnswersByQuestionId.getValue(question.id).value,
                                 onValueChange = {
                                     onAction(
                                         CollectionBatchFormAction.UpdateFormAnswer(question.id, it)
@@ -118,6 +120,5 @@ fun CollectionBatchFormScreen(
                 ),
             )
         }
-
     }
 }

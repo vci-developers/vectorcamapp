@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import java.util.UUID
 
 @Entity(
@@ -43,7 +44,7 @@ data class FormAnswerEntity(
     val sessionId: UUID = UUID(0, 0),
     val sessionUnitId: UUID? = null,
     val questionId: Int = -1,
-    val value: String = "",
+    val value: FormAnswerValue = FormAnswerValue.StringValue(""),
     val dataType: String = "",
     val submittedAt: Long = 0L
 )

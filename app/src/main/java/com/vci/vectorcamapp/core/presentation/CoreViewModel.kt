@@ -6,11 +6,22 @@ import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.util.Error
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
 import com.vci.vectorcamapp.core.presentation.util.error.ErrorMessageEmitter
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-abstract class CoreViewModel(
-    private val errorMessageEmitter: ErrorMessageEmitter
-) : ViewModel() {
+abstract class CoreViewModel : ViewModel() {
+
+    /**
+     * Field-injected so every screen shares these emitters without another constructor parameter.
+     * Hilt sets them after construction, before the ViewModel is used.
+     */
+    @Inject
+    lateinit var errorMessageEmitter: ErrorMessageEmitter
+
+    @Inject
+    lateinit var successMessageEmitter: SuccessMessageEmitter
 
     /**
      * Emits a user-visible error snackbar AND fires a generic GA4 `error_emitted` event.
@@ -31,6 +42,15 @@ abstract class CoreViewModel(
         )
         viewModelScope.launch {
             errorMessageEmitter.emit(error, duration)
+        }
+    }
+
+    protected fun emitSuccess(
+        message: SuccessMessage,
+        duration: SnackbarDuration = SnackbarDuration.Long,
+    ) {
+        viewModelScope.launch {
+            successMessageEmitter.emit(message, duration)
         }
     }
 }

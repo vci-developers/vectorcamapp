@@ -5,7 +5,7 @@ import java.util.UUID
 data class FormAnswer(
     val localId: UUID,
     val remoteId: Int?,
-    val value: String,
+    val value: FormAnswerValue,
     val dataType: String,
     val submittedAt: Long
 )

@@ -9,6 +9,7 @@ import com.vci.vectorcamapp.core.domain.cache.CurrentSessionCache
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Form
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
+import com.vci.vectorcamapp.core.domain.model.FormAnswerValue
 import com.vci.vectorcamapp.core.domain.model.FormQuestion
 import com.vci.vectorcamapp.core.domain.model.Program
 import com.vci.vectorcamapp.core.domain.model.Session
@@ -24,6 +25,8 @@ import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.WorkManagerRepository
 import com.vci.vectorcamapp.core.logging.analytics.VectorCamAnalytics
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessage
+import com.vci.vectorcamapp.core.presentation.util.success.SuccessMessageEmitter
 import com.vci.vectorcamapp.core.rules.MainDispatcherRule
 import com.vci.vectorcamapp.navigation.Destination
 import io.mockk.coEvery
@@ -61,6 +64,7 @@ class CollectionBatchListViewModelTest {
     private lateinit var formQuestionRepository: FormQuestionRepository
     private lateinit var formAnswerRepository: FormAnswerRepository
     private lateinit var workManagerRepository: WorkManagerRepository
+    private lateinit var successMessageEmitter: SuccessMessageEmitter
     private lateinit var viewModel: CollectionBatchListViewModel
 
     private val sessionUnits = MutableStateFlow<List<SessionUnit>>(emptyList())
@@ -80,6 +84,8 @@ class CollectionBatchListViewModelTest {
         formQuestionRepository = mockk(relaxed = true)
         formAnswerRepository = mockk(relaxed = true)
         workManagerRepository = mockk(relaxed = true)
+        successMessageEmitter = mockk(relaxed = true)
+        coEvery { successMessageEmitter.emit(any(), any()) } returns Unit
         every { sessionUnitRepository.observeSessionUnitsForSession(sessionId) } returns sessionUnits
         every { formAnswerRepository.observeSessionUnitScopedFormAnswersBySessionId(sessionId) } returns answersByUnit
         coEvery { specimenImageRepository.getTotalCountForSession(sessionId) } returns 6
@@ -266,6 +272,7 @@ class CollectionBatchListViewModelTest {
             assertThat(awaitItem()).isEqualTo(CollectionBatchListEvent.NavigateBackToLandingScreen)
             cancelAndIgnoreRemainingEvents()
         }
+        coVerify { successMessageEmitter.emit(SuccessMessage.SESSION_DATA_SAVED, any()) }
         coVerify { currentSessionCache.clearSession() }
         coVerify { specimenImageRepository.getTotalCountForSession(sessionId) }
     }
@@ -297,6 +304,7 @@ class CollectionBatchListViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
         coVerify { workManagerRepository.enqueueSessionUpload(sessionId, 4) }
+        coVerify { successMessageEmitter.emit(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION, any()) }
         coVerify { currentSessionCache.clearSession() }
     }
 
@@ -342,8 +350,10 @@ class CollectionBatchListViewModelTest {
             formQuestionRepository = formQuestionRepository,
             formAnswerRepository = formAnswerRepository,
             workManagerRepository = workManagerRepository,
-            errorMessageEmitter = mockk(relaxed = true),
-        )
+        ).also {
+            it.errorMessageEmitter = mockk(relaxed = true)
+            it.successMessageEmitter = successMessageEmitter
+        }
     }
 
     private fun stubIdentityQuestions() {
@@ -353,15 +363,15 @@ class CollectionBatchListViewModelTest {
         coEvery {
             formQuestionRepository.getQuestionsByFormIdAndScope(3, FormQuestionScope.SESSION_UNIT)
         } returns listOf(
-            FormQuestion(1, "Village", "text", false, null, null, 1, FormQuestionScope.SESSION_UNIT, true),
-            FormQuestion(2, "House", "text", false, null, null, 2, FormQuestionScope.SESSION_UNIT, true),
+            FormQuestion(1, "Village", null, "text", false, null, null, 1, FormQuestionScope.SESSION_UNIT, true),
+            FormQuestion(2, "House", null, "text", false, null, null, 2, FormQuestionScope.SESSION_UNIT, true),
         )
     }
 
     private fun answer(value: String) = FormAnswer(
         localId = UUID.randomUUID(),
         remoteId = null,
-        value = value,
+        value = FormAnswerValue.StringValue(value),
         dataType = "text",
         submittedAt = 0L,
     )
