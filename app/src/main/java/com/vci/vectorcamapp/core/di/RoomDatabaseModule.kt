@@ -10,6 +10,7 @@ import com.vci.vectorcamapp.core.data.room.dao.FormDao
 import com.vci.vectorcamapp.core.data.room.dao.FormQuestionDao
 import com.vci.vectorcamapp.core.data.room.dao.InferenceResultDao
 import com.vci.vectorcamapp.core.data.room.dao.LocationTypeDao
+import com.vci.vectorcamapp.core.data.room.dao.MetadataUploadStatusDao
 import com.vci.vectorcamapp.core.data.room.dao.ProgramDao
 import com.vci.vectorcamapp.core.data.room.dao.SessionDao
 import com.vci.vectorcamapp.core.data.room.dao.SessionUnitDao
@@ -85,4 +86,8 @@ object RoomDatabaseModule {
 
     @Provides
     fun provideFormAnswerDao(db: VectorCamDatabase): FormAnswerDao = db.formAnswerDao
+
+    @Provides
+    fun provideMetadataUploadStatusDao(db: VectorCamDatabase): MetadataUploadStatusDao =
+        db.metadataUploadStatusDao
 }

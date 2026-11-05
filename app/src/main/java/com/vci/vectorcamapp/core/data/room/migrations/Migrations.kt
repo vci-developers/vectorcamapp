@@ -28,6 +28,7 @@ import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_32_33_A
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_33_34_ADD_SESSION_GPS_ACCURACY_COLUMN
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_34_35_STORE_FORM_ANSWER_VALUE_AS_JSON
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_35_36_ADD_FORM_QUESTION_QUESTION_KEY_COLUMN
+import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_36_37_ADD_METADATA_UPLOAD_STATUS_TABLE
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_3_4_SCHEMA_V2
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_4_5_ADD_SUBMITTED_AT_COLUMNS_TO_SPECIMEN_AND_SURVEILLANCE_FORM_TABLES
 import com.vci.vectorcamapp.core.data.room.migrations.versions.MIGRATION_5_6_ADD_UPLOAD_STATUS_TO_SPECIMEN
@@ -71,5 +72,6 @@ val ALL_MIGRATIONS = arrayOf(
     MIGRATION_32_33_ADD_SITE_LATITUDE_AND_LONGITUDE_COLUMNS,
     MIGRATION_33_34_ADD_SESSION_GPS_ACCURACY_COLUMN,
     MIGRATION_34_35_STORE_FORM_ANSWER_VALUE_AS_JSON,
-    MIGRATION_35_36_ADD_FORM_QUESTION_QUESTION_KEY_COLUMN
+    MIGRATION_35_36_ADD_FORM_QUESTION_QUESTION_KEY_COLUMN,
+    MIGRATION_36_37_ADD_METADATA_UPLOAD_STATUS_TABLE
 )

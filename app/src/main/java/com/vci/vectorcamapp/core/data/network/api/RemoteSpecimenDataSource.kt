@@ -1,8 +1,8 @@
 package com.vci.vectorcamapp.core.data.network.api
 
-import com.vci.vectorcamapp.core.data.dto.specimen.PostSpecimenRequestDto
 import com.vci.vectorcamapp.core.data.dto.specimen.PostSpecimenResponseDto
 import com.vci.vectorcamapp.core.data.dto.specimen.SpecimenDto
+import com.vci.vectorcamapp.core.data.mappers.toPostSpecimenRequestDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.safeCall
 import com.vci.vectorcamapp.core.domain.model.Specimen
@@ -23,15 +23,8 @@ class RemoteSpecimenDataSource @Inject constructor(
         specimen: Specimen, sessionId: Int, sessionUnitId: Int?, expectedImages: Int
     ): Result<PostSpecimenResponseDto, NetworkError> {
         return safeCall<PostSpecimenResponseDto> {
-            httpClient.post(constructUrl("sessions/$sessionId/specimens")) {
-                setBody(
-                    PostSpecimenRequestDto(
-                        specimenId = specimen.id,
-                        sessionUnitId = sessionUnitId,
-                        shouldProcessFurther = specimen.shouldProcessFurther,
-                        expectedImages = expectedImages
-                    )
-                )
+            httpClient.post(constructUrl(UploadRoutes.specimens(sessionId))) {
+                setBody(specimen.toPostSpecimenRequestDto(sessionUnitId, expectedImages))
             }
         }
     }

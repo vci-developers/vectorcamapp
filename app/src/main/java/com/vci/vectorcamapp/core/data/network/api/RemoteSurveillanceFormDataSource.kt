@@ -1,8 +1,8 @@
 package com.vci.vectorcamapp.core.data.network.api
 
-import com.vci.vectorcamapp.core.data.dto.surveillance_form.PostSurveillanceFormRequestDto
 import com.vci.vectorcamapp.core.data.dto.surveillance_form.PostSurveillanceFormResponseDto
 import com.vci.vectorcamapp.core.data.dto.surveillance_form.SurveillanceFormDto
+import com.vci.vectorcamapp.core.data.mappers.toPostSurveillanceFormRequestDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.safeCall
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
@@ -24,21 +24,8 @@ class RemoteSurveillanceFormDataSource @Inject constructor(
         sessionId: Int
     ): Result<PostSurveillanceFormResponseDto, NetworkError> {
         return safeCall<PostSurveillanceFormResponseDto> {
-            httpClient.post(constructUrl("sessions/$sessionId/survey")) {
-                setBody(
-                    PostSurveillanceFormRequestDto(
-                        sessionId = sessionId,
-                        numPeopleSleptInHouse = surveillanceForm.numPeopleSleptInHouse,
-                        wasIrsConducted = surveillanceForm.wasIrsConducted,
-                        monthsSinceIrs = surveillanceForm.monthsSinceIrs,
-                        numLlinsAvailable = surveillanceForm.numLlinsAvailable,
-                        llinType = surveillanceForm.llinType,
-                        llinBrand = surveillanceForm.llinBrand,
-                        numPeopleSleptUnderLlin = surveillanceForm.numPeopleSleptUnderLlin,
-                        numChildrenUnder5 = surveillanceForm.numChildrenUnder5,
-                        hasPregnantWoman = surveillanceForm.hasPregnantWoman
-                    )
-                )
+            httpClient.post(constructUrl(UploadRoutes.surveillanceForm(sessionId))) {
+                setBody(surveillanceForm.toPostSurveillanceFormRequestDto(sessionId))
             }
         }
     }

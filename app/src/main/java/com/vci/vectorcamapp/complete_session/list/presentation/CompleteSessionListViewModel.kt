@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
+import com.vci.vectorcamapp.core.domain.repository.MetadataUploadStatusRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
@@ -34,6 +35,7 @@ import javax.inject.Inject
 class CompleteSessionListViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val sessionRepository: SessionRepository,
+    private val metadataUploadStatusRepository: MetadataUploadStatusRepository,
     private val specimenRepository: SpecimenRepository,
     private val specimenImageRepository: SpecimenImageRepository,
     private val workManagerRepository: WorkManagerRepository,
@@ -54,7 +56,8 @@ class CompleteSessionListViewModel @Inject constructor(
                             specimenImageRepository.observeUploadedImageCountForSession(sessionId),
                             specimenImageRepository.observeFailedImageCountForSession(sessionId),
                             workManagerRepository.observeIsSessionActivelyUploading(sessionId),
-                        ) { uploadedMetadataCount, uploadedImageCount, failedImageCount, isUploading ->
+                            metadataUploadStatusRepository.observeMetadataUploadStatusesForSession(sessionId),
+                        ) { uploadedMetadataCount, uploadedImageCount, failedImageCount, isUploading, metadataUploadStepStatuses ->
                             sessionAndSite to SessionUploadProgress(
                                 uploadedMetadataCount = uploadedMetadataCount,
                                 uploadedImageCount = uploadedImageCount,
@@ -62,7 +65,8 @@ class CompleteSessionListViewModel @Inject constructor(
                                     sessionId
                                 ),
                                 isUploading = isUploading,
-                                failedImageCount = failedImageCount
+                                failedImageCount = failedImageCount,
+                                metadataUploadStepStatuses = metadataUploadStepStatuses.sortedBy { it.step.ordinal }
                             )
                         }
                     }

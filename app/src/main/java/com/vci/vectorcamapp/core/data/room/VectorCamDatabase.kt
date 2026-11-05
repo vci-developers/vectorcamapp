@@ -20,6 +20,7 @@ import com.vci.vectorcamapp.core.data.room.dao.FormDao
 import com.vci.vectorcamapp.core.data.room.dao.FormQuestionDao
 import com.vci.vectorcamapp.core.data.room.dao.InferenceResultDao
 import com.vci.vectorcamapp.core.data.room.dao.LocationTypeDao
+import com.vci.vectorcamapp.core.data.room.dao.MetadataUploadStatusDao
 import com.vci.vectorcamapp.core.data.room.dao.ProgramDao
 import com.vci.vectorcamapp.core.data.room.dao.SessionDao
 import com.vci.vectorcamapp.core.data.room.dao.SessionUnitDao
@@ -33,6 +34,7 @@ import com.vci.vectorcamapp.core.data.room.entities.FormEntity
 import com.vci.vectorcamapp.core.data.room.entities.FormQuestionEntity
 import com.vci.vectorcamapp.core.data.room.entities.InferenceResultEntity
 import com.vci.vectorcamapp.core.data.room.entities.LocationTypeEntity
+import com.vci.vectorcamapp.core.data.room.entities.MetadataUploadStatusEntity
 import com.vci.vectorcamapp.core.data.room.entities.ProgramEntity
 import com.vci.vectorcamapp.core.data.room.entities.SessionEntity
 import com.vci.vectorcamapp.core.data.room.entities.SessionUnitEntity
@@ -55,9 +57,10 @@ import com.vci.vectorcamapp.core.data.room.entities.SurveillanceFormEntity
         SurveillanceFormEntity::class,
         FormEntity::class,
         FormQuestionEntity::class,
-        FormAnswerEntity::class
+        FormAnswerEntity::class,
+        MetadataUploadStatusEntity::class
     ],
-    version = 36,
+    version = 37,
 )
 @TypeConverters(
     UuidConverter::class,
@@ -86,4 +89,5 @@ abstract class VectorCamDatabase : RoomDatabase() {
     abstract val formDao: FormDao
     abstract val formQuestionDao: FormQuestionDao
     abstract val formAnswerDao: FormAnswerDao
+    abstract val metadataUploadStatusDao: MetadataUploadStatusDao
 }
