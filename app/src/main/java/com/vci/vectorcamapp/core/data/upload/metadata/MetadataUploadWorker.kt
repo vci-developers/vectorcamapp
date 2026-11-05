@@ -1,14 +1,9 @@
 package com.vci.vectorcamapp.core.data.upload.metadata
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
-import android.content.pm.ServiceInfo
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
-import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.data.dto.data_recovery.PostDataRecoveryRequestDto
@@ -107,13 +102,13 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val formRepository: FormRepository,
     private val formQuestionRepository: FormQuestionRepository,
     private val metadataUploadStatusRepository: MetadataUploadStatusRepository,
+    private val notifier: MetadataUploadNotifier,
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
         const val MAX_RETRIES = 5
         const val MAX_API_RETRIES = 3
         const val API_RETRY_BASE_DELAY_MS = 1000L
-        const val CHANNEL_ID = "metadata_upload_channel"
         private const val TAG = "MetadataUploadWorker"
 
         private val recoveryJson = Json {
@@ -123,8 +118,6 @@ class MetadataUploadWorker @AssistedInject constructor(
     }
 
     private var notificationId = 1001
-    private val notificationManager: NotificationManager =
-        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     override suspend fun doWork(): WorkerResult {
         val localSessionIdString = inputData.getString("session_id")
@@ -149,9 +142,9 @@ class MetadataUploadWorker @AssistedInject constructor(
         val localProgram = programRepository.getProgramById(localProgramId)
             ?: return retryOrFailure(context.getString(R.string.upload_error_program_not_found))
 
-        createNotificationChannel()
+        notifier.createNotificationChannel()
         notificationId = localSessionId.hashCode()
-        setForeground(showInitialMetadataNotification())
+        setForeground(notifier.buildInitialMetadataForegroundInfo(notificationId))
 
         val recoveryTemplate = PostDataRecoveryRequestDto(
             userId = "${localDevice.id}_${localDevice.registeredAt}",
@@ -425,7 +418,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                                 specimenImage, inferenceResult, syncedSpecimen, syncedSession.localId
                             )
                         }.onSuccess {
-                            showSpecimenProgressNotification(
+                            notifier.showSpecimenProgressNotification(
+                                notificationId = notificationId,
                                 specimenId = syncedSpecimen.id,
                                 currentSpecimenIndex = specimenIndex,
                                 totalSpecimens = totalSpecimensForSession,
@@ -555,7 +549,7 @@ class MetadataUploadWorker @AssistedInject constructor(
     }
 
     private fun retryOrComplete(message: String): WorkerResult {
-        showUploadRetryNotification(message)
+        notifier.showUploadRetryNotification(notificationId, message)
         return if (runAttemptCount < MAX_RETRIES) {
             WorkerResult.retry()
         } else {
@@ -565,10 +559,10 @@ class MetadataUploadWorker @AssistedInject constructor(
 
     private fun retryOrFailure(message: String): WorkerResult {
         if (runAttemptCount < MAX_RETRIES) {
-            showUploadRetryNotification(message)
+            notifier.showUploadRetryNotification(notificationId, message)
             return WorkerResult.retry()
         } else {
-            showUploadErrorNotification(message)
+            notifier.showUploadErrorNotification(notificationId, message)
             return WorkerResult.failure()
         }
     }
@@ -1165,59 +1159,5 @@ class MetadataUploadWorker @AssistedInject constructor(
         } catch (e: Exception) {
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
-    }
-
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            context.getString(R.string.upload_notification_channel_metadata),
-            NotificationManager.IMPORTANCE_LOW
-        )
-        notificationManager.createNotificationChannel(channel)
-    }
-
-    private fun showInitialMetadataNotification(): ForegroundInfo {
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setContentTitle(context.getString(R.string.upload_notification_registering))
-            .setSmallIcon(R.drawable.ic_cloud_upload).setOngoing(true).build()
-
-        return ForegroundInfo(
-            notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-        )
-    }
-
-    private fun showSpecimenProgressNotification(
-        specimenId: String,
-        currentSpecimenIndex: Int,
-        totalSpecimens: Int,
-        currentImageIndex: Int,
-        totalImagesForSpecimen: Int
-    ) {
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setContentTitle(context.getString(R.string.upload_notification_uploading_metadata, specimenId))
-            .setContentText(context.getString(R.string.upload_notification_specimen_progress, currentSpecimenIndex + 1, totalSpecimens)).setStyle(
-                NotificationCompat.BigTextStyle().bigText(
-                    context.getString(R.string.upload_notification_specimen_image_progress, currentSpecimenIndex + 1, totalSpecimens, currentImageIndex + 1, totalImagesForSpecimen)
-                )
-            ).setSmallIcon(R.drawable.ic_cloud_upload)
-            .setProgress(totalSpecimens, currentSpecimenIndex + 1, false).setOngoing(true).build()
-
-        notificationManager.notify(notificationId, notification)
-    }
-
-    private fun showUploadRetryNotification(message: String) {
-        val notification =
-            NotificationCompat.Builder(context, CHANNEL_ID).setContentTitle(context.getString(R.string.upload_notification_retrying))
-                .setContentText(message).setSmallIcon(R.drawable.ic_error).build()
-
-        notificationManager.notify(notificationId, notification)
-    }
-
-    private fun showUploadErrorNotification(message: String) {
-        val notification =
-            NotificationCompat.Builder(context, CHANNEL_ID).setContentTitle(context.getString(R.string.upload_notification_failed))
-                .setContentText(message).setSmallIcon(R.drawable.ic_error).build()
-
-        notificationManager.notify(notificationId, notification)
     }
 }
