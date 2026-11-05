@@ -36,7 +36,9 @@ class MetadataUploadNotifier @Inject constructor(
             .setSmallIcon(R.drawable.ic_cloud_upload).setOngoing(true).build()
 
         return ForegroundInfo(
-            notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            notificationId,
+            notification,
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
         )
     }
 
@@ -50,9 +52,22 @@ class MetadataUploadNotifier @Inject constructor(
     ) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(context.getString(R.string.upload_notification_uploading_metadata, specimenId))
-            .setContentText(context.getString(R.string.upload_notification_specimen_progress, currentSpecimenIndex + 1, totalSpecimens)).setStyle(
+            .setContentText(
+                context.getString(
+                    R.string.upload_notification_specimen_progress,
+                    currentSpecimenIndex + 1,
+                    totalSpecimens
+                )
+            )
+            .setStyle(
                 NotificationCompat.BigTextStyle().bigText(
-                    context.getString(R.string.upload_notification_specimen_image_progress, currentSpecimenIndex + 1, totalSpecimens, currentImageIndex + 1, totalImagesForSpecimen)
+                    context.getString(
+                        R.string.upload_notification_specimen_image_progress,
+                        currentSpecimenIndex + 1,
+                        totalSpecimens,
+                        currentImageIndex + 1,
+                        totalImagesForSpecimen
+                    )
                 )
             ).setSmallIcon(R.drawable.ic_cloud_upload)
             .setProgress(totalSpecimens, currentSpecimenIndex + 1, false).setOngoing(true).build()
@@ -61,17 +76,21 @@ class MetadataUploadNotifier @Inject constructor(
     }
 
     fun showUploadRetryNotification(notificationId: Int, message: String) {
-        val notification =
-            NotificationCompat.Builder(context, CHANNEL_ID).setContentTitle(context.getString(R.string.upload_notification_retrying))
-                .setContentText(message).setSmallIcon(R.drawable.ic_error).build()
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setContentTitle(context.getString(R.string.upload_notification_retrying))
+            .setContentText(message)
+            .setSmallIcon(R.drawable.ic_error)
+            .build()
 
         notificationManager.notify(notificationId, notification)
     }
 
     fun showUploadErrorNotification(notificationId: Int, message: String) {
-        val notification =
-            NotificationCompat.Builder(context, CHANNEL_ID).setContentTitle(context.getString(R.string.upload_notification_failed))
-                .setContentText(message).setSmallIcon(R.drawable.ic_error).build()
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setContentTitle(context.getString(R.string.upload_notification_failed))
+            .setContentText(message)
+            .setSmallIcon(R.drawable.ic_error)
+            .build()
 
         notificationManager.notify(notificationId, notification)
     }

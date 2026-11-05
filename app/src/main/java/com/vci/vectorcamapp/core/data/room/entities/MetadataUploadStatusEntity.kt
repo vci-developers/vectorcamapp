@@ -10,13 +10,15 @@ import java.util.UUID
 @Entity(
     tableName = "metadata_upload_status",
     primaryKeys = ["sessionId", "step"],
-    foreignKeys = [ForeignKey(
-        entity = SessionEntity::class,
-        parentColumns = ["localId"],
-        childColumns = ["sessionId"],
-        onDelete = ForeignKey.CASCADE,
-        onUpdate = ForeignKey.CASCADE
-    )],
+    foreignKeys = [
+        ForeignKey(
+            entity = SessionEntity::class,
+            parentColumns = ["localId"],
+            childColumns = ["sessionId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        )
+    ],
     indices = [Index("sessionId")]
 )
 data class MetadataUploadStatusEntity(

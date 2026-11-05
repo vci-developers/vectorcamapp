@@ -346,7 +346,9 @@ fun CompleteSessionListTile(
                                     stepStatus.status == UploadStatus.COMPLETED -> {
                                         Icon(
                                             painter = painterResource(R.drawable.ic_check),
-                                            contentDescription = stringResource(R.string.complete_session_content_description_upload_step_succeeded),
+                                            contentDescription = stringResource(
+                                                R.string.complete_session_content_description_upload_step_succeeded
+                                            ),
                                             tint = MaterialTheme.colors.successConfirm,
                                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraSmall)
                                         )
@@ -355,7 +357,9 @@ fun CompleteSessionListTile(
                                     else -> {
                                         Icon(
                                             painter = painterResource(R.drawable.ic_close),
-                                            contentDescription = stringResource(R.string.complete_session_content_description_upload_step_failed),
+                                            contentDescription = stringResource(
+                                                R.string.complete_session_content_description_upload_step_failed
+                                            ),
                                             tint = MaterialTheme.colors.error,
                                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraSmall)
                                         )

@@ -35,7 +35,8 @@ class MetadataUploadStatusRepositoryImplementation @Inject constructor(
     ): Result<Unit, RoomDbError> {
         return try {
             metadataUploadStatusDao.failInProgressMetadataUploadStatuses(
-                sessionId, System.currentTimeMillis()
+                sessionId,
+                System.currentTimeMillis()
             )
             Result.Success(Unit)
         } catch (e: Exception) {

@@ -95,7 +95,10 @@ class MetadataUploadWorkerTest {
     private val remoteSpecimenIds = mapOf(SPECIMEN_1 to 100, SPECIMEN_2 to 200)
 
     private val device = Device(
-        id = DEVICE_ID, model = "Pixel", registeredAt = DEVICE_REGISTERED_AT, submittedAt = null
+        id = DEVICE_ID,
+        model = "Pixel",
+        registeredAt = DEVICE_REGISTERED_AT,
+        submittedAt = null
     )
     private val session = Session(
         localId = sessionId,
@@ -165,6 +168,15 @@ class MetadataUploadWorkerTest {
 
     @Before
     fun setUp() {
+        setUpAndroidMocks()
+        setUpLocalRepositories()
+        setUpSessionDataSources()
+        setUpSpecimenDataSources()
+        setUpFormAnswerMocks()
+        setUpRecoveryAndStatusMocks()
+    }
+
+    private fun setUpAndroidMocks() {
         mockkStatic(Log::class)
         every { Log.e(any(), any<String>()) } returns 0
 
@@ -184,7 +196,9 @@ class MetadataUploadWorkerTest {
         every {
             workerParams.foregroundUpdater.setForegroundAsync(any(), any(), any())
         } returns completedForegroundFuture
+    }
 
+    private fun setUpLocalRepositories() {
         deviceCache = mockk(relaxed = true)
         coEvery { deviceCache.getDevice() } returns device
         coEvery { deviceCache.getProgramId() } returns PROGRAM_ID
@@ -217,7 +231,9 @@ class MetadataUploadWorkerTest {
         coEvery { specimenImageRepository.updateSpecimenImage(any(), any(), any()) } returns Result.Success(Unit)
 
         inferenceResultRepository = mockk(relaxed = true)
+    }
 
+    private fun setUpSessionDataSources() {
         deviceDataSource = mockk()
         coEvery { deviceDataSource.getDeviceById(DEVICE_ID) } returns Result.Success(
             DeviceDto(
@@ -252,7 +268,9 @@ class MetadataUploadWorkerTest {
         coEvery {
             surveillanceFormDataSource.postSurveillanceForm(any(), REMOTE_SESSION_ID)
         } returns Result.Success(PostSurveillanceFormResponseDto())
+    }
 
+    private fun setUpSpecimenDataSources() {
         specimenDataSource = mockk()
         coEvery {
             specimenDataSource.getSpecimenByIdAndSessionId(any(), REMOTE_SESSION_ID)
@@ -287,7 +305,9 @@ class MetadataUploadWorkerTest {
                 PostSpecimenImageResponseDto(image = SpecimenImageDto(filemd5 = imageId))
             )
         }
+    }
 
+    private fun setUpFormAnswerMocks() {
         formAnswerRepository = mockk(relaxed = true)
         coEvery { formAnswerRepository.getSessionScopedFormAnswers(sessionId) } returns mapOf(
             QUESTION_ID to formAnswer
@@ -309,7 +329,9 @@ class MetadataUploadWorkerTest {
         coEvery {
             formAnswerDataSource.postFormAnswersForSession(REMOTE_SESSION_ID, FORM_VERSION, any(), any())
         } returns Result.Success(PostFormAnswersResponseDto())
+    }
 
+    private fun setUpRecoveryAndStatusMocks() {
         dataRecoveryRequests.clear()
         val dataRecoveryRequest = slot<PostDataRecoveryRequestDto>()
         dataRecoveryDataSource = mockk()
@@ -693,7 +715,9 @@ class MetadataUploadWorkerTest {
     private fun assertImagePosted(imageId: String, remoteSpecimenId: Int) {
         coVerify {
             specimenImageDataSource.postSpecimenImageMetadata(
-                match { it.localId == imageId }, null, remoteSpecimenId
+                match { it.localId == imageId },
+                null,
+                remoteSpecimenId
             )
         }
     }

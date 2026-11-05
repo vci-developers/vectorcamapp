@@ -57,8 +57,9 @@ import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
-import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.errorOrNull
+import com.vci.vectorcamapp.core.domain.util.map
+import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
 import com.vci.vectorcamapp.core.domain.util.successOrNull
@@ -191,7 +192,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 it.specimenImagesAndInferenceResults.isNotEmpty()
             }
 
-            markStepsInProgress(localSessionId, buildList {
+            val applicableSteps = buildList {
                 add(MetadataUploadStep.DEVICE)
                 add(MetadataUploadStep.SESSION)
                 if (localSessionUnits.isNotEmpty()) add(MetadataUploadStep.SESSION_UNITS)
@@ -199,7 +200,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                 if (localSurveillanceForm != null) add(MetadataUploadStep.SURVEILLANCE_FORM)
                 if (totalSpecimensForSession > 0) add(MetadataUploadStep.SPECIMENS)
                 if (hasSpecimenImages) add(MetadataUploadStep.SPECIMEN_IMAGES)
-            })
+            }
+            markStepsInProgress(localSessionId, applicableSteps)
 
             val syncedDevice = when (val syncDeviceResult = syncWithRecovery(
                 recoveryTemplate = recoveryTemplate,
@@ -226,19 +228,26 @@ class MetadataUploadWorker @AssistedInject constructor(
                 requestData = {
                     recoveryJson.encodeToJsonElement(
                         localSession.toPostSessionRequestDto(
-                            localSiteId, syncedDevice.id, totalSpecimensForSession
+                            localSiteId,
+                            syncedDevice.id,
+                            totalSpecimensForSession
                         )
                     )
                 },
             ) {
                 syncSessionIfNeeded(
-                    localSession, localSiteId, syncedDevice.id, totalSpecimensForSession
+                    localSession,
+                    localSiteId,
+                    syncedDevice.id,
+                    totalSpecimensForSession
                 )
             }
             val syncedSession = syncSessionResult.successOrNull()
             val syncedRemoteSessionId = syncedSession?.remoteId
             recordStepStatus(
-                localSessionId, MetadataUploadStep.SESSION, isSuccessful = syncedRemoteSessionId != null
+                localSessionId,
+                MetadataUploadStep.SESSION,
+                isSuccessful = syncedRemoteSessionId != null
             )
             if (syncedSession == null || syncedRemoteSessionId == null) {
                 // Every remaining endpoint is scoped under the remote session id.
@@ -260,7 +269,9 @@ class MetadataUploadWorker @AssistedInject constructor(
                     },
                 ) {
                     syncSessionUnitIfNeeded(
-                        localSessionUnit, syncedSession.localId, syncedRemoteSessionId
+                        localSessionUnit,
+                        syncedSession.localId,
+                        syncedRemoteSessionId
                     )
                 }) {
                     is DomainResult.Success -> {
@@ -333,7 +344,9 @@ class MetadataUploadWorker @AssistedInject constructor(
                     },
                 ) {
                     syncSurveillanceFormIfNeeded(
-                        localSurveillanceForm, syncedSession.localId, syncedRemoteSessionId
+                        localSurveillanceForm,
+                        syncedSession.localId,
+                        syncedRemoteSessionId
                     )
                 }
                 syncSurveillanceFormResult.onError { registerFailure(it.toString(context)) }
@@ -369,7 +382,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                         requestData = {
                             recoveryJson.encodeToJsonElement(
                                 localSpecimen.toPostSpecimenRequestDto(
-                                    syncedRemoteSessionUnitId, totalImagesForSpecimen
+                                    syncedRemoteSessionUnitId,
+                                    totalImagesForSpecimen
                                 )
                             )
                         },
@@ -443,7 +457,9 @@ class MetadataUploadWorker @AssistedInject constructor(
             }
             if (hasSpecimenImages) {
                 recordStepStatus(
-                    localSessionId, MetadataUploadStep.SPECIMEN_IMAGES, areAllSpecimenImagesSynced
+                    localSessionId,
+                    MetadataUploadStep.SPECIMEN_IMAGES,
+                    areAllSpecimenImagesSynced
                 )
             }
 
@@ -451,8 +467,9 @@ class MetadataUploadWorker @AssistedInject constructor(
         } catch (e: IOException) {
             failInProgressSteps(localSessionId)
             return retryOrFailure(context.getString(R.string.upload_error_lost_connection))
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is CancellationException) throw e
             failInProgressSteps(localSessionId)
             return retryOrFailure(context.getString(R.string.upload_error_unknown))
         } finally {
@@ -507,7 +524,9 @@ class MetadataUploadWorker @AssistedInject constructor(
         sessionId: UUID, step: MetadataUploadStep, isSuccessful: Boolean
     ) {
         upsertStepStatus(
-            sessionId, step, if (isSuccessful) UploadStatus.COMPLETED else UploadStatus.FAILED
+            sessionId,
+            step,
+            if (isSuccessful) UploadStatus.COMPLETED else UploadStatus.FAILED
         )
     }
 
@@ -843,6 +862,30 @@ class MetadataUploadWorker @AssistedInject constructor(
         return formRepository.getFormById(formId)?.version
     }
 
+    private suspend fun getOrPostFormAnswers(
+        syncedRemoteSessionId: Int,
+        formVersion: String,
+        sessionScopedAnswers: Map<Int, FormAnswer>,
+        sessionUnitScopedAnswersBySessionUnitRemoteId: Map<Int, Map<Int, FormAnswer>>,
+    ): DomainResult<List<FormAnswerDto>, NetworkError> {
+        val getResult = formAnswerDataSource.getFormAnswersForSession(syncedRemoteSessionId)
+        val existingRemoteAnswers = when (getResult) {
+            is DomainResult.Success -> getResult.data.answers
+            is DomainResult.Error -> when (getResult.error) {
+                NetworkError.NOT_FOUND -> emptyList()
+                else -> return DomainResult.Error(getResult.error)
+            }
+        }
+        if (existingRemoteAnswers.isNotEmpty()) return DomainResult.Success(existingRemoteAnswers)
+
+        return formAnswerDataSource.postFormAnswersForSession(
+            syncedRemoteSessionId,
+            formVersion,
+            sessionScopedAnswers,
+            sessionUnitScopedAnswersBySessionUnitRemoteId,
+        ).map { it.answers }
+    }
+
     private suspend fun syncFormAnswersIfNeeded(
         sessionScopedAnswers: Map<Int, FormAnswer>,
         sessionUnitScopedAnswersBySessionUnitRemoteId: Map<Int, Map<Int, FormAnswer>>,
@@ -850,11 +893,11 @@ class MetadataUploadWorker @AssistedInject constructor(
         syncedLocalSessionId: UUID,
         syncedRemoteSessionId: Int,
     ): DomainResult<Unit, NetworkError> {
-        return try {
-            if (sessionScopedAnswers.isEmpty() && sessionUnitScopedAnswersBySessionUnitRemoteId.values.all { it.isEmpty() }) {
-                return DomainResult.Success(Unit)
-            }
+        if (sessionScopedAnswers.isEmpty() && sessionUnitScopedAnswersBySessionUnitRemoteId.values.all { it.isEmpty() }) {
+            return DomainResult.Success(Unit)
+        }
 
+        return try {
             val formVersion = resolveFormVersion(
                 sessionScopedAnswers, sessionUnitScopedAnswersBySessionUnitRemoteId
             ) ?: return DomainResult.Error(NetworkError.CLIENT_ERROR)
@@ -892,25 +935,15 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
             }
 
-            val existingRemoteAnswers = when (val getResult =
-                formAnswerDataSource.getFormAnswersForSession(syncedRemoteSessionId)) {
-                is DomainResult.Success -> getResult.data.answers
-                is DomainResult.Error -> when (getResult.error) {
-                    NetworkError.NOT_FOUND -> emptyList()
-                    else -> return DomainResult.Error(getResult.error)
-                }
-            }
-
-            val remoteFormAnswersDto = existingRemoteAnswers.ifEmpty {
-                when (val postResult = formAnswerDataSource.postFormAnswersForSession(
-                    syncedRemoteSessionId,
-                    formVersion,
-                    sessionScopedAnswers,
-                    sessionUnitScopedAnswersBySessionUnitRemoteId,
-                )) {
-                    is DomainResult.Success -> postResult.data.answers
-                    is DomainResult.Error -> return DomainResult.Error(postResult.error)
-                }
+            val remoteFormAnswersResult = getOrPostFormAnswers(
+                syncedRemoteSessionId,
+                formVersion,
+                sessionScopedAnswers,
+                sessionUnitScopedAnswersBySessionUnitRemoteId,
+            )
+            val remoteFormAnswersDto = when (remoteFormAnswersResult) {
+                is DomainResult.Success -> remoteFormAnswersResult.data
+                is DomainResult.Error -> return remoteFormAnswersResult
             }
 
             for (remoteFormAnswerDto in remoteFormAnswersDto) {
