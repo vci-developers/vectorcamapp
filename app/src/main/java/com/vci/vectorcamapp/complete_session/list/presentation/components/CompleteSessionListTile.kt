@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
+import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
@@ -39,6 +41,7 @@ import com.vci.vectorcamapp.core.presentation.extensions.displayText
 import com.vci.vectorcamapp.core.presentation.util.date.rememberDateFormatter
 import com.vci.vectorcamapp.ui.extensions.colors
 import com.vci.vectorcamapp.ui.extensions.dimensions
+import com.vci.vectorcamapp.ui.extensions.displayText
 
 @Composable
 fun CompleteSessionListTile(
@@ -315,6 +318,56 @@ fun CompleteSessionListTile(
                                     RoundedCornerShape(MaterialTheme.dimensions.cornerRadiusSmall)
                                 )
                         )
+                    }
+
+                    if (sessionUploadProgress.metadataUploadStepStatuses.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(MaterialTheme.dimensions.spacingExtraSmall))
+
+                        Text(
+                            text = stringResource(R.string.complete_session_label_metadata_upload_steps),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colors.textSecondary
+                        )
+
+                        sessionUploadProgress.metadataUploadStepStatuses.forEach { stepStatus ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimensions.spacingSmall)
+                            ) {
+                                when {
+                                    stepStatus.status == UploadStatus.IN_PROGRESS && sessionUploadProgress.isUploading -> {
+                                        CircularProgressIndicator(
+                                            color = MaterialTheme.colors.warning,
+                                            strokeWidth = MaterialTheme.dimensions.borderThicknessThick,
+                                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraSmall)
+                                        )
+                                    }
+
+                                    stepStatus.status == UploadStatus.COMPLETED -> {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_check),
+                                            contentDescription = stringResource(R.string.complete_session_content_description_upload_step_succeeded),
+                                            tint = MaterialTheme.colors.successConfirm,
+                                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraSmall)
+                                        )
+                                    }
+
+                                    else -> {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_close),
+                                            contentDescription = stringResource(R.string.complete_session_content_description_upload_step_failed),
+                                            tint = MaterialTheme.colors.error,
+                                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraSmall)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = stepStatus.step.displayText(context),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colors.textPrimary
+                                )
+                            }
+                        }
                     }
                 }
             }

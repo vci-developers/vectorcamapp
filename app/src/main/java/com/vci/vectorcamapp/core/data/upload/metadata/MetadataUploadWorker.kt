@@ -4,12 +4,14 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.data.dto.data_recovery.PostDataRecoveryRequestDto
 import com.vci.vectorcamapp.core.data.dto.device.DeviceDto
 import com.vci.vectorcamapp.core.data.dto.form_answer.FormAnswerDto
 import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto
@@ -20,17 +22,28 @@ import com.vci.vectorcamapp.core.data.dto.specimen_image.SpecimenImageDto
 import com.vci.vectorcamapp.core.data.dto.surveillance_form.SurveillanceFormDto
 import com.vci.vectorcamapp.core.data.mappers.toCameraMetadata
 import com.vci.vectorcamapp.core.data.mappers.toImageMetadataDto
+import com.vci.vectorcamapp.core.data.mappers.toPostFormAnswersRequestDto
+import com.vci.vectorcamapp.core.data.mappers.toPostSessionRequestDto
+import com.vci.vectorcamapp.core.data.mappers.toPostSessionUnitRequestDto
+import com.vci.vectorcamapp.core.data.mappers.toPostSpecimenImageRequestDto
+import com.vci.vectorcamapp.core.data.mappers.toPostSpecimenRequestDto
+import com.vci.vectorcamapp.core.data.mappers.toPostSurveillanceFormRequestDto
+import com.vci.vectorcamapp.core.data.mappers.toRegisterDeviceRequestDto
+import com.vci.vectorcamapp.core.data.network.api.UploadRoutes
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
+import com.vci.vectorcamapp.core.domain.model.MetadataUploadStepStatus
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.SessionUnit
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
+import com.vci.vectorcamapp.core.domain.model.enums.MetadataUploadStep
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
+import com.vci.vectorcamapp.core.domain.network.api.DataRecoveryDataSource
 import com.vci.vectorcamapp.core.domain.network.api.DeviceDataSource
 import com.vci.vectorcamapp.core.domain.network.api.FormAnswerDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SessionDataSource
@@ -42,6 +55,7 @@ import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
+import com.vci.vectorcamapp.core.domain.repository.MetadataUploadStatusRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
@@ -49,12 +63,21 @@ import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
+import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.onError
 import com.vci.vectorcamapp.core.domain.util.onSuccess
+import com.vci.vectorcamapp.core.domain.util.successOrNull
 import com.vci.vectorcamapp.core.presentation.util.error.toString
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import java.util.UUID
 import androidx.work.ListenableWorker.Result as WorkerResult
 import com.vci.vectorcamapp.core.domain.util.Result as DomainResult
@@ -79,14 +102,24 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val specimenDataSource: SpecimenDataSource,
     private val specimenImageDataSource: SpecimenImageDataSource,
     private val formAnswerDataSource: FormAnswerDataSource,
+    private val dataRecoveryDataSource: DataRecoveryDataSource,
     private val formAnswerRepository: FormAnswerRepository,
     private val formRepository: FormRepository,
-    private val formQuestionRepository: FormQuestionRepository
+    private val formQuestionRepository: FormQuestionRepository,
+    private val metadataUploadStatusRepository: MetadataUploadStatusRepository,
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
         const val MAX_RETRIES = 5
+        const val MAX_API_RETRIES = 3
+        const val API_RETRY_BASE_DELAY_MS = 1000L
         const val CHANNEL_ID = "metadata_upload_channel"
+        private const val TAG = "MetadataUploadWorker"
+
+        private val recoveryJson = Json {
+            encodeDefaults = true
+            explicitNulls = false
+        }
     }
 
     private var notificationId = 1001
@@ -120,135 +153,278 @@ class MetadataUploadWorker @AssistedInject constructor(
         notificationId = localSessionId.hashCode()
         setForeground(showInitialMetadataNotification())
 
-        try {
-            val syncedDevice =
-                when (val syncDeviceResult = syncDeviceIfNeeded(localDevice, localProgramId)) {
-                    is DomainResult.Success -> syncDeviceResult.data
-                    is DomainResult.Error -> return retryOrFailure(
-                        syncDeviceResult.error.toString(context)
-                    )
-                }
+        val recoveryTemplate = PostDataRecoveryRequestDto(
+            userId = "${localDevice.id}_${localDevice.registeredAt}",
+            deviceId = localDevice.id,
+            programId = localProgramId,
+            sessionFrontendId = localSessionId,
+            method = "POST",
+            workerAttempt = runAttemptCount + 1,
+        )
 
+        try {
+            var firstFailureMessage: String? = null
+            fun registerFailure(message: String) {
+                if (firstFailureMessage == null) firstFailureMessage = message
+            }
+
+            val usesDynamicForm = localProgram.formVersion != null
+            val localSessionUnits = if (usesDynamicForm) {
+                sessionUnitRepository.getSessionUnitsForSession(localSessionId)
+            } else {
+                emptyList()
+            }
+            val sessionScopedFormAnswers = if (usesDynamicForm) {
+                formAnswerRepository.getSessionScopedFormAnswers(localSessionId)
+            } else {
+                emptyMap()
+            }
+            val sessionUnitScopedFormAnswersByLocalUnitId = localSessionUnits.associate { localSessionUnit ->
+                localSessionUnit.localId to formAnswerRepository.getSessionUnitScopedFormAnswers(localSessionUnit.localId)
+            }.filterValues { it.isNotEmpty() }
+            val hasFormAnswers =
+                sessionScopedFormAnswers.isNotEmpty() || sessionUnitScopedFormAnswersByLocalUnitId.isNotEmpty()
+            val localSurveillanceForm = if (usesDynamicForm) {
+                null
+            } else {
+                surveillanceFormRepository.getSurveillanceFormBySessionId(localSessionId)
+            }
             val localSpecimensWithImagesAndInferenceResults =
                 specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(
                     localSessionId, null
                 )
             val totalSpecimensForSession = localSpecimensWithImagesAndInferenceResults.size
+            val hasSpecimenImages = localSpecimensWithImagesAndInferenceResults.any {
+                it.specimenImagesAndInferenceResults.isNotEmpty()
+            }
 
-            val syncedSession = when (val syncSessionResult = syncSessionIfNeeded(
-                localSession, localSiteId, syncedDevice.id, totalSpecimensForSession
-            )) {
-                is DomainResult.Success -> syncSessionResult.data
-                is DomainResult.Error -> return retryOrFailure(
-                    syncSessionResult.error.toString(context)
+            markStepsInProgress(localSessionId, buildList {
+                add(MetadataUploadStep.DEVICE)
+                add(MetadataUploadStep.SESSION)
+                if (localSessionUnits.isNotEmpty()) add(MetadataUploadStep.SESSION_UNITS)
+                if (hasFormAnswers) add(MetadataUploadStep.FORM_ANSWERS)
+                if (localSurveillanceForm != null) add(MetadataUploadStep.SURVEILLANCE_FORM)
+                if (totalSpecimensForSession > 0) add(MetadataUploadStep.SPECIMENS)
+                if (hasSpecimenImages) add(MetadataUploadStep.SPECIMEN_IMAGES)
+            })
+
+            val syncedDevice = when (val syncDeviceResult = syncWithRecovery(
+                recoveryTemplate = recoveryTemplate,
+                route = UploadRoutes.REGISTER_DEVICE,
+                requestData = {
+                    recoveryJson.encodeToJsonElement(localDevice.toRegisterDeviceRequestDto(localProgramId))
+                },
+            ) { syncDeviceIfNeeded(localDevice, localProgramId) }) {
+                is DomainResult.Success -> {
+                    recordStepStatus(localSessionId, MetadataUploadStep.DEVICE, isSuccessful = true)
+                    syncDeviceResult.data
+                }
+
+                is DomainResult.Error -> {
+                    recordStepStatus(localSessionId, MetadataUploadStep.DEVICE, isSuccessful = false)
+                    registerFailure(syncDeviceResult.error.toString(context))
+                    localDevice
+                }
+            }
+
+            val syncSessionResult = syncWithRecovery(
+                recoveryTemplate = recoveryTemplate,
+                route = UploadRoutes.SESSIONS,
+                requestData = {
+                    recoveryJson.encodeToJsonElement(
+                        localSession.toPostSessionRequestDto(
+                            localSiteId, syncedDevice.id, totalSpecimensForSession
+                        )
+                    )
+                },
+            ) {
+                syncSessionIfNeeded(
+                    localSession, localSiteId, syncedDevice.id, totalSpecimensForSession
                 )
             }
-            if (syncedSession.remoteId == null) {
-                return retryOrFailure(context.getString(R.string.upload_error_session_not_found_server))
+            val syncedSession = syncSessionResult.successOrNull()
+            val syncedRemoteSessionId = syncedSession?.remoteId
+            recordStepStatus(
+                localSessionId, MetadataUploadStep.SESSION, isSuccessful = syncedRemoteSessionId != null
+            )
+            if (syncedSession == null || syncedRemoteSessionId == null) {
+                // Every remaining endpoint is scoped under the remote session id.
+                failInProgressSteps(localSessionId)
+                return retryOrFailure(
+                    syncSessionResult.errorOrNull()?.toString(context)
+                        ?: context.getString(R.string.upload_error_session_not_found_server)
+                )
             }
 
-            val syncedSessionUnitsByLocalId: Map<UUID, SessionUnit> =
-                if (localProgram.formVersion != null) {
-                    val localSessionUnits =
-                        sessionUnitRepository.getSessionUnitsForSession(syncedSession.localId)
-                    buildMap {
-                        localSessionUnits.forEach { localSessionUnit ->
-                            when (val syncSessionUnitResult = syncSessionUnitIfNeeded(
-                                localSessionUnit, syncedSession.localId, syncedSession.remoteId
-                            )) {
-                                is DomainResult.Success -> put(
-                                    localSessionUnit.localId, syncSessionUnitResult.data
-                                )
-
-                                is DomainResult.Error -> return retryOrFailure(
-                                    syncSessionUnitResult.error.toString(context)
-                                )
-                            }
-                        }
+            val syncedSessionUnitsByLocalId = mutableMapOf<UUID, SessionUnit>()
+            val failedSessionUnitLocalIds = mutableSetOf<UUID>()
+            localSessionUnits.forEach { localSessionUnit ->
+                when (val syncSessionUnitResult = syncWithRecovery(
+                    recoveryTemplate = recoveryTemplate,
+                    route = UploadRoutes.sessionUnits(syncedRemoteSessionId),
+                    requestData = {
+                        recoveryJson.encodeToJsonElement(localSessionUnit.toPostSessionUnitRequestDto())
+                    },
+                ) {
+                    syncSessionUnitIfNeeded(
+                        localSessionUnit, syncedSession.localId, syncedRemoteSessionId
+                    )
+                }) {
+                    is DomainResult.Success -> {
+                        syncedSessionUnitsByLocalId[localSessionUnit.localId] = syncSessionUnitResult.data
                     }
+
+                    is DomainResult.Error -> {
+                        failedSessionUnitLocalIds += localSessionUnit.localId
+                        registerFailure(syncSessionUnitResult.error.toString(context))
+                    }
+                }
+            }
+            if (localSessionUnits.isNotEmpty()) {
+                recordStepStatus(
+                    localSessionId,
+                    MetadataUploadStep.SESSION_UNITS,
+                    isSuccessful = failedSessionUnitLocalIds.isEmpty()
+                )
+            }
+
+            if (hasFormAnswers) {
+                // The answers endpoint only accepts the first submission for a session, so posting before
+                // every unit has a remote id would permanently drop the answers of the missing units.
+                val areFormAnswersSynced = if (failedSessionUnitLocalIds.isNotEmpty()) {
+                    false
                 } else {
-                    emptyMap()
-                }
+                    val sessionUnitScopedFormAnswersByRemoteUnitId =
+                        sessionUnitScopedFormAnswersByLocalUnitId.mapNotNull { (localUnitId, answers) ->
+                            syncedSessionUnitsByLocalId[localUnitId]?.remoteId?.let { it to answers }
+                        }.toMap()
 
-            if (localProgram.formVersion != null) {
-                val sessionScopedFormAnswers =
-                    formAnswerRepository.getSessionScopedFormAnswers(syncedSession.localId)
-                val sessionUnitScopedFormAnswersBySessionUnit =
-                    syncedSessionUnitsByLocalId.keys.associateWith { localUnitId ->
-                        formAnswerRepository.getSessionUnitScopedFormAnswers(localUnitId)
-                    }.filterValues { it.isNotEmpty() }
-
-                if (sessionScopedFormAnswers.isNotEmpty() || sessionUnitScopedFormAnswersBySessionUnit.isNotEmpty()) {
-                    when (val syncFormAnswersResult = syncFormAnswersIfNeeded(
-                        sessionScopedFormAnswers,
-                        sessionUnitScopedFormAnswersBySessionUnit,
-                        syncedSessionUnitsByLocalId,
-                        syncedSession.localId,
-                        syncedSession.remoteId,
-                    )) {
-                        is DomainResult.Success -> syncFormAnswersResult.data
-                        is DomainResult.Error -> return retryOrFailure(
-                            syncFormAnswersResult.error.toString(context)
+                    val syncFormAnswersResult = syncWithRecovery(
+                        recoveryTemplate = recoveryTemplate,
+                        route = UploadRoutes.formAnswers(syncedRemoteSessionId),
+                        requestData = {
+                            recoveryJson.encodeToJsonElement(
+                                toPostFormAnswersRequestDto(
+                                    formVersion = resolveFormVersion(
+                                        sessionScopedFormAnswers, sessionUnitScopedFormAnswersByRemoteUnitId
+                                    ) ?: localProgram.formVersion.orEmpty(),
+                                    sessionScopedAnswers = sessionScopedFormAnswers,
+                                    sessionUnitScopedAnswersBySessionUnitRemoteId = sessionUnitScopedFormAnswersByRemoteUnitId,
+                                    submittedAt = System.currentTimeMillis(),
+                                )
+                            )
+                        },
+                    ) {
+                        syncFormAnswersIfNeeded(
+                            sessionScopedFormAnswers,
+                            sessionUnitScopedFormAnswersByRemoteUnitId,
+                            syncedSessionUnitsByLocalId,
+                            syncedSession.localId,
+                            syncedRemoteSessionId,
                         )
                     }
+                    syncFormAnswersResult.onError { registerFailure(it.toString(context)) }
+                    syncFormAnswersResult is DomainResult.Success
                 }
-            } else {
-                val localSurveillanceForm =
-                    surveillanceFormRepository.getSurveillanceFormBySessionId(syncedSession.localId)
-                if (localSurveillanceForm != null) {
-                    when (val syncSurveillanceFormResult = syncSurveillanceFormIfNeeded(
-                        localSurveillanceForm, syncedSession.localId, syncedSession.remoteId
-                    )) {
-                        is DomainResult.Success -> syncSurveillanceFormResult.data
-                        is DomainResult.Error -> return retryOrFailure(
-                            syncSurveillanceFormResult.error.toString(context)
-                        )
-                    }
-                }
+                recordStepStatus(localSessionId, MetadataUploadStep.FORM_ANSWERS, areFormAnswersSynced)
             }
 
-            var hasFailure = false
+            if (localSurveillanceForm != null) {
+                val syncSurveillanceFormResult = syncWithRecovery(
+                    recoveryTemplate = recoveryTemplate,
+                    route = UploadRoutes.surveillanceForm(syncedRemoteSessionId),
+                    requestData = {
+                        recoveryJson.encodeToJsonElement(
+                            localSurveillanceForm.toPostSurveillanceFormRequestDto(syncedRemoteSessionId)
+                        )
+                    },
+                ) {
+                    syncSurveillanceFormIfNeeded(
+                        localSurveillanceForm, syncedSession.localId, syncedRemoteSessionId
+                    )
+                }
+                syncSurveillanceFormResult.onError { registerFailure(it.toString(context)) }
+                recordStepStatus(
+                    localSessionId,
+                    MetadataUploadStep.SURVEILLANCE_FORM,
+                    isSuccessful = syncSurveillanceFormResult is DomainResult.Success
+                )
+            }
+
+            var areAllSpecimensSynced = true
+            var areAllSpecimenImagesSynced = true
             localSpecimensWithImagesAndInferenceResults.forEachIndexed { specimenIndex, specimenWithImagesAndInferenceResults ->
+                val localSpecimen = specimenWithImagesAndInferenceResults.specimen
                 val totalImagesForSpecimen =
                     specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.size
 
                 val syncedLocalSessionUnitId = specimenRepository.getSessionUnitIdForSpecimen(
-                    specimenWithImagesAndInferenceResults.specimen.id,
+                    localSpecimen.id,
                     syncedSession.localId,
                 )
                 val syncedRemoteSessionUnitId = syncedLocalSessionUnitId?.let {
                     syncedSessionUnitsByLocalId[it]?.remoteId
                 }
 
-                val syncedSpecimen = when (val syncSpecimenResult = syncSpecimenIfNeeded(
-                    specimenWithImagesAndInferenceResults.specimen,
-                    syncedSession.localId,
-                    syncedSession.remoteId,
-                    syncedLocalSessionUnitId,
-                    syncedRemoteSessionUnitId,
-                    totalImagesForSpecimen,
-                )) {
-                    is DomainResult.Success -> syncSpecimenResult.data
-                    is DomainResult.Error -> {
-                        hasFailure = true
-                        specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
-                            if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
-                                specimenImageRepository.updateSpecimenImage(
-                                    specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
-                                    specimenWithImagesAndInferenceResults.specimen.id,
-                                    syncedSession.localId
+                // A specimen whose unit failed to sync would otherwise be created without its unit link.
+                val syncedSpecimen = if (syncedLocalSessionUnitId in failedSessionUnitLocalIds) {
+                    null
+                } else {
+                    val syncSpecimenResult = syncWithRecovery(
+                        recoveryTemplate = recoveryTemplate,
+                        route = UploadRoutes.specimens(syncedRemoteSessionId),
+                        requestData = {
+                            recoveryJson.encodeToJsonElement(
+                                localSpecimen.toPostSpecimenRequestDto(
+                                    syncedRemoteSessionUnitId, totalImagesForSpecimen
                                 )
-                            }
-                        }
-                        return@forEachIndexed
+                            )
+                        },
+                    ) {
+                        syncSpecimenIfNeeded(
+                            localSpecimen,
+                            syncedSession.localId,
+                            syncedRemoteSessionId,
+                            syncedLocalSessionUnitId,
+                            syncedRemoteSessionUnitId,
+                            totalImagesForSpecimen,
+                        )
                     }
+                    syncSpecimenResult.onError { registerFailure(it.toString(context)) }
+                    syncSpecimenResult.successOrNull()
+                }
+                val syncedRemoteSpecimenId = syncedSpecimen?.remoteId
+
+                if (syncedSpecimen == null || syncedRemoteSpecimenId == null) {
+                    areAllSpecimensSynced = false
+                    specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
+                        if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
+                            areAllSpecimenImagesSynced = false
+                            specimenImageRepository.updateSpecimenImage(
+                                specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
+                                localSpecimen.id,
+                                syncedSession.localId
+                            )
+                        }
+                    }
+                    return@forEachIndexed
                 }
 
                 specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEachIndexed { imageIndex, (specimenImage, inferenceResult) ->
                     if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
-                        syncSpecimenImageAndInferenceResultIfNeeded(
-                            specimenImage, inferenceResult, syncedSpecimen, syncedSession.localId
-                        ).onSuccess {
+                        syncWithRecovery(
+                            recoveryTemplate = recoveryTemplate,
+                            route = UploadRoutes.specimenImagesData(syncedRemoteSpecimenId),
+                            requestData = {
+                                recoveryJson.encodeToJsonElement(
+                                    specimenImage.toPostSpecimenImageRequestDto(inferenceResult)
+                                )
+                            },
+                        ) {
+                            syncSpecimenImageAndInferenceResultIfNeeded(
+                                specimenImage, inferenceResult, syncedSpecimen, syncedSession.localId
+                            )
+                        }.onSuccess {
                             showSpecimenProgressNotification(
                                 specimenId = syncedSpecimen.id,
                                 currentSpecimenIndex = specimenIndex,
@@ -257,7 +433,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                                 totalImagesForSpecimen = totalImagesForSpecimen
                             )
                         }.onError {
-                            hasFailure = true
+                            areAllSpecimenImagesSynced = false
+                            registerFailure(context.getString(R.string.upload_error_images_failed))
                             specimenImageRepository.updateSpecimenImage(
                                 specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
                                 syncedSpecimen.id,
@@ -267,20 +444,97 @@ class MetadataUploadWorker @AssistedInject constructor(
                     }
                 }
             }
-
-            return if (hasFailure) {
-                retryOrComplete()
-            } else {
-                WorkerResult.success()
+            if (totalSpecimensForSession > 0) {
+                recordStepStatus(localSessionId, MetadataUploadStep.SPECIMENS, areAllSpecimensSynced)
             }
+            if (hasSpecimenImages) {
+                recordStepStatus(
+                    localSessionId, MetadataUploadStep.SPECIMEN_IMAGES, areAllSpecimenImagesSynced
+                )
+            }
+
+            return firstFailureMessage?.let { retryOrComplete(it) } ?: WorkerResult.success()
         } catch (e: IOException) {
+            failInProgressSteps(localSessionId)
             return retryOrFailure(context.getString(R.string.upload_error_lost_connection))
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            failInProgressSteps(localSessionId)
             return retryOrFailure(context.getString(R.string.upload_error_unknown))
         } finally {
             if (isStopped) {
-                resetInProgressUploads(localSession.localId)
+                withContext(NonCancellable) {
+                    resetInProgressUploads(localSession.localId)
+                    failInProgressSteps(localSessionId)
+                }
             }
+        }
+    }
+
+    private suspend fun <T> withApiRetries(
+        call: suspend () -> DomainResult<T, NetworkError>
+    ): DomainResult<T, NetworkError> {
+        var result = call()
+        for (retry in 1..MAX_API_RETRIES) {
+            if (result is DomainResult.Success) break
+            delay(API_RETRY_BASE_DELAY_MS * retry)
+            result = call()
+        }
+        return result
+    }
+
+    private suspend fun <T> syncWithRecovery(
+        recoveryTemplate: PostDataRecoveryRequestDto,
+        route: String,
+        requestData: suspend () -> JsonElement,
+        sync: suspend () -> DomainResult<T, NetworkError>,
+    ): DomainResult<T, NetworkError> {
+        val result = withApiRetries(sync)
+        if (result is DomainResult.Error) {
+            val recoveryRequest = recoveryTemplate.copy(
+                route = route,
+                error = result.error.name,
+                attemptCount = MAX_API_RETRIES + 1,
+                requestData = requestData(),
+                failedAt = System.currentTimeMillis(),
+            )
+            withApiRetries { dataRecoveryDataSource.postDataRecovery(recoveryRequest) }.onError {
+                Log.e(TAG, "Failed to report $route to data recovery: $it")
+            }
+        }
+        return result
+    }
+
+    private suspend fun markStepsInProgress(sessionId: UUID, steps: List<MetadataUploadStep>) {
+        steps.forEach { step -> upsertStepStatus(sessionId, step, UploadStatus.IN_PROGRESS) }
+    }
+
+    private suspend fun recordStepStatus(
+        sessionId: UUID, step: MetadataUploadStep, isSuccessful: Boolean
+    ) {
+        upsertStepStatus(
+            sessionId, step, if (isSuccessful) UploadStatus.COMPLETED else UploadStatus.FAILED
+        )
+    }
+
+    private suspend fun upsertStepStatus(
+        sessionId: UUID, step: MetadataUploadStep, status: UploadStatus
+    ) {
+        metadataUploadStatusRepository.upsertMetadataUploadStatus(
+            MetadataUploadStepStatus(
+                step = step,
+                status = status,
+                updatedAt = System.currentTimeMillis()
+            ),
+            sessionId
+        ).onError {
+            Log.e(TAG, "Failed to record $step upload status for session $sessionId: $it")
+        }
+    }
+
+    private suspend fun failInProgressSteps(sessionId: UUID) {
+        metadataUploadStatusRepository.failInProgressMetadataUploadStatuses(sessionId).onError {
+            Log.e(TAG, "Failed to clear in-progress upload statuses for session $sessionId: $it")
         }
     }
 
@@ -300,8 +554,8 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
-    private fun retryOrComplete(): WorkerResult {
-        showUploadRetryNotification(context.getString(R.string.upload_error_images_failed))
+    private fun retryOrComplete(message: String): WorkerResult {
+        showUploadRetryNotification(message)
         return if (runAttemptCount < MAX_RETRIES) {
             WorkerResult.retry()
         } else {
@@ -582,31 +836,34 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
+    private suspend fun resolveFormVersion(
+        sessionScopedAnswers: Map<Int, FormAnswer>,
+        sessionUnitScopedAnswersBySessionUnitRemoteId: Map<Int, Map<Int, FormAnswer>>,
+    ): String? {
+        val formId = (sessionScopedAnswers.keys + sessionUnitScopedAnswersBySessionUnitRemoteId.values.flatMap { it.keys })
+            .distinct()
+            .map { formQuestionRepository.getFormIdByQuestionId(it) }
+            .distinct()
+            .singleOrNull()
+            ?: return null
+        return formRepository.getFormById(formId)?.version
+    }
+
     private suspend fun syncFormAnswersIfNeeded(
         sessionScopedAnswers: Map<Int, FormAnswer>,
-        sessionUnitScopedAnswersBySessionUnitLocalId: Map<UUID, Map<Int, FormAnswer>>,
+        sessionUnitScopedAnswersBySessionUnitRemoteId: Map<Int, Map<Int, FormAnswer>>,
         syncedSessionUnitsByLocalId: Map<UUID, SessionUnit>,
         syncedLocalSessionId: UUID,
         syncedRemoteSessionId: Int,
     ): DomainResult<Unit, NetworkError> {
         return try {
-            val sessionUnitScopedAnswersBySessionUnitRemoteId =
-                sessionUnitScopedAnswersBySessionUnitLocalId.mapNotNull { (localId, answers) ->
-                    syncedSessionUnitsByLocalId[localId]?.remoteId?.let { it to answers }
-                }.toMap()
+            if (sessionScopedAnswers.isEmpty() && sessionUnitScopedAnswersBySessionUnitRemoteId.values.all { it.isEmpty() }) {
+                return DomainResult.Success(Unit)
+            }
 
-            val questionIds = (sessionScopedAnswers.keys + sessionUnitScopedAnswersBySessionUnitRemoteId.values.flatMap { it.keys })
-                .distinct()
-            if (questionIds.isEmpty()) return DomainResult.Success(Unit)
-
-            val formId = questionIds
-                .map { formQuestionRepository.getFormIdByQuestionId(it) }
-                .distinct()
-                .singleOrNull()
-                ?: return DomainResult.Error(NetworkError.CLIENT_ERROR)
-
-            val formVersion = formRepository.getFormById(formId)?.version
-                ?: return DomainResult.Error(NetworkError.CLIENT_ERROR)
+            val formVersion = resolveFormVersion(
+                sessionScopedAnswers, sessionUnitScopedAnswersBySessionUnitRemoteId
+            ) ?: return DomainResult.Error(NetworkError.CLIENT_ERROR)
 
             val localFormAnswersDtoByKey: Map<Pair<Int, Int?>, FormAnswerDto> = buildMap {
                 sessionScopedAnswers.forEach { (questionId, answer) ->

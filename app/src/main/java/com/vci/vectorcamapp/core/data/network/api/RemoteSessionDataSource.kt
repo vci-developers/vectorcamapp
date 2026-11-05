@@ -1,8 +1,8 @@
 package com.vci.vectorcamapp.core.data.network.api
 
-import com.vci.vectorcamapp.core.data.dto.session.PostSessionRequestDto
 import com.vci.vectorcamapp.core.data.dto.session.PostSessionResponseDto
 import com.vci.vectorcamapp.core.data.dto.session.SessionDto
+import com.vci.vectorcamapp.core.data.mappers.toPostSessionRequestDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.safeCall
 import com.vci.vectorcamapp.core.domain.model.Session
@@ -28,29 +28,8 @@ class RemoteSessionDataSource @Inject constructor(
         }
 
         return safeCall<PostSessionResponseDto> {
-            httpClient.post(constructUrl("sessions")) {
-                setBody(
-                    PostSessionRequestDto(
-                        frontendId = session.localId,
-                        hardwareId = session.hardwareId,
-                        collectorTitle = session.collectorTitle,
-                        collectorName = session.collectorName,
-                        collectorLastTrainedOn = session.collectorLastTrainedOn,
-                        collectionDate = session.collectionDate,
-                        collectionMethod = session.collectionMethod,
-                        specimenCondition = session.specimenCondition,
-                        createdAt = session.createdAt,
-                        completedAt = session.completedAt,
-                        notes = session.notes,
-                        latitude = session.latitude,
-                        longitude = session.longitude,
-                        gpsAccuracy = session.gpsAccuracy,
-                        type = session.type,
-                        expectedSpecimens = expectedSpecimens,
-                        siteId = siteId,
-                        deviceId = deviceId,
-                    )
-                )
+            httpClient.post(constructUrl(UploadRoutes.SESSIONS)) {
+                setBody(session.toPostSessionRequestDto(siteId, deviceId, expectedSpecimens))
             }
         }
     }

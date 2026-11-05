@@ -8,6 +8,7 @@ import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.repository.MetadataUploadStatusRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
@@ -39,6 +40,7 @@ class CompleteSessionListViewModelTest {
 
     private lateinit var context: Context
     private lateinit var sessionRepository: SessionRepository
+    private lateinit var metadataUploadStatusRepository: MetadataUploadStatusRepository
     private lateinit var specimenRepository: SpecimenRepository
     private lateinit var specimenImageRepository: SpecimenImageRepository
     private lateinit var workManagerRepository: WorkManagerRepository
@@ -88,6 +90,7 @@ class CompleteSessionListViewModelTest {
         every { context.getString(any()) } returns ""
 
         sessionRepository = mockk(relaxed = true)
+        metadataUploadStatusRepository = mockk(relaxed = true)
         specimenRepository = mockk(relaxed = true)
         specimenImageRepository = mockk(relaxed = true)
         workManagerRepository = mockk(relaxed = true)
@@ -103,12 +106,14 @@ class CompleteSessionListViewModelTest {
         every { specimenImageRepository.observeUploadedImageCountForSession(any()) } returns flowOf(0)
         every { specimenImageRepository.observeFailedImageCountForSession(any()) } returns flowOf(0)
         every { workManagerRepository.observeIsSessionActivelyUploading(any()) } returns flowOf(false)
+        every { metadataUploadStatusRepository.observeMetadataUploadStatusesForSession(any()) } returns flowOf(emptyList())
         coEvery { specimenImageRepository.getTotalCountForSession(any()) } returns 0
     }
 
     private fun makeViewModel() = CompleteSessionListViewModel(
         context = context,
         sessionRepository = sessionRepository,
+        metadataUploadStatusRepository = metadataUploadStatusRepository,
         specimenRepository = specimenRepository,
         specimenImageRepository = specimenImageRepository,
         workManagerRepository = workManagerRepository,
