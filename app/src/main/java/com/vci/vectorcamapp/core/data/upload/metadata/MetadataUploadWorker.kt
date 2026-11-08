@@ -6,6 +6,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.vci.vectorcamapp.R
+import com.vci.vectorcamapp.core.data.dto.data_recovery.DataRecoveryPayloadDto
 import com.vci.vectorcamapp.core.data.dto.data_recovery.PostDataRecoveryRequestDto
 import com.vci.vectorcamapp.core.data.dto.device.DeviceDto
 import com.vci.vectorcamapp.core.data.dto.form_answer.FormAnswerDto
@@ -27,6 +28,7 @@ import com.vci.vectorcamapp.core.data.mappers.toRegisterDeviceRequestDto
 import com.vci.vectorcamapp.core.data.network.api.UploadRoutes
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
+import com.vci.vectorcamapp.core.domain.model.DataRecoverySubmission
 import com.vci.vectorcamapp.core.domain.model.Device
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
@@ -46,6 +48,7 @@ import com.vci.vectorcamapp.core.domain.network.api.SessionUnitDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SpecimenImageDataSource
 import com.vci.vectorcamapp.core.domain.network.api.SurveillanceFormDataSource
+import com.vci.vectorcamapp.core.domain.repository.DataRecoverySubmissionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
@@ -74,6 +77,7 @@ import kotlinx.io.IOException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import java.util.Calendar
 import java.util.UUID
 import androidx.work.ListenableWorker.Result as WorkerResult
 import com.vci.vectorcamapp.core.domain.util.Result as DomainResult
@@ -99,6 +103,7 @@ class MetadataUploadWorker @AssistedInject constructor(
     private val specimenImageDataSource: SpecimenImageDataSource,
     private val formAnswerDataSource: FormAnswerDataSource,
     private val dataRecoveryDataSource: DataRecoveryDataSource,
+    private val dataRecoverySubmissionRepository: DataRecoverySubmissionRepository,
     private val formAnswerRepository: FormAnswerRepository,
     private val formRepository: FormRepository,
     private val formQuestionRepository: FormQuestionRepository,
@@ -119,6 +124,8 @@ class MetadataUploadWorker @AssistedInject constructor(
     }
 
     private var notificationId = 1001
+    private val uploadOutcomes = MetadataUploadOutcomes()
+    private val submittedRecoveryKeys = mutableSetOf<String>()
 
     override suspend fun doWork(): WorkerResult {
         val localSessionIdString = inputData.getString("session_id")
@@ -147,20 +154,26 @@ class MetadataUploadWorker @AssistedInject constructor(
         notificationId = localSessionId.hashCode()
         setForeground(notifier.buildInitialMetadataForegroundInfo(notificationId))
 
+        val collectionCalendar = Calendar.getInstance().apply { timeInMillis = localSession.collectionDate }
         val recoveryTemplate = PostDataRecoveryRequestDto(
-            userId = "${localDevice.id}_${localDevice.registeredAt}",
-            deviceId = localDevice.id,
             programId = localProgramId,
+            siteId = localSiteId,
             sessionFrontendId = localSessionId,
-            method = "POST",
-            workerAttempt = runAttemptCount + 1,
+            year = collectionCalendar.get(Calendar.YEAR),
+            month = collectionCalendar.get(Calendar.MONTH) + 1,
+            payload = DataRecoveryPayloadDto(
+                userId = "${localDevice.id}_${localDevice.registeredAt}",
+                deviceId = localDevice.id,
+                method = "POST",
+                workerAttempt = runAttemptCount + 1,
+            ),
         )
 
         try {
-            var firstFailureMessage: String? = null
-            fun registerFailure(message: String) {
-                if (firstFailureMessage == null) firstFailureMessage = message
-            }
+            submittedRecoveryKeys += dataRecoverySubmissionRepository.getSubmittedIdempotencyKeysForSession(
+                localSessionId
+            )
+            val dependencyFailureMessage = context.getString(R.string.upload_error_dependency_not_uploaded)
 
             val usesDynamicForm = localProgram.formVersion != null
             val localSessionUnits = if (usesDynamicForm) {
@@ -203,27 +216,21 @@ class MetadataUploadWorker @AssistedInject constructor(
             }
             markStepsInProgress(localSessionId, applicableSteps)
 
-            val syncedDevice = when (val syncDeviceResult = syncWithRecovery(
+            val syncedDevice = syncWithRecovery(
                 recoveryTemplate = recoveryTemplate,
+                step = MetadataUploadStep.DEVICE,
+                itemId = localDevice.id.toString(),
                 route = UploadRoutes.REGISTER_DEVICE,
                 requestData = {
                     recoveryJson.encodeToJsonElement(localDevice.toRegisterDeviceRequestDto(localProgramId))
                 },
-            ) { syncDeviceIfNeeded(localDevice, localProgramId) }) {
-                is DomainResult.Success -> {
-                    recordStepStatus(localSessionId, MetadataUploadStep.DEVICE, isSuccessful = true)
-                    syncDeviceResult.data
-                }
-
-                is DomainResult.Error -> {
-                    recordStepStatus(localSessionId, MetadataUploadStep.DEVICE, isSuccessful = false)
-                    registerFailure(syncDeviceResult.error.toString(context))
-                    localDevice
-                }
-            }
+            ) { syncDeviceIfNeeded(localDevice, localProgramId) }.successOrNull() ?: localDevice
+            recordStepStatus(localSessionId, MetadataUploadStep.DEVICE)
 
             val syncSessionResult = syncWithRecovery(
                 recoveryTemplate = recoveryTemplate,
+                step = MetadataUploadStep.SESSION,
+                itemId = localSessionId.toString(),
                 route = UploadRoutes.SESSIONS,
                 requestData = {
                     recoveryJson.encodeToJsonElement(
@@ -244,12 +251,14 @@ class MetadataUploadWorker @AssistedInject constructor(
             }
             val syncedSession = syncSessionResult.successOrNull()
             val syncedRemoteSessionId = syncedSession?.remoteId
-            recordStepStatus(
-                localSessionId,
-                MetadataUploadStep.SESSION,
-                isSuccessful = syncedRemoteSessionId != null
-            )
             if (syncedSession == null || syncedRemoteSessionId == null) {
+                if (syncSessionResult is DomainResult.Success) {
+                    uploadOutcomes.markFailed(
+                        MetadataUploadStep.SESSION,
+                        context.getString(R.string.upload_error_session_not_found_server)
+                    )
+                }
+                recordStepStatus(localSessionId, MetadataUploadStep.SESSION)
                 // Every remaining endpoint is scoped under the remote session id.
                 failInProgressSteps(localSessionId)
                 return retryOrFailure(
@@ -257,12 +266,15 @@ class MetadataUploadWorker @AssistedInject constructor(
                         ?: context.getString(R.string.upload_error_session_not_found_server)
                 )
             }
+            recordStepStatus(localSessionId, MetadataUploadStep.SESSION)
 
             val syncedSessionUnitsByLocalId = mutableMapOf<UUID, SessionUnit>()
             val failedSessionUnitLocalIds = mutableSetOf<UUID>()
             localSessionUnits.forEach { localSessionUnit ->
-                when (val syncSessionUnitResult = syncWithRecovery(
+                syncWithRecovery(
                     recoveryTemplate = recoveryTemplate,
+                    step = MetadataUploadStep.SESSION_UNITS,
+                    itemId = localSessionUnit.localId.toString(),
                     route = UploadRoutes.sessionUnits(syncedRemoteSessionId),
                     requestData = {
                         recoveryJson.encodeToJsonElement(localSessionUnit.toPostSessionUnitRequestDto())
@@ -273,38 +285,31 @@ class MetadataUploadWorker @AssistedInject constructor(
                         syncedSession.localId,
                         syncedRemoteSessionId
                     )
-                }) {
-                    is DomainResult.Success -> {
-                        syncedSessionUnitsByLocalId[localSessionUnit.localId] = syncSessionUnitResult.data
-                    }
-
-                    is DomainResult.Error -> {
-                        failedSessionUnitLocalIds += localSessionUnit.localId
-                        registerFailure(syncSessionUnitResult.error.toString(context))
-                    }
+                }.onSuccess { syncedSessionUnit ->
+                    syncedSessionUnitsByLocalId[localSessionUnit.localId] = syncedSessionUnit
+                }.onError {
+                    failedSessionUnitLocalIds += localSessionUnit.localId
                 }
             }
             if (localSessionUnits.isNotEmpty()) {
-                recordStepStatus(
-                    localSessionId,
-                    MetadataUploadStep.SESSION_UNITS,
-                    isSuccessful = failedSessionUnitLocalIds.isEmpty()
-                )
+                recordStepStatus(localSessionId, MetadataUploadStep.SESSION_UNITS)
             }
 
             if (hasFormAnswers) {
                 // The answers endpoint only accepts the first submission for a session, so posting before
                 // every unit has a remote id would permanently drop the answers of the missing units.
-                val areFormAnswersSynced = if (failedSessionUnitLocalIds.isNotEmpty()) {
-                    false
+                if (failedSessionUnitLocalIds.isNotEmpty()) {
+                    uploadOutcomes.markFailed(MetadataUploadStep.FORM_ANSWERS, dependencyFailureMessage)
                 } else {
                     val sessionUnitScopedFormAnswersByRemoteUnitId =
                         sessionUnitScopedFormAnswersByLocalUnitId.mapNotNull { (localUnitId, answers) ->
                             syncedSessionUnitsByLocalId[localUnitId]?.remoteId?.let { it to answers }
                         }.toMap()
 
-                    val syncFormAnswersResult = syncWithRecovery(
+                    syncWithRecovery(
                         recoveryTemplate = recoveryTemplate,
+                        step = MetadataUploadStep.FORM_ANSWERS,
+                        itemId = localSessionId.toString(),
                         route = UploadRoutes.formAnswers(syncedRemoteSessionId),
                         requestData = {
                             recoveryJson.encodeToJsonElement(
@@ -327,15 +332,15 @@ class MetadataUploadWorker @AssistedInject constructor(
                             syncedRemoteSessionId,
                         )
                     }
-                    syncFormAnswersResult.onError { registerFailure(it.toString(context)) }
-                    syncFormAnswersResult is DomainResult.Success
                 }
-                recordStepStatus(localSessionId, MetadataUploadStep.FORM_ANSWERS, areFormAnswersSynced)
+                recordStepStatus(localSessionId, MetadataUploadStep.FORM_ANSWERS)
             }
 
             if (localSurveillanceForm != null) {
-                val syncSurveillanceFormResult = syncWithRecovery(
+                syncWithRecovery(
                     recoveryTemplate = recoveryTemplate,
+                    step = MetadataUploadStep.SURVEILLANCE_FORM,
+                    itemId = localSessionId.toString(),
                     route = UploadRoutes.surveillanceForm(syncedRemoteSessionId),
                     requestData = {
                         recoveryJson.encodeToJsonElement(
@@ -349,16 +354,9 @@ class MetadataUploadWorker @AssistedInject constructor(
                         syncedRemoteSessionId
                     )
                 }
-                syncSurveillanceFormResult.onError { registerFailure(it.toString(context)) }
-                recordStepStatus(
-                    localSessionId,
-                    MetadataUploadStep.SURVEILLANCE_FORM,
-                    isSuccessful = syncSurveillanceFormResult is DomainResult.Success
-                )
+                recordStepStatus(localSessionId, MetadataUploadStep.SURVEILLANCE_FORM)
             }
 
-            var areAllSpecimensSynced = true
-            var areAllSpecimenImagesSynced = true
             localSpecimensWithImagesAndInferenceResults.forEachIndexed { specimenIndex, specimenWithImagesAndInferenceResults ->
                 val localSpecimen = specimenWithImagesAndInferenceResults.specimen
                 val totalImagesForSpecimen =
@@ -374,10 +372,13 @@ class MetadataUploadWorker @AssistedInject constructor(
 
                 // A specimen whose unit failed to sync would otherwise be created without its unit link.
                 val syncedSpecimen = if (syncedLocalSessionUnitId in failedSessionUnitLocalIds) {
+                    uploadOutcomes.markFailed(MetadataUploadStep.SPECIMENS, dependencyFailureMessage)
                     null
                 } else {
-                    val syncSpecimenResult = syncWithRecovery(
+                    syncWithRecovery(
                         recoveryTemplate = recoveryTemplate,
+                        step = MetadataUploadStep.SPECIMENS,
+                        itemId = localSpecimen.id,
                         route = UploadRoutes.specimens(syncedRemoteSessionId),
                         requestData = {
                             recoveryJson.encodeToJsonElement(
@@ -396,17 +397,14 @@ class MetadataUploadWorker @AssistedInject constructor(
                             syncedRemoteSessionUnitId,
                             totalImagesForSpecimen,
                         )
-                    }
-                    syncSpecimenResult.onError { registerFailure(it.toString(context)) }
-                    syncSpecimenResult.successOrNull()
+                    }.successOrNull()
                 }
                 val syncedRemoteSpecimenId = syncedSpecimen?.remoteId
 
                 if (syncedSpecimen == null || syncedRemoteSpecimenId == null) {
-                    areAllSpecimensSynced = false
                     specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
                         if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
-                            areAllSpecimenImagesSynced = false
+                            uploadOutcomes.markFailed(MetadataUploadStep.SPECIMEN_IMAGES, dependencyFailureMessage)
                             specimenImageRepository.updateSpecimenImage(
                                 specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
                                 localSpecimen.id,
@@ -421,6 +419,8 @@ class MetadataUploadWorker @AssistedInject constructor(
                     if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
                         syncWithRecovery(
                             recoveryTemplate = recoveryTemplate,
+                            step = MetadataUploadStep.SPECIMEN_IMAGES,
+                            itemId = specimenImage.localId,
                             route = UploadRoutes.specimenImagesData(syncedRemoteSpecimenId),
                             requestData = {
                                 recoveryJson.encodeToJsonElement(
@@ -441,8 +441,6 @@ class MetadataUploadWorker @AssistedInject constructor(
                                 totalImagesForSpecimen = totalImagesForSpecimen
                             )
                         }.onError {
-                            areAllSpecimenImagesSynced = false
-                            registerFailure(context.getString(R.string.upload_error_images_failed))
                             specimenImageRepository.updateSpecimenImage(
                                 specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
                                 syncedSpecimen.id,
@@ -453,17 +451,15 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
             }
             if (totalSpecimensForSession > 0) {
-                recordStepStatus(localSessionId, MetadataUploadStep.SPECIMENS, areAllSpecimensSynced)
+                recordStepStatus(localSessionId, MetadataUploadStep.SPECIMENS)
             }
             if (hasSpecimenImages) {
-                recordStepStatus(
-                    localSessionId,
-                    MetadataUploadStep.SPECIMEN_IMAGES,
-                    areAllSpecimenImagesSynced
-                )
+                recordStepStatus(localSessionId, MetadataUploadStep.SPECIMEN_IMAGES)
             }
 
-            return firstFailureMessage?.let { retryOrComplete(it) } ?: WorkerResult.success()
+            // Failures that were captured by data recovery are not retried here; only data that
+            // reached neither the server nor the recovery table keeps the upload pending.
+            return uploadOutcomes.firstFailureMessage?.let { retryOrComplete(it) } ?: WorkerResult.success()
         } catch (e: IOException) {
             failInProgressSteps(localSessionId)
             return retryOrFailure(context.getString(R.string.upload_error_lost_connection))
@@ -496,38 +492,83 @@ class MetadataUploadWorker @AssistedInject constructor(
 
     private suspend fun <T> syncWithRecovery(
         recoveryTemplate: PostDataRecoveryRequestDto,
+        step: MetadataUploadStep,
+        itemId: String,
         route: String,
         requestData: suspend () -> JsonElement,
         sync: suspend () -> DomainResult<T, NetworkError>,
     ): DomainResult<T, NetworkError> {
         val result = withApiRetries(sync)
         if (result is DomainResult.Error) {
-            val recoveryRequest = recoveryTemplate.copy(
+            val isRecovered = reportToDataRecovery(
+                recoveryTemplate = recoveryTemplate,
+                idempotencyKey = "${recoveryTemplate.sessionFrontendId}:${step.name}:$itemId",
+                step = step,
                 route = route,
-                error = result.error.name,
-                attemptCount = MAX_API_RETRIES + 1,
-                requestData = requestData(),
-                failedAt = System.currentTimeMillis(),
+                error = result.error,
+                requestData = requestData,
             )
-            withApiRetries { dataRecoveryDataSource.postDataRecovery(recoveryRequest) }.onError {
-                Log.e(TAG, "Failed to report $route to data recovery: $it")
+            if (isRecovered) {
+                uploadOutcomes.markRecovered(step)
+            } else {
+                uploadOutcomes.markFailed(step, result.error.toString(context))
             }
         }
         return result
+    }
+
+    private suspend fun reportToDataRecovery(
+        recoveryTemplate: PostDataRecoveryRequestDto,
+        idempotencyKey: String,
+        step: MetadataUploadStep,
+        route: String,
+        error: NetworkError,
+        requestData: suspend () -> JsonElement,
+    ): Boolean {
+        if (idempotencyKey in submittedRecoveryKeys) return true
+
+        val attemptCount = MAX_API_RETRIES + 1
+        val recoveryRequest = recoveryTemplate.copy(
+            idempotencyKey = idempotencyKey,
+            payload = recoveryTemplate.payload.copy(
+                route = route,
+                error = error.name,
+                attemptCount = attemptCount,
+                failedAt = System.currentTimeMillis(),
+                requestData = requestData(),
+            ),
+            notes = "${recoveryTemplate.payload.method} $route failed with ${error.name} after $attemptCount attempts",
+        )
+        return when (val recoveryResult = withApiRetries { dataRecoveryDataSource.postDataRecovery(recoveryRequest) }) {
+            is DomainResult.Success -> {
+                submittedRecoveryKeys += idempotencyKey
+                dataRecoverySubmissionRepository.recordDataRecoverySubmission(
+                    DataRecoverySubmission(
+                        idempotencyKey = idempotencyKey,
+                        step = step,
+                        dataRecoveryId = recoveryResult.data.dataRecovery?.id,
+                        submittedAt = System.currentTimeMillis(),
+                    ),
+                    recoveryTemplate.sessionFrontendId,
+                ).onError {
+                    Log.e(TAG, "Failed to remember data recovery submission $idempotencyKey: $it")
+                }
+                true
+            }
+
+            is DomainResult.Error -> {
+                Log.e(TAG, "Failed to report $route to data recovery: ${recoveryResult.error}")
+                false
+            }
+        }
     }
 
     private suspend fun markStepsInProgress(sessionId: UUID, steps: List<MetadataUploadStep>) {
         steps.forEach { step -> upsertStepStatus(sessionId, step, UploadStatus.IN_PROGRESS) }
     }
 
-    private suspend fun recordStepStatus(
-        sessionId: UUID, step: MetadataUploadStep, isSuccessful: Boolean
-    ) {
-        upsertStepStatus(
-            sessionId,
-            step,
-            if (isSuccessful) UploadStatus.COMPLETED else UploadStatus.FAILED
-        )
+    private suspend fun recordStepStatus(sessionId: UUID, step: MetadataUploadStep) {
+        upsertStepStatus(sessionId, step, uploadOutcomes.statusOf(step))
     }
 
     private suspend fun upsertStepStatus(
@@ -1192,5 +1233,28 @@ class MetadataUploadWorker @AssistedInject constructor(
         } catch (e: Exception) {
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
+    }
+}
+
+private class MetadataUploadOutcomes {
+    private val failedSteps = mutableSetOf<MetadataUploadStep>()
+    private val recoveredSteps = mutableSetOf<MetadataUploadStep>()
+
+    var firstFailureMessage: String? = null
+        private set
+
+    fun markFailed(step: MetadataUploadStep, message: String) {
+        failedSteps += step
+        if (firstFailureMessage == null) firstFailureMessage = message
+    }
+
+    fun markRecovered(step: MetadataUploadStep) {
+        recoveredSteps += step
+    }
+
+    fun statusOf(step: MetadataUploadStep): UploadStatus = when (step) {
+        in failedSteps -> UploadStatus.FAILED
+        in recoveredSteps -> UploadStatus.RECOVERED
+        else -> UploadStatus.COMPLETED
     }
 }

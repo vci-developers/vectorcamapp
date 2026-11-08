@@ -9,6 +9,7 @@
     <string name="upload_status_completed">Terminé</string>
     <string name="upload_status_in_progress">En cours</string>
     <string name="upload_status_not_started">Non démarré</string>
+    <string name="upload_status_recovered">Envoyé pour récupération</string>
     <string name="upload_status_retry">Réessayer</string>
 
     <!-- Session Type -->

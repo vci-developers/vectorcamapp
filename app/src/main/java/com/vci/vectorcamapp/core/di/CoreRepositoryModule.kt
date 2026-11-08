@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.core.di
 
 import com.vci.vectorcamapp.core.data.repository.CollectorRepositoryImplementation
+import com.vci.vectorcamapp.core.data.repository.DataRecoverySubmissionRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.FormAnswerRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.FormQuestionRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.FormRepositoryImplementation
@@ -16,6 +17,7 @@ import com.vci.vectorcamapp.core.data.repository.SpecimenRepositoryImplementatio
 import com.vci.vectorcamapp.core.data.repository.SurveillanceFormRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.WorkManagerRepositoryImplementation
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.DataRecoverySubmissionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
@@ -123,6 +125,12 @@ abstract class CoreRepositoryModule {
     abstract fun bindMetadataUploadStatusRepository(
         metadataUploadStatusRepositoryImplementation: MetadataUploadStatusRepositoryImplementation
     ): MetadataUploadStatusRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDataRecoverySubmissionRepository(
+        dataRecoverySubmissionRepositoryImplementation: DataRecoverySubmissionRepositoryImplementation
+    ): DataRecoverySubmissionRepository
 
     @Binds
     abstract fun bindWorkManagerRepository(

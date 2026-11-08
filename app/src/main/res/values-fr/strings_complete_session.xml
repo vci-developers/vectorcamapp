@@ -69,6 +69,7 @@
     <!-- Status -->
     <string name="complete_session_status_completed">Terminé</string>
     <string name="complete_session_status_not_started">Non démarré</string>
+    <string name="complete_session_status_metadata_failed">Certaines données n\'ont pas pu être envoyées</string>
     <string name="complete_session_status_metadata_progress">%1$d / %2$d métadonnées</string>
     <string name="complete_session_status_image_progress">%1$d / %2$d images</string>
 
@@ -103,6 +104,7 @@
     <string name="complete_session_content_description_location">Localisation</string>
     <string name="complete_session_content_description_uploading">Envoi en cours</string>
     <string name="complete_session_content_description_upload_step_succeeded">Envoyé</string>
+    <string name="complete_session_content_description_upload_step_recovered">Envoyé pour récupération</string>
     <string name="complete_session_content_description_upload_step_failed">Échoué</string>
     <string name="complete_session_content_description_refresh">Actualiser</string>
     <string name="complete_session_content_description_upload">Envoyer</string>

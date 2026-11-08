@@ -122,5 +122,6 @@
     <string name="upload_error_lost_connection">Lost internet connection while uploading.</string>
     <string name="upload_error_unknown">An unknown error occurred during upload.</string>
     <string name="upload_error_images_failed">Upload failed for one or more images.</string>
+    <string name="upload_error_dependency_not_uploaded">Some data was not uploaded because the data it depends on failed to upload.</string>
 
 </resources>

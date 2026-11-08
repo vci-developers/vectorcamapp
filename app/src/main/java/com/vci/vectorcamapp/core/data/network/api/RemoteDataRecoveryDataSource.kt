@@ -1,6 +1,7 @@
 package com.vci.vectorcamapp.core.data.network.api
 
 import com.vci.vectorcamapp.core.data.dto.data_recovery.PostDataRecoveryRequestDto
+import com.vci.vectorcamapp.core.data.dto.data_recovery.PostDataRecoveryResponseDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.safeCall
 import com.vci.vectorcamapp.core.domain.network.api.DataRecoveryDataSource
@@ -17,8 +18,8 @@ class RemoteDataRecoveryDataSource @Inject constructor(
 
     override suspend fun postDataRecovery(
         request: PostDataRecoveryRequestDto
-    ): Result<Unit, NetworkError> {
-        return safeCall<Unit> {
+    ): Result<PostDataRecoveryResponseDto, NetworkError> {
+        return safeCall<PostDataRecoveryResponseDto> {
             httpClient.post(constructUrl(UploadRoutes.DATA_RECOVERIES)) {
                 setBody(request)
             }

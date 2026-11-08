@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
 import com.vci.vectorcamapp.core.data.room.VectorCamDatabase
 import com.vci.vectorcamapp.core.data.room.dao.CollectorDao
+import com.vci.vectorcamapp.core.data.room.dao.DataRecoverySubmissionDao
 import com.vci.vectorcamapp.core.data.room.dao.FormAnswerDao
 import com.vci.vectorcamapp.core.data.room.dao.FormDao
 import com.vci.vectorcamapp.core.data.room.dao.FormQuestionDao
@@ -90,4 +91,8 @@ object RoomDatabaseModule {
     @Provides
     fun provideMetadataUploadStatusDao(db: VectorCamDatabase): MetadataUploadStatusDao =
         db.metadataUploadStatusDao
+
+    @Provides
+    fun provideDataRecoverySubmissionDao(db: VectorCamDatabase): DataRecoverySubmissionDao =
+        db.dataRecoverySubmissionDao
 }

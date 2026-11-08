@@ -122,5 +122,6 @@
     <string name="upload_error_lost_connection">Se perdió la conexión a internet durante la subida.</string>
     <string name="upload_error_unknown">Ocurrió un error desconocido durante la subida.</string>
     <string name="upload_error_images_failed">La subida falló para una o más imágenes.</string>
+    <string name="upload_error_dependency_not_uploaded">Algunos datos no se subieron porque los datos de los que dependen no se pudieron subir.</string>
 
 </resources>

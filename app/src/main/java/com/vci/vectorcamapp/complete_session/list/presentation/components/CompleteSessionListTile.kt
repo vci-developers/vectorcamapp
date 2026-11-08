@@ -64,9 +64,13 @@ fun CompleteSessionListTile(
     val dateTimeFormatter = rememberDateFormatter(R.string.core_date_format_medium_with_time)
 
     val sessionMetadataUploaded = session.submittedAt != null
+    val isSessionUploadComplete = sessionMetadataUploaded &&
+        sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount &&
+        sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount &&
+        !sessionUploadProgress.hasFailedMetadataUploadStep
 
     val progressColor = when {
-        sessionMetadataUploaded && sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount && sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount -> MaterialTheme.colors.primary
+        isSessionUploadComplete -> MaterialTheme.colors.primary
         sessionUploadProgress.isUploading -> MaterialTheme.colors.warning
         else -> MaterialTheme.colors.error
     }
@@ -271,9 +275,16 @@ fun CompleteSessionListTile(
                         }
                         Text(
                             text = when {
-                                sessionMetadataUploaded && sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount && sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount -> stringResource(R.string.complete_session_status_completed)
+                                isSessionUploadComplete -> stringResource(R.string.complete_session_status_completed)
                                 !sessionMetadataUploaded -> stringResource(R.string.complete_session_status_not_started)
-                                sessionUploadProgress.uploadedMetadataCount != sessionUploadProgress.totalCount -> stringResource(R.string.complete_session_status_metadata_progress, sessionUploadProgress.uploadedMetadataCount, sessionUploadProgress.totalCount)
+                                sessionUploadProgress.hasFailedMetadataUploadStep -> stringResource(
+                                    R.string.complete_session_status_metadata_failed
+                                )
+                                sessionUploadProgress.uploadedMetadataCount != sessionUploadProgress.totalCount -> stringResource(
+                                    R.string.complete_session_status_metadata_progress,
+                                    sessionUploadProgress.uploadedMetadataCount,
+                                    sessionUploadProgress.totalCount
+                                )
                                 else -> stringResource(R.string.complete_session_status_image_progress, sessionUploadProgress.uploadedImageCount, sessionUploadProgress.totalCount)
                             },
                             style = MaterialTheme.typography.bodySmall,
@@ -350,6 +361,17 @@ fun CompleteSessionListTile(
                                                 R.string.complete_session_content_description_upload_step_succeeded
                                             ),
                                             tint = MaterialTheme.colors.successConfirm,
+                                            modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraSmall)
+                                        )
+                                    }
+
+                                    stepStatus.status == UploadStatus.RECOVERED -> {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_database),
+                                            contentDescription = stringResource(
+                                                R.string.complete_session_content_description_upload_step_recovered
+                                            ),
+                                            tint = MaterialTheme.colors.info,
                                             modifier = Modifier.size(MaterialTheme.dimensions.iconSizeExtraSmall)
                                         )
                                     }

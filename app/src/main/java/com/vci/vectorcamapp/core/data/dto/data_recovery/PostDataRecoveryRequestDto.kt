@@ -8,16 +8,26 @@ import java.util.UUID
 
 @Serializable
 data class PostDataRecoveryRequestDto(
-    val userId: String = "",
-    val deviceId: Int = -1,
-    val programId: Int = -1,
+    val idempotencyKey: String = "",
+    val payload: DataRecoveryPayloadDto = DataRecoveryPayloadDto(),
+    val programId: Int? = null,
+    val siteId: Int? = null,
     @Serializable(with = UuidSerializer::class)
     val sessionFrontendId: UUID = UUID(0, 0),
+    val year: Int? = null,
+    val month: Int? = null,
+    val notes: String? = null,
+)
+
+@Serializable
+data class DataRecoveryPayloadDto(
+    val userId: String = "",
+    val deviceId: Int = -1,
     val method: String = "",
     val route: String = "",
     val error: String = "",
     val attemptCount: Int = 0,
     val workerAttempt: Int = 0,
-    val requestData: JsonElement = JsonNull,
     val failedAt: Long = 0L,
+    val requestData: JsonElement = JsonNull,
 )

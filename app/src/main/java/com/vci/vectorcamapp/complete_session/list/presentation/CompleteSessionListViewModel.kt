@@ -143,7 +143,12 @@ class CompleteSessionListViewModel @Inject constructor(
                             }
                         }
 
-                        if (isSessionUploaded && areSpecimensUploaded) continue
+                        val hasFailedMetadataUploadStep = metadataUploadStatusRepository
+                            .observeMetadataUploadStatusesForSession(session.localId)
+                            .first()
+                            .any { it.status == UploadStatus.FAILED }
+
+                        if (isSessionUploaded && areSpecimensUploaded && !hasFailedMetadataUploadStep) continue
 
                         workManagerRepository.enqueueSessionUpload(session.localId, site.id)
                         didEnqueueUpload = true
@@ -172,6 +177,7 @@ class CompleteSessionListViewModel @Inject constructor(
 
         return when {
             sessionUploadProgress.failedImageCount > 0 -> UploadStatus.FAILED.displayText(context)
+            sessionUploadProgress.hasFailedMetadataUploadStep -> UploadStatus.FAILED.displayText(context)
             isComplete -> UploadStatus.COMPLETED.displayText(context)
             sessionUploadProgress.isUploading -> UploadStatus.IN_PROGRESS.displayText(context)
             else -> UploadStatus.NOT_STARTED.displayText(context)

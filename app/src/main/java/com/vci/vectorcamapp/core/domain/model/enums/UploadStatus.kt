@@ -4,5 +4,6 @@ enum class UploadStatus {
     COMPLETED,
     IN_PROGRESS,
     NOT_STARTED,
+    RECOVERED,
     FAILED
 }

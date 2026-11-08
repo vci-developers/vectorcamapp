@@ -69,6 +69,7 @@
     <!-- Status -->
     <string name="complete_session_status_completed">Completado</string>
     <string name="complete_session_status_not_started">No iniciado</string>
+    <string name="complete_session_status_metadata_failed">Algunos datos no se pudieron subir</string>
     <string name="complete_session_status_metadata_progress">%1$d / %2$d metadatos</string>
     <string name="complete_session_status_image_progress">%1$d / %2$d imágenes</string>
 
@@ -103,6 +104,7 @@
     <string name="complete_session_content_description_location">Ubicación</string>
     <string name="complete_session_content_description_uploading">Subiendo actualmente</string>
     <string name="complete_session_content_description_upload_step_succeeded">Subido</string>
+    <string name="complete_session_content_description_upload_step_recovered">Enviado para recuperación</string>
     <string name="complete_session_content_description_upload_step_failed">Fallido</string>
     <string name="complete_session_content_description_refresh">Actualizar</string>
     <string name="complete_session_content_description_upload">Subir</string>

@@ -3,11 +3,14 @@ package com.vci.vectorcamapp.complete_session.list.presentation
 import android.content.Context
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.vci.vectorcamapp.core.domain.model.MetadataUploadStepStatus
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import com.vci.vectorcamapp.core.domain.model.enums.MetadataUploadStep
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
+import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.repository.MetadataUploadStatusRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
@@ -266,6 +269,50 @@ class CompleteSessionListViewModelTest {
 
         coVerify(exactly = 1) { workManagerRepository.enqueueSessionUpload(testSessionId, testSite.id) }
         coVerify(exactly = 1) { successMessageEmitter.emit(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION, any()) }
+    }
+
+    @Test
+    fun listVm_d04_uploadAllPendingSessions_withSubmittedSessionButFailedStep_enqueuesUpload() = runTest {
+        val submittedSession = testSession.copy(submittedAt = 9_999_999L)
+        completeSessionsFlow.value = listOf(SessionAndSite(submittedSession, testSite))
+        coEvery { specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(any(), any()) } returns
+            emptyList<SpecimenWithSpecimenImagesAndInferenceResults>()
+        every { metadataUploadStatusRepository.observeMetadataUploadStatusesForSession(testSessionId) } returns flowOf(
+            listOf(
+                MetadataUploadStepStatus(MetadataUploadStep.SESSION, UploadStatus.COMPLETED, 0L),
+                MetadataUploadStepStatus(MetadataUploadStep.FORM_ANSWERS, UploadStatus.FAILED, 0L),
+            )
+        )
+
+        val vm = makeViewModel()
+        advanceUntilIdle()
+
+        vm.onAction(CompleteSessionListAction.UploadAllPendingSessions)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { workManagerRepository.enqueueSessionUpload(testSessionId, testSite.id) }
+    }
+
+    @Test
+    fun listVm_d05_uploadAllPendingSessions_withRecoveredSteps_doesNotEnqueueAgain() = runTest {
+        val submittedSession = testSession.copy(submittedAt = 9_999_999L)
+        completeSessionsFlow.value = listOf(SessionAndSite(submittedSession, testSite))
+        coEvery { specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(any(), any()) } returns
+            emptyList<SpecimenWithSpecimenImagesAndInferenceResults>()
+        every { metadataUploadStatusRepository.observeMetadataUploadStatusesForSession(testSessionId) } returns flowOf(
+            listOf(
+                MetadataUploadStepStatus(MetadataUploadStep.SESSION, UploadStatus.COMPLETED, 0L),
+                MetadataUploadStepStatus(MetadataUploadStep.FORM_ANSWERS, UploadStatus.RECOVERED, 0L),
+            )
+        )
+
+        val vm = makeViewModel()
+        advanceUntilIdle()
+
+        vm.onAction(CompleteSessionListAction.UploadAllPendingSessions)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { workManagerRepository.enqueueSessionUpload(any(), any()) }
     }
 
     // ========================================
