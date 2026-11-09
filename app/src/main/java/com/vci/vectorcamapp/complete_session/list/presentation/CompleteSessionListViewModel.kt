@@ -178,6 +178,8 @@ class CompleteSessionListViewModel @Inject constructor(
         return when {
             sessionUploadProgress.failedImageCount > 0 -> UploadStatus.FAILED.displayText(context)
             sessionUploadProgress.hasFailedMetadataUploadStep -> UploadStatus.FAILED.displayText(context)
+            sessionUploadProgress.hasRecoveredMetadataUploadStep ->
+                UploadStatus.RECOVERED.displayText(context)
             isComplete -> UploadStatus.COMPLETED.displayText(context)
             sessionUploadProgress.isUploading -> UploadStatus.IN_PROGRESS.displayText(context)
             else -> UploadStatus.NOT_STARTED.displayText(context)

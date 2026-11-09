@@ -70,6 +70,8 @@
     <string name="complete_session_status_completed">Completed</string>
     <string name="complete_session_status_not_started">Not started</string>
     <string name="complete_session_status_metadata_failed">Some data failed to upload</string>
+    <string name="complete_session_status_sent_to_recovery">Some data was sent to recovery</string>
+    <string name="complete_session_upload_step_recovery_detail">Sent to recovery API</string>
     <string name="complete_session_status_metadata_progress">%1$d / %2$d metadata</string>
     <string name="complete_session_status_image_progress">%1$d / %2$d images</string>
 

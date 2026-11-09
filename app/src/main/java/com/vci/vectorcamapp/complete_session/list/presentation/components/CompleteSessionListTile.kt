@@ -67,10 +67,12 @@ fun CompleteSessionListTile(
     val isSessionUploadComplete = sessionMetadataUploaded &&
         sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount &&
         sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount &&
-        !sessionUploadProgress.hasFailedMetadataUploadStep
+        !sessionUploadProgress.hasFailedMetadataUploadStep &&
+        !sessionUploadProgress.hasRecoveredMetadataUploadStep
 
     val progressColor = when {
         isSessionUploadComplete -> MaterialTheme.colors.primary
+        sessionUploadProgress.hasRecoveredMetadataUploadStep -> MaterialTheme.colors.info
         sessionUploadProgress.isUploading -> MaterialTheme.colors.warning
         else -> MaterialTheme.colors.error
     }
@@ -277,6 +279,9 @@ fun CompleteSessionListTile(
                             text = when {
                                 isSessionUploadComplete -> stringResource(R.string.complete_session_status_completed)
                                 !sessionMetadataUploaded -> stringResource(R.string.complete_session_status_not_started)
+                                sessionUploadProgress.hasRecoveredMetadataUploadStep -> stringResource(
+                                    R.string.complete_session_status_sent_to_recovery
+                                )
                                 sessionUploadProgress.hasFailedMetadataUploadStep -> stringResource(
                                     R.string.complete_session_status_metadata_failed
                                 )
@@ -387,11 +392,22 @@ fun CompleteSessionListTile(
                                         )
                                     }
                                 }
-                                Text(
-                                    text = stepStatus.step.displayText(context),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colors.textPrimary
-                                )
+                                Column {
+                                    Text(
+                                        text = stepStatus.step.displayText(context),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colors.textPrimary
+                                    )
+                                    if (stepStatus.status == UploadStatus.RECOVERED) {
+                                        Text(
+                                            text = stringResource(
+                                                R.string.complete_session_upload_step_recovery_detail
+                                            ),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colors.info
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

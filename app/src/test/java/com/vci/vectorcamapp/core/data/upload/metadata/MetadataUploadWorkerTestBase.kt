@@ -2,7 +2,6 @@ package com.vci.vectorcamapp.core.data.upload.metadata
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.google.common.util.concurrent.ListenableFuture
@@ -65,7 +64,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
-import org.junit.After
 import org.junit.Before
 import java.util.UUID
 
@@ -180,9 +178,6 @@ abstract class MetadataUploadWorkerTestBase {
     }
 
     protected fun setUpAndroidMocks() {
-        mockkStatic(Log::class)
-        every { Log.e(any(), any<String>()) } returns 0
-
         context = mockk(relaxed = true)
         every { context.getString(any()) } returns "error"
 
@@ -386,11 +381,6 @@ abstract class MetadataUploadWorkerTestBase {
         }
 
         notifier = mockk(relaxed = true)
-    }
-
-    @After
-    fun tearDown() {
-        unmockkStatic(Log::class)
     }
 
     protected fun buildWorker() = MetadataUploadWorker(

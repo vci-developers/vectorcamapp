@@ -10,6 +10,7 @@ import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import timber.log.Timber
 import javax.inject.Inject
 
 class RemoteDataRecoveryDataSource @Inject constructor(
@@ -19,10 +20,29 @@ class RemoteDataRecoveryDataSource @Inject constructor(
     override suspend fun postDataRecovery(
         request: PostDataRecoveryRequestDto
     ): Result<PostDataRecoveryResponseDto, NetworkError> {
-        return safeCall<PostDataRecoveryResponseDto> {
+        Timber.tag(TAG).i(
+            "POST ${UploadRoutes.DATA_RECOVERIES} key=${request.idempotencyKey} " +
+                "session=${request.sessionFrontendId} route=${request.payload.route} " +
+                "error=${request.payload.error}"
+        )
+        val result = safeCall<PostDataRecoveryResponseDto> {
             httpClient.post(constructUrl(UploadRoutes.DATA_RECOVERIES)) {
                 setBody(request)
             }
         }
+        when (result) {
+            is Result.Success -> Timber.tag(TAG).i(
+                "POST ${UploadRoutes.DATA_RECOVERIES} success key=${request.idempotencyKey} " +
+                    "recoveryId=${result.data.dataRecovery?.id} duplicate=${result.data.duplicate}"
+            )
+            is Result.Error -> Timber.tag(TAG).e(
+                "POST ${UploadRoutes.DATA_RECOVERIES} error key=${request.idempotencyKey}: ${result.error}"
+            )
+        }
+        return result
+    }
+
+    companion object {
+        private const val TAG = "DataRecovery"
     }
 }
