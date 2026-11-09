@@ -1,7 +1,6 @@
 package com.vci.vectorcamapp.core.data.upload.metadata
 
 import android.content.Context
-import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -77,6 +76,7 @@ import kotlinx.io.IOException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import timber.log.Timber
 import java.util.Calendar
 import java.util.UUID
 import androidx.work.ListenableWorker.Result as WorkerResult
@@ -115,7 +115,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         const val MAX_RETRIES = 5
         const val MAX_API_RETRIES = 3
         const val API_RETRY_BASE_DELAY_MS = 1000L
-        private const val TAG = "MetadataUploadWorker"
+        private const val TAG = "DataRecovery"
 
         private val recoveryJson = Json {
             encodeDefaults = true
@@ -499,7 +499,13 @@ class MetadataUploadWorker @AssistedInject constructor(
         sync: suspend () -> DomainResult<T, NetworkError>,
     ): DomainResult<T, NetworkError> {
         val result = withApiRetries(sync)
-        if (result is DomainResult.Error) {
+        if (result is DomainResult.Success) {
+            Timber.tag(TAG).i("Upload step $step succeeded for item $itemId on $route. Not sending to recovery.")
+        } else if (result is DomainResult.Error) {
+            Timber.tag(TAG).e(
+                "Upload step $step failed for item $itemId on $route: ${result.error}. " +
+                    "Sending this item to POST /data-recoveries."
+            )
             val isRecovered = reportToDataRecovery(
                 recoveryTemplate = recoveryTemplate,
                 idempotencyKey = "${recoveryTemplate.sessionFrontendId}:${step.name}:$itemId",
@@ -525,7 +531,10 @@ class MetadataUploadWorker @AssistedInject constructor(
         error: NetworkError,
         requestData: suspend () -> JsonElement,
     ): Boolean {
-        if (idempotencyKey in submittedRecoveryKeys) return true
+        if (idempotencyKey in submittedRecoveryKeys) {
+            Timber.tag(TAG).i("Skipping data recovery POST; already submitted key=$idempotencyKey")
+            return true
+        }
 
         val attemptCount = MAX_API_RETRIES + 1
         val recoveryRequest = recoveryTemplate.copy(
@@ -539,8 +548,17 @@ class MetadataUploadWorker @AssistedInject constructor(
             ),
             notes = "${recoveryTemplate.payload.method} $route failed with ${error.name} after $attemptCount attempts",
         )
+        Timber.tag(TAG).i(
+            "POST /data-recoveries key=$idempotencyKey step=$step route=$route error=${error.name} " +
+                "notes=${recoveryRequest.notes}"
+        )
         return when (val recoveryResult = withApiRetries { dataRecoveryDataSource.postDataRecovery(recoveryRequest) }) {
             is DomainResult.Success -> {
+                Timber.tag(TAG).i(
+                    "POST /data-recoveries succeeded key=$idempotencyKey " +
+                        "recoveryId=${recoveryResult.data.dataRecovery?.id} " +
+                        "duplicate=${recoveryResult.data.duplicate}"
+                )
                 submittedRecoveryKeys += idempotencyKey
                 dataRecoverySubmissionRepository.recordDataRecoverySubmission(
                     DataRecoverySubmission(
@@ -551,13 +569,15 @@ class MetadataUploadWorker @AssistedInject constructor(
                     ),
                     recoveryTemplate.sessionFrontendId,
                 ).onError {
-                    Log.e(TAG, "Failed to remember data recovery submission $idempotencyKey: $it")
+                    Timber.tag(TAG).e("Failed to remember data recovery submission $idempotencyKey: $it")
                 }
                 true
             }
 
             is DomainResult.Error -> {
-                Log.e(TAG, "Failed to report $route to data recovery: ${recoveryResult.error}")
+                Timber.tag(TAG).e(
+                    "POST /data-recoveries failed key=$idempotencyKey route=$route: ${recoveryResult.error}"
+                )
                 false
             }
         }
@@ -582,13 +602,13 @@ class MetadataUploadWorker @AssistedInject constructor(
             ),
             sessionId
         ).onError {
-            Log.e(TAG, "Failed to record $step upload status for session $sessionId: $it")
+            Timber.tag(TAG).e("Failed to record $step upload status for session $sessionId: $it")
         }
     }
 
     private suspend fun failInProgressSteps(sessionId: UUID) {
         metadataUploadStatusRepository.failInProgressMetadataUploadStatuses(sessionId).onError {
-            Log.e(TAG, "Failed to clear in-progress upload statuses for session $sessionId: $it")
+            Timber.tag(TAG).e("Failed to clear in-progress upload statuses for session $sessionId: $it")
         }
     }
 
