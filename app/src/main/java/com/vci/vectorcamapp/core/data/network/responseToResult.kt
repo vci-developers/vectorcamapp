@@ -9,20 +9,18 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.client.statement.request
 import timber.log.Timber
 
-internal const val DATA_RECOVERY_LOG_TAG = "DataRecovery"
-
 suspend inline fun <reified T> responseToResult(
     response: HttpResponse
 ): Result<T, NetworkError> {
     val status = response.status.value
     val url = response.request.url
-    Timber.tag(DATA_RECOVERY_LOG_TAG).i("HTTP $status $url")
+    Timber.tag("DataRecovery").i("HTTP $status $url")
     return when (status) {
         in 200..299 -> {
             try {
                 Result.Success(response.body<T>())
             } catch (e: NoTransformationFoundException) {
-                Timber.tag(DATA_RECOVERY_LOG_TAG).e(e, "HTTP $status $url serialization failed")
+                Timber.tag("DataRecovery").e(e, "HTTP $status $url serialization failed")
                 Result.Error(NetworkError.SERIALIZATION_ERROR)
             }
         }
@@ -33,12 +31,12 @@ suspend inline fun <reified T> responseToResult(
         429 -> Result.Error(NetworkError.TOO_MANY_REQUESTS)
         in 400..499 -> {
             val body = runCatching { response.bodyAsText() }.getOrNull()
-            Timber.tag(DATA_RECOVERY_LOG_TAG).e("HTTP $status $url body=$body")
+            Timber.tag("DataRecovery").e("HTTP $status $url body=$body")
             Result.Error(NetworkError.CLIENT_ERROR)
         }
         in 500..599 -> {
             val body = runCatching { response.bodyAsText() }.getOrNull()
-            Timber.tag(DATA_RECOVERY_LOG_TAG).e("HTTP $status $url body=$body")
+            Timber.tag("DataRecovery").e("HTTP $status $url body=$body")
             Result.Error(NetworkError.SERVER_ERROR)
         }
         else -> Result.Error(NetworkError.UNKNOWN_ERROR)
