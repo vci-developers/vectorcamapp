@@ -10,4 +10,7 @@ object UploadRoutes {
     fun surveillanceForm(sessionId: Int) = "sessions/$sessionId/survey"
     fun specimens(sessionId: Int) = "sessions/$sessionId/specimens"
     fun specimenImagesData(specimenId: Int) = "specimens/$specimenId/images/data"
+    fun specimenImagesDataForUnsyncedSpecimen(sessionId: Int, specimenId: String) =
+        "sessions/$sessionId/specimens/$specimenId/images/data"
+    fun dataRecoveryTus(recoveryId: Int) = "data-recoveries/$recoveryId/tus"
 }

@@ -2,6 +2,7 @@ package com.vci.vectorcamapp.core.data.network.api
 
 import com.vci.vectorcamapp.core.data.dto.data_recovery.PostDataRecoveryRequestDto
 import com.vci.vectorcamapp.core.data.dto.data_recovery.PostDataRecoveryResponseDto
+import com.vci.vectorcamapp.core.data.dto.data_recovery.PostStaleSpecimenImageRecoveryRequestDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.safeCall
 import com.vci.vectorcamapp.core.domain.network.api.DataRecoveryDataSource
@@ -37,6 +38,33 @@ class RemoteDataRecoveryDataSource @Inject constructor(
             )
             is Result.Error -> Timber.tag(TAG).e(
                 "POST ${UploadRoutes.DATA_RECOVERIES} error key=${request.idempotencyKey}: ${result.error}"
+            )
+        }
+        return result
+    }
+
+    override suspend fun postStaleSpecimenImageRecovery(
+        request: PostStaleSpecimenImageRecoveryRequestDto
+    ): Result<PostDataRecoveryResponseDto, NetworkError> {
+        Timber.tag(TAG).i(
+            "POST ${UploadRoutes.DATA_RECOVERIES} key=${request.idempotencyKey} " +
+                "session=${request.sessionFrontendId} type=${request.payload.type} " +
+                "filemd5=${request.payload.filemd5} clientSpecimenId=${request.payload.clientSpecimenId}"
+        )
+        val result = safeCall<PostDataRecoveryResponseDto> {
+            httpClient.post(constructUrl(UploadRoutes.DATA_RECOVERIES)) {
+                setBody(request)
+            }
+        }
+        when (result) {
+            is Result.Success -> Timber.tag(TAG).i(
+                "POST ${UploadRoutes.DATA_RECOVERIES} image recovery success " +
+                    "key=${request.idempotencyKey} recoveryId=${result.data.dataRecovery?.id} " +
+                    "duplicate=${result.data.duplicate}"
+            )
+            is Result.Error -> Timber.tag(TAG).e(
+                "POST ${UploadRoutes.DATA_RECOVERIES} image recovery error " +
+                    "key=${request.idempotencyKey}: ${result.error}"
             )
         }
         return result

@@ -110,23 +110,33 @@ class MetadataUploadWorkerTest : MetadataUploadWorkerTestBase() {
 
         val result = buildWorker().doWork()
 
-        assertThat(result).isEqualTo(ListenableWorker.Result.retry())
+        assertThat(result).isEqualTo(ListenableWorker.Result.success())
         coVerify(exactly = TOTAL_ATTEMPTS_PER_CALL) {
             specimenDataSource.postSpecimen(match { it.id == SPECIMEN_1 }, REMOTE_SESSION_ID, null, 1)
         }
-        val recoveryRequest = dataRecoveryRequests.single()
-        assertThat(recoveryRequest.idempotencyKey).isEqualTo("$sessionId:SPECIMENS:$SPECIMEN_1")
-        assertThat(recoveryRequest.payload.route).isEqualTo("sessions/$REMOTE_SESSION_ID/specimens")
-        val requestData = recoveryRequest.payload.requestData.jsonObject
+        assertThat(dataRecoveryRequests.map { it.idempotencyKey }).containsExactly(
+            "$sessionId:SPECIMENS:$SPECIMEN_1",
+            "$sessionId:SPECIMEN_IMAGES:$IMAGE_1",
+        )
+        val specimenRecovery = dataRecoveryRequests.single {
+            it.idempotencyKey == "$sessionId:SPECIMENS:$SPECIMEN_1"
+        }
+        assertThat(specimenRecovery.payload.route).isEqualTo("sessions/$REMOTE_SESSION_ID/specimens")
+        val requestData = specimenRecovery.payload.requestData.jsonObject
         assertThat(requestData["specimenId"]?.jsonPrimitive?.content).isEqualTo(SPECIMEN_1)
         assertThat(requestData["expectedImages"]?.jsonPrimitive?.int).isEqualTo(1)
+        val imageRecovery = dataRecoveryRequests.single {
+            it.idempotencyKey == "$sessionId:SPECIMEN_IMAGES:$IMAGE_1"
+        }
+        assertThat(imageRecovery.payload.route)
+            .isEqualTo("sessions/$REMOTE_SESSION_ID/specimens/$SPECIMEN_1/images/data")
 
         coVerify(exactly = 0) {
             specimenImageDataSource.postSpecimenImageMetadata(match { it.localId == IMAGE_1 }, any(), any())
         }
         coVerify {
             specimenImageRepository.updateSpecimenImage(
-                match { it.localId == IMAGE_1 && it.metadataUploadStatus == UploadStatus.FAILED },
+                match { it.localId == IMAGE_1 && it.metadataUploadStatus == UploadStatus.RECOVERED },
                 SPECIMEN_1,
                 sessionId,
             )
@@ -135,8 +145,8 @@ class MetadataUploadWorkerTest : MetadataUploadWorkerTestBase() {
         assertImagePosted(IMAGE_2, remoteSpecimenIds.getValue(SPECIMEN_2))
         assertThat(finalStepStatuses()[MetadataUploadStep.FORM_ANSWERS]).isEqualTo(UploadStatus.COMPLETED)
         assertThat(finalStepStatuses()[MetadataUploadStep.SPECIMENS]).isEqualTo(UploadStatus.RECOVERED)
-        // The skipped image was never sent anywhere, so it keeps the upload pending.
-        assertThat(finalStepStatuses()[MetadataUploadStep.SPECIMEN_IMAGES]).isEqualTo(UploadStatus.FAILED)
+        // Image JSON is recovered so the metadata worker can succeed and TUS can still run.
+        assertThat(finalStepStatuses()[MetadataUploadStep.SPECIMEN_IMAGES]).isEqualTo(UploadStatus.RECOVERED)
     }
 
     @Test
@@ -193,6 +203,7 @@ class MetadataUploadWorkerTest : MetadataUploadWorkerTestBase() {
         assertThat(dataRecoveryRequests.map { it.payload.route to it.payload.error }).containsExactly(
             "sessions/$REMOTE_SESSION_ID/forms/answers" to NetworkError.SERVER_ERROR.name,
             "sessions/$REMOTE_SESSION_ID/specimens" to NetworkError.NO_INTERNET.name,
+            "sessions/$REMOTE_SESSION_ID/specimens/$SPECIMEN_1/images/data" to NetworkError.CLIENT_ERROR.name,
         ).inOrder()
         assertSpecimenPosted(SPECIMEN_2)
         assertImagePosted(IMAGE_2, remoteSpecimenIds.getValue(SPECIMEN_2))

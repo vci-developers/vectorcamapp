@@ -402,21 +402,52 @@ class MetadataUploadWorker @AssistedInject constructor(
                 val syncedRemoteSpecimenId = syncedSpecimen?.remoteId
 
                 if (syncedSpecimen == null || syncedRemoteSpecimenId == null) {
-                    specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
-                        if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
-                            uploadOutcomes.markFailed(MetadataUploadStep.SPECIMEN_IMAGES, dependencyFailureMessage)
-                            specimenImageRepository.updateSpecimenImage(
-                                specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
-                                localSpecimen.id,
-                                syncedSession.localId
+                    specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults
+                        .forEach { (specimenImage, inferenceResult) ->
+                            if (specimenImage.metadataUploadStatus.isUploaded()) {
+                                return@forEach
+                            }
+                            val isRecovered = reportToDataRecovery(
+                                recoveryTemplate = recoveryTemplate,
+                                idempotencyKey = "${recoveryTemplate.sessionFrontendId}:" +
+                                    "${MetadataUploadStep.SPECIMEN_IMAGES.name}:${specimenImage.localId}",
+                                step = MetadataUploadStep.SPECIMEN_IMAGES,
+                                route = UploadRoutes.specimenImagesDataForUnsyncedSpecimen(
+                                    syncedRemoteSessionId,
+                                    localSpecimen.id
+                                ),
+                                error = NetworkError.CLIENT_ERROR,
+                                requestData = {
+                                    recoveryJson.encodeToJsonElement(
+                                        specimenImage.toPostSpecimenImageRequestDto(inferenceResult)
+                                    )
+                                },
                             )
+                            specimenImageRepository.updateSpecimenImage(
+                                specimenImage.copy(
+                                    metadataUploadStatus = if (isRecovered) {
+                                        UploadStatus.RECOVERED
+                                    } else {
+                                        UploadStatus.FAILED
+                                    }
+                                ),
+                                localSpecimen.id,
+                                syncedSession.localId,
+                            )
+                            if (isRecovered) {
+                                uploadOutcomes.markRecovered(MetadataUploadStep.SPECIMEN_IMAGES)
+                            } else {
+                                uploadOutcomes.markFailed(
+                                    MetadataUploadStep.SPECIMEN_IMAGES,
+                                    dependencyFailureMessage
+                                )
+                            }
                         }
-                    }
                     return@forEachIndexed
                 }
 
                 specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEachIndexed { imageIndex, (specimenImage, inferenceResult) ->
-                    if (specimenImage.metadataUploadStatus != UploadStatus.COMPLETED) {
+                    if (!specimenImage.metadataUploadStatus.isUploaded()) {
                         syncWithRecovery(
                             recoveryTemplate = recoveryTemplate,
                             step = MetadataUploadStep.SPECIMEN_IMAGES,

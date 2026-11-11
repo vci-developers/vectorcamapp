@@ -59,8 +59,10 @@ class MetadataUploadWorkerDataRecoveryTest : MetadataUploadWorkerTestBase() {
         coVerify(exactly = 3 * TOTAL_ATTEMPTS_PER_CALL) {
             specimenDataSource.postSpecimen(match { it.id == SPECIMEN_1 }, REMOTE_SESSION_ID, null, 1)
         }
-        assertThat(dataRecoveryRequests.map { it.idempotencyKey })
-            .containsExactly("$sessionId:SPECIMENS:$SPECIMEN_1")
+        assertThat(dataRecoveryRequests.map { it.idempotencyKey }).containsExactly(
+            "$sessionId:SPECIMENS:$SPECIMEN_1",
+            "$sessionId:SPECIMEN_IMAGES:$IMAGE_1",
+        )
     }
 
     @Test

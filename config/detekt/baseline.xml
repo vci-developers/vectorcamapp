@@ -276,6 +276,7 @@
     <ID>CyclomaticComplexMethod:IntakeScreen.kt$@Composable fun IntakeScreen( state: IntakeState, onAction: (IntakeAction) -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:IntakeViewModel.kt$IntakeViewModel$fun onAction(action: IntakeAction)</ID>
     <ID>CyclomaticComplexMethod:IntakeViewModel.kt$IntakeViewModel$private fun loadFormDetails()</ID>
+    <ID>CyclomaticComplexMethod:ImageUploadWorker.kt$ImageUploadWorker$private suspend fun uploadSingleImage( task: ImageUploadTask, sessionId: UUID ): DomainResult&lt;String, NetworkError&gt;</ID>
     <ID>CyclomaticComplexMethod:MetadataUploadWorker.kt$MetadataUploadWorker$override suspend fun doWork(): WorkerResult</ID>
     <ID>CyclomaticComplexMethod:NavGraph.kt$@Composable fun NavGraph(startDestination: Destination)</ID>
     <ID>CyclomaticComplexMethod:SettingsViewModel.kt$SettingsViewModel$fun onAction(action: SettingsAction)</ID>
@@ -434,6 +435,7 @@
     <ID>ImportOrdering:safeCall.kt$import com.vci.vectorcamapp.core.domain.util.network.NetworkError import com.vci.vectorcamapp.core.domain.util.Result import io.ktor.client.statement.HttpResponse import io.ktor.util.network.UnresolvedAddressException import kotlinx.coroutines.ensureActive import kotlinx.serialization.SerializationException import java.net.UnknownHostException import kotlin.coroutines.coroutineContext</ID>
     <ID>LargeClass:ImagingViewModel.kt$ImagingViewModel : CoreViewModel</ID>
     <ID>LargeClass:IntakeViewModel.kt$IntakeViewModel : CoreViewModel</ID>
+    <ID>LargeClass:ImageUploadWorker.kt$ImageUploadWorker : CoroutineWorker</ID>
     <ID>LargeClass:MetadataUploadWorker.kt$MetadataUploadWorker : CoroutineWorker</ID>
     <ID>LongMethod:CapturedSpecimenTile.kt$@Composable fun CapturedSpecimenTile( specimen: Specimen, specimenImage: SpecimenImage, inferenceResult: InferenceResult?, modifier: Modifier = Modifier, badgeText: String? = null, )</ID>
     <ID>LongMethod:CollectionBatchFormViewModel.kt$CollectionBatchFormViewModel$fun onAction(action: CollectionBatchFormAction)</ID>
@@ -727,6 +729,7 @@
     <ID>PackageName:MultipleBatchWorkflow.kt$package com.vci.vectorcamapp.intake.domain.strategy.collection_method.concrete</ID>
     <ID>PackageName:PostDataRecoveryRequestDto.kt$package com.vci.vectorcamapp.core.data.dto.data_recovery</ID>
     <ID>PackageName:PostDataRecoveryResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.data_recovery</ID>
+    <ID>PackageName:PostStaleSpecimenImageRecoveryRequestDto.kt$package com.vci.vectorcamapp.core.data.dto.data_recovery</ID>
     <ID>PackageName:PostFormAnswersRequestDto.kt$package com.vci.vectorcamapp.core.data.dto.form_answer</ID>
     <ID>PackageName:PostFormAnswersResponseDto.kt$package com.vci.vectorcamapp.core.data.dto.form_answer</ID>
     <ID>PackageName:PostSessionUnitRequestDto.kt$package com.vci.vectorcamapp.core.data.dto.session_unit</ID>

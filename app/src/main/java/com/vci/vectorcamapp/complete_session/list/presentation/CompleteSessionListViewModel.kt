@@ -139,7 +139,7 @@ class CompleteSessionListViewModel @Inject constructor(
                             )
                         val areSpecimensUploaded = !specimens.any { specimen ->
                             specimen.specimenImagesAndInferenceResults.any { (image, _) ->
-                                image.metadataUploadStatus != UploadStatus.COMPLETED || image.imageUploadStatus != UploadStatus.COMPLETED
+                                !image.metadataUploadStatus.isUploaded() || !image.imageUploadStatus.isUploaded()
                             }
                         }
 
