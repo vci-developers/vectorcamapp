@@ -2,7 +2,9 @@ package com.vci.vectorcamapp.complete_session.list.presentation
 
 import android.content.Context
 import androidx.lifecycle.viewModelScope
+import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
+import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadDelivery
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 import com.vci.vectorcamapp.core.domain.repository.MetadataUploadStatusRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
@@ -96,7 +98,7 @@ class CompleteSessionListViewModel @Inject constructor(
                     add(site.parish)
                     add(site.villageName)
                     add(site.houseNumber)
-                    add(getSessionUploadStatus(progress))
+                    add(getSessionUploadStatus(session, progress))
                     site.locationHierarchy?.values?.forEach {
                         if (it.isNotEmpty()) {
                             add(it)
@@ -131,24 +133,24 @@ class CompleteSessionListViewModel @Inject constructor(
                         val session = sessionAndSite.session
                         val site = sessionAndSite.site
 
-                        val isSessionUploaded = (session.submittedAt != null)
-
                         val specimens =
                             specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(
                                 session.localId, null
                             )
-                        val areSpecimensUploaded = !specimens.any { specimen ->
-                            specimen.specimenImagesAndInferenceResults.any { (image, _) ->
-                                !image.metadataUploadStatus.isUploaded() || !image.imageUploadStatus.isUploaded()
-                            }
+                        val images = specimens.flatMap { specimen ->
+                            specimen.specimenImagesAndInferenceResults.map { it.specimenImage }
                         }
-
-                        val hasFailedMetadataUploadStep = metadataUploadStatusRepository
+                        val metadataSteps = metadataUploadStatusRepository
                             .observeMetadataUploadStatusesForSession(session.localId)
                             .first()
-                            .any { it.status == UploadStatus.FAILED }
-
-                        if (isSessionUploaded && areSpecimensUploaded && !hasFailedMetadataUploadStep) continue
+                        if (SessionUploadDelivery.isFullyDelivered(
+                                session.submittedAt,
+                                metadataSteps,
+                                images,
+                            )
+                        ) {
+                            continue
+                        }
 
                         workManagerRepository.enqueueSessionUpload(session.localId, site.id)
                         didEnqueueUpload = true
@@ -172,16 +174,21 @@ class CompleteSessionListViewModel @Inject constructor(
         }
     }
 
-    private fun getSessionUploadStatus(sessionUploadProgress: SessionUploadProgress): String {
-        val isComplete = sessionUploadProgress.totalCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount
-
+    private fun getSessionUploadStatus(
+        session: Session,
+        sessionUploadProgress: SessionUploadProgress,
+    ): String {
+        val isFullyDelivered = SessionUploadDelivery.isFullyDelivered(
+            session.submittedAt,
+            sessionUploadProgress,
+        )
         return when {
             sessionUploadProgress.failedImageCount > 0 -> UploadStatus.FAILED.displayText(context)
             sessionUploadProgress.hasFailedMetadataUploadStep -> UploadStatus.FAILED.displayText(context)
-            sessionUploadProgress.hasRecoveredMetadataUploadStep ->
-                UploadStatus.RECOVERED.displayText(context)
-            isComplete -> UploadStatus.COMPLETED.displayText(context)
             sessionUploadProgress.isUploading -> UploadStatus.IN_PROGRESS.displayText(context)
+            isFullyDelivered && sessionUploadProgress.hasRecoveredMetadataUploadStep ->
+                UploadStatus.RECOVERED.displayText(context)
+            isFullyDelivered -> UploadStatus.COMPLETED.displayText(context)
             else -> UploadStatus.NOT_STARTED.displayText(context)
         }
     }

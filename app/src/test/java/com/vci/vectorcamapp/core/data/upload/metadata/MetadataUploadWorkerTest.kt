@@ -270,9 +270,9 @@ class MetadataUploadWorkerTest : MetadataUploadWorkerTestBase() {
         assertThat(finalStepStatuses()).containsExactly(
             MetadataUploadStep.DEVICE, UploadStatus.COMPLETED,
             MetadataUploadStep.SESSION, UploadStatus.RECOVERED,
-            MetadataUploadStep.FORM_ANSWERS, UploadStatus.FAILED,
-            MetadataUploadStep.SPECIMENS, UploadStatus.FAILED,
-            MetadataUploadStep.SPECIMEN_IMAGES, UploadStatus.FAILED,
+            MetadataUploadStep.FORM_ANSWERS, UploadStatus.NOT_STARTED,
+            MetadataUploadStep.SPECIMENS, UploadStatus.NOT_STARTED,
+            MetadataUploadStep.SPECIMEN_IMAGES, UploadStatus.NOT_STARTED,
         )
     }
 
@@ -327,5 +327,41 @@ class MetadataUploadWorkerTest : MetadataUploadWorkerTestBase() {
             .containsExactlyElementsIn(applicableSteps.map { it to UploadStatus.IN_PROGRESS })
         assertThat(finalStepStatuses())
             .containsExactlyEntriesIn(applicableSteps.associateWith { UploadStatus.COMPLETED })
+    }
+
+    @Test
+    fun worker_c02_interruptedImageStatuses_areRevertedToPendingBeforeUpload() = runTest {
+        val interrupted = specimenWithImage(SPECIMEN_1, IMAGE_1)
+        val interruptedImage = interrupted.specimenImagesAndInferenceResults.single().specimenImage.copy(
+            metadataUploadStatus = UploadStatus.IN_PROGRESS,
+            imageUploadStatus = UploadStatus.IN_PROGRESS,
+        )
+        coEvery {
+            specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(sessionId, null)
+        } returns listOf(
+            interrupted.copy(
+                specimenImagesAndInferenceResults = listOf(
+                    interrupted.specimenImagesAndInferenceResults.single().copy(
+                        specimenImage = interruptedImage
+                    )
+                )
+            ),
+            specimenWithImage(SPECIMEN_2, IMAGE_2),
+        )
+
+        val result = buildWorker().doWork()
+
+        assertThat(result).isEqualTo(ListenableWorker.Result.success())
+        coVerify {
+            specimenImageRepository.updateSpecimenImage(
+                match {
+                    it.localId == IMAGE_1 &&
+                        it.metadataUploadStatus == UploadStatus.NOT_STARTED &&
+                        it.imageUploadStatus == UploadStatus.NOT_STARTED
+                },
+                SPECIMEN_1,
+                sessionId,
+            )
+        }
     }
 }

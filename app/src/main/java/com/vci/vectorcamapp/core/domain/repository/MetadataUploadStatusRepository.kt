@@ -11,6 +11,6 @@ interface MetadataUploadStatusRepository {
         metadataUploadStepStatus: MetadataUploadStepStatus,
         sessionId: UUID,
     ): Result<Unit, RoomDbError>
-    suspend fun failInProgressMetadataUploadStatuses(sessionId: UUID): Result<Unit, RoomDbError>
+    suspend fun revertInProgressMetadataUploadStatuses(sessionId: UUID): Result<Unit, RoomDbError>
     fun observeMetadataUploadStatusesForSession(sessionId: UUID): Flow<List<MetadataUploadStepStatus>>
 }

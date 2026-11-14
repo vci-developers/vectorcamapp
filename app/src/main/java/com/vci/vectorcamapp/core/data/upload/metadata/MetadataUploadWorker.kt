@@ -173,6 +173,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             submittedRecoveryKeys += dataRecoverySubmissionRepository.getSubmittedIdempotencyKeysForSession(
                 localSessionId
             )
+            revertInterruptedUploads(localSessionId)
             val dependencyFailureMessage = context.getString(R.string.upload_error_dependency_not_uploaded)
 
             val usesDynamicForm = localProgram.formVersion != null
@@ -260,7 +261,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
                 recordStepStatus(localSessionId, MetadataUploadStep.SESSION)
                 // Every remaining endpoint is scoped under the remote session id.
-                failInProgressSteps(localSessionId)
+                revertInProgressSteps(localSessionId)
                 return retryOrFailure(
                     syncSessionResult.errorOrNull()?.toString(context)
                         ?: context.getString(R.string.upload_error_session_not_found_server)
@@ -492,18 +493,17 @@ class MetadataUploadWorker @AssistedInject constructor(
             // reached neither the server nor the recovery table keeps the upload pending.
             return uploadOutcomes.firstFailureMessage?.let { retryOrComplete(it) } ?: WorkerResult.success()
         } catch (e: IOException) {
-            failInProgressSteps(localSessionId)
+            revertInProgressSteps(localSessionId)
             return retryOrFailure(context.getString(R.string.upload_error_lost_connection))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            failInProgressSteps(localSessionId)
+            revertInProgressSteps(localSessionId)
             return retryOrFailure(context.getString(R.string.upload_error_unknown))
         } finally {
             if (isStopped) {
                 withContext(NonCancellable) {
-                    resetInProgressUploads(localSession.localId)
-                    failInProgressSteps(localSessionId)
+                    revertInterruptedUploads(localSession.localId)
                 }
             }
         }
@@ -637,20 +637,32 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
-    private suspend fun failInProgressSteps(sessionId: UUID) {
-        metadataUploadStatusRepository.failInProgressMetadataUploadStatuses(sessionId).onError {
+    private suspend fun revertInterruptedUploads(sessionId: UUID) {
+        revertInProgressSteps(sessionId)
+        revertInProgressImageMetadata(sessionId)
+    }
+
+    private suspend fun revertInProgressSteps(sessionId: UUID) {
+        metadataUploadStatusRepository.revertInProgressMetadataUploadStatuses(sessionId).onError {
             Timber.tag(TAG).e("Failed to clear in-progress upload statuses for session $sessionId: $it")
         }
     }
 
-    private suspend fun resetInProgressUploads(sessionId: UUID) {
+    private suspend fun revertInProgressImageMetadata(sessionId: UUID) {
         val specimensWithImagesAndInferenceResults =
             specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(sessionId, null)
         specimensWithImagesAndInferenceResults.forEach { specimenWithImagesAndInferenceResults ->
             specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
-                if (specimenImage.metadataUploadStatus == UploadStatus.IN_PROGRESS) {
+                val pendingMetadataStatus = specimenImage.metadataUploadStatus.pendingIfInterrupted()
+                val pendingImageStatus = specimenImage.imageUploadStatus.pendingIfInterrupted()
+                if (pendingMetadataStatus != specimenImage.metadataUploadStatus ||
+                    pendingImageStatus != specimenImage.imageUploadStatus
+                ) {
                     specimenImageRepository.updateSpecimenImage(
-                        specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
+                        specimenImage.copy(
+                            metadataUploadStatus = pendingMetadataStatus,
+                            imageUploadStatus = pendingImageStatus,
+                        ),
                         specimenWithImagesAndInferenceResults.specimen.id,
                         sessionId
                     )

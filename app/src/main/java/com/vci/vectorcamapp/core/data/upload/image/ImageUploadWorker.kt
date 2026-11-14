@@ -127,9 +127,26 @@ class ImageUploadWorker @AssistedInject constructor(
         val specimensWithImages =
             specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(sessionId, null)
 
+        specimensWithImages.forEach { specimenWithData ->
+            specimenWithData.specimenImagesAndInferenceResults.forEach { (image, _) ->
+                val pendingImageStatus = image.imageUploadStatus.pendingIfInterrupted()
+                if (pendingImageStatus != image.imageUploadStatus) {
+                    specimenImageRepository.updateSpecimenImage(
+                        image.copy(imageUploadStatus = pendingImageStatus),
+                        specimenWithData.specimen.id,
+                        sessionId
+                    )
+                }
+            }
+        }
+
         val imagesToUpload = specimensWithImages.flatMap { specimenWithData ->
             specimenWithData.specimenImagesAndInferenceResults.map { imageAndResult ->
-                ImageUploadTask(specimenWithData.specimen, imageAndResult.specimenImage)
+                val image = imageAndResult.specimenImage
+                ImageUploadTask(
+                    specimenWithData.specimen,
+                    image.copy(imageUploadStatus = image.imageUploadStatus.pendingIfInterrupted()),
+                )
             }
         }.filter { task ->
             !task.image.imageUploadStatus.isUploaded()

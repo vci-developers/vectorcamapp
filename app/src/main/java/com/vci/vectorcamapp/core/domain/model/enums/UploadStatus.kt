@@ -8,4 +8,7 @@ enum class UploadStatus {
     FAILED;
 
     fun isUploaded(): Boolean = this == COMPLETED || this == RECOVERED
+
+    fun pendingIfInterrupted(): UploadStatus =
+        if (this == IN_PROGRESS) NOT_STARTED else this
 }

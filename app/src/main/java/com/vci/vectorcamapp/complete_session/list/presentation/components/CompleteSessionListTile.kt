@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
+import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadDelivery
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.ActionTile
@@ -63,16 +64,17 @@ fun CompleteSessionListTile(
     val dateFormatter = rememberDateFormatter(R.string.core_date_format_medium)
     val dateTimeFormatter = rememberDateFormatter(R.string.core_date_format_medium_with_time)
 
-    val sessionMetadataUploaded = session.submittedAt != null
-    val isSessionUploadComplete = sessionMetadataUploaded &&
-        sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount &&
-        sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount &&
-        !sessionUploadProgress.hasFailedMetadataUploadStep &&
+    val isFullyDelivered = SessionUploadDelivery.isFullyDelivered(
+        session.submittedAt,
+        sessionUploadProgress,
+    )
+    val hasStarted = SessionUploadDelivery.hasStarted(session.submittedAt, sessionUploadProgress)
+    val isSessionUploadComplete = isFullyDelivered &&
         !sessionUploadProgress.hasRecoveredMetadataUploadStep
 
     val progressColor = when {
         isSessionUploadComplete -> MaterialTheme.colors.primary
-        sessionUploadProgress.hasRecoveredMetadataUploadStep -> MaterialTheme.colors.info
+        isFullyDelivered -> MaterialTheme.colors.info
         sessionUploadProgress.isUploading -> MaterialTheme.colors.warning
         else -> MaterialTheme.colors.error
     }
@@ -278,10 +280,10 @@ fun CompleteSessionListTile(
                         Text(
                             text = when {
                                 isSessionUploadComplete -> stringResource(R.string.complete_session_status_completed)
-                                !sessionMetadataUploaded -> stringResource(R.string.complete_session_status_not_started)
-                                sessionUploadProgress.hasRecoveredMetadataUploadStep -> stringResource(
+                                isFullyDelivered -> stringResource(
                                     R.string.complete_session_status_sent_to_recovery
                                 )
+                                !hasStarted -> stringResource(R.string.complete_session_status_not_started)
                                 sessionUploadProgress.hasFailedMetadataUploadStep -> stringResource(
                                     R.string.complete_session_status_metadata_failed
                                 )
@@ -307,12 +309,12 @@ fun CompleteSessionListTile(
                             )
                     ) {
                         val metadataProgress = when {
-                            !sessionMetadataUploaded -> 0f
+                            !hasStarted -> 0f
                             sessionUploadProgress.totalCount == 0 -> 1f
                             else -> sessionUploadProgress.uploadedMetadataCount.toFloat() / sessionUploadProgress.totalCount.toFloat()
                         }
                         val imageProgress = when {
-                            !sessionMetadataUploaded -> 0f
+                            !hasStarted -> 0f
                             sessionUploadProgress.totalCount == 0 -> 1f
                             else -> sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalCount.toFloat()
                         }
