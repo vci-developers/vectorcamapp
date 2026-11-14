@@ -23,6 +23,7 @@ import com.vci.vectorcamapp.core.data.mappers.toPostSessionUnitRequestDto
 import com.vci.vectorcamapp.core.data.mappers.toPostSpecimenImageRequestDto
 import com.vci.vectorcamapp.core.data.mappers.toPostSpecimenRequestDto
 import com.vci.vectorcamapp.core.data.mappers.toPostSurveillanceFormRequestDto
+import com.vci.vectorcamapp.core.data.mappers.toRecoveryFormAnswersRequestDto
 import com.vci.vectorcamapp.core.data.mappers.toRegisterDeviceRequestDto
 import com.vci.vectorcamapp.core.data.network.api.UploadRoutes
 import com.vci.vectorcamapp.core.data.room.TransactionHelper
@@ -37,6 +38,8 @@ import com.vci.vectorcamapp.core.domain.model.SessionUnit
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
+import com.vci.vectorcamapp.core.domain.model.composites.SpecimenImageAndInferenceResult
+import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.domain.model.enums.MetadataUploadStep
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.network.api.DataRecoveryDataSource
@@ -59,7 +62,6 @@ import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
 import com.vci.vectorcamapp.core.domain.repository.SurveillanceFormRepository
-import com.vci.vectorcamapp.core.domain.util.errorOrNull
 import com.vci.vectorcamapp.core.domain.util.map
 import com.vci.vectorcamapp.core.domain.util.network.NetworkError
 import com.vci.vectorcamapp.core.domain.util.onError
@@ -173,6 +175,7 @@ class MetadataUploadWorker @AssistedInject constructor(
             submittedRecoveryKeys += dataRecoverySubmissionRepository.getSubmittedIdempotencyKeysForSession(
                 localSessionId
             )
+            revertInterruptedUploads(localSessionId)
             val dependencyFailureMessage = context.getString(R.string.upload_error_dependency_not_uploaded)
 
             val usesDynamicForm = localProgram.formVersion != null
@@ -259,12 +262,22 @@ class MetadataUploadWorker @AssistedInject constructor(
                     )
                 }
                 recordStepStatus(localSessionId, MetadataUploadStep.SESSION)
-                // Every remaining endpoint is scoped under the remote session id.
-                failInProgressSteps(localSessionId)
-                return retryOrFailure(
-                    syncSessionResult.errorOrNull()?.toString(context)
-                        ?: context.getString(R.string.upload_error_session_not_found_server)
+                recoverGraphWithoutRemoteSession(
+                    recoveryTemplate = recoveryTemplate,
+                    localSessionId = localSessionId,
+                    sessionKey = localSessionId.toString(),
+                    localSessionUnits = localSessionUnits,
+                    sessionScopedFormAnswers = sessionScopedFormAnswers,
+                    sessionUnitScopedFormAnswersByLocalUnitId = sessionUnitScopedFormAnswersByLocalUnitId,
+                    hasFormAnswers = hasFormAnswers,
+                    localSurveillanceForm = localSurveillanceForm,
+                    localSpecimensWithImagesAndInferenceResults =
+                        localSpecimensWithImagesAndInferenceResults,
+                    formVersionFallback = localProgram.formVersion.orEmpty(),
+                    dependencyFailureMessage = dependencyFailureMessage,
                 )
+                return uploadOutcomes.firstFailureMessage?.let { retryOrComplete(it) }
+                    ?: WorkerResult.success()
             }
             recordStepStatus(localSessionId, MetadataUploadStep.SESSION)
 
@@ -299,7 +312,18 @@ class MetadataUploadWorker @AssistedInject constructor(
                 // The answers endpoint only accepts the first submission for a session, so posting before
                 // every unit has a remote id would permanently drop the answers of the missing units.
                 if (failedSessionUnitLocalIds.isNotEmpty()) {
-                    uploadOutcomes.markFailed(MetadataUploadStep.FORM_ANSWERS, dependencyFailureMessage)
+                    recoverFormAnswersWithoutPosting(
+                        recoveryTemplate = recoveryTemplate,
+                        sessionKey = syncedRemoteSessionId.toString(),
+                        sessionScopedFormAnswers = sessionScopedFormAnswers,
+                        sessionUnitScopedFormAnswersByLocalUnitId =
+                            sessionUnitScopedFormAnswersByLocalUnitId,
+                        remoteSessionUnitIdByLocalId = localSessionUnits.associate { unit ->
+                            unit.localId to syncedSessionUnitsByLocalId[unit.localId]?.remoteId
+                        },
+                        formVersionFallback = localProgram.formVersion.orEmpty(),
+                        error = NetworkError.CLIENT_ERROR,
+                    )
                 } else {
                     val sessionUnitScopedFormAnswersByRemoteUnitId =
                         sessionUnitScopedFormAnswersByLocalUnitId.mapNotNull { (localUnitId, answers) ->
@@ -372,7 +396,16 @@ class MetadataUploadWorker @AssistedInject constructor(
 
                 // A specimen whose unit failed to sync would otherwise be created without its unit link.
                 val syncedSpecimen = if (syncedLocalSessionUnitId in failedSessionUnitLocalIds) {
-                    uploadOutcomes.markFailed(MetadataUploadStep.SPECIMENS, dependencyFailureMessage)
+                    recoverUnsyncedSpecimen(
+                        recoveryTemplate = recoveryTemplate,
+                        sessionKey = syncedRemoteSessionId.toString(),
+                        localSpecimen = localSpecimen,
+                        imagesAndInferenceResults =
+                            specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults,
+                        sessionUnitFrontendId = syncedLocalSessionUnitId,
+                        error = NetworkError.CLIENT_ERROR,
+                        dependencyFailureMessage = dependencyFailureMessage,
+                    )
                     null
                 } else {
                     syncWithRecovery(
@@ -402,47 +435,15 @@ class MetadataUploadWorker @AssistedInject constructor(
                 val syncedRemoteSpecimenId = syncedSpecimen?.remoteId
 
                 if (syncedSpecimen == null || syncedRemoteSpecimenId == null) {
-                    specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults
-                        .forEach { (specimenImage, inferenceResult) ->
-                            if (specimenImage.metadataUploadStatus.isUploaded()) {
-                                return@forEach
-                            }
-                            val isRecovered = reportToDataRecovery(
-                                recoveryTemplate = recoveryTemplate,
-                                idempotencyKey = "${recoveryTemplate.sessionFrontendId}:" +
-                                    "${MetadataUploadStep.SPECIMEN_IMAGES.name}:${specimenImage.localId}",
-                                step = MetadataUploadStep.SPECIMEN_IMAGES,
-                                route = UploadRoutes.specimenImagesDataForUnsyncedSpecimen(
-                                    syncedRemoteSessionId,
-                                    localSpecimen.id
-                                ),
-                                error = NetworkError.CLIENT_ERROR,
-                                requestData = {
-                                    recoveryJson.encodeToJsonElement(
-                                        specimenImage.toPostSpecimenImageRequestDto(inferenceResult)
-                                    )
-                                },
-                            )
-                            specimenImageRepository.updateSpecimenImage(
-                                specimenImage.copy(
-                                    metadataUploadStatus = if (isRecovered) {
-                                        UploadStatus.RECOVERED
-                                    } else {
-                                        UploadStatus.FAILED
-                                    }
-                                ),
-                                localSpecimen.id,
-                                syncedSession.localId,
-                            )
-                            if (isRecovered) {
-                                uploadOutcomes.markRecovered(MetadataUploadStep.SPECIMEN_IMAGES)
-                            } else {
-                                uploadOutcomes.markFailed(
-                                    MetadataUploadStep.SPECIMEN_IMAGES,
-                                    dependencyFailureMessage
-                                )
-                            }
-                        }
+                    recoverUnsyncedSpecimenImages(
+                        recoveryTemplate = recoveryTemplate,
+                        sessionKey = syncedRemoteSessionId.toString(),
+                        localSessionId = syncedSession.localId,
+                        localSpecimen = localSpecimen,
+                        imagesAndInferenceResults =
+                            specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults,
+                        dependencyFailureMessage = dependencyFailureMessage,
+                    )
                     return@forEachIndexed
                 }
 
@@ -455,7 +456,10 @@ class MetadataUploadWorker @AssistedInject constructor(
                             route = UploadRoutes.specimenImagesData(syncedRemoteSpecimenId),
                             requestData = {
                                 recoveryJson.encodeToJsonElement(
-                                    specimenImage.toPostSpecimenImageRequestDto(inferenceResult)
+                                    specimenImage.toPostSpecimenImageRequestDto(
+                                        inferenceResult,
+                                        clientSpecimenId = syncedSpecimen.id,
+                                    )
                                 )
                             },
                         ) {
@@ -492,18 +496,17 @@ class MetadataUploadWorker @AssistedInject constructor(
             // reached neither the server nor the recovery table keeps the upload pending.
             return uploadOutcomes.firstFailureMessage?.let { retryOrComplete(it) } ?: WorkerResult.success()
         } catch (e: IOException) {
-            failInProgressSteps(localSessionId)
+            revertInProgressSteps(localSessionId)
             return retryOrFailure(context.getString(R.string.upload_error_lost_connection))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            failInProgressSteps(localSessionId)
+            revertInProgressSteps(localSessionId)
             return retryOrFailure(context.getString(R.string.upload_error_unknown))
         } finally {
             if (isStopped) {
                 withContext(NonCancellable) {
-                    resetInProgressUploads(localSession.localId)
-                    failInProgressSteps(localSessionId)
+                    revertInterruptedUploads(localSession.localId)
                 }
             }
         }
@@ -614,6 +617,245 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
+    private suspend fun recoverGraphWithoutRemoteSession(
+        recoveryTemplate: PostDataRecoveryRequestDto,
+        localSessionId: UUID,
+        sessionKey: String,
+        localSessionUnits: List<SessionUnit>,
+        sessionScopedFormAnswers: Map<Int, FormAnswer>,
+        sessionUnitScopedFormAnswersByLocalUnitId: Map<UUID, Map<Int, FormAnswer>>,
+        hasFormAnswers: Boolean,
+        localSurveillanceForm: SurveillanceForm?,
+        localSpecimensWithImagesAndInferenceResults:
+            List<SpecimenWithSpecimenImagesAndInferenceResults>,
+        formVersionFallback: String,
+        dependencyFailureMessage: String,
+    ) {
+        localSessionUnits.forEach { localSessionUnit ->
+            val isRecovered = reportToDataRecovery(
+                recoveryTemplate = recoveryTemplate,
+                idempotencyKey = "${recoveryTemplate.sessionFrontendId}:" +
+                    "${MetadataUploadStep.SESSION_UNITS.name}:${localSessionUnit.localId}",
+                step = MetadataUploadStep.SESSION_UNITS,
+                route = UploadRoutes.sessionUnits(sessionKey),
+                error = NetworkError.CLIENT_ERROR,
+                requestData = {
+                    recoveryJson.encodeToJsonElement(localSessionUnit.toPostSessionUnitRequestDto())
+                },
+            )
+            if (isRecovered) {
+                uploadOutcomes.markRecovered(MetadataUploadStep.SESSION_UNITS)
+            } else {
+                uploadOutcomes.markFailed(MetadataUploadStep.SESSION_UNITS, dependencyFailureMessage)
+            }
+        }
+        if (localSessionUnits.isNotEmpty()) {
+            recordStepStatus(localSessionId, MetadataUploadStep.SESSION_UNITS)
+        }
+
+        if (hasFormAnswers) {
+            recoverFormAnswersWithoutPosting(
+                recoveryTemplate = recoveryTemplate,
+                sessionKey = sessionKey,
+                sessionScopedFormAnswers = sessionScopedFormAnswers,
+                sessionUnitScopedFormAnswersByLocalUnitId = sessionUnitScopedFormAnswersByLocalUnitId,
+                remoteSessionUnitIdByLocalId = localSessionUnits.associate { it.localId to it.remoteId },
+                formVersionFallback = formVersionFallback,
+                error = NetworkError.CLIENT_ERROR,
+            )
+            recordStepStatus(localSessionId, MetadataUploadStep.FORM_ANSWERS)
+        }
+
+        if (localSurveillanceForm != null) {
+            val isRecovered = reportToDataRecovery(
+                recoveryTemplate = recoveryTemplate,
+                idempotencyKey = "${recoveryTemplate.sessionFrontendId}:" +
+                    "${MetadataUploadStep.SURVEILLANCE_FORM.name}:$localSessionId",
+                step = MetadataUploadStep.SURVEILLANCE_FORM,
+                route = UploadRoutes.surveillanceForm(sessionKey),
+                error = NetworkError.CLIENT_ERROR,
+                requestData = {
+                    recoveryJson.encodeToJsonElement(
+                        localSurveillanceForm.toPostSurveillanceFormRequestDto(sessionId = null)
+                    )
+                },
+            )
+            if (isRecovered) {
+                uploadOutcomes.markRecovered(MetadataUploadStep.SURVEILLANCE_FORM)
+            } else {
+                uploadOutcomes.markFailed(
+                    MetadataUploadStep.SURVEILLANCE_FORM,
+                    dependencyFailureMessage
+                )
+            }
+            recordStepStatus(localSessionId, MetadataUploadStep.SURVEILLANCE_FORM)
+        }
+
+        localSpecimensWithImagesAndInferenceResults.forEach { specimenWithImagesAndInferenceResults ->
+            val localSpecimen = specimenWithImagesAndInferenceResults.specimen
+            val sessionUnitFrontendId = specimenRepository.getSessionUnitIdForSpecimen(
+                localSpecimen.id,
+                localSessionId,
+            )
+            recoverUnsyncedSpecimen(
+                recoveryTemplate = recoveryTemplate,
+                sessionKey = sessionKey,
+                localSpecimen = localSpecimen,
+                imagesAndInferenceResults =
+                    specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults,
+                sessionUnitFrontendId = sessionUnitFrontendId,
+                error = NetworkError.CLIENT_ERROR,
+                dependencyFailureMessage = dependencyFailureMessage,
+            )
+            recoverUnsyncedSpecimenImages(
+                recoveryTemplate = recoveryTemplate,
+                sessionKey = sessionKey,
+                localSessionId = localSessionId,
+                localSpecimen = localSpecimen,
+                imagesAndInferenceResults =
+                    specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults,
+                dependencyFailureMessage = dependencyFailureMessage,
+            )
+        }
+        if (localSpecimensWithImagesAndInferenceResults.isNotEmpty()) {
+            recordStepStatus(localSessionId, MetadataUploadStep.SPECIMENS)
+        }
+        if (localSpecimensWithImagesAndInferenceResults.any {
+                it.specimenImagesAndInferenceResults.isNotEmpty()
+            }
+        ) {
+            recordStepStatus(localSessionId, MetadataUploadStep.SPECIMEN_IMAGES)
+        }
+    }
+
+    private suspend fun recoverFormAnswersWithoutPosting(
+        recoveryTemplate: PostDataRecoveryRequestDto,
+        sessionKey: String,
+        sessionScopedFormAnswers: Map<Int, FormAnswer>,
+        sessionUnitScopedFormAnswersByLocalUnitId: Map<UUID, Map<Int, FormAnswer>>,
+        remoteSessionUnitIdByLocalId: Map<UUID, Int?>,
+        formVersionFallback: String,
+        error: NetworkError,
+    ) {
+        val questionIds = sessionScopedFormAnswers.keys +
+            sessionUnitScopedFormAnswersByLocalUnitId.values.flatMap { it.keys }
+        val isRecovered = reportToDataRecovery(
+            recoveryTemplate = recoveryTemplate,
+            idempotencyKey = "${recoveryTemplate.sessionFrontendId}:" +
+                "${MetadataUploadStep.FORM_ANSWERS.name}:${recoveryTemplate.sessionFrontendId}",
+            step = MetadataUploadStep.FORM_ANSWERS,
+            route = UploadRoutes.formAnswers(sessionKey),
+            error = error,
+            requestData = {
+                recoveryJson.encodeToJsonElement(
+                    toRecoveryFormAnswersRequestDto(
+                        formVersion = resolveFormVersionFromQuestionIds(questionIds)
+                            ?: formVersionFallback,
+                        sessionScopedAnswers = sessionScopedFormAnswers,
+                        sessionUnitScopedAnswersByLocalUnitId =
+                            sessionUnitScopedFormAnswersByLocalUnitId,
+                        remoteSessionUnitIdByLocalId = remoteSessionUnitIdByLocalId,
+                        submittedAt = System.currentTimeMillis(),
+                    )
+                )
+            },
+        )
+        if (isRecovered) {
+            uploadOutcomes.markRecovered(MetadataUploadStep.FORM_ANSWERS)
+        } else {
+            uploadOutcomes.markFailed(
+                MetadataUploadStep.FORM_ANSWERS,
+                error.toString(context)
+            )
+        }
+    }
+
+    private suspend fun recoverUnsyncedSpecimen(
+        recoveryTemplate: PostDataRecoveryRequestDto,
+        sessionKey: String,
+        localSpecimen: Specimen,
+        imagesAndInferenceResults: List<SpecimenImageAndInferenceResult>,
+        sessionUnitFrontendId: UUID?,
+        error: NetworkError,
+        dependencyFailureMessage: String,
+    ) {
+        val isRecovered = reportToDataRecovery(
+            recoveryTemplate = recoveryTemplate,
+            idempotencyKey = "${recoveryTemplate.sessionFrontendId}:" +
+                "${MetadataUploadStep.SPECIMENS.name}:${localSpecimen.id}",
+            step = MetadataUploadStep.SPECIMENS,
+            route = UploadRoutes.specimens(sessionKey),
+            error = error,
+            requestData = {
+                recoveryJson.encodeToJsonElement(
+                    localSpecimen.toPostSpecimenRequestDto(
+                        sessionUnitId = null,
+                        expectedImages = imagesAndInferenceResults.size,
+                        sessionUnitFrontendId = sessionUnitFrontendId,
+                    )
+                )
+            },
+        )
+        if (isRecovered) {
+            uploadOutcomes.markRecovered(MetadataUploadStep.SPECIMENS)
+        } else {
+            uploadOutcomes.markFailed(MetadataUploadStep.SPECIMENS, dependencyFailureMessage)
+        }
+    }
+
+    private suspend fun recoverUnsyncedSpecimenImages(
+        recoveryTemplate: PostDataRecoveryRequestDto,
+        sessionKey: String,
+        localSessionId: UUID,
+        localSpecimen: Specimen,
+        imagesAndInferenceResults: List<SpecimenImageAndInferenceResult>,
+        dependencyFailureMessage: String,
+    ) {
+        imagesAndInferenceResults.forEach { (specimenImage, inferenceResult) ->
+            if (specimenImage.metadataUploadStatus.isUploaded()) {
+                return@forEach
+            }
+            val isRecovered = reportToDataRecovery(
+                recoveryTemplate = recoveryTemplate,
+                idempotencyKey = "${recoveryTemplate.sessionFrontendId}:" +
+                    "${MetadataUploadStep.SPECIMEN_IMAGES.name}:${specimenImage.localId}",
+                step = MetadataUploadStep.SPECIMEN_IMAGES,
+                route = UploadRoutes.specimenImagesDataForUnsyncedSpecimen(
+                    sessionKey,
+                    localSpecimen.id
+                ),
+                error = NetworkError.CLIENT_ERROR,
+                requestData = {
+                    recoveryJson.encodeToJsonElement(
+                        specimenImage.toPostSpecimenImageRequestDto(
+                            inferenceResult,
+                            clientSpecimenId = localSpecimen.id,
+                        )
+                    )
+                },
+            )
+            specimenImageRepository.updateSpecimenImage(
+                specimenImage.copy(
+                    metadataUploadStatus = if (isRecovered) {
+                        UploadStatus.RECOVERED
+                    } else {
+                        UploadStatus.FAILED
+                    }
+                ),
+                localSpecimen.id,
+                localSessionId,
+            )
+            if (isRecovered) {
+                uploadOutcomes.markRecovered(MetadataUploadStep.SPECIMEN_IMAGES)
+            } else {
+                uploadOutcomes.markFailed(
+                    MetadataUploadStep.SPECIMEN_IMAGES,
+                    dependencyFailureMessage
+                )
+            }
+        }
+    }
+
     private suspend fun markStepsInProgress(sessionId: UUID, steps: List<MetadataUploadStep>) {
         steps.forEach { step -> upsertStepStatus(sessionId, step, UploadStatus.IN_PROGRESS) }
     }
@@ -637,20 +879,32 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
     }
 
-    private suspend fun failInProgressSteps(sessionId: UUID) {
-        metadataUploadStatusRepository.failInProgressMetadataUploadStatuses(sessionId).onError {
+    private suspend fun revertInterruptedUploads(sessionId: UUID) {
+        revertInProgressSteps(sessionId)
+        revertInProgressImageMetadata(sessionId)
+    }
+
+    private suspend fun revertInProgressSteps(sessionId: UUID) {
+        metadataUploadStatusRepository.revertInProgressMetadataUploadStatuses(sessionId).onError {
             Timber.tag(TAG).e("Failed to clear in-progress upload statuses for session $sessionId: $it")
         }
     }
 
-    private suspend fun resetInProgressUploads(sessionId: UUID) {
+    private suspend fun revertInProgressImageMetadata(sessionId: UUID) {
         val specimensWithImagesAndInferenceResults =
             specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(sessionId, null)
         specimensWithImagesAndInferenceResults.forEach { specimenWithImagesAndInferenceResults ->
             specimenWithImagesAndInferenceResults.specimenImagesAndInferenceResults.forEach { (specimenImage, _) ->
-                if (specimenImage.metadataUploadStatus == UploadStatus.IN_PROGRESS) {
+                val pendingMetadataStatus = specimenImage.metadataUploadStatus.pendingIfInterrupted()
+                val pendingImageStatus = specimenImage.imageUploadStatus.pendingIfInterrupted()
+                if (pendingMetadataStatus != specimenImage.metadataUploadStatus ||
+                    pendingImageStatus != specimenImage.imageUploadStatus
+                ) {
                     specimenImageRepository.updateSpecimenImage(
-                        specimenImage.copy(metadataUploadStatus = UploadStatus.FAILED),
+                        specimenImage.copy(
+                            metadataUploadStatus = pendingMetadataStatus,
+                            imageUploadStatus = pendingImageStatus,
+                        ),
                         specimenWithImagesAndInferenceResults.specimen.id,
                         sessionId
                     )
@@ -945,8 +1199,13 @@ class MetadataUploadWorker @AssistedInject constructor(
         sessionScopedAnswers: Map<Int, FormAnswer>,
         sessionUnitScopedAnswersBySessionUnitRemoteId: Map<Int, Map<Int, FormAnswer>>,
     ): String? {
-        val formId = (sessionScopedAnswers.keys + sessionUnitScopedAnswersBySessionUnitRemoteId.values.flatMap { it.keys })
-            .distinct()
+        val questionIds = sessionScopedAnswers.keys +
+            sessionUnitScopedAnswersBySessionUnitRemoteId.values.flatMap { it.keys }
+        return resolveFormVersionFromQuestionIds(questionIds)
+    }
+
+    private suspend fun resolveFormVersionFromQuestionIds(questionIds: Iterable<Int>): String? {
+        val formId = questionIds.distinct()
             .map { formQuestionRepository.getFormIdByQuestionId(it) }
             .distinct()
             .singleOrNull()

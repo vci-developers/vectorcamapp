@@ -11,10 +11,14 @@ data class SessionUploadProgress(
     val isUploading: Boolean,
     val metadataUploadStepStatuses: List<MetadataUploadStepStatus> = emptyList()
 ) {
+    val areImageFilesDelivered: Boolean
+        get() = totalCount == 0 || uploadedImageCount == totalCount
+
+    val areImageMetadataDelivered: Boolean
+        get() = totalCount == 0 || uploadedMetadataCount == totalCount
+
     val hasFailedMetadataUploadStep: Boolean
-        get() = metadataUploadStepStatuses.any {
-            it.status == UploadStatus.FAILED || (it.status == UploadStatus.IN_PROGRESS && !isUploading)
-        }
+        get() = metadataUploadStepStatuses.any { it.status == UploadStatus.FAILED }
 
     val hasRecoveredMetadataUploadStep: Boolean
         get() = metadataUploadStepStatuses.any { it.status == UploadStatus.RECOVERED }

@@ -785,6 +785,7 @@
     <ID>TooGenericExceptionThrown:SettingsViewModel.kt:SettingsViewModel$throw Exception("Failed to save sites for program $programId")</ID>
     <ID>TooGenericExceptionThrown:SettingsViewModel.kt:SettingsViewModel$throw Exception("Failed to save surveillance form for program $programId")</ID>
     <ID>TooGenericExceptionThrown:SettingsViewModel.kt:SettingsViewModel$throw Exception("Failed to save surveillance form questions")</ID>
+    <ID>TooManyFunctions:MetadataUploadWorker.kt:MetadataUploadWorker : CoroutineWorker</ID>
     <ID>TooManyFunctions:RoomDatabaseModule.kt:RoomDatabaseModule</ID>
     <ID>TooManyFunctions:VectorCamAnalytics.kt:VectorCamAnalytics</ID>
     <ID>UnusedParameter:IncompleteSessionErrorLogger.kt:IncompleteSessionErrorLogger$failedImageUri: Uri</ID>

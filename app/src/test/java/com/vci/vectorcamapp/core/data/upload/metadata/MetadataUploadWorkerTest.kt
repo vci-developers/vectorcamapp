@@ -4,6 +4,8 @@ import androidx.work.ListenableWorker
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.data.dto.data_recovery.PostDataRecoveryRequestDto
 import com.vci.vectorcamapp.core.data.dto.form_answer.PostFormAnswersResponseDto
+import com.vci.vectorcamapp.core.data.dto.session_unit.GetSessionUnitsResponseDto
+import com.vci.vectorcamapp.core.domain.model.SessionUnit
 import com.vci.vectorcamapp.core.domain.model.enums.MetadataUploadStep
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.util.Result
@@ -18,6 +20,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Test
+import java.util.UUID
 
 class MetadataUploadWorkerTest : MetadataUploadWorkerTestBase() {
 
@@ -130,6 +133,8 @@ class MetadataUploadWorkerTest : MetadataUploadWorkerTestBase() {
         }
         assertThat(imageRecovery.payload.route)
             .isEqualTo("sessions/$REMOTE_SESSION_ID/specimens/$SPECIMEN_1/images/data")
+        assertThat(imageRecovery.payload.requestData.jsonObject["clientSpecimenId"]?.jsonPrimitive?.content)
+            .isEqualTo(SPECIMEN_1)
 
         coVerify(exactly = 0) {
             specimenImageDataSource.postSpecimenImageMetadata(match { it.localId == IMAGE_1 }, any(), any())
@@ -247,22 +252,50 @@ class MetadataUploadWorkerTest : MetadataUploadWorkerTestBase() {
     }
 
     // ========================================
-    // B. Session failure is the only step that stops the upload
+    // B. Parent failures recover remaining children so image TUS can still run
     // ========================================
 
     @Test
-    fun worker_b01_sessionFails_reportsToDataRecoveryAndSkipsSessionScopedEndpoints() = runTest {
+    fun worker_b01_sessionFails_recoversRemainingGraphWithoutPostingChildren() = runTest {
         coEvery { sessionDataSource.postSession(any(), any(), any(), any()) } returns Result.Error(NetworkError.SERVER_ERROR)
 
         val result = buildWorker().doWork()
 
-        assertThat(result).isEqualTo(ListenableWorker.Result.retry())
-        val recoveryRequest = dataRecoveryRequests.single()
-        assertThat(recoveryRequest.payload.route).isEqualTo("sessions")
-        val requestData = recoveryRequest.payload.requestData.jsonObject
+        assertThat(result).isEqualTo(ListenableWorker.Result.success())
+        assertThat(dataRecoveryRequests.map { it.idempotencyKey }).containsExactly(
+            "$sessionId:SESSION:$sessionId",
+            "$sessionId:FORM_ANSWERS:$sessionId",
+            "$sessionId:SPECIMENS:$SPECIMEN_1",
+            "$sessionId:SPECIMEN_IMAGES:$IMAGE_1",
+            "$sessionId:SPECIMENS:$SPECIMEN_2",
+            "$sessionId:SPECIMEN_IMAGES:$IMAGE_2",
+        ).inOrder()
+        val sessionRecovery = dataRecoveryRequests.first()
+        assertThat(sessionRecovery.payload.route).isEqualTo("sessions")
+        val requestData = sessionRecovery.payload.requestData.jsonObject
         assertThat(requestData["frontendId"]?.jsonPrimitive?.content).isEqualTo(sessionId.toString())
         assertThat(requestData["siteId"]?.jsonPrimitive?.int).isEqualTo(SITE_ID)
         assertThat(requestData["deviceId"]?.jsonPrimitive?.int).isEqualTo(DEVICE_ID)
+
+        val formRecovery = dataRecoveryRequests.single {
+            it.idempotencyKey == "$sessionId:FORM_ANSWERS:$sessionId"
+        }
+        assertThat(formRecovery.sessionFrontendId).isEqualTo(sessionId)
+        assertThat(formRecovery.payload.route).isEqualTo("sessions/$sessionId/forms/answers")
+        val formRecoveryData = formRecovery.payload.requestData.jsonObject
+        assertThat(formRecoveryData["formVersion"]?.jsonPrimitive?.content).isEqualTo(FORM_VERSION)
+        assertThat(
+            formRecoveryData["answers"]?.jsonArray?.single()?.jsonObject?.get("frontendId")
+                ?.jsonPrimitive?.content
+        ).isEqualTo(formAnswer.localId.toString())
+
+        val imageRecovery = dataRecoveryRequests.single {
+            it.idempotencyKey == "$sessionId:SPECIMEN_IMAGES:$IMAGE_1"
+        }
+        assertThat(imageRecovery.payload.route)
+            .isEqualTo("sessions/$sessionId/specimens/$SPECIMEN_1/images/data")
+        assertThat(imageRecovery.payload.requestData.jsonObject["clientSpecimenId"]?.jsonPrimitive?.content)
+            .isEqualTo(SPECIMEN_1)
 
         coVerify(exactly = 0) { formAnswerDataSource.postFormAnswersForSession(any(), any(), any(), any()) }
         coVerify(exactly = 0) { specimenDataSource.postSpecimen(any(), any(), any(), any()) }
@@ -270,20 +303,101 @@ class MetadataUploadWorkerTest : MetadataUploadWorkerTestBase() {
         assertThat(finalStepStatuses()).containsExactly(
             MetadataUploadStep.DEVICE, UploadStatus.COMPLETED,
             MetadataUploadStep.SESSION, UploadStatus.RECOVERED,
-            MetadataUploadStep.FORM_ANSWERS, UploadStatus.FAILED,
-            MetadataUploadStep.SPECIMENS, UploadStatus.FAILED,
-            MetadataUploadStep.SPECIMEN_IMAGES, UploadStatus.FAILED,
+            MetadataUploadStep.FORM_ANSWERS, UploadStatus.RECOVERED,
+            MetadataUploadStep.SPECIMENS, UploadStatus.RECOVERED,
+            MetadataUploadStep.SPECIMEN_IMAGES, UploadStatus.RECOVERED,
         )
     }
 
     @Test
-    fun worker_b02_sessionFailsOnFinalAttempt_returnsFailure() = runTest {
+    fun worker_b02_sessionFailsOnFinalAttempt_stillRecoversGraphSoImageUploadCanRun() = runTest {
         every { workerParams.runAttemptCount } returns MetadataUploadWorker.MAX_RETRIES
         coEvery { sessionDataSource.postSession(any(), any(), any(), any()) } returns Result.Error(NetworkError.SERVER_ERROR)
 
         val result = buildWorker().doWork()
 
-        assertThat(result).isEqualTo(ListenableWorker.Result.failure())
+        assertThat(result).isEqualTo(ListenableWorker.Result.success())
+        assertThat(finalStepStatuses()[MetadataUploadStep.SESSION]).isEqualTo(UploadStatus.RECOVERED)
+        assertThat(finalStepStatuses()[MetadataUploadStep.SPECIMEN_IMAGES]).isEqualTo(UploadStatus.RECOVERED)
+    }
+
+    @Test
+    fun worker_b04_sessionUnitFails_recoversFormAnswersAndLinkedSpecimensWithoutPosting() = runTest {
+        val unitId = UUID.randomUUID()
+        val unit = SessionUnit(localId = unitId, remoteId = null, unitOrder = 1, createdAt = 1_000L)
+        coEvery { sessionUnitRepository.getSessionUnitsForSession(sessionId) } returns listOf(unit)
+        coEvery { sessionUnitDataSource.getSessionUnitForSession(REMOTE_SESSION_ID) } returns
+            Result.Success(GetSessionUnitsResponseDto(sessionId = REMOTE_SESSION_ID, units = emptyList()))
+        coEvery { sessionUnitDataSource.postSessionUnit(unit, REMOTE_SESSION_ID) } returns
+            Result.Error(NetworkError.SERVER_ERROR)
+        coEvery { specimenRepository.getSessionUnitIdForSpecimen(SPECIMEN_1, sessionId) } returns unitId
+        coEvery { formAnswerRepository.getSessionUnitScopedFormAnswers(unitId) } returns mapOf(
+            QUESTION_ID to formAnswer
+        )
+
+        val result = buildWorker().doWork()
+
+        assertThat(result).isEqualTo(ListenableWorker.Result.success())
+        coVerify(exactly = 0) {
+            formAnswerDataSource.postFormAnswersForSession(any(), any(), any(), any())
+        }
+        coVerify(exactly = 0) {
+            specimenDataSource.postSpecimen(match { it.id == SPECIMEN_1 }, any(), any(), any())
+        }
+        assertSpecimenPosted(SPECIMEN_2)
+
+        val formRecovery = dataRecoveryRequests.single {
+            it.idempotencyKey == "$sessionId:FORM_ANSWERS:$sessionId"
+        }
+        val unitAnswer = formRecovery.payload.requestData.jsonObject["answers"]?.jsonArray
+            ?.map { it.jsonObject }
+            ?.single { it["sessionUnitFrontendId"] != null }
+        assertThat(unitAnswer?.get("sessionUnitFrontendId")?.jsonPrimitive?.content)
+            .isEqualTo(unitId.toString())
+        assertThat(unitAnswer?.get("frontendId")?.jsonPrimitive?.content)
+            .isEqualTo(formAnswer.localId.toString())
+
+        val specimenRecovery = dataRecoveryRequests.single {
+            it.idempotencyKey == "$sessionId:SPECIMENS:$SPECIMEN_1"
+        }
+        assertThat(
+            specimenRecovery.payload.requestData.jsonObject["sessionUnitFrontendId"]
+                ?.jsonPrimitive?.content
+        ).isEqualTo(unitId.toString())
+        val imageRecovery = dataRecoveryRequests.single {
+            it.idempotencyKey == "$sessionId:SPECIMEN_IMAGES:$IMAGE_1"
+        }
+        assertThat(imageRecovery.payload.requestData.jsonObject["clientSpecimenId"]?.jsonPrimitive?.content)
+            .isEqualTo(SPECIMEN_1)
+
+        assertThat(finalStepStatuses()[MetadataUploadStep.SESSION_UNITS]).isEqualTo(UploadStatus.RECOVERED)
+        assertThat(finalStepStatuses()[MetadataUploadStep.FORM_ANSWERS]).isEqualTo(UploadStatus.RECOVERED)
+        assertThat(finalStepStatuses()[MetadataUploadStep.SPECIMENS]).isEqualTo(UploadStatus.RECOVERED)
+        assertThat(finalStepStatuses()[MetadataUploadStep.SPECIMEN_IMAGES]).isEqualTo(UploadStatus.RECOVERED)
+    }
+
+    @Test
+    fun worker_b05_sessionFailsForLegacySurveillance_recoversSurveyWithoutPosting() = runTest {
+        givenProgramFormVersion(null)
+        coEvery { formAnswerRepository.getSessionScopedFormAnswers(sessionId) } returns emptyMap()
+        coEvery { surveillanceFormRepository.getSurveillanceFormBySessionId(sessionId) } returns surveillanceForm
+        coEvery { sessionDataSource.postSession(any(), any(), any(), any()) } returns
+            Result.Error(NetworkError.SERVER_ERROR)
+
+        val result = buildWorker().doWork()
+
+        assertThat(result).isEqualTo(ListenableWorker.Result.success())
+        val surveyRecovery = dataRecoveryRequests.single { it.payload.route.contains("/survey") }
+        assertThat(surveyRecovery.payload.route).isEqualTo("sessions/$sessionId/survey")
+        assertThat(surveyRecovery.payload.requestData.jsonObject.containsKey("sessionId")).isFalse()
+        assertThat(
+            surveyRecovery.payload.requestData.jsonObject["numPeopleSleptInHouse"]?.jsonPrimitive?.int
+        ).isEqualTo(4)
+        coVerify(exactly = 0) { surveillanceFormDataSource.postSurveillanceForm(any(), any()) }
+        assertThat(finalStepStatuses()[MetadataUploadStep.SURVEILLANCE_FORM])
+            .isEqualTo(UploadStatus.RECOVERED)
+        assertThat(finalStepStatuses()[MetadataUploadStep.SPECIMEN_IMAGES])
+            .isEqualTo(UploadStatus.RECOVERED)
     }
 
     @Test
@@ -327,5 +441,41 @@ class MetadataUploadWorkerTest : MetadataUploadWorkerTestBase() {
             .containsExactlyElementsIn(applicableSteps.map { it to UploadStatus.IN_PROGRESS })
         assertThat(finalStepStatuses())
             .containsExactlyEntriesIn(applicableSteps.associateWith { UploadStatus.COMPLETED })
+    }
+
+    @Test
+    fun worker_c02_interruptedImageStatuses_areRevertedToPendingBeforeUpload() = runTest {
+        val interrupted = specimenWithImage(SPECIMEN_1, IMAGE_1)
+        val interruptedImage = interrupted.specimenImagesAndInferenceResults.single().specimenImage.copy(
+            metadataUploadStatus = UploadStatus.IN_PROGRESS,
+            imageUploadStatus = UploadStatus.IN_PROGRESS,
+        )
+        coEvery {
+            specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(sessionId, null)
+        } returns listOf(
+            interrupted.copy(
+                specimenImagesAndInferenceResults = listOf(
+                    interrupted.specimenImagesAndInferenceResults.single().copy(
+                        specimenImage = interruptedImage
+                    )
+                )
+            ),
+            specimenWithImage(SPECIMEN_2, IMAGE_2),
+        )
+
+        val result = buildWorker().doWork()
+
+        assertThat(result).isEqualTo(ListenableWorker.Result.success())
+        coVerify {
+            specimenImageRepository.updateSpecimenImage(
+                match {
+                    it.localId == IMAGE_1 &&
+                        it.metadataUploadStatus == UploadStatus.NOT_STARTED &&
+                        it.imageUploadStatus == UploadStatus.NOT_STARTED
+                },
+                SPECIMEN_1,
+                sessionId,
+            )
+        }
     }
 }

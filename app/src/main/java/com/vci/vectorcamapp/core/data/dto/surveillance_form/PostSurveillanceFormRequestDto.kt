@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PostSurveillanceFormRequestDto(
-    val sessionId: Int = -1,
+    val sessionId: Int? = null,
     val numPeopleSleptInHouse: Int = 0,
     val wasIrsConducted: Boolean = false,
     val monthsSinceIrs: Int? = null,
