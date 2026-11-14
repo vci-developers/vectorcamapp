@@ -36,7 +36,6 @@ import coil3.request.ImageRequest
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
-import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.presentation.components.pill.InfoPill
 import com.vci.vectorcamapp.core.presentation.components.tile.InfoTile
 import com.vci.vectorcamapp.core.presentation.extensions.displayTextFor
@@ -68,7 +67,7 @@ fun CompleteSessionSpecimensTile(
     val sexDisplay = SexLabel.displayTextFor(context, specimenImage.sex)
     val abdomenStatusDisplay = AbdomenStatusLabel.displayTextFor(context, specimenImage.abdomenStatus)
 
-    val fallbackPainter = if (specimenImage.imageUploadStatus == UploadStatus.COMPLETED) {
+    val fallbackPainter = if (specimenImage.imageUploadStatus.isUploaded()) {
         painterResource(R.drawable.specimen_image_placeholder_uploaded)
     } else {
         painterResource(R.drawable.specimen_image_placeholder_not_uploaded)

@@ -43,15 +43,15 @@
     <ID>ArgumentListWrapping:CompleteSessionListTile.kt:(R.string.complete_session_label_completed_at, dateTimeFormatter.format(session.completedAt))</ID>
     <ID>ArgumentListWrapping:CompleteSessionListTile.kt:(R.string.complete_session_label_created_at, dateTimeFormatter.format(session.createdAt))</ID>
     <ID>ArgumentListWrapping:CompleteSessionListTile.kt:(R.string.complete_session_label_session_type, session.type.displayText(context))</ID>
-    <ID>ArgumentListWrapping:CompleteSessionListTile.kt:(R.string.complete_session_status_completed)</ID>
     <ID>ArgumentListWrapping:CompleteSessionListTile.kt:(R.string.complete_session_status_image_progress, sessionUploadProgress.uploadedImageCount, sessionUploadProgress.totalCount)</ID>
-    <ID>ArgumentListWrapping:CompleteSessionListTile.kt:(R.string.complete_session_status_metadata_progress, sessionUploadProgress.uploadedMetadataCount, sessionUploadProgress.totalCount)</ID>
     <ID>ArgumentListWrapping:CompleteSessionListTile.kt:(R.string.complete_session_title_card, dateFormatter.format(completedAt))</ID>
     <ID>ArgumentListWrapping:CompleteSessionListTile.kt:(completedAt)</ID>
     <ID>ArgumentListWrapping:CompleteSessionListTile.kt:(context)</ID>
     <ID>ArgumentListWrapping:CompleteSessionListTile.kt:(session.completedAt)</ID>
     <ID>ArgumentListWrapping:CompleteSessionListTile.kt:(session.createdAt)</ID>
     <ID>ArgumentListWrapping:CompleteSessionListViewModel.kt:CompleteSessionListViewModel$( session.localId, null )</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListViewModelTest.kt:CompleteSessionListViewModelTest$(any())</ID>
+    <ID>ArgumentListWrapping:CompleteSessionListViewModelTest.kt:CompleteSessionListViewModelTest$(emptyList())</ID>
     <ID>ArgumentListWrapping:CompleteSessionSpecimens.kt:(R.string.complete_session_label_image_badge, index + 1, totalImages)</ID>
     <ID>ArgumentListWrapping:CompleteSessionSpecimens.kt:(items = specimensWithImagesAndInferenceResults.asReversed())</ID>
     <ID>ArgumentListWrapping:CompleteSessionSpecimensTile.kt:(R.string.complete_session_content_description_specimen_image, specimen.id)</ID>
@@ -114,32 +114,28 @@
     <ID>ArgumentListWrapping:LocationClient.kt:LocationClient$( context, Manifest.permission.ACCESS_FINE_LOCATION )</ID>
     <ID>ArgumentListWrapping:MainViewModel.kt:MainViewModel$( screen = "Main", feature = "DeviceCache", action = "observe_program_id" )</ID>
     <ID>ArgumentListWrapping:MainViewModel.kt:MainViewModel$( throwable = Exception(MainError.DEVICE_FETCH_FAILED.name, throwable), context = VectorCamCrashlyticsContext( screen = "Main", feature = "DeviceCache", action = "observe_program_id" ), tags = mapOf( "error_type" to "device_fetch_failure", "critical" to "true", "phase" to "startup", ), extras = mapOf( "fallback_destination" to "Registration", "error_context" to "User redirected to registration", "recovery_action" to "Defaulting to registration flow", "possible_causes" to "Program ID not cached, database not initialized, device configuration incomplete, corruption in device cache" ) )</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( localSession, localSiteId, syncedDevice.id, totalSpecimensForSession )</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( localSession, localSiteId, syncedDeviceId, expectedSpecimens )</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( localSessionId, null )</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( localSessionUnit, syncedSession.localId, syncedSession.remoteId )</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( localSessionUnit.localId, syncSessionUnitResult.data )</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( localSpecimen.id, syncedRemoteSessionId )</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( localSpecimenImage.localId, syncedSpecimen.remoteId )</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( localSurveillanceForm, syncedRemoteSessionId )</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( localSurveillanceForm, syncedSession.localId, syncedSession.remoteId )</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC )</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( questionId to null, FormAnswerDto( id = answer.remoteId, frontendId = answer.localId, sessionId = syncedRemoteSessionId, sessionUnitId = null, questionId = questionId, value = answer.value, dataType = answer.dataType, submittedAt = answer.submittedAt ) )</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( questionId to remoteSessionUnitId, FormAnswerDto( id = answer.remoteId, frontendId = answer.localId, sessionId = syncedRemoteSessionId, sessionUnitId = remoteSessionUnitId, questionId = questionId, value = answer.value, dataType = answer.dataType, submittedAt = answer.submittedAt ) )</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( remoteInferenceResult, remoteSpecimenImage.localId )</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( remoteSessionUnit, syncedLocalSessionId )</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( remoteSpecimenImage, syncedSpecimen.id, syncedLocalSessionId )</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( remoteSurveillanceForm, syncedLocalSessionId )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( sessionScopedAnswers, sessionUnitScopedAnswersBySessionUnitRemoteId )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( sessionScopedFormAnswers, sessionUnitScopedFormAnswersByRemoteUnitId )</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$( specimenImage, inferenceResult, syncedSpecimen, syncedSession.localId )</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$(R.string.upload_notification_failed)</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$(R.string.upload_notification_retrying)</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$(R.string.upload_notification_specimen_image_progress, currentSpecimenIndex + 1, totalSpecimens, currentImageIndex + 1, totalImagesForSpecimen)</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$(R.string.upload_notification_specimen_progress, currentSpecimenIndex + 1, totalSpecimens)</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$(context, CHANNEL_ID)</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$(context.getString(R.string.upload_notification_failed))</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$(context.getString(R.string.upload_notification_retrying))</ID>
-    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$(context.getString(R.string.upload_notification_specimen_progress, currentSpecimenIndex + 1, totalSpecimens))</ID>
     <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$(localSessionUnit, syncedRemoteSessionId)</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorker.kt:MetadataUploadWorker$(localSessionUnit.localId)</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorkerTest.kt:MetadataUploadWorkerTest$(NetworkError.SERVER_ERROR)</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorkerTest.kt:MetadataUploadWorkerTest$(any(), any(), any(), any())</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorkerTestBase.kt:MetadataUploadWorkerTestBase$( id = FORM_ID, name = "Form", version = FORM_VERSION )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorkerTestBase.kt:MetadataUploadWorkerTestBase$( id = PROGRAM_ID, name = "Program", country = "Uganda", formVersion = formVersion )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorkerTestBase.kt:MetadataUploadWorkerTestBase$( match { it.id == specimenId }, REMOTE_SESSION_ID, null, 1 )</ID>
+    <ID>ArgumentListWrapping:MetadataUploadWorkerTestBase.kt:MetadataUploadWorkerTestBase$( match { it.localId == imageId }, null, any() )</ID>
     <ID>ArgumentListWrapping:Migration_23_24_AddLocationTypeLevelColumn.kt:&lt;no name provided&gt;$( """ UPDATE `location_type` SET `level` = ( SELECT COUNT(*) FROM `location_type` AS lt2 WHERE lt2.programId = location_type.programId AND lt2.id &lt;= location_type.id ) """.trimIndent())</ID>
     <ID>ArgumentListWrapping:Migration_7_8_SpecimenImageSeparation.kt:&lt;no name provided&gt;$("CREATE INDEX IF NOT EXISTS `index_specimen_image_specimenId_sessionId` ON `specimen_image` (`specimenId`, `sessionId`);")</ID>
     <ID>ArgumentListWrapping:Migration_9_10_RefactorSpecimenImageAndInferenceResultKeys.kt:&lt;no name provided&gt;$("CREATE INDEX IF NOT EXISTS `index_specimen_image_specimenId_sessionId` ON `specimen_image` (`specimenId`, `sessionId`)")</ID>
@@ -196,6 +192,7 @@
     <ID>CyclomaticComplexMethod:CompleteSessionForm.kt:@Composable fun CompleteSessionForm</ID>
     <ID>CyclomaticComplexMethod:CompleteSessionListTile.kt:@Composable fun CompleteSessionListTile</ID>
     <ID>CyclomaticComplexMethod:ErrorExtensions.kt:fun Error.toString: String</ID>
+    <ID>CyclomaticComplexMethod:ImageUploadWorker.kt:ImageUploadWorker$private suspend fun uploadSingleImage: DomainResult&lt;String, NetworkError&gt;</ID>
     <ID>CyclomaticComplexMethod:ImagingViewModel.kt:ImagingViewModel$fun onAction</ID>
     <ID>CyclomaticComplexMethod:IntakeViewModel.kt:IntakeViewModel$fun onAction</ID>
     <ID>CyclomaticComplexMethod:IntakeViewModel.kt:IntakeViewModel$private fun loadFormDetails</ID>
@@ -327,7 +324,6 @@
     <ID>ImportOrdering:LandingErrorLogger.kt:import android.os.Build import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlyticsContext import com.vci.vectorcamapp.core.logging.crashlytics.Severity</ID>
     <ID>ImportOrdering:NetworkModule.kt:import android.content.Context import com.vci.vectorcamapp.BuildConfig import com.vci.vectorcamapp.core.data.network.connectivity.AndroidConnectivityObserver import com.vci.vectorcamapp.core.data.upload.image.util.TimeoutConfiguredTusClient import com.vci.vectorcamapp.core.domain.network.connectivity.ConnectivityObserver import dagger.Module import dagger.Provides import dagger.hilt.InstallIn import dagger.hilt.android.qualifiers.ApplicationContext import dagger.hilt.components.SingletonComponent import io.ktor.client.HttpClient import io.ktor.client.engine.android.Android import io.ktor.client.plugins.DefaultRequest import io.ktor.client.plugins.contentnegotiation.ContentNegotiation import io.ktor.client.plugins.logging.ANDROID import io.ktor.client.plugins.logging.LogLevel import io.ktor.client.plugins.logging.Logger import io.ktor.client.plugins.logging.Logging import io.ktor.client.request.bearerAuth import io.ktor.serialization.kotlinx.json.json import io.ktor.http.ContentType import io.ktor.http.contentType import io.tus.android.client.TusPreferencesURLStore import io.tus.java.client.TusClient import kotlinx.serialization.json.Json import javax.inject.Named import javax.inject.Singleton</ID>
     <ID>ImportOrdering:RegistrationScreen.kt:import androidx.compose.foundation.Image import androidx.compose.foundation.layout.Arrangement import androidx.compose.foundation.layout.Column import androidx.compose.foundation.layout.IntrinsicSize import androidx.compose.foundation.layout.fillMaxSize import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.foundation.layout.height import androidx.compose.foundation.layout.padding import androidx.compose.foundation.text.KeyboardOptions import androidx.compose.foundation.shape.RoundedCornerShape import androidx.compose.material3.AlertDialog import androidx.compose.material3.Button import androidx.compose.material3.ButtonDefaults import androidx.compose.material3.Card import androidx.compose.material3.CardDefaults import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Icon import androidx.compose.material3.IconButton import androidx.compose.material3.Scaffold import androidx.compose.material3.Text import androidx.compose.material3.TextButton import androidx.compose.runtime.Composable import androidx.compose.runtime.getValue import androidx.compose.runtime.mutableStateOf import androidx.compose.runtime.remember import androidx.compose.runtime.setValue import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.graphics.Color import androidx.compose.ui.layout.ContentScale import androidx.compose.ui.text.input.PasswordVisualTransformation import androidx.compose.ui.text.input.VisualTransformation import androidx.compose.ui.text.input.KeyboardType import androidx.compose.ui.res.painterResource import androidx.compose.ui.res.stringResource import androidx.compose.ui.tooling.preview.PreviewLightDark import com.vci.vectorcamapp.R import com.vci.vectorcamapp.core.presentation.components.button.ActionButton import com.vci.vectorcamapp.core.presentation.components.form.DatePickerField import com.vci.vectorcamapp.core.presentation.components.form.DropdownField import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField import com.vci.vectorcamapp.core.presentation.components.gestures.PullToRefresh import com.vci.vectorcamapp.registration.domain.model.RegistrationDropdownOptions import com.vci.vectorcamapp.registration.presentation.util.RegistrationTestTags import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.customShadow import com.vci.vectorcamapp.ui.extensions.dimensions import com.vci.vectorcamapp.ui.theme.VectorcamappTheme</ID>
-    <ID>ImportOrdering:RemoteSpecimenImageDataSource.kt:import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageRequestDto import com.vci.vectorcamapp.core.data.mappers.toImageMetadataDto import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageResponseDto import com.vci.vectorcamapp.core.data.dto.specimen_image.SpecimenImageDto import com.vci.vectorcamapp.core.data.network.constructUrl import com.vci.vectorcamapp.core.data.network.safeCall import com.vci.vectorcamapp.core.domain.model.InferenceResult import com.vci.vectorcamapp.core.domain.model.SpecimenImage import com.vci.vectorcamapp.core.domain.network.api.SpecimenImageDataSource import com.vci.vectorcamapp.core.domain.util.Result import com.vci.vectorcamapp.core.domain.util.network.NetworkError import io.ktor.client.HttpClient import io.ktor.client.request.get import io.ktor.client.request.post import io.ktor.client.request.setBody import javax.inject.Inject</ID>
     <ID>ImportOrdering:ScreenHeader.kt:import androidx.compose.ui.geometry.Offset import androidx.compose.ui.graphics.Brush import com.vci.vectorcamapp.core.presentation.util.ScreenHeaderTestTags import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.dimensions import com.vci.vectorcamapp.ui.theme.screenHeightFraction import androidx.compose.foundation.background import androidx.compose.foundation.layout.Arrangement import androidx.compose.foundation.layout.Box import androidx.compose.foundation.layout.Column import androidx.compose.foundation.layout.Row import androidx.compose.foundation.layout.Spacer import androidx.compose.foundation.layout.fillMaxSize import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.foundation.layout.height import androidx.compose.foundation.layout.padding import androidx.compose.foundation.lazy.LazyColumn import androidx.compose.foundation.lazy.LazyListScope import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Text import androidx.compose.runtime.Composable import androidx.compose.ui.Modifier import androidx.compose.ui.platform.testTag</ID>
     <ID>ImportOrdering:SearchHelpTooltipContent.kt:import androidx.compose.foundation.layout.Column import androidx.compose.foundation.layout.Arrangement import androidx.compose.foundation.layout.padding import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Text import androidx.compose.runtime.Composable import androidx.compose.ui.Modifier import androidx.compose.ui.text.font.FontWeight import androidx.compose.ui.res.stringResource import com.vci.vectorcamapp.R import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.dimensions</ID>
     <ID>ImportOrdering:SearchTextField.kt:import androidx.compose.foundation.layout.padding import androidx.compose.foundation.text.KeyboardActions import androidx.compose.foundation.text.KeyboardOptions import androidx.compose.material3.MaterialTheme import androidx.compose.runtime.Composable import androidx.compose.ui.Modifier import androidx.compose.ui.platform.LocalSoftwareKeyboardController import androidx.compose.ui.text.input.ImeAction import androidx.compose.ui.res.stringResource import com.vci.vectorcamapp.R import com.vci.vectorcamapp.core.presentation.components.form.TextEntryField import com.vci.vectorcamapp.core.presentation.components.tooltip.Tooltip import com.vci.vectorcamapp.ui.extensions.dimensions</ID>
@@ -337,6 +333,7 @@
     <ID>ImportOrdering:Tooltip.kt:import androidx.compose.foundation.clickable import androidx.compose.foundation.layout.Column import androidx.compose.foundation.layout.Row import androidx.compose.foundation.layout.Spacer import androidx.compose.foundation.layout.fillMaxWidth import androidx.compose.foundation.layout.padding import androidx.compose.foundation.layout.size import androidx.compose.material3.AlertDialog import androidx.compose.material3.Icon import androidx.compose.material3.MaterialTheme import androidx.compose.material3.Text import androidx.compose.material3.TextButton import androidx.compose.runtime.Composable import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.res.painterResource import androidx.compose.ui.text.TextStyle import androidx.compose.ui.unit.Dp import androidx.compose.ui.res.stringResource import com.vci.vectorcamapp.R import com.vci.vectorcamapp.ui.extensions.colors import com.vci.vectorcamapp.ui.extensions.dimensions</ID>
     <ID>ImportOrdering:VectorCamAnalytics.kt:import android.content.Context import android.content.Intent import android.content.IntentFilter import android.net.ConnectivityManager import android.net.NetworkCapabilities import android.os.BatteryManager import android.os.Build import android.os.Bundle import android.os.Environment import android.os.StatFs import com.google.firebase.analytics.FirebaseAnalytics import timber.log.Timber import com.vci.vectorcamapp.BuildConfig import com.vci.vectorcamapp.core.domain.model.Device import java.io.File import java.time.Instant import java.time.ZoneOffset import java.time.temporal.WeekFields import com.vci.vectorcamapp.core.logging.crashlytics.VectorCamCrashlytics</ID>
     <ID>ImportOrdering:safeCall.kt:import com.vci.vectorcamapp.core.domain.util.network.NetworkError import com.vci.vectorcamapp.core.domain.util.Result import io.ktor.client.statement.HttpResponse import io.ktor.util.network.UnresolvedAddressException import kotlinx.coroutines.ensureActive import kotlinx.serialization.SerializationException import java.net.UnknownHostException import kotlin.coroutines.coroutineContext</ID>
+    <ID>LargeClass:ImageUploadWorker.kt:ImageUploadWorker : CoroutineWorker</ID>
     <ID>LargeClass:ImagingViewModel.kt:ImagingViewModel : CoreViewModel</ID>
     <ID>LargeClass:MetadataUploadWorker.kt:MetadataUploadWorker : CoroutineWorker</ID>
     <ID>LongMethod:CapturedSpecimenTile.kt:@Composable fun CapturedSpecimenTile</ID>
@@ -436,7 +433,6 @@
     <ID>MaximumLineLength:CompleteSessionForm.kt:)</ID>
     <ID>MaximumLineLength:CompleteSessionListScreen.kt:,</ID>
     <ID>MaximumLineLength:CompleteSessionListTile.kt:)</ID>
-    <ID>MaximumLineLength:CompleteSessionListTile.kt:primary</ID>
     <ID>MaximumLineLength:DropdownField.kt:,</ID>
     <ID>MaximumLineLength:ImageUploadWorker.kt:ImageUploadWorker$)</ID>
     <ID>MaximumLineLength:ImagingViewModel.kt:ImagingViewModel$)</ID>
@@ -445,7 +441,6 @@
     <ID>MaximumLineLength:IncompleteSessionErrorLogger.kt:IncompleteSessionErrorLogger$"</ID>
     <ID>MaximumLineLength:IncompleteSessionViewModel.kt:IncompleteSessionViewModel$)</ID>
     <ID>MaximumLineLength:MainViewModel.kt:MainViewModel$"</ID>
-    <ID>MaximumLineLength:MetadataUploadWorker.kt:MetadataUploadWorker$)</ID>
     <ID>MaximumLineLength:MetadataUploadWorker.kt:MetadataUploadWorker$-&gt;</ID>
     <ID>MaximumLineLength:MetadataUploadWorker.kt:MetadataUploadWorker${</ID>
     <ID>MaximumLineLength:RegistrationScreen.kt:)</ID>
@@ -593,12 +588,15 @@
     <ID>PackageName:IntakeValidationUseCasesTest.kt:package com.vci.vectorcamapp.intake.domain.use_cases</ID>
     <ID>PackageName:LocationTypeDto.kt:package com.vci.vectorcamapp.core.data.dto.location_type</ID>
     <ID>PackageName:MultipleBatchWorkflow.kt:package com.vci.vectorcamapp.intake.domain.strategy.collection_method.concrete</ID>
+    <ID>PackageName:PostDataRecoveryRequestDto.kt:package com.vci.vectorcamapp.core.data.dto.data_recovery</ID>
+    <ID>PackageName:PostDataRecoveryResponseDto.kt:package com.vci.vectorcamapp.core.data.dto.data_recovery</ID>
     <ID>PackageName:PostFormAnswersRequestDto.kt:package com.vci.vectorcamapp.core.data.dto.form_answer</ID>
     <ID>PackageName:PostFormAnswersResponseDto.kt:package com.vci.vectorcamapp.core.data.dto.form_answer</ID>
     <ID>PackageName:PostSessionUnitRequestDto.kt:package com.vci.vectorcamapp.core.data.dto.session_unit</ID>
     <ID>PackageName:PostSessionUnitResponseDto.kt:package com.vci.vectorcamapp.core.data.dto.session_unit</ID>
     <ID>PackageName:PostSpecimenImageRequestDto.kt:package com.vci.vectorcamapp.core.data.dto.specimen_image</ID>
     <ID>PackageName:PostSpecimenImageResponseDto.kt:package com.vci.vectorcamapp.core.data.dto.specimen_image</ID>
+    <ID>PackageName:PostStaleSpecimenImageRecoveryRequestDto.kt:package com.vci.vectorcamapp.core.data.dto.data_recovery</ID>
     <ID>PackageName:PostSurveillanceFormRequestDto.kt:package com.vci.vectorcamapp.core.data.dto.surveillance_form</ID>
     <ID>PackageName:PostSurveillanceFormResponseDto.kt:package com.vci.vectorcamapp.core.data.dto.surveillance_form</ID>
     <ID>PackageName:ProgramFormWorkflow.kt:package com.vci.vectorcamapp.intake.domain.strategy.program_form</ID>
@@ -641,8 +639,6 @@
     <ID>PrintStackTrace:DeviceCacheDtoSerializer.kt:DeviceCacheDtoSerializer$e</ID>
     <ID>PrintStackTrace:safeCall.kt:e</ID>
     <ID>PropertyWrapping:SettingsViewModelTest.kt:SettingsViewModelTest$private val testCollector = Collector(id = UUID.randomUUID(), name = "Alice", title = "Dr.", lastTrainedOn = 1_000_000L)</ID>
-    <ID>ReturnCount:MetadataUploadWorker.kt:MetadataUploadWorker$override suspend fun doWork: WorkerResult</ID>
-    <ID>ReturnCount:MetadataUploadWorker.kt:MetadataUploadWorker$private suspend fun syncFormAnswersIfNeeded: DomainResult&lt;Unit, NetworkError&gt;</ID>
     <ID>ReturnCount:MetadataUploadWorker.kt:MetadataUploadWorker$private suspend fun syncSpecimenImageAndInferenceResultIfNeeded: DomainResult&lt;Unit, NetworkError&gt;</ID>
     <ID>SpacingAroundColon:ActionTile.kt::</ID>
     <ID>SpacingAroundColon:CameraRepository.kt:CameraRepository$:</ID>
@@ -715,6 +711,7 @@
     <ID>StringTemplate:RemoteSpecimenImageDataSource.kt:RemoteSpecimenImageDataSource$${specimenImageId}</ID>
     <ID>StringTemplate:VectorCamAnalytics.kt:VectorCamAnalytics$${it}</ID>
     <ID>SwallowedException:CameraRepositoryImplementation.kt:CameraRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:DataRecoverySubmissionRepositoryImplementation.kt:DataRecoverySubmissionRepositoryImplementation$e: Exception</ID>
     <ID>SwallowedException:FormAnswerRepositoryImplementation.kt:FormAnswerRepositoryImplementation$e: Exception</ID>
     <ID>SwallowedException:FormQuestionRepositoryImplementation.kt:FormQuestionRepositoryImplementation$e: Exception</ID>
     <ID>SwallowedException:FormRepositoryImplementation.kt:FormRepositoryImplementation$e: Exception</ID>
@@ -724,6 +721,7 @@
     <ID>SwallowedException:IntakeViewModel.kt:IntakeViewModel$e: SecurityException</ID>
     <ID>SwallowedException:IntakeViewModel.kt:IntakeViewModel$e: TimeoutCancellationException</ID>
     <ID>SwallowedException:LocationTypeRepositoryImplementation.kt:LocationTypeRepositoryImplementation$e: Exception</ID>
+    <ID>SwallowedException:MetadataUploadStatusRepositoryImplementation.kt:MetadataUploadStatusRepositoryImplementation$e: Exception</ID>
     <ID>SwallowedException:MetadataUploadWorker.kt:MetadataUploadWorker$e: Exception</ID>
     <ID>SwallowedException:MetadataUploadWorker.kt:MetadataUploadWorker$e: IOException</ID>
     <ID>SwallowedException:MetadataUploadWorker.kt:MetadataUploadWorker$e: IllegalArgumentException</ID>
@@ -737,13 +735,13 @@
     <ID>SwallowedException:SpecimenRepositoryImplementation.kt:SpecimenRepositoryImplementation$e: Exception</ID>
     <ID>SwallowedException:SpecimenRepositoryImplementation.kt:SpecimenRepositoryImplementation$e: SQLiteConstraintException</ID>
     <ID>SwallowedException:SurveillanceFormRepositoryImplementation.kt:SurveillanceFormRepositoryImplementation$e: Exception</ID>
-    <ID>SwallowedException:responseToResult.kt:e: NoTransformationFoundException</ID>
     <ID>ThrowsCount:FormAnswerValueSerializer.kt:FormAnswerValueSerializer$override fun deserialize: FormAnswerValue</ID>
     <ID>ThrowsCount:ImageUploadWorker.kt:ImageUploadWorker$private suspend fun uploadSingleImage: DomainResult&lt;String, NetworkError&gt;</ID>
     <ID>TooGenericExceptionCaught:CameraRepositoryImplementation.kt:CameraRepositoryImplementation$e: Exception</ID>
     <ID>TooGenericExceptionCaught:ClassifierAcceleratorSelector.kt:ClassifierAcceleratorSelector$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CollectorRepositoryImplementation.kt:CollectorRepositoryImplementation$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CurrentSessionCacheDtoSerializer.kt:CurrentSessionCacheDtoSerializer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DataRecoverySubmissionRepositoryImplementation.kt:DataRecoverySubmissionRepositoryImplementation$e: Exception</ID>
     <ID>TooGenericExceptionCaught:DefaultIntakeFieldsCacheDtoSerializer.kt:DefaultIntakeFieldsCacheDtoSerializer$e: Exception</ID>
     <ID>TooGenericExceptionCaught:DeviceCacheDtoSerializer.kt:DeviceCacheDtoSerializer$e: Exception</ID>
     <ID>TooGenericExceptionCaught:FormAnswerRepositoryImplementation.kt:FormAnswerRepositoryImplementation$e: Exception</ID>
@@ -758,6 +756,7 @@
     <ID>TooGenericExceptionCaught:InferenceResultRepositoryImplementation.kt:InferenceResultRepositoryImplementation$e: Exception</ID>
     <ID>TooGenericExceptionCaught:IntakeViewModel.kt:IntakeViewModel$e: Exception</ID>
     <ID>TooGenericExceptionCaught:LocationTypeRepositoryImplementation.kt:LocationTypeRepositoryImplementation$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:MetadataUploadStatusRepositoryImplementation.kt:MetadataUploadStatusRepositoryImplementation$e: Exception</ID>
     <ID>TooGenericExceptionCaught:MetadataUploadWorker.kt:MetadataUploadWorker$e: Exception</ID>
     <ID>TooGenericExceptionCaught:ProgramRepositoryImplementation.kt:ProgramRepositoryImplementation$e: Exception</ID>
     <ID>TooGenericExceptionCaught:RegistrationViewModel.kt:RegistrationViewModel$e: Exception</ID>
@@ -786,6 +785,7 @@
     <ID>TooGenericExceptionThrown:SettingsViewModel.kt:SettingsViewModel$throw Exception("Failed to save sites for program $programId")</ID>
     <ID>TooGenericExceptionThrown:SettingsViewModel.kt:SettingsViewModel$throw Exception("Failed to save surveillance form for program $programId")</ID>
     <ID>TooGenericExceptionThrown:SettingsViewModel.kt:SettingsViewModel$throw Exception("Failed to save surveillance form questions")</ID>
+    <ID>TooManyFunctions:RoomDatabaseModule.kt:RoomDatabaseModule</ID>
     <ID>TooManyFunctions:VectorCamAnalytics.kt:VectorCamAnalytics</ID>
     <ID>UnusedParameter:IncompleteSessionErrorLogger.kt:IncompleteSessionErrorLogger$failedImageUri: Uri</ID>
     <ID>VariableNaming:CompleteSessionListScreen.kt:val ROTATION_DURATION = 2000</ID>

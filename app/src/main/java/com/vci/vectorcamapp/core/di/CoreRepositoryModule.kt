@@ -1,11 +1,13 @@
 package com.vci.vectorcamapp.core.di
 
 import com.vci.vectorcamapp.core.data.repository.CollectorRepositoryImplementation
+import com.vci.vectorcamapp.core.data.repository.DataRecoverySubmissionRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.FormAnswerRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.FormQuestionRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.FormRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.InferenceResultRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.LocationTypeRepositoryImplementation
+import com.vci.vectorcamapp.core.data.repository.MetadataUploadStatusRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.ProgramRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SessionRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.SessionUnitRepositoryImplementation
@@ -15,11 +17,13 @@ import com.vci.vectorcamapp.core.data.repository.SpecimenRepositoryImplementatio
 import com.vci.vectorcamapp.core.data.repository.SurveillanceFormRepositoryImplementation
 import com.vci.vectorcamapp.core.data.repository.WorkManagerRepositoryImplementation
 import com.vci.vectorcamapp.core.domain.repository.CollectorRepository
+import com.vci.vectorcamapp.core.domain.repository.DataRecoverySubmissionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormAnswerRepository
 import com.vci.vectorcamapp.core.domain.repository.FormQuestionRepository
 import com.vci.vectorcamapp.core.domain.repository.FormRepository
 import com.vci.vectorcamapp.core.domain.repository.InferenceResultRepository
 import com.vci.vectorcamapp.core.domain.repository.LocationTypeRepository
+import com.vci.vectorcamapp.core.domain.repository.MetadataUploadStatusRepository
 import com.vci.vectorcamapp.core.domain.repository.ProgramRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionUnitRepository
@@ -115,6 +119,18 @@ abstract class CoreRepositoryModule {
     abstract fun bindFormAnswerRepository(
         formAnswerRepositoryImplementation: FormAnswerRepositoryImplementation
     ): FormAnswerRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMetadataUploadStatusRepository(
+        metadataUploadStatusRepositoryImplementation: MetadataUploadStatusRepositoryImplementation
+    ): MetadataUploadStatusRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDataRecoverySubmissionRepository(
+        dataRecoverySubmissionRepositoryImplementation: DataRecoverySubmissionRepositoryImplementation
+    ): DataRecoverySubmissionRepository
 
     @Binds
     abstract fun bindWorkManagerRepository(

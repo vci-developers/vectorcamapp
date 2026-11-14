@@ -41,7 +41,7 @@ class WorkManagerRepositoryImplementation @Inject constructor(
             chainName,
             ExistingWorkPolicy.REPLACE,
             buildSessionMetadataWork(sessionId, siteId)
-        ).then(buildSessionImageWork(sessionId)).enqueue()
+        ).then(buildSessionImageWork(sessionId, siteId)).enqueue()
         // Start the sticky foreground service after work is enqueued so the process
         // stays alive even while workers are queued waiting for constraints to be met.
         UploadForegroundService.start(context)
@@ -69,11 +69,12 @@ class WorkManagerRepositoryImplementation @Inject constructor(
             .build()
     }
 
-    private fun buildSessionImageWork(sessionId: UUID): OneTimeWorkRequest {
+    private fun buildSessionImageWork(sessionId: UUID, siteId: Int): OneTimeWorkRequest {
         return OneTimeWorkRequestBuilder<ImageUploadWorker>()
             .addTag(UploadForegroundService.UPLOAD_WORK_TAG)
             .setInputData(workDataOf(
-                ImageUploadWorker.KEY_SESSION_ID to sessionId.toString()
+                ImageUploadWorker.KEY_SESSION_ID to sessionId.toString(),
+                ImageUploadWorker.KEY_SITE_ID to siteId,
             ))
             .setConstraints(uploadConstraints)
             .setBackoffCriteria(BackoffPolicy.LINEAR, WorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)

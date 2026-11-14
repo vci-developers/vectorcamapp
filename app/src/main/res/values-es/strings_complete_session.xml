@@ -69,8 +69,21 @@
     <!-- Status -->
     <string name="complete_session_status_completed">Completado</string>
     <string name="complete_session_status_not_started">No iniciado</string>
+    <string name="complete_session_status_metadata_failed">Algunos datos no se pudieron subir</string>
+    <string name="complete_session_status_sent_to_recovery">Algunos datos se enviaron a recuperación</string>
+    <string name="complete_session_upload_step_recovery_detail">Enviado a la API de recuperación</string>
     <string name="complete_session_status_metadata_progress">%1$d / %2$d metadatos</string>
     <string name="complete_session_status_image_progress">%1$d / %2$d imágenes</string>
+
+    <!-- Metadata Upload Steps -->
+    <string name="complete_session_label_metadata_upload_steps">Subida de metadatos</string>
+    <string name="complete_session_upload_step_device">Dispositivo</string>
+    <string name="complete_session_upload_step_session">Sesión</string>
+    <string name="complete_session_upload_step_session_units">Unidades de sesión</string>
+    <string name="complete_session_upload_step_form_answers">Respuestas del formulario</string>
+    <string name="complete_session_upload_step_surveillance_form">Formulario de vigilancia</string>
+    <string name="complete_session_upload_step_specimens">Especímenes</string>
+    <string name="complete_session_upload_step_specimen_images">Imágenes de especímenes</string>
 
     <!-- Placeholders -->
     <string name="complete_session_placeholder_search">Busca por recolector, distrito, tipo de sesión, etc.</string>
@@ -92,6 +105,9 @@
     <string name="complete_session_content_description_hospital">Hospital</string>
     <string name="complete_session_content_description_location">Ubicación</string>
     <string name="complete_session_content_description_uploading">Subiendo actualmente</string>
+    <string name="complete_session_content_description_upload_step_succeeded">Subido</string>
+    <string name="complete_session_content_description_upload_step_recovered">Enviado para recuperación</string>
+    <string name="complete_session_content_description_upload_step_failed">Fallido</string>
     <string name="complete_session_content_description_refresh">Actualizar</string>
     <string name="complete_session_content_description_upload">Subir</string>
     <string name="complete_session_content_description_specimen_image">Imagen del espécimen: %1$s</string>
