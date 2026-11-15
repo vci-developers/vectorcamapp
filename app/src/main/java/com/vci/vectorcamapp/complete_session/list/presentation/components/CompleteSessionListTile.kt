@@ -70,7 +70,7 @@ fun CompleteSessionListTile(
     )
     val hasStarted = SessionUploadDelivery.hasStarted(session.submittedAt, sessionUploadProgress)
     val isSessionUploadComplete = isFullyDelivered &&
-        !sessionUploadProgress.hasRecoveredMetadataUploadStep
+        !sessionUploadProgress.hasRecoveredDelivery
 
     val progressColor = when {
         isSessionUploadComplete -> MaterialTheme.colors.primary

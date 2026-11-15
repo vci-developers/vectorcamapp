@@ -112,6 +112,7 @@ class CompleteSessionListViewModelTest {
         every { specimenImageRepository.observeUploadedMetadataCountForSession(any()) } returns flowOf(0)
         every { specimenImageRepository.observeUploadedImageCountForSession(any()) } returns flowOf(0)
         every { specimenImageRepository.observeFailedImageCountForSession(any()) } returns flowOf(0)
+        every { specimenImageRepository.observeRecoveredImageCountForSession(any()) } returns flowOf(0)
         every { workManagerRepository.observeIsSessionActivelyUploading(any()) } returns flowOf(false)
         every { metadataUploadStatusRepository.observeMetadataUploadStatusesForSession(any()) } returns flowOf(emptyList())
         coEvery { specimenImageRepository.getTotalCountForSession(any()) } returns 0

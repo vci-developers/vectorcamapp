@@ -56,10 +56,15 @@ class CompleteSessionListViewModel @Inject constructor(
                         combine(
                             specimenImageRepository.observeUploadedMetadataCountForSession(sessionId),
                             specimenImageRepository.observeUploadedImageCountForSession(sessionId),
-                            specimenImageRepository.observeFailedImageCountForSession(sessionId),
+                            combine(
+                                specimenImageRepository.observeFailedImageCountForSession(sessionId),
+                                specimenImageRepository.observeRecoveredImageCountForSession(sessionId),
+                            ) { failedImageCount, recoveredImageCount ->
+                                failedImageCount to recoveredImageCount
+                            },
                             workManagerRepository.observeIsSessionActivelyUploading(sessionId),
                             metadataUploadStatusRepository.observeMetadataUploadStatusesForSession(sessionId),
-                        ) { uploadedMetadataCount, uploadedImageCount, failedImageCount, isUploading, metadataUploadStepStatuses ->
+                        ) { uploadedMetadataCount, uploadedImageCount, failedAndRecovered, isUploading, metadataUploadStepStatuses ->
                             sessionAndSite to SessionUploadProgress(
                                 uploadedMetadataCount = uploadedMetadataCount,
                                 uploadedImageCount = uploadedImageCount,
@@ -67,7 +72,8 @@ class CompleteSessionListViewModel @Inject constructor(
                                     sessionId
                                 ),
                                 isUploading = isUploading,
-                                failedImageCount = failedImageCount,
+                                failedImageCount = failedAndRecovered.first,
+                                recoveredImageCount = failedAndRecovered.second,
                                 metadataUploadStepStatuses = metadataUploadStepStatuses.sortedBy { it.step.ordinal }
                             )
                         }
@@ -186,7 +192,7 @@ class CompleteSessionListViewModel @Inject constructor(
             sessionUploadProgress.failedImageCount > 0 -> UploadStatus.FAILED.displayText(context)
             sessionUploadProgress.hasFailedMetadataUploadStep -> UploadStatus.FAILED.displayText(context)
             sessionUploadProgress.isUploading -> UploadStatus.IN_PROGRESS.displayText(context)
-            isFullyDelivered && sessionUploadProgress.hasRecoveredMetadataUploadStep ->
+            isFullyDelivered && sessionUploadProgress.hasRecoveredDelivery ->
                 UploadStatus.RECOVERED.displayText(context)
             isFullyDelivered -> UploadStatus.COMPLETED.displayText(context)
             else -> UploadStatus.NOT_STARTED.displayText(context)

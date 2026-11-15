@@ -120,6 +120,22 @@ class SessionUploadDeliveryTest {
         assertThat(SessionUploadDelivery.hasStarted(null, progress)).isTrue()
     }
 
+    @Test
+    fun recoveredImageFile_isSentToRecoveryEvenWhenMetadataStepsCompleted() {
+        val progress = SessionUploadProgress(
+            uploadedMetadataCount = 1,
+            uploadedImageCount = 1,
+            totalCount = 1,
+            failedImageCount = 0,
+            isUploading = false,
+            metadataUploadStepStatuses = listOf(completedSessionStep),
+            recoveredImageCount = 1,
+        )
+        assertThat(SessionUploadDelivery.isFullyDelivered(null, progress)).isTrue()
+        assertThat(progress.hasRecoveredDelivery).isTrue()
+        assertThat(progress.hasRecoveredMetadataUploadStep).isFalse()
+    }
+
     private fun specimenImage(
         metadataUploadStatus: UploadStatus,
         imageUploadStatus: UploadStatus,

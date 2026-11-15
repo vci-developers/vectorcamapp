@@ -9,7 +9,8 @@ data class SessionUploadProgress(
     val totalCount: Int,
     val failedImageCount: Int,
     val isUploading: Boolean,
-    val metadataUploadStepStatuses: List<MetadataUploadStepStatus> = emptyList()
+    val metadataUploadStepStatuses: List<MetadataUploadStepStatus> = emptyList(),
+    val recoveredImageCount: Int = 0,
 ) {
     val areImageFilesDelivered: Boolean
         get() = totalCount == 0 || uploadedImageCount == totalCount
@@ -22,4 +23,7 @@ data class SessionUploadProgress(
 
     val hasRecoveredMetadataUploadStep: Boolean
         get() = metadataUploadStepStatuses.any { it.status == UploadStatus.RECOVERED }
+
+    val hasRecoveredDelivery: Boolean
+        get() = hasRecoveredMetadataUploadStep || recoveredImageCount > 0
 }
