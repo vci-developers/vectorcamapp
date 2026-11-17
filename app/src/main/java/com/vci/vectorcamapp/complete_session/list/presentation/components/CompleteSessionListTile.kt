@@ -65,6 +65,7 @@ fun CompleteSessionListTile(
 
     val sessionMetadataUploaded = session.submittedAt != null
     val isSessionUploadComplete = sessionMetadataUploaded &&
+        sessionUploadProgress.hasUploadHistory &&
         sessionUploadProgress.uploadedMetadataCount == sessionUploadProgress.totalCount &&
         sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount &&
         !sessionUploadProgress.hasFailedMetadataUploadStep &&
@@ -278,7 +279,8 @@ fun CompleteSessionListTile(
                         Text(
                             text = when {
                                 isSessionUploadComplete -> stringResource(R.string.complete_session_status_completed)
-                                !sessionMetadataUploaded -> stringResource(R.string.complete_session_status_not_started)
+                                !sessionMetadataUploaded || !sessionUploadProgress.hasUploadHistory ->
+                                    stringResource(R.string.complete_session_status_not_started)
                                 sessionUploadProgress.hasRecoveredMetadataUploadStep -> stringResource(
                                     R.string.complete_session_status_sent_to_recovery
                                 )
@@ -307,12 +309,12 @@ fun CompleteSessionListTile(
                             )
                     ) {
                         val metadataProgress = when {
-                            !sessionMetadataUploaded -> 0f
+                            !sessionMetadataUploaded || !sessionUploadProgress.hasUploadHistory -> 0f
                             sessionUploadProgress.totalCount == 0 -> 1f
                             else -> sessionUploadProgress.uploadedMetadataCount.toFloat() / sessionUploadProgress.totalCount.toFloat()
                         }
                         val imageProgress = when {
-                            !sessionMetadataUploaded -> 0f
+                            !sessionMetadataUploaded || !sessionUploadProgress.hasUploadHistory -> 0f
                             sessionUploadProgress.totalCount == 0 -> 1f
                             else -> sessionUploadProgress.uploadedImageCount.toFloat() / sessionUploadProgress.totalCount.toFloat()
                         }

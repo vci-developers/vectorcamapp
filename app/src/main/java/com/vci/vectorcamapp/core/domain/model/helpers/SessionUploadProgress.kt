@@ -18,4 +18,7 @@ data class SessionUploadProgress(
 
     val hasRecoveredMetadataUploadStep: Boolean
         get() = metadataUploadStepStatuses.any { it.status == UploadStatus.RECOVERED }
+
+    val hasUploadHistory: Boolean
+        get() = metadataUploadStepStatuses.isNotEmpty()
 }

@@ -143,12 +143,16 @@ class CompleteSessionListViewModel @Inject constructor(
                             }
                         }
 
-                        val hasFailedMetadataUploadStep = metadataUploadStatusRepository
+                        val metadataUploadStatuses = metadataUploadStatusRepository
                             .observeMetadataUploadStatusesForSession(session.localId)
                             .first()
-                            .any { it.status == UploadStatus.FAILED }
+                        val hasFailedMetadataUploadStep =
+                            metadataUploadStatuses.any { it.status == UploadStatus.FAILED }
+                        // Sessions finished on an older build have no step history. Queue them so
+                        // form answers that never reached storage can be verified and recovered.
+                        val hasUploadHistory = metadataUploadStatuses.isNotEmpty()
 
-                        if (isSessionUploaded && areSpecimensUploaded && !hasFailedMetadataUploadStep) continue
+                        if (isSessionUploaded && areSpecimensUploaded && !hasFailedMetadataUploadStep && hasUploadHistory) continue
 
                         workManagerRepository.enqueueSessionUpload(session.localId, site.id)
                         didEnqueueUpload = true
@@ -173,7 +177,8 @@ class CompleteSessionListViewModel @Inject constructor(
     }
 
     private fun getSessionUploadStatus(sessionUploadProgress: SessionUploadProgress): String {
-        val isComplete = sessionUploadProgress.totalCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount
+        val isComplete = sessionUploadProgress.hasUploadHistory &&
+            (sessionUploadProgress.totalCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount)
 
         return when {
             sessionUploadProgress.failedImageCount > 0 -> UploadStatus.FAILED.displayText(context)
