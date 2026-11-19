@@ -1,9 +1,8 @@
 package com.vci.vectorcamapp.core.data.network.api
 
-import com.vci.vectorcamapp.BuildConfig
 import com.vci.vectorcamapp.core.data.dto.device.DeviceDto
-import com.vci.vectorcamapp.core.data.dto.device.RegisterDeviceRequestDto
 import com.vci.vectorcamapp.core.data.dto.device.RegisterDeviceResponseDto
+import com.vci.vectorcamapp.core.data.mappers.toRegisterDeviceRequestDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.safeCall
 import com.vci.vectorcamapp.core.domain.model.Device
@@ -23,15 +22,8 @@ class RemoteDeviceDataSource @Inject constructor(
         device: Device, programId: Int
     ): Result<RegisterDeviceResponseDto, NetworkError> {
         return safeCall<RegisterDeviceResponseDto> {
-            httpClient.post(constructUrl("devices/register")) {
-                setBody(
-                    RegisterDeviceRequestDto(
-                        model = device.model,
-                        registeredAt = device.registeredAt,
-                        programId = programId,
-                        appVersion = BuildConfig.VERSION_CODE.toString() + "(" + BuildConfig.VERSION_NAME + ")",
-                    )
-                )
+            httpClient.post(constructUrl(UploadRoutes.REGISTER_DEVICE)) {
+                setBody(device.toRegisterDeviceRequestDto(programId))
             }
         }
     }

@@ -122,5 +122,6 @@
     <string name="upload_error_lost_connection">Connexion Internet perdue pendant l\'envoi.</string>
     <string name="upload_error_unknown">Une erreur inconnue s\'est produite pendant l\'envoi.</string>
     <string name="upload_error_images_failed">Échec de l\'envoi d\'une ou plusieurs images.</string>
+    <string name="upload_error_dependency_not_uploaded">Certaines données n\'ont pas été envoyées car les données dont elles dépendent n\'ont pas pu être envoyées.</string>
 
 </resources>

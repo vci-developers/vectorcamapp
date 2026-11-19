@@ -1,10 +1,8 @@
 package com.vci.vectorcamapp.core.data.network.api
 
-import com.vci.vectorcamapp.core.data.dto.inference_result.InferenceResultDto
-import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageRequestDto
-import com.vci.vectorcamapp.core.data.mappers.toImageMetadataDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.PostSpecimenImageResponseDto
 import com.vci.vectorcamapp.core.data.dto.specimen_image.SpecimenImageDto
+import com.vci.vectorcamapp.core.data.mappers.toPostSpecimenImageRequestDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.safeCall
 import com.vci.vectorcamapp.core.domain.model.InferenceResult
@@ -25,34 +23,8 @@ class RemoteSpecimenImageDataSource @Inject constructor(
         specimenImage: SpecimenImage, inferenceResult: InferenceResult?, specimenId: Int
     ): Result<PostSpecimenImageResponseDto, NetworkError> {
         return safeCall<PostSpecimenImageResponseDto> {
-            httpClient.post(constructUrl("specimens/${specimenId}/images/data")) {
-                setBody(
-                    PostSpecimenImageRequestDto(
-                        filemd5 = specimenImage.localId,
-                        species = specimenImage.species,
-                        sex = specimenImage.sex,
-                        abdomenStatus = specimenImage.abdomenStatus,
-                        capturedAt = specimenImage.capturedAt,
-                        inferenceResult = inferenceResult?.let {
-                            InferenceResultDto(
-                                bboxTopLeftX = it.bboxTopLeftX,
-                                bboxTopLeftY = it.bboxTopLeftY,
-                                bboxWidth = it.bboxWidth,
-                                bboxHeight = it.bboxHeight,
-                                bboxConfidence = it.bboxConfidence,
-                                bboxClassId = it.bboxClassId,
-                                speciesLogits = it.speciesLogits,
-                                sexLogits = it.sexLogits,
-                                abdomenStatusLogits = it.abdomenStatusLogits,
-                                bboxDetectionDuration = it.bboxDetectionDuration,
-                                speciesInferenceDuration = it.speciesInferenceDuration,
-                                sexInferenceDuration = it.sexInferenceDuration,
-                                abdomenStatusInferenceDuration = it.abdomenStatusInferenceDuration
-                            )
-                        },
-                        metadata = specimenImage.imageMetadata?.toImageMetadataDto()
-                    )
-                )
+            httpClient.post(constructUrl(UploadRoutes.specimenImagesData(specimenId))) {
+                setBody(specimenImage.toPostSpecimenImageRequestDto(inferenceResult))
             }
         }
     }

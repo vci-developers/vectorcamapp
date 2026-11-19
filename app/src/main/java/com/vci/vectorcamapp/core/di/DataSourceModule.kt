@@ -1,5 +1,6 @@
 package com.vci.vectorcamapp.core.di
 
+import com.vci.vectorcamapp.core.data.network.api.RemoteDataRecoveryDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteDeviceDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteFormAnswerDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteFormDataSource
@@ -11,6 +12,7 @@ import com.vci.vectorcamapp.core.data.network.api.RemoteSiteDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSpecimenDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSpecimenImageDataSource
 import com.vci.vectorcamapp.core.data.network.api.RemoteSurveillanceFormDataSource
+import com.vci.vectorcamapp.core.domain.network.api.DataRecoveryDataSource
 import com.vci.vectorcamapp.core.domain.network.api.DeviceDataSource
 import com.vci.vectorcamapp.core.domain.network.api.FormAnswerDataSource
 import com.vci.vectorcamapp.core.domain.network.api.FormDataSource
@@ -97,4 +99,10 @@ abstract class DataSourceModule {
     abstract fun bindFormAnswerDataSource(
         remoteFormAnswerDataSource: RemoteFormAnswerDataSource
     ): FormAnswerDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindDataRecoveryDataSource(
+        remoteDataRecoveryDataSource: RemoteDataRecoveryDataSource
+    ): DataRecoveryDataSource
 }

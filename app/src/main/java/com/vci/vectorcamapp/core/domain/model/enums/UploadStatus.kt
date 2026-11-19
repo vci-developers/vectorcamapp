@@ -4,5 +4,8 @@ enum class UploadStatus {
     COMPLETED,
     IN_PROGRESS,
     NOT_STARTED,
-    FAILED
+    RECOVERED,
+    FAILED;
+
+    fun isUploaded(): Boolean = this == COMPLETED || this == RECOVERED
 }
