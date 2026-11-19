@@ -84,8 +84,8 @@ android {
         create("nigeria") {
             dimension = "region"
             applicationIdSuffix = ".nigeria"
-            versionCode = 3001
-            versionName = "1.0.1"
+            versionCode = 3002
+            versionName = "1.0.2"
             
             buildConfigField("String", "REGION", "\"nigeria\"")
             buildConfigField("String", "REGION_CODE", "\"NG\"")
