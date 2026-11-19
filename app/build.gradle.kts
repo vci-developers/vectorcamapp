@@ -145,6 +145,19 @@ android {
 
             resValue("string", "app_name_region", "VectorCam Pilgrim Africa")
         }
+
+        create("burundi") {
+            dimension = "region"
+            applicationIdSuffix = ".burundi"
+            versionCode = 8000
+            versionName = "1.0.0"
+
+            buildConfigField("String", "REGION", "\"burundi\"")
+            buildConfigField("String", "REGION_CODE", "\"BI\"")
+            buildConfigField("String", "REGION_DISPLAY_NAME", "\"Burundi\"")
+
+            resValue("string", "app_name_region", "VectorCam Burundi")
+        }
     }
 
     buildTypes {
