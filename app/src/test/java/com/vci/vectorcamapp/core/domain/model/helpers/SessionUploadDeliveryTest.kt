@@ -29,18 +29,26 @@ class SessionUploadDeliveryTest {
 
     @Test
     fun emptyStepsWithoutSubmittedAt_isNotDelivered() {
-        assertThat(SessionUploadDelivery.isFullyDelivered(null, emptyList(), emptyList())).isFalse()
+        assertThat(SessionUploadDelivery.isFullyDelivered(emptyList(), emptyList())).isFalse()
     }
 
     @Test
-    fun emptyStepsWithSubmittedAtAndNoImages_isDelivered() {
-        assertThat(SessionUploadDelivery.isFullyDelivered(9L, emptyList(), emptyList())).isTrue()
+    fun emptyStepsWithSubmittedAtAndNoImages_isNotDelivered() {
+        assertThat(SessionUploadDelivery.isFullyDelivered(emptyList(), emptyList())).isFalse()
+        val progress = SessionUploadProgress(
+            uploadedMetadataCount = 0,
+            uploadedImageCount = 0,
+            totalCount = 0,
+            failedImageCount = 0,
+            isUploading = false,
+        )
+        assertThat(SessionUploadDelivery.hasStarted(progress)).isFalse()
     }
 
     @Test
     fun recoveredStepsWithoutSubmittedAt_isDelivered() {
         assertThat(
-            SessionUploadDelivery.isFullyDelivered(null, listOf(recoveredSessionStep), emptyList())
+            SessionUploadDelivery.isFullyDelivered(listOf(recoveredSessionStep), emptyList())
         ).isTrue()
     }
 
@@ -51,7 +59,7 @@ class SessionUploadDeliveryTest {
             imageUploadStatus = UploadStatus.NOT_STARTED,
         )
         assertThat(
-            SessionUploadDelivery.isFullyDelivered(null, listOf(recoveredSessionStep), listOf(image))
+            SessionUploadDelivery.isFullyDelivered(listOf(recoveredSessionStep), listOf(image))
         ).isFalse()
     }
 
@@ -62,7 +70,7 @@ class SessionUploadDeliveryTest {
             imageUploadStatus = UploadStatus.RECOVERED,
         )
         assertThat(
-            SessionUploadDelivery.isFullyDelivered(null, listOf(recoveredSessionStep), listOf(image))
+            SessionUploadDelivery.isFullyDelivered(listOf(recoveredSessionStep), listOf(image))
         ).isTrue()
     }
 
@@ -74,7 +82,6 @@ class SessionUploadDeliveryTest {
         )
         assertThat(
             SessionUploadDelivery.isFullyDelivered(
-                9L,
                 listOf(completedSessionStep, recoveredSessionStep.copy(step = MetadataUploadStep.FORM_ANSWERS)),
                 listOf(image),
             )
@@ -85,7 +92,6 @@ class SessionUploadDeliveryTest {
     fun failedMetadataStep_isNotDelivered() {
         assertThat(
             SessionUploadDelivery.isFullyDelivered(
-                9L,
                 listOf(completedSessionStep, failedFormStep),
                 emptyList(),
             )
@@ -102,7 +108,7 @@ class SessionUploadDeliveryTest {
             isUploading = false,
             metadataUploadStepStatuses = listOf(recoveredSessionStep),
         )
-        assertThat(SessionUploadDelivery.isFullyDelivered(null, progress)).isTrue()
+        assertThat(SessionUploadDelivery.isFullyDelivered(progress)).isTrue()
         assertThat(progress.areImageFilesDelivered).isTrue()
     }
 
@@ -116,8 +122,8 @@ class SessionUploadDeliveryTest {
             isUploading = false,
             metadataUploadStepStatuses = listOf(recoveredSessionStep),
         )
-        assertThat(SessionUploadDelivery.isFullyDelivered(null, progress)).isFalse()
-        assertThat(SessionUploadDelivery.hasStarted(null, progress)).isTrue()
+        assertThat(SessionUploadDelivery.isFullyDelivered(progress)).isFalse()
+        assertThat(SessionUploadDelivery.hasStarted(progress)).isTrue()
     }
 
     @Test
@@ -131,7 +137,7 @@ class SessionUploadDeliveryTest {
             metadataUploadStepStatuses = listOf(completedSessionStep),
             recoveredImageCount = 1,
         )
-        assertThat(SessionUploadDelivery.isFullyDelivered(null, progress)).isTrue()
+        assertThat(SessionUploadDelivery.isFullyDelivered(progress)).isTrue()
         assertThat(progress.hasRecoveredDelivery).isTrue()
         assertThat(progress.hasRecoveredMetadataUploadStep).isFalse()
     }

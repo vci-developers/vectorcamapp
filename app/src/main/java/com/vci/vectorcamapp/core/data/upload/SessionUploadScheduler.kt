@@ -32,7 +32,7 @@ class SessionUploadScheduler @Inject constructor(
             val metadataSteps = metadataUploadStatusRepository
                 .observeMetadataUploadStatusesForSession(session.localId)
                 .first()
-            if (SessionUploadDelivery.isFullyDelivered(session.submittedAt, metadataSteps, images)) {
+            if (SessionUploadDelivery.isFullyDelivered(metadataSteps, images)) {
                 continue
             }
             Timber.tag(TAG).i(

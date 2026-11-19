@@ -244,11 +244,34 @@ class CompleteSessionListViewModelTest {
     }
 
     @Test
-    fun listVm_d02_uploadAllPendingSessions_withAlreadySubmittedSessions_skipsThose() = runTest {
+    fun listVm_d02_uploadAllPendingSessions_withSubmittedSessionAndNoUploadHistory_enqueuesVerification() = runTest {
         val submittedSession = testSession.copy(submittedAt = 9_999_999L)
         completeSessionsFlow.value = listOf(SessionAndSite(submittedSession, testSite))
         coEvery { specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(any(), any()) } returns
             emptyList<SpecimenWithSpecimenImagesAndInferenceResults>()
+
+        val vm = makeViewModel()
+        advanceUntilIdle()
+
+        vm.onAction(CompleteSessionListAction.UploadAllPendingSessions)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { workManagerRepository.enqueueSessionUpload(testSessionId, testSite.id) }
+        coVerify(exactly = 1) { successMessageEmitter.emit(SuccessMessage.SESSION_QUEUED_FOR_SUBMISSION, any()) }
+    }
+
+    @Test
+    fun listVm_d02b_uploadAllPendingSessions_withVerifiedSubmittedSession_skipsThose() = runTest {
+        val submittedSession = testSession.copy(submittedAt = 9_999_999L)
+        completeSessionsFlow.value = listOf(SessionAndSite(submittedSession, testSite))
+        coEvery { specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(any(), any()) } returns
+            emptyList<SpecimenWithSpecimenImagesAndInferenceResults>()
+        every { metadataUploadStatusRepository.observeMetadataUploadStatusesForSession(testSessionId) } returns flowOf(
+            listOf(
+                MetadataUploadStepStatus(MetadataUploadStep.SESSION, UploadStatus.COMPLETED, 0L),
+                MetadataUploadStepStatus(MetadataUploadStep.FORM_ANSWERS, UploadStatus.COMPLETED, 0L),
+            )
+        )
 
         val vm = makeViewModel()
         advanceUntilIdle()

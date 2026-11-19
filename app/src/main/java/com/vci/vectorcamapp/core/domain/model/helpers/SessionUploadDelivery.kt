@@ -5,38 +5,33 @@ import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 
 object SessionUploadDelivery {
     fun isFullyDelivered(
-        submittedAt: Long?,
         metadataSteps: List<MetadataUploadStepStatus>,
         images: List<SpecimenImage>,
     ): Boolean {
         if (images.any { !it.metadataUploadStatus.isUploaded() || !it.imageUploadStatus.isUploaded() }) {
             return false
         }
-        return areMetadataStepsDelivered(submittedAt, metadataSteps)
+        return areMetadataStepsDelivered(metadataSteps)
     }
 
-    fun isFullyDelivered(
-        submittedAt: Long?,
-        progress: SessionUploadProgress,
-    ): Boolean {
+    fun isFullyDelivered(progress: SessionUploadProgress): Boolean {
         if (progress.failedImageCount > 0) return false
         if (!progress.areImageFilesDelivered || !progress.areImageMetadataDelivered) return false
-        return areMetadataStepsDelivered(submittedAt, progress.metadataUploadStepStatuses)
+        return areMetadataStepsDelivered(progress.metadataUploadStepStatuses)
     }
 
-    fun hasStarted(submittedAt: Long?, progress: SessionUploadProgress): Boolean {
-        return submittedAt != null ||
-            progress.metadataUploadStepStatuses.isNotEmpty() ||
+    fun hasStarted(progress: SessionUploadProgress): Boolean {
+        return progress.hasUploadHistory ||
             progress.uploadedMetadataCount > 0 ||
             progress.uploadedImageCount > 0 ||
             progress.isUploading
     }
 
     private fun areMetadataStepsDelivered(
-        submittedAt: Long?,
         metadataSteps: List<MetadataUploadStepStatus>,
     ): Boolean {
-        if (metadataSteps.isEmpty()) return submittedAt != null
+        // Empty history is not complete: older builds set submittedAt without step records.
+        if (metadataSteps.isEmpty()) return false
         return metadataSteps.all { it.status.isUploaded() }
     }
 }

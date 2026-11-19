@@ -80,6 +80,20 @@ class SessionUploadSchedulerTest {
     }
 
     @Test
+    fun enqueuePendingCompleteSessions_enqueuesSubmittedSessionWithNoUploadHistory() = runTest {
+        val scheduler = scheduler(
+            images = emptyList(),
+            steps = emptyList(),
+            submittedAt = 9L,
+        )
+
+        val enqueued = scheduler.enqueuePendingCompleteSessions()
+
+        assertThat(enqueued).isEqualTo(1)
+        coVerify(exactly = 1) { schedulerWorkManager.enqueueSessionUpload(sessionId, site.id) }
+    }
+
+    @Test
     fun enqueuePendingCompleteSessions_enqueuesWhenImageFileStillPending() = runTest {
         val scheduler = scheduler(
             images = listOf(specimenImage(UploadStatus.RECOVERED, UploadStatus.NOT_STARTED)),
@@ -100,10 +114,11 @@ class SessionUploadSchedulerTest {
     private fun scheduler(
         images: List<SpecimenImage>,
         steps: List<MetadataUploadStepStatus>,
+        submittedAt: Long? = session.submittedAt,
     ): SessionUploadScheduler {
         val sessionRepository = mockk<SessionRepository>()
         every { sessionRepository.observeCompleteSessionsAndSites() } returns flowOf(
-            listOf(SessionAndSite(session, site))
+            listOf(SessionAndSite(session.copy(submittedAt = submittedAt), site))
         )
         val specimenRepository = mockk<SpecimenRepository>()
         coEvery {

@@ -64,11 +64,8 @@ fun CompleteSessionListTile(
     val dateFormatter = rememberDateFormatter(R.string.core_date_format_medium)
     val dateTimeFormatter = rememberDateFormatter(R.string.core_date_format_medium_with_time)
 
-    val isFullyDelivered = SessionUploadDelivery.isFullyDelivered(
-        session.submittedAt,
-        sessionUploadProgress,
-    )
-    val hasStarted = SessionUploadDelivery.hasStarted(session.submittedAt, sessionUploadProgress)
+    val isFullyDelivered = SessionUploadDelivery.isFullyDelivered(sessionUploadProgress)
+    val hasStarted = SessionUploadDelivery.hasStarted(sessionUploadProgress)
     val isSessionUploadComplete = isFullyDelivered &&
         !sessionUploadProgress.hasRecoveredDelivery
 
