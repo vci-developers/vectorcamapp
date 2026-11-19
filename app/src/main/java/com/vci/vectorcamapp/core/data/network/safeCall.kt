@@ -20,23 +20,18 @@ suspend inline fun <reified T> safeCall(
     clearUploadExchange()
     val response = try {
         execute()
-    } catch (e: UnresolvedAddressException) {
-        e.printStackTrace()
-        rememberTransportFailure(e, NetworkError.NO_INTERNET)
-        return Result.Error(NetworkError.NO_INTERNET)
-    } catch (e: UnknownHostException) {
-        e.printStackTrace()
-        rememberTransportFailure(e, NetworkError.NO_INTERNET)
-        return Result.Error(NetworkError.NO_INTERNET)
-    } catch (e: SerializationException) {
-        e.printStackTrace()
-        rememberTransportFailure(e, NetworkError.SERIALIZATION_ERROR)
-        return Result.Error(NetworkError.SERIALIZATION_ERROR)
     } catch (e: Exception) {
-        coroutineContext.ensureActive()
+        val error = when (e) {
+            is UnresolvedAddressException, is UnknownHostException -> NetworkError.NO_INTERNET
+            is SerializationException -> NetworkError.SERIALIZATION_ERROR
+            else -> {
+                coroutineContext.ensureActive()
+                NetworkError.UNKNOWN_ERROR
+            }
+        }
         e.printStackTrace()
-        rememberTransportFailure(e, NetworkError.UNKNOWN_ERROR)
-        return Result.Error(NetworkError.UNKNOWN_ERROR)
+        rememberTransportFailure(e, error)
+        return Result.Error(error)
     }
 
     val result = responseToResult<T>(response)

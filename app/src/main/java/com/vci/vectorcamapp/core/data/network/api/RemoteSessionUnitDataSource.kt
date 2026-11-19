@@ -1,9 +1,9 @@
 package com.vci.vectorcamapp.core.data.network.api
 
 import com.vci.vectorcamapp.core.data.dto.session_unit.GetSessionUnitsResponseDto
-import com.vci.vectorcamapp.core.data.dto.session_unit.PostSessionUnitRequestDto
 import com.vci.vectorcamapp.core.data.dto.session_unit.PostSessionUnitResponseDto
 import com.vci.vectorcamapp.core.data.dto.session_unit.SessionUnitDto
+import com.vci.vectorcamapp.core.data.mappers.toPostSessionUnitRequestDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.safeCall
 import com.vci.vectorcamapp.core.domain.model.SessionUnit
@@ -26,14 +26,8 @@ class RemoteSessionUnitDataSource @Inject constructor(
         sessionId: Int
     ): Result<PostSessionUnitResponseDto, NetworkError> {
         return safeCall<PostSessionUnitResponseDto> {
-            httpClient.post(constructUrl("sessions/$sessionId/units")) {
-                setBody(
-                    PostSessionUnitRequestDto(
-                        frontendId = sessionUnit.localId,
-                        unitOrder = sessionUnit.unitOrder,
-                        createdAt = sessionUnit.createdAt,
-                    )
-                )
+            httpClient.post(constructUrl(UploadRoutes.sessionUnits(sessionId))) {
+                setBody(sessionUnit.toPostSessionUnitRequestDto())
             }
         }
     }

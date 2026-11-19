@@ -23,25 +23,26 @@ plugins {
 }
 
 dependencies {
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${libs.versions.detekt.get()}")
+    detektPlugins("dev.detekt:detekt-rules-ktlint-wrapper:${libs.versions.detekt.get()}")
 }
 
 subprojects {
-    apply(plugin = "io.gitlab.arturbosch.detekt")
+    apply(plugin = "dev.detekt")
 
     dependencies {
-        "detektPlugins"("io.gitlab.arturbosch.detekt:detekt-formatting:${rootProject.libs.versions.detekt.get()}")
+        "detektPlugins"("dev.detekt:detekt-rules-ktlint-wrapper:${rootProject.libs.versions.detekt.get()}")
     }
 
-    configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
-        buildUponDefaultConfig = true
-        allRules = false
+    configure<dev.detekt.gradle.extensions.DetektExtension> {
+        buildUponDefaultConfig.set(true)
+        allRules.set(false)
         config.setFrom(rootProject.files("config/detekt/detekt.yml"))
-        autoCorrect = rootProject.findProperty("detekt.autoCorrect")?.toString()?.toBoolean() ?: false
-        baseline = rootProject.file("config/detekt/baseline.xml")
+        autoCorrect.set(rootProject.findProperty("detekt.autoCorrect")?.toString()?.toBoolean() ?: false)
+        baseline.set(rootProject.layout.projectDirectory.file("config/detekt/baseline.xml"))
     }
-}
 
-tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
-    jvmTarget = "11"
+    tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+        jvmTarget.set("17")
+        baseline.set(rootProject.layout.projectDirectory.file("config/detekt/baseline.xml"))
+    }
 }

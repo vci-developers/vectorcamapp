@@ -1,9 +1,8 @@
 package com.vci.vectorcamapp.core.data.network.api
 
-import com.vci.vectorcamapp.core.data.dto.form_answer.FormAnswerRequestItemDto
 import com.vci.vectorcamapp.core.data.dto.form_answer.GetFormAnswersResponseDto
-import com.vci.vectorcamapp.core.data.dto.form_answer.PostFormAnswersRequestDto
 import com.vci.vectorcamapp.core.data.dto.form_answer.PostFormAnswersResponseDto
+import com.vci.vectorcamapp.core.data.mappers.toPostFormAnswersRequestDto
 import com.vci.vectorcamapp.core.data.network.constructUrl
 import com.vci.vectorcamapp.core.data.network.safeCall
 import com.vci.vectorcamapp.core.domain.model.FormAnswer
@@ -26,37 +25,13 @@ class RemoteFormAnswerDataSource @Inject constructor(
         sessionUnitScopedAnswersBySessionUnitRemoteId: Map<Int, Map<Int, FormAnswer>>,
     ): Result<PostFormAnswersResponseDto, NetworkError> {
         return safeCall<PostFormAnswersResponseDto> {
-            httpClient.post(constructUrl("sessions/$sessionId/forms/answers")) {
+            httpClient.post(constructUrl(UploadRoutes.formAnswers(sessionId))) {
                 setBody(
-                    PostFormAnswersRequestDto(
-                        answers = buildList {
-                            sessionScopedAnswers.forEach { (questionId, answer) ->
-                                add(
-                                    FormAnswerRequestItemDto(
-                                        frontendId = answer.localId,
-                                        questionId = questionId,
-                                        sessionUnitId = null,
-                                        value = answer.value,
-                                        dataType = answer.dataType
-                                    )
-                                )
-                            }
-                            sessionUnitScopedAnswersBySessionUnitRemoteId.forEach { (remoteSessionUnitId, answers) ->
-                                answers.forEach { (questionId, answer) ->
-                                    add(
-                                        FormAnswerRequestItemDto(
-                                            frontendId = answer.localId,
-                                            questionId = questionId,
-                                            sessionUnitId = remoteSessionUnitId,
-                                            value = answer.value,
-                                            dataType = answer.dataType
-                                        )
-                                    )
-                                }
-                            }
-                        },
+                    toPostFormAnswersRequestDto(
                         formVersion = formVersion,
-                        submittedAt = System.currentTimeMillis()
+                        sessionScopedAnswers = sessionScopedAnswers,
+                        sessionUnitScopedAnswersBySessionUnitRemoteId = sessionUnitScopedAnswersBySessionUnitRemoteId,
+                        submittedAt = System.currentTimeMillis(),
                     )
                 )
             }

@@ -69,8 +69,21 @@
     <!-- Status -->
     <string name="complete_session_status_completed">Completed</string>
     <string name="complete_session_status_not_started">Not started</string>
+    <string name="complete_session_status_metadata_failed">Some data failed to upload</string>
+    <string name="complete_session_status_sent_to_recovery">Some data was sent to recovery</string>
+    <string name="complete_session_upload_step_recovery_detail">Sent to recovery API</string>
     <string name="complete_session_status_metadata_progress">%1$d / %2$d metadata</string>
     <string name="complete_session_status_image_progress">%1$d / %2$d images</string>
+
+    <!-- Metadata Upload Steps -->
+    <string name="complete_session_label_metadata_upload_steps">Metadata Upload</string>
+    <string name="complete_session_upload_step_device">Device</string>
+    <string name="complete_session_upload_step_session">Session</string>
+    <string name="complete_session_upload_step_session_units">Session Units</string>
+    <string name="complete_session_upload_step_form_answers">Form Answers</string>
+    <string name="complete_session_upload_step_surveillance_form">Surveillance Form</string>
+    <string name="complete_session_upload_step_specimens">Specimens</string>
+    <string name="complete_session_upload_step_specimen_images">Specimen Images</string>
 
     <!-- Placeholders -->
     <string name="complete_session_placeholder_search">Search by collector, district, session type, etc.</string>
@@ -92,6 +105,9 @@
     <string name="complete_session_content_description_hospital">Hospital</string>
     <string name="complete_session_content_description_location">Location</string>
     <string name="complete_session_content_description_uploading">Currently uploading</string>
+    <string name="complete_session_content_description_upload_step_succeeded">Uploaded</string>
+    <string name="complete_session_content_description_upload_step_recovered">Sent for recovery</string>
+    <string name="complete_session_content_description_upload_step_failed">Failed</string>
     <string name="complete_session_content_description_refresh">Refresh</string>
     <string name="complete_session_content_description_upload">Upload</string>
     <string name="complete_session_content_description_specimen_image">Specimen Image: %1$s</string>
