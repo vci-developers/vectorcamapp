@@ -36,23 +36,23 @@ class WorkManagerRepositoryImplementation @Inject constructor(
         .build()
 
     override fun enqueueSessionUpload(sessionId: UUID, siteId: Int) {
+        UploadForegroundService.start(context)
         val chainName = UPLOAD_WORK_CHAIN_PREFIX + sessionId
         workManager.beginUniqueWork(
             chainName,
-            ExistingWorkPolicy.REPLACE,
+            ExistingWorkPolicy.KEEP,
             buildSessionMetadataWork(sessionId, siteId)
         ).then(buildSessionImageWork(sessionId, siteId)).enqueue()
-        // Start the sticky foreground service after work is enqueued so the process
-        // stays alive even while workers are queued waiting for constraints to be met.
-        UploadForegroundService.start(context)
     }
 
     override fun observeIsSessionActivelyUploading(sessionId: UUID): Flow<Boolean> {
-        val chainName = "session_upload_chain_$sessionId"
+        val chainName = UPLOAD_WORK_CHAIN_PREFIX + sessionId
         return workManager.getWorkInfosForUniqueWorkFlow(chainName)
             .map { workInfos ->
-                workInfos.any {
-                    it.state == WorkInfo.State.RUNNING
+                workInfos.any { workInfo ->
+                    workInfo.state == WorkInfo.State.RUNNING ||
+                        workInfo.state == WorkInfo.State.ENQUEUED ||
+                        workInfo.state == WorkInfo.State.BLOCKED
                 }
             }
     }

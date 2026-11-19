@@ -61,7 +61,6 @@ class MetadataUploadWorkerDataRecoveryTest : MetadataUploadWorkerTestBase() {
         }
         assertThat(dataRecoveryRequests.map { it.idempotencyKey }).containsExactly(
             "$sessionId:SPECIMENS:$SPECIMEN_1",
-            "$sessionId:SPECIMEN_IMAGES:$IMAGE_1",
         )
     }
 

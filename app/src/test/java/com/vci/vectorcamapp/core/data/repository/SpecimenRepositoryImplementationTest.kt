@@ -69,6 +69,7 @@ class SpecimenRepositoryImplementationTest {
         every { dao.observeUploadedMetadataCountForSession(sessionId) } returns flowOf(1)
         every { dao.observeUploadedImageCountForSession(sessionId) } returns flowOf(2)
         every { dao.observeFailedImageCountForSession(sessionId) } returns flowOf(3)
+        every { dao.observeRecoveredImageCountForSession(sessionId) } returns flowOf(1)
 
         assertThat(repository.insertSpecimenImage(image, "spec", sessionId)).isEqualTo(Result.Success(Unit))
         assertThat(repository.insertSpecimenImage(image, "spec", sessionId))
@@ -93,6 +94,10 @@ class SpecimenRepositoryImplementationTest {
         }
         repository.observeFailedImageCountForSession(sessionId).test {
             assertThat(awaitItem()).isEqualTo(3)
+            awaitComplete()
+        }
+        repository.observeRecoveredImageCountForSession(sessionId).test {
+            assertThat(awaitItem()).isEqualTo(1)
             awaitComplete()
         }
     }

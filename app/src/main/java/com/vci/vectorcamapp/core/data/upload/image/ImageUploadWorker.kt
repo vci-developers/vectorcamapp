@@ -127,9 +127,26 @@ class ImageUploadWorker @AssistedInject constructor(
         val specimensWithImages =
             specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(sessionId, null)
 
+        specimensWithImages.forEach { specimenWithData ->
+            specimenWithData.specimenImagesAndInferenceResults.forEach { (image, _) ->
+                val pendingImageStatus = image.imageUploadStatus.pendingIfInterrupted()
+                if (pendingImageStatus != image.imageUploadStatus) {
+                    specimenImageRepository.updateSpecimenImage(
+                        image.copy(imageUploadStatus = pendingImageStatus),
+                        specimenWithData.specimen.id,
+                        sessionId
+                    )
+                }
+            }
+        }
+
         val imagesToUpload = specimensWithImages.flatMap { specimenWithData ->
             specimenWithData.specimenImagesAndInferenceResults.map { imageAndResult ->
-                ImageUploadTask(specimenWithData.specimen, imageAndResult.specimenImage)
+                val image = imageAndResult.specimenImage
+                ImageUploadTask(
+                    specimenWithData.specimen,
+                    image.copy(imageUploadStatus = image.imageUploadStatus.pendingIfInterrupted()),
+                )
             }
         }.filter { task ->
             !task.image.imageUploadStatus.isUploaded()
@@ -242,7 +259,7 @@ class ImageUploadWorker @AssistedInject constructor(
                     } catch (e: TusProtocolException) {
                         if (e.causingConnection?.responseCode == HttpURLConnection.HTTP_CONFLICT) {
                             val location = e.causingConnection.getHeaderField("Location")
-                            if (location != null || tusTarget.successStatus == UploadStatus.RECOVERED) {
+                            if (location != null) {
                                 Log.i(
                                     "ImageUploadWorker",
                                     "Upload for ${task.image.localId} already exists on server (conflict). Treating as success."
@@ -252,8 +269,12 @@ class ImageUploadWorker @AssistedInject constructor(
                                     specimenId = task.specimen.id,
                                     sessionId = sessionId
                                 )
-                                return@run DomainResult.Success(location ?: constructUrl(tusTarget.path))
+                                return@run DomainResult.Success(location)
                             }
+                            Log.w(
+                                "ImageUploadWorker",
+                                "Conflict for ${task.image.localId} without Location; not treating as success."
+                            )
                         }
                         file.delete()
                         throw e

@@ -14,10 +14,10 @@ interface MetadataUploadStatusDao {
     suspend fun upsertMetadataUploadStatus(metadataUploadStatus: MetadataUploadStatusEntity)
 
     @Query(
-        "UPDATE metadata_upload_status SET status = 'FAILED', updatedAt = :updatedAt " +
+        "UPDATE metadata_upload_status SET status = 'NOT_STARTED', updatedAt = :updatedAt " +
                 "WHERE sessionId = :sessionId AND status = 'IN_PROGRESS'"
     )
-    suspend fun failInProgressMetadataUploadStatuses(sessionId: UUID, updatedAt: Long)
+    suspend fun revertInProgressMetadataUploadStatuses(sessionId: UUID, updatedAt: Long)
 
     @Query("SELECT * FROM metadata_upload_status WHERE sessionId = :sessionId")
     fun observeMetadataUploadStatusesForSession(sessionId: UUID): Flow<List<MetadataUploadStatusEntity>>

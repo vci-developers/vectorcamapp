@@ -1,6 +1,9 @@
 package com.vci.vectorcamapp.core.data.mappers
 
 import com.vci.vectorcamapp.BuildConfig
+import com.vci.vectorcamapp.core.data.dto.data_recovery.SessionRecoveryBundleDto
+import com.vci.vectorcamapp.core.data.dto.data_recovery.SessionUnitRecoveryBundleDto
+import com.vci.vectorcamapp.core.data.dto.data_recovery.SpecimenRecoveryBundleDto
 import com.vci.vectorcamapp.core.data.dto.device.RegisterDeviceRequestDto
 import com.vci.vectorcamapp.core.data.dto.form_answer.FormAnswerRequestItemDto
 import com.vci.vectorcamapp.core.data.dto.form_answer.PostFormAnswersRequestDto
@@ -18,6 +21,9 @@ import com.vci.vectorcamapp.core.domain.model.SessionUnit
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.SurveillanceForm
+import com.vci.vectorcamapp.core.domain.model.composites.SpecimenImageAndInferenceResult
+import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
+import java.util.UUID
 
 fun Device.toRegisterDeviceRequestDto(programId: Int): RegisterDeviceRequestDto {
     return RegisterDeviceRequestDto(
@@ -83,19 +89,51 @@ fun toPostFormAnswersRequestDto(
     )
 }
 
+fun toRecoveryFormAnswersRequestDto(
+    formVersion: String,
+    sessionScopedAnswers: Map<Int, FormAnswer>,
+    sessionUnitScopedAnswersByLocalUnitId: Map<UUID, Map<Int, FormAnswer>>,
+    remoteSessionUnitIdByLocalId: Map<UUID, Int?>,
+    submittedAt: Long,
+): PostFormAnswersRequestDto {
+    return PostFormAnswersRequestDto(
+        answers = buildList {
+            sessionScopedAnswers.forEach { (questionId, answer) ->
+                add(answer.toFormAnswerRequestItemDto(questionId, sessionUnitId = null))
+            }
+            sessionUnitScopedAnswersByLocalUnitId.forEach { (localUnitId, answers) ->
+                answers.forEach { (questionId, answer) ->
+                    add(
+                        answer.toFormAnswerRequestItemDto(
+                            questionId = questionId,
+                            sessionUnitId = remoteSessionUnitIdByLocalId[localUnitId],
+                            sessionUnitFrontendId = localUnitId,
+                        )
+                    )
+                }
+            }
+        },
+        formVersion = formVersion,
+        submittedAt = submittedAt,
+    )
+}
+
 private fun FormAnswer.toFormAnswerRequestItemDto(
-    questionId: Int, sessionUnitId: Int?
+    questionId: Int,
+    sessionUnitId: Int?,
+    sessionUnitFrontendId: UUID? = null,
 ): FormAnswerRequestItemDto {
     return FormAnswerRequestItemDto(
         frontendId = this.localId,
         questionId = questionId,
         sessionUnitId = sessionUnitId,
+        sessionUnitFrontendId = sessionUnitFrontendId,
         value = this.value,
         dataType = this.dataType,
     )
 }
 
-fun SurveillanceForm.toPostSurveillanceFormRequestDto(sessionId: Int): PostSurveillanceFormRequestDto {
+fun SurveillanceForm.toPostSurveillanceFormRequestDto(sessionId: Int?): PostSurveillanceFormRequestDto {
     return PostSurveillanceFormRequestDto(
         sessionId = sessionId,
         numPeopleSleptInHouse = this.numPeopleSleptInHouse,
@@ -111,27 +149,87 @@ fun SurveillanceForm.toPostSurveillanceFormRequestDto(sessionId: Int): PostSurve
 }
 
 fun Specimen.toPostSpecimenRequestDto(
-    sessionUnitId: Int?, expectedImages: Int
+    sessionUnitId: Int?,
+    expectedImages: Int,
+    sessionUnitFrontendId: UUID? = null,
 ): PostSpecimenRequestDto {
     return PostSpecimenRequestDto(
         specimenId = this.id,
         sessionUnitId = sessionUnitId,
+        sessionUnitFrontendId = sessionUnitFrontendId,
         shouldProcessFurther = this.shouldProcessFurther,
         expectedImages = expectedImages,
     )
 }
 
 fun SpecimenImage.toPostSpecimenImageRequestDto(
-    inferenceResult: InferenceResult?
+    inferenceResult: InferenceResult?,
+    clientSpecimenId: String? = null,
 ): PostSpecimenImageRequestDto {
     return PostSpecimenImageRequestDto(
         filemd5 = this.localId,
+        clientSpecimenId = clientSpecimenId,
         species = this.species,
         sex = this.sex,
         abdomenStatus = this.abdomenStatus,
         capturedAt = this.capturedAt,
         inferenceResult = inferenceResult?.toInferenceResultDto(),
         metadata = this.imageMetadata?.toImageMetadataDto(),
+    )
+}
+
+fun toSpecimenRecoveryBundleDto(
+    specimen: Specimen,
+    imagesAndInferenceResults: List<SpecimenImageAndInferenceResult>,
+    sessionUnitId: Int? = null,
+    sessionUnitFrontendId: UUID? = null,
+): SpecimenRecoveryBundleDto {
+    return SpecimenRecoveryBundleDto(
+        specimen = specimen.toPostSpecimenRequestDto(
+            sessionUnitId = sessionUnitId,
+            expectedImages = imagesAndInferenceResults.size,
+            sessionUnitFrontendId = sessionUnitFrontendId,
+        ),
+        images = imagesAndInferenceResults.map { (image, inferenceResult) ->
+            image.toPostSpecimenImageRequestDto(inferenceResult, clientSpecimenId = specimen.id)
+        },
+    )
+}
+
+fun toSessionUnitRecoveryBundleDto(
+    unit: SessionUnit,
+    specimens: List<SpecimenWithSpecimenImagesAndInferenceResults>,
+): SessionUnitRecoveryBundleDto {
+    return SessionUnitRecoveryBundleDto(
+        unit = unit.toPostSessionUnitRequestDto(),
+        specimens = specimens.map { specimenWithImages ->
+            toSpecimenRecoveryBundleDto(
+                specimen = specimenWithImages.specimen,
+                imagesAndInferenceResults = specimenWithImages.specimenImagesAndInferenceResults,
+                sessionUnitFrontendId = unit.localId,
+            )
+        },
+    )
+}
+
+fun toSessionRecoveryBundleDto(
+    session: Session,
+    siteId: Int,
+    deviceId: Int,
+    expectedSpecimens: Int,
+    formVersion: String?,
+    units: List<SessionUnit>,
+    formAnswers: PostFormAnswersRequestDto?,
+    surveillanceForm: SurveillanceForm?,
+    specimens: List<SpecimenRecoveryBundleDto>,
+): SessionRecoveryBundleDto {
+    return SessionRecoveryBundleDto(
+        session = session.toPostSessionRequestDto(siteId, deviceId, expectedSpecimens),
+        formVersion = formVersion,
+        units = units.map { it.toPostSessionUnitRequestDto() },
+        formAnswers = formAnswers,
+        surveillanceForm = surveillanceForm?.toPostSurveillanceFormRequestDto(sessionId = null),
+        specimens = specimens,
     )
 }
 

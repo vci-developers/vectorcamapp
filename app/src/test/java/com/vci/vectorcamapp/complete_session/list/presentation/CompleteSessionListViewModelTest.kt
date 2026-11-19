@@ -1,12 +1,16 @@
 package com.vci.vectorcamapp.complete_session.list.presentation
 
 import android.content.Context
+import android.net.Uri
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.vci.vectorcamapp.core.domain.model.MetadataUploadStepStatus
 import com.vci.vectorcamapp.core.domain.model.Session
 import com.vci.vectorcamapp.core.domain.model.Site
+import com.vci.vectorcamapp.core.domain.model.Specimen
+import com.vci.vectorcamapp.core.domain.model.SpecimenImage
 import com.vci.vectorcamapp.core.domain.model.composites.SessionAndSite
+import com.vci.vectorcamapp.core.domain.model.composites.SpecimenImageAndInferenceResult
 import com.vci.vectorcamapp.core.domain.model.composites.SpecimenWithSpecimenImagesAndInferenceResults
 import com.vci.vectorcamapp.core.domain.model.enums.MetadataUploadStep
 import com.vci.vectorcamapp.core.domain.model.enums.SessionType
@@ -108,6 +112,7 @@ class CompleteSessionListViewModelTest {
         every { specimenImageRepository.observeUploadedMetadataCountForSession(any()) } returns flowOf(0)
         every { specimenImageRepository.observeUploadedImageCountForSession(any()) } returns flowOf(0)
         every { specimenImageRepository.observeFailedImageCountForSession(any()) } returns flowOf(0)
+        every { specimenImageRepository.observeRecoveredImageCountForSession(any()) } returns flowOf(0)
         every { workManagerRepository.observeIsSessionActivelyUploading(any()) } returns flowOf(false)
         every { metadataUploadStatusRepository.observeMetadataUploadStatusesForSession(any()) } returns flowOf(emptyList())
         coEvery { specimenImageRepository.getTotalCountForSession(any()) } returns 0
@@ -337,6 +342,73 @@ class CompleteSessionListViewModelTest {
 
         coVerify(exactly = 0) { workManagerRepository.enqueueSessionUpload(any(), any()) }
     }
+
+    @Test
+    fun listVm_d06_uploadAllPendingSessions_withRecoveredSessionAndImages_doesNotEnqueueAgain() = runTest {
+        completeSessionsFlow.value = listOf(SessionAndSite(testSession.copy(submittedAt = null), testSite))
+        coEvery { specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(any(), any()) } returns
+            listOf(specimenWithImage(UploadStatus.RECOVERED, UploadStatus.RECOVERED))
+        every { metadataUploadStatusRepository.observeMetadataUploadStatusesForSession(testSessionId) } returns flowOf(
+            listOf(
+                MetadataUploadStepStatus(MetadataUploadStep.SESSION, UploadStatus.RECOVERED, 0L),
+                MetadataUploadStepStatus(MetadataUploadStep.SPECIMEN_IMAGES, UploadStatus.RECOVERED, 0L),
+            )
+        )
+
+        val vm = makeViewModel()
+        advanceUntilIdle()
+
+        vm.onAction(CompleteSessionListAction.UploadAllPendingSessions)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { workManagerRepository.enqueueSessionUpload(any(), any()) }
+    }
+
+    @Test
+    fun listVm_d07_uploadAllPendingSessions_withRecoveredMetadataButPendingImage_enqueuesUpload() = runTest {
+        completeSessionsFlow.value = listOf(SessionAndSite(testSession.copy(submittedAt = null), testSite))
+        coEvery { specimenRepository.getSpecimenImagesAndInferenceResultsBySessionScope(any(), any()) } returns
+            listOf(specimenWithImage(UploadStatus.RECOVERED, UploadStatus.NOT_STARTED))
+        every { metadataUploadStatusRepository.observeMetadataUploadStatusesForSession(testSessionId) } returns flowOf(
+            listOf(
+                MetadataUploadStepStatus(MetadataUploadStep.SESSION, UploadStatus.RECOVERED, 0L),
+                MetadataUploadStepStatus(MetadataUploadStep.SPECIMEN_IMAGES, UploadStatus.RECOVERED, 0L),
+            )
+        )
+
+        val vm = makeViewModel()
+        advanceUntilIdle()
+
+        vm.onAction(CompleteSessionListAction.UploadAllPendingSessions)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { workManagerRepository.enqueueSessionUpload(testSessionId, testSite.id) }
+    }
+
+    private fun specimenWithImage(
+        metadataUploadStatus: UploadStatus,
+        imageUploadStatus: UploadStatus,
+    ) = SpecimenWithSpecimenImagesAndInferenceResults(
+        specimen = Specimen(id = "AAY", remoteId = null, shouldProcessFurther = false),
+        specimenImagesAndInferenceResults = listOf(
+            SpecimenImageAndInferenceResult(
+                specimenImage = SpecimenImage(
+                    localId = "img",
+                    remoteId = null,
+                    species = null,
+                    sex = null,
+                    abdomenStatus = null,
+                    imageUri = mockk<Uri>(),
+                    metadataUploadStatus = metadataUploadStatus,
+                    imageUploadStatus = imageUploadStatus,
+                    capturedAt = 0L,
+                    submittedAt = null,
+                    imageMetadata = null,
+                ),
+                inferenceResult = null,
+            )
+        ),
+    )
 
     // ========================================
     // E. State Updates from Flow

@@ -368,12 +368,12 @@ abstract class MetadataUploadWorkerTestBase {
             Result.Success(Unit)
         }
         coEvery {
-            metadataUploadStatusRepository.failInProgressMetadataUploadStatuses(sessionId)
+            metadataUploadStatusRepository.revertInProgressMetadataUploadStatuses(sessionId)
         } answers {
             val stillInProgress = finalStepStatuses()
                 .filterValues { it == UploadStatus.IN_PROGRESS }.keys
             stillInProgress.forEach { step ->
-                recordedStepStatuses += MetadataUploadStepStatus(step, UploadStatus.FAILED, 0L)
+                recordedStepStatuses += MetadataUploadStepStatus(step, UploadStatus.NOT_STARTED, 0L)
             }
             Result.Success(Unit)
         }

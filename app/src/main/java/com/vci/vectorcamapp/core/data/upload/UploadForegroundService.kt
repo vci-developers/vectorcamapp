@@ -22,6 +22,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 private enum class UploadState { WAITING, UPLOADING, IDLE }
@@ -36,31 +37,20 @@ private enum class UploadState { WAITING, UPLOADING, IDLE }
  * Lifecycle:
  *  - Started by WorkManagerRepository immediately before upload work is enqueued.
  *  - Observes WorkManager state and calls stopSelf() when no upload work remains active.
- *  - On system restart (START_STICKY), re-attaches to any in-flight WorkManager tasks.
+ *  - On system restart (START_STICKY), re-attaches to in-flight WorkManager tasks
+ *    and re-enqueues complete sessions that still have pending Room items.
  */
 @AndroidEntryPoint
 class UploadForegroundService : Service() {
 
     @Inject lateinit var workManager: WorkManager
 
+    @Inject lateinit var sessionUploadScheduler: SessionUploadScheduler
+
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var observerJob: Job? = null
     private val notificationManager by lazy {
         getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-    }
-
-    companion object {
-        const val UPLOAD_WORK_TAG = "session_upload_work"
-
-        private const val NOTIFICATION_ID = 9001
-        private const val CHANNEL_ID = "upload_foreground_service_channel"
-
-        fun start(context: Context) {
-            ContextCompat.startForegroundService(
-                context,
-                Intent(context, UploadForegroundService::class.java)
-            )
-        }
     }
 
     override fun onCreate() {
@@ -71,6 +61,16 @@ class UploadForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTIFICATION_ID, buildNotification(getString(R.string.upload_service_preparing)), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         startObservingWork()
+        if (intent == null) {
+            Timber.tag(TAG).i("Sticky restart; resuming pending complete-session uploads")
+            serviceScope.launch {
+                val enqueued = sessionUploadScheduler.enqueuePendingCompleteSessions()
+                Timber.tag(TAG).i("Sticky restart enqueued $enqueued pending session upload(s)")
+                if (enqueued == 0 && !hasActiveUploadWork()) {
+                    stopSelf()
+                }
+            }
+        }
         return START_STICKY
     }
 
@@ -110,6 +110,15 @@ class UploadForegroundService : Service() {
         }
     }
 
+    private fun hasActiveUploadWork(): Boolean {
+        val workInfos = workManager.getWorkInfosByTag(UPLOAD_WORK_TAG).get()
+        return workInfos.any { workInfo ->
+            workInfo.state == WorkInfo.State.RUNNING ||
+                workInfo.state == WorkInfo.State.ENQUEUED ||
+                workInfo.state == WorkInfo.State.BLOCKED
+        }
+    }
+
     private fun updateNotification(state: UploadState) {
         val text = when (state) {
             UploadState.WAITING -> getString(R.string.upload_service_waiting)
@@ -142,6 +151,21 @@ class UploadForegroundService : Service() {
             .setOngoing(true)
             .setContentIntent(pendingIntent)
             .build()
+    }
+
+    companion object {
+        const val UPLOAD_WORK_TAG = "session_upload_work"
+
+        private const val NOTIFICATION_ID = 9001
+        private const val CHANNEL_ID = "upload_foreground_service_channel"
+        private const val TAG = "DataRecovery"
+
+        fun start(context: Context) {
+            ContextCompat.startForegroundService(
+                context,
+                Intent(context, UploadForegroundService::class.java)
+            )
+        }
     }
 
     private fun createNotificationChannel() {

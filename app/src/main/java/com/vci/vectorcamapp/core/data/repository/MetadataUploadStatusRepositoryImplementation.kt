@@ -30,11 +30,11 @@ class MetadataUploadStatusRepositoryImplementation @Inject constructor(
         }
     }
 
-    override suspend fun failInProgressMetadataUploadStatuses(
+    override suspend fun revertInProgressMetadataUploadStatuses(
         sessionId: UUID
     ): Result<Unit, RoomDbError> {
         return try {
-            metadataUploadStatusDao.failInProgressMetadataUploadStatuses(
+            metadataUploadStatusDao.revertInProgressMetadataUploadStatuses(
                 sessionId,
                 System.currentTimeMillis()
             )
