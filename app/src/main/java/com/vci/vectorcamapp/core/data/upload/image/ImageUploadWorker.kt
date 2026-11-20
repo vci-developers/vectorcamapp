@@ -108,10 +108,11 @@ class ImageUploadWorker @AssistedInject constructor(
     )
 
     override suspend fun doWork(): WorkerResult {
-        activeTrace = UploadTrace(worker = "ImageUploadWorker")
-        activeTrace?.step = "validate_input"
-        try {
-            return uploadImages()
+        val trace = UploadTrace(worker = "ImageUploadWorker")
+        activeTrace = trace
+        trace.step = "validate_input"
+        return try {
+            withContext(trace) { uploadImages() }
         } finally {
             activeTrace = null
         }

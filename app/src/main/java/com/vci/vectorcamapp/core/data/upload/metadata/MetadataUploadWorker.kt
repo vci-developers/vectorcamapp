@@ -131,11 +131,13 @@ class MetadataUploadWorker @AssistedInject constructor(
     private var activeTrace: UploadTrace? = null
 
     override suspend fun doWork(): WorkerResult {
-        activeTrace = UploadTrace(worker = "MetadataUploadWorker")
+        val trace = UploadTrace(worker = "MetadataUploadWorker")
+        activeTrace = trace
+        return withContext(trace) {
         val localSessionIdString = inputData.getString("session_id")
         val localSiteId = inputData.getInt("site_id", -1)
         if (localSessionIdString == null || localSiteId == -1) {
-            return retryOrFailure(
+            return@withContext retryOrFailure(
                 message = context.getString(R.string.upload_error_invalid_request),
                 detail = "Invalid metadata upload request sessionId=$localSessionIdString siteId=$localSiteId",
             )
@@ -144,7 +146,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         val localSessionId = try {
             UUID.fromString(localSessionIdString)
         } catch (e: IllegalArgumentException) {
-            return retryOrFailure(
+            return@withContext retryOrFailure(
                 message = context.getString(R.string.upload_error_invalid_session_id),
                 detail = "Invalid session id '$localSessionIdString'",
                 throwable = e,
@@ -158,7 +160,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         val localProgramId = deviceCache.getProgramId()
         activeTrace?.programId = localProgramId?.toString()
         if (localSession == null || localDevice == null || localProgramId == null) {
-            return retryOrFailure(
+            return@withContext retryOrFailure(
                 message = context.getString(R.string.upload_error_device_session_not_found),
                 detail = "Missing local data session=${localSession != null} device=${localDevice != null} " +
                     "program=${localProgramId != null} deviceId=${localDevice?.id}",
@@ -166,7 +168,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         }
 
         val localProgram = programRepository.getProgramById(localProgramId)
-            ?: return retryOrFailure(context.getString(R.string.upload_error_program_not_found))
+            ?: return@withContext retryOrFailure(context.getString(R.string.upload_error_program_not_found))
 
         notifier.createNotificationChannel()
         notificationId = localSessionId.hashCode()
@@ -279,7 +281,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 recordStepStatus(localSessionId, MetadataUploadStep.SESSION)
                 // Every remaining endpoint is scoped under the remote session id.
                 failInProgressSteps(localSessionId)
-                return retryOrFailure(
+                return@withContext retryOrFailure(
                     syncSessionResult.errorOrNull()?.toString(context)
                         ?: context.getString(R.string.upload_error_session_not_found_server)
                 )
@@ -508,11 +510,12 @@ class MetadataUploadWorker @AssistedInject constructor(
 
             // Failures that were captured by data recovery are not retried here; only data that
             // reached neither the server nor the recovery table keeps the upload pending.
-            return uploadOutcomes.firstFailureMessage?.let { retryOrComplete(it) } ?: WorkerResult.success()
+            return@withContext uploadOutcomes.firstFailureMessage?.let { retryOrComplete(it) }
+                ?: WorkerResult.success()
         } catch (e: IOException) {
             activeTrace?.failureCause = e
             failInProgressSteps(localSessionId)
-            return retryOrFailure(
+            return@withContext retryOrFailure(
                 message = context.getString(R.string.upload_error_lost_connection),
                 throwable = e,
             )
@@ -521,7 +524,7 @@ class MetadataUploadWorker @AssistedInject constructor(
         } catch (e: Exception) {
             activeTrace?.failureCause = e
             failInProgressSteps(localSessionId)
-            return retryOrFailure(
+            return@withContext retryOrFailure(
                 message = context.getString(R.string.upload_error_unknown),
                 throwable = e,
             )
@@ -534,6 +537,7 @@ class MetadataUploadWorker @AssistedInject constructor(
                 }
             }
             activeTrace = null
+        }
         }
     }
 
