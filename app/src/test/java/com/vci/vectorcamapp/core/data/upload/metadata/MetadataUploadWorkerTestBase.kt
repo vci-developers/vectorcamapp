@@ -240,6 +240,9 @@ abstract class MetadataUploadWorkerTestBase {
                 programId = PROGRAM_ID,
             )
         )
+        coEvery { deviceDataSource.updateAppVersionIfStale(any()) } answers {
+            Result.Success(args[0] as DeviceDto)
+        }
 
         sessionDataSource = mockk()
         coEvery { sessionDataSource.getSessionByFrontendId(sessionId) } returns Result.Error(NetworkError.NOT_FOUND)

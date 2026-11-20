@@ -16,6 +16,8 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.data.network.constructUrl
+import com.vci.vectorcamapp.core.data.upload.logging.UploadErrorLogger
+import com.vci.vectorcamapp.core.data.upload.logging.UploadTrace
 import com.vci.vectorcamapp.core.domain.cache.DeviceCache
 import com.vci.vectorcamapp.core.domain.model.Specimen
 import com.vci.vectorcamapp.core.domain.model.SpecimenImage
@@ -93,6 +95,7 @@ class ImageUploadWorker @AssistedInject constructor(
 
     private val notificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private var activeTrace: UploadTrace? = null
 
     private var notificationId: Int = 1002
     private var notificationSessionTitle: String = ""
@@ -105,22 +108,41 @@ class ImageUploadWorker @AssistedInject constructor(
     )
 
     override suspend fun doWork(): WorkerResult {
+        val trace = UploadTrace(worker = "ImageUploadWorker")
+        activeTrace = trace
+        trace.step = "validate_input"
+        return try {
+            withContext(trace) { uploadImages() }
+        } finally {
+            activeTrace = null
+        }
+    }
+
+    private suspend fun uploadImages(): WorkerResult {
         val sessionIdStr = inputData.getString(KEY_SESSION_ID)
         if (sessionIdStr == null) {
             Log.e("ImageUploadWorker", "Session ID missing from worker input data.")
+            logUploadFailure(reason = "Session id missing from image upload worker input")
             return WorkerResult.failure()
         }
+        activeTrace?.sessionId = sessionIdStr
 
         val sessionId = try {
             UUID.fromString(sessionIdStr)
         } catch (e: IllegalArgumentException) {
             Log.e("ImageUploadWorker", "Invalid session ID format provided: $sessionIdStr", e)
+            logUploadFailure(
+                reason = "Invalid session id '$sessionIdStr'",
+                throwable = e,
+            )
             return WorkerResult.failure()
         }
+        activeTrace?.sessionId = sessionId.toString()
 
         val session = sessionRepository.getSessionById(sessionId)
         if (session == null) {
             Log.e("ImageUploadWorker", "Session $sessionId not found in the database.")
+            logUploadFailure(reason = "Session $sessionId was not found in the local database")
             return WorkerResult.failure()
         }
 
@@ -181,6 +203,15 @@ class ImageUploadWorker @AssistedInject constructor(
         task: ImageUploadTask,
         sessionId: UUID
     ): DomainResult<String, NetworkError> {
+        activeTrace?.apply {
+            step = "prepare_file"
+            specimenId = task.specimen.id
+            imageId = task.image.localId
+            endpointHint = task.image.imageUri.toString()
+            requestBodyHint = "(local file)"
+            lastExchange = null
+            failureCause = null
+        }
         var tempFile: File? = null
         val (file, contentType, md5) = try {
             val (prepared, type) = prepareFile(task.image.imageUri, task.specimen.id, task.image.localId)
@@ -188,12 +219,23 @@ class ImageUploadWorker @AssistedInject constructor(
             Triple(prepared, type, task.image.localId)
         } catch (e: Exception) {
             if (isStopped) {
+                UploadErrorLogger.rememberTusFailure(activeTrace, e, connection = null, fallbackMethod = "LOCAL")
+                logUploadFailure(
+                    reason = "Image upload worker was stopped while preparing ${task.image.localId}",
+                    throwable = e,
+                )
                 throw CancellationException("Worker was stopped during file preparation.", e)
             }
             Log.e(
                 "ImageUploadWorker",
                 "Failed to prepare file or calculate MD5 for specimen ${task.image.localId}.",
                 e
+            )
+            UploadErrorLogger.rememberTusFailure(activeTrace, e, connection = null, fallbackMethod = "LOCAL")
+            logUploadFailure(
+                reason = "Failed to prepare image file ${task.image.localId}",
+                networkError = NetworkError.TUS_PERMANENT_ERROR,
+                throwable = e,
             )
             specimenImageRepository.updateSpecimenImage(
                 specimenImage = task.image.copy(imageUploadStatus = UploadStatus.FAILED),
@@ -207,6 +249,10 @@ class ImageUploadWorker @AssistedInject constructor(
         val tusTarget = when (val targetResult = resolveTusTarget(task, sessionId, file.name, contentType, md5)) {
             is DomainResult.Success -> targetResult.data
             is DomainResult.Error -> {
+                logUploadFailure(
+                    reason = "Image ${task.image.localId} was not uploaded",
+                    networkError = targetResult.error,
+                )
                 specimenImageRepository.updateSpecimenImage(
                     specimenImage = task.image.copy(imageUploadStatus = UploadStatus.FAILED),
                     specimenId = task.specimen.id,
@@ -215,6 +261,15 @@ class ImageUploadWorker @AssistedInject constructor(
                 file.delete()
                 return targetResult
             }
+        }
+
+        activeTrace?.step = "tus_upload"
+        activeTrace?.endpointHint = constructUrl(tusTarget.path)
+        activeTrace?.requestBodyHint = buildString {
+            append("metadata=")
+            append(tusTarget.metadata.entries.joinToString(prefix = "{", postfix = "}") { "${it.key}=${it.value}" })
+            append(" fileBytes=${file.length()}")
+            append(" binaryPayload=omitted")
         }
 
         val uploadResult: DomainResult<String, NetworkError> = run {
@@ -281,6 +336,7 @@ class ImageUploadWorker @AssistedInject constructor(
                         "Attempt $attempt failed with TusProtocolException.",
                         e
                     )
+                    UploadErrorLogger.rememberTusFailure(activeTrace, e, e.causingConnection, fallbackMethod = "TUS")
                     if (e.shouldRetry()) {
                         DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                     } else {
@@ -288,16 +344,28 @@ class ImageUploadWorker @AssistedInject constructor(
                     }
                 } catch (e: IOException) {
                     Log.w("ImageUploadWorker", "Attempt $attempt failed with IOException.", e)
+                    UploadErrorLogger.rememberTusFailure(activeTrace, e, connection = null, fallbackMethod = "TUS")
                     DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                 } catch (e: Exception) {
                     if (isStopped) {
                         file.delete()
+                        UploadErrorLogger.rememberTusFailure(activeTrace, e, connection = null, fallbackMethod = "TUS")
+                        logUploadFailure(
+                            reason = "Image upload worker was stopped on attempt $attempt",
+                            throwable = e,
+                        )
                         throw CancellationException("Worker was stopped by the system.", e)
                     }
                     Log.e(
                         "ImageUploadWorker",
                         "Exception on attempt $attempt for specimen ${task.image.localId}.",
                         e
+                    )
+                    UploadErrorLogger.rememberTusFailure(activeTrace, e, connection = null, fallbackMethod = "TUS")
+                    logUploadFailure(
+                        reason = "Image upload failed on attempt $attempt for ${task.image.localId}",
+                        networkError = NetworkError.UNKNOWN_ERROR,
+                        throwable = e,
                     )
                     return@run DomainResult.Error(NetworkError.UNKNOWN_ERROR)
                 }
@@ -317,20 +385,21 @@ class ImageUploadWorker @AssistedInject constructor(
                 )
 
                 if (result.error == NetworkError.TUS_PERMANENT_ERROR || attempt == MAX_RETRIES) {
-                    if (result.error == NetworkError.TUS_PERMANENT_ERROR) {
-                        Log.e(
-                            "ImageUploadWorker",
-                            "Permanent error for specimen ${task.image.localId}."
-                        )
-                    } else {
-                        Log.e(
-                            "ImageUploadWorker",
-                            "Max retries reached for specimen ${task.image.localId}."
-                        )
-                    }
+                    Log.e(
+                        "ImageUploadWorker",
+                        "Image ${task.image.localId} was not uploaded on attempt $attempt (${result.error})."
+                    )
+                    logUploadFailure(
+                        reason = "Image ${task.image.localId} was not uploaded after attempt $attempt",
+                        networkError = result.error,
+                    )
                     return@run result
                 }
             }
+            logUploadFailure(
+                reason = "Image ${task.image.localId} was not uploaded",
+                networkError = NetworkError.UNKNOWN_ERROR,
+            )
             DomainResult.Error(NetworkError.UNKNOWN_ERROR)
         }
 
@@ -353,6 +422,16 @@ class ImageUploadWorker @AssistedInject constructor(
                     "ImageUploadWorker",
                     "Failed to compress original file (${task.image.imageUri}) after upload.",
                     e
+                )
+                activeTrace?.apply {
+                    step = "compress_uploaded_image"
+                    endpointHint = task.image.imageUri.toString()
+                    requestBodyHint = "(local file)"
+                }
+                UploadErrorLogger.rememberTusFailure(activeTrace, e, connection = null, fallbackMethod = "LOCAL")
+                logUploadFailure(
+                    reason = "Image ${task.image.localId} was uploaded, then compressing the local file failed",
+                    throwable = e,
                 )
             }
         }
@@ -478,22 +557,16 @@ class ImageUploadWorker @AssistedInject constructor(
 
             val chunkResult = try {
                 DomainResult.Success(uploader.uploadChunk())
-            } catch (_: SocketTimeoutException) {
-                DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
-            } catch (e: TusProtocolException) {
-                if (e.shouldRetry()) {
-                    DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
-                } else {
-                    DomainResult.Error(NetworkError.TUS_PERMANENT_ERROR)
-                }
-            } catch (_: IOException) {
-                DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
-            } catch (e: Exception) {
-                if (isStopped) {
-                    file.delete()
-                    throw CancellationException("Worker was stopped during chunk upload.", e)
-                }
-                DomainResult.Error(NetworkError.UNKNOWN_ERROR)
+            } catch (timeout: SocketTimeoutException) {
+                DomainResult.Error(UploadErrorLogger.rememberChunkFailure(activeTrace, timeout))
+            } catch (protocol: TusProtocolException) {
+                DomainResult.Error(UploadErrorLogger.rememberChunkFailure(activeTrace, protocol))
+            } catch (io: IOException) {
+                DomainResult.Error(UploadErrorLogger.rememberChunkFailure(activeTrace, io))
+            } catch (expected: Exception) {
+                val error = UploadErrorLogger.rememberChunkFailure(activeTrace, expected)
+                if (isStopped) stopChunkUpload(file, expected)
+                DomainResult.Error(error)
             }
 
             when (chunkResult) {
@@ -551,8 +624,18 @@ class ImageUploadWorker @AssistedInject constructor(
                     try {
                         uploader = tusClient.resumeOrCreateUpload(upload)
                     } catch (resumeException: Exception) {
+                        UploadErrorLogger.rememberTusFailure(
+                            activeTrace,
+                            resumeException,
+                            (resumeException as? TusProtocolException)?.causingConnection,
+                            fallbackMethod = "POST",
+                        )
                         if (isStopped) {
                             file.delete()
+                            logUploadFailure(
+                                reason = "Image upload worker was stopped while resuming the upload",
+                                throwable = resumeException,
+                            )
                             throw CancellationException(
                                 "Worker was stopped by the system.",
                                 resumeException
@@ -615,6 +698,7 @@ class ImageUploadWorker @AssistedInject constructor(
                 DomainResult.Success(uploader.uploadURL)
             } catch (e: TusProtocolException) {
                 Log.w("ImageUploadWorker", "finish() failed with TusProtocolException.", e)
+                UploadErrorLogger.rememberTusFailure(activeTrace, e, e.causingConnection, fallbackMethod = "PATCH")
                 if (e.shouldRetry()) {
                     DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
                 } else {
@@ -622,16 +706,45 @@ class ImageUploadWorker @AssistedInject constructor(
                 }
             } catch (e: IOException) {
                 Log.e("ImageUploadWorker", "finish() failed due to IOException.", e)
+                UploadErrorLogger.rememberTusFailure(activeTrace, e, connection = null, fallbackMethod = "PATCH")
                 DomainResult.Error(NetworkError.TUS_TRANSIENT_ERROR)
             } catch (e: Exception) {
                 if (isStopped) {
                     file.delete()
+                    UploadErrorLogger.rememberTusFailure(activeTrace, e, connection = null, fallbackMethod = "PATCH")
+                    logUploadFailure(
+                        reason = "Image upload worker was stopped during Tus finish()",
+                        throwable = e,
+                    )
                     throw CancellationException("Worker was stopped during Tus finish().", e)
                 }
                 Log.e("ImageUploadWorker", "finish() failed due to unexpected exception.", e)
+                UploadErrorLogger.rememberTusFailure(activeTrace, e, connection = null, fallbackMethod = "PATCH")
                 DomainResult.Error(NetworkError.UNKNOWN_ERROR)
             }
         }
+
+    private fun stopChunkUpload(file: File, error: Throwable): Nothing {
+        file.delete()
+        logUploadFailure(
+            reason = "Image upload worker was stopped during chunk upload",
+            throwable = error,
+        )
+        throw CancellationException("Worker was stopped during chunk upload.", error)
+    }
+
+    private fun logUploadFailure(
+        reason: String,
+        networkError: NetworkError? = null,
+        throwable: Throwable? = null,
+    ) {
+        UploadErrorLogger.record(
+            trace = activeTrace,
+            reason = reason,
+            networkError = networkError?.name,
+            throwable = throwable,
+        )
+    }
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(

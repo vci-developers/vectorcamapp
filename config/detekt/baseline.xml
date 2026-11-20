@@ -639,6 +639,7 @@
     <ID>PrintStackTrace:DeviceCacheDtoSerializer.kt:DeviceCacheDtoSerializer$e</ID>
     <ID>PrintStackTrace:safeCall.kt:e</ID>
     <ID>PropertyWrapping:SettingsViewModelTest.kt:SettingsViewModelTest$private val testCollector = Collector(id = UUID.randomUUID(), name = "Alice", title = "Dr.", lastTrainedOn = 1_000_000L)</ID>
+    <ID>ReturnCount:MetadataUploadWorker.kt:MetadataUploadWorker$override suspend fun doWork: WorkerResult</ID>
     <ID>ReturnCount:MetadataUploadWorker.kt:MetadataUploadWorker$private suspend fun syncSpecimenImageAndInferenceResultIfNeeded: DomainResult&lt;Unit, NetworkError&gt;</ID>
     <ID>SpacingAroundColon:ActionTile.kt::</ID>
     <ID>SpacingAroundColon:CameraRepository.kt:CameraRepository$:</ID>
