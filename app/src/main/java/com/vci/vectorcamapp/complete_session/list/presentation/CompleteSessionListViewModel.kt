@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.vci.vectorcamapp.core.domain.model.enums.UploadStatus
 import com.vci.vectorcamapp.core.domain.model.helpers.SessionUploadProgress
+import com.vci.vectorcamapp.core.domain.repository.MetadataUploadStatusRepository
 import com.vci.vectorcamapp.core.domain.repository.SessionRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenImageRepository
 import com.vci.vectorcamapp.core.domain.repository.SpecimenRepository
@@ -34,6 +35,7 @@ import javax.inject.Inject
 class CompleteSessionListViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val sessionRepository: SessionRepository,
+    private val metadataUploadStatusRepository: MetadataUploadStatusRepository,
     private val specimenRepository: SpecimenRepository,
     private val specimenImageRepository: SpecimenImageRepository,
     private val workManagerRepository: WorkManagerRepository,
@@ -54,7 +56,8 @@ class CompleteSessionListViewModel @Inject constructor(
                             specimenImageRepository.observeUploadedImageCountForSession(sessionId),
                             specimenImageRepository.observeFailedImageCountForSession(sessionId),
                             workManagerRepository.observeIsSessionActivelyUploading(sessionId),
-                        ) { uploadedMetadataCount, uploadedImageCount, failedImageCount, isUploading ->
+                            metadataUploadStatusRepository.observeMetadataUploadStatusesForSession(sessionId),
+                        ) { uploadedMetadataCount, uploadedImageCount, failedImageCount, isUploading, metadataUploadStepStatuses ->
                             sessionAndSite to SessionUploadProgress(
                                 uploadedMetadataCount = uploadedMetadataCount,
                                 uploadedImageCount = uploadedImageCount,
@@ -62,7 +65,8 @@ class CompleteSessionListViewModel @Inject constructor(
                                     sessionId
                                 ),
                                 isUploading = isUploading,
-                                failedImageCount = failedImageCount
+                                failedImageCount = failedImageCount,
+                                metadataUploadStepStatuses = metadataUploadStepStatuses.sortedBy { it.step.ordinal }
                             )
                         }
                     }
@@ -135,11 +139,20 @@ class CompleteSessionListViewModel @Inject constructor(
                             )
                         val areSpecimensUploaded = !specimens.any { specimen ->
                             specimen.specimenImagesAndInferenceResults.any { (image, _) ->
-                                image.metadataUploadStatus != UploadStatus.COMPLETED || image.imageUploadStatus != UploadStatus.COMPLETED
+                                !image.metadataUploadStatus.isUploaded() || !image.imageUploadStatus.isUploaded()
                             }
                         }
 
-                        if (isSessionUploaded && areSpecimensUploaded) continue
+                        val metadataUploadStatuses = metadataUploadStatusRepository
+                            .observeMetadataUploadStatusesForSession(session.localId)
+                            .first()
+                        val hasFailedMetadataUploadStep =
+                            metadataUploadStatuses.any { it.status == UploadStatus.FAILED }
+                        // Sessions finished on an older build have no step history. Queue them so
+                        // form answers that never reached storage can be verified and recovered.
+                        val hasUploadHistory = metadataUploadStatuses.isNotEmpty()
+
+                        if (isSessionUploaded && areSpecimensUploaded && !hasFailedMetadataUploadStep && hasUploadHistory) continue
 
                         workManagerRepository.enqueueSessionUpload(session.localId, site.id)
                         didEnqueueUpload = true
@@ -164,10 +177,14 @@ class CompleteSessionListViewModel @Inject constructor(
     }
 
     private fun getSessionUploadStatus(sessionUploadProgress: SessionUploadProgress): String {
-        val isComplete = sessionUploadProgress.totalCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount
+        val isComplete = sessionUploadProgress.hasUploadHistory &&
+            (sessionUploadProgress.totalCount == 0 || sessionUploadProgress.uploadedImageCount == sessionUploadProgress.totalCount)
 
         return when {
             sessionUploadProgress.failedImageCount > 0 -> UploadStatus.FAILED.displayText(context)
+            sessionUploadProgress.hasFailedMetadataUploadStep -> UploadStatus.FAILED.displayText(context)
+            sessionUploadProgress.hasRecoveredMetadataUploadStep ->
+                UploadStatus.RECOVERED.displayText(context)
             isComplete -> UploadStatus.COMPLETED.displayText(context)
             sessionUploadProgress.isUploading -> UploadStatus.IN_PROGRESS.displayText(context)
             else -> UploadStatus.NOT_STARTED.displayText(context)
