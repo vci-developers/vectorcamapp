@@ -173,21 +173,22 @@ internal class IntakeSubmission(
 }
 
 private fun findSelectedSite(snapshot: IntakeState): Site? {
-    return if (snapshot.allSitesInProgram.any { !it.district.isNullOrBlank() }) {
-        snapshot.allSitesInProgram.find {
+    val matches = if (snapshot.allSitesInProgram.any { !it.district.isNullOrBlank() }) {
+        snapshot.allSitesInProgram.filter {
             it.district == snapshot.selectedDistrict &&
                 it.villageName == snapshot.selectedVillageName &&
                 it.houseNumber == snapshot.selectedHouseNumber
         }
     } else {
-        snapshot.allSitesInProgram.find { site ->
-            val locationHierarchy = site.locationHierarchy ?: return@find false
+        snapshot.allSitesInProgram.filter { site ->
+            val locationHierarchy = site.locationHierarchy ?: return@filter false
             snapshot.siteSelectionsByLocationTypeId.all { (locationTypeId, selectedLocationTypeSite) ->
                 val locationTypeName = snapshot.allLocationTypesInProgram.find { it.id == locationTypeId }?.name
                 locationHierarchy[locationTypeName] == selectedLocationTypeSite
             }
         }
     }
+    return matches.firstOrNull { it.isActive } ?: matches.firstOrNull()
 }
 
 private fun locationSelectionsToCache(state: IntakeState): Map<Int, String> {

@@ -6,6 +6,7 @@ import com.vci.vectorcamapp.R
 import com.vci.vectorcamapp.core.domain.model.LocationType
 import com.vci.vectorcamapp.core.domain.model.Site
 import com.vci.vectorcamapp.core.presentation.components.form.DropdownField
+import com.vci.vectorcamapp.intake.domain.util.sitesShownInIntakeDropdown
 import com.vci.vectorcamapp.intake.presentation.IntakeAction
 import com.vci.vectorcamapp.intake.presentation.IntakeState
 
@@ -33,10 +34,12 @@ private fun DistrictSiteFields(
     state: IntakeState,
     onAction: (IntakeAction) -> Unit,
 ) {
+    val selectableSites = sitesShownInIntakeDropdown(state.allSitesInProgram)
+
     DropdownField(
         label = stringResource(R.string.intake_label_district),
         required = true,
-        options = state.allSitesInProgram.mapNotNull { it.district }.distinct(),
+        options = selectableSites.mapNotNull { it.district }.distinct(),
         selectedOption = state.selectedDistrict,
         onOptionSelected = { onAction(IntakeAction.SelectDistrict(it)) },
         error = state.intakeErrors.district,
@@ -48,7 +51,7 @@ private fun DistrictSiteFields(
         DropdownField(
             label = stringResource(R.string.intake_label_village_name),
             required = true,
-            options = state.allSitesInProgram
+            options = selectableSites
                 .filter { it.district == state.selectedDistrict }
                 .mapNotNull { it.villageName }
                 .distinct(),
@@ -64,7 +67,7 @@ private fun DistrictSiteFields(
         DropdownField(
             label = stringResource(R.string.intake_label_house_number),
             required = true,
-            options = state.allSitesInProgram
+            options = selectableSites
                 .filter { it.district == state.selectedDistrict && it.villageName == state.selectedVillageName }
                 .mapNotNull { it.houseNumber }
                 .distinct(),
@@ -93,7 +96,7 @@ private fun LocationHierarchyField(
         label = locationType.name,
         required = true,
         options = sitesMatchingParents(
-            state.allSitesInProgram,
+            sitesShownInIntakeDropdown(state.allSitesInProgram),
             parentLocationTypes,
             state.siteSelectionsByLocationTypeId
         )

@@ -1112,6 +1112,74 @@ class IntakeViewModelTest {
         advanceUntilIdle()
         assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(village)
     }
+
+    @Test
+    fun load_doesNotRestoreCachedSelectionForInactiveSites() = runTest {
+        val inactiveSite = testSite.copy(
+            id = 2,
+            district = "Closed District",
+            villageName = "Closed Village",
+            houseNumber = "9",
+            isActive = false,
+        )
+        every { siteRepository.observeAllSitesByProgramId(any()) } returns MutableStateFlow(
+            listOf(testSite, inactiveSite)
+        )
+        coEvery { defaultIntakeFieldsCache.getDefaultIntakeFields() } returns DefaultIntakeFieldsCacheDto(
+            district = "Closed District",
+            villageName = "Closed Village",
+        )
+
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+
+        assertThat(vm.state.value.selectedDistrict).isEmpty()
+        assertThat(vm.state.value.selectedVillageName).isEmpty()
+    }
+
+    @Test
+    fun load_keepsSavedSiteWhenItIsInactive() = runTest {
+        val inactiveSite = testSite.copy(isActive = false, latitude = 1f, longitude = 2f)
+        coEvery { currentSessionCache.getSession() } returns sampleSession()
+        coEvery { currentSessionCache.getSiteId() } returns inactiveSite.id
+        every { siteRepository.observeAllSitesByProgramId(any()) } returns MutableStateFlow(listOf(inactiveSite))
+
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+
+        assertThat(vm.state.value.selectedDistrict).isEqualTo("District A")
+        assertThat(vm.state.value.selectedVillageName).isEqualTo("Village A")
+        assertThat(vm.state.value.selectedHouseNumber).isEqualTo("101")
+        assertThat(vm.state.value.selectedSiteWithCoordinates).isEqualTo(inactiveSite)
+    }
+
+    @Test
+    fun load_doesNotRestoreCachedHierarchySelectionForInactiveSites() = runTest {
+        val inactiveSite = testSite.copy(
+            id = 2,
+            district = null,
+            villageName = null,
+            houseNumber = null,
+            isActive = false,
+            locationHierarchy = mapOf("Parish" to "Closed"),
+        )
+        every { siteRepository.observeAllSitesByProgramId(any()) } returns MutableStateFlow(listOf(inactiveSite))
+        every { locationTypeRepository.observeAllLocationTypesByProgramId(any()) } returns MutableStateFlow(
+            listOf(LocationType(1, "Parish", 1), LocationType(2, "Village", 2))
+        )
+        coEvery { defaultIntakeFieldsCache.getDefaultIntakeFields() } returns DefaultIntakeFieldsCacheDto(
+            locationSelections = mapOf(1 to "Closed"),
+        )
+
+        val vm = makeViewModel()
+        backgroundScope.launch { vm.state.collect {} }
+        advanceUntilIdle()
+
+        assertThat(vm.state.value.siteSelectionsByLocationTypeId).isEmpty()
+    }
+
     private fun fillCollectorAndMethod(vm: IntakeViewModel) {
         collectorsFlow.value = listOf(testCollector)
         vm.onAction(IntakeAction.SelectCollector(testCollector))
