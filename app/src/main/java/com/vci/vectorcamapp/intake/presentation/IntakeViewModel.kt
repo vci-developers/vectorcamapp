@@ -33,6 +33,7 @@ import com.vci.vectorcamapp.intake.domain.use_cases.IntakeValidationUseCases
 import com.vci.vectorcamapp.intake.domain.util.FormQuestionPrerequisiteEvaluator
 import com.vci.vectorcamapp.intake.domain.util.IntakeError
 import com.vci.vectorcamapp.intake.domain.util.SiteSelectionResolver
+import com.vci.vectorcamapp.intake.domain.util.sitesShownInIntakeDropdown
 import com.vci.vectorcamapp.intake.logging.IntakeErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.TimeoutCancellationException
@@ -548,10 +549,15 @@ class IntakeViewModel @Inject constructor(
             ) { currentAllSites, currentSavedSurveillanceForm, currentAllCollectors, currentAllLocationTypes ->
 
                 val validatedSite = currentAllSites.find { it.id == currentSessionSiteId }
+                val activeSites = sitesShownInIntakeDropdown(currentAllSites)
                 val validatedSiteSelectionsByLocationTypeId = when {
                     validatedSite == null -> {
-                        cachedLocationSelection.filterKeys { cachedId ->
-                            currentAllLocationTypes.any { it.id == cachedId }
+                        cachedLocationSelection.filter { (cachedId, cachedValue) ->
+                            val locationType = currentAllLocationTypes.find { it.id == cachedId }
+                                ?: return@filter false
+                            activeSites.any { site ->
+                                site.locationHierarchy?.get(locationType.name) == cachedValue
+                            }
                         }
                     }
 
@@ -570,13 +576,13 @@ class IntakeViewModel @Inject constructor(
 
                 val validatedDistrict = when {
                     validatedSite != null -> validatedSite.district.orEmpty()
-                    currentAllSites.any { it.district == cachedDefaultDistrict } -> cachedDefaultDistrict
+                    activeSites.any { it.district == cachedDefaultDistrict } -> cachedDefaultDistrict
                     else -> ""
                 }
 
                 val validatedVillageName = when {
                     validatedSite != null -> validatedSite.villageName.orEmpty()
-                    validatedDistrict.isNotBlank() && currentAllSites.any {
+                    validatedDistrict.isNotBlank() && activeSites.any {
                         it.district == validatedDistrict && it.villageName == cachedDefaultVillageName
                     } -> cachedDefaultVillageName
 
